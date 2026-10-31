@@ -1,0 +1,32 @@
+== C1-C2: pinned Ollama, model, the user's venv with openai
+debconf: delaying package configuration, since apt-utils is not installed
+{"ollama_version": "0.40.13", "model": "qwen2.5:0.5b", "digest": "a8b0c51577010a279d933d14c2a8ab4b268079d44c5c8830c0a93900f1827c67", "size": 397821319}
+model layer c5396e06af294bd1 present 397807936
+{"id": "ollama-model-qwen2.5:0.5b", "sha256": "c5396e06af294bd101b30dce59131a76d2b773e76950acc870eda801d3ab0515", "bytes": 397807936, "at": "2026-10-31T15:06:14+08:00"}
+debconf: delaying package configuration, since apt-utils is not installed
+openai==3.42.0
+== C3: the default address in use (OLLAMA_HOST unset)
+Listening on 127.0.0.1:11434
+== C4: reference setting, network open
+diff exit 0
+base_url exit 0
+{"pass": true, "exit_code": 0, "elapsed": 1.061, "timed_out": false}
+run_ask exit 0
+== C5: reference setting, network blocked (Ollama and the call in one namespace)
+egress: blocked exit=0 timed_out=False 5.1s tracer_running=False trace=/out/q20/eg/blocked.strace
+blocked run exit 0
+EGRESS blocked:29 pid=566 connect AF_INET 8.8.8.8:53 -> -1 ENETUNREACH (name lookup (port 53))
+egress: FAIL (21 egress attempt(s))
+== C6: no key (only the model name changed)
+{"pass": false, "exit_code": 1, "elapsed": 0.508, "timed_out": false}
+nokey exit 1
+env/lib/python3.12/site-packages/openai/lib/_client_auth.py", line 188, in sync__init__
+    raise _sdk_client.OpenAIError(
+openai.OpenAIError: Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.
+
+== C7: selftest with the real openai package
+0 failure(s)
+0 failure(s)
+== OLLAMA_NO_CLOUD in the server log
+      3 OLLAMA_NO_CLOUD:true
+      3 cloud disabled: true

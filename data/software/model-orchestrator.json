@@ -36,6 +36,12 @@
     "OpenRouter",
     "claude-code-router"
   ],
+  "features": [
+    "route routine work to cheaper models",
+    "delegate scoped work to worker lanes",
+    "suggest cheapest lane for tasks",
+    "report routing split and subagent activity"
+  ],
   "why_worth_it": null,
   "homepage": "https://model-orchestrator.aunysillyme.dev",
   "repo": {
@@ -78,18 +84,18 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-model-orchestrator-20261031-004025-476a",
+      "run_id": "verify-model-orchestrator-20261031-031804-44d5",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g model-orchestrator",
-          "purpose": "Install via npm global"
+          "purpose": "Global npm install of model-orchestrator"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "model-orchestrator --help",
-        "expected_signal": "--level 1|2|3"
+        "command": "aunx --help",
+        "expected_signal": "aunx route [--dir PATH]"
       },
       "first_task": "npx model-orchestrator --list"
     },
@@ -110,10 +116,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:41:21.001824+08:00",
+    "checked_at": "2026-10-31T03:18:58.864117+08:00",
     "runs": [
       {
-        "id": "verify-model-orchestrator-20261031-004025-476a",
+        "id": "verify-model-orchestrator-20261031-031804-44d5",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -121,88 +127,141 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:41:21.001824+08:00",
+        "checked_at": "2026-10-31T03:18:58.864117+08:00",
         "tool_version": "1.1.2",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g model-orchestrator",
-            "purpose": "Install via npm global"
+            "purpose": "Global npm install of model-orchestrator"
           }
         ],
         "smoke_tests": [
           {
-            "command": "model-orchestrator --help",
-            "expected_signal": "--level 1|2|3",
+            "command": "aunx --help",
+            "expected_signal": "aunx route [--dir PATH]",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "--level 1|2|3 1 beginner (one agent), 2 intermediate (many CLIs), 3 advanced (plus a VM)",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "model-orchestrator --version",
-            "expected_signal": "1.1.2",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "1.1.2",
+            "observed_excerpt": "aunx route [--dir PATH] \"<task>\" Suggest a stack role, tier and effort",
             "setup": [],
             "offline": true
           },
           {
             "command": "npx model-orchestrator --list",
-            "expected_signal": "metered API providers (--apis a,b, level 3 gateway only):",
+            "expected_signal": "claude-code",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "metered API providers (--apis a,b, level 3 gateway only):",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "aunx --help",
-            "expected_signal": "aunx: model router tools for AI coding agents",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "aunx: model router tools for AI coding agents",
+            "observed_excerpt": "claude-code Claude Code (Anthropic)",
             "setup": [],
             "offline": true
           },
           {
             "command": "aunx cli-run --doctor",
-            "expected_signal": "doctor: 6 enabled lane(s): grok, codex, agy, hermes, qwen, claude",
+            "expected_signal": "doctor: 6 enabled lane(s)",
             "exit_code": 10,
             "passed": true,
             "observed_excerpt": "doctor: 6 enabled lane(s): grok, codex, agy, hermes, qwen, claude",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "aunx route \"rename this file\"",
+            "expected_signal": "Suggestion: bulk | tier: cheap model | effort: low",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Suggestion: bulk | tier: cheap model | effort: low",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "aunx route \"design the auth system\"",
+            "expected_signal": "Suggestion: plan | tier: planning model | effort: xhigh",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Suggestion: plan | tier: planning model | effort: xhigh",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "aunx route-metrics --summary",
+            "expected_signal": "route-metrics: no data yet",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "route-metrics: no data yet (/home/sbx/.ai-orchestrator/route-metrics.jsonl does not exist).",
+            "setup": [],
+            "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "aunx cli-run --doctor",
+            "actually_needed": "Exits 10 listing 6 enabled lanes with binaries MISSING when no project lanes are installed; still the correct honest doctor output.",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks exit as expected and show the catalog with metered APIs, the doctor lane list, and the help usage.",
+          "observed": "All three screenshots show expected outputs for list, doctor, and help with correct exit codes.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-model-orchestrator-20261031-004025-476a/report.json",
+          "trace_path": "runs/verify/verify-model-orchestrator-20261031-031804-44d5/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-model-orchestrator-20261031-004025-476a/check-1-cmd4.judged.png",
-            "runs/verify/verify-model-orchestrator-20261031-004025-476a/check-2-cmd6.judged.png",
-            "runs/verify/verify-model-orchestrator-20261031-004025-476a/check-3-cmd2.judged.png"
+            "runs/verify/verify-model-orchestrator-20261031-031804-44d5/check-1-cmd3.judged.png",
+            "runs/verify/verify-model-orchestrator-20261031-031804-44d5/check-2-cmd4.judged.png",
+            "runs/verify/verify-model-orchestrator-20261031-031804-44d5/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.04519
+        "cost_usd": 0.062642,
+        "features": [
+          {
+            "feature": "route routine work to cheaper models",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "delegate scoped work to worker lanes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists lanes with all binaries MISSING and no work dispatched."
+          },
+          {
+            "feature": "suggest cheapest lane for tasks",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "report routing split and subagent activity",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output reports no data yet instead of routing split and activity."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 94.1,
       "confidence": 0.8,
@@ -557,8 +616,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:36:27+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "routes routine work to cheaper models with routing rules, 8 subagents, hooks and a CLI runner",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:08+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Claude Code can dispatch scoped work through `aunx cli-run codex --brief TASK_BRIEF.md`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:08+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "The first suggests cheap bulk work; the second suggests planning.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:08+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "The summary reports your routing split, valid route-marker coverage, invalid marker count and agent durations.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:08+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

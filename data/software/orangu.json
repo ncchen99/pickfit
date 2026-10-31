@@ -33,6 +33,12 @@
   "alternatives_to": [
     "Typical Cloud Coding Assistant"
   ],
+  "features": [
+    "code in terminal using local AI",
+    "review code with interactive diffs",
+    "serve models via OpenAI-compatible API",
+    "generate text, images and video"
+  ],
   "why_worth_it": null,
   "homepage": "https://mnemosyne-systems.github.io/orangu/",
   "repo": {
@@ -72,24 +78,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-orangu-20261031-000627-1bfa",
+      "run_id": "verify-orangu-20261031-034904-c72b",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://mnemosyne-systems.github.io/orangu/install.sh -o /tmp/orangu-install.sh && wc -c /tmp/orangu-install.sh && head -c 2000 /tmp/orangu-install.sh",
-          "purpose": "Download install script for reading"
+          "command": "curl -fsSL https://mnemosyne-systems.github.io/orangu/install.sh -o /tmp/install-orangu.sh && ls -l /tmp/install-orangu.sh && wc -c /tmp/install-orangu.sh",
+          "purpose": "Download install script"
         },
         {
-          "command": "sh /tmp/orangu-install.sh",
-          "purpose": "Install orangu via release script"
+          "command": "sh /tmp/install-orangu.sh",
+          "purpose": "Run install script to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "orangu --version",
-        "expected_signal": "orangu 1.4.0"
+        "command": "orangu --help",
+        "expected_signal": "A coding environment for OpenAI-compatible servers"
       },
-      "first_task": "SHELL=/bin/bash orangu -s"
+      "first_task": "SHELL=bash orangu -s"
     },
     "windows": {
       "basis": "readme_claim",
@@ -121,10 +127,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:07:52.865368+08:00",
+    "checked_at": "2026-10-31T03:51:05.979048+08:00",
     "runs": [
       {
-        "id": "verify-orangu-20261031-000627-1bfa",
+        "id": "verify-orangu-20261031-034904-c72b",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -132,30 +138,21 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:07:52.865368+08:00",
+        "checked_at": "2026-10-31T03:51:05.979048+08:00",
         "tool_version": "1.4.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://mnemosyne-systems.github.io/orangu/install.sh -o /tmp/orangu-install.sh && wc -c /tmp/orangu-install.sh && head -c 2000 /tmp/orangu-install.sh",
-            "purpose": "Download install script for reading"
+            "command": "curl -fsSL https://mnemosyne-systems.github.io/orangu/install.sh -o /tmp/install-orangu.sh && ls -l /tmp/install-orangu.sh && wc -c /tmp/install-orangu.sh",
+            "purpose": "Download install script"
           },
           {
-            "command": "sh /tmp/orangu-install.sh",
-            "purpose": "Install orangu via release script"
+            "command": "sh /tmp/install-orangu.sh",
+            "purpose": "Run install script to ~/.local/bin"
           }
         ],
         "smoke_tests": [
-          {
-            "command": "orangu --version",
-            "expected_signal": "orangu 1.4.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "orangu 1.4.0",
-            "setup": [],
-            "offline": true
-          },
           {
             "command": "orangu --help",
             "expected_signal": "A coding environment for OpenAI-compatible servers",
@@ -166,11 +163,11 @@
             "offline": true
           },
           {
-            "command": "SHELL=/bin/bash orangu -s",
-            "expected_signal": "# bash completion for orangu",
+            "command": "SHELL=bash orangu -s",
+            "expected_signal": "complete -F _orangu orangu",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "# bash completion for orangu",
+            "observed_excerpt": "complete -F _orangu orangu",
             "setup": [],
             "offline": true
           },
@@ -182,58 +179,78 @@
             "observed_excerpt": "No sessions found.",
             "setup": [],
             "offline": true
-          },
-          {
-            "command": "orangu-server --version",
-            "expected_signal": "orangu-server 1.4.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "orangu-server 1.4.0",
-            "setup": [],
-            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "orangu -s",
-            "actually_needed": "SHELL=/bin/bash orangu -s (run with $SHELL set to a supported shell)",
+            "readme_said": "orangu -s prints completion scripts",
+            "actually_needed": "SHELL=bash orangu -s (or any SHELL=bash/zsh/fish set); with empty $SHELL it exits 1 asking for supported shell",
             "kind": "sandbox"
           },
           {
-            "readme_said": "orangu --init",
-            "actually_needed": "orangu --init is an interactive wizard prompting for endpoint/model and hangs waiting for TTY input; it cannot complete non-interactively with stdin closed",
-            "kind": "note"
-          },
-          {
-            "readme_said": "curl -fsSL https://mnemosyne-systems.github.io/orangu/install.sh | sh",
-            "actually_needed": "install.sh downloads a prebuilt binary tarball orangu-1.4.0-x86_64-unknown-linux-gnu.tar.gz from GitHub releases, which was installed unread as a binary",
+            "readme_said": "orangu --init runs the setup wizard",
+            "actually_needed": "interactive TTY with prompts for server endpoint; with stdin closed it hangs waiting for input",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show bash completion script header, 'No sessions found.', and 'orangu 1.4.0' all printing correctly with exit 0.",
+          "observed": "Screenshots show bash completion ending with complete line, empty session list message, and help header for OpenAI-compatible coding environment.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-orangu-20261031-000627-1bfa/report.json",
+          "trace_path": "runs/verify/verify-orangu-20261031-034904-c72b/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-orangu-20261031-000627-1bfa/check-1-cmd6.judged.png",
-            "runs/verify/verify-orangu-20261031-000627-1bfa/check-2-cmd9.judged.png",
-            "runs/verify/verify-orangu-20261031-000627-1bfa/check-3-cmd3.judged.png"
+            "runs/verify/verify-orangu-20261031-034904-c72b/check-1-cmd6.judged.png",
+            "runs/verify/verify-orangu-20261031-034904-c72b/check-2-cmd7.judged.png",
+            "runs/verify/verify-orangu-20261031-034904-c72b/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.060189
+        "cost_usd": 0.068337,
+        "features": [
+          {
+            "feature": "code in terminal using local AI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "needs local GGUF model and running orangu-server; no model bundled"
+          },
+          {
+            "feature": "review code with interactive diffs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "needs LLM-backed interactive review plus model weights"
+          },
+          {
+            "feature": "serve models via OpenAI-compatible API",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "serving requires downloading multi-GB GGUF weights first"
+          },
+          {
+            "feature": "generate text, images and video",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "text/image/video generation needs chat, Qwen-Image, LTX-2.5 weights"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 87.3,
       "confidence": 0.9,
@@ -578,8 +595,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:03:50+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**orangu** is a local, workspace-aware, tool-driven coding environment for your terminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:16+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Built-in interactive two-pane diff review (`/review`) and automated LLM-driven rubric review with confidence scoring (`/auto_review`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:16+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Every layer communicates over OpenAI-compatible APIs.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:16+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**Text, Image & Video Generation** - Native serving of chat, completion, embedding, text-to-image models",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:16+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:40:38+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

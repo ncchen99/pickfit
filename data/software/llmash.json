@@ -34,6 +34,12 @@
     "Ollama",
     "vLLM"
   ],
+  "features": [
+    "run Ollama-compatible LLM server",
+    "assemble custom model builds",
+    "remove model refusals",
+    "classify text without generating"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -59,24 +65,28 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-llmash-20261030-235851-480f",
+      "run_id": "verify-llmash-20261031-033237-8fa3",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/omgitsbase/llmash/main/install.sh -o /tmp/install_llmash.sh && echo downloaded && wc -c /tmp/install_llmash.sh",
-          "purpose": "Download installer script"
+          "command": "curl -fsSL https://raw.githubusercontent.com/omgitsbase/llmash/main/install.sh -o /tmp/llmash-install.sh && wc -c /tmp/llmash-install.sh && echo OK",
+          "purpose": "download installer script"
         },
         {
-          "command": "sh /tmp/install_llmash.sh --no-service",
-          "purpose": "Run installer for current user"
+          "command": "sh /tmp/llmash-install.sh",
+          "purpose": "install llmash via script"
+        },
+        {
+          "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/",
+          "purpose": "download tiny GGUF model"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "llmash --version",
-        "expected_signal": "llmash version is 0.5.8"
+        "expected_signal": "llmash version is 0.5.9"
       },
-      "first_task": "curl -fsSL http://127.0.0.1:11434/api/tags && echo \"---V1---\" && curl -fsSL http://127.0.0.1:11434/v1/models"
+      "first_task": "curl -fsSL http://127.0.0.1:11434/api/tags && echo && curl -fsSL http://127.0.0.1:11434/v1/models"
     },
     "windows": {
       "basis": "readme_claim",
@@ -108,10 +118,10 @@
   "verification": {
     "level": "inference",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:00:49.555622+08:00",
+    "checked_at": "2026-10-31T03:34:17.895978+08:00",
     "runs": [
       {
-        "id": "verify-llmash-20261030-235851-480f",
+        "id": "verify-llmash-20261031-033237-8fa3",
         "level": "inference",
         "unverified_reason": null,
         "os": "linux",
@@ -119,129 +129,180 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:00:49.555622+08:00",
-        "tool_version": "0.5.8",
+        "checked_at": "2026-10-31T03:34:17.895978+08:00",
+        "tool_version": "0.5.9",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/omgitsbase/llmash/main/install.sh -o /tmp/install_llmash.sh && echo downloaded && wc -c /tmp/install_llmash.sh",
-            "purpose": "Download installer script"
+            "command": "curl -fsSL https://raw.githubusercontent.com/omgitsbase/llmash/main/install.sh -o /tmp/llmash-install.sh && wc -c /tmp/llmash-install.sh && echo OK",
+            "purpose": "download installer script"
           },
           {
-            "command": "sh /tmp/install_llmash.sh --no-service",
-            "purpose": "Run installer for current user"
+            "command": "sh /tmp/llmash-install.sh",
+            "purpose": "install llmash via script"
+          },
+          {
+            "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/",
+            "purpose": "download tiny GGUF model"
           }
         ],
         "smoke_tests": [
           {
             "command": "llmash --version",
-            "expected_signal": "llmash version is 0.5.8",
+            "expected_signal": "llmash version is 0.5.9",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "llmash version is 0.5.8",
+            "observed_excerpt": "llmash version is 0.5.9",
             "setup": [],
             "offline": true
           },
           {
-            "command": "llmash models",
-            "expected_signal": "store /home/sbx/.ollama/models",
+            "command": "curl -fsSL http://127.0.0.1:11434/api/tags && echo && curl -fsSL http://127.0.0.1:11434/v1/models",
+            "expected_signal": "\"model\":\"stories260k:gguf\"",
             "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"models\":[{\"capabilities\":[\"completion\"],\"details\":{\"context_length\":2048,\"expert_count\":0,\"expert_used_count\":0,\"families\":[\"llama\"],\"family\":\"llama\",\"format\":\"gguf\",\"parameter_size\":\"\",\"parent_model\":\"\",\"quantization_level\":\"\"},\"digest\":\"18a1535ab5f07c4f0f3a73e0e59980ed5ce3526e81f607e2042af4d6be…",
+            "setup": [
+              {
+                "command": "OLLAMA_MODELS=$HOME/models llmash serve --port 11434",
+                "background": true,
+                "port": 11434
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://127.0.0.1:11434/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"stories260k:gguf\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi.\"}],\"temperature\":0,\"max_tokens\":16}'",
+            "expected_signal": "\"completion_tokens\":16",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"choices\":[{\"finish_reason\":\"length\",\"index\":0,\"message\":{\"content\":\"\\\"Here,\\\" Annack.\\nThe\",\"role\":\"assistant\"}}],\"created\":1793388850,\"id\":\"chatcmpl-lDcqrbOOiEfVJGf0Zg8xLPCkOgoYz4DS\",\"model\":\"stories260k:gguf\",\"object\":\"chat.completion\",\"system_fingerprint\":\"b12015-a34de8618\",\"timings\":{\"cache_n…",
+            "setup": [
+              {
+                "command": "OLLAMA_MODELS=$HOME/models llmash serve --port 11434",
+                "background": true,
+                "port": 11434
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://127.0.0.1:11434/api/classify -H 'Content-Type: application/json' -d '{\"model\":\"stories260k:gguf\",\"state\":\"I was charged twice for my subscription.\",\"questions\":{\"angry\":{\"type\":\"noul\",\"instructions\":\"Is the customer angry?\"}}}'",
+            "expected_signal": "\"answers\":{\"angry\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"answers\":{\"angry\":{\"noul\":1.0,\"probabilities\":{\"false\":0.0,\"true\":1.0},\"type\":\"noul\"}},\"model\":\"stories260k:gguf\",\"usage\":{\"input_tokens\":307,\"output_tokens\":0}}",
+            "setup": [
+              {
+                "command": "OLLAMA_MODELS=$HOME/models llmash serve --port 11434",
+                "background": true,
+                "port": 11434
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "OLLAMA_MODELS=$HOME/models llmash rco convert /home/sbx/models/stories260K.gguf -q RCO-3",
+            "expected_signal": "",
+            "exit_code": 1,
             "passed": false,
-            "observed_excerpt": "folder /home/sbx/models 1 models, read in place",
+            "observed_excerpt": "Error: stories260K.gguf names no imatrix and none was given. The bits would be placed unweighted, which measures every tensor alike and gives back a uniform build. Pass one with --imatrix <file or repo>.",
             "setup": [],
             "offline": null
           },
           {
-            "command": "curl -fsSL http://127.0.0.1:11434/api/tags && echo \"---V1---\" && curl -fsSL http://127.0.0.1:11434/v1/models",
-            "expected_signal": "stories260k:gguf",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "{\"models\":[{\"capabilities\":[\"completion\"],\"details\":{\"context_length\":2048,\"expert_count\":0,\"expert_used_count\":0,\"families\":[\"llama\"],\"family\":\"llama\",\"format\":\"gguf\",\"parameter_size\":\"\",\"parent_model\":\"\",\"quantization_level\":\"\"},\"digest\":\"824d233b7cab011cb2f2d0322dcc131a74c77c3a71bee6edfd158a0f87…",
-            "setup": [
-              {
-                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/ && sha256sum ~/models/stories260K.gguf | cut -c1-16",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "llmash models set /home/sbx/models && llmash models",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "llmash serve",
-                "background": true,
-                "port": 11434
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "curl -fsSL http://127.0.0.1:11434/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"stories260k:gguf\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi\"}],\"temperature\":0,\"max_tokens\":16}'",
-            "expected_signal": "completion_tokens",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "{\"choices\":[{\"finish_reason\":\"length\",\"index\":0,\"message\":{\"content\":\"\\\"Here?\\\" Annabyed.\\n\",\"role\":\"assistant\"}}],\"created\":1793376044,\"id\":\"chatcmpl-lVfOlqxY4lQmxXmPPK0KDMRi1fuYtd0A\",\"model\":\"stories260k:gguf\",\"object\":\"chat.completion\",\"system_fingerprint\":\"b12014-aa588a346\",\"timings\":{\"cache_n\"…",
-            "setup": [
-              {
-                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/ && sha256sum ~/models/stories260K.gguf | cut -c1-16",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "llmash models set /home/sbx/models && llmash models",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "llmash serve",
-                "background": true,
-                "port": 11434
-              }
-            ],
-            "offline": true
+            "command": "llmash ablate stories260k:gguf --yes",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Error: abliteration needs llmash's own runtime, and this machine runs another llama.cpp build: /home/sbx/.local/lib/llmash/runtime/llama-server llmash's runtime is built for NVIDIA cards from Turing on, with driver 580 or newer; on such a card `llmash update --force` installs it. Other GPUs run ups…",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "installer puts llmash on PATH, fetches runtime and starts the server",
-            "actually_needed": "installer reported 'systemd is not running here, so no service was installed' and server must be started manually with 'llmash serve'",
-            "kind": "sandbox"
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/omgitsbase/llmash/main/install.sh | sh",
+            "actually_needed": "installer fetches prebuilt llmash tarball and llama.cpp runtime tarball as binaries during the run; they cannot be pre-read",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show model list containing stories260k:gguf, chat completion with completion_tokens usage, and llmash version 0.5.8.",
+          "observed": "All three checks show the model listed, a 16-token chat completion, and version 0.5.9.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-llmash-20261030-235851-480f/report.json",
+          "trace_path": "runs/verify/verify-llmash-20261031-033237-8fa3/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-llmash-20261030-235851-480f/check-1-cmd9.judged.png",
-            "runs/verify/verify-llmash-20261030-235851-480f/check-2-cmd10.judged.png",
-            "runs/verify/verify-llmash-20261030-235851-480f/check-3-cmd3.judged.png"
+            "runs/verify/verify-llmash-20261031-033237-8fa3/check-1-cmd8.judged.png",
+            "runs/verify/verify-llmash-20261031-033237-8fa3/check-2-cmd9.judged.png",
+            "runs/verify/verify-llmash-20261031-033237-8fa3/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.129304
+        "cost_usd": 0.145677,
+        "features": [
+          {
+            "feature": "run Ollama-compatible LLM server",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "assemble custom model builds",
+            "status": "test_failed",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "tiny F32 test model names no imatrix; needs real model with imatrix metadata"
+          },
+          {
+            "feature": "remove model refusals",
+            "status": "test_failed",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "needs llmash CUDA runtime (Turing+GPU); box has CPU upstream build"
+          },
+          {
+            "feature": "classify text without generating",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 92.2,
+      "total": 85.6,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -282,7 +343,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 38.36
+      "value": 35.61
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -570,8 +631,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-30T23:53:16+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "An Ollama-compatible server and command line for Windows and Linux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:16+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "assemble a custom build from a model on disk",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:16+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Removes a model's refusals without changing its weights.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:16+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "answers questions about a text from one forward pass",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:16+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

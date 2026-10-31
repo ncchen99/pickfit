@@ -491,3 +491,82 @@ def test_committed_schema_files_match_models():
         assert path.read_text(encoding="utf-8") == text, (
             f"schema/{name} is stale; run: uv run python scripts/export_schema.py"
         )
+
+
+# --- Features and feature coverage --------------------------------------------
+
+
+def test_extraction_features_keep_four_short_quoted_labels():
+    sample = copy.deepcopy(EXTRACTION_SAMPLE)
+    assert ExtractionResult.model_validate(sample).features == []  # older extractions have none
+    sample["features"] = [
+        _cited("follow a JSON log", "Tail JSON Lines logs"),
+        _cited("a guess", None),
+        _cited("x" * 81, "too long a label"),
+        _cited("filter by level", "--level warn"),
+        _cited("pretty-print fields", "pretty fields"),
+        _cited("color output", "colors"),
+        _cited("one too many", "more"),
+    ]
+    result = ExtractionResult.model_validate(sample)
+    assert [f.value for f in result.features] == [
+        "follow a JSON log", "filter by level", "pretty-print fields", "color output"]
+    strict = meta_strict_schema(ExtractionResult)
+    assert "features" in strict["required"]
+
+
+def with_features(doc, *features):
+    run = doc["verification"]["runs"][0]
+    run["features"] = list(features)
+    doc["features"] = [f["feature"] for f in features]
+    return doc
+
+
+CHECKED = {"feature": "follow a JSON log", "status": "checked", "smoke_tests": [1]}
+NOT_CHECKED = {"feature": "send alerts to Slack", "status": "not_checked", "reason": "needs_account",
+               "note": "needs a Slack webhook"}
+
+
+def test_run_records_which_features_its_smoke_tests_covered(example):
+    record = SoftwareRecord.model_validate(with_features(example, CHECKED, NOT_CHECKED))
+    run = record.verification.runs[0]
+    assert [(f.feature, f.status, f.reason) for f in run.features] == [
+        ("follow a JSON log", "checked", None), ("send alerts to Slack", "not_checked", "needs_account")]
+    assert record.features == ["follow a JSON log", "send alerts to Slack"]
+
+
+def test_records_without_features_render_as_before(example):
+    dumped = SoftwareRecord.model_validate(example).model_dump(mode="json")
+    assert "features" not in dumped and "features" not in dumped["verification"]["runs"][0]
+
+
+def failed_test(doc):
+    doc["verification"]["runs"][0]["smoke_tests"].append({
+        "command": "frobtail app.jsonl --follow", "expected_signal": "", "exit_code": 1, "passed": False,
+        "observed_excerpt": "inotify: too many watches"})
+    return doc
+
+
+@pytest.mark.parametrize("mutate", [
+    lambda d: with_features(d, {**CHECKED, "smoke_tests": []}),  # checked with no test
+    lambda d: with_features(d, {**CHECKED, "smoke_tests": [5]}),  # no such test
+    lambda d: with_features(d, {**NOT_CHECKED, "smoke_tests": [1]}),  # a passing test covers it
+    lambda d: with_features(d, {**NOT_CHECKED, "reason": None}),  # not checked without a reason
+    lambda d: with_features(d, {**CHECKED, "reason": "other"}),
+    lambda d: with_features(d, CHECKED, {**CHECKED, "smoke_tests": [0]}),  # the same label twice
+    lambda d: with_features(failed_test(d), {"feature": "follow", "status": "test_failed", "smoke_tests": [2]}),
+    lambda d: with_features(d, {"feature": "follow", "status": "test_failed", "smoke_tests": [1],
+                                "failure": "tool"}),  # its test passed
+    lambda d: with_features(d, *[{**NOT_CHECKED, "feature": f"f{i}"} for i in range(5)]),
+])
+def test_feature_coverage_must_match_the_smoke_tests(example, mutate):
+    with pytest.raises(ValidationError):
+        SoftwareRecord.model_validate(mutate(example))
+
+
+def test_a_failed_feature_test_says_whom_it_points_at(example):
+    doc = with_features(failed_test(example), {"feature": "follow a growing file", "status": "test_failed",
+                                               "smoke_tests": [2], "failure": "sandbox",
+                                               "reason": "needs_more_resources"})
+    run = SoftwareRecord.model_validate(doc).verification.runs[0]
+    assert (run.features[0].failure, run.smoke_tests[2].passed) == ("sandbox", False)

@@ -35,6 +35,12 @@
     "Letta",
     "Zep"
   ],
+  "features": [
+    "remember projects and preferences across sessions",
+    "find memories without exact wording",
+    "share one memory across AI assistants",
+    "capture and recall conversation history"
+  ],
   "why_worth_it": null,
   "homepage": "https://github.com/skynetcmd/m3-memory",
   "repo": {
@@ -76,11 +82,11 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-m3-memory-20261031-023427-2831",
+      "run_id": "verify-m3-memory-20261031-035820-5f24",
       "method": "uv",
       "steps": [
         {
-          "command": "python3 --version && uv --version && uv tool install m3-memory",
+          "command": "uv tool install m3-memory 2>&1",
           "purpose": "Install m3-memory via uv tool"
         }
       ],
@@ -89,7 +95,7 @@
         "command": "m3 --version",
         "expected_signal": "m3-memory 2026.10.25.0"
       },
-      "first_task": "m3 doctor"
+      "first_task": "m3 doctor 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -121,10 +127,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:36:50.356352+08:00",
+    "checked_at": "2026-10-31T04:00:02.079381+08:00",
     "runs": [
       {
-        "id": "verify-m3-memory-20261031-023427-2831",
+        "id": "verify-m3-memory-20261031-035820-5f24",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -132,13 +138,13 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:36:50.356352+08:00",
+        "checked_at": "2026-10-31T04:00:02.079381+08:00",
         "tool_version": "2026.10.25.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "python3 --version && uv --version && uv tool install m3-memory",
+            "command": "uv tool install m3-memory 2>&1",
             "purpose": "Install m3-memory via uv tool"
           }
         ],
@@ -153,89 +159,148 @@
             "offline": true
           },
           {
-            "command": "m3 --help",
-            "expected_signal": "m3 setup",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "m3 setup",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "m3 doctor",
-            "expected_signal": "m3 DEGRADED",
+            "command": "m3 doctor 2>&1",
+            "expected_signal": "[OK] m3 server found",
             "exit_code": 1,
             "passed": true,
-            "observed_excerpt": "[~] m3 DEGRADED · ? memories · embedder: pure-Python (HTTP) · chatlog: ?",
+            "observed_excerpt": "[OK] m3 server found",
             "setup": [],
             "offline": true
           },
           {
-            "command": "m3 memory memory_write --type user_fact --content \"pickfit verification test memory\" --title \"verification test\" --no-embed --yes",
+            "command": "m3 memory memory_write --type decision --title \"project-database\" --content \"We chose PostgreSQL for our website.\" 2>&1",
             "expected_signal": "Created:",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "\"Created: 8f582406-51e1-4b97-b317-a074aa69d24a\"",
+            "observed_excerpt": "\"Created: c4fe6ffd-01e7-4a01-8ae5-1cc03859af1e\"",
             "setup": [],
             "offline": true
           },
           {
-            "command": "m3 memory memory_search --query \"pickfit verification test memory\"",
-            "expected_signal": "pickfit verification test memory",
+            "command": "m3 memory memory_search --query \"Which database did we decide to use?\" --k 1 2>&1",
+            "expected_signal": "We chose PostgreSQL for our website.",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "\"content\": \"pickfit verification test memory\",",
+            "observed_excerpt": "\"content\": \"We chose PostgreSQL for our website.\",",
             "setup": [
               {
-                "command": "m3 memory memory_write --type user_fact --content \"pickfit verification test memory\" --title \"verification test\" --no-embed --yes",
+                "command": "m3 memory memory_write --type decision --title \"project-database\" --content \"We chose PostgreSQL for our website.\" 2>&1",
                 "background": false,
                 "port": null
               }
             ],
             "offline": true
+          },
+          {
+            "command": "m3 memory memory_get --id 39de149d-0075-485e-b5ed-cf4545ffc817 2>&1",
+            "expected_signal": "We chose PostgreSQL for our website.",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "\"Error: not found\"",
+            "setup": [
+              {
+                "command": "m3 memory memory_write --type decision --title \"project-database\" --content \"We chose PostgreSQL for our website.\" 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "echo '{\"conversation_id\":\"c23872cc-6828-4988-8ca3-38e59f1f275b\",\"role\":\"user\",\"content\":\"We discussed using PostgreSQL for the website\"}' | m3 conversations conversation_append --json-file - 2>&1 && echo '{\"query\":\"PostgreSQL website\",\"k\":1}' | m3 conversations conversation_search --json-file - 2>&1",
+            "expected_signal": "We discussed using PostgreSQL for the website",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "}",
+            "setup": [
+              {
+                "command": "echo '{\"title\":\"test-session\"}' | m3 conversations conversation_start --json-file - 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "m3 setup # finds your agents and connects them to m3",
-            "actually_needed": "m3 setup is an interactive wizard prompting 'Keep the current settings and just update this install? [Y/n]' and waits for TTY input; with stdin closed it hung until killed after 60s (exit 137). Use non-interactive flags (see m3 setup --help, e.g. --agents/--no-cognitive-loop) or m3 doctor for a non…",
-            "kind": "note"
+            "readme_said": "local BGE-M3 embedder provides semantic search",
+            "actually_needed": "m3 works via keyword fallback with EmbedFallbackError/EmbedPrimaryError warnings; no embedder setup needed for basic write/search",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "m3 doctor # checks that everything is working",
-            "actually_needed": "m3 doctor exits 1 and reports 'm3 DEGRADED' with 'embedding: broken' and 'embed-server: binary not located' when the optional embedder is not installed; storage and CLI still work via keyword search.",
-            "kind": "note"
+            "readme_said": "m3 doctor checks that everything is working",
+            "actually_needed": "m3 doctor exits 1 reporting warnings (no embedder, no agents, no LLM) but store and CLI remain usable",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "m3 CLI memory_write/memory_search with default embedding",
-            "actually_needed": "m3 memory memory_write required --no-embed --yes to store without the embedder server and to confirm the mutating tool; m3 memory memory_search then falls back to keyword search with EmbedFallbackError warnings on stderr but exit 0.",
+            "readme_said": "chat-log capture keeps conversations and finds them again",
+            "actually_needed": "conversation capture/recall uses m3 conversations conversation_start/conversation_append/conversation_search; m3 chatlog only has init/status/doctor/hook-path",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show m3 DEGRADED doctor output, successful Created memory write, and correct m3-memory version.",
+          "observed": "All three checks show their expected signals: doctor reports m3 server found, memory_write reports Created with an ID, and --version prints the version.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-m3-memory-20261031-023427-2831/report.json",
+          "trace_path": "runs/verify/verify-m3-memory-20261031-035820-5f24/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-m3-memory-20261031-023427-2831/check-1-cmd4.judged.png",
-            "runs/verify/verify-m3-memory-20261031-023427-2831/check-2-cmd11.judged.png",
-            "runs/verify/verify-m3-memory-20261031-023427-2831/check-3-cmd2.judged.png"
+            "runs/verify/verify-m3-memory-20261031-035820-5f24/check-1-cmd3.judged.png",
+            "runs/verify/verify-m3-memory-20261031-035820-5f24/check-2-cmd4.judged.png",
+            "runs/verify/verify-m3-memory-20261031-035820-5f24/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.090751
+        "cost_usd": 0.111883,
+        "features": [
+          {
+            "feature": "remember projects and preferences across sessions",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "find memories without exact wording",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "share one memory across AI assistants",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "capture and recall conversation history",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 91.3,
       "confidence": 0.9,
@@ -606,8 +671,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T02:17:13+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Your assistants remember your projects, preferences, decisions and past work",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:23+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "finds a memory even when you don't recall the exact words",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:23+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "shares one memory across Claude Code, Cursor, Gemini CLI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:23+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "keeps your conversations and finds them again",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:23+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:46:57+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

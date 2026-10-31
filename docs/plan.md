@@ -48,7 +48,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 10. 每天結束時，把當日花費寫進狀態紀錄（數字由帳本產生；只記花費，不記 credits 餘額）。
 11. **上限是安全網，不是要省到最後。** Meta 的 Spend Limit 只寄信、不會擋，所以由程式擋：管線 $120＋Windows $5＋Worker 評審期 $15＋評測部署 $10＝$150，最壞情況剛好用完 credits，預估實際花費約 $120（10/31 調整）。各家額度照用途分配，**產品裡每個決定都用 Meta 模型**（評分 25%，第一輪必查；arch D.3、I #19）：
     - **Meta**：用在品質與規模。正式資料用 `muse-spark-1.3`（contributor 只用在開發）；驗證 agent 用 medium；修錯時可用 `web_search`；困難案例用 `muse-wonder-1.0` 重試；驗證目標從 50 筆提高到 100 筆以上。**11/1 檢查**：若預估到交件的 Meta 花費 <$60，就再擴大發現與驗證規模。
-    - **Baseten（Muse Spark Open，開放權重）**：初篩；MCP 擴充的驗證 agent（10/31 比對 20 筆：通過率是 1.3 的 0.92、多通過的 2 筆人工確認屬實；抽取的主要欄位只有 62–71% 一致，沒達 90%，所以抽取、判讀、評分、Worker 仍用 `muse-spark-1.3`）；評測的第三評分者。每筆紀錄記下各段用的模型。帳本上限總額 $80、每日 $25；帳號綁念誠的信用卡，大量跑前先看後台餘額。
+    - **Baseten（Muse Spark Open，開放權重）**：初篩；MCP 擴充的驗證 agent（10/31 比對 20 筆：通過率是 1.3 的 0.92、多通過的 2 筆人工確認屬實；抽取的主要欄位只有 62–71% 一致，沒達 90%，所以抽取、判讀、評分、Worker 仍用 `muse-spark-1.3`）；評測的第三評分者。每筆紀錄記下各段用的模型。帳本上限總額 $80、每日 $25；key 由比賽提供，超出配額不會另外收費（念誠 10/31），照常記帳。
     - **Modal**：更多沙盒驗證；本地 AI 工具必須用 GPU 時開 GPU 沙盒（T4 約 $0.59／小時），讓更多工具達到「推論驗證」等級。
     - **Anthropic**（11/27 到期）：只用在評測（受測 agent、補充重跑、獨立評分）與開發工具，不放進產品的發現、抽取、驗證、配對流程。
 
@@ -112,7 +112,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 - [x] P3.6 `ModalBox`（需 P0.6）：`runtime="gvisor"`、資源上限、先開網路安裝再收緊、預建 image、`--limits-test`。（`--limits-test` 12／12；沙盒 3–4 秒啟動；記憶體超限時 Modal 會把整個沙盒停掉）
 - [x] P3.7 批次：`pickfit verify --batch N --concurrency 5`，demo 類別優先。（10 筆測試候選：第一輪 7／10，修好 3 個問題後 10／10 通過並重播；每筆中位數 91 秒、Meta 約 $0.08）
 - [x] P3.8 挑 10 筆 demo 候選（Mac 能裝、免費、能離線）。（10/29：見 `docs/demo-candidates.md`。39 筆中 11 筆不能在 Linux 沙盒跑（多是圖形介面 app），其餘 28 筆有 25 筆通過並重播、寫回資料；10 筆候選全部通過並重播。Mac 上的安裝還沒實測（P6.4）；10 筆中原本只有 1 筆本地 AI 工具（localm）；同日補本地 AI 後，第 10 筆改為 cluaiz（斷網時 `/health` 有回應，官方安裝支援 macOS arm64），另列 8 筆本地 AI 備選。schema 補上「斷網是否通過」與測試前的準備指令）
-- [ ] P3.9 Show HN 管道（計畫內，10/30 最後做，1.5 h）：沿用 `spikes/ch_comm_hn_showhn.py`；落後就第一個砍（arch H.5 #2）。
+- [ ] P3.9 Show HN 管道（計畫內，10/30 最後做，1.5 h）：沿用 `spikes/ch_comm_hn_showhn.py`；落後就第一個砍（arch H.5 #2）。（10/31 念誠決定要做：找剛發表的冷門工具，符合 pickfit 的宗旨。交給新 session，Meta 上限 $3、Baseten $10）
 
 **10/30 完成標準**：一個「照 README 會失敗」的工具，由 Muse Spark 自己讀錯誤、補步驟、呼叫 `finish`，trace 看得到推理摘要；≥30 份 profile 已 commit。修不好 → 10/31 上午繼續修，細路徑 MCP 延到 11/1；用規則表兜底，只做到「安裝驗證」等級。
 **G2（10/31 晚上，硬關卡）**：10 筆 demo 候選中 ≥5 筆在 Modal 通過並重播成功。沒過 → 停掉所有計畫內與超前項目，11/1 上午只修驗證；Modal 不能用 → 換 E2B（約 2 h）。**10/29 提前達成：10／10。**
@@ -192,7 +192,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | 期限 | 項目 |
 |---|---|
 | **10/28 今天** | ✅ 評測凍結、Modal 上限、Baseten 申請、Meta credits 表單與通知都已完成。每天能投入幾小時還沒定，暫照 arch H.1 的 10.5 h（少於 9 h → 先砍 Show HN 與 run page） |
-| 10/31 | 要不要開 Workers Paid（每月 $5）；demo 用的 agent（建議 Claude Code，搭配分割畫面秀 Meta trace） |
+| 10/31 | ✅ 開 Workers Paid（每月 $5；念誠自己在 Cloudflare 後台開）；demo 用的 agent 是 Claude 桌面 app（念誠 10/31） |
 | 11/1 | demo 主案與備案；第 5 幕提交哪個第三方 repo |
 | 11/2 | 到 Discord 問：開放權重獎怎麼標、Community Vote 看哪個頁面；評審期的提交怎麼處理 |
 | 選做 | 寄信給 ecosyste.ms 取得同意；買 `pickfit.dev` |
@@ -257,3 +257,9 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | 10/31 13:32 | P5.2、P5.3 | 提交與回報閉環併入 main（merge `29cf450`）：`pickfit watch` 每 60 秒讀 D1 的提交、一個 repo 一筆紀錄、狀態照實際發生的事走、用線上 Worker 的 `data_sha256` 判斷是否已上線；MCP server 與 GUI app 的提交會用對應的沙盒。`pickfit reverify`：回報只決定「要不要重驗」，回報文字完全不進模型；改寫的步驟只有在每個套件名與網址都出現在 README、pickfit 先前的步驟或 repo 裡時才寫回，否則標 `held` 等人看；`--reverify` 不能和 `--publish` 一起用。新增 darnlink（function 等級、已重播）。上一輪審查的 7 點都修好；已知限制 9 點記在交接筆記（例如 Worker 的 `next` 文字、reverify 只用 Linux 沙盒）。**線上實測還沒跑**：今日 Meta 已到上限，11/1 凌晨從 main 提交 `Alberto-Codes/docvet` 跑一次 | — |
 | 10/31 13:32 | P5.7 | 產品網頁併入 main（merge `490f091`）並上線：`https://pickfit-mcp.ncchen99.workers.dev/` 用一句話搜尋，背後是和 MCP 同一個 `findSoftware`、`installGuide`；伺服器端產生、所有值都 escape、nonce CSP；顯示 MCP 握手與客戶端設定、GUI 啟動證據、rules 路徑的配合度標籤，知名工具標「not verified by pickfit」。網頁搜尋在 Worker 每日 $3 中用到 $2 就不再呼叫 Meta、每次先預留兩次呼叫的花費、每位訪客每分鐘 6 次；評測部署關掉網頁。779 個 Python、183 個 Worker 測試通過；Worker 重新發布（版本 `07125622`，504 筆），rate-limit binding 被接受；線上一次搜尋 14 秒、選出 3 個 MCP server。已知：寬泛的中文需求（322 筆通過）一次配對超過 25 秒逾時、退回規則排序 | Worker 約 $0.3（含分支實測 $0.22） |
 | 10/31 13:52 | P2–P3 | MCP 擴充的模型與上限（merge `1fa3a68`）：念誠要求「介面相容就用 Muse Spark Open」。MCP session 比對 20 筆（Baseten $2.27、Meta $0.075）：驗證 agent 通過 11／20（1.3 是 12／20，比值 0.92，過 0.85 門檻；Spark Open 多通過的 ken、vibes-plug 人工確認屬實，錯誤主張都被守門擋下）；抽取主要欄位只有 62–71% 一致（第一輪 20 筆有 11 筆違反列舉值，Baseten 不強制 json_schema），沒過 90%。所以這批走混合：抽取、判讀、評分用 `muse-spark-1.3`（約 $4.8），驗證 agent 用 Spark Open（約 $7）。功能覆蓋停在 $110，$115 沒有餘裕，從 Worker 移 $5：管線總額 $115 → $120、Worker 評審期 $20 → $15，最壞情況合計仍 $150。779 個 Python、183 個 Worker 測試通過；Worker 重新發布（版本 `23c1b8eb`）。另：更深的 MCP 發現（$0）多找到 750 個新 repo，去掉一個 repo 農場後 520 筆待初篩 | Baseten $2.27（比對）、Meta $0.075 |
+| 10/31 16:35 | P6.1 | 評測準備併入 main（merge `d7b5bef`，只動 `eval/`），**仍未跑任何一題**：20 題的 L2 測試資料（各題判定方式統一成 `_shared/` 的共用工具，產生器重跑與 commit 的檔案一致）；執行器支援 9.2（Haiku 對照組、B 題組、Muse Spark 第三評分者）；D5 擴充到 GUI 證據、MCP 握手、功能覆蓋與程式寫的 how_we_know；盲評與去識別工具（seed 20261102）。**9.3 事先登記**（開跑前 commit）：三個 L2 映像從同一個固定 digest 的 `ubuntu:24.04` 建出（q03 用 base、q10 用 base-git，其他用 dev）；擋外連用 user＋network namespace，連 DNS 一起擋，正反對照都通過；35 個固定版本工具 sha256 與官方 0 不一致；q19 測試模型改 `qwen2.5:7b`（llama3.2:3b 0/3），q18–q20 用 8 vCPU（q19 長提示 348 秒，4 vCPU 要 758 秒）；Ollama 的 local-only 只套在評分者啟動的伺服器；q11 在 24 GiB Mac 以實測峰值判定；改動行數一行算一次；第二評分者 `claude-opus-5-5`（與受測 agent 同模型，已揭露）；Muse Spark Open 跑第二批 MCP 驗證 agent 的揭露。q15 錄音（LibriVox〈一件小事〉，公有領域，念誠同意）已下載核對；語音只有 41.6／55 秒，念誠決定縮短同一錄音裡超過 0.5 秒的停頓，參考逐字稿待念誠校對後才 commit。779 個 Python、71 個執行器、25 個共用測試通過 | Modal 約 $1.9、Anthropic $0.007、Baseten $0.004 |
+| 10/31 20:03 | — | 念誠決定：開 Workers Paid（每月 $5，他自己在 Cloudflare 後台開）；demo 用 Claude 桌面 app；P3.9 Show HN 管道要做。新開三個 session（各自的 worktree、不讀 `eval/`、合併前回報、11/1 18:00 前）：Show HN 管道（Meta 上限 $3、Baseten $10）；gVisor 沙盒斷網時仍查得到 DNS 的修正（VM 版已用 nftables 擋）；Mac 驗證器改由主機狀態判斷 VM 失敗，不再看 guest 的 stderr 文字（Windows 審查找到的同類問題）。另有工作標籤 `jobs`（給候選卡篩選與 rules 排序用，新測試集在產生 jobs 前 commit）在量，Meta 部分等 11/1 00:00 每日上限重置 | — |
+| 10/31 20:41 | P6.1 | 評測準備 q15 併入 main（merge `cbc94f6`，只動 `eval/`），**仍未跑任何一題**：念誠核准的 LibriVox〈一件小事〉錄音，超過 0.5 秒的停頓縮成 0.3 秒，60 秒片段裡語音 46.66 秒（55 秒的目標沒達到，照實記為未通過）。片段從「這是民國六年的冬天」開始：原本從時間推的「從故事第一句開始」被念誠聽音檔推翻，各處已更正、量測數字沒改。參考逐字稿由念誠聽寫校正，到「……要自己惹出是非」為止；簡繁寫法不同的字剛好 60（門檻 ≥60，沒有餘裕）。重建逐位元相同。779 個 Python、q15 25 個、執行器 71 個測試通過（執行器要 `--with pyyaml`） | — |
+| 11/1 00:48 | P3 | Windows 驗證器併入 main（merge `cdd23ed`）：VirtualBox 的 Windows 11 guest 放在 Alpine router VM 後面，安裝與測試用標準使用者 sbx；主機端鎖、確認 VM 是自己的才動、主機通道設定少一項就拒絕、權限只允許標準使用者那 5 種、密碼掃描有對照組。兩輪審查找到的問題都已修好。9 筆紀錄都來自 base `16ea69df29ff`：8 筆到 function，aria-code 記為 install，labelize 接受官方 release 執行檔。sbx 能開 `\\.\VBoxGuest`（筆記的風險 a）在現在的架構關不掉，已寫進筆記。**還沒寫回 `data/`**，先由 Windows session 提方案。865 個 Python、183 個 Worker、執行器 71 個測試通過；沒動 Worker，不用重新發布 | — |
+| 11/1 01:06 | P3 | Mac 驗證器修正併入 main（merge `05effe2`，念誠同意）：VM 是否失效改看主機狀態（`tart run` 是否還在、agent 探測），不再比對 guest 的 stderr 文字；`read_file` 卡住會變成 box 錯誤；mDNS 探測失敗就擋下。872 個 Python 測試通過 | — |
+| 11/1 01:06 | P3 | 功能覆蓋併入 main（merge `e8d8803`，念誠 10/31 同意跑完就併），Worker 重新發布（版本 `2e750b29`）：通過驗證的 run 記下 README 宣稱的主要功能哪些實際測過（要有通過的 smoke test，且另一個模型看輸出確認在做那件事；那個模型呼叫失敗就一個都不算），沒測的附原因；`find_software` 與 `get_install_guide` 都帶 `features`，分數公式不用它。329 筆通過驗證的紀錄中 237 筆有覆蓋：882 個功能測過 232 個、28 個測試失敗（26 個由沙盒限制解釋，open-self 與 supercli 指向工具本身）。重新驗證讓 14 筆等級上升、沒有下降；寶藏 3 進 3 出（新 run 的沙盒分不同）。跑到共用帳本 $110 停下（$109.76／$120），75 筆沒跑到。918 個 Python、189 個 Worker、執行器 71 個測試通過；上線後 `find_software` 兩題都走模型、約 10 秒 | Meta $2.20（今晚 20 筆） |

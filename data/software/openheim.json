@@ -28,6 +28,12 @@
     "delegate tasks to subagents"
   ],
   "alternatives_to": [],
+  "features": [
+    "run iterative agent loop with tool execution",
+    "use multiple LLM providers",
+    "run as TUI, CLI, ACP agent or server",
+    "connect external MCP servers and expose tools"
+  ],
   "why_worth_it": null,
   "homepage": "https://openheim.io",
   "repo": {
@@ -54,18 +60,22 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-openheim-20261029-030311-aac5",
+      "run_id": "verify-openheim-20261031-023830-93bf",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fSL https://github.com/weirdstuff-dev/openheim/releases/download/v0.17.1/openheim-v0.17.1-x86_64-unknown-linux-gnu.tar.gz -o /tmp/openheim.tar.gz && mkdir -p /tmp/openheim-rel ~/.local/bin && tar -xzf /tmp/openheim.tar.gz -C /tmp/openheim-rel && cp /tmp/openheim-rel/openheim ~/.local/bin/openheim && chmod +x ~/.local/bin/openheim && ls -l ~/.local/bin/openheim",
-          "purpose": "Download prebuilt Linux x86_64 release and install to ~/.local/bin"
+          "command": "curl -fSL https://github.com/weirdstuff-dev/openheim/releases/download/v0.17.1/openheim-v0.17.1-x86_64-unknown-linux-gnu.tar.gz -o /tmp/openheim.tar.gz && ls -l /tmp/openheim.tar.gz",
+          "purpose": "Download prebuilt Linux binary tarball"
+        },
+        {
+          "command": "mkdir -p /tmp/openheim-ex && tar -xzf /tmp/openheim.tar.gz -C /tmp/openheim-ex && ls -R /tmp/openheim-ex && mkdir -p ~/.local/bin && cp /tmp/openheim-ex/openheim ~/.local/bin/openheim && chmod +x ~/.local/bin/openheim && ls -l ~/.local/bin/openheim",
+          "purpose": "Extract tarball and install binary to PATH"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "openheim --help",
-        "expected_signal": "Usage: openheim [OPTIONS] [COMMAND]"
+        "expected_signal": "Usage: openheim"
       },
       "first_task": "openheim init"
     },
@@ -86,10 +96,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T03:03:58.570501+08:00",
+    "checked_at": "2026-10-31T02:39:39.497760+08:00",
     "runs": [
       {
-        "id": "verify-openheim-20261029-030311-aac5",
+        "id": "verify-openheim-20261031-023830-93bf",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -97,20 +107,24 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T03:03:58.570501+08:00",
+        "checked_at": "2026-10-31T02:39:39.497760+08:00",
         "tool_version": null,
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fSL https://github.com/weirdstuff-dev/openheim/releases/download/v0.17.1/openheim-v0.17.1-x86_64-unknown-linux-gnu.tar.gz -o /tmp/openheim.tar.gz && mkdir -p /tmp/openheim-rel ~/.local/bin && tar -xzf /tmp/openheim.tar.gz -C /tmp/openheim-rel && cp /tmp/openheim-rel/openheim ~/.local/bin/openheim && chmod +x ~/.local/bin/openheim && ls -l ~/.local/bin/openheim",
-            "purpose": "Download prebuilt Linux x86_64 release and install to ~/.local/bin"
+            "command": "curl -fSL https://github.com/weirdstuff-dev/openheim/releases/download/v0.17.1/openheim-v0.17.1-x86_64-unknown-linux-gnu.tar.gz -o /tmp/openheim.tar.gz && ls -l /tmp/openheim.tar.gz",
+            "purpose": "Download prebuilt Linux binary tarball"
+          },
+          {
+            "command": "mkdir -p /tmp/openheim-ex && tar -xzf /tmp/openheim.tar.gz -C /tmp/openheim-ex && ls -R /tmp/openheim-ex && mkdir -p ~/.local/bin && cp /tmp/openheim-ex/openheim ~/.local/bin/openheim && chmod +x ~/.local/bin/openheim && ls -l ~/.local/bin/openheim",
+            "purpose": "Extract tarball and install binary to PATH"
           }
         ],
         "smoke_tests": [
           {
             "command": "openheim --help",
-            "expected_signal": "Usage: openheim [OPTIONS] [COMMAND]",
+            "expected_signal": "Usage: openheim",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "Usage: openheim [OPTIONS] [COMMAND]",
@@ -119,7 +133,7 @@
           },
           {
             "command": "openheim init",
-            "expected_signal": "Config file created at /home/sbx/.openheim/config.toml",
+            "expected_signal": "Config file created at",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "Config file created at /home/sbx/.openheim/config.toml",
@@ -129,37 +143,78 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "cargo install openheim (requires Rust 1.91+)",
-            "actually_needed": "Download prebuilt x86_64-unknown-linux-gnu tarball from GitHub releases v0.17.1 and copy openheim binary to ~/.local/bin; no Rust toolchain needed"
+            "readme_said": "cargo install openheim",
+            "actually_needed": "download prebuilt openheim-v0.17.1-x86_64-unknown-linux-gnu.tar.gz from GitHub releases and copy openheim binary to ~/.local/bin",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "Standard --version flag assumed available",
-            "actually_needed": "openheim supports --help but not --version (exits 2 with 'unexpected argument --version'); use openheim --help"
+            "readme_said": "--version or --help works (assumed --version exists)",
+            "actually_needed": "use openheim --help; openheim --version exits 2 with unexpected argument error",
+            "kind": "note"
+          },
+          {
+            "readme_said": "cargo build from source is auditable Rust code",
+            "actually_needed": "installed file is a precompiled binary tarball whose contents cannot be read/audited",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show init creating the config file and --help printing usage with commands.",
+          "observed": "Both screenshots show successful init config creation and help usage output with no errors.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-openheim-20261029-030311-aac5/report.json",
+          "trace_path": "runs/verify/verify-openheim-20261031-023830-93bf/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-openheim-20261029-030311-aac5/check-1-cmd6.judged.png",
-            "runs/verify/verify-openheim-20261029-030311-aac5/check-2-cmd5.judged.png"
+            "runs/verify/verify-openheim-20261031-023830-93bf/check-1-cmd7.judged.png",
+            "runs/verify/verify-openheim-20261031-023830-93bf/check-2-cmd6.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.048216
+        "cost_usd": 0.087122,
+        "features": [
+          {
+            "feature": "run iterative agent loop with tool execution",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs LLM API key to run agent loop"
+          },
+          {
+            "feature": "use multiple LLM providers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          },
+          {
+            "feature": "run as TUI, CLI, ACP agent or server",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          },
+          {
+            "feature": "connect external MCP servers and expose tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "no MCP server configured; connecting one needs outside server"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 79.4,
       "confidence": 0.9,
@@ -466,8 +521,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-29T02:40:29+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Openheim runs an iterative agent loop — it calls your LLM, executes tools on its behalf, feeds results back, and repeats until the task is done.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:58+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Multi-provider** — OpenAI, Anthropic Claude, Google Gemini, and any OpenAI-compatible endpoint (Ollama, vLLM, LM Studio, etc.)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:58+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "It works as an interactive terminal UI, a headless CLI, an ACP stdio agent (for Zed, Claude Code, and other ACP clients), or a self-hosted ACP-over-WebSocket server.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:58+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "connect external MCP servers (stdio or Streamable HTTP)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:58+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

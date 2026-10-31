@@ -26,6 +26,12 @@
     "see which checks ran against current code"
   ],
   "alternatives_to": [],
+  "features": [
+    "Read repositories and build task context",
+    "Change code with bounded edits",
+    "Inspect changes and assess impact",
+    "Run checks and verify projects"
+  ],
   "why_worth_it": null,
   "homepage": "https://wcode.francis.run",
   "repo": {
@@ -64,16 +70,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-wcode-20261031-012049-3a94",
+      "run_id": "verify-wcode-20261031-024743-dd20",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh -o /tmp/wcode-install.sh && ls -l /tmp/wcode-install.sh && wc -c /tmp/wcode-install.sh",
-          "purpose": "Download install script for reading"
+          "command": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh -o /tmp/wcode-install.sh && wc -c /tmp/wcode-install.sh && head -c 2000 /tmp/wcode-install.sh",
+          "purpose": "download install script for reading"
         },
         {
           "command": "sh /tmp/wcode-install.sh",
-          "purpose": "Install wcode via install script"
+          "purpose": "install wcode binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -113,10 +119,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:21:37.025757+08:00",
+    "checked_at": "2026-10-31T02:49:37.154284+08:00",
     "runs": [
       {
-        "id": "verify-wcode-20261031-012049-3a94",
+        "id": "verify-wcode-20261031-024743-dd20",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -124,18 +130,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:21:37.025757+08:00",
+        "checked_at": "2026-10-31T02:49:37.154284+08:00",
         "tool_version": "0.9.1",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh -o /tmp/wcode-install.sh && ls -l /tmp/wcode-install.sh && wc -c /tmp/wcode-install.sh",
-            "purpose": "Download install script for reading"
+            "command": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh -o /tmp/wcode-install.sh && wc -c /tmp/wcode-install.sh && head -c 2000 /tmp/wcode-install.sh",
+            "purpose": "download install script for reading"
           },
           {
             "command": "sh /tmp/wcode-install.sh",
-            "purpose": "Install wcode via install script"
+            "purpose": "install wcode binary to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -158,34 +164,76 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call workspace_info --args '{}' -- wcode mcp-stdio",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call agent_context --args '{\"query\":\"how is this repo organized\"}' -- wcode mcp-stdio",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=workspace_info content=text text_chars=16660",
+            "observed_excerpt": "tools/call: ok tool=agent_context content=text text_chars=6071",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call create_file --args '{\"path\":\"wcode-smoke-hello.txt\",\"content\":\"hello wcode\\n\"}' -- wcode mcp-stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=create_file content=text text_chars=173",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call review_changes --args '{}' -- wcode mcp-stdio",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"review_changes\", \"count\": 85, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"wcode\", \"mcp-stdio\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"wcode\", \"tools\": [\"workspace_info\", \"design_status\", \"acceptance_policy\", \"convention_statu…",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call impact_analysis --args '{}' -- wcode mcp-stdio",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"impact_analysis\", \"count\": 85, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"wcode\", \"mcp-stdio\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"wcode\", \"tools\": [\"workspace_info\", \"design_status\", \"acceptance_policy\", \"convention_stat…",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call verify_project --args '{}' -- wcode mcp-stdio",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"verify_project\", \"count\": 85, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"wcode\", \"mcp-stdio\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"wcode\", \"tools\": [\"workspace_info\", \"design_status\", \"acceptance_policy\", \"convention_statu…",
+            "setup": [],
+            "offline": null
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh | sh",
+            "actually_needed": "installer fetches prebuilt binary tarball plus SHA256SUMS, verifies checksum, then runs it; binary cannot be read before running",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 85 tools, successful workspace_info tool call, and wcode 0.9.1 version output.",
+          "observed": "Screenshots show MCP handshake with 85 tools, successful agent_context tool call, and version 0.9.1 output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-wcode-20261031-012049-3a94/report.json",
+          "trace_path": "runs/verify/verify-wcode-20261031-024743-dd20/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-wcode-20261031-012049-3a94/check-1-cmd4.judged.png",
-            "runs/verify/verify-wcode-20261031-012049-3a94/check-2-cmd5.judged.png",
-            "runs/verify/verify-wcode-20261031-012049-3a94/check-3-cmd3.judged.png"
+            "runs/verify/verify-wcode-20261031-024743-dd20/check-1-cmd4.judged.png",
+            "runs/verify/verify-wcode-20261031-024743-dd20/check-2-cmd11.judged.png",
+            "runs/verify/verify-wcode-20261031-024743-dd20/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.043742,
+        "cost_usd": 0.115277,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -284,9 +332,48 @@
             "command_task"
           ],
           "tool_count": 85,
-          "called_tool": "workspace_info",
+          "called_tool": "agent_context",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Read repositories and build task context",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists tool names and transport info, not repository context."
+          },
+          {
+            "feature": "Change code with bounded edits",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists tool names and transport info, not a file-written result."
+          },
+          {
+            "feature": "Inspect changes and assess impact",
+            "status": "test_failed",
+            "smoke_tests": [
+              4,
+              5
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "review_changes and impact_analysis error in bare work dir with no git/project snapshot"
+          },
+          {
+            "feature": "Run checks and verify projects",
+            "status": "test_failed",
+            "smoke_tests": [
+              6
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "verify_project reports no verifiable project in bare work dir"
+          }
+        ]
       }
     ]
   },
@@ -303,7 +390,7 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 88.3,
       "confidence": 0.8,
@@ -624,8 +711,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:15:04+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**wcode helps coding assistants read repositories, change code and run checks.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:40+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Change** — mutate only inside the selected Workspace with bounded writes and SHA-guarded edits.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:40+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Inspect** — explain changed files and symbols, impacted components and requirements, precision, risk and missing coverage.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:40+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**Verify** — execute required deterministic checks and language-native providers; keep mapped, skipped, failed and unavailable distinct.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:40+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:18:42+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

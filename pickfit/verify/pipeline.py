@@ -3,9 +3,11 @@
 1. The agent installs and smoke-tests the tool in one box (network on).
 2. The command log decides the claimed level (verdict.py).
 3. If that level passed, a fresh box replays the steps online and the smoke
-   tests offline (replay.py).
+   tests offline, then reruns failed feature checks once (replay.py).
 4. If the replay passed, the screen judge reads its outputs (judge.py); a GUI
    launch's real screenshot goes to the GUI judge, and the worse verdict wins.
+   When the tool is seen working, the feature judge reads whether each checked
+   feature's output shows that feature working (feature_judge.py).
    A failed claim whose failing command is the tool's own, run after every
    install step succeeded, gets a fresh box that reruns the steps and that
    command, then probes the installed package's own structure (failure.py, no
@@ -30,6 +32,8 @@ from pickfit.meta import is_open_model, resolve_model
 from pickfit.schema import VerificationRun, is_passed
 from pickfit.verify.agent import DEFAULT_MODE, AgentLimits, HistoryMode, VerifyAgent, VerifyReport, new_run_id
 from pickfit.verify.box import Box, BoxError
+from pickfit.verify.feature_judge import judge_features
+from pickfit.verify.features import failed_ids, judge_items
 from pickfit.verify.failure import (
     FailureCheck,
     cited_workarounds,
@@ -94,13 +98,33 @@ def _start(box: Box) -> float:
     return round(time.monotonic() - began, 1)
 
 
-# The agent may run on Muse Spark Open (Baseten); the screenshot and output judges stay on muse-spark-1.3.
+# The agent may run on Muse Spark Open (Baseten); the output, screenshot and feature judges stay on
+# muse-spark-1.3.
 OPEN_JUDGE_MODEL = "prod"
 
 
 def judge_model_for(model: str | None) -> str | None:
     """The judges' model for an agent model: muse-spark-1.3 when the agent runs on Muse Spark Open."""
     return OPEN_JUDGE_MODEL if is_open_model(model) else model
+
+
+def _judge_features(task: VerifyTask, report: VerifyReport, replay: ReplayResult, evidence_dir: Path, *,
+                    model: str | None, run_id: str, limits: AgentLimits, log: Callable[[str], None],
+                    notes: list[str], **call_kwargs: Any) -> tuple[dict[str, tuple[str, str]] | None, float]:
+    """The feature judge's verdicts on the checked features, and its cost. A failed call confirms none."""
+    quotes = {str(f.value): f.quote or "" for f in task.extraction.features if f.value} if task.extraction else {}
+    items = judge_items(report.features, quotes, replay.checks)
+    if not items:
+        return None, 0.0
+    try:
+        judged = judge_features(_display_name(task), items, model=model, run_id=run_id, scope=f"verify:{task.slug}",
+                                scope_cap_usd=limits.scope_cap_usd, log=log, **call_kwargs)
+    except Exception as err:  # budget or API failure: no feature is confirmed
+        notes.append(f"feature judge failed: {type(err).__name__}: {err}")
+        log(f"  feature judge failed: {err}")
+        return {}, 0.0
+    _dump(evidence_dir / "feature_judge.json", judged.to_dict())
+    return judged.verdicts, judged.cost_usd
 
 
 def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = None,
@@ -139,6 +163,8 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
 
     replay: ReplayResult | None = None
     judge: JudgeResult | None = None
+    verdicts: dict[str, tuple[str, str]] | None = None  # the feature judge's, when it ran
+    feature_cost = 0.0
     confirm: FailureCheck | None = None
     notes: list[str] = []
     plan_failure = None
@@ -166,7 +192,7 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
         box_usd += confirm_box.usd_per_second() * phases["confirm_box_s"]
         _dump(evidence_dir / "confirm.json", {"plan": plan_failure.to_dict(), "result": confirm.to_dict()})
     if agent.verdict is not None and is_passed(agent.verdict.level):
-        plan = plan_from(agent.verdict, report.commands)
+        plan = plan_from(agent.verdict, report.commands, rerun_failed=failed_ids(report.features))
         replay_box = make_box(run_id, "replay")
         box_began = time.monotonic()
         try:
@@ -199,11 +225,17 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
             if judge is not None:
                 phases["judge"] = judge.latency_s
                 _dump(evidence_dir / "judge.json", judge.to_dict())
+            if judge is not None and judge.verdict == "working":
+                verdicts, feature_cost = _judge_features(task, report, replay, evidence_dir, model=judge_model,
+                                                         run_id=run_id, limits=limits, log=log, notes=notes,
+                                                         **call_kwargs)
 
+    judge_cost = (judge.cost_usd if judge else 0.0) + feature_cost
     run, build_notes = build_run(report, replay, judge, evidence_dir=evidence_dir,
                                  screenshots=[Path(p) for p in (judge.annotated or judge.screenshots)] if judge else [],
-                                 judge_cost_usd=judge.cost_usd if judge else 0.0, confirm=confirm,
-                                 gui_app=_kind(task) == "desktop_app", mcp=is_mcp(task))
+                                 judge_cost_usd=judge_cost, confirm=confirm,
+                                 gui_app=_kind(task) == "desktop_app", mcp=is_mcp(task),
+                                 feature_verdicts=verdicts)
     notes += build_notes
     save_run(run, evidence_dir)
     outcome = Outcome(slug=task.slug, run_id=run_id, run=run, notes=notes, evidence_dir=evidence_dir,

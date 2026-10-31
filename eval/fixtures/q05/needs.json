@@ -1,0 +1,34 @@
+[
+  {
+    "item": "[L2] Frozen fixtures: a text-based PDF (CJK font embedded) ... (fixture.pdf)",
+    "why": "Settled by 9.3 B.4 (念誠, 2026-10-31: the first candidate): Noto Sans TC from google/fonts at commit 3be1884c48c3 (OFL-1.1). The repository has only the variable font, whose default instance is Thin, so static Regular (400) and Bold (700) instances are cut with fontTools 4.68.0 (build_pdf.sh). Hashes in eval/fixtures/PINS.md; fixture.pdf is committed (sha256 19b82c3a...913de), rebuilt twice identically.",
+    "candidates": [],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "[L2] Egress check passes during the conversions; With egress blocked ... (all q05 L2 checks)",
+    "why": "The check scripts need python3 and the egress check needs strace; ubuntu:24.04 ships neither. Both are grader tools, not part of any answer. Installing them changes the image the answers run in, so the choice must be the same for both groups and recorded.",
+    "candidates": [
+      {
+        "source": "Ubuntu 24.04 (noble) archive: apt-get install -y python3 strace",
+        "license": "python3: PSF License; strace: LGPL-2.1-or-later",
+        "size": "a few tens of MB installed",
+        "pin": "Bake them into the grading image (dev image + python3 + strace) before any answer runs; record `dpkg-query -W python3 strace` and the image digest in calibration.md. Alternative: install them only after the answer's install steps finished (then L2-1 runs on the untouched dev image); pick one and use it for both groups."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "[L2] The install steps succeed verbatim in the dev image (x86_64, CPU only, 4 vCPU and 16 GB)",
+    "why": "The dev image is the same image family as the product's sandbox verification (eval/README.md section 5); its exact digest has to be fixed and recorded before the first run so both groups use the same one.",
+    "candidates": [
+      {
+        "source": "The Modal Sandbox image built on ubuntu:24.04 that the product's sandbox verification uses",
+        "license": "Ubuntu image: various free licences",
+        "size": "as built",
+        "pin": "Record the image digest, Modal sandbox settings (cpu=4, memory=16384 MiB, no GPU) and region in calibration.md."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  }
+]

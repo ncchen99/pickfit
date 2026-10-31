@@ -29,6 +29,12 @@
     "browse folders and notes as a live map"
   ],
   "alternatives_to": [],
+  "features": [
+    "file documents into Markdown wiki",
+    "answer questions with citations",
+    "import text, PDF and Office files",
+    "serve as long-term memory for MCP clients"
+  ],
   "why_worth_it": null,
   "homepage": "https://pypi.org/project/llmwiki2/",
   "repo": {
@@ -55,20 +61,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-llm-wiki-v2-20261031-002523-d33a",
+      "run_id": "verify-llm-wiki-v2-20261031-040328-5e17",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install llmwiki2",
-          "purpose": "Install llmwiki2 with uv tool install"
+          "command": "uv tool install llmwiki2 2>&1",
+          "purpose": "Install llmwiki2 with uv tool"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "llmwiki2 --help",
+        "command": "llmwiki2 --help 2>&1",
         "expected_signal": "LLM wiki on the Open Knowledge Format"
       },
-      "first_task": "llmwiki2 --bundle ./wiki check"
+      "first_task": "llmwiki2 --bundle ./wiki check 2>&1"
     },
     "windows": null
   },
@@ -87,10 +93,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:26:43.132832+08:00",
+    "checked_at": "2026-10-31T04:04:26.468645+08:00",
     "runs": [
       {
-        "id": "verify-llm-wiki-v2-20261031-002523-d33a",
+        "id": "verify-llm-wiki-v2-20261031-040328-5e17",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -98,19 +104,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:26:43.132832+08:00",
+        "checked_at": "2026-10-31T04:04:26.468645+08:00",
         "tool_version": "0.7.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install llmwiki2",
-            "purpose": "Install llmwiki2 with uv tool install"
+            "command": "uv tool install llmwiki2 2>&1",
+            "purpose": "Install llmwiki2 with uv tool"
           }
         ],
         "smoke_tests": [
           {
-            "command": "llmwiki2 --help",
+            "command": "llmwiki2 --help 2>&1",
             "expected_signal": "LLM wiki on the Open Knowledge Format",
             "exit_code": 0,
             "passed": true,
@@ -119,14 +125,14 @@
             "offline": true
           },
           {
-            "command": "llmwiki2 --bundle ./wiki check",
+            "command": "llmwiki2 --bundle ./wiki check 2>&1",
             "expected_signal": "0 problem(s)",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "0 problem(s)",
             "setup": [
               {
-                "command": "llmwiki2 --bundle ./wiki init && llmwiki2 --bundle ./wiki check",
+                "command": "rm -rf ./wiki ~/llm-wiki-demo && llmwiki2 --bundle ./wiki init 2>&1 && echo \"---INIT DONE---\" && ls -R ./wiki 2>&1",
                 "background": false,
                 "port": null
               }
@@ -134,72 +140,85 @@
             "offline": true
           },
           {
-            "command": "curl -s http://127.0.0.1:8001/health",
+            "command": "curl -s http://127.0.0.1:8000/health 2>&1; echo; curl -s http://127.0.0.1:8000/usage 2>&1; echo; curl -s http://127.0.0.1:8000/tree 2>&1",
             "expected_signal": "\"status\":\"ok\"",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "{\"status\":\"ok\",\"mode\":\"crow\",\"llm\":\"google/gemini-3.8-flash\",\"classifier\":\"typesafe/jev-1.13\",\"concurrency\":4}",
             "setup": [
               {
-                "command": "llmwiki2 --bundle ./wiki init && llmwiki2 --bundle ./wiki check",
+                "command": "rm -rf ./wiki ~/llm-wiki-demo && llmwiki2 --bundle ./wiki init 2>&1 && echo \"---INIT DONE---\" && ls -R ./wiki 2>&1",
                 "background": false,
                 "port": null
               },
               {
-                "command": "llmwiki2 --bundle ./wiki serve --port 8001",
+                "command": "llmwiki2 --bundle ./wiki serve",
                 "background": true,
-                "port": 8001
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "curl -s http://127.0.0.1:8002/health",
-            "expected_signal": "\"status\":\"ok\"",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "{\"status\":\"ok\",\"mode\":\"crow\",\"llm\":\"google/gemini-3.8-flash\",\"classifier\":\"typesafe/jev-1.13\",\"concurrency\":4}",
-            "setup": [
-              {
-                "command": "llmwiki2 demo --port 8002",
-                "background": true,
-                "port": 8002
+                "port": 8000
               }
             ],
             "offline": true
           }
         ],
-        "pitfalls": [
-          {
-            "readme_said": "Generic --version check pattern",
-            "actually_needed": "Use llmwiki2 --help; --version exits 2 with unrecognized arguments",
-            "kind": "note"
-          }
-        ],
+        "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show check reporting 0 problems, health returning status ok, and help displaying the LLM wiki description.",
+          "observed": "Screenshots show the help tagline, 0 problem(s) from check, and ok status from the API.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-llm-wiki-v2-20261031-002523-d33a/report.json",
+          "trace_path": "runs/verify/verify-llm-wiki-v2-20261031-040328-5e17/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-llm-wiki-v2-20261031-002523-d33a/check-1-cmd10.judged.png",
-            "runs/verify/verify-llm-wiki-v2-20261031-002523-d33a/check-2-cmd11.judged.png",
-            "runs/verify/verify-llm-wiki-v2-20261031-002523-d33a/check-3-cmd3.judged.png"
+            "runs/verify/verify-llm-wiki-v2-20261031-040328-5e17/check-1-cmd3.judged.png",
+            "runs/verify/verify-llm-wiki-v2-20261031-040328-5e17/check-2-cmd5.judged.png",
+            "runs/verify/verify-llm-wiki-v2-20261031-040328-5e17/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.08332
+        "cost_usd": 0.06393,
+        "features": [
+          {
+            "feature": "file documents into Markdown wiki",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "ingest routes/summarizes via LLM, no key in box"
+          },
+          {
+            "feature": "answer questions with citations",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "ask answers via LLM, no key in box"
+          },
+          {
+            "feature": "import text, PDF and Office files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "ingest/upload filing needs LLM, no key in box"
+          },
+          {
+            "feature": "serve as long-term memory for MCP clients",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "MCP memory needs mcp extra and LLM key/client"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 84.1,
       "confidence": 0.9,
@@ -498,8 +517,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:14:28+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "It files them into a tidy wiki of Markdown notes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:00+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "answers your questions, citing the notes it used.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:00+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Drop text, Markdown, PDF, Word, PowerPoint, Excel or OpenDocument files anywhere on the page.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:00+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "The wiki can be the long-term memory of Claude Code, Codex or any MCP client",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:00+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

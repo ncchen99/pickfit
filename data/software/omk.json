@@ -31,6 +31,11 @@
   "alternatives_to": [
     "Claude Code"
   ],
+  "features": [
+    "switch models mid-session",
+    "complete goals only when check passes",
+    "read files, edit code, run commands"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -77,12 +82,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-omk-20261031-002536-a5d9",
+      "run_id": "verify-omk-20261031-034219-4861",
       "method": "npm",
       "steps": [
         {
-          "command": "node --version && npm --version && which bwrap; bwrap --version; echo \"---\"; npm install -g open-multi-agent-kit --ignore-scripts",
-          "purpose": "Install OMK via npm global per README"
+          "command": "npm install -g open-multi-agent-kit --ignore-scripts",
+          "purpose": "Install OMK via npm candidate 1"
         }
       ],
       "manual_steps": [],
@@ -109,10 +114,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:26:46.822422+08:00",
+    "checked_at": "2026-10-31T03:43:41.391262+08:00",
     "runs": [
       {
-        "id": "verify-omk-20261031-002536-a5d9",
+        "id": "verify-omk-20261031-034219-4861",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -120,14 +125,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:26:46.822422+08:00",
+        "checked_at": "2026-10-31T03:43:41.391262+08:00",
         "tool_version": "1.5.10",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "node --version && npm --version && which bwrap; bwrap --version; echo \"---\"; npm install -g open-multi-agent-kit --ignore-scripts",
-            "purpose": "Install OMK via npm global per README"
+            "command": "npm install -g open-multi-agent-kit --ignore-scripts",
+            "purpose": "Install OMK via npm candidate 1"
           }
         ],
         "smoke_tests": [
@@ -141,17 +146,8 @@
             "offline": true
           },
           {
-            "command": "omk --help",
-            "expected_signal": "Built-in Tool Names:",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Built-in Tool Names:",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "omk doctor",
-            "expected_signal": "✓ runtime",
+            "expected_signal": "runtime OMK 1.5.10",
             "exit_code": 1,
             "passed": true,
             "observed_excerpt": "✓ runtime OMK 1.5.10 · node 22.23.4 · linux-x64",
@@ -161,34 +157,60 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "omk doctor checks the runtime, credentials, model and sandbox and prints the fix",
-            "actually_needed": "omk doctor exits 1 when checks fail (no credentials, no bwrap) while still printing all check results and fixes; this is its intended validator behavior, not an install failure",
-            "kind": "note"
+            "readme_said": "Built-in local bash requires bwrap plus unprivileged user namespaces on Linux (sudo apt install bubblewrap)",
+            "actually_needed": "Box has no bwrap and no root to install it; omk doctor reports bash sandbox blocked and suggests OMK_BASH_SANDBOX=audit workaround",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show omk doctor passing the runtime check with OMK 1.5.10 details and omk --version printing 1.5.10.",
+          "observed": "Screenshots show omk doctor reporting runtime OMK 1.5.10 with diagnostics and omk --version printing 1.5.10.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-omk-20261031-002536-a5d9/report.json",
+          "trace_path": "runs/verify/verify-omk-20261031-034219-4861/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-omk-20261031-002536-a5d9/check-1-cmd4.judged.png",
-            "runs/verify/verify-omk-20261031-002536-a5d9/check-2-cmd2.judged.png"
+            "runs/verify/verify-omk-20261031-034219-4861/check-1-cmd3.judged.png",
+            "runs/verify/verify-omk-20261031-034219-4861/check-2-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.025837
+        "cost_usd": 0.038942,
+        "features": [
+          {
+            "feature": "switch models mid-session",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Needs provider login; omk doctor shows no credentials, bare omk prompts /login"
+          },
+          {
+            "feature": "complete goals only when check passes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Needs provider login to run goal verification loop"
+          },
+          {
+            "feature": "read files, edit code, run commands",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Needs provider login; agent file/shell tools only run inside a session"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 92.2,
       "confidence": 0.8,
@@ -519,8 +541,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:13:53+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Switch with `/model` mid-conversation",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:19+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Define a check before a goal can complete.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:19+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "It reads files, edits code, and runs commands in your repository.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:19+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:40:55+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

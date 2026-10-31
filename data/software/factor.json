@@ -29,6 +29,12 @@
     "control desktop windows, mouse, keyboard and screenshots"
   ],
   "alternatives_to": [],
+  "features": [
+    "Chat via terminal, Telegram, phone and voice",
+    "Run AI agent locally on your machine",
+    "Answer phone calls and send texts",
+    "Control desktop and real browser"
+  ],
   "why_worth_it": null,
   "homepage": "https://cyqlelabs.github.io/factor/",
   "repo": {
@@ -72,12 +78,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-factor-20261029-024750-ab85",
+      "run_id": "verify-factor-20261031-021419-2084",
       "method": "binary",
       "steps": [
         {
-          "command": "mkdir -p ~/.local/bin && curl -fsSL -o ~/.local/bin/factor https://github.com/cyqlelabs/factor/releases/download/v0.53.3/factor-linux-amd64 && chmod +x ~/.local/bin/factor",
-          "purpose": "Download linux-amd64 release binary to ~/.local/bin/factor"
+          "command": "curl -fsSL -o /home/sbx/.local/bin/factor https://github.com/cyqlelabs/factor/releases/download/v0.53.3/factor-linux-amd64 && chmod +x /home/sbx/.local/bin/factor && ls -lh /home/sbx/.local/bin/factor && file /home/sbx/.local/bin/factor",
+          "purpose": "Download Factor binary to PATH"
         }
       ],
       "manual_steps": [],
@@ -119,10 +125,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:48:38.300523+08:00",
+    "checked_at": "2026-10-31T02:14:59.429368+08:00",
     "runs": [
       {
-        "id": "verify-factor-20261029-024750-ab85",
+        "id": "verify-factor-20261031-021419-2084",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -130,14 +136,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T02:48:38.300523+08:00",
+        "checked_at": "2026-10-31T02:14:59.429368+08:00",
         "tool_version": "v0.53.3",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p ~/.local/bin && curl -fsSL -o ~/.local/bin/factor https://github.com/cyqlelabs/factor/releases/download/v0.53.3/factor-linux-amd64 && chmod +x ~/.local/bin/factor",
-            "purpose": "Download linux-amd64 release binary to ~/.local/bin/factor"
+            "command": "curl -fsSL -o /home/sbx/.local/bin/factor https://github.com/cyqlelabs/factor/releases/download/v0.53.3/factor-linux-amd64 && chmod +x /home/sbx/.local/bin/factor && ls -lh /home/sbx/.local/bin/factor && file /home/sbx/.local/bin/factor",
+            "purpose": "Download Factor binary to PATH"
           }
         ],
         "smoke_tests": [
@@ -163,36 +169,72 @@
         "pitfalls": [
           {
             "readme_said": "go install github.com/cyqlelabs/factor/cmd/factor@latest",
-            "actually_needed": "Download the linux-amd64 release binary to ~/.local/bin/factor and chmod +x (Go toolchain installation is not allowed in the box)"
+            "actually_needed": "used prebuilt factor-linux-amd64 release binary from GitHub releases since box has no Go toolchain and must not install one",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "--version flag",
-            "actually_needed": "factor version (subcommand); factor --version exits 2 with 'flag provided but not defined: -version'"
+            "readme_said": "factor --version / --help probe (help lists factor version subcommand, no --version flag)",
+            "actually_needed": "factor --version exits 2; use factor version subcommand",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show factor status with gateway not running and factor version v0.53.3 printed with exit 0.",
+          "observed": "Both screenshots show factor status reporting gateway not running and version reporting v0.53.3 with exit code 0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-factor-20261029-024750-ab85/report.json",
+          "trace_path": "runs/verify/verify-factor-20261031-021419-2084/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-factor-20261029-024750-ab85/check-1-cmd5.judged.png",
-            "runs/verify/verify-factor-20261029-024750-ab85/check-2-cmd4.judged.png"
+            "runs/verify/verify-factor-20261031-021419-2084/check-1-cmd5.judged.png",
+            "runs/verify/verify-factor-20261031-021419-2084/check-2-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.068261
+        "cost_usd": 0.055238,
+        "features": [
+          {
+            "feature": "Chat via terminal, Telegram, phone and voice",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs FACTOR_PROVIDER_API_KEY and Telegram/phone/voice credentials"
+          },
+          {
+            "feature": "Run AI agent locally on your machine",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "agent runs require FACTOR_PROVIDER_API_KEY; status only shows health"
+          },
+          {
+            "feature": "Answer phone calls and send texts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs Twilio/Telnyx carrier account, phone numbers and voice credentials"
+          },
+          {
+            "feature": "Control desktop and real browser",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "box has no graphical session; status reports desktop off"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 82.4,
       "confidence": 0.9,
@@ -505,8 +547,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-29T02:40:33+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Talk to it in the terminal, on Telegram, over\nthe phone, or out loud to the machine itself",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:59+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "A fast, lightweight AI agent that lives on your machine",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:59+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "A real number to call, or it calls and texts you",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:59+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "It drives a real browser, works your desktop",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:59+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

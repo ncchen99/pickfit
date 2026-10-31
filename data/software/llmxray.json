@@ -33,6 +33,12 @@
   "alternatives_to": [
     "Ollama"
   ],
+  "features": [
+    "Observe Ollama traffic via Live proxy",
+    "Chat with local models",
+    "Compare models side by side",
+    "Benchmark models with real logprobs"
+  ],
   "why_worth_it": null,
   "homepage": "https://lognebudo.github.io/llmxray/",
   "repo": {
@@ -57,20 +63,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-llmxray-20261031-023548-6afb",
+      "run_id": "verify-llmxray-20261031-034114-b7b4",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g llmxray",
+          "command": "npm install -g llmxray 2>&1",
           "purpose": "Install llmxray globally via npm"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "llmxray --help",
-        "expected_signal": "LLMxRay — Local LLM Observatory"
+        "command": "llmxray --help 2>&1",
+        "expected_signal": "Port to serve on"
       },
-      "first_task": "curl -s http://localhost:3000/__system-info"
+      "first_task": "curl -s http://localhost:5182/ 2>&1"
     },
     "windows": null
   },
@@ -89,10 +95,10 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:42:21.033468+08:00",
+    "checked_at": "2026-10-31T03:42:19.327038+08:00",
     "runs": [
       {
-        "id": "verify-llmxray-20261031-023548-6afb",
+        "id": "verify-llmxray-20261031-034114-b7b4",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
@@ -100,108 +106,131 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:42:21.033468+08:00",
+        "checked_at": "2026-10-31T03:42:19.327038+08:00",
         "tool_version": "0.8.12",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g llmxray",
+            "command": "npm install -g llmxray 2>&1",
             "purpose": "Install llmxray globally via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "llmxray --help",
-            "expected_signal": "LLMxRay — Local LLM Observatory",
+            "command": "llmxray --help 2>&1",
+            "expected_signal": "Port to serve on",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "LLMxRay — Local LLM Observatory",
+            "observed_excerpt": "--port <number> Port to serve on (default: 5174, env: PORT)",
             "setup": [],
             "offline": true
           },
           {
-            "command": "curl -s http://localhost:3000/__system-info",
-            "expected_signal": "\"os\"",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "{\"os\":{\"name\":\"Debian GNU/Linux 13 (trixie)\",\"version\":\"4.19.0-gvisor\",\"build\":\"\",\"arch\":\"x64\"},\"device\":{\"name\":\"modal\",\"manufacturer\":\"\",\"model\":\"\",\"family\":\"\"},\"cpu\":{\"name\":\"unknown\",\"cores\":2,\"logicalProcessors\":2,\"maxClockMhz\":0},\"memory\":{\"totalBytes\":2147483648,\"freeBytes\":2088804352},\"gpu\"…",
-            "setup": [
-              {
-                "command": "npx llmxray --port 3000",
-                "background": true,
-                "port": 3000
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "curl -s http://localhost:3000/",
-            "expected_signal": "<title>LLMxRay — Local LLM Observatory</title>",
+            "command": "curl -s http://localhost:5182/ 2>&1",
+            "expected_signal": "LLMxRay — Local LLM Observatory",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "<title>LLMxRay — Local LLM Observatory</title>",
             "setup": [
               {
-                "command": "npx llmxray --port 3000",
+                "command": "llmxray --port 5182 --observe-port 11436",
                 "background": true,
-                "port": 3000
+                "port": 5182
               }
             ],
             "offline": true
           },
           {
-            "command": "curl -s http://localhost:11435/api/tags",
+            "command": "curl -s -m 10 -i http://localhost:11436/api/tags 2>&1",
             "expected_signal": "could not reach Ollama",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "{\"error\":\"LLMxRay could not reach Ollama at http://localhost:11434: connect ECONNREFUSED 127.0.0.1:11434\"}",
             "setup": [
               {
-                "command": "npx llmxray --port 3000",
+                "command": "llmxray --port 5182 --observe-port 11436",
                 "background": true,
-                "port": 3000
+                "port": 5182
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s -m 10 -i http://localhost:11436/v1/models 2>&1",
+            "expected_signal": "could not reach Ollama",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"error\":\"LLMxRay could not reach Ollama at http://localhost:11434: connect ECONNREFUSED 127.0.0.1:11434\"}",
+            "setup": [
+              {
+                "command": "llmxray --port 5182 --observe-port 11436",
+                "background": true,
+                "port": 5182
               }
             ],
             "offline": true
           }
         ],
-        "pitfalls": [
-          {
-            "readme_said": "--help / --version convention (README shows --port and --observe-port examples)",
-            "actually_needed": "llmxray supports --help only; llmxray --version starts the server (App on 5174, Observe on 11435) and never exits instead of printing a version",
-            "kind": "note"
-          },
-          {
-            "readme_said": "You need Ollama running with at least one model pulled (ollama pull llama3.2)",
-            "actually_needed": "UI on --port and observe proxy start without Ollama; /api/* and /v1/* via either port return 502 JSON 'LLMxRay could not reach Ollama at http://localhost:11434' until Ollama runs with a pulled model",
-            "kind": "note"
-          }
-        ],
+        "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks show LLMxRay responding: system-info JSON, HTML page with correct title, and help text with usage.",
+          "observed": "Help lists server options, web root serves the LLMxRay Observatory page, and the observe proxy correctly reports it could not reach Ollama.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-llmxray-20261031-023548-6afb/report.json",
+          "trace_path": "runs/verify/verify-llmxray-20261031-034114-b7b4/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-llmxray-20261031-023548-6afb/check-1-cmd7.judged.png",
-            "runs/verify/verify-llmxray-20261031-023548-6afb/check-2-cmd8.judged.png",
-            "runs/verify/verify-llmxray-20261031-023548-6afb/check-3-cmd4.judged.png"
+            "runs/verify/verify-llmxray-20261031-034114-b7b4/check-1-cmd2.judged.png",
+            "runs/verify/verify-llmxray-20261031-034114-b7b4/check-2-cmd4.judged.png",
+            "runs/verify/verify-llmxray-20261031-034114-b7b4/check-3-cmd5.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.10431
+        "cost_usd": 0.059287,
+        "features": [
+          {
+            "feature": "Observe Ollama traffic via Live proxy",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Requires Ollama at localhost:11434 with a pulled model; box has no Ollama"
+          },
+          {
+            "feature": "Chat with local models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Requires Ollama with a pulled model; box has no Ollama"
+          },
+          {
+            "feature": "Compare models side by side",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Requires Ollama with models for side-by-side compare; box has no Ollama"
+          },
+          {
+            "feature": "Benchmark models with real logprobs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Requires Ollama with models for logprob benchmark; box has no Ollama"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 87.6,
       "confidence": 0.8,
@@ -516,8 +545,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T02:16:56+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Point VS Code Copilot, Open WebUI, Continue, n8n or your own agent at LLMxRay instead of Ollama, and see every turn:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:29+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Just want to try a model? Open the Chat page, pick one, and send a message.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:29+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "The same prompt against up to four slots, each with its own model, temperature and system prompt, streaming side by side.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:29+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Score models on curated question suites (MMLU-Pro, ARC-Challenge, HellaSwag, GSM8K, TruthfulQA)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:29+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:46:41+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

@@ -17,7 +17,7 @@ def claim(method: str, command: str, platforms: list[str] | None = None) -> Inst
 
 
 def extraction(slug: str) -> ExtractionResult:
-    data = json.loads((FIXTURES / f"{slug}.json").read_text())
+    data = json.loads((FIXTURES / f"{slug}.json").read_text(encoding="utf-8"))
     return ExtractionResult.model_validate(data["extraction"])
 
 

@@ -29,6 +29,11 @@
     "run two agents with different constitutions talking through local pipes"
   ],
   "alternatives_to": [],
+  "features": [
+    "post autonomously on Moltbook with local LLM",
+    "propose changes to constitution, identity, skills",
+    "distill episode log into patterns"
+  ],
   "why_worth_it": null,
   "homepage": "https://doi.org/10.5281/zenodo.19212118",
   "repo": {
@@ -73,22 +78,22 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-contemplative-agent-20261031-023818-b262",
-      "method": "source",
+      "run_id": "verify-contemplative-agent-20261031-040805-c1f2",
+      "method": "pip",
       "steps": [
         {
-          "command": "git clone https://github.com/shimo4228/contemplative-agent.git ./contemplative-agent",
-          "purpose": "Clone repo for editable install"
+          "command": "rm -rf /tmp/ca-src && git clone --depth 1 https://github.com/shimo4228/contemplative-agent.git /tmp/ca-src",
+          "purpose": "Clone repository checkout"
         },
         {
-          "command": "pip install -e ./contemplative-agent --break-system-packages",
-          "purpose": "Editable pip install from clone"
+          "command": "cd /tmp/ca-src && pip install -e . --break-system-packages",
+          "purpose": "Editable pip install from checkout"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "contemplative-agent --version",
-        "expected_signal": "contemplative-agent 2.13.0"
+        "command": "contemplative-agent --help",
+        "expected_signal": "dialogue"
       },
       "first_task": "MOLTBOOK_HOME=/tmp/ca-a contemplative-agent init"
     },
@@ -109,10 +114,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:40:15.353302+08:00",
+    "checked_at": "2026-10-31T04:09:44.238067+08:00",
     "runs": [
       {
-        "id": "verify-contemplative-agent-20261031-023818-b262",
+        "id": "verify-contemplative-agent-20261031-040805-c1f2",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -120,36 +125,27 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:40:15.353302+08:00",
+        "checked_at": "2026-10-31T04:09:44.238067+08:00",
         "tool_version": "2.13.0",
-        "install_method": "source",
+        "install_method": "pip",
         "replayed": true,
         "steps": [
           {
-            "command": "git clone https://github.com/shimo4228/contemplative-agent.git ./contemplative-agent",
-            "purpose": "Clone repo for editable install"
+            "command": "rm -rf /tmp/ca-src && git clone --depth 1 https://github.com/shimo4228/contemplative-agent.git /tmp/ca-src",
+            "purpose": "Clone repository checkout"
           },
           {
-            "command": "pip install -e ./contemplative-agent --break-system-packages",
-            "purpose": "Editable pip install from clone"
+            "command": "cd /tmp/ca-src && pip install -e . --break-system-packages",
+            "purpose": "Editable pip install from checkout"
           }
         ],
         "smoke_tests": [
           {
-            "command": "contemplative-agent --version",
-            "expected_signal": "contemplative-agent 2.13.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "contemplative-agent 2.13.0",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "contemplative-agent --help",
-            "expected_signal": "Contemplative AI agent for Moltbook",
+            "expected_signal": "dialogue",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Contemplative AI agent for Moltbook",
+            "observed_excerpt": "{register,status,run,solve,submolt-scan,init,report,generate-report,meditate,sync-data,dialogue,dialogue-peer,doctor,distill,distill-identity,amend-constitution,shadow-constitution,insight,install-schedule,skill-stocktake,adopt-staged,remove-skill,restore-skill}",
             "setup": [],
             "offline": true
           },
@@ -163,8 +159,8 @@
             "offline": true
           },
           {
-            "command": "MOLTBOOK_HOME=/tmp/ca-b contemplative-agent init --template stoic",
-            "expected_signal": "Created identity file: /tmp/ca-b/identity.md (from stoic)",
+            "command": "rm -rf /tmp/ca-b && MOLTBOOK_HOME=/tmp/ca-b contemplative-agent init --template stoic",
+            "expected_signal": "Created identity file: /tmp/ca-b/identity.md",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "Created identity file: /tmp/ca-b/identity.md (from stoic)",
@@ -172,70 +168,80 @@
             "offline": true
           },
           {
-            "command": "MOLTBOOK_HOME=/tmp/ca-a contemplative-agent doctor",
-            "expected_signal": "not reachable at http://localhost:11434",
+            "command": "contemplative-agent doctor",
+            "expected_signal": "doctor: 2 problem(s) to fix",
             "exit_code": 1,
             "passed": true,
-            "observed_excerpt": "[ FAIL ] Ollama: not reachable at http://localhost:11434",
-            "setup": [
-              {
-                "command": "MOLTBOOK_HOME=/tmp/ca-a contemplative-agent init",
-                "background": false,
-                "port": null
-              }
-            ],
+            "observed_excerpt": "doctor: 2 problem(s) to fix, 2 warning(s)",
+            "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "uv venv .venv && source .venv/bin/activate && uv pip install -e .",
-            "actually_needed": "pip install -e ./contemplative-agent --break-system-packages without creating .venv; system pip requires --break-system-packages when no venv is activated",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "ollama pull gemma4:e4b && ollama pull nomic-embed-text then dialogue with 2 turns in ~90s",
-            "actually_needed": "Ollama must be running at http://localhost:11434 with models gemma4:e4b and nomic-embed-text (~10 GB); absent here so doctor reports FAIL and dialogue truncates with 0 replies",
-            "kind": "note"
-          },
-          {
-            "readme_said": "candidates ollama pull gemma4:e4b and ollama pull nomic-embed-text",
-            "actually_needed": "Skipped; ollama binary absent and required models exceed box resources; pip editable install already succeeded so pulls were not needed for init/doctor checks",
-            "kind": "note"
+            "readme_said": "uv pip install -e . (assumes current dir is the clone)",
+            "actually_needed": "git clone https://github.com/shimo4228/contemplative-agent.git first (to /tmp/ca-src), then run pip install -e . inside the checkout",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show successful init for both templates and the expected version string with exit code 0.",
+          "observed": "Screenshots show both init commands creating identity files and help output listing the dialogue command.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-contemplative-agent-20261031-023818-b262/report.json",
+          "trace_path": "runs/verify/verify-contemplative-agent-20261031-040805-c1f2/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-contemplative-agent-20261031-023818-b262/check-1-cmd6.judged.png",
-            "runs/verify/verify-contemplative-agent-20261031-023818-b262/check-2-cmd7.judged.png",
-            "runs/verify/verify-contemplative-agent-20261031-023818-b262/check-3-cmd4.judged.png"
+            "runs/verify/verify-contemplative-agent-20261031-040805-c1f2/check-1-cmd5.judged.png",
+            "runs/verify/verify-contemplative-agent-20261031-040805-c1f2/check-2-cmd10.judged.png",
+            "runs/verify/verify-contemplative-agent-20261031-040805-c1f2/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.196313
+        "cost_usd": 0.128581,
+        "features": [
+          {
+            "feature": "post autonomously on Moltbook with local LLM",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs Moltbook API key, claim link, email+X verification"
+          },
+          {
+            "feature": "propose changes to constitution, identity, skills",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "insight/distill-identity/amend-constitution need Ollama gemma4:e4b ~10GB"
+          },
+          {
+            "feature": "distill episode log into patterns",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "distill needs Ollama generation+embeddings models"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 87.2,
+      "total": 81.8,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.8,
+          "score": 0.68,
           "weight": 40.0
         },
         "install_docs": {
@@ -276,7 +282,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 62.78
+      "value": 58.9
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -556,8 +562,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T02:17:00+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "an AI agent posts on its own with a local LLM",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:04+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "github_api",
+      "quote": "proposes changes to its harness (the constitution, identity and skills in its prompts)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:04+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "The agent distills that log into patterns (short observations about what happened)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:04+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:46:57+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

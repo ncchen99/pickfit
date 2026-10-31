@@ -29,6 +29,12 @@
     "break a coding task into actionable steps"
   ],
   "alternatives_to": [],
+  "features": [
+    "build software from plain English task descriptions",
+    "plan, code, review and test coding tasks",
+    "generate and run unit tests to verify code",
+    "retrieve relevant codebase context with built-in RAG"
+  ],
   "why_worth_it": null,
   "homepage": "https://pypi.org/project/agentchanti/",
   "repo": {
@@ -57,20 +63,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-agentchanti-20261031-004524-6589",
+      "run_id": "verify-agentchanti-20261031-040901-7445",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install agentchanti 2>&1",
-          "purpose": "install via uv tool"
+          "purpose": "Install agentchanti via uv tool"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "agentchanti --help",
+        "command": "agentchanti --help 2>&1",
         "expected_signal": "AgentChanti — Multi-Agent Local Coder"
       },
-      "first_task": "agentchanti mcp list --no-health"
+      "first_task": "cd ragdemo && agentchanti kb search \"multiply numbers\" 2>&1"
     },
     "windows": null
   },
@@ -85,10 +91,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:46:01.162651+08:00",
+    "checked_at": "2026-10-31T04:09:59.274941+08:00",
     "runs": [
       {
-        "id": "verify-agentchanti-20261031-004524-6589",
+        "id": "verify-agentchanti-20261031-040901-7445",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -96,19 +102,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:46:01.162651+08:00",
+        "checked_at": "2026-10-31T04:09:59.274941+08:00",
         "tool_version": "0.13.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install agentchanti 2>&1",
-            "purpose": "install via uv tool"
+            "purpose": "Install agentchanti via uv tool"
           }
         ],
         "smoke_tests": [
           {
-            "command": "agentchanti --help",
+            "command": "agentchanti --help 2>&1",
             "expected_signal": "AgentChanti — Multi-Agent Local Coder",
             "exit_code": 0,
             "passed": true,
@@ -117,56 +123,100 @@
             "offline": true
           },
           {
-            "command": "agentchanti --version",
-            "expected_signal": "agentchanti 0.13.0",
+            "command": "cd ragdemo && agentchanti kb search \"multiply numbers\" 2>&1",
+            "expected_signal": "method: multiply",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "agentchanti 0.13.0",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "agentchanti mcp list --no-health",
-            "expected_signal": "No usable server configured.",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "No usable server configured.",
-            "setup": [],
+            "observed_excerpt": "[1] method: multiply",
+            "setup": [
+              {
+                "command": "mkdir -p ragdemo && cat > ragdemo/calc.py <<'EOF'\ndef add(a, b):\n    \"\"\"Add two numbers.\"\"\"\n    return a + b\n\nclass Calculator:\n    \"\"\"Simple calculator.\"\"\"\n\n    def multiply(self, a, b):\n        \"\"\"Multiply two numbers.\"\"\"\n        return a * b\nEOF\necho created && ls ragdemo",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd ragdemo && agentchanti kb index 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "kb commands listed as `agentchanti kb embed` / `agentchanti kb search \"query\"` with no `kb index` step mentioned",
+            "actually_needed": "run `agentchanti kb index` in the project directory before `kb embed`/`kb search`; search must also run from the indexed project directory (index is CWD-scoped)",
+            "kind": "readme_wrong"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show successful outputs with the expected messages and full help text.",
+          "observed": "Help shows AgentChanti title with options and KB search returns the multiply method.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-agentchanti-20261031-004524-6589/report.json",
+          "trace_path": "runs/verify/verify-agentchanti-20261031-040901-7445/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-agentchanti-20261031-004524-6589/check-1-cmd4.judged.png",
-            "runs/verify/verify-agentchanti-20261031-004524-6589/check-2-cmd2.judged.png"
+            "runs/verify/verify-agentchanti-20261031-040901-7445/check-1-cmd2.judged.png",
+            "runs/verify/verify-agentchanti-20261031-040901-7445/check-2-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.033449
+        "cost_usd": 0.060192,
+        "features": [
+          {
+            "feature": "build software from plain English task descriptions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Needs an LLM provider: local server (Ollama/LM Studio) or cloud API key; box has neither."
+          },
+          {
+            "feature": "plan, code, review and test coding tasks",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Plan/code/review/test pipeline needs an LLM provider; none available in box."
+          },
+          {
+            "feature": "generate and run unit tests to verify code",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Test generation and execution is part of the LLM pipeline; no provider available."
+          },
+          {
+            "feature": "retrieve relevant codebase context with built-in RAG",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 83.1,
+      "total": 75.6,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -209,7 +259,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 45.54
+      "value": 41.43
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -443,8 +493,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:37:14+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "takes a plain English description of a coding task and autonomously builds the software for you",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:50+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "github_api",
+      "quote": "Plans, codes, reviews, tests — works with local LLMs (Ollama, LM Studio) or cloud (OpenAI, Gemini, Claude).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:50+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Generates and runs unit tests to verify everything works",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:50+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "relevant functions, classes and docs are retrieved from your codebase and\ninjected as context",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:50+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

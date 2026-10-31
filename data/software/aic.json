@@ -29,6 +29,12 @@
     "undo last run and restore changes unstaged"
   ],
   "alternatives_to": [],
+  "features": [
+    "Create atomic commits from messy working tree",
+    "Generate Conventional Commits messages",
+    "Resolve git merge conflicts",
+    "Undo last run's commits"
+  ],
   "why_worth_it": null,
   "homepage": "https://caicoleung.github.io/aic-web/",
   "repo": {
@@ -66,22 +72,26 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-aic-20261031-001936-dc8a",
+      "run_id": "verify-aic-20261031-035350-2508",
       "method": "script",
       "steps": [
         {
-          "command": "curl --proto '=https' --tlsv1.2 -sSfL https://github.com/CaicoLeung/aic/releases/latest/download/aic-installer.sh -o /tmp/aic-installer.sh && ls -l /tmp/aic-installer.sh",
+          "command": "curl --proto '=https' --tlsv1.2 -sSfL https://github.com/CaicoLeung/aic/releases/latest/download/aic-installer.sh -o /tmp/aic-installer2.sh",
           "purpose": "download installer script"
         },
         {
-          "command": "sh /tmp/aic-installer.sh",
+          "command": "sh /tmp/aic-installer2.sh",
           "purpose": "run installer script"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && ln -sf ~/.cargo/bin/aic ~/.local/bin/aic && ls -l ~/.local/bin/aic",
+          "purpose": "put aic on PATH via ~/.local/bin symlink"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "aic --version",
-        "expected_signal": "aic 0.5.8"
+        "expected_signal": "aic 0.6.1"
       },
       "first_task": "aic list"
     },
@@ -102,10 +112,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:20:54.606822+08:00",
+    "checked_at": "2026-10-31T03:55:11.493596+08:00",
     "runs": [
       {
-        "id": "verify-aic-20261031-001936-dc8a",
+        "id": "verify-aic-20261031-035350-2508",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -113,93 +123,141 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:20:54.606822+08:00",
-        "tool_version": "0.5.8",
+        "checked_at": "2026-10-31T03:55:11.493596+08:00",
+        "tool_version": "0.6.1",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl --proto '=https' --tlsv1.2 -sSfL https://github.com/CaicoLeung/aic/releases/latest/download/aic-installer.sh -o /tmp/aic-installer.sh && ls -l /tmp/aic-installer.sh",
+            "command": "curl --proto '=https' --tlsv1.2 -sSfL https://github.com/CaicoLeung/aic/releases/latest/download/aic-installer.sh -o /tmp/aic-installer2.sh",
             "purpose": "download installer script"
           },
           {
-            "command": "sh /tmp/aic-installer.sh",
+            "command": "sh /tmp/aic-installer2.sh",
             "purpose": "run installer script"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && ln -sf ~/.cargo/bin/aic ~/.local/bin/aic && ls -l ~/.local/bin/aic",
+            "purpose": "put aic on PATH via ~/.local/bin symlink"
           }
         ],
         "smoke_tests": [
           {
             "command": "aic --version",
-            "expected_signal": "aic 0.5.8",
+            "expected_signal": "aic 0.6.1",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "aic 0.5.8",
+            "observed_excerpt": "aic 0.6.1",
             "setup": [],
             "offline": true
           },
           {
             "command": "aic list",
-            "expected_signal": "Provider: openai (source: default)",
+            "expected_signal": "Provider openai",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Provider: openai (source: default)",
+            "observed_excerpt": "Provider openai (source: default)",
             "setup": [],
             "offline": true
           },
           {
             "command": "SHELL=/bin/bash aic completion",
-            "expected_signal": "Installed bash completion to:",
+            "expected_signal": "completion installed for bash",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Installed bash completion to: /home/sbx/.local/share/bash-completion/completions/aic",
+            "observed_excerpt": "✓ completion installed for bash",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "curl --proto '=https' --tlsv1.2 -sSfL https://github.com/CaicoLeung/aic/releases/latest/download/aic-installer.sh | sh",
-            "actually_needed": "download installer to /tmp/aic-installer.sh, read it, then run `sh /tmp/aic-installer.sh`; it fetches a precompiled binary tarball (e.g. aic-x86_64-unknown-linux-gnu.tar.gz) which cannot be read as a script beforehand",
+            "readme_said": "curl ... aic-installer.sh | sh installs aic",
+            "actually_needed": "installer places binary in ~/.cargo/bin; symlinked it to ~/.local/bin which is on PATH",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "aic completion installs shell completions",
+            "actually_needed": "run with SHELL=/bin/bash (e.g. SHELL=/bin/bash aic completion); bare call fails when $SHELL is unset",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "aic-installer.sh installer script",
+            "actually_needed": "installer fetches prebuilt binary tarball (e.g. aic-x86_64-unknown-linux-gnu.tar.gz) which cannot be read as text",
             "kind": "note"
           },
           {
-            "readme_said": "aic completion",
-            "actually_needed": "SHELL=/bin/bash aic completion",
-            "kind": "sandbox"
+            "readme_said": "install step 2 runs aic-installer2.sh",
+            "actually_needed": "nothing to change; a note: the box ran aic-installer2.sh, downloaded, without reading it first, so pickfit did not inspect it",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The screenshots show aic listing default provider config, installing bash completion, and printing version 0.5.8.",
+          "observed": "All three screenshots show expected outputs: provider list with openai, bash completion installed, and version aic 0.6.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-aic-20261031-001936-dc8a/report.json",
+          "trace_path": "runs/verify/verify-aic-20261031-035350-2508/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-aic-20261031-001936-dc8a/check-1-cmd7.judged.png",
-            "runs/verify/verify-aic-20261031-001936-dc8a/check-2-cmd11.judged.png",
-            "runs/verify/verify-aic-20261031-001936-dc8a/check-3-cmd5.judged.png"
+            "runs/verify/verify-aic-20261031-035350-2508/check-1-cmd5.judged.png",
+            "runs/verify/verify-aic-20261031-035350-2508/check-2-cmd7.judged.png",
+            "runs/verify/verify-aic-20261031-035350-2508/check-3-cmd13.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.078552
+        "cost_usd": 0.099964,
+        "features": [
+          {
+            "feature": "Create atomic commits from messy working tree",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "aic in test repo fails requiring API key: provider openai requires an API key"
+          },
+          {
+            "feature": "Generate Conventional Commits messages",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "message generation needs same LLM backend as F1, no API key in box"
+          },
+          {
+            "feature": "Resolve git merge conflicts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "aic resolve only shows no-conflicts path offline; proposing resolutions needs LLM auth"
+          },
+          {
+            "feature": "Undo last run's commits",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "undo needs prior LLM Run plus interactive terminal; no prior run in box"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 90.2,
+      "total": 83.5,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -240,7 +298,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 54.48
+      "value": 50.43
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -480,8 +538,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:16:17+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "aic turns your messy working tree into a series of clean, atomic commits",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:03+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "- **Conventional Commits** — every message follows the [v1.0.0 spec](https://www.conventionalcommits.org/), scoped to the logical change it describes.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:03+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Merge conflict resolution** — `aic resolve` proposes per-file resolutions you review, then finalizes the merge.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:03+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**One-command undo** — `aic undo` resets the last Run's commits and returns every change to the working tree, unstaged.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:03+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:41:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

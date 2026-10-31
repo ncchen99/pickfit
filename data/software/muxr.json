@@ -29,6 +29,12 @@
     "dictate prompts on-device in the native app"
   ],
   "alternatives_to": [],
+  "features": [
+    "answer coding agents from phone",
+    "answer agents in live terminal",
+    "launch agents, shells and worktrees",
+    "browse files, read diffs, download artifacts"
+  ],
   "why_worth_it": null,
   "homepage": "https://trymuxr.com",
   "repo": {
@@ -53,7 +59,7 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-muxr-20261029-012023-2476",
+      "run_id": "verify-muxr-20261031-023503-881c",
       "method": "npm",
       "steps": [
         {
@@ -63,8 +69,8 @@
       ],
       "manual_steps": [],
       "check": {
-        "command": "muxr --version",
-        "expected_signal": "0.2.9"
+        "command": "muxr --help",
+        "expected_signal": "muxr link [--new]"
       },
       "first_task": "muxr"
     },
@@ -81,10 +87,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:23:21.529021+08:00",
+    "checked_at": "2026-10-31T02:37:35.199462+08:00",
     "runs": [
       {
-        "id": "verify-muxr-20261029-012023-2476",
+        "id": "verify-muxr-20261031-023503-881c",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -92,8 +98,8 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T01:23:21.529021+08:00",
-        "tool_version": "0.2.9",
+        "checked_at": "2026-10-31T02:37:35.199462+08:00",
+        "tool_version": "0.2.17",
         "install_method": "npm",
         "replayed": true,
         "steps": [
@@ -104,79 +110,106 @@
         ],
         "smoke_tests": [
           {
-            "command": "muxr --version",
-            "expected_signal": "0.2.9",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "0.2.9",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "muxr --help",
-            "expected_signal": "muxr — every coding agent on your phone",
+            "expected_signal": "muxr link [--new]",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "muxr — every coding agent on your phone",
+            "observed_excerpt": "muxr link [--new] show this computer's pairing link: open it on a phone to pair",
             "setup": [],
             "offline": true
           },
           {
             "command": "muxr",
-            "expected_signal": "muxr — every coding agent on your phone",
+            "expected_signal": "muxr 0.2.17 — every coding agent on your phone",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "muxr — every coding agent on your phone",
+            "observed_excerpt": "muxr 0.2.17 — every coding agent on your phone",
             "setup": [],
             "offline": true
           },
           {
-            "command": "muxr pair --help",
-            "expected_signal": "Create a two-minute native QR/string",
+            "command": "timeout 20 muxr artifacts status",
+            "expected_signal": "Shared Artifacts retention",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Create a two-minute native QR/string, an eight-hour control-browser link (--browser), an eight-hour view-only browser link (--browser-view), or a 30-day control link for a browser only you use (--browser-personal).",
+            "observed_excerpt": "Shared Artifacts retention",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "muxr link",
-            "actually_needed": "muxr pair [--help shows QR/string pairing options]"
+            "readme_said": "muxr opens the interactive menu",
+            "actually_needed": "bare muxr prints the command menu and exits 0 when stdin is closed / no TTY",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show muxr printing its tagline with full help menu and version 0.2.9 with exit 0.",
+          "observed": "All three runs exit 0 and show the version banner, the artifacts retention details, and the full help menu with no errors.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-muxr-20261029-012023-2476/report.json",
+          "trace_path": "runs/verify/verify-muxr-20261031-023503-881c/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-muxr-20261029-012023-2476/check-1-cmd6.judged.png",
-            "runs/verify/verify-muxr-20261029-012023-2476/check-2-cmd2.judged.png"
+            "runs/verify/verify-muxr-20261031-023503-881c/check-1-cmd9.judged.png",
+            "runs/verify/verify-muxr-20261031-023503-881c/check-2-cmd8.judged.png",
+            "runs/verify/verify-muxr-20261031-023503-881c/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.043762
+        "cost_usd": 0.071896,
+        "features": [
+          {
+            "feature": "answer coding agents from phone",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "needs paired phone app and waiting agent; only local menu verified"
+          },
+          {
+            "feature": "answer agents in live terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "needs waiting agent and paired phone live terminal"
+          },
+          {
+            "feature": "launch agents, shells and worktrees",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "needs Herdr setup and paired phone to launch agents"
+          },
+          {
+            "feature": "browse files, read diffs, download artifacts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "needs paired phone to browse/download; local artifacts status only shows policy"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 80.8,
+      "total": 88.3,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -219,7 +252,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 35.47
+      "value": 38.76
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -467,8 +500,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-28T23:52:21+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "When an agent needs you, answer from your phone.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:23+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "muxr shows which agent is waiting and what it asks, then lets you answer it in the <em>same</em> live terminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:23+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Launch installed agents, shells and worktrees, or pick up an existing session and attach a prompt.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:23+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Browse files, read diffs and download artifacts, with progress and resume after a lost connection.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T01:36:23+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:15+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

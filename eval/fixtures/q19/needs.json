@@ -1,0 +1,73 @@
+[
+  {
+    "item": "Pinned local OpenAI-compatible model server (stands in for the company's self-hosted server)",
+    "why": "L2-2 needs 'a pinned local OpenAI-compatible server'. The fixture runs it on 127.0.0.1:11435 behind the logging proxy on 127.0.0.1:8000; answers' placeholder base URL is filled with http://127.0.0.1:8000/v1. Reusing q18's Ollama pin keeps the local-model-client cluster (q18, q19) on one server.",
+    "candidates": [
+      {
+        "source": "Ollama, same release and pins.env values as q18 (OpenAI-compatible API under /v1)",
+        "license": "MIT",
+        "size": "about 1.5-2 GB archive (to confirm at pin time)",
+        "pin": "tag + asset URL + SHA-256 in pins.env, checked by setup_pinned_ollama.sh; record `GET /api/version`"
+      },
+      {
+        "source": "llama.cpp llama-server, one tagged build from https://github.com/ggml-org/llama.cpp/releases (Ubuntu x64 CPU archive), run with --jinja for tool calls and a GGUF model file",
+        "license": "MIT",
+        "size": "about 30 MB plus the GGUF model",
+        "pin": "build number + archive SHA-256; GGUF file from a fixed Hugging Face commit + SHA-256. start_fixture_servers.sh would need a llama-server variant (not written yet)"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Frozen tool-calling fixture model, shared with q18",
+    "why": "L2-2 needs 'the frozen tool-calling fixture model (calibrated before freeze: a reference harness calling its tool API directly completes the same task 3 of 3 times)'. Coding agents send long system prompts (often over 10,000 tokens), so on 4 CPU cores a 3-4B model is the practical size for 15 minutes per run; reference_harness.py --probe-prefill measures this.",
+    "candidates": [
+      {
+        "source": "Ollama library llama3.2:3b",
+        "license": "Llama 3.2 Community License (not OSI)",
+        "size": "about 2.0 GB",
+        "pin": "same tag and digest as q18's pins.env; model store baked into the base image"
+      },
+      {
+        "source": "Ollama library qwen2.5:7b",
+        "license": "Apache-2.0",
+        "size": "about 4.7 GB",
+        "pin": "same as above; check the prefill probe first (about 2x slower than a 3B model on CPU)"
+      },
+      {
+        "source": "Ollama library qwen3:4b",
+        "license": "Apache-2.0",
+        "size": "about 2.5 GB",
+        "pin": "same as above; thinks by default, adding tokens on CPU"
+      }
+    ],
+    "decision_needed_by": "念誠",
+    "decided": "qwen2.5:7b, by the 2026-10-31 calibration (calibration.md, 換候選): llama3.2:3b passed 0/3, qwen2.5:7b 3/3, qwen3:4b 2/3 (its third run passed the 900 s limit). q18 keeps llama3.2:3b, so the two questions no longer share the model."
+  },
+  {
+    "item": "git in the dev image (the user's 'repo' is a git repository)",
+    "why": "new_run.py makes each run's workdir a git repository with one fixed commit when git exists (the prompt says 'files in my repo'; some agents expect a git repo). Without git the workdir is a plain folder. Either way it must be the same for both groups, so decide before the first run.",
+    "candidates": [
+      {
+        "source": "Ubuntu 24.04 (noble) apt package `git`",
+        "license": "GPL-2.0-only",
+        "size": "about 20 MB installed with dependencies",
+        "pin": "same apt snapshot id as the dev image; record `git --version`"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "dev image: the clean Linux environment for every L2 check (base image, packages, user)",
+    "why": "Settled by 9.3 B (念誠, 2026-10-31): every Linux question but q03 and q10 uses the dev image (ubuntu:24.04 + python3, git, ca-certificates, curl, strace), built and recorded in eval/results/l2-images.json. Fixture infrastructure this question names (the pinned Ollama and model) is installed by the grader from eval/fixtures/PINS.md, not baked into the image.",
+    "candidates": [],
+    "proposal": "Packages: python3, ca-certificates, curl, sudo, strace, git. User `dev` with passwordless sudo. q19 base image = dev image + pinned server + fixture model store.",
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "strace in the dev image (the egress check)",
+    "why": "Shared by every Linux question: listed once in eval/fixtures/_shared/needs.json (strace for _shared/egress.py).",
+    "candidates": [],
+    "decision_needed_by": "念誠"
+  }
+]

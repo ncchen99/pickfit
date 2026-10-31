@@ -459,23 +459,34 @@ class Reverifier:
         result.outcome = "rewritten"
 
     def _extraction(self, candidate: dict[str, Any], run_id: str, result: Result) -> dict[str, Any]:
-        from pickfit.extract import build_sources, sources_sha
+        from pickfit.extract import FEATURES_STATUS, build_sources, sources_sha
 
         current = sources_sha(build_sources(candidate))
         stored = [e for model in EXTRACTION_MODELS
-                  if (e := self.db.last_extraction(candidate["repo_id"], model)) and e["status"] in DONE_EXTRACTIONS]
+                  if (e := self.db.last_extraction(candidate["repo_id"], model, exclude=(FEATURES_STATUS,)))
+                  and e["status"] in DONE_EXTRACTIONS]
         same = next((e for e in stored if e["sources_sha"] == current), None)
         if same:
-            return same
+            return self._with_features(same)
         rows = self.steps.extract(candidate, run_id)
         for row in rows:
             self.db.save_extraction(**row)
             result.cost_usd += row["cost_usd"]
         if rows and rows[-1]["status"] in DONE_EXTRACTIONS:
-            fresh = self.db.last_extraction(candidate["repo_id"], MODEL)
+            fresh = self.db.last_extraction(candidate["repo_id"], MODEL, exclude=(FEATURES_STATUS,))
             assert fresh is not None
-            return fresh
+            return self._with_features(fresh)
         if stored:  # the README changed but could not be read again: the older reading still says what the tool is
             result.notes.append("extraction of the current README failed; used the stored one")
-            return stored[0]
+            return self._with_features(stored[0])
         raise RuntimeError("no extraction of this repository")
+
+    def _with_features(self, extraction: dict[str, Any]) -> dict[str, Any]:
+        """The extraction with the features of a newer features-only reading, as the batch merges them, so the
+        agent checks the features the record lists (an extraction from before features has none)."""
+        from pickfit.extract import feature_rows
+
+        extra = feature_rows(self.db, extraction["repo_id"], extraction["model"])
+        if extra is None or (extraction["result"].get("features") and extra["id"] <= extraction["id"]):
+            return extraction
+        return {**extraction, "result": {**extraction["result"], "features": extra["result"]["features"]}}

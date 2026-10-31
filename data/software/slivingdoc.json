@@ -29,6 +29,11 @@
     "merge concurrent writes without overwrites"
   ],
   "alternatives_to": [],
+  "features": [
+    "share notes across agents",
+    "merge concurrent note commits",
+    "store notes in S3 bucket"
+  ],
   "why_worth_it": null,
   "homepage": "https://slivingdoc.dev",
   "repo": {
@@ -53,20 +58,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-slivingdoc-20261031-015206-5d7a",
+      "run_id": "verify-slivingdoc-20261031-030828-81b7",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g slivingdoc 2>&1",
-          "purpose": "install slivingdoc globally via npm"
+          "command": "npm install -g slivingdoc && slivingdoc version",
+          "purpose": "npm install -g slivingdoc for PATH"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "slivingdoc version 2>&1",
+        "command": "npx -y slivingdoc version",
         "expected_signal": "slivingdoc 1.3.1"
       },
-      "first_task": "slivingdoc version 2>&1"
+      "first_task": "npx -y slivingdoc version"
     },
     "windows": null
   },
@@ -85,10 +90,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:55:34.813955+08:00",
+    "checked_at": "2026-10-31T03:10:49.218154+08:00",
     "runs": [
       {
-        "id": "verify-slivingdoc-20261031-015206-5d7a",
+        "id": "verify-slivingdoc-20261031-030828-81b7",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -96,26 +101,17 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:55:34.813955+08:00",
+        "checked_at": "2026-10-31T03:10:49.218154+08:00",
         "tool_version": "1.3.1",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g slivingdoc 2>&1",
-            "purpose": "install slivingdoc globally via npm"
+            "command": "npm install -g slivingdoc && slivingdoc version",
+            "purpose": "npm install -g slivingdoc for PATH"
           }
         ],
         "smoke_tests": [
-          {
-            "command": "slivingdoc version 2>&1",
-            "expected_signal": "slivingdoc 1.3.1",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "slivingdoc 1.3.1",
-            "setup": [],
-            "offline": false
-          },
           {
             "command": "npx -y slivingdoc version",
             "expected_signal": "slivingdoc 1.3.1",
@@ -126,45 +122,33 @@
             "offline": false
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- slivingdoc serve 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- slivingdoc serve",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
             "setup": [],
-            "offline": false
+            "offline": true
           }
         ],
-        "pitfalls": [
-          {
-            "readme_said": "npx -y slivingdoc serve",
-            "actually_needed": "npm install -g slivingdoc then launch with `slivingdoc serve` so the binary is on PATH for offline replay",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "`--login never` turns off browser sign-in",
-            "actually_needed": "probe with default `--login auto` (`slivingdoc serve` with no flags); `--login never` refuses to start without a credential and cannot handshake offline",
-            "kind": "note"
-          }
-        ],
+        "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show slivingdoc 1.3.1 printed via binary and npx, and MCP serve handshake ok with 2 tools.",
+          "observed": "Screenshots show MCP handshake succeeding with 2 tools and version command printing slivingdoc 1.3.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-slivingdoc-20261031-015206-5d7a/report.json",
+          "trace_path": "runs/verify/verify-slivingdoc-20261031-030828-81b7/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-slivingdoc-20261031-015206-5d7a/check-1-cmd3.judged.png",
-            "runs/verify/verify-slivingdoc-20261031-015206-5d7a/check-2-cmd7.judged.png",
-            "runs/verify/verify-slivingdoc-20261031-015206-5d7a/check-3-cmd9.judged.png"
+            "runs/verify/verify-slivingdoc-20261031-030828-81b7/check-1-cmd5.judged.png",
+            "runs/verify/verify-slivingdoc-20261031-030828-81b7/check-2-cmd1.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.048817,
+        "cost_usd": 0.042592,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -181,8 +165,34 @@
           ],
           "tool_count": 2,
           "called_tool": null,
-          "offline": false
-        }
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "share notes across agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "notes_pull/notes_commit need SLIVINGDOC_TOKEN login via browser; tool call timed out waiting for auth"
+          },
+          {
+            "feature": "merge concurrent note commits",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "same notes_commit/notes_pull tools need login; cannot exercise merge without account"
+          },
+          {
+            "feature": "store notes in S3 bucket",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs AWS credentials and S3-compatible bucket or hosted space; no bucket here"
+          }
+        ]
       }
     ]
   },
@@ -211,7 +221,7 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 82.2,
       "confidence": 0.8,
@@ -550,8 +560,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:24:21+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Shared notes for your agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:52+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "with Git-style merges instead of overwrites.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:52+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Store them durably in your own S3-compatible bucket",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T02:35:52+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:18:42+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

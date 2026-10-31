@@ -31,6 +31,12 @@
     "output machine-readable diagnostics for scripts and CI"
   ],
   "alternatives_to": [],
+  "features": [
+    "pinpoint where Wi-Fi connection dies",
+    "visualize connection as topology diagram",
+    "re-probe continuously in live dashboard",
+    "explain root cause with concrete fix"
+  ],
   "why_worth_it": null,
   "homepage": "https://crates.io/crates/wtfi2",
   "repo": {
@@ -76,16 +82,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-wtfi2-20261031-001734-9733",
+      "run_id": "verify-wtfi2-20261031-034853-7a6d",
       "method": "script",
       "steps": [
         {
-          "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/kanywst/wtfi2/releases/latest/download/wtfi2-installer.sh -o /tmp/wtfi2-installer2.sh",
-          "purpose": "Download installer script for reading before running"
+          "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/kanywst/wtfi2/releases/latest/download/wtfi2-installer.sh -o /tmp/wtfi2-installer.sh && ls -l /tmp/wtfi2-installer.sh && head -c 2000 /tmp/wtfi2-installer.sh",
+          "purpose": "download installer script"
         },
         {
-          "command": "sh /tmp/wtfi2-installer2.sh",
-          "purpose": "Install prebuilt wtfi binary via script"
+          "command": "sh /tmp/wtfi2-installer.sh",
+          "purpose": "run installer script"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && ln -sf ~/.cargo/bin/wtfi ~/.local/bin/wtfi && ls -l ~/.local/bin/wtfi",
+          "purpose": "link wtfi onto PATH"
         }
       ],
       "manual_steps": [],
@@ -93,7 +103,7 @@
         "command": "wtfi --version",
         "expected_signal": "wtfi 0.8.0"
       },
-      "first_task": "wtfi"
+      "first_task": "wtfi --no-color"
     },
     "windows": null
   },
@@ -112,10 +122,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:19:13.485138+08:00",
+    "checked_at": "2026-10-31T03:50:32.499732+08:00",
     "runs": [
       {
-        "id": "verify-wtfi2-20261031-001734-9733",
+        "id": "verify-wtfi2-20261031-034853-7a6d",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -123,18 +133,22 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:19:13.485138+08:00",
+        "checked_at": "2026-10-31T03:50:32.499732+08:00",
         "tool_version": "0.8.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/kanywst/wtfi2/releases/latest/download/wtfi2-installer.sh -o /tmp/wtfi2-installer2.sh",
-            "purpose": "Download installer script for reading before running"
+            "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/kanywst/wtfi2/releases/latest/download/wtfi2-installer.sh -o /tmp/wtfi2-installer.sh && ls -l /tmp/wtfi2-installer.sh && head -c 2000 /tmp/wtfi2-installer.sh",
+            "purpose": "download installer script"
           },
           {
-            "command": "sh /tmp/wtfi2-installer2.sh",
-            "purpose": "Install prebuilt wtfi binary via script"
+            "command": "sh /tmp/wtfi2-installer.sh",
+            "purpose": "run installer script"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && ln -sf ~/.cargo/bin/wtfi ~/.local/bin/wtfi && ls -l ~/.local/bin/wtfi",
+            "purpose": "link wtfi onto PATH"
           }
         ],
         "smoke_tests": [
@@ -148,91 +162,103 @@
             "offline": true
           },
           {
-            "command": "wtfi --help",
-            "expected_signal": "Usage: wtfi [OPTIONS]",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Usage: wtfi [OPTIONS]",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "wtfi",
-            "expected_signal": "wtfi · what the f*ck internet",
+            "command": "wtfi --no-color",
+            "expected_signal": "You ─── ! Wi-Fi ─── ! Gateway ─── ✓ Internet ─── ✓ DNS ─── ✓ Portal",
             "exit_code": 1,
             "passed": true,
-            "observed_excerpt": "wtfi · what the f*ck internet",
+            "observed_excerpt": "✓ You ─── ! Wi-Fi ─── ! Gateway ─── ✓ Internet ─── ✓ DNS ─── ✓ Portal",
             "setup": [],
             "offline": false
           },
           {
-            "command": "wtfi -v",
-            "expected_signal": "Resolving fast",
+            "command": "wtfi -v --no-color",
+            "expected_signal": "Resolving fast (2 ms)",
             "exit_code": 1,
-            "passed": true,
-            "observed_excerpt": "Resolving fast (2 ms)",
+            "passed": false,
+            "observed_excerpt": "↳ hotspot check against http://captive.apple.com/hotspot-detect.html, plus a DNS-free port-80 probe to http://192.0.2.1/",
             "setup": [],
-            "offline": false
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "curl installer script installs prebuilt binary",
-            "actually_needed": "Installer downloaded and verified prebuilt x86_64-unknown-linux-gnu binary (wtfi 0.8.0) at runtime; that fetched archive cannot be read before running, only the shell script can",
-            "kind": "note"
-          },
-          {
-            "readme_said": "Prerequisites: Rust 1.88+, ip, iw, ping, traceroute",
-            "actually_needed": "No Rust toolchain needed for script install; binary installed to $HOME/.cargo/bin which was already on PATH, no PATH edit needed",
-            "kind": "note"
-          },
-          {
-            "readme_said": "Prerequisites list ip, iw, ping, traceroute",
-            "actually_needed": "Run succeeded with only `ip` present (no ping, iw, traceroute in box); Internet/DNS/Portal hops still measured, Wi-Fi/Gateway reported unmeasured and overall exit was 1 Degraded per README exit-code table",
+            "readme_said": "curl ... | sh installs wtfi onto PATH",
+            "actually_needed": "download to /tmp/wtfi2-installer.sh, read it, then run sh on the file; binary still installs to ~/.cargo/bin so link it to ~/.local/bin for PATH",
             "kind": "sandbox"
           },
           {
-            "readme_said": "wtfi -w example",
-            "actually_needed": "`wtfi -w` live dashboard not smoke-tested: it is an interactive TUI requiring q to quit",
-            "kind": "note"
-          },
-          {
-            "readme_said": "install step 2 runs wtfi2-installer2.sh",
-            "actually_needed": "nothing to change; a note: the box ran wtfi2-installer2.sh, downloaded, without reading it first, so pickfit did not inspect it",
+            "readme_said": "installer script from releases/latest/download",
+            "actually_needed": "installer fetches prebuilt binary tarball (wtfi2-x86_64-unknown-linux-gnu.tar.xz) at run time with checksum; binary cannot be read before running",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show wtfi running with full path diagnosis and printing version 0.8.0.",
+          "observed": "Screenshots show wtfi printing the expected hop chain with degraded Wi-Fi/Gateway and version 0.8.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-wtfi2-20261031-001734-9733/report.json",
+          "trace_path": "runs/verify/verify-wtfi2-20261031-034853-7a6d/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-wtfi2-20261031-001734-9733/check-1-cmd8.judged.png",
-            "runs/verify/verify-wtfi2-20261031-001734-9733/check-2-cmd4.judged.png"
+            "runs/verify/verify-wtfi2-20261031-034853-7a6d/check-1-cmd5.judged.png",
+            "runs/verify/verify-wtfi2-20261031-034853-7a6d/check-2-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.087347
+        "cost_usd": 0.079948,
+        "features": [
+          {
+            "feature": "pinpoint where Wi-Fi connection dies",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output says 2 hops went unmeasured and Gateway state is unknown, so no death point was pinpointed."
+          },
+          {
+            "feature": "visualize connection as topology diagram",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "re-probe continuously in live dashboard",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "live TUI needs interactive TTY; non-TTY wtfi -w fell back to one-shot report"
+          },
+          {
+            "feature": "explain root cause with concrete fix",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 88.3,
+      "total": 80.8,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -275,7 +301,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 24.19
+      "value": 22.14
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -587,8 +613,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:16:13+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "pinpoints *exactly* where your connection dies, and tells you how to fix it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:31+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "draws the connection as a\n**topology diagram**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:31+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "`wtfi -w` re-probes continuously with real-time latency",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:31+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "into a single verdict plus a concrete fix",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:31+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:41:22+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

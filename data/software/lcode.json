@@ -31,6 +31,12 @@
     "review repository changes with findings"
   ],
   "alternatives_to": [],
+  "features": [
+    "run entirely on local machine with open-weight models",
+    "talk to repository in terminal",
+    "write and edit files",
+    "run scripts and tests"
+  ],
   "why_worth_it": null,
   "homepage": "https://nasser1941.github.io/lcode/",
   "repo": {
@@ -69,7 +75,7 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-lcode-20261031-001540-3a4d",
+      "run_id": "verify-lcode-20261031-032908-1561",
       "method": "uv",
       "steps": [
         {
@@ -79,10 +85,10 @@
       ],
       "manual_steps": [],
       "check": {
-        "command": "lcode --version 2>&1",
-        "expected_signal": "lcode 0.52.0"
+        "command": "lcode --help 2>&1",
+        "expected_signal": "A local-first terminal coding agent"
       },
-      "first_task": "lcode doctor 2>&1"
+      "first_task": "lcode models 2>&1"
     },
     "windows": null
   },
@@ -101,10 +107,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:16:27.739106+08:00",
+    "checked_at": "2026-10-31T03:29:45.204471+08:00",
     "runs": [
       {
-        "id": "verify-lcode-20261031-001540-3a4d",
+        "id": "verify-lcode-20261031-032908-1561",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -112,7 +118,7 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:16:27.739106+08:00",
+        "checked_at": "2026-10-31T03:29:45.204471+08:00",
         "tool_version": "0.52.0",
         "install_method": "uv",
         "replayed": true,
@@ -124,29 +130,11 @@
         ],
         "smoke_tests": [
           {
-            "command": "lcode --version 2>&1",
-            "expected_signal": "lcode 0.52.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "lcode 0.52.0",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "lcode --help 2>&1",
             "expected_signal": "A local-first terminal coding agent",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "A local-first terminal coding agent powered by open-weight models via Ollama.",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "lcode doctor 2>&1",
-            "expected_signal": "cannot reach Ollama at http://localhost:11434",
-            "exit_code": 1,
-            "passed": true,
-            "observed_excerpt": "✗ Ollama cannot reach Ollama at http://localhost:11434: HTTPConnectionPool(host='localhost',",
             "setup": [],
             "offline": true
           },
@@ -158,33 +146,76 @@
             "observed_excerpt": "│ qwen3.5-4b │ 3.4 GB │ 256K │ no │ too large │ tested │",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "lcode doctor 2>&1",
+            "expected_signal": "cannot reach Ollama",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "✗ Ollama cannot reach Ollama at http://localhost:11434: HTTPConnectionPool(host='localhost',",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show version 0.52.0, help with local-first agent tagline, and doctor correctly reporting Ollama unreachable.",
+          "observed": "All three checks show expected output: help with local-first tagline, models table containing qwen3.5-4b, and doctor correctly reporting Ollama unreachable.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-lcode-20261031-001540-3a4d/report.json",
+          "trace_path": "runs/verify/verify-lcode-20261031-032908-1561/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-lcode-20261031-001540-3a4d/check-1-cmd2.judged.png",
-            "runs/verify/verify-lcode-20261031-001540-3a4d/check-2-cmd3.judged.png",
-            "runs/verify/verify-lcode-20261031-001540-3a4d/check-3-cmd4.judged.png"
+            "runs/verify/verify-lcode-20261031-032908-1561/check-1-cmd2.judged.png",
+            "runs/verify/verify-lcode-20261031-032908-1561/check-2-cmd4.judged.png",
+            "runs/verify/verify-lcode-20261031-032908-1561/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.032259
+        "cost_usd": 0.033005,
+        "features": [
+          {
+            "feature": "run entirely on local machine with open-weight models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "Smallest catalog model is 3.4 GB; box is CPU-only with 2 GB RAM and no Ollama (lcode doctor)."
+          },
+          {
+            "feature": "talk to repository in terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "Requires a running Ollama model; none fits/runs on this CPU-only 2 GB box."
+          },
+          {
+            "feature": "write and edit files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "Requires a running Ollama model; none fits/runs on this CPU-only 2 GB box."
+          },
+          {
+            "feature": "run scripts and tests",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "Requires a running Ollama model; none fits/runs on this CPU-only 2 GB box."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 90.2,
       "confidence": 0.8,
@@ -515,8 +546,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:14:22+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "A coding agent that runs entirely on your own machine.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:36+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Point lcode at a repository and talk to it in your terminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:36+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "writes and edits files",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:36+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "runs your scripts and tests",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:36+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

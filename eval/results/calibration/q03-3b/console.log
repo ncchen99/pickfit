@@ -1,0 +1,33 @@
+== step 1: base image
+PRETTY_NAME="Ubuntu 24.04.5 LTS"
+NAME="Ubuntu"
+mawk 1.3.4 20240123
+4
+999292928
+check_runtime exit 0 stdout=[]
+== step 2: the generator
+gen exit 0 seconds 44
+rows=12732399
+bytes=2000000065
+seed=20261028
+target=2000000000
+0b0fa6e979cdc58b3e5a01f951700d69f33bd6be3e7024f45a99f5695ee5f2ce  /work/big.csv
+b5cd81a0d5dd11a47a551591ef3f0e3360a0db2efb8daedb11b82a08d7e0b206  /work/big.csv.expected_counts.csv
+== step 3b: hard limit 999292928
+mem_peak: exit=0 wall=2.073s value=2461696 ("sampled memory.current") oom_kills=null result=undetermined
+{"tool": "mem_peak.sh run", "command": "cat /work/big.csv > /dev/null", "exit_code": 0, "wall_seconds": 2.073,
+ "cgroup": "v1", "peak_before": null, "peak_after": null, "max_current": 2461696, "max_anon": null,
+ "max_rss_sum": 43270144, "limit": 999292928, "oom_kills": null,
+ "rule": null, "method": "sampled memory.current", "value": 2461696, "result": "undetermined"}
+limit 999292928
+SwapCache:             0 kB
+SwapTotal:             0 kB
+SwapFree:              0 kB
+== step 4: wc -l reference
+mem_peak: exit=0 wall=2.073s value=2314240 ("sampled memory.current") oom_kills=null result=undetermined
+{"tool": "mem_peak.sh run", "command": "wc -l /work/big.csv", "exit_code": 0, "wall_seconds": 2.073,
+ "cgroup": "v1", "peak_before": null, "peak_after": null, "max_current": 2314240, "max_anon": null,
+ "max_rss_sum": 44331008, "limit": 999292928, "oom_kills": null,
+ "rule": null, "method": "sampled memory.current", "value": 2314240, "result": "undetermined"}
+none            8.0E  1.9G  8.0E   1% /
+== step 3b, last: a 1.5 GB allocation over the limit (expected: killed; in Modal the whole sandbox may go)

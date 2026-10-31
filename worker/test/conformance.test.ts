@@ -24,6 +24,9 @@ function index(): unknown {
   Object.assign(entry('fixture-llm-runner').install.linux.pitfalls[0], { kind: 'surprise', seen_in: 'step 2' });
   entry('fixture-cloud-summarize').install = {};
   entry('fixture-json-query').repo_url = 'https://github.com/example/json-query';
+  // An index from before feature coverage: no features on the entry or its guide.
+  delete entry('fixture-chat-tui').features;
+  for (const guide of Object.values(entry('fixture-chat-tui').install) as any[]) delete guide.features;
   // A GUI app's launch on its Linux run.
   const chat = entry('fixture-chat-tui');
   const gui = { tier: 'ui_rendered', screen: 'main_ui', display: 'Xvfb 1280x800x24, no window manager, no GPU', launch_offline: true };
@@ -188,6 +191,9 @@ test('get_install_guide conforms: pitfalls, setup, no pitfalls, another OS or ar
 
   const tagged = await call('pitfall with a kind', { slug: 'fixture-transcribe', os: 'linux' });
   assert.equal(tagged.known_issues[0].kind, 'readme_wrong');
+  assert.deepEqual([tagged.features.checked.length, tagged.features.not_checked.length], [1, 2]);
+  const older = await call('an index from before feature coverage', { slug: 'fixture-chat-tui', os: 'linux' });
+  assert.equal(older.features.recorded, false);
 
   const setup = await call('setup, offline check, unknown pitfall kind', { slug: 'fixture-llm-runner', os: 'linux' });
   assert.equal(setup.verification.works_offline, true);

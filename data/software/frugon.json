@@ -30,6 +30,11 @@
     "list candidate models available for cost comparison"
   ],
   "alternatives_to": [],
+  "features": [
+    "analyze LLM logs for cost",
+    "recommend cheaper model routing",
+    "sample candidate models for quality"
+  ],
   "why_worth_it": null,
   "homepage": "https://frugon.rodiun.io",
   "repo": {
@@ -73,17 +78,17 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-frugon-20261031-023714-2aff",
+      "run_id": "verify-frugon-20261031-032243-ca13",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install frugon && frugon --version",
-          "purpose": "Permanent install via uv tool install frugon"
+          "command": "uv tool install frugon && frugon analyze --demo",
+          "purpose": "permanent install via uv tool (same uv package as candidate 1 one-shot; candidate 1 verified first)"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "frugon --version",
+        "command": "uvx frugon --version",
         "expected_signal": "frugon 0.2.6"
       },
       "first_task": "frugon analyze --demo"
@@ -118,10 +123,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:38:18.955946+08:00",
+    "checked_at": "2026-10-31T03:24:07.758861+08:00",
     "runs": [
       {
-        "id": "verify-frugon-20261031-023714-2aff",
+        "id": "verify-frugon-20261031-032243-ca13",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -129,19 +134,19 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:38:18.955946+08:00",
-        "tool_version": "frugon 0.2.6",
+        "checked_at": "2026-10-31T03:24:07.758861+08:00",
+        "tool_version": "0.2.6",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install frugon && frugon --version",
-            "purpose": "Permanent install via uv tool install frugon"
+            "command": "uv tool install frugon && frugon analyze --demo",
+            "purpose": "permanent install via uv tool (same uv package as candidate 1 one-shot; candidate 1 verified first)"
           }
         ],
         "smoke_tests": [
           {
-            "command": "frugon --version",
+            "command": "uvx frugon --version",
             "expected_signal": "frugon 0.2.6",
             "exit_code": 0,
             "passed": true,
@@ -150,20 +155,11 @@
             "offline": true
           },
           {
-            "command": "frugon --help",
-            "expected_signal": "Usage: frugon [OPTIONS] COMMAND [ARGS]...",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Usage: frugon [OPTIONS] COMMAND [ARGS]...",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "frugon analyze --demo",
-            "expected_signal": "56,100 calls",
+            "expected_signal": "56,100 analyzed",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "│ Analyzed 56,100 calls · baseline gpt-5.5 (your current model) │",
+            "observed_excerpt": "= 56,100 analyzed",
             "setup": [],
             "offline": true
           }
@@ -172,26 +168,56 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show demo cost analysis of 56,100 calls with savings breakdown and version output frugon 0.2.6.",
+          "observed": "Both screenshots show expected results: demo cost analysis reporting 56,100 analyzed calls with savings, and version output showing frugon 0.2.6.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-frugon-20261031-023714-2aff/report.json",
+          "trace_path": "runs/verify/verify-frugon-20261031-032243-ca13/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-frugon-20261031-023714-2aff/check-1-cmd4.judged.png",
-            "runs/verify/verify-frugon-20261031-023714-2aff/check-2-cmd5.judged.png"
+            "runs/verify/verify-frugon-20261031-032243-ca13/check-1-cmd3.judged.png",
+            "runs/verify/verify-frugon-20261031-032243-ca13/check-2-cmd1.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.033556
+        "cost_usd": 0.053184,
+        "features": [
+          {
+            "feature": "analyze LLM logs for cost",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "recommend cheaper model routing",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "sample candidate models for quality",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs OPENAI_API_KEY to sample candidates"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 96.1,
       "confidence": 0.8,
@@ -546,8 +572,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T02:17:29+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "Free, local, open-source LLM cost analyzer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:39+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "\"move these X% of calls to a cheaper model and save ~$Y/mo; keep the hard Z% where they are.\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:39+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "samples your traffic through candidate models using *your own* API keys",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:39+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:52:01+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

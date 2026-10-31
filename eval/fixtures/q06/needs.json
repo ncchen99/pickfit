@@ -1,0 +1,40 @@
+[
+  {
+    "item": "[L2] ... a pinned reference MCP client lists exactly two tools ...",
+    "why": "The item needs one fixed MCP client for both groups. mcp_ref_client.py (self-authored, stdlib only, pinned by its sha256 at the fixture freeze) is ready and needs no download. An official SDK-based client could be used instead; that would be external material with its own runtime (Node or a Python package) and must be pinned.",
+    "candidates": [
+      {
+        "source": "eval/fixtures/q06/mcp_ref_client.py (this folder)",
+        "license": "same as this repository",
+        "size": "about 25 KB",
+        "pin": "sha256 of the file at the fixture freeze commit, recorded in calibration.md; every client report carries client.sha256"
+      },
+      {
+        "source": "https://github.com/modelcontextprotocol/inspector (CLI mode)",
+        "license": "MIT (check the LICENSE file of the pinned version)",
+        "size": "not downloaded; needs Node.js in the grading image",
+        "pin": "exact npm version and its package-lock integrity hash; install into the grading image before any answer runs"
+      },
+      {
+        "source": "https://github.com/modelcontextprotocol/python-sdk (client session API)",
+        "license": "MIT (check the LICENSE file of the pinned version)",
+        "size": "not downloaded",
+        "pin": "exact PyPI version with --require-hashes, installed in a separate venv under /opt so it does not change the answer's Python environment"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "[L2] Egress check passes for generation, startup and both tool calls (and the check scripts of every q06 L2 item)",
+    "why": "The scripts need python3 and the egress check needs strace; ubuntu:24.04 ships neither. Same decision as q05 and q07: both are grader tools and must be identical for both groups.",
+    "candidates": [
+      {
+        "source": "Ubuntu 24.04 (noble) archive: apt-get install -y python3 strace",
+        "license": "python3: PSF License; strace: LGPL-2.1-or-later",
+        "size": "a few tens of MB installed",
+        "pin": "bake into the grading image; record `dpkg-query -W python3 strace` and the image digest in calibration.md"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  }
+]

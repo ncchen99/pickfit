@@ -34,6 +34,12 @@
     "release-it",
     "changesets"
   ],
+  "features": [
+    "compute next SemVer version from commits",
+    "generate Keep-a-Changelog release notes",
+    "update manifests across language ecosystems",
+    "create releases on Git forges"
+  ],
   "why_worth_it": null,
   "homepage": "https://www.semrel.io",
   "repo": {
@@ -73,20 +79,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-semrel-20261031-002218-1c6c",
+      "run_id": "verify-semrel-20261031-035722-5fbe",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -sSL -o /tmp/semrel.tar.gz https://github.com/SemRels/semrel/releases/download/v0.28.3/semrel_0.28.3_linux_amd64.tar.gz && tar -tzf /tmp/semrel.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/semrel.tar.gz -C ~/.local/bin && chmod +x ~/.local/bin/semrel && ls -l ~/.local/bin/semrel",
-          "purpose": "Download versioned semrel_0.28.3_linux_amd64.tar.gz and install binary to ~/.local/bin"
+          "command": "curl -sSL -o /tmp/semrel.tar.gz https://github.com/SemRels/semrel/releases/download/v0.28.3/semrel_0.28.3_linux_amd64.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/semrel.tar.gz -C /tmp && ls -l /tmp/*.tar.gz /tmp/semrel* 2>&1; mkdir -p /tmp/sx && tar -tzf /tmp/semrel.tar.gz",
+          "purpose": "Download versioned semrel tarball and inspect"
+        },
+        {
+          "command": "mkdir -p /tmp/sx2 && tar -xzf /tmp/semrel.tar.gz -C /tmp/sx2 && ls -l /tmp/sx2 && cp /tmp/sx2/semrel ~/.local/bin/semrel && chmod +x ~/.local/bin/semrel && semrel --version",
+          "purpose": "Install semrel binary to local bin"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "semrel --version",
-        "expected_signal": "semrel version v0.28.3"
+        "expected_signal": "semrel version v0.28.3+dirty"
       },
-      "first_task": "semrel doctor"
+      "first_task": "cd /tmp/demorepo && git branch -M main && semrel doctor"
     },
     "windows": {
       "basis": "readme_claim",
@@ -118,10 +128,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:24:05.238830+08:00",
+    "checked_at": "2026-10-31T03:58:26.587711+08:00",
     "runs": [
       {
-        "id": "verify-semrel-20261031-002218-1c6c",
+        "id": "verify-semrel-20261031-035722-5fbe",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -129,20 +139,24 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:24:05.238830+08:00",
+        "checked_at": "2026-10-31T03:58:26.587711+08:00",
         "tool_version": "v0.28.3+dirty",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -sSL -o /tmp/semrel.tar.gz https://github.com/SemRels/semrel/releases/download/v0.28.3/semrel_0.28.3_linux_amd64.tar.gz && tar -tzf /tmp/semrel.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/semrel.tar.gz -C ~/.local/bin && chmod +x ~/.local/bin/semrel && ls -l ~/.local/bin/semrel",
-            "purpose": "Download versioned semrel_0.28.3_linux_amd64.tar.gz and install binary to ~/.local/bin"
+            "command": "curl -sSL -o /tmp/semrel.tar.gz https://github.com/SemRels/semrel/releases/download/v0.28.3/semrel_0.28.3_linux_amd64.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/semrel.tar.gz -C /tmp && ls -l /tmp/*.tar.gz /tmp/semrel* 2>&1; mkdir -p /tmp/sx && tar -tzf /tmp/semrel.tar.gz",
+            "purpose": "Download versioned semrel tarball and inspect"
+          },
+          {
+            "command": "mkdir -p /tmp/sx2 && tar -xzf /tmp/semrel.tar.gz -C /tmp/sx2 && ls -l /tmp/sx2 && cp /tmp/sx2/semrel ~/.local/bin/semrel && chmod +x ~/.local/bin/semrel && semrel --version",
+            "purpose": "Install semrel binary to local bin"
           }
         ],
         "smoke_tests": [
           {
             "command": "semrel --version",
-            "expected_signal": "semrel version v0.28.3",
+            "expected_signal": "semrel version v0.28.3+dirty",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "semrel version v0.28.3+dirty",
@@ -150,92 +164,155 @@
             "offline": true
           },
           {
-            "command": "semrel --help",
-            "expected_signal": "semrel automates software releases",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "semrel automates software releases by analysing Conventional Commits,",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "semrel doctor",
-            "expected_signal": "no config file found",
+            "command": "cd /tmp/demorepo && git branch -M main && semrel doctor",
+            "expected_signal": "one or more checks failed",
             "exit_code": 1,
             "passed": true,
-            "observed_excerpt": "✗ config-file no config file found (.semrel.yaml / .semrel.yml / .semrel.toml / .semrel.json)",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "cd /tmp/semrel-demo && semrel release --dry-run",
-            "expected_signal": "Next version : v0.1.0",
-            "exit_code": 0,
-            "passed": false,
-            "observed_excerpt": "Branch \"master\" is not configured for release — skipping.",
+            "observed_excerpt": "✗ one or more checks failed — fix the issues above before releasing",
             "setup": [
               {
-                "command": "rm -rf /tmp/semrel-demo && mkdir -p /tmp/semrel-demo && cd /tmp/semrel-demo && git init -q && git config user.email \"test@example.com\" && git config user.name \"test\" && semrel config init --no-interactive && echo \"hello\" > hello.txt && git add -A && git commit -qm \"feat: initial commit\" && git log --oneline && cat .semrel.yaml",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "cd /tmp/semrel-demo && cat > .semrel.yaml <<'YAML'\nschemaVersion: 1\nbranches:\n  - name: main\ntagPrefix: \"v\"\nrules:\n  - type: feat\n    bump: minor\n  - type: fix\n    bump: patch\nYAML\ncat .semrel.yaml && semrel doctor; semrel release --dry-run",
+                "command": "rm -rf /tmp/demorepo && mkdir -p /tmp/demorepo && cd /tmp/demorepo && git init -q && git config user.email \"test@example.com\" && git config user.name \"Test\" && echo \"# demo\" > README.md && git add README.md && GIT_AUTHOR_DATE=\"2024-01-01T00:00:00Z\" GIT_COMMITTER_DATE=\"2024-01-01T00:00:00Z\" git commit -qm \"feat: initial feature\" && echo \"change\" >> README.md && git add README.md && GIT_AUTHOR_DATE=\"2024-01-02T00:00:00Z\" GIT_COMMITTER_DATE=\"2024-01-02T00:00:00Z\" git commit -qm \"fix: a bug fix\" && semrel config init && cat .semrel.yaml",
                 "background": false,
                 "port": null
               }
             ],
-            "offline": null
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/demorepo && printf '# yaml-language-server: $schema=https://registry.semrel.io/schemas/core/v1.json\\nschemaVersion: 1\\nbranches:\\n  - name: main\\ntagPrefix: \"v\"\\nrules:\\n  - type: feat\\n    bump: minor\\n  - type: fix\\n    bump: patch\\nplugins: []\\n' > .semrel.yaml && cat .semrel.yaml && semrel release --dry-run",
+            "expected_signal": "Next version : v0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Next version : v0.1.0",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/demorepo && mkdir -p /tmp/demorepo && cd /tmp/demorepo && git init -q && git config user.email \"test@example.com\" && git config user.name \"Test\" && echo \"# demo\" > README.md && git add README.md && GIT_AUTHOR_DATE=\"2024-01-01T00:00:00Z\" GIT_COMMITTER_DATE=\"2024-01-01T00:00:00Z\" git commit -qm \"feat: initial feature\" && echo \"change\" >> README.md && git add README.md && GIT_AUTHOR_DATE=\"2024-01-02T00:00:00Z\" GIT_COMMITTER_DATE=\"2024-01-02T00:00:00Z\" git commit -qm \"fix: a bug fix\" && semrel config init && cat .semrel.yaml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/demorepo && semrel changelog",
+            "expected_signal": "Next version : v0.1.0 (minor bump)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Next version : v0.1.0 (minor bump)",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/demorepo && mkdir -p /tmp/demorepo && cd /tmp/demorepo && git init -q && git config user.email \"test@example.com\" && git config user.name \"Test\" && echo \"# demo\" > README.md && git add README.md && GIT_AUTHOR_DATE=\"2024-01-01T00:00:00Z\" GIT_COMMITTER_DATE=\"2024-01-01T00:00:00Z\" git commit -qm \"feat: initial feature\" && echo \"change\" >> README.md && git add README.md && GIT_AUTHOR_DATE=\"2024-01-02T00:00:00Z\" GIT_COMMITTER_DATE=\"2024-01-02T00:00:00Z\" git commit -qm \"fix: a bug fix\" && semrel config init && cat .semrel.yaml",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/demorepo && printf '# yaml-language-server: $schema=https://registry.semrel.io/schemas/core/v1.json\\nschemaVersion: 1\\nbranches:\\n  - name: main\\ntagPrefix: \"v\"\\nrules:\\n  - type: feat\\n    bump: minor\\n  - type: fix\\n    bump: patch\\nplugins: []\\n' > .semrel.yaml && cat .semrel.yaml && semrel release --dry-run",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/demorepo && semrel lint",
+            "expected_signal": "All 2 commit(s) follow Conventional Commits.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ All 2 commit(s) follow Conventional Commits.",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/demorepo && mkdir -p /tmp/demorepo && cd /tmp/demorepo && git init -q && git config user.email \"test@example.com\" && git config user.name \"Test\" && echo \"# demo\" > README.md && git add README.md && GIT_AUTHOR_DATE=\"2024-01-01T00:00:00Z\" GIT_COMMITTER_DATE=\"2024-01-01T00:00:00Z\" git commit -qm \"feat: initial feature\" && echo \"change\" >> README.md && git add README.md && GIT_AUTHOR_DATE=\"2024-01-02T00:00:00Z\" GIT_COMMITTER_DATE=\"2024-01-02T00:00:00Z\" git commit -qm \"fix: a bug fix\" && semrel config init && cat .semrel.yaml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -sSL https://github.com/SemRels/semrel/releases/latest/download/semrel_linux_amd64.tar.gz | tar -xz semrel",
-            "actually_needed": "use versioned asset https://github.com/SemRels/semrel/releases/download/v0.28.3/semrel_0.28.3_linux_amd64.tar.gz (asset names are semrel_<version>_linux_amd64.tar.gz); tarball lists ./semrel ./README.md ./CHANGELOG.md ./LICENSE",
+            "readme_said": "curl -sSL https://github.com/SemRels/semrel/releases/latest/download/semrel_linux_amd64.tar.gz | tar -xz semrel + sudo mv",
+            "actually_needed": "download versioned asset https://github.com/SemRels/semrel/releases/download/v0.28.3/semrel_0.28.3_linux_amd64.tar.gz (assets are per-version), extract in an empty dir and copy semrel to ~/.local/bin (no sudo)",
             "kind": "readme_wrong"
           },
           {
-            "readme_said": "sudo mv semrel /usr/local/bin/",
-            "actually_needed": "extract to and run from ~/.local/bin/semrel without sudo (no root in box)",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "semrel doctor and semrel release --dry-run work right after semrel config init",
-            "actually_needed": "init a git repo, run semrel config init --no-interactive, rename branch to main, then replace generated .semrel.yaml with minimal plugin-free config (no condition-github-actions) otherwise doctor reports missing plugins and release --dry-run fails with condition-github-actions requires GitHub Actio…",
+            "readme_said": "semrel release --dry-run with zero side effects after semrel config init",
+            "actually_needed": "replace default plugins with minimal core-only .semrel.yaml (plugins: []) before offline dry-run; default config auto-installs condition-github-actions and fails its condition check outside GitHub Actions",
             "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show semrel doctor reporting no config file found with exit 1 as expected, and semrel --version printing v0.28.3+dirty.",
+          "observed": "Screenshots show doctor failing as expected, dry-run predicting v0.1.0, and --version printing v0.28.3+dirty.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-semrel-20261031-002218-1c6c/report.json",
+          "trace_path": "runs/verify/verify-semrel-20261031-035722-5fbe/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-semrel-20261031-002218-1c6c/check-1-cmd8.judged.png",
-            "runs/verify/verify-semrel-20261031-002218-1c6c/check-2-cmd7.judged.png"
+            "runs/verify/verify-semrel-20261031-035722-5fbe/check-1-cmd9.judged.png",
+            "runs/verify/verify-semrel-20261031-035722-5fbe/check-2-cmd11.judged.png",
+            "runs/verify/verify-semrel-20261031-035722-5fbe/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.118289
+        "cost_usd": 0.085309,
+        "features": [
+          {
+            "feature": "compute next SemVer version from commits",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "generate Keep-a-Changelog release notes",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "update manifests across language ecosystems",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "updaters are external plugin binaries requiring registry download; not exercised offline"
+          },
+          {
+            "feature": "create releases on Git forges",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "requires forge token and outside forge service"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 73.5,
+      "total": 68.7,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6141,
+          "score": 0.5057,
           "weight": 40.0
         },
         "install_docs": {
@@ -276,7 +353,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 42.92
+      "value": 40.12
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -580,8 +657,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:16:36+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "computes the next SemVer version (`major`, `minor`, `patch`, or prerelease)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:42+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "generates Keep-a-Changelog Markdown/HTML release notes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:42+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "updates manifests across **15+ language ecosystems**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:42+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "creates releases on GitHub (including GHES), GitLab, Gitea/Forgejo, and Bitbucket",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:42+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:41:39+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

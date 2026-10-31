@@ -31,6 +31,12 @@
     "check quota and rate-limit status"
   ],
   "alternatives_to": [],
+  "features": [
+    "aggregate 100+ free AI coding models",
+    "validate models via live pre-tests",
+    "inject ranked models into combos",
+    "manage models via web console"
+  ],
   "why_worth_it": null,
   "homepage": "https://www.npmjs.com/package/9router-auto-free",
   "repo": {
@@ -70,20 +76,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-9router-auto-free-20261031-004048-609e",
+      "run_id": "verify-9router-auto-free-20261031-035511-5c5f",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g 9router-auto-free 2>&1",
-          "purpose": "install globally via npm"
+          "command": "npm install -g 9router-auto-free",
+          "purpose": "global install via candidate 2 for PATH binary (candidate 1 npx works but leaves no PATH binary)"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "npx 9router-auto-free --dry-run",
-        "expected_signal": "[*] Dry run mode enabled. No changes written."
+        "command": "command -v 9router-auto-free && npm list -g 9router-auto-free",
+        "expected_signal": "9router-auto-free@1.4.0"
       },
-      "first_task": "npx 9router-auto-free --dry-run"
+      "first_task": "command -v 9router-auto-free && npm list -g 9router-auto-free"
     },
     "windows": {
       "basis": "readme_claim",
@@ -113,84 +119,141 @@
     "url": "https://github.com/herliansyah/9router-auto-free/releases/tag/v1.4.1"
   },
   "verification": {
-    "level": "function",
+    "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:42:50.547209+08:00",
+    "checked_at": "2026-10-31T03:56:51.262247+08:00",
     "runs": [
       {
-        "id": "verify-9router-auto-free-20261031-004048-609e",
-        "level": "function",
+        "id": "verify-9router-auto-free-20261031-035511-5c5f",
+        "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:42:50.547209+08:00",
+        "checked_at": "2026-10-31T03:56:51.262247+08:00",
         "tool_version": "1.4.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g 9router-auto-free 2>&1",
-            "purpose": "install globally via npm"
+            "command": "npm install -g 9router-auto-free",
+            "purpose": "global install via candidate 2 for PATH binary (candidate 1 npx works but leaves no PATH binary)"
           }
         ],
         "smoke_tests": [
           {
-            "command": "npx 9router-auto-free --dry-run",
-            "expected_signal": "[*] Dry run mode enabled. No changes written.",
+            "command": "command -v 9router-auto-free && npm list -g 9router-auto-free",
+            "expected_signal": "9router-auto-free@1.4.0",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "[*] Dry run mode enabled. No changes written.",
+            "observed_excerpt": "└── 9router-auto-free@1.4.0",
             "setup": [],
             "offline": true
           },
           {
             "command": "9router-auto-free --dry-run",
-            "expected_signal": "[*] Dry run mode enabled. No changes written.",
+            "expected_signal": "Dry run mode enabled. No changes written.",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "[*] Dry run mode enabled. No changes written.",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "curl -s http://localhost:20129/api/status",
+            "expected_signal": "Unauthorized",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"success\":false,\"error\":\"Unauthorized: Harap login dengan password 9router\"}",
+            "setup": [
+              {
+                "command": "9router-auto-free --web",
+                "background": true,
+                "port": 20129
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "README documents CLI flags but no --help/--version; standard expectation is they print help",
-            "actually_needed": "sync.js only handles --dry-run, --refresh/--watchdog, --setup-cron, --live-benchmarks and --verbose; --help/--version fall through to DAILY FULL SYNC (tried --help: got full sync header and exit 1 without 9router DB instead of help text)",
+            "readme_said": "standard --help/--version flags",
+            "actually_needed": "--help and --version both start a full sync (exit 1 without 9router DB); get version via npm list -g 9router-auto-free (1.4.0)",
             "kind": "note"
           },
           {
-            "readme_said": "npx 9router-auto-free --dry-run simulates sync without modifying SQLite database",
-            "actually_needed": "--dry-run exits 0 without a 9router SQLite DB (warns 'Could not read 9router DB' and 'skipping live test', still ranks public Kilo/OpenRouter lists); bare full sync without DB exits 1 with 'unable to open database file'",
+            "readme_said": "npx 9router-auto-free --dry-run simulates sync",
+            "actually_needed": "dry-run exits 0 without 9router DB but prints skipping live test warnings and Dry run mode enabled, no DB writes",
             "kind": "note"
+          },
+          {
+            "readme_said": "--setup-cron installs Systemd timers or crontab",
+            "actually_needed": "box has no crontab or systemd timers; --setup-cron prints Scheduler installed yet stderr crontab: not found, still exits 0",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show the sync completing with Super-combo results and the line '[*] Dry run mode enabled. No changes written.'",
+          "observed": "Screenshots show version 1.4.0 installed, dry-run sync completing with no changes written, and API status returning Unauthorized.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-9router-auto-free-20261031-004048-609e/report.json",
+          "trace_path": "runs/verify/verify-9router-auto-free-20261031-035511-5c5f/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-9router-auto-free-20261031-004048-609e/check-1-cmd9.judged.png",
-            "runs/verify/verify-9router-auto-free-20261031-004048-609e/check-2-cmd12.judged.png"
+            "runs/verify/verify-9router-auto-free-20261031-035511-5c5f/check-1-cmd5.judged.png",
+            "runs/verify/verify-9router-auto-free-20261031-035511-5c5f/check-2-cmd10.judged.png",
+            "runs/verify/verify-9router-auto-free-20261031-035511-5c5f/check-3-cmd12.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.102941
+        "cost_usd": 0.107963,
+        "features": [
+          {
+            "feature": "aggregate 100+ free AI coding models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only 7 models in super-combo and 0 validated for listed providers, not 100+ models."
+          },
+          {
+            "feature": "validate models via live pre-tests",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "needs live 9router server/token; --refresh aborts without changes"
+          },
+          {
+            "feature": "inject ranked models into combos",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "manage models via web console",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only an Unauthorized error, not any model management action."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
       "total": 85.2,
       "confidence": 0.8,
@@ -505,8 +568,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:36:56+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "aggregates **100+ free AI coding models**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:33+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "validates them via **live pre-tests** directly through 9router",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:33+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "injects them into ready-to-use 9router combos",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:33+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "includes a built-in dark-themed **Web Management Console** on port `20129`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:15:33+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }

@@ -84,7 +84,7 @@ def test_steps_online_then_checks_offline():
 
 def test_a_check_that_needs_the_network_is_retried_online():
     plan = plan_from(verdict([{"command_id": 2, "expected_signal": "0.4.1"},
-                              {"command_id": 5, "expected_signal": "══▶"}]), LOG)
+                              {"command_id": 5, "setup_ids": [3], "expected_signal": "══▶"}]), LOG)
     result = Replayer(box_for_log(online_only=("example.invalid",)), log=lambda s: None).run(plan, TASK)
     assert result.passed and result.level == "function" and not result.offline
     online = result.checks[1]
@@ -144,3 +144,30 @@ def test_steps_cited_as_setup_are_not_run_twice():
     plan = plan_from(verdict([{"command_id": 4, "setup_ids": [1, 3], "expected_signal": "──▶"}]), LOG)
     assert [s.command_id for s in plan.setups] == [3]
     assert plan.checks[0].setup_ids == (3,)
+
+
+def test_a_setup_that_fails_fails_only_the_checks_that_need_it():
+    plan = plan_from(verdict([{"command_id": 2, "expected_signal": "0.4.1"},
+                              {"command_id": 4, "setup_ids": [3], "expected_signal": "──▶"}]), LOG)
+    box = box_for_log()
+    box.script = {"cat > graph.json": (1, "", "disk full"), **box.script}
+    result = Replayer(box, log=lambda s: None).run(plan, TASK)
+    assert result.passed and result.level == "install"  # the version check still holds
+    graph = result.checks[1]
+    assert not graph.passed and graph.run is None and graph.problems[0].startswith("setup 3 exited 1")
+    assert "graphtty graph.json" not in [c for c, _ in box.ran]  # not run without its input
+
+
+def test_failed_feature_checks_are_rerun_once_online_after_their_setup():
+    log = [*LOG, rec(6, "graphtty graph.json --svg out.svg", 1, "", stderr="unknown flag --svg")]
+    finish = FinishArgs.model_validate({
+        "level": "function", "steps": [{"command_id": 1, "purpose": "install"}],
+        "smoke_tests": [{"command_id": 2, "setup_ids": [], "expected_signal": "0.4.1", "expected_exit_code": 0},
+                        {"command_id": 6, "setup_ids": [3], "expected_signal": "<svg", "expected_exit_code": 0}]})
+    plan = plan_from(log_verdict(finish, log), log, rerun_failed=[6])
+    assert [c.run.command_id for c in plan.failed] == [6] and [s.command_id for s in plan.failed_setups] == [3]
+    box = NetBox({"--svg": (1, "", "unknown flag --svg"), **box_for_log().script})
+    result = Replayer(box, log=lambda s: None).run(plan, TASK)
+    assert result.level == "install" and [(f.command_id, f.reproduced) for f in result.failed] == [(6, True)]
+    assert [c for c, _ in box.ran][-2:] == [LOG[2].command, "graphtty graph.json --svg out.svg"]
+    assert box.network_log[-1] is True  # online, after the offline checks

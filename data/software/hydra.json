@@ -29,6 +29,12 @@
     "block secret files from leaving the machine"
   ],
   "alternatives_to": [],
+  "features": [
+    "discover every model on machine",
+    "route tasks by capability and cost",
+    "enforce PII policy",
+    "track spend across models"
+  ],
   "why_worth_it": null,
   "homepage": "https://hydra.uvansa.com/",
   "repo": {
@@ -68,20 +74,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-hydra-20261031-023219-8f33",
-      "method": "pip",
+      "run_id": "verify-hydra-20261031-033417-15eb",
+      "method": "npm",
       "steps": [
         {
-          "command": "pip install hyctl",
-          "purpose": "Install hyctl via pip (README pip method)"
+          "command": "npm install -g hyctl 2>&1",
+          "purpose": "Install hyctl via npm global"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "hyctl version",
+        "command": "hyctl version 2>&1",
         "expected_signal": "hydra 1.5.0"
       },
-      "first_task": "hyctl version"
+      "first_task": "hyctl version 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -113,10 +119,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:37:14.961849+08:00",
+    "checked_at": "2026-10-31T03:35:34.387601+08:00",
     "runs": [
       {
-        "id": "verify-hydra-20261031-023219-8f33",
+        "id": "verify-hydra-20261031-033417-15eb",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -124,93 +130,158 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:37:14.961849+08:00",
+        "checked_at": "2026-10-31T03:35:34.387601+08:00",
         "tool_version": "1.5.0",
-        "install_method": "pip",
+        "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "pip install hyctl",
-            "purpose": "Install hyctl via pip (README pip method)"
+            "command": "npm install -g hyctl 2>&1",
+            "purpose": "Install hyctl via npm global"
           }
         ],
         "smoke_tests": [
           {
-            "command": "hyctl version",
+            "command": "hyctl version 2>&1",
             "expected_signal": "hydra 1.5.0",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "hydra 1.5.0",
             "setup": [],
-            "offline": false
+            "offline": true
           },
           {
-            "command": "hyctl --help",
-            "expected_signal": "Available Commands:",
+            "command": "hyctl probe 2>&1",
+            "expected_signal": "CORTEX",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Available Commands:",
+            "observed_excerpt": "⚡ CORTEX ──▶ Claude Opus 4.6 (Thinking)",
             "setup": [],
-            "offline": false
+            "offline": true
           },
           {
-            "command": "hyctl probe",
-            "expected_signal": "Head",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Multi-model AI orchestration, one Cortex, many Heads",
-            "setup": [],
-            "offline": false
-          },
-          {
-            "command": "hyctl trust benchmark",
+            "command": "hyctl trust benchmark 2>&1",
             "expected_signal": "blended",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "blended (71/29) 3.41 97.9% 32%",
             "setup": [],
-            "offline": false
+            "offline": true
+          },
+          {
+            "command": "hyctl dispatch --dry-run \"write a SQL migration\" 2>&1",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Error: no hydra config at /home/sbx/.hydra/config.toml, run: hyctl init",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "hyctl dispatch --dry-run \"process payment for card 4111-1111-1111-1111\" 2>&1",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Error: no hydra config at /home/sbx/.hydra/config.toml, run: hyctl init",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "hyctl cost 2>&1",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Error: no cost log at /home/sbx/.hydra/logs/cost.jsonl, has anything dispatched yet?",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "every method installs the same prebuilt binary and verifies its checksum",
-            "actually_needed": "pip installs a small shim; the prebuilt hydra binary (hydra_1.5.0_linux_amd64.tar.gz) is downloaded automatically on first hyctl invocation",
-            "kind": "tool_handled"
+            "readme_said": "brew install ankit373/hydra/hyctl && hyctl init",
+            "actually_needed": "used README npm method `npm install -g hyctl` because Homebrew is not in the Linux box",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "hyctl init first-run wizard takes about 60 seconds",
+            "actually_needed": "hyctl init refuses without a TTY; error says write ~/.hydra/config.toml directly, so dispatch/cost cannot run after README init in a non-interactive box",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show probe listing 7 Heads, trust benchmark with blended results, and hydra 1.5.0 version output, all exiting 0.",
+          "observed": "All three commands succeeded showing hydra 1.5.0, a CORTEX probe table, and a trust benchmark with blended results.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-hydra-20261031-023219-8f33/report.json",
+          "trace_path": "runs/verify/verify-hydra-20261031-033417-15eb/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-hydra-20261031-023219-8f33/check-1-cmd3.judged.png",
-            "runs/verify/verify-hydra-20261031-023219-8f33/check-2-cmd4.judged.png",
-            "runs/verify/verify-hydra-20261031-023219-8f33/check-3-cmd5.judged.png"
+            "runs/verify/verify-hydra-20261031-033417-15eb/check-1-cmd3.judged.png",
+            "runs/verify/verify-hydra-20261031-033417-15eb/check-2-cmd4.judged.png",
+            "runs/verify/verify-hydra-20261031-033417-15eb/check-3-cmd6.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.086279
+        "cost_usd": 0.124079,
+        "features": [
+          {
+            "feature": "discover every model on machine",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "route tasks by capability and cost",
+            "status": "test_failed",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "dispatch needs config from interactive init with no TTY in box"
+          },
+          {
+            "feature": "enforce PII policy",
+            "status": "test_failed",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "PII dispatch needs config from interactive init with no TTY in box"
+          },
+          {
+            "feature": "track spend across models",
+            "status": "test_failed",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "no cost log without a dispatch, which needs config from TTY init"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 86.3,
+      "total": 78.8,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -253,7 +324,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 42.72
+      "value": 39.01
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -501,8 +572,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T02:16:53+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "Discovers every model on your machine",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:27+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "github_api",
+      "quote": "routes by capability and cost",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:27+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "github_api",
+      "quote": "enforces PII policy",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:27+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "github_api",
+      "quote": "tracks spend",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-10-31T03:14:27+08:00"
     }
   ],
   "first_seen_at": "2026-10-30T23:42:53+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-10-31T13:19:37+08:00"
 }
