@@ -108,6 +108,16 @@ class GuiBox(FakeBox):
             return ExecResult("cat", 0, "0\n", "", 0.1)
         if argv[:1] == ["/usr/bin/ps"] and "Xvfb" in argv:  # root's view of the display server
             return ExecResult("ps", 0, " 1001 Xvfb\n", "", 0.1)
+        if argv[:1] == ["/usr/bin/readlink"]:  # Xvfb's network namespace, then the box's own
+            return ExecResult("readlink", 0, "net:[11]\nnet:[2]\n", "", 0.1)
+        if source.startswith("import os, socket, sys") and as_uid:  # the X ports, from Xvfb's namespace
+            return ExecResult("xports", 0, "ns net:[11] net:[11]\nclosed 127.0.0.1 6000 111\nclosed ::1 6000 111\n", "", 0.1)
+        if source.startswith("import os, random, socket"):  # DNS: from the display's namespace, or root's control
+            out = ("ns net:[11]\nno answer 172.21.0.1 OSError\nunresolved 127.0.0.1.nip.io [Errno -3]\n" if as_uid else
+                   "ns net:[2]\nanswered 172.21.0.1\nresolved 127.0.0.1.nip.io 127.0.0.1\n")
+            return ExecResult("names", 0, out, "", 0.1)
+        if "/proc/net/route" in " ".join(argv):  # root's view of the gateway and the resolver
+            return ExecResult("hosts", 0, "172.20.0.1 172.21.0.1\n", "", 0.1)
         return ExecResult(" ".join(argv), 0, "", "", 0.1)
 
     def harness_read(self, path: str, max_bytes: int) -> bytes:
@@ -440,6 +450,8 @@ def test_limits_test_on_a_display_box():
         f"ls {gui.EVIDENCE_DIR}": (0, "ls: Permission denied\ntouch: Permission denied\n", ""),
         "AF_VSOCK": (0, "closed 1 52 OSError 97\nclosed 2 52 OSError 97\n", ""),
         "io_uring": (0, "io_uring refused errno 1\n", ""),
+        "readlink /proc/self/ns/net": (0, "net:[9]\n", ""),
+        "font path": (0, "font path tcp/127.0.0.1.nip.io:7100 error 2\nfont path reset accepted\n", ""),
     }
 
     class Box(GuiBox):
@@ -456,7 +468,8 @@ def test_limits_test_on_a_display_box():
     results = {r.name: r for r in run_limits_test(box, log=lambda s: None)}
     assert {"no_userns", "no_io_uring", "vsock_closed", "display_server_uid", "display_server_held", "evidence_dir_closed",
             "display_window", "display_report_unforgeable", "internet_ip", "offline_internet_ip", "ipv6_blocked",
-            "multicast_no_answer", "gateway_ports_closed"} <= set(results)
+            "multicast_no_answer", "gateway_ports_closed", "display_no_tcp", "display_no_network"} <= set(results)
+    assert "root sees 172.20.0.1 172.21.0.1" in results["gateway_ports_closed"].detail
     assert [name for name, r in results.items() if not r.ok] == ["offline_dns"]  # a resolver that answers fails
     assert results["display_report_unforgeable"].detail.startswith("tier process_alive; child running True")
     assert "control as root: OPEN 2 52" in results["vsock_closed"].detail
@@ -658,3 +671,48 @@ def test_the_display_uid_probe_is_decided_by_roots_view(root: str, user: str, ok
             return ExecResult("ps", 0, root, "", 0.1)
 
     assert _display_uid(Box({"-C Xvfb": (0, user, "")})).ok is ok
+
+
+def _display_network_box(control: str, display: str, xvfb_ns: str = "net:[11]\nnet:[2]\n",
+                         font: str = "font path tcp/127.0.0.1.nip.io:7100 error 2\n") -> GuiBox:
+    class Box(GuiBox):
+        def harness_exec(self, argv, timeout_s, *, as_uid=None, stdin=None):
+            if argv[:1] == ["/usr/bin/readlink"]:
+                return ExecResult("readlink", 0, xvfb_ns, "", 0.1)
+            return ExecResult("names", 0, display if as_uid else control, "", 0.1)
+
+    return Box({"readlink /proc/self/ns/net": (0, "net:[9]\n", ""), "font path": (0, font, "")})
+
+
+CONTROL = "ns net:[2]\nanswered 172.21.0.1\nresolved 127.0.0.1.nip.io 127.0.0.1\n"
+CLOSED = "ns net:[11]\nno answer 172.21.0.1 OSError\nunresolved 127.0.0.1.nip.io [Errno -3]\n"
+
+
+@pytest.mark.parametrize("control, display, xvfb_ns, font, ok", [
+    (CONTROL, CLOSED, "net:[11]\nnet:[2]\n", "font path tcp/127.0.0.1.nip.io:7100 error 2\n", True),
+    # main's code: Xvfb in the box's own namespace, where the resolver answers it offline
+    (CONTROL, "ns net:[2]\nanswered 172.21.0.1\nresolved 127.0.0.1.nip.io 127.0.0.1\n", "net:[2]\nnet:[2]\n",
+     "font path tcp/127.0.0.1.nip.io:7100 accepted\n", False),
+    (CONTROL, CLOSED, "net:[11]\nnet:[2]\n", "font path tcp/127.0.0.1.nip.io:7100 accepted\n", False),
+    ("ns net:[2]\nno answer 172.21.0.1 OSError\n", CLOSED, "net:[11]\nnet:[2]\n",  # no control: undecided
+     "font path tcp/127.0.0.1.nip.io:7100 error 2\n", False),
+    (CONTROL, CLOSED, "net:[9]\nnet:[2]\n", "font path tcp/127.0.0.1.nip.io:7100 error 2\n", False),  # the box user's
+])
+def test_the_display_network_probe_is_decided_by_root(control: str, display: str, xvfb_ns: str, font: str, ok: bool):
+    from pickfit.verify.limits import _display_no_network
+
+    assert _display_no_network(_display_network_box(control, display, xvfb_ns, font)).ok is ok
+
+
+def test_the_gateway_probe_covers_the_real_gateway_root_sees():
+    from pickfit.verify.limits import _gateway
+
+    class Box(GuiBox):
+        def harness_exec(self, argv, timeout_s, *, as_uid=None, stdin=None):
+            return ExecResult("hosts", 0, "172.20.0.1 172.21.0.1\n", "", 0.1)
+
+    seen = Box({"/proc/net/route": (0, "hosts: 10.0.2.2 172.21.0.1 172.20.0.1\n", "")})
+    assert _gateway(seen).ok and "172.20.0.1 172.21.0.1" in seen.ran[-1][0]  # root's hosts go to the box user
+    assert not _gateway(Box({"/proc/net/route": (0, "hosts: 10.0.2.2 172.21.0.1\n", "")})).ok  # real gateway unprobed
+    assert not _gateway(Box({"/proc/net/route": (0, "hosts: 10.0.2.2 172.20.0.1 172.21.0.1\nopen 172.20.0.1:80\n",
+                                                  "")})).ok
