@@ -77,6 +77,16 @@ test('negation in English: without, no, no need for, do not need, does not requi
   assert.equal(dropNegated('不需要 GPU，但需要 CUDA').trim(), '，但需要 CUDA');
 });
 
+test('jobs: a tool whose profile never names the job is found by its jobs, in the shortlist and the rules', () => {
+  const runner = tool('runner', 'Runs open models from many families on your machine.', 50, { jobs: ['upscale blurry photos', 'super resolution'] });
+  const editor = tool('editor', 'Edits photos with layers.', 50);
+  const corpus = [runner, editor];
+  const words = rulesTerms('upscale my blurry photos');
+  assert.ok(rulesRelevance(corpus, corpus, words).get('runner')! > rulesRelevance(corpus, corpus, words).get('editor')!);
+  assert.ok(relevance(corpus, corpus, queryTerms('super resolution')).get('runner')! > 0);
+  assert.equal(relevance(corpus, corpus, queryTerms('super resolution')).get('editor'), 0);
+});
+
 test('rulesRelevance: a generic word counts for little; matching more of the request beats repeating one word', () => {
   const generic = tool('generic', 'Terminal tool for terminal files in the terminal.');
   const specific = tool('specific', 'Renames with a regex.');

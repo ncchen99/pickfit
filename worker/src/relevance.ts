@@ -50,6 +50,9 @@ function mcpToolNames(entry: Entry): string[] {
   return OSES.flatMap((os) => entry.install[os]?.mcp?.tools ?? []);
 }
 
+/** Weight of the jobs field (scripts/tool_jobs.py), fixed on the tuning sets (0.25-2 were compared; 0.5 kept the most suitable tools in the 60). */
+export const JOBS_WEIGHT = 0.5;
+
 /** BM25F-style field weights: a word in the name counts three times one in a use case. */
 const FIELDS: [number, (entry: Entry) => string[]][] = [
   [3, (e) => [e.name, e.slug]],
@@ -57,6 +60,7 @@ const FIELDS: [number, (entry: Entry) => string[]][] = [
   [1.5, (e) => [e.summary]],
   [1.5, (e) => e.alternatives_to],
   [1, (e) => e.use_cases],
+  [JOBS_WEIGHT, (e) => e.jobs ?? []],
   [1, (e) => [e.why_worth_it ?? '']],
   [1, (e) => [...new Set(mcpToolNames(e))]],
 ];

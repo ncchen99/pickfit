@@ -89,6 +89,8 @@ export interface Entry {
   maturity: string | null;
   tags: string[];
   use_cases: string[];
+  /** Jobs people ask this tool for, in their words, each shown by its README (scripts/tool_jobs.py); matched, never on a card. */
+  jobs?: string[];
   alternatives_to: string[];
   homepage: string | null;
   repo_url: string;
