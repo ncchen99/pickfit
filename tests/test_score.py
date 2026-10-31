@@ -303,13 +303,15 @@ def setup_records(tmp_path: Path, *, verified: bool = True) -> tuple[Path, Path]
                                       "steps": [{"command": "step 0"}, {"command": "step 1"}]}
         record["evidence"].append({"field": "/verification", "source_id": "github_api", "quote": None,
                                    "method": "sandbox", "checked_at": "2026-10-30T10:00:00+08:00"})
-        path.write_text(json.dumps(record))
+        # as profiles and write-back write a record: normalized, indented
+        path.write_text(json.dumps(SoftwareRecord.model_validate(record).model_dump(mode="json"), ensure_ascii=False,
+                                   indent=2) + "\n")
     return tmp_path / "pipeline.db", out
 
 
 def test_scoring_writes_only_scores_and_reuses_the_rubric(tmp_path: Path) -> None:
     db_path, out = setup_records(tmp_path)
-    before = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text()).model_dump(mode="json")
+    before = json.loads((out / "tinyq.json").read_text())
     calls: list[str] = []
     summary = score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER,
                             grade=fake_grade(calls=calls))
@@ -426,7 +428,8 @@ def test_refresh_moves_scores_of_a_refreshable_formula_and_score_refresh_writes_
     old = next(iter(REFRESHABLE_FROM))
     data["scores"]["formula_version"] = old
     data["verification"]["runs"][0]["pitfalls"] = [{"readme_said": "tool link", "actually_needed": "tool pair",
-                                                    "kind": "note"}]
+                                                    "kind": "note"},
+                                                   {"readme_said": "a", "actually_needed": "b"}]  # written before kind
     path.write_text(json.dumps(data))
     before = SoftwareRecord.model_validate_json(path.read_text()).model_dump(mode="json")
     assert refresh_records(out, dry_run=True, now=LATER).written == ["tinyq"]
@@ -434,11 +437,12 @@ def test_refresh_moves_scores_of_a_refreshable_formula_and_score_refresh_writes_
     summary = refresh_records(out, now=LATER)
     assert summary.written == ["tinyq"] and "moved from formula" in summary.rows[0]["note"]
     after = json.loads(path.read_text())
-    assert {k for k in after if after[k] != before.get(k)} == {"scores", "updated_at"}
+    assert {k for k in after if after[k] != data.get(k)} == {"scores", "updated_at"}  # the file, key by key
+    assert "kind" not in after["verification"]["runs"][0]["pitfalls"][1]  # no schema default added
     scores = SoftwareRecord.model_validate(after).scores
     assert scores.formula_version == FORMULA_VERSION and scores.docs_rubric == SoftwareRecord.model_validate(
         before).scores.docs_rubric  # other components kept as they were
-    assert scores.quality.components.sandbox_verification.score == 1.0  # a note is not a README fix
+    assert scores.quality.components.sandbox_verification.score == 0.85  # the note is not a fix; "a"/"b" is
     assert refresh_records(out, now=LATER).unchanged == ["tinyq"]
     after["scores"]["formula_version"] = "q0"  # not refreshable: left for a full rescore, never cleared
     path.write_text(json.dumps(after))

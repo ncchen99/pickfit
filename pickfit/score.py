@@ -758,8 +758,14 @@ class ScoreSummary:
                 "cost_usd": round(self.cost_usd, 6), "records": self.rows}
 
 
-def _render(record: SoftwareRecord) -> str:
-    return json.dumps(record.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n"
+def _with_scores(raw: dict[str, Any], scores: dict[str, Any] | None, updated_at: str) -> str:
+    """The record file with only scores and updated_at replaced. The whole record is validated, but the
+    other fields are written as they were read, so a schema default added since the record was written
+    (a pitfall's kind: null) does not show up as a change to them."""
+    raw = {**raw, "scores": scores, "updated_at": updated_at}
+    record = SoftwareRecord.model_validate(raw)
+    raw["scores"] = record.scores.model_dump(mode="json") if record.scores else None
+    return json.dumps(raw, ensure_ascii=False, indent=2) + "\n"
 
 
 def _write(path: Path, text: str) -> None:
@@ -857,12 +863,9 @@ def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: st
     if _same_scores(old.model_dump(mode="json") if old else None, scores):
         row["status"] = "unchanged"
         return row
-    data = record.model_dump(mode="json")
-    data["scores"] = scores
-    data["updated_at"] = now.isoformat(timespec="seconds")
-    updated = SoftwareRecord.model_validate(data)
+    text = _with_scores(json.loads(path.read_text(encoding="utf-8")), scores, now.isoformat(timespec="seconds"))
     if not dry_run:
-        _write(path, _render(updated))
+        _write(path, text)
     row["status"] = "written"
     return row
 
@@ -971,10 +974,9 @@ def refresh_records(data_dir: Path, *, slugs: list[str] | None = None, dry_run: 
                    quality=after["quality"]["total"] if after else None, treasure_before=old_treasure,
                    treasure=after["treasure"]["is_treasure"] if after else None)
         if note:
-            data["updated_at"] = now.isoformat(timespec="seconds")
-            updated = SoftwareRecord.model_validate(data)
+            text = _with_scores(data, data["scores"], now.isoformat(timespec="seconds"))
             if not dry_run:
-                _write(path, _render(updated))
+                _write(path, text)
             summary.written.append(path.stem)
             log(f"  written   {path.stem:<26} Q {old_quality} -> {row['quality']} · {note}")
         else:
