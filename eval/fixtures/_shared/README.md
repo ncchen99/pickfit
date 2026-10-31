@@ -14,6 +14,7 @@
 | `git_diff_lines.py` | git diff 改了幾行（第 4 節） | q07、q09 |
 | `selftest_dict/` | `zh_script.py` 測試用的手寫小字典（**不是** OpenCC 的資料） | 測試 |
 | `test_shared.py` | 本資料夾的測試（`python3 test_shared.py`；不用網路、不用 strace） | 測試 |
+| `test_ollama_scope.py` | q18–q20 的啟動腳本只讓評分者啟動的那一個 Ollama 帶 `OLLAMA_NO_CLOUD=1`，答案自己啟動的伺服器不帶（9.3 C.5） | q18、q19、q20 |
 | `needs.json` | 要外部取得、等念誠決定的東西 | |
 | `calibration.md` | 第一次開跑前在 L2 沙盒做的校準與紀錄表 | |
 

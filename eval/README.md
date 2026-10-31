@@ -365,7 +365,7 @@ README 列出每一題兩組的結果，**包括輸的題與兩組都沒過的�
    - q18：`llama3.2:3b`，經 Ollama 自己的 API 與經 logging proxy 的工具呼叫都是 3/3。
    - q19：第 1 個候選 `llama3.2:3b` 的參考 harness 0/3（把那句話原樣寫進 `hello.py`，或把工具呼叫寫成一般文字），所以照本節在任何一組開跑前換模型，選法先寫進 `q19/calibration.md` 再跑：`qwen2.5:7b` 3/3、`qwen3:4b` 2/3（第 3 次超過 900 秒）→ 採用 `qwen2.5:7b`。它處理約 17,000 token 的長提示要 758 秒（超過該檔設的 600 秒參考線，但沒有更快又 3/3 的候選）；真的 coding agent 可能因此來不及在 15 分鐘內完成，兩組相同，報告寫明。q18、q19 因此用不同的固定模型。
    - q20：`qwen2.5:0.5b`，網路開著與封鎖時同一個呼叫都成功；封鎖時呼叫時段內沒有任何對外連線嘗試。
-5. 測試環境的 Ollama 以它文件寫的 local-only 模式啟動（`OLLAMA_NO_CLOUD=1`，寫在各題啟動固定服務的腳本裡）。校準時沒有這個設定，`ollama serve` 一啟動就自己連 ollama.com:443（q18 C6）；這是測試環境的設定，兩組相同，不是答案的步驟。
+5. 測試環境的 Ollama 以它文件寫的 local-only 模式啟動（`OLLAMA_NO_CLOUD=1`，寫在各題啟動固定服務的腳本裡）。校準時沒有這個設定，`ollama serve` 一啟動就自己連 ollama.com:443（q18 C6）；這是測試環境的設定，兩組相同，不是答案的步驟。它只加在評分者啟動腳本裡那一個 `ollama serve` 指令前面（不 export，也不用會影響同一使用者所有 Ollama 的 `~/.ollama/server.json`）；答案自己的步驟啟動的 Ollama 或任何其他伺服器照原樣執行、不帶這個設定，它們的任何對外連線都算答案的（`eval/fixtures/_shared/test_ollama_scope.py` 檢查這一點）。
 
 #### D. q11 的硬體（第 4 項）
 

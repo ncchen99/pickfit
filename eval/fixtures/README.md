@@ -12,6 +12,7 @@
 
 ```sh
 python3 _shared/test_shared.py
+python3 _shared/test_ollama_scope.py
 (cd q01 && python3 server/selftest.py)
 (cd q05 && python3 test_check_md.py && python3 verify_fixtures.py)
 (cd q06 && python3 test_q06.py)
