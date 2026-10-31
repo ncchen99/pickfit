@@ -1119,9 +1119,10 @@ def prepare_router(*, iso: Path | None = None, name: str = ROUTER_VM, vboxmanage
 # in its first phase on Hyper-V (an AHCI port reset, then no disk I/O for hours). 6 GB leaves the host ~1.5 GB.
 # More vCPUs than physical cores does not work here: with 6, the firmware hung in PciHostBridgeDxe and never booted.
 # With 4, OOBE sat idle for an hour with vCPU0's TSC ~35,000 s off the others (NEM SMP timekeeping); restarted on
-# 1 vCPU, the same install finished in minutes. So 1 until more is shown to be stable under NEM.
+# 1 vCPU, the same install finished in minutes. Hyper-V and Memory Integrity are now off on this host, so
+# VirtualBox runs on VT-x (HM) instead of NEM; 2 vCPUs until more is shown to be stable.
 WIN_MEMORY_MB = 6144
-WIN_CPUS = 1
+WIN_CPUS = 2
 WIN_DISK_MB = 65536  # Windows 11 setup requires 64 GB; the VDI is dynamic (about 25 GB used)
 
 PROVISION_SYSTEM = r"""
@@ -1138,6 +1139,12 @@ Set-ItemProperty $st AutoDownload 2 -Type DWord
 Set-ItemProperty 'HKLM:\System\CurrentControlSet\Control\Terminal Server' fDenyTSConnections 1 -Type DWord
 Stop-Service WinRM -ErrorAction SilentlyContinue
 Set-Service WinRM -StartupType Disabled
+# The guest may have come up before the router did (a 169.254 address): renew until DNS answers.
+for ($i = 0; $i -lt 24; $i++) {
+  ipconfig /renew *> $null
+  if (Resolve-DnsName activation-v2.sls.microsoft.com -ErrorAction SilentlyContinue) { break }
+  Start-Sleep 5
+}
 cscript //nologo "$env:SystemRoot\System32\slmgr.vbs" /ato
 cscript //nologo "$env:SystemRoot\System32\slmgr.vbs" /dli
 "build=$([Environment]::OSVersion.Version.Build).$((Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').UBR)"
