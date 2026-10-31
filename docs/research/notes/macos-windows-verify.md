@@ -484,11 +484,12 @@ GitHub Actions 沒有採用。改在念誠的 Windows 11 Home 筆電（i5-1135G7
   | nlm-memory | function | 0.21.20 | npm | verify-nlm-memory-20261031-220955-fd3d | |
   | akm | function | 0.10.261022 | npm | verify-akm-20261031-221817-e9c3 | |
   | martty | function | 0.3.3 | npm | verify-martty-20261031-222518-09bb | |
-  | aria-code | function | 0.165.0 | npm | verify-aria-code-20261031-223659-aa9c | **要審**：function 只靠 `aria update --check`（"You are up to date."，offline false）；`--help`、`--version` 只到 install。照協調 session 的規則（要網路的 smoke 不算 function），應該算 install。紀錄是 pipeline（合併 main 之後的版本）判的，我沒有改 |
+  | aria-code | **install**（pipeline 判 function） | 0.165.0 | npm | verify-aria-code-20261031-223659-aa9c | 協調 session 決定記為 install。唯一不是查版本的檢查是 `aria update --check`（"You are up to date."，offline false），它連網查有沒有新版，沒有用到工具本身的功能；`--help`、`--version` 只到 install。main 的規則是任何不是查版本的檢查都算 function（只連網才過的會標成需要網路），所以 pipeline 判 function；這裡保守降一級。main 的 verdict 規則這次不動 |
   | alysiscode | function | 0.15.2 | pipx | verify-alysiscode-20261031-224540-1927 | |
-  | labelize | function | 1.10.0 | binary | verify-labelize-20261031-230031-6dff | **要審**：這次裝的是 GitHub release 的官方 Windows 執行檔（labelize-x86_64-pc-windows-msvc.zip），不是之前的 npm wasm 套件；抽取的 install_methods 裡沒有這條（只有 brew、cargo、npm wasm、docker），算不算 README 的裝法由審查決定 |
+  | labelize | function | 1.10.0 | release binary | verify-labelize-20261031-230031-6dff | 協調 session 接受：裝的是專案自己 GitHub releases 的官方 Windows 執行檔（labelize-x86_64-pc-windows-msvc.zip），P3.2 的安裝順序本來就包含 release 二進位，斷網重播也通過。README 的安裝段沒有列這條（brew、cargo、npm wasm、docker）；這只是註明，不算 README 修正 |
 
-  - labelize 第一次（225314）判 unverified：agent 宣稱 service，但有一步的最後一條是 `echo`，蓋掉了前面的 exit code，log 支持不了這個宣稱。第二次通過。
+  - labelize 第一次（225314）判 unverified：agent 宣稱 service，但有一步的最後一條是 `echo`，蓋掉了前面的 exit code，log 支持不了這個宣稱。第二次通過；225314 那筆留著當證據。
+  - 結果：8 款 function、aria-code install。寫回 `data/` 還沒做，合併後再提方案（install.windows、verification、證據放哪裡、Worker 怎麼顯示）。
   - 這台 Meta 累計 $0.426。
 
 ---
