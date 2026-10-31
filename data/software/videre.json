@@ -1,0 +1,534 @@
+{
+  "schema_version": "software.v1",
+  "slug": "videre",
+  "repo_id": "gh:1344974275",
+  "name": "videre",
+  "summary": "Local-first CLI to scan, dedupe, search, and browse photos and videos.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "classification",
+    "duplicate-detection",
+    "duplicate-removal",
+    "embedding",
+    "exiftool",
+    "face-clustering",
+    "face-search",
+    "geolocation",
+    "image-processing",
+    "image-search"
+  ],
+  "use_cases": [
+    "find and remove identical and near-identical duplicates",
+    "search photos by describing them in natural language",
+    "detect faces, group them automatically and search by person",
+    "browse library in local web gallery UI",
+    "fix wrong file dates from EXIF data"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://videre.sh",
+  "repo": {
+    "url": "https://github.com/aegea-dev/videre",
+    "full_name": "aegea-dev/videre",
+    "created_at": "2026-08-24T13:13:27Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install aegea-dev/tap/videre",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "videre scan"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-videre-20261101-002755-80f0",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fL -o /tmp/videre.tar.gz https://github.com/aegea-dev/videre/releases/download/v0.64.2/videre-v0.64.2-x86_64-unknown-linux-gnu.tar.gz",
+          "purpose": "download x86_64 Linux binary tarball from GitHub releases v0.64.2"
+        },
+        {
+          "command": "tar -xzf /tmp/videre.tar.gz -C /tmp && cp /tmp/videre ~/.local/bin/videre && chmod +x ~/.local/bin/videre",
+          "purpose": "extract and install binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "~/.local/bin/videre --version",
+        "expected_signal": "videre 0.64.2"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.64.2",
+    "published_at": "2026-10-23T17:02:19Z",
+    "url": "https://github.com/aegea-dev/videre/releases/tag/v0.64.2"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:29:08.495437+08:00",
+    "runs": [
+      {
+        "id": "verify-videre-20261101-002755-80f0",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:29:08.495437+08:00",
+        "tool_version": "0.64.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fL -o /tmp/videre.tar.gz https://github.com/aegea-dev/videre/releases/download/v0.64.2/videre-v0.64.2-x86_64-unknown-linux-gnu.tar.gz",
+            "purpose": "download x86_64 Linux binary tarball from GitHub releases v0.64.2"
+          },
+          {
+            "command": "tar -xzf /tmp/videre.tar.gz -C /tmp && cp /tmp/videre ~/.local/bin/videre && chmod +x ~/.local/bin/videre",
+            "purpose": "extract and install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "~/.local/bin/videre --version",
+            "expected_signal": "videre 0.64.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "videre 0.64.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/testvidere_final && cp /tmp/testlib/sample.jpg /tmp/testvidere_final/a.png && cp /tmp/testlib/sample.jpg /tmp/testvidere_final/b.png && ~/.local/bin/videre --library /tmp/testvidere_final scan",
+            "expected_signal": "2/2 images processed",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "cp: cannot stat '/tmp/testlib/sample.jpg': No such file or directory",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "~/.local/bin/videre --library /tmp/testvidere_final dedupe --json",
+            "expected_signal": "\"total_files\":2",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "{\"schema_version\":1,\"error\":{\"message\":\"library /tmp/testvidere_final is not initialized: /tmp/testvidere_final/.videre does not exist\"}}",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install videre --locked",
+            "actually_needed": "No Rust toolchain in box; used binary download from latest release (README's documented alternative) to ~/.local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "videre search \"golden gate bridge at sunset\"",
+            "actually_needed": "Search requires prior `videre embed` which downloads ~1.5 GB model; without it search exits 1 with guidance to run `videre embed`",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows videre --version printing videre 0.64.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-videre-20261101-002755-80f0/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-videre-20261101-002755-80f0/check-1-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.086359
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 65.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 43.4,
+      "signals": {
+        "stars": 16,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 191,
+        "hn_top_score": 5,
+        "registries_count": 0
+      },
+      "age_days": 67,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 37.19
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "383370c80b22ae796f417aa8e872313e71331ecb9be16e5dc5c9265195314bb3",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A local-first tool for making sense of a folder full of photos and videos."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "No Rust toolchain needed, nothing to compile."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install aegea-dev/tap/videre"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "videre scan\n```\n\nThat builds a database at `~/Photos/.videre/hashes.db` describing what you have."
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "Check with `which videre`, and remove it with\n`cargo uninstall videre`."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Free and open source under the permissive Apache 2.0 licence"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/aegea-dev/videre",
+      "fetched_at": "2026-10-31T20:23:05+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/aegea-dev/videre/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:27:41+08:00"
+    },
+    {
+      "id": "release:v0.64.2",
+      "kind": "release",
+      "url": "https://github.com/aegea-dev/videre/releases/tag/v0.64.2",
+      "fetched_at": "2026-10-31T20:27:41+08:00"
+    },
+    {
+      "id": "hn:50117598",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=50117598",
+      "fetched_at": "2026-10-31T20:23:05+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "because it's an ordinary command-line tool over an ordinary SQLite file",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:51+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Point it at a directory and you get a single SQLite file",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:51+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "The search and face models and the offline map are downloaded once on first use",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:51+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A local-first tool for making sense of a folder full of photos and videos.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:51+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# videre",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:51+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "On macOS or Linux with Homebrew:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:51+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "after that the one network call is `videre search --location \"Berlin\"`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:51+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:23:05+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:23:05+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:23:05+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:23:05+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:23:05+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.64.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:27:41+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "find and remove duplicates (identical *and* near-identical)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:51+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "search your photos by describing them, like \"sunset over water\" or \"my red car\"",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:51+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "recognise faces, group them automatically, and search by person",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:51+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "browse it all in `videre gallery`, a local web UI with every file",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:51+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "fix wrong file dates from the camera's own EXIF data",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:51+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install aegea-dev/tap/videre",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:51+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install videre --locked",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:51+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Free and open source under the permissive Apache 2.0 licence",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:51+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Nothing leaves your machine. No account, no upload, no telemetry.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:51+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:23:05+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}

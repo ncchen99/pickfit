@@ -240,6 +240,27 @@ def test_slug_clash_uses_the_owner_and_rewrites_keep_slug_and_verification(db: P
     assert len(build_index(out, now=NOW).index["entries"]) == 2
 
 
+def test_a_show_hn_post_is_listed_as_a_source_but_backs_no_field(db: PipelineDB, tmp_path: Path) -> None:
+    from pickfit.discover.showhn import Post
+
+    key = add(db, 7, "someone/tinyq", extraction())
+    post = Post(item_id="4242", title="Show HN: tinyq", link="https://github.com/someone/tinyq", points=12,
+                comments=3, posted_at="2026-10-27T10:00:00+00:00", repo="someone/tinyq", categories=["dev_cli"])
+    db.save_channel_hit(channel="show_hn", post=post, repo_id=key, outcome="candidate", known_before=False,
+                        run_id="discover-show_hn-test", seen_at="2026-10-31T21:00:00+08:00")
+    out = tmp_path / "software"
+    write_profiles(db, model=MODEL, out_dir=out, now=NOW)
+    record = read(out, "tinyq")
+    assert record["sources"][-1] == {"id": "hn:4242", "kind": "hn",
+                                     "url": "https://news.ycombinator.com/item?id=4242",
+                                     "fetched_at": "2026-10-31T21:00:00+08:00"}
+    assert not [e for e in record["evidence"] if e["source_id"] == "hn:4242"]
+    # Writing again keeps one copy of it.
+    assert write_profiles(db, model=MODEL, out_dir=out, now=NOW).unchanged == ["tinyq"]
+    assert [s["id"] for s in read(out, "tinyq")["sources"]].count("hn:4242") == 1
+    assert len(build_index(out, now=NOW).index["entries"]) == 1
+
+
 def test_repeated_list_values_are_kept_once(db: PipelineDB, tmp_path: Path) -> None:
     keys = [cited("JQ_KEY", "jq-like"), cited("JQ_KEY", "jq-like")]
     add(db, 7, "someone/tinyq", extraction(prerequisites={**extraction()["prerequisites"], "api_keys": keys}))

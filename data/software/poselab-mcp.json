@@ -1,0 +1,851 @@
+{
+  "schema_version": "software.v1",
+  "slug": "poselab-mcp",
+  "repo_id": "gh:1409117188",
+  "name": "Pose Lab",
+  "summary": "MCP server that measures, solves and fixes first-person arm and rifle poses in Blender.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "blender",
+    "mcp",
+    "pypi",
+    "python"
+  ],
+  "use_cases": [
+    "search rifle moves against goals and report which goals no move can meet",
+    "measure how deep the rifle clips inside an arm or hand",
+    "measure how squarely a surface faces the eye and what the eye sees",
+    "scan an animation clip frame by frame against pose checks",
+    "mend failing clip frames and report scan before and after"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/hpdkhoa/poselab-mcp",
+    "full_name": "hpdkhoa/poselab-mcp",
+    "created_at": "2026-10-07T17:04:52Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.10 or newer"
+    ],
+    "system_packages": [
+      "Blender"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-poselab-mcp-20261101-002050-b546",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install poselab-mcp",
+          "purpose": "install poselab-mcp via uv tool install"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": null,
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:22:03.469437+08:00",
+    "runs": [
+      {
+        "id": "verify-poselab-mcp-20261101-002050-b546",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:22:03.469437+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install poselab-mcp",
+            "purpose": "install poselab-mcp via uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 /home/sbx/.pickfit/mcp_probe.py -- poselab-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 /home/sbx/.pickfit/mcp_probe.py --call arm_ranges --args '{}' -- poselab-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=arm_ranges content=text text_chars=10277",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Prerequisites: Blender",
+            "actually_needed": "MCP handshake and tool arm_ranges succeed without Blender installed; other tools like describe/list_rigs/where fail without a loaded rig/Blender context",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show successful MCP handshake with 31 tools listed and a successful arm_ranges tool call returning data.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-poselab-mcp-20261101-002050-b546/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-poselab-mcp-20261101-002050-b546/check-1-cmd4.judged.png",
+            "runs/verify/verify-poselab-mcp-20261101-002050-b546/check-2-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.055531,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "poselab-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "poselab",
+          "server_version": "0.7.0",
+          "tools": [
+            "list_rigs",
+            "load_rig",
+            "describe",
+            "pose_idle",
+            "pose_clip",
+            "move_part",
+            "move_gun",
+            "reach",
+            "turn_bone",
+            "snapshot",
+            "where",
+            "distance",
+            "clearance",
+            "anatomy",
+            "grip",
+            "arm_ranges",
+            "faces_eye",
+            "visible",
+            "screen",
+            "solve",
+            "record_clip",
+            "load_clip",
+            "scan_clip",
+            "fix_clip",
+            "view_cover",
+            "solve_grip",
+            "retarget_clip",
+            "shift_hand",
+            "check_set",
+            "save_clip",
+            "render"
+          ],
+          "tool_count": 31,
+          "called_tool": "arm_ranges",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "uvx poselab-mcp",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add poselab -- uvx poselab-mcp"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"poselab\": {\n      \"command\": \"uvx\",\n      \"args\": [\"poselab-mcp\"],\n      \"env\": { \"POSELAB_BLENDER\": \"C:/Program Files/Blender Foundation/Blender 5.2/blender.exe\" }\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "POSELAB_BLENDER",
+        "required": null,
+        "purpose": "Blender's executable location"
+      },
+      {
+        "name": "POSELAB_RIGS",
+        "required": null,
+        "purpose": "rigs.json describing own rigs"
+      },
+      {
+        "name": "POSELAB_OUT",
+        "required": null,
+        "purpose": "folder Pose Lab writes to"
+      }
+    ],
+    "tools": [
+      "list_rigs",
+      "load_rig",
+      "describe",
+      "pose_idle",
+      "pose_clip",
+      "move_part",
+      "snapshot",
+      "move_gun",
+      "reach",
+      "turn_bone",
+      "where",
+      "distance",
+      "clearance",
+      "purpose",
+      "anatomy",
+      "grip",
+      "arm_ranges",
+      "faces_eye",
+      "visible",
+      "screen",
+      "solve",
+      "render",
+      "record_clip",
+      "load_clip",
+      "scan_clip",
+      "fix_clip",
+      "save_clip",
+      "view_cover",
+      "solve_grip",
+      "retarget_clip"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 81.6,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.6,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 31.6,
+      "signals": {
+        "stars": 1,
+        "monthly_downloads": 57,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 2,
+        "registries_count": 1
+      },
+      "age_days": 23,
+      "packages": [
+        "pypi:poselab-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 55.81
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "14792d57d90b88e79e9a927a01bf2f7d7d0e9f3545b37ced13821db2c6a0d010",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Measured spatial answers for posing first-person arms and a rifle in Blender."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Pose Lab gives a model numbers instead."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "You need [Blender](https://www.blender.org/download/) and Python 3.10 or newer."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "uvx poselab-mcp"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "python examples/selftest.py"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `POSELAB_BLENDER` | Blender's executable, if it is not on the PATH or in the usual install folder |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "<a href=\"LICENSE\"><img alt=\"license: MIT\" src=\"https://img.shields.io/badge/license-MIT-blue\"></a>\n  <a href=\"pyproject.toml\"><img alt=\"Python 3.10+\""
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/hpdkhoa/poselab-mcp",
+      "fetched_at": "2026-10-31T20:22:16+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/hpdkhoa/poselab-mcp/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:27:19+08:00"
+    },
+    {
+      "id": "hn:50029698",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=50029698",
+      "fetched_at": "2026-10-31T20:22:16+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "poselab_mcp/server.py`: the MCP server (the official Python SDK, stdio).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "uvx poselab-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "poselab_mcp/server.py`: the MCP server (the official Python SDK, stdio).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Measured spatial answers for posing first-person arms and a rifle in Blender.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">Pose Lab</h1>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.10 or newer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "You need [Blender](https://www.blender.org/download/) and Python 3.10 or newer.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:16+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:16+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:16+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:16+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "searches rifle moves against goals; reports each goal and how often any sample met it",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "how deep the rifle sits inside a forearm, palm or finger, measured to its surface, and where",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "how squarely a surface faces the eye, how much of it the eye sees, where it falls on screen",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "every frame against checks; the worst value, when, and the time spans that fail",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "mends what fails and reports the scan before and after, and what no fix can reach",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "starts one headless Blender on the first call and keeps the rig loaded.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "the MCP server (the official Python SDK, stdio)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "uvx poselab-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add poselab -- uvx poselab-mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"poselab\": {\n      \"command\": \"uvx\",\n      \"args\": [\"poselab-mcp\"],\n      \"env\": { \"POSELAB_BLENDER\": \"C:/Program Files/Blender Foundation/Blender 5.2/blender.exe\" }\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "POSELAB_BLENDER",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "POSELAB_RIGS",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "POSELAB_OUT",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`list_rigs`, `load_rig`, `describe`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`list_rigs`, `load_rig`, `describe`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`list_rigs`, `load_rig`, `describe`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`pose_idle`, `pose_clip`, `move_part`, `snapshot`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`pose_idle`, `pose_clip`, `move_part`, `snapshot`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`pose_idle`, `pose_clip`, `move_part`, `snapshot`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`pose_idle`, `pose_clip`, `move_part`, `snapshot`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`move_gun`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`reach`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`turn_bone`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`where`, `distance`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`where`, `distance`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`clearance`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "`purpose`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/14",
+      "source_id": "readme",
+      "quote": "`anatomy`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/15",
+      "source_id": "readme",
+      "quote": "`grip`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/16",
+      "source_id": "readme",
+      "quote": "`arm_ranges`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/17",
+      "source_id": "readme",
+      "quote": "`faces_eye`, `visible`, `screen`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/18",
+      "source_id": "readme",
+      "quote": "`faces_eye`, `visible`, `screen`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/19",
+      "source_id": "readme",
+      "quote": "`faces_eye`, `visible`, `screen`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/20",
+      "source_id": "readme",
+      "quote": "`solve`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/21",
+      "source_id": "readme",
+      "quote": "`render`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/22",
+      "source_id": "readme",
+      "quote": "`record_clip`, `load_clip`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/23",
+      "source_id": "readme",
+      "quote": "`record_clip`, `load_clip`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/24",
+      "source_id": "readme",
+      "quote": "`scan_clip`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/25",
+      "source_id": "readme",
+      "quote": "`fix_clip`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/26",
+      "source_id": "readme",
+      "quote": "`save_clip`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/27",
+      "source_id": "readme",
+      "quote": "`view_cover`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/28",
+      "source_id": "readme",
+      "quote": "`solve_grip`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    },
+    {
+      "field": "/mcp/tools/29",
+      "source_id": "readme",
+      "quote": "`retarget_clip`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:21+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:22:16+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}

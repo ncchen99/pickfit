@@ -1,0 +1,518 @@
+{
+  "schema_version": "software.v1",
+  "slug": "strata",
+  "repo_id": "gh:1247384025",
+  "name": "Strata",
+  "summary": "Shared memory for fleets of AI coding agents with LLM-judged contributions.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/oren198/Strata",
+    "full_name": "oren198/Strata",
+    "created_at": "2026-05-23T08:35:49Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.11"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "JUDGE_API_KEY"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-strata-20261101-002426-1e81",
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install strata-mem",
+          "purpose": "install strata-mem via pipx (provides strata and strata-mcp)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "strata --version 2>&1",
+        "expected_signal": "strata 1.19.0"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.19.0",
+    "published_at": "2026-10-28T06:36:13Z",
+    "url": "https://github.com/oren198/Strata/releases/tag/v1.19.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:25:58.084177+08:00",
+    "runs": [
+      {
+        "id": "verify-strata-20261101-002426-1e81",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:25:58.084177+08:00",
+        "tool_version": "1.19.0",
+        "install_method": "pipx",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pipx install strata-mem",
+            "purpose": "install strata-mem via pipx (provides strata and strata-mcp)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "strata --version 2>&1",
+            "expected_signal": "strata 1.19.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "strata 1.19.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/strata-test && python3 /home/sbx/.pickfit/mcp_probe.py --timeout 30 -- strata-mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/strata-test && cd /tmp/strata-test && git init -q && strata register --harness claude-code --harness codex --description \"test scope\" 2>&1 | head -n 100\nls -R .strata 2>&1 | head -n 100\ncat .strata/fleet.yaml 2>&1 | head -n 100\ncat .strata/config.toml 2>&1 | head -n 100",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/strata-test && python3 /home/sbx/.pickfit/mcp_probe.py --call strata_list_scopes --args '{}' -- strata-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=strata_list_scopes content=text text_chars=340",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/strata-test && cd /tmp/strata-test && git init -q && strata register --harness claude-code --harness codex --description \"test scope\" 2>&1 | head -n 100\nls -R .strata 2>&1 | head -n 100\ncat .strata/fleet.yaml 2>&1 | head -n 100\ncat .strata/config.toml 2>&1 | head -n 100",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "strata-mcp starts unconditionally",
+            "actually_needed": "MCP server requires a registered project (strata register creates .strata/config.toml and fleet.yaml) and must be launched from that project directory; without it it exits with 3 validation failures",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show strata version 1.19.0, MCP handshake with 17 tools, and successful strata_list_scopes call.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-strata-20261101-002426-1e81/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-strata-20261101-002426-1e81/check-1-cmd10.judged.png",
+            "runs/verify/verify-strata-20261101-002426-1e81/check-2-cmd7.judged.png",
+            "runs/verify/verify-strata-20261101-002426-1e81/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.076926,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "strata-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "strata",
+          "server_version": "1.29.1",
+          "tools": [
+            "strata_bind",
+            "strata_contribute",
+            "strata_rejudge",
+            "strata_publish",
+            "strata_withdraw",
+            "strata_restore",
+            "strata_read_scope_summary",
+            "strata_read_perspective",
+            "strata_list_scopes",
+            "strata_read_scope_record",
+            "strata_read_contribution",
+            "strata_session_stats",
+            "strata_session_closeout",
+            "strata_fleet_propose",
+            "strata_fleet_pending",
+            "strata_fleet_approve",
+            "strata_fleet_reject"
+          ],
+          "tool_count": 17,
+          "called_tool": "strata_list_scopes",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": null,
+    "client_configs": [],
+    "env_vars": [
+      {
+        "name": "JUDGE_API_KEY",
+        "required": null,
+        "purpose": "judge API key"
+      }
+    ],
+    "tools": [
+      "strata_read_perspective",
+      "strata_contribute",
+      "strata_session_closeout",
+      "strata_rejudge"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 91.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 39.5,
+      "signals": {
+        "stars": 4,
+        "monthly_downloads": 775,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 1,
+        "registries_count": 1
+      },
+      "age_days": 161,
+      "packages": [
+        "pypi:strata-mem"
+      ]
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 55.18
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "0006fb11deed2f69fe1a2739cac0ec57bf6b10543be0bf61252f2a607d6855e4",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Strata gives a fleet of AI coding agents shared memory."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Claude Code session and a Codex session bound to the same scope."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**Python 3.11 or newer** (`strata-mem` declares `requires-python >=3.11`)."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pipx install strata-mem      # strata + strata-mcp on PATH, in an isolated env"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "strata register               # wires memory into this project"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "JUDGE_API_KEY=sk-or-..."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Run `strata doctor` first — it checks config, DB, `fleet.yaml`, harness wiring,"
+        },
+        "license_and_platforms": {
+          "score": 0,
+          "quote": null
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/oren198/Strata",
+      "fetched_at": "2026-10-31T20:20:08+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/oren198/Strata/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:26:22+08:00"
+    },
+    {
+      "id": "release:v1.19.0",
+      "kind": "release",
+      "url": "https://github.com/oren198/Strata/releases/tag/v1.19.0",
+      "fetched_at": "2026-10-31T20:26:22+08:00"
+    },
+    {
+      "id": "hn:49807583",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=49807583",
+      "fetched_at": "2026-10-31T20:20:08+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "the agent has these tools:\n`strata_read_perspective`, `strata_contribute`, `strata_session_closeout`, and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:15+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "pipx install strata-mem      # strata + strata-mcp on PATH, in an isolated env",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:15+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "adds the `strata` server to `.mcp.json`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:15+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Shared Memory for Agent Fleets",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:15+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Strata",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:15+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.11 or newer",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:15+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "JUDGE_API_KEY=sk-or-...",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:15+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:20:08+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:20:08+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:20:08+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.19.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:26:22+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "`strata` is a local-first Python service: SQLite + markdown storage",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:15+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "JUDGE_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:15+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`strata_read_perspective`, `strata_contribute`, `strata_session_closeout`, and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:15+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`strata_read_perspective`, `strata_contribute`, `strata_session_closeout`, and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:15+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`strata_read_perspective`, `strata_contribute`, `strata_session_closeout`, and",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:15+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`strata_rejudge` gives it its verdict.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:15+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:20:08+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}

@@ -1,0 +1,419 @@
+{
+  "schema_version": "software.v1",
+  "slug": "rebrief",
+  "repo_id": "gh:1308788947",
+  "name": "neracu/rebrief",
+  "summary": "Local CLI that scans a codebase and writes a structured markdown handoff report.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-coding",
+    "cli",
+    "code-analysis",
+    "codebase-analysis",
+    "developer-experience",
+    "developer-productivity",
+    "developer-tools",
+    "documentation",
+    "git",
+    "handoff"
+  ],
+  "use_cases": [
+    "scan a local repo or remote Git URL",
+    "detect tech stack and dependencies across ecosystems",
+    "map secrets, technical debt and missing tests"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/neracu/rebrief",
+    "full_name": "neracu/rebrief",
+    "created_at": "2026-07-22T12:15:08Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-rebrief-20261101-001726-749d",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install rebrief",
+          "purpose": "install rebrief via uv tool install rebrief"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "rebrief --version && rebrief --help",
+        "expected_signal": "rebrief, version 0.3.2"
+      },
+      "first_task": "rm -f REBRIEF.md REBRIEF.json\nrebrief scan . -f json && ls -l REBRIEF.json && head -n 50 REBRIEF.json"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": null,
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:18:10.319246+08:00",
+    "runs": [
+      {
+        "id": "verify-rebrief-20261101-001726-749d",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:18:10.319246+08:00",
+        "tool_version": "0.3.2",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install rebrief",
+            "purpose": "install rebrief via uv tool install rebrief"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "rebrief --version && rebrief --help",
+            "expected_signal": "rebrief, version 0.3.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "rebrief, version 0.3.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rm -f REBRIEF.md REBRIEF.json\nrebrief scan . -f json && ls -l REBRIEF.json && head -n 50 REBRIEF.json",
+            "expected_signal": "saved to REBRIEF.json",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "saved to REBRIEF.json (367 tokens)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rebrief badge .",
+            "expected_signal": "[![Rebrief]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[![Rebrief](https://img.shields.io/badge/rebrief-1%20risks-yellow)](https://github.com/neracu/rebrief)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show scan writing REBRIEF.json with JSON output, badge command printing Rebrief markdown, and version/help displaying 0.3.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-rebrief-20261101-001726-749d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-rebrief-20261101-001726-749d/check-1-cmd4.judged.png",
+            "runs/verify/verify-rebrief-20261101-001726-749d/check-2-cmd5.judged.png",
+            "runs/verify/verify-rebrief-20261101-001726-749d/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.044958
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 79.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 43.3,
+      "signals": {
+        "stars": 9,
+        "monthly_downloads": 186,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 1,
+        "registries_count": 1
+      },
+      "age_days": 101,
+      "packages": [
+        "pypi:rebrief"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 44.91
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "523e91d90e4bceb250edf862d2704eac62b8afec5eab7da1e288a332209cbb84",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "An AI-ready CLI that analyzes your codebase and generates a clean Markdown summary of your repository."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "You join a new project - after an outsourcing handoff, a freelancer exit, or years of legacy development."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "pip install rebrief"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "rebrief scan .\n# → REBRIEF.md"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "No cloud upload, no API keys."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Error: Unable to access remote repository. Check the URL or your Git authentication credentials."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "License: MIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/neracu/rebrief",
+      "fetched_at": "2026-10-31T20:18:35+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/neracu/rebrief/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:25:40+08:00"
+    },
+    {
+      "id": "hn:49642387",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=49642387",
+      "fetched_at": "2026-10-31T20:18:35+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A local CLI that scans any codebase and produces a structured `REBRIEF.md` report",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:28+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "rebrief scan .",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:28+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A local CLI that scans any codebase and produces a structured `REBRIEF.md` report",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:28+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A local CLI that scans any codebase and produces a structured `REBRIEF.md` report in ~30 seconds - stack, context, history, risks, and a where-to-start checklist.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:28+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "github_api",
+      "quote": "name: neracu/rebrief",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:28+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:18:35+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:18:35+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:18:35+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:18:35+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Point it at any local repo or a remote Git URL.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:28+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Recursive scan for ecosystem manifests across JavaScript/TypeScript, Python, Go, Rust, Java, Kotlin, PHP, and Ruby",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:28+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Static analysis for hardcoded secrets, unresolved technical debt (TODO/FIXME), missing test directories",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:28+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "No cloud upload, no API keys.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:28+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:18:35+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}
