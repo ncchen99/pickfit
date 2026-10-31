@@ -96,7 +96,9 @@ export const NOT_THE_JOB_WORDS = (
   'set setting show showing see view check checking do doing give put take go ' +
   // How well, not what (added after the dev half); privacy is a constraint like offline.
   'natural accurate reliable robust smooth pretty beautiful intuitive friendly flexible configurable powerful ' +
-  'efficient convenient stable privacy private'
+  'efficient convenient stable privacy private ' +
+  // Prepositions and adverbs of manner (second iteration): how or where, not what.
+  'via inside within please directly fully completely securely safely automatically actually simply basically'
 ).split(' ');
 
 /** English phrasings of a job that the profiles say in one word (decision only). */
@@ -115,4 +117,16 @@ export const EN_PHRASES: Record<string, string> = {
   'jot down': 'notes',
   'turn into': 'convert',
   'figure out': 'analyze',
+};
+
+/**
+ * Chinese words whose dictionary sense is wrong when deciding fit (decision
+ * only; the ranking keeps ZH_EN): "AI 編碼助手" is a coding assistant, not an
+ * encoding tool, and 助手/助理 there is the kind of tool, not an agent to build.
+ */
+export const ZH_PHRASES: Record<string, string> = {
+  編碼助手: 'coding assistant',
+  编码助手: 'coding assistant',
+  助手: 'assistant',
+  助理: 'assistant',
 };
