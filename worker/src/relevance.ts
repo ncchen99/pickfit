@@ -140,7 +140,10 @@ const EN_NEGATED = /\b(without|no)\s+(?:(?:a|an|the|any|my|to|being|having)\s+)*
 const ZH_NEGATIONS = ['不需要', '不用', '不要', '不必', '無需', '无需', '免'];
 
 /** English words for the Chinese words in a text: at each position the longest dictionary word wins; a negated word is skipped. */
-export function zhToEnglish(text: string): string {
+export const zhToEnglish = (text: string): string => zhWords(text).join(' ');
+
+/** The dictionary's English for each Chinese word in a text, one string per word (its synonyms together). */
+export function zhWords(text: string): string[] {
   const out: string[] = [];
   let negated = false;
   for (let i = 0; i < text.length; ) {
@@ -165,7 +168,7 @@ export function zhToEnglish(text: string): string {
       i++;
     }
   }
-  return out.join(' ');
+  return out;
 }
 
 /** The request's terms for rulesRelevance: its own English words (less negated ones) and the dictionary's English for its Chinese ones. */

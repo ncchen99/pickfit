@@ -2,6 +2,7 @@
 
 Usage:
     uv run python scripts/rules_eval.py queries [--out runs/rules-eval/queries.json]
+    uv run python scripts/rules_eval.py queries --used runs/fit-eval/queries.json ... --out runs/fit-fresh/queries.json
     uv run python scripts/rules_eval.py label --pool runs/rules-eval/pool.json [--out runs/rules-eval/labels.json]
 
 `queries` asks the model for realistic requests written from common user tasks; it never
@@ -49,6 +50,24 @@ Write the requests real people type to an AI assistant when they need a tool for
 - Write exactly {count} requests, all {language}; lang is "{lang}" for every one.
 - category: what an assistant would pass for the request: dev_cli, local_ai or mcp_server, or any when it is unclear.
 - os: macos, linux or windows only when the request says it; otherwise null."""
+# The fit-decision set (no-good-match task): the same method, with ordinary tasks a long-tail catalog may lack.
+FIT_INSTRUCTIONS = QUERY_INSTRUCTIONS.replace(
+    "Vary length, tone and wording.",
+    "Vary length, tone and wording. Mix very ordinary chores that people often need a small tool for (for example bulk "
+    "renaming files with a regex, or watching a server's CPU and memory from the terminal) with more specialized jobs, "
+    "and do not repeat a job.",
+)
+FIT_LANGUAGES = {"en": (36, "in English"), "zh": (24, "in Traditional Chinese as a Taiwanese developer would type them, keeping product and format names in English when that is natural")}
+# The fresh held-out set for the second fit iteration: new jobs only (earlier requests are listed as used), the whole
+# set held out, and a deliberate mix of chores a long-tail catalog may lack, two-part jobs, and specialized jobs.
+FRESH_INSTRUCTIONS = QUERY_INSTRUCTIONS.replace(
+    "Vary length, tone and wording.",
+    "Vary length, tone and wording, and write them the way people really type to an assistant: often casual or terse, "
+    "sometimes with a little context about why, never in marketing words. Mix three kinds, about a third each: very "
+    "ordinary chores people need a small tool for (some of them outside developer tools, local AI and MCP servers "
+    "altogether); requests that ask one tool to do two or three things at once; and more specialized jobs. Do not "
+    "repeat a job, and do not reuse any job from <used>.",
+)
 LANGUAGES = {
     "en": (30, "in English"),
     "zh": (20, "in Traditional Chinese as a Taiwanese developer would type them, keeping product and format names in English when that is natural"),
@@ -101,26 +120,34 @@ def forced_call(instructions: str, text: str, model: type[BaseModel], name: str,
     return parsed, result.cost_usd
 
 
-def make_queries(out: Path) -> int:
-    """One call per language; a language already in `out` is kept with its split."""
+def make_queries(out: Path, fit: bool = False, used: list[Path] | None = None) -> int:
+    """One call per language; a language already in `out` is kept with its split.
+
+    With `used` (earlier query files), the requests must be new jobs and all of them are held out."""
     old = json.loads(out.read_text())["queries"] if out.exists() else []
     rows = [q for q in old if not q.get("reported")]
+    earlier = [q["query"] for path in used or [] for q in json.loads(path.read_text())["queries"]]
+    prompt = "Write the requests now."
+    if used:
+        prompt = "<used>\n" + "\n".join(earlier) + "\n</used>\n" + prompt
     cost = 0.0
-    for lang, (count, language) in LANGUAGES.items():
+    for lang, (count, language) in (FIT_LANGUAGES if fit or used else LANGUAGES).items():
         if any(q["lang"] == lang for q in rows):
             continue
-        instructions = QUERY_INSTRUCTIONS.format(count=count, language=language, lang=lang)
-        parsed, spent = forced_call(instructions, "Write the requests now.", Queries, "record_queries",
-                                    f"rules-eval:queries:{lang}", "rules-eval-queries")
+        base = FRESH_INSTRUCTIONS if used else FIT_INSTRUCTIONS if fit else QUERY_INSTRUCTIONS
+        parsed, spent = forced_call(base.format(count=count, language=language, lang=lang), prompt, Queries,
+                                    "record_queries", f"rules-eval:queries:{lang}{':fresh' if used else ''}",
+                                    "rules-eval-queries")
         cost += spent
-        mine = [q.model_dump() | {"lang": lang} for q in (parsed.queries if parsed else [])]
+        mine = [q.model_dump() | {"lang": lang} for q in (parsed.queries if parsed else []) if q.query not in earlier]
         random.Random(f"{SEED}:{lang}").shuffle(mine)
-        half = len(mine) // 2
+        half = 0 if used else len(mine) // 2
         rows += [{**q, "split": "dev" if i < half else "heldout"} for i, q in enumerate(mine)]
-    rows += [{**q, "split": "dev", "reported": True} for q in REPORTED]
+    if not fit and not used:
+        rows += [{**q, "split": "dev", "reported": True} for q in REPORTED]
     ids = {q["query"]: q["id"] for q in old if "id" in q}
-    used = set(ids.values())
-    fresh = (f"q{i:02d}" for i in range(1000) if f"q{i:02d}" not in used)
+    taken = set(ids.values())
+    fresh = (f"q{i:02d}" for i in range(1000) if f"q{i:02d}" not in taken)
     for row in rows:
         row["id"] = ids.get(row["query"]) or next(fresh)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -162,10 +189,18 @@ def label(pool_path: Path, out: Path) -> int:
     failed = 0
     labels: dict[str, dict[str, int]] = {}
     with ThreadPoolExecutor(max_workers=8) as pool_exec:
-        for qid, grades, cost, bad in pool_exec.map(run, jobs):
-            labels.setdefault(qid, {}).update(grades)
-            total += cost
-            failed += bad
+        results = list(pool_exec.map(run, jobs))
+    # A chunk where nearly every tool came back graded is a labeling failure: grade it once more.
+    degenerate = [job for job, (_, grades, _, _) in zip(jobs, results) if len(job[1]) >= 10 and len(grades) >= 0.8 * len(job[1])]
+    with ThreadPoolExecutor(max_workers=8) as pool_exec:
+        redone = dict(zip(map(id, degenerate), pool_exec.map(run, degenerate)))
+    for job, result in zip(jobs, results):
+        qid, grades, cost, bad = redone.get(id(job), result)
+        labels.setdefault(qid, {}).update(grades)
+        total += cost + (result[2] if id(job) in redone else 0)
+        failed += bad
+    if degenerate:
+        print(f"re-graded {len(degenerate)} chunk(s) where nearly every tool was graded", file=sys.stderr)
     done.update(labels)
     out.write_text(json.dumps({"model": MODEL, "labels": done}, ensure_ascii=False, indent=1) + "\n")
     print(f"{len(jobs)} label calls for {len(labels)} queries -> {out} (${total:.4f}, {failed} without an answer)")
@@ -177,11 +212,13 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
     q = sub.add_parser("queries")
     q.add_argument("--out", type=Path, default=OUT_DIR / "queries.json")
+    q.add_argument("--fit", action="store_true", help="the fit-decision set (ordinary chores mixed in)")
+    q.add_argument("--used", type=Path, nargs="+", help="earlier query files: write new jobs only, all held out")
     lab = sub.add_parser("label")
     lab.add_argument("--pool", type=Path, default=OUT_DIR / "pool.json")
     lab.add_argument("--out", type=Path, default=OUT_DIR / "labels.json")
     args = parser.parse_args(argv)
-    return make_queries(args.out) if args.cmd == "queries" else label(args.pool, args.out)
+    return make_queries(args.out, args.fit, args.used) if args.cmd == "queries" else label(args.pool, args.out)
 
 
 if __name__ == "__main__":

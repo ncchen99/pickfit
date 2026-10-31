@@ -56,6 +56,18 @@ GUI 桌面 app 的實跑另帶 `verification.gui`（`find_*` 的 pick 與 `get_i
 3. **一次 `muse-spark-1.3`**（Responses API、`store: false`、`reasoning.effort: low`、strict JSON schema；slug 欄位的 enum 就是這次的候選）：解析需求成條件、選 1–3 個、每個理由引用一個卡片欄位與原值、取捨、和知名工具比、最好的免費選項、「內建就夠」、不在資料裡的知名免費工具（`well_known_option`，見下）、最多 1 個追問。模型固定在程式裡，不能換成 `-contributor`（使用者需求是私人資料）。`find_alternatives` 用同一份 prompt，**後面加 4 條規則**（`ALTERNATIVES_RULES`：只選做同一件事、至少解決一個痛點、保留 `must_keep` 的；和目前的工具比較；`keep_current`；解析出的痛點）；`find_software` 的 prompt 與 schema 不變。
 4. **守門（程式）**：slug 必須在候選裡；理由引用的值要真的出現在該欄位；理由不能和卡片矛盾（離線、免費、開源、在某 OS 驗證過、不需 key、不需 GPU）。不合的理由丟掉，沒有理由的推薦丟掉。`well_known_option` 另有自己的檢查（見下）。
 5. **退回規則**：模型關掉、沒有 key、超出預算、逾時、HTTP 錯誤（重試一次後仍失敗，見下面「重試」）、輸出壞掉、或推薦全被守門擋掉 → 依「（`find_alternatives`）卡片的 `alternatives_to` 提到目前的工具 → 規則的相關度分數（有關鍵字就加上關鍵字）→ 分數相同時：在使用者 OS 驗證過 → 寶藏分數」排序，理由用模板（只從欄位產生），標 `matched_by: "rules"`、`degraded: true`、`degraded_reason`。規則模式不判斷 `keep_current`（回 `null`）。
+   - **合不合（`src/fit.ts`，只在規則模式；只加標記，不改列出的工具）**：把需求裡「具體的字」（去掉通用字、OS 名稱（整個字，`macOS` 不會變成產品 `OS`）、`MCP server` 這類工具種類、口語填充字與介系詞、`without`／`no` 到子句結束的限制、`不用` 之後的限制、`secret-project-xyz` 這類自己取的名字；只留目錄裡有出現過的字或產品名）和每個工具的能力欄位（名稱、summary、use cases、tags、MCP 工具名）比對。每個字算一樣重；一個中文詞的幾個英文同義字算一個字（`記憶體` → memory 或 ram，提到任一個就算）。判斷用的中文另有幾條修正（`ZH_PHRASES`：`編碼助手` 是 coding assistant 不是 encoding；`助手`／`助理` 是工具種類），排序用的 `ZH_EN` 不變。
+     - **good**：需求點名的產品（Notion、GitHub、PostgreSQL 這類大小寫混合或句中大寫的字；PDF、JSON 這種縮寫算一般字；`my Node project` 這種「在哪裡做」的不算點名）全都直接提到，涵蓋**過半**的具體字，而且至少兩個字。需求只有一個具體字時最多 partial，除非那個字是點名的產品、卡片也直接提到它。
+     - **partial**：至少提到一個點名的產品（有點名時），涵蓋至少三分之一的具體字：至少兩個字，或一個字但佔需求的一半以上。
+     - **weak**：其他。需求的具體字目錄裡完全沒出現過，也是 weak。
+     - 卡片只把某產品當成「替代誰」（tag `jira-alternative`、「an alternative to Notion」）時不算直接提到；只有需求說要它的替代品（`alternative to Jira`、`instead of`、`類似`）時才算數。
+     - 回應：**列出的工具、順序、數量、`best_free`、追問都和沒有這個判斷時一樣**（`bench/rules_same.ts` 對 main 逐筆比對）；判斷只加標記。每個 pick 多一個 `match`（`quality`：good／partial／weak、`covers`、`missing`），partial 與 weak 的 `tradeoffs` 寫明「提到了哪些、沒提到哪些」。整體多一個 `match_quality`：列出的 picks 裡最好的那個標記，沒有一個到 partial 就是 none。
+       - none：`coverage_note` 說 pickfit 沒有明確能做這件事的驗證工具，列出的是最接近的，但都沒提到某些字（列出來）；若排名更後面有工具到 partial，只說「列出的工具沒有一個明確做這件事」。
+       - partial：`coverage_note` 說沒有一個列出的工具涵蓋整個需求，並寫出最接近的那個沒提到哪些字。
+       - 文字不誇大 weak／partial，也不叫 agent 丟掉列出的工具：要不要用由 agent 和使用者決定。
+       - `find_alternatives` 裡 `alternatives_to` 寫了目前工具的算 good。`events.need.match_quality` 也記下來。
+     - **模型路徑完全不變**：`match`、`match_quality` 在模型選的回應裡不存在（schema 是 optional；`test/conformance.test.ts` 驗證兩種回應）；`bench/ai_path_same.ts` 用存下的關鍵字跑 1268 筆，模型回答的回應與 main 逐位元相同。
+     - 量法：`scripts/rules_eval.py queries --fit` 產生新題目（Baseten，不看工具），`label` 給每題所有過硬條件的工具打分；`bench/fit_eval.ts` 依標註把題目分成 good／partial／none 三類，從 `findSoftware` 的回應算整體 `match_quality`、每個 pick 的標記分布、各標記有多少站得住，以及排序的 P@5。第二輪的保留題組在 `bench/fit-fresh/`（`queries --used …` 產生、只收新工作、全部保留；題目與標註先 commit，之後才跑判斷）。
 
 `find_alternatives` 的 `current`：`matched_slug` 是目錄裡的那筆（有的話，且不會出現在 picks）；`known` 是「目錄有它，或某張卡的 `alternatives_to` 提到它」。`keep_current.recommended: true` 表示沒有一個候選明顯比較好，這時 picks 可能是空的。
 
