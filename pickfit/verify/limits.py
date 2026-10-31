@@ -17,10 +17,14 @@ connection (a VM's host answered on port 52 until a seccomp filter closed it;
 root's unfiltered attempt is the positive control); the internet by literal
 IP, online (positive control) and offline; no IPv6 (global, link-local, the
 fd00:ec2::254 metadata address); no multicast answer; no open port on the
-gateway or the resolver; and names that do not resolve with the network off
-(Modal's resolver answers under both runtimes with an empty allowlist; a VM box
-drops the box user's DNS with nftables, gVisor cannot, so a gVisor box fails
-this probe).
+gateway or the resolver; and names that resolve online (positive control) but
+not with the network off (Modal's resolver answers under both runtimes with an
+empty allowlist: a VM box drops the box user's DNS with nftables; a gVisor box
+runs the box user in its own network namespace and cuts that namespace's only
+uplink, measured 2026-10-31). A gVisor box also checks, offline, that the box
+user cannot enter the box's own network namespace or the uplink's, signal the
+uplink's uid or add a route, and that only the namespace's holder is left of
+that uid (no uplink runs).
 
 A box with a display checks that Xvfb runs as pickfit's display uid, survives
 the box user's kill and a second server on :99, does not listen on TCP; that the
@@ -93,6 +97,101 @@ except OSError as e:
 PICKFIT_PY"""
 
 
+# The box user tries to leave its network namespace, signal NET_UID's processes (the namespace's holder, and the
+# uplink while online) and add a route; lists NET_UID's processes as "net_uid PID COMM". Inside the namespace
+# NET_UID is uid 0 (the box's real root is unmapped there and shows as 65534).
+NETNS_PROBE = r"""ip route add 1.1.1.1/32 dev lo 2>/dev/null && echo ROUTED
+nsenter --net=/proc/1/ns/net true 2>/dev/null && echo "ENTERED the box's own namespace"
+for p in $(pgrep -u 0); do echo "net_uid $p $(cat /proc/$p/comm 2>/dev/null)"
+  kill -0 "$p" 2>/dev/null && echo "SIGNALS $p"
+  nsenter --target="$p" --net true 2>/dev/null && echo "ENTERED net of $p"
+  nsenter --target="$p" --user --net true 2>/dev/null && echo "ENTERED user and net of $p"; done; true"""
+
+
+# The X server's TCP ports from its own network namespace (the display uid's commands run there); prints the
+# namespace it ran in and Xvfb's.
+XPORTS_PY = r"""import os, socket, sys
+print("ns", os.readlink("/proc/self/ns/net"), os.readlink(f"/proc/{sys.argv[1]}/ns/net"))
+for host, family in (("127.0.0.1", socket.AF_INET), ("::1", socket.AF_INET6)):
+    for port in (6000, 6099):
+        s = socket.socket(family)
+        s.settimeout(3)
+        try:
+            s.connect((host, port))
+            print("open", host, port)
+        except OSError as e:
+            print("closed", host, port, e.errno)
+        finally:
+            s.close()
+"""
+# Asks each resolver in resolv.conf for a name over UDP and resolves argv's names; prints its network namespace.
+NAMES_PY = r"""import os, random, socket, struct, sys
+print("ns", os.readlink("/proc/self/ns/net"))
+q = struct.pack(">HHHHHH", random.randint(0, 65535), 0x0100, 1, 0, 0, 0) + b"\x04pypi\x03org\x00" + struct.pack(">HH", 1, 1)
+for server in [l.split()[1] for l in open("/etc/resolv.conf") if l.startswith("nameserver")][:3]:
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(3)
+    try:
+        s.sendto(q, (server, 53))
+        s.recv(512)
+        print("answered", server)
+    except OSError as e:
+        print("no answer", server, type(e).__name__)
+for name in sys.argv[1:]:
+    try:
+        print("resolved", name, socket.getaddrinfo(name, 7100, socket.AF_INET)[0][4][0])
+    except OSError as e:
+        print("unresolved", name, e)
+"""
+# Names only DNS resolves (to 127.0.0.1): a font server's name the box user can hand to Xvfb.
+FONT_NAMES = ("127.0.0.1.nip.io", "127.0.0.1.sslip.io")
+# The box user, as a raw X client: SetFontPath (opcode 51) with each argv element, then a round trip to read the
+# answer ("accepted" or "error N"), then the default path back. No xset in the image, and none needed. Xvfb refuses
+# an unreachable font server whether or not it resolved the name, so the answer is recorded, not judged.
+SET_FONT_PATH = r"""python3 -I - "$@" <<'PICKFIT_PY'
+import socket, struct, sys
+def exact(s, n):
+    b = b""
+    while len(b) < n:
+        c = s.recv(n - len(b))
+        if not c:
+            raise SystemExit("the X server closed the connection")
+        b += c
+    return b
+s = None
+for addr in ("\0/tmp/.X11-unix/X99", "/tmp/.X11-unix/X99"):
+    try:
+        s = socket.socket(socket.AF_UNIX)
+        s.settimeout(60)
+        s.connect(addr)
+        break
+    except OSError:
+        s = None
+if s is None:
+    raise SystemExit("no X connection")
+s.sendall(struct.pack("<BxHHHHxx", 0x6C, 11, 0, 0, 0))
+head = exact(s, 8)
+if head[0] != 1:
+    raise SystemExit(f"X refused the connection ({head[0]})")
+exact(s, 4 * struct.unpack("<H", head[6:8])[0])
+def font_path(elements):
+    body = b"".join(bytes([len(e)]) + e.encode() for e in elements)
+    body += b"\0" * (-len(body) % 4)
+    s.sendall(struct.pack("<BxHHxx", 51, 2 + len(body) // 4, len(elements)) + body + struct.pack("<BxH", 43, 1))
+    error = None
+    while True:  # up to the round trip's reply, so an error does not leave it for the next request
+        packet = exact(s, 32)
+        if packet[0] == 0 and error is None:
+            error = f"error {packet[1]}"
+        elif packet[0] == 1:
+            exact(s, 4 * struct.unpack("<I", packet[4:8])[0])
+            return error or "accepted"
+for element in sys.argv[1:]:
+    print("font path", element, font_path([element]), flush=True)
+print("font path reset", font_path([]))
+PICKFIT_PY"""
+
+
 VSOCK_PROBE = r"""/usr/local/bin/python3 -I -S - <<'PICKFIT_PY'
 import os, socket
 for fd in sorted(os.listdir("/proc/self/fd"), key=int):
@@ -146,11 +245,16 @@ while time.time() < end:
         pass
 PICKFIT_PY"""
 # The default gateway and any private resolver: no port of theirs answers the box user (DNS itself is 53/udp).
-GATEWAY_PROBE = r"""hosts="$(/usr/local/bin/python3 -I -S -c "import socket, struct
+# The default gateway and any private resolver, as whoever runs it sees them.
+HOSTS_PY = """import socket, struct
 gw = [socket.inet_ntoa(struct.pack('<L', int(f[2], 16))) for f in (l.split() for l in open('/proc/net/route'))
       if f[1] == '00000000' and f[2] != 'Gateway']
 ns = [l.split()[1] for l in open('/etc/resolv.conf') if l.startswith('nameserver') and l.split()[1].startswith(('10.', '172.', '192.168.'))]
-print(' '.join(dict.fromkeys(gw + ns)))")"
+print(' '.join(dict.fromkeys(gw + ns)))"""
+# Those the box user sees, plus {extra} (the box's real ones as root reads them: a gVisor box user sees its uplink's
+# 10.0.2.2, and reaches the real gateway through the uplink while online).
+GATEWAY_PROBE = r"""hosts="$(/usr/local/bin/python3 -I -S -c "{hosts_py}") {extra}"
+hosts="$(echo $hosts | tr ' ' '\n' | awk '!seen[$0]++' | tr '\n' ' ')"
 echo "hosts: $hosts"
 for h in $hosts; do for p in 22 80 443 2375 2376 3000 5000 6443 8000 8080 8443 9000 10250; do
   timeout 3 bash -c "echo > /dev/tcp/$h/$p" 2>/dev/null && echo "open $h:$p"; done; done; true"""
@@ -227,6 +331,89 @@ def _userns(box: Box) -> ProbeResult:
     return ProbeResult("no_userns", "made" not in result.stdout and limit == "0",
                        "the box user cannot make a user namespace; user.max_user_namespaces reads 0",
                        result.exit_code, result.seconds, f"max_user_namespaces {limit}; {_detail(result)}"[-300:])
+
+
+def _netns_held(result: ExecResult) -> bool:
+    """Nothing of the box user's got out, and NET_UID's only process is the namespace's holder (sleep): there was
+    something to try, and no uplink runs."""
+    held = [line.split(None, 2) for line in result.stdout.splitlines() if line.startswith("net_uid ")]
+    return (bool(held) and all(h[2:] == ["sleep"] for h in held)
+            and not re.search(r"^(ROUTED|ENTERED|SIGNALS)", result.stdout, re.M))
+
+
+def _display_uid(box: Box) -> ProbeResult:
+    """Xvfb runs as the display uid as root sees it, and not as the box user as the box user sees it (a gVisor box's
+    namespace does not map the display uid: the box user sees 65534 there)."""
+    uid = str(gui.DISPLAY_UID)
+    result = box.exec("ps -o uid=,comm= -C Xvfb", 20)
+    try:
+        seen = box.harness_exec(["/usr/bin/ps", "-o", "uid=,comm=", "-C", "Xvfb"], 20).stdout.split()[::2]
+    except BoxError:
+        seen = []
+    ok = bool(seen) and all(u == uid for u in seen) and "1000" not in result.stdout.split()[::2]
+    return ProbeResult("display_server_uid", ok, f"Xvfb runs as uid {uid} (root's view), not the box user",
+                       result.exit_code, result.seconds, f"root sees uids {' '.join(seen) or 'none'}; {_detail(result)}")
+
+
+def _display_no_tcp(box: Box) -> ProbeResult:
+    """The X server listens on no TCP port: neither on the box user's loopback nor on its own (from its own network
+    namespace, where the display uid's commands run)."""
+    user = box.exec("for p in 6000 6099; do (echo > /dev/tcp/127.0.0.1/$p) 2>/dev/null && echo \"open $p\"; done; true",
+                    20)
+    own = box.harness_exec([gui.PYTHON, "-I", "-S", "-", str(box.xvfb_pid)], 30, as_uid=gui.DISPLAY_UID,
+                           stdin=XPORTS_PY.encode())
+    ns = next((line.split()[1:] for line in own.stdout.splitlines() if line.startswith("ns ")), [])
+    ok = ("open" not in user.stdout and len(ns) == 2 and ns[0] == ns[1] and "closed" in own.stdout
+          and "open" not in own.stdout)
+    return ProbeResult("display_no_tcp", ok, "the X server does not listen on TCP (from the box user's loopback and "
+                       "from its own network namespace)", user.exit_code, user.seconds,
+                       f"box user: {_detail(user) or 'nothing open'}; Xvfb's view: {_detail(own)}"[-300:])
+
+
+def _display_no_network(box: Box) -> ProbeResult:
+    """Offline: the display has no network, so the box user cannot use Xvfb to resolve a name (a font server's, by
+    SetFontPath, which the box user sends). Decided by root: Xvfb's network namespace is neither the box's nor the
+    box user's, and from it the display uid gets no DNS answer and resolves no name, while root's same lookups
+    answer (the control). Xvfb's answer to SetFontPath is kept in the detail: it refuses an unreachable font
+    server whether or not it resolved the name."""
+    names = " ".join(FONT_NAMES)
+    control = box.harness_exec([gui.PYTHON, "-I", "-S", "-", *FONT_NAMES], 40, stdin=NAMES_PY.encode())
+    name = next((line.split()[1] for line in control.stdout.splitlines()
+                 if line.startswith("resolved ") and line.split()[2:3] == ["127.0.0.1"]), None)
+    own = box.harness_exec([gui.PYTHON, "-I", "-S", "-", *FONT_NAMES], 40, as_uid=gui.DISPLAY_UID,
+                           stdin=NAMES_PY.encode())
+    xvfb_ns = box.harness_exec(["/usr/bin/readlink", f"/proc/{box.xvfb_pid}/ns/net", "/proc/1/ns/net"],
+                               20).stdout.split()
+    user_ns = box.exec("readlink /proc/self/ns/net", 20).stdout.strip()
+    own_ns = next((line.split()[1] for line in own.stdout.splitlines() if line.startswith("ns ")), "")
+    asked = box.exec(f"set -- {' '.join(f'tcp/{n}:7100' for n in FONT_NAMES)}\n{SET_FONT_PATH}", 90)
+    apart = len(xvfb_ns) == 2 and xvfb_ns[0] != xvfb_ns[1] and xvfb_ns[0] != user_ns and own_ns == xvfb_ns[0]
+    decisive = bool(re.search(r"^answered ", control.stdout, re.M)) and name is not None
+    closed = (not re.search(r"^(answered|resolved) ", own.stdout, re.M)
+              and bool(re.search(r"^unresolved ", own.stdout, re.M)))
+    ran = "font path tcp/" in asked.stdout
+    detail = (f"Xvfb ns {xvfb_ns[:1]} box {xvfb_ns[1:]} box user {user_ns}; control (root): {_detail(control)}; "
+              f"display: {_detail(own)}; box user's SetFontPath: {_detail(asked)}")
+    return ProbeResult("display_no_network", apart and decisive and closed and ran,
+                       f"offline, after the box user's SetFontPath for those names, Xvfb's namespace has no network: no "
+                       f"DNS answer or name ({names}) from it, root's control answers", asked.exit_code, asked.seconds,
+                       detail[-300:])
+
+
+def _gateway(box: Box) -> ProbeResult:
+    """No port answers the box user on the gateway or a private resolver: the ones it sees and the box's real ones as
+    root reads them. A box with no root channel checks only its own view."""
+    try:
+        real = box.harness_exec([gui.PYTHON, "-I", "-S", "-c", HOSTS_PY], 20).stdout.split()
+        note, rooted = f"root sees {' '.join(real) or 'none'}", True
+    except BoxError:
+        real, note, rooted = [], "no root view", False
+    result = box.exec(GATEWAY_PROBE.format(hosts_py=HOSTS_PY, extra=" ".join(real)), 180)
+    hosts = _hosts(result.stdout)
+    ok = bool(hosts) and "open " not in result.stdout and (not rooted or (bool(real) and set(real) <= set(hosts)))
+    return ProbeResult("gateway_ports_closed", ok, "no port answers on the gateway or the resolver, as the box user "
+                       "sees them and as root does (at least one found)", result.exit_code, result.seconds,
+                       f"{note}; {_detail(result)}"[-300:])
 
 
 def _not_admin(result: ExecResult) -> bool:
@@ -447,9 +634,7 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
     if box.display:
         add(_probe(box, "display_up", f"DISPLAY={box.display} /usr/bin/xdpyinfo", 20, f"Xvfb answers on {box.display}",
                    lambda r: r.exit_code == 0 and "dimensions:" in r.stdout))
-        uid = str(gui.DISPLAY_UID)
-        add(_probe(box, "display_server_uid", "ps -o uid=,comm= -C Xvfb", 20, f"Xvfb runs as uid {uid}, not the box user",
-                   lambda r: bool(r.stdout.split()) and all(u == uid for u in r.stdout.split()[::2])))
+        add(_display_uid(box))
         add(_probe(box, "display_server_held",
                    f"p=$(pgrep -x Xvfb); echo \"before $p\"; kill -KILL $p 2>&1; timeout 5 Xvfb {box.display} -nolisten tcp "
                    f"2>&1 | grep -m1 -o 'already active'; sleep 1; echo \"after $(pgrep -x Xvfb)\"; "
@@ -457,9 +642,7 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
                    "the box user cannot kill pickfit's X server or start another on its display",
                    lambda r: "Operation not permitted" in r.stdout and "already active" in r.stdout
                    and "still-up" in r.stdout and _same_pid(r.stdout)))
-        add(_probe(box, "display_no_tcp",
-                   "for p in 6000 6099; do (echo > /dev/tcp/127.0.0.1/$p) 2>/dev/null && echo \"open $p\"; done; true",
-                   20, "the X server does not listen on TCP", lambda r: "open" not in r.stdout))
+        add(_display_no_tcp(box))
         add(_probe(box, "evidence_dir_closed", f"ls {gui.EVIDENCE_DIR} 2>&1; touch {gui.EVIDENCE_DIR}/x 2>&1; true", 20,
                    "the box user cannot list or write pickfit's evidence directory",
                    lambda r: r.stdout.count("Permission denied") == 2))
@@ -495,13 +678,14 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
         add(_probe(box, "internet", PYPI, 30, "PyPI answers 200", lambda r: r.stdout.strip() == "200"))
         add(_probe(box, "internet_ip", IP_HTTPS, 20, "1.1.1.1 answers by literal IP (control for offline_internet_ip)",
                    lambda r: r.exit_code == 0 and r.stdout.strip() not in ("", "000")))
+        add(_probe(box, "online_dns", DNS_PROBE, 40, "names resolve with the network on (control for offline_dns)",
+                   lambda r: "answered" in r.stdout and "resolved" in r.stdout))
         add(_probe(box, "ipv6_blocked", IPV6_PROBE, 40, "no global IPv6 address; IPv6 internet, fd00:ec2::254 and "
                    "link-local unreachable", lambda r: "inet6" not in r.stdout and
                    not re.search(r"^(?!000 )\d{3} ", r.stdout, re.M)))
         add(_probe(box, "multicast_no_answer", MULTICAST_PROBE, 30, "no answer to mDNS, SSDP or broadcast",
                    lambda r: "answer from" not in r.stdout))
-        add(_probe(box, "gateway_ports_closed", GATEWAY_PROBE, 180, "no port answers on the gateway or the resolver "
-                   "(at least one of them found)", lambda r: _hosts(r.stdout) and "open " not in r.stdout))
+        add(_gateway(box))
         add(_probe(box, "metadata_blocked", "curl -sS -m 5 http://169.254.169.254/latest/meta-data/", 20,
                    "169.254.169.254 unreachable", lambda r: r.exit_code != 0))
         add(_probe(box, "private_blocked", "curl -sS -m 5 http://10.0.0.1/", 20,
@@ -517,6 +701,12 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
                        "off", lambda r: r.exit_code != 0 and r.stdout.strip() in ("", "000")))
             add(_probe(box, "offline_dns", DNS_PROBE, 40, "names do not resolve with the network off",
                        lambda r: "answered" not in r.stdout and "resolved" not in r.stdout))
+        if box.display:
+            add(_display_no_network(box))
+        if getattr(box, "runtime", None) == "gvisor":
+            add(_probe(box, "netns_held", NETNS_PROBE, 30, "offline, the box user cannot leave "
+                       "its network namespace, signal the uplink's uid or add a route; only the holder runs as it",
+                       _netns_held))
         add(_probe(box, "offline_localhost", "curl -sS -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/",
                    20, "localhost still answers with the network off", lambda r: r.stdout.strip() == "200"))
     finally:

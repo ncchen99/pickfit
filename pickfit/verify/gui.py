@@ -70,11 +70,14 @@ SHOT_READS = 3  # a long read can come back short when the box's output stream i
 MARK = "PICKFIT_GUI_"
 
 
-def xvfb_script(filter_argv: tuple[str, ...] = ()) -> str:
+def xvfb_script(filter_argv: tuple[str, ...] = (), enter_argv: tuple[str, ...] = ()) -> str:
     """Root: the evidence directory, then Xvfb as DISPLAY_UID (under the box's seccomp filter, if any: it
-    parses what the app sends); prints `xvfb_pid N` once it answers."""
-    drop = (f"/usr/bin/setpriv --reuid={DISPLAY_UID} --regid={DISPLAY_UID} --clear-groups --inh-caps=-all "
-            f"--no-new-privs -- {' '.join(filter_argv)} /usr/bin/env -i PATH={HARNESS_PATH} HOME={EVIDENCE_DIR}")
+    parses what the app sends; in the display's own network namespace, if root gives one: a box-user X
+    request can make it resolve and reach a font server); prints `xvfb_pid N` once it answers. The box
+    user's apps reach it by its socket file in /tmp/.X11-unix, which a network namespace does not hide."""
+    drop = (f"{' '.join(enter_argv)} /usr/bin/setpriv --reuid={DISPLAY_UID} --regid={DISPLAY_UID} --clear-groups "
+            f"--inh-caps=-all --no-new-privs -- {' '.join(filter_argv)} /usr/bin/env -i PATH={HARNESS_PATH} "
+            f"HOME={EVIDENCE_DIR}")
     return (f"/usr/bin/install -d -m 0700 -o {DISPLAY_UID} -g {DISPLAY_UID} {EVIDENCE_DIR} && "
             "/usr/bin/install -d -m 1777 -o root -g root /tmp/.X11-unix && "
             f"{{ /usr/bin/setsid {drop} /usr/bin/Xvfb {DISPLAY} -screen 0 {SCREEN} -nolisten tcp "
