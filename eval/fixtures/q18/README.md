@@ -15,7 +15,7 @@
 | `calibrate_toolcall.py` | 開跑前校準：模型透過 Ollama 自己的 API 做工具呼叫是否 3/3 |
 | `pins.env` | 固定版本（凍結時填） |
 | `setup_pinned_ollama.sh` | 建 base image 時安裝固定版本的 Ollama、拉模型（**要網路**，只在建 image 時用） |
-| `start_fixture_servers.sh`、`stop_fixture_servers.sh` | 啟動／停止固定版本的 Ollama（127.0.0.1:11435）與 logging proxy（127.0.0.1:11434，Ollama 的預設位址） |
+| `start_fixture_servers.sh`、`stop_fixture_servers.sh` | 啟動／停止固定版本的 Ollama（127.0.0.1:11435）與 logging proxy（127.0.0.1:11434，Ollama 的預設位址）。Ollama 以文件寫的 local-only 模式（`OLLAMA_NO_CLOUD=1`）啟動，否則它會自己連 ollama.com（calibration.md C6，9.3 C.5） |
 | `tools/logging_proxy.py` | 透明的 HTTP 記錄 proxy：原樣轉送，記下每個請求與模型的回應 |
 | `tools/run_steps.py` | 把答案的安裝指令原字不改、依序打進同一個終端機 session |
 | `tools/pty_drive.py` | 在虛擬終端機裡跑用戶端：送出請求、自動同意工具提示、記錄輸出與時間 |

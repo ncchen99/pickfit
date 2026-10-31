@@ -17,7 +17,7 @@
 | `reference_harness.py` | 開跑前校準：直接呼叫伺服器工具 API 的參考 agent，同一個任務要 3/3 |
 | `pins.env` | 固定版本（凍結時填） |
 | `setup_pinned_ollama.sh` | 建 base image 時安裝固定版本的伺服器、拉模型（**要網路**，只在建 image 時用） |
-| `start_fixture_servers.sh`、`stop_fixture_servers.sh` | 啟動／停止「自架伺服器」：固定版本的 Ollama（127.0.0.1:11435）與前面的 logging proxy（127.0.0.1:8000） |
+| `start_fixture_servers.sh`、`stop_fixture_servers.sh` | 啟動／停止「自架伺服器」：固定版本的 Ollama（127.0.0.1:11435）與前面的 logging proxy（127.0.0.1:8000）。Ollama 以文件寫的 local-only 模式（`OLLAMA_NO_CLOUD=1`）啟動，否則它會自己連 ollama.com（q18 calibration.md C6，9.3 C.5） |
 | `tools/logging_proxy.py` | 透明的 HTTP 記錄 proxy，就是檢查項目說的「the local server's log」 |
 | `tools/run_steps.py`、`tools/pty_drive.py`、`tools/gen_dummy_key.py` | 逐字執行安裝指令；在虛擬終端機跑 agent 並同意提示；執行時產生假的金鑰值 |
 | `../_shared/egress.py` | egress check（各題共用，[`_shared/README.md`](../_shared/README.md) 第 1 節；第 1 節寫本題怎麼用） |

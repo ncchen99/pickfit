@@ -16,7 +16,7 @@ L3（主要答案是否說不用另外裝 proxy／gateway）從答案原文判�
 | `run_ask.py` | 在乾淨的環境變數下跑一次腳本（`OPENAI_*` 只留答案給的），記錄結果；`--egress-dir` 時包在共用的 `egress.py run` 裡 |
 | `pins.env` | 固定版本（凍結時填） |
 | `setup_pinned_ollama.sh`、`setup_user_env.sh` | 建 base image 時裝固定版本的 Ollama 與小模型、建使用者的 venv 與固定版本的 openai 套件（**要網路**，只在建 image 時用） |
-| `start_ollama.sh`、`stop_ollama.sh` | 以 Ollama 自己的預設位址啟動／停止（不設 `OLLAMA_HOST`），並確認模型 digest |
+| `start_ollama.sh`、`stop_ollama.sh` | 以 Ollama 自己的預設位址啟動／停止（不設 `OLLAMA_HOST`），並確認模型 digest。以文件寫的 local-only 模式（`OLLAMA_NO_CLOUD=1`）啟動，否則 Ollama 會自己連 ollama.com，算進呼叫時段的 egress（q18 calibration.md C6，9.3 C.5） |
 | `tools/gen_dummy_key.py` | 執行時產生假的金鑰值（只在答案說「填什麼都可以」時用） |
 | `tools/run_steps.py`、`tools/pty_drive.py` | 答案要另外裝東西時，把指令原字不改、依序打進同一個終端機 session |
 | `../_shared/egress.py` | egress check（各題共用，[`_shared/README.md`](../_shared/README.md) 第 1 節；第 1 節寫本題怎麼用） |

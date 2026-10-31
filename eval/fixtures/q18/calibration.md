@@ -10,7 +10,7 @@
 
 | 項目 | 結果 |
 |---|---|
-| dev image digest、apt snapshot id | |
+| dev image digest、apt snapshot id | `pickfit-eval-l2-dev:4acdd7fff6ab`（`ubuntu:24.04@sha256:78d4744e…2044d`）；沒有 apt snapshot：映像建好時的套件版本整份記在 `eval/results/l2-images.json` 的 `dpkg` |
 | egress | 照 `_shared/calibration.md` 步驟 1、2（各題共用一次） |
 
 ## C. q18 固定版本與模型
@@ -29,14 +29,16 @@
 
 | 項目 | 結果 |
 |---|---|
-| Ollama 版本、asset URL、SHA-256 | |
-| 模型 tag、digest、大小 | |
-| q18 base image digest | |
-| OLLAMA_CONTEXT_LENGTH、記憶體用量 | |
-| C4 `correct_runs`（附 toolcall.json） | |
-| C5 經 proxy 的 `correct_runs`、紀錄筆數 | |
-| C6 report `result` | |
-| 換過的候選與原因 | |
-| 記錄人、時間、commit | |
+| Ollama 版本、asset URL、SHA-256 | v0.40.13，`ollama-linux-amd64.tar.zst`，`c9490e0f…a75bb6`（`pins.env`；下載後核對相同） |
+| 模型 tag、digest、大小 | `llama3.2:3b`，`/api/tags` 的 digest `a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72`（填回 `pins.env`），2,019,393,189 位元組；model layer `dde5aa3f…` 與 PINS.md 相同 |
+| q18 base image digest | 沒有另外建：每次照 C2 在 dev image 沙盒裡裝固定版本的 Ollama 與模型（核對 sha256 與 digest）後才跑答案的步驟。要存成映像時，由建評測部署的協調 session 記 digest |
+| OLLAMA_CONTEXT_LENGTH、記憶體用量 | 16384（伺服器紀錄 `CONTEXT_LENGTH:16384`）；載入模型後 `free -m` used 3,847 MiB／16,384 |
+| C4 `correct_runs`（附 toolcall.json） | 3／3（第一回合 3.16、1.16、1.19 秒；`final_has_token` 3 次都是 true） |
+| C5 經 proxy 的 `correct_runs`、紀錄筆數 | 3／3。`requests.jsonl` 9 筆、9 個 `.resp`：6 筆 `/api/chat`（3 次 × 2 回合），另外 3 筆是 proxy 啟動時與 `calibrate_toolcall.py` 開頭的 `/api/version`、`/api/tags` |
+| C6 report `result` | 第一次 `fail`：`ollama serve` 啟動 0.1 秒內自己查名稱並連 ollama.com（34.36.133.15:443）（`eval/results/calibration/ollama-trio-2cpu/q18/c6-egress.json`）。照 Ollama FAQ 的 local-only 模式在 `start_fixture_servers.sh` 加 `OLLAMA_NO_CLOUD=1`（伺服器紀錄 `cloud disabled: true`），重做：`pass`（no egress attempt） |
+| 換過的候選與原因 | 沒換（`llama3.2:3b`） |
+| 記錄人、時間、commit | 評測 session（eval-prep-74b711），2026-10-31，Modal 沙盒 `sb-01M68B0VBFA3W11EQEH6DFWNR9`（cpu 4、16 GiB、無 GPU）；紀錄 `eval/results/calibration/ollama-trio/q18/`；commit 同本檔 |
+
+先在 2 vCPU 的沙盒跑過一次（C4、C5 同樣 3/3，C6 發現上面的外連），因為題目寫 4 vCPU 而停掉重跑；那次的紀錄在 `eval/results/calibration/ollama-trio-2cpu/`。
 
 C4 的 `toolcall.json` 與 C6 的報告存到 `eval/results/`（或評分 session 決定的位置），和本檔同一個 commit。

@@ -11,7 +11,9 @@ OLLAMA="$OLLAMA_PREFIX/bin/ollama"
 : "${FIXTURE_MODEL:?pins.env: FIXTURE_MODEL is empty; fill it at freeze}"
 mkdir -p "$STATE"
 unset OLLAMA_HOST
-OLLAMA_MODELS="$OLLAMA_MODELS" OLLAMA_CONTEXT_LENGTH="$OLLAMA_CONTEXT_LENGTH" OLLAMA_KEEP_ALIVE=-1 \
+# OLLAMA_NO_CLOUD=1: Ollama's documented local-only mode (docs.ollama.com/faq, "disabling Ollama's cloud
+# features"). Without it the server connects to ollama.com:443 on its own (q18 calibration C6, 2026-10-31).
+OLLAMA_NO_CLOUD=1 OLLAMA_MODELS="$OLLAMA_MODELS" OLLAMA_CONTEXT_LENGTH="$OLLAMA_CONTEXT_LENGTH" OLLAMA_KEEP_ALIVE=-1 \
   nohup "$OLLAMA" serve >>"$STATE/ollama.log" 2>&1 &
 echo $! >"$STATE/ollama.pid"
 python3 - "$FIXTURE_MODEL" "${FIXTURE_MODEL_DIGEST:-}" <<'EOF'
