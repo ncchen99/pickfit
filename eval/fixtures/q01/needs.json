@@ -1,0 +1,86 @@
+[
+  {
+    "item": "[L2] item 3: pinned Claude Code CLI (provides `claude mcp list`)",
+    "why": "The item checks each agent's own MCP list command with pinned versions recorded at freeze. Not downloaded or committed here.",
+    "candidates": [
+      {
+        "source": "https://www.npmjs.com/package/@anthropic-ai/claude-code",
+        "license": "Proprietary (package license field points to its README; use is under Anthropic's Commercial Terms). Installed into the sandbox only, never committed.",
+        "size": "Record at pin time: `npm view @anthropic-ai/claude-code@<version> dist.unpackedSize` (plus any platform binary it pulls).",
+        "pin": "npm install -g @anthropic-ai/claude-code@<exact version>; record the version and `npm view @anthropic-ai/claude-code@<version> dist.integrity` in calibration.md. Simplest choice: the same version the eval runner records (eval/runner `snapshot`), so only one Claude Code version is in play."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "[L2] item 3: pinned Codex CLI (provides `codex mcp list`)",
+    "why": "Same as above for Codex CLI.",
+    "candidates": [
+      {
+        "source": "https://www.npmjs.com/package/@openai/codex",
+        "license": "Apache-2.0",
+        "size": "Record at pin time: `npm view @openai/codex@<version> dist.unpackedSize` (plus the platform binary it pulls).",
+        "pin": "npm install -g @openai/codex@<exact version>; record version and dist.integrity."
+      },
+      {
+        "source": "https://github.com/openai/codex/releases",
+        "license": "Apache-2.0",
+        "size": "Record at pin time (single x86_64 Linux binary in a .tar.gz).",
+        "pin": "Download the x86_64-unknown-linux-musl asset of one exact release tag; record tag, asset name and sha256."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "[L2] item 3: pinned Gemini CLI (provides `gemini mcp list`)",
+    "why": "Same as above for Gemini CLI.",
+    "candidates": [
+      {
+        "source": "https://www.npmjs.com/package/@google/gemini-cli",
+        "license": "Apache-2.0",
+        "size": "Record at pin time: `npm view @google/gemini-cli@<version> dist.unpackedSize`.",
+        "pin": "npm install -g @google/gemini-cli@<exact version>; record version and dist.integrity."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Node.js runtime for the npm-installed agent CLIs",
+    "why": "The npm packages above need Node.js in the dev image; check each pinned package's `engines` field.",
+    "candidates": [
+      {
+        "source": "https://nodejs.org/dist/ (an active LTS line, e.g. v22.x, file node-v22.x.y-linux-x64.tar.xz)",
+        "license": "MIT (bundled dependencies under their own licenses)",
+        "size": "Record at pin time (tens of MB compressed).",
+        "pin": "Exact version; verify against that release's SHASUMS256.txt and record the sha256."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "[L2] item 4: strace in the dev image (egress check)",
+    "why": "egress/run_traced.sh records network system calls with strace. ubuntu:24.04 does not ship it.",
+    "candidates": [
+      {
+        "source": "https://packages.ubuntu.com/noble/strace",
+        "license": "LGPL-2.1-or-later (test suite GPL-2.0-or-later)",
+        "size": "About 1-2 MB installed; record `dpkg-query -W -f='${Installed-Size}' strace`.",
+        "pin": "apt-get install strace=<noble version>; record `dpkg-query -W strace`. Calibration step 7 checks that ptrace works in the L2 sandbox."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Dev image for q01",
+    "why": "README section 5 fixes ubuntu:24.04 as the base and asks for the image digest; q01 also needs python3 >= 3.11 (fixture server and seed scripts) and git.",
+    "candidates": [
+      {
+        "source": "https://hub.docker.com/_/ubuntu (tag 24.04)",
+        "license": "Ubuntu base image; packages under their own licenses (python3: PSF-2.0, git: GPL-2.0-only)",
+        "size": "About 30 MB compressed base, plus python3, git, ca-certificates, curl, strace and Node.js.",
+        "pin": "Pin the base by digest (ubuntu:24.04@sha256:...), install python3, git, ca-certificates, curl, strace with apt at recorded versions, and record the final image digest in calibration.md. The same dev image should serve q02 and q04."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  }
+]

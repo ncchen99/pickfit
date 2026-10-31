@@ -1,0 +1,53 @@
+[
+  {
+    "item": "L2-1..L2-5 dev image contents",
+    "why": "\"The install steps succeed verbatim in the dev image\": which packages the dev image has decides whether steps such as npm/pipx/cargo/go installs can work verbatim. The persona uses Claude Code and Codex, so a JavaScript runtime is plausible; jq and python3 are needed by the grader's checks. The same image should serve every question that says \"dev image\" (q01 too). Not fetched.",
+    "candidates": [
+      {
+        "source": "https://hub.docker.com/_/ubuntu (24.04) + Ubuntu archive: git ca-certificates curl wget jq python3 python3-venv python3-pip pipx build-essential unzip xz-utils sudo",
+        "license": "Ubuntu image and packages under their own free licenses",
+        "size": "about 400 MB installed",
+        "pin": "Record the ubuntu:24.04 digest and the `dpkg-query -W` list (its SHA-256) at freeze; build once, reuse the digest for both groups"
+      },
+      {
+        "source": "Same as above plus nodejs and npm from the Ubuntu archive",
+        "license": "Node.js: MIT; npm: Artistic-2.0",
+        "size": "about 100 MB more",
+        "pin": "Same as above; record `node --version` and `npm --version`"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "L2-1 whether the non-root user has sudo",
+    "why": "\"as a non-root user\" is meant to catch steps that silently assume root. With passwordless sudo, steps that say `sudo ...` work and steps that write to system paths without sudo fail; without sudo, every step that needs root fails. setup_user.sh supports both (GRANT_SUDO=yes|no).",
+    "candidates": [
+      {
+        "source": "setup_user.sh GRANT_SUDO=yes (recommended: a typical developer account can sudo)",
+        "license": "n/a",
+        "size": "n/a",
+        "pin": "Write the choice in calibration.md before the first run; same for both groups"
+      },
+      {
+        "source": "setup_user.sh GRANT_SUDO=no",
+        "license": "n/a",
+        "size": "n/a",
+        "pin": "Same"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "L2-5 egress check tool (strace)",
+    "why": "The egress check traces connect/sendto/sendmsg/sendmmsg calls with strace. It is installed by the grader after the L2-1 install check, so it does not change the image the answer's steps run in. Whether ptrace works inside the Modal (gVisor) sandbox must be confirmed (calibration.md step 2); otherwise the network-blocked fallback is used.",
+    "candidates": [
+      {
+        "source": "Ubuntu 24.04 archive package `strace`",
+        "license": "LGPL-2.1-or-later",
+        "size": "about 2 MB",
+        "pin": "Record `dpkg -s strace | grep Version` at freeze"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  }
+]

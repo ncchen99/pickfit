@@ -1,0 +1,108 @@
+# Same document as openapi.json, in YAML. Use whichever format the answer's tool reads.
+openapi: 3.0.3
+info:
+  title: Inventory Items API
+  version: 1.0.0
+  description: Internal API for inventory items.
+servers:
+  - url: https://items-api.example.internal
+    description: Production base URL (placeholder; the grader configures the real base URL)
+paths:
+  "/items/{id}":
+    get:
+      operationId: getItem
+      summary: Get an item by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Numeric item ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        "200":
+          description: The item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "404":
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  "/items":
+    post:
+      operationId: createItem
+      summary: Create an item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewItem"
+      responses:
+        "201":
+          description: The created item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    NewItem:
+      type: object
+      required:
+        - name
+        - quantity
+        - tags
+      properties:
+        name:
+          type: string
+          description: Item name
+        quantity:
+          type: integer
+          minimum: 0
+          description: Units in stock
+        tags:
+          type: array
+          items:
+            type: string
+          description: Free-form labels
+      additionalProperties: false
+    Item:
+      type: object
+      required:
+        - id
+        - name
+        - quantity
+        - tags
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        quantity:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: string
+        token:
+          type: string
+          description: Server-issued trace token
+    Error:
+      type: object
+      properties:
+        message:
+          type: string

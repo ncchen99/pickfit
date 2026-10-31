@@ -1,0 +1,72 @@
+[
+  {
+    "item": "L2-4 shared OpenCC scorer: pinned OpenCC character tables (shared with q15)",
+    "why": "README section 5 fixes the script judgement to a pinned OpenCC version, character by character. opencc_scorer.py reads OpenCC's own text dictionaries STCharacters.txt and TSCharacters.txt (data/dictionary/ in the source tree) and needs no OpenCC binary. Not downloaded or committed here (third-party data).",
+    "candidates": [
+      {
+        "source": "https://github.com/BYVoid/OpenCC (release tag, e.g. ver.1.1.9 or the latest tag at freeze): data/dictionary/STCharacters.txt and data/dictionary/TSCharacters.txt",
+        "license": "Apache-2.0",
+        "size": "under 1 MB for the two files",
+        "pin": "Record the tag, the raw-file URLs at that tag, and the SHA-256 of both files in calibration.md; keep the files outside the repo, or commit them with the Apache-2.0 notice only after checking the license terms"
+      },
+      {
+        "source": "https://pypi.org/project/OpenCC/ (official Python binding, pinned version)",
+        "license": "Apache-2.0",
+        "size": "a few MB wheel",
+        "pin": "Only if 念誠 prefers converting with the library (s2t/t2s per character) instead of reading the tables; then opencc_scorer.py needs a small change before freeze. Record version and wheel SHA-256"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "L2-3 blind grader model",
+    "why": "README section 5: semantic judgements use a pinned Claude model with a fixed rubric, blind to the group. judge_rubric.md is the rubric; the model ID must be fixed before the first run (graders' budget: section 9.1 B4, $20).",
+    "candidates": [
+      {
+        "source": "Anthropic API, a fixed full model ID (for example the same model as the runner, claude-opus-5-5, or a cheaper fixed model)",
+        "license": "Anthropic API terms",
+        "size": "8 judge calls per run (4 prompts; x3 when three runs are needed)",
+        "pin": "Write the full model ID and temperature 0 in calibration.md; the API key is supplied at run time and never committed"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Mac baseline for q11 and q12 (and q08 if it uses the same runbook)",
+    "why": "A fresh macOS user still sees system-wide software. The main account's Homebrew at /opt/homebrew would be visible but not writable to the test user, and the main account's installed formulae would leak into the test. Both groups must start from the same baseline.",
+    "candidates": [
+      {
+        "source": "Option A (recommended): move the main Homebrew aside during the run (sudo mv /opt/homebrew /opt/homebrew.main), install an empty Homebrew in the test user with the official installer as part of the baseline, delete it afterwards and move the main one back",
+        "license": "Homebrew: BSD-2-Clause",
+        "size": "about 500 MB per run, removed afterwards",
+        "pin": "Record the Homebrew version (brew --version) in calibration.md for each run"
+      },
+      {
+        "source": "Option B: move the main Homebrew aside and give the test user no Homebrew (answers that use brew must install it)",
+        "license": "n/a",
+        "size": "n/a",
+        "pin": "Write the choice in calibration.md"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "L2-1 hardware: a 16 GB Apple silicon Mac",
+    "why": "The item says \"On a 16 GB Apple silicon Mac\". 念誠's Mac is an Apple M5 with 24 GiB (sysctl hw.memsize, 2026-10-30). The memory check itself is the measured footprint (< 12 GiB), which does not depend on installed RAM, but speed and memory pressure differ.",
+    "candidates": [
+      {
+        "source": "Use the 24 GiB Mac and report the real hardware; judge only by the measured footprint",
+        "license": "n/a",
+        "size": "n/a",
+        "pin": "Record chip, memory and macOS version in calibration.md"
+      },
+      {
+        "source": "Borrow a 16 GB Apple silicon Mac for q11",
+        "license": "n/a",
+        "size": "n/a",
+        "pin": "Same records"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  }
+]

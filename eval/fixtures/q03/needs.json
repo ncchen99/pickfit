@@ -1,0 +1,28 @@
+[
+  {
+    "item": "[L2] items 1-3: the q03 base image",
+    "why": "Item 1 runs the install steps in the base image with no python3, node or java, and README section 5 asks for the image digest. Nothing else is added by the grader: the in-sandbox scripts need only POSIX sh, awk (mawk), GNU date and coreutils, all in ubuntu:24.04.",
+    "candidates": [
+      {
+        "source": "https://hub.docker.com/_/ubuntu (tag 24.04)",
+        "license": "Ubuntu base image; packages under their own licenses (mawk: GPL-2.0, coreutils: GPL-3.0-or-later)",
+        "size": "About 30 MB compressed.",
+        "pin": "ubuntu:24.04@sha256:<digest>; record the digest and `awk -W version` in calibration.md step 1. Use this exact image with no extra packages (Modal: from_registry without add_python; calibration step 1 checks that the platform does not inject python3)."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "[L2] item 3: sandbox shape (4 vCPU, memory measurement)",
+    "why": "Not a download, but a platform setting that must be fixed before the freeze: 4 vCPU, local disk for the 2 GB file, and the memory rule chosen in calibration.md step 3 (literal memory.peak, or the registered fallback of a hard 1,000,000,000-byte limit with no swap and no OOM kill).",
+    "candidates": [
+      {
+        "source": "https://modal.com/docs/reference/modal.Sandbox (cpu and memory arguments)",
+        "license": "Service setting, nothing installed",
+        "size": "n/a",
+        "pin": "Record the exact Sandbox.create arguments (cpu=4, memory request/limit in MiB; 953 MiB = 999,292,928 bytes is the largest whole-MiB limit not above 1,000,000,000 bytes) in calibration.md step 3."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  }
+]

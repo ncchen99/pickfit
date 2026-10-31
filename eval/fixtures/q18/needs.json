@@ -1,0 +1,79 @@
+[
+  {
+    "item": "Pinned Ollama for Linux x86_64 (the user's existing model runner; also used by q19 and q20)",
+    "why": "L2-3 needs 'a pinned Ollama on localhost'. The fixture runs it on 127.0.0.1:11435 behind the logging proxy on Ollama's default 127.0.0.1:11434. One pin for q18, q19 and q20 keeps the local-model questions comparable.",
+    "candidates": [
+      {
+        "source": "https://github.com/ollama/ollama/releases (Linux amd64 archive of one tagged release)",
+        "license": "MIT",
+        "size": "about 1.5-2 GB archive (bundles GPU libraries; to confirm at pin time)",
+        "pin": "the latest stable tag at freeze; put the exact asset URL and the SHA-256 from that release's checksum list in pins.env (OLLAMA_VERSION, OLLAMA_URL, OLLAMA_SHA256); setup_pinned_ollama.sh checks the hash after download"
+      },
+      {
+        "source": "Docker Hub ollama/ollama:<version> (copy /usr/bin/ollama and /usr/lib/ollama into the dev image)",
+        "license": "MIT",
+        "size": "about 2-3 GB image",
+        "pin": "pull by digest (ollama/ollama@sha256:...) and record the digest and `ollama --version`"
+      },
+      {
+        "source": "https://ollama.com/install.sh with OLLAMA_VERSION=<version>",
+        "license": "MIT",
+        "size": "same archive as the first candidate",
+        "pin": "not recommended: the script itself is not pinned; if used, save the script's SHA-256 too"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Frozen tool-calling fixture model (Ollama tag), shared with q19",
+    "why": "L2-3 needs 'the frozen tool-calling fixture model (calibrated before freeze: 3 of 3 correct tool calls through Ollama's own API)'. It must run on 4 CPU cores within the 10-minute limit per run, and q19's coding agents send long prompts, so a 3-4B model is the practical size. calibrate_toolcall.py decides; pick the next candidate if one fails.",
+    "candidates": [
+      {
+        "source": "Ollama library llama3.2:3b",
+        "license": "Llama 3.2 Community License (not OSI; allows use and redistribution under its terms)",
+        "size": "about 2.0 GB",
+        "pin": "pull the tag, record the digest from GET /api/tags in pins.env (FIXTURE_MODEL_DIGEST), bake the model store into the base image; never pull again during eval"
+      },
+      {
+        "source": "Ollama library qwen2.5:7b",
+        "license": "Apache-2.0",
+        "size": "about 4.7 GB",
+        "pin": "same as above. Stronger tool calling, but about 2x slower on CPU: check q19's prefill probe before choosing it"
+      },
+      {
+        "source": "Ollama library qwen3:4b",
+        "license": "Apache-2.0",
+        "size": "about 2.5 GB",
+        "pin": "same as above. Thinks by default, which adds many tokens on CPU unless a client turns thinking off; calibrate with the default"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "dev image: the clean Linux environment for every L2 check (base image, packages, user)",
+    "why": "The fixture MCP server and the checkers need python3 (3.9 or newer). 'The install steps succeed verbatim' depends on whether sudo exists and on the user the steps run as. Share one decision with q17-q20.",
+    "candidates": [
+      {
+        "source": "docker.io/library/ubuntu:24.04, plus apt packages from https://snapshot.ubuntu.com",
+        "license": "Ubuntu archive packages (each package's own license)",
+        "size": "about 30 MB compressed base image; proposed packages add about 60 MB",
+        "pin": "pull by digest; `apt-get update --snapshot <id>` with one fixed snapshot id; record `dpkg-query -W`"
+      }
+    ],
+    "proposal": "Packages: python3, ca-certificates, curl, sudo, strace. User `dev` with passwordless sudo. q18 base image = dev image + pinned Ollama + fixture model store (built once with setup_pinned_ollama.sh).",
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "strace in the dev image (per-process layer of the egress check)",
+    "why": "Attributes outbound attempts to the client's process tree (including the MCP servers it launches), separate from the fixture Ollama.",
+    "candidates": [
+      {
+        "source": "Ubuntu 24.04 (noble) apt package `strace`",
+        "license": "LGPL-2.1-or-later",
+        "size": "about 2 MB installed",
+        "pin": "same apt snapshot id as the dev image; calibration.md E4 checks it works in the Modal sandbox"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  }
+]

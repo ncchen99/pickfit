@@ -1,0 +1,77 @@
+[
+  {
+    "item": "[L2] Frozen compose fixture (an nginx-alpine web service ... and a redis-alpine service); [L2] docker run --rm hello-world ...",
+    "why": "The checks pull container images from Docker Hub during the hand run (the answer's runtime pulls them; nothing is downloaded now). Tags can move between the two groups' runs, so their digests should be fixed before the first run.",
+    "candidates": [
+      {
+        "source": "https://hub.docker.com/_/nginx (tag 1.27-alpine)",
+        "license": "nginx: BSD-2-Clause; Alpine base: various free licences (see the image's docs)",
+        "size": "not pulled; record the arm64 image size at calibration",
+        "pin": "Resolve the multi-arch index digest of nginx:1.27-alpine (calibration.md step 1) and append it as nginx:1.27-alpine@sha256:<digest> in compose.yaml before the fixture freeze, or decide to keep the tag and record the digest each run pulled."
+      },
+      {
+        "source": "https://hub.docker.com/_/redis (tag 7.2-alpine)",
+        "license": "Redis 7.2: BSD-3-Clause (the 7.4 line moved to RSALv2/SSPLv1, so the fixture uses 7.2)",
+        "size": "not pulled; record at calibration",
+        "pin": "Same as nginx: resolve the index digest of redis:7.2-alpine at calibration and append @sha256:<digest> in compose.yaml before the freeze, or keep the tag and record what each run pulled."
+      },
+      {
+        "source": "https://hub.docker.com/_/hello-world (tag latest, fixed by the checklist's command)",
+        "license": "MIT",
+        "size": "tens of KB",
+        "pin": "Cannot be pinned (the command is frozen); record the RepoDigest that each run pulled (checks.log does)."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "[L2] In a separate macOS user account on Apple silicon ... the install steps run as written",
+    "why": "Homebrew on this Mac lives in /opt/homebrew and belongs to the main account, so a separate account cannot brew install, while most answers for this question will use Homebrew. Every option touches the main account and must be identical for both groups.",
+    "candidates": [
+      {
+        "source": "Option A (recommended): for the hand-run window, move the main Homebrew aside (sudo mv /opt/homebrew /opt/homebrew.q08-saved), install a fresh Homebrew in each eval account with the official installer from https://brew.sh before preflight, run, delete it, move the main one back",
+        "license": "Homebrew: BSD-2-Clause",
+        "size": "a few hundred MB per fresh install",
+        "pin": "Record `brew --version` of each fresh install. Caveat: while /opt/homebrew is moved, anything in the main account that uses it (including other agent sessions on this Mac) breaks; schedule the run when nothing else needs it."
+      },
+      {
+        "source": "Option B: let the eval account use the main Homebrew (sudo chown -R <eval>:admin /opt/homebrew for the run, chown back afterwards)",
+        "license": "Homebrew: BSD-2-Clause",
+        "size": "none",
+        "pin": "Snapshot `brew list --versions` before and after; uninstall what the answer added. Caveat: brew install may upgrade formulae the main account uses, which cannot be undone exactly."
+      },
+      {
+        "source": "Option C: no Homebrew in the baseline (main one moved aside, none installed); answers that use brew must install it themselves",
+        "license": "n/a",
+        "size": "n/a",
+        "pin": "Same caveat as A about moving /opt/homebrew."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "[L2] ... with Docker Desktop not running and not the active docker context or DOCKER_HOST ...",
+    "why": "The baseline docker CLI must be the same for both groups. Docker Desktop is not installed on this Mac (2026-10-30); another container app is, and its CLI links in /usr/local/bin and its /var/run/docker.sock link would hijack or launch that app. Rosetta is not installed (a Rosetta install dialog would count as GUI).",
+    "candidates": [
+      {
+        "source": "Baseline 1 (recommended): no Docker Desktop, no docker CLI on PATH at the start (the other app quit, its /usr/local/bin links and /var/run/docker.sock moved aside); answers must provide a docker CLI themselves, as a user who removed Docker Desktop would need",
+        "license": "n/a",
+        "size": "n/a",
+        "pin": "preflight.sh must show 'no docker CLI on PATH before the install'."
+      },
+      {
+        "source": "Baseline 2: install Docker Desktop from https://www.docker.com/products/docker-desktop/ but keep it quit, so its docker CLI is on PATH as for the user in the question",
+        "license": "Docker Subscription Service Agreement (free for personal use; installing it means accepting its terms)",
+        "size": "about 1-2 GB installed",
+        "pin": "Record the Docker Desktop version; its first launch creates the CLI links and shows GUI dialogs, which happen before the run and are not graded."
+      },
+      {
+        "source": "Rosetta: keep it not installed (current state), or install it in the main account before both runs with `softwareupdate --install-rosetta --agree-to-license`",
+        "license": "Apple software licence",
+        "size": "small",
+        "pin": "preflight.txt records whether Rosetta is installed; the same state for both groups."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  }
+]

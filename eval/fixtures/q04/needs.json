@@ -1,0 +1,34 @@
+[
+  {
+    "item": "[L2] items 1-4: dev image contents for q04 (three sandboxes A, B, C)",
+    "why": "The checks need git, python3 (make_env.py) and strace. The answer decides the key type; whether the developers' machines already have an SSH client or an OpenPGP implementation changes whether an answer that assumes them can run verbatim, so this must be fixed before the freeze, not after seeing answers. Developers on macOS and Linux normally have ssh (openssh-client) and git; an OpenPGP tool is not preinstalled on macOS.",
+    "candidates": [
+      {
+        "source": "https://hub.docker.com/_/ubuntu (tag 24.04) + apt: git, python3, strace, ca-certificates, curl, openssh-client",
+        "license": "Ubuntu base image; git GPL-2.0-only, python3 PSF-2.0, strace LGPL-2.1-or-later, openssh-client BSD-style (OpenSSH licence)",
+        "size": "About 30 MB compressed base plus the packages; record the final image size.",
+        "pin": "Same dev image as q01 and q02 (base by digest, apt versions recorded) with openssh-client added; record `dpkg-query -W git python3 strace openssh-client` and the final digest in calibration.md step 3. Recommended: include openssh-client, do not include gnupg (an answer that needs it must install it)."
+      },
+      {
+        "source": "Same as above plus apt: gnupg",
+        "license": "gnupg GPL-3.0-or-later",
+        "size": "Record at pin time.",
+        "pin": "Only if 念誠 decides developers should be assumed to have an OpenPGP tool; record the version."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "[L2] item 4: strace in the dev image (egress check)",
+    "why": "egress/run_traced.sh records network system calls with strace. ubuntu:24.04 does not ship it.",
+    "candidates": [
+      {
+        "source": "https://packages.ubuntu.com/noble/strace",
+        "license": "LGPL-2.1-or-later (test suite GPL-2.0-or-later)",
+        "size": "About 1-2 MB installed.",
+        "pin": "apt-get install strace=<noble version>; record `dpkg-query -W strace`."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  }
+]

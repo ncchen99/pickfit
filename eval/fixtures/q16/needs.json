@@ -1,0 +1,78 @@
+[
+  {
+    "item": "Pinned language identifier",
+    "why": "L2-5: each output prose paragraph must be identified as Portuguese with confidence >= 0.9 by a pinned identifier. lang_check.py supports the three below; pick one before freeze and check it on calibration/control-pt-PT (calibration.md). The threshold is frozen, so the identifier is chosen on genuine Portuguese paragraphs, never on any answer's output.",
+    "candidates": [
+      {
+        "source": "fastText language identification model lid.176.ftz (https://fasttext.cc/docs/en/language-identification.html) with the fasttext package (https://pypi.org/project/fasttext/)",
+        "license": "model CC-BY-SA-3.0; package MIT",
+        "size": "model about 0.9 MB (compressed .ftz); package needs numpy (pin numpy<2: older fasttext releases break on numpy 2 in predict)",
+        "pin": "model file SHA-256 + fasttext==X.Y.Z + numpy==X.Y.Z with wheel hashes"
+      },
+      {
+        "source": "https://pypi.org/project/lingua-language-detector/",
+        "license": "Apache-2.0",
+        "size": "wheel with built-in models, tens of MB (confirm)",
+        "pin": "lingua-language-detector==X.Y.Z + wheel SHA-256; detector built from all languages"
+      },
+      {
+        "source": "https://pypi.org/project/langid/",
+        "license": "BSD-3-Clause",
+        "size": "a few MB (model inside), needs numpy",
+        "pin": "langid==1.1.6 (confirm) + numpy version + wheel hashes; norm_probs=True"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Meaning judge for L2-7: a blind human grader who reads Portuguese, or a pinned LLM judge",
+    "why": "The item says the choice is recorded before freeze. The rubric is frozen in meaning/rubric.md; calibration/judge_cases.json holds 6 self-written cases with known verdicts that the judge must get right before freeze. The judge sees no group or tool name (make_judge_input.py build).",
+    "candidates": [
+      {
+        "source": "a person who reads Portuguese, not told which group or tool produced the text (meaning/make_judge_input.py sheet)",
+        "license": "n/a",
+        "size": "5 sentences per answer and run",
+        "pin": "the person's name or role and the date, recorded in calibration.md"
+      },
+      {
+        "source": "a pinned Claude model through the Anthropic API (eval/README.md section 5: fixed-version Claude model, fixed rubric, blind to group), billed to the $20 grading budget of section 9.1 B4",
+        "license": "Anthropic API terms",
+        "size": "about 5 short requests per answer and run",
+        "pin": "exact model id + temperature 0 (or, if the model rejects temperature, 3 runs and 2 of 3, via --no-temperature); recorded in calibration.md"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "strace and the egress block (same as q14 and q15)",
+    "why": "L2-2 egress check during the translation run. strace is installed by the grader after the answer's setup and the warm-up run.",
+    "candidates": [
+      {
+        "source": "Ubuntu 24.04 package strace",
+        "license": "LGPL-2.1-or-later",
+        "size": "about 1.5 MB",
+        "pin": "package version from apt-cache policy on the pin date"
+      },
+      {
+        "source": "Modal Sandbox network blocking on a sandbox started from the filesystem snapshot, or iptables (Ubuntu package, GPL-2.0-or-later) REJECT rules inside the sandbox",
+        "license": "n/a / GPL-2.0-or-later",
+        "size": "n/a",
+        "pin": "Modal SDK version and flag, or iptables version and rules, in calibration.md"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Dev image digest and grader-side Python (shared by every Linux question)",
+    "why": "eval/README.md section 5. egress_check.py runs inside the sandbox; md_check.py, lang_check.py and the judge tools run outside it on copied output files.",
+    "candidates": [
+      {
+        "source": "docker.io/library/ubuntu:24.04 plus the eval's own dev-image layer; python3 from the image or a standalone build on the read-only /eval mount (https://github.com/astral-sh/python-build-standalone/releases)",
+        "license": "Ubuntu image terms; PSF-2.0",
+        "size": "about 30 MB each",
+        "pin": "image digest; release tag + archive SHA-256"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  }
+]

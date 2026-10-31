@@ -1,0 +1,42 @@
+[
+  {
+    "item": "dev image: the clean Linux environment for every L2 check (base image, packages, user)",
+    "why": "The fixture scripts need python3 (3.9 or newer, stdlib only). Whether `sudo` exists and whether steps run as root or as a normal user decides whether answers' commands run verbatim. The four questions q17-q20 (and the other Linux questions) should share one decision.",
+    "candidates": [
+      {
+        "source": "docker.io/library/ubuntu:24.04, plus apt packages from the Ubuntu snapshot service (https://snapshot.ubuntu.com)",
+        "license": "Ubuntu archive packages (each package's own license; main is free software)",
+        "size": "about 30 MB compressed base image; proposed packages add about 60 MB",
+        "pin": "pull by digest (ubuntu@sha256:...) and record it; install packages with `apt-get update --snapshot <YYYYMMDDTHHMMSSZ>` at one fixed snapshot id; record `dpkg-query -W` output in calibration.md"
+      }
+    ],
+    "proposal": "Packages: python3, ca-certificates, curl, sudo, strace (and git for q19). A normal user `dev` with passwordless sudo, HOME=/home/dev, login shell bash, so answers written for a desktop Ubuntu user (with or without sudo) run as written. Modal Sandbox with 4 vCPU, 16 GiB, no GPU (q17's checklist).",
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "strace in the dev image (the per-process layer of the egress check)",
+    "why": "egress/egress.py can attribute outbound connection attempts to the answer's processes only with strace. Without it the check falls back to the DNS log and /proc polling, which see the whole sandbox.",
+    "candidates": [
+      {
+        "source": "Ubuntu 24.04 (noble) apt package `strace`",
+        "license": "LGPL-2.1-or-later",
+        "size": "about 2 MB installed",
+        "pin": "same apt snapshot id as the dev image; record `dpkg-query -W strace`; calibration.md step E4 checks it works inside the Modal (gVisor) sandbox"
+      }
+    ],
+    "decision_needed_by": "念誠"
+  },
+  {
+    "item": "Optional: an independent PDF text extractor in the dev image for the corpus check",
+    "why": "verify_corpus.py already decodes the PDF text streams with the stdlib. While writing the fixtures the two token PDFs were also checked locally with poppler pdftotext, Apple PDFKit and pypdf 6.16.2 (all found the tokens intact). An in-image check is only extra assurance.",
+    "candidates": [
+      {
+        "source": "Ubuntu 24.04 apt package `poppler-utils` (pdftotext)",
+        "license": "GPL-2.0-or-later",
+        "size": "about 1 MB plus libpoppler",
+        "pin": "same apt snapshot id; record the version. Install it only in a separate check image, not in the dev image the answers run in."
+      }
+    ],
+    "decision_needed_by": "念誠"
+  }
+]
