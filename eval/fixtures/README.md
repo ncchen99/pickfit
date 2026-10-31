@@ -21,7 +21,7 @@ for q in q13 q14 q15 q16; do (cd $q && python3 -m unittest discover -s tests); d
 for q in q17 q18 q19 q20; do (cd $q && sh selftest.sh); done
 ```
 
-2026-10-31 在 macOS（Python 3.9）全部通過；q05 的 `fixture.pdf` 照設計還不存在。strace 的實測要在 L2 沙盒做（`_shared/calibration.md` 步驟 1）。
+2026-10-31 在 macOS（Python 3.9）全部通過。strace 的實測要在 L2 沙盒做（`_shared/calibration.md` 步驟 1）。
 
 ## 產生器重跑（2026-10-31）
 
@@ -38,7 +38,6 @@ for q in q17 q18 q19 q20; do (cd $q && sh selftest.sh); done
 | q10 | `make_repo.sh`（三種模式各跑兩次） | 兩次的 HEAD commit id 相同 | 相同 |
 | q16 | `build_manifest.py --check` | `manifest.json` | 相同 |
 | q17 | `verify_corpus.py --regenerate` | 55 個檔與 `SHA256SUMS` | 相同 |
-
 | q05 | `build_pdf.sh`（固定版本的 Noto Sans TC 與 fontTools，在 dev image 沙盒跑兩次） | 兩次的 `fixture.pdf` 逐位元相同，`verify_fixtures.py` OK | 相同 |
 
 沒有重跑的：q15 `build_clip.py`（錄音等念誠確認後才下載）。
