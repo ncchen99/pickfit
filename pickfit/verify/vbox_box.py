@@ -623,15 +623,18 @@ class Router:
         self.vbox("setextradata", self.name, "VBoxInternal/Devices/pcbios/0/Config/DmiSystemSerial", serial)
         self.vbox.check_nics(self.name, ROUTER_NICS)
         self.serial_log.parent.mkdir(parents=True, exist_ok=True)
-        start = self.serial_log.stat().st_size if self.serial_log.exists() else 0
+        # Emptied here, with the router off, so any ready line in it is this boot's. (Reading on from the old
+        # size failed when VirtualBox rewrote the file in place with a line of the same length.)
+        try:
+            self.serial_log.write_bytes(b"")
+        except OSError as err:
+            raise BoxError(f"cannot empty the router's serial log {self.serial_log}: {err}") from None
         self.vbox("startvm", self.name, "--type", "headless", timeout_s=120)
         deadline = time.monotonic() + ROUTER_WAIT_S
         m = None
         while time.monotonic() < deadline:
             data = self.serial_log.read_bytes() if self.serial_log.exists() else b""
-            if len(data) < start:  # VirtualBox truncated the log at power-on
-                start = 0
-            m = READY.search(data[start:].decode("utf-8", "replace"))
+            m = READY.search(data.decode("utf-8", "replace"))
             if m:
                 break
             time.sleep(1)

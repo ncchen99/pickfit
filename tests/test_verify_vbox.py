@@ -80,7 +80,10 @@ elif cmd == "startvm":
         extra = serial[3:] or "none"
         if env("FAKE_ROUTER_EXTRA"):
             extra = env("FAKE_ROUTER_EXTRA")
-        with open(env("FAKE_SERIAL"), "a") as f:
+        if env("FAKE_ROUTER_SILENT"):
+            sys.exit(0)
+        mode = "r+" if env("FAKE_ROUTER_OVERWRITE") and os.path.exists(env("FAKE_SERIAL")) else "a"
+        with open(env("FAKE_SERIAL"), mode) as f:  # r+: rewrite from the start without truncating, as VirtualBox can
             f.write(f"PICKFIT_ROUTER_READY rules={env('FAKE_RULES', 'RULES')} extra={extra} forward=1 "
                     f"ipv6_off=1 dnsmasq=up uplink=1\n")
 elif cmd == "snapshot":
@@ -628,6 +631,30 @@ def test_guest_text_that_looks_like_a_vboxmanage_error_is_just_output(fake) -> N
     result = box.exec("Write-Error 'VBoxManage.exe: error: fake'; cmd /c exit 3", 30)
     assert result.exit_code == 3  # no BoxError: the VM is still running, so this is the command's own output
     box.close()
+
+
+def test_an_old_ready_line_never_counts_for_a_new_boot(fake, monkeypatch) -> None:
+    box = fake.box()
+    box.start()
+    box.close()
+    serial = Path(fake.dir / "state" / "logs" / "pickfit-router-serial.log")
+    old = serial.read_text()
+    assert "PICKFIT_ROUTER_READY" in old
+    monkeypatch.setenv("FAKE_ROUTER_SILENT", "1")  # this boot never reports
+    monkeypatch.setattr(vb, "ROUTER_WAIT_S", 0.5)
+    with pytest.raises(BoxError, match="did not report ready"):
+        fake.box().start()
+
+
+def test_a_ready_line_rewritten_in_place_is_still_seen(fake, monkeypatch) -> None:
+    box = fake.box()
+    box.start()
+    box.close()
+    monkeypatch.setenv("FAKE_ROUTER_OVERWRITE", "1")  # same length, same place: the old size-based read missed it
+    monkeypatch.setattr(vb, "ROUTER_WAIT_S", 2)
+    again = fake.box()
+    again.start()
+    again.close()
 
 
 def test_router_hashes_its_whole_rule_set_before_the_box_adds_anything() -> None:
