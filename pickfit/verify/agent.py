@@ -431,6 +431,11 @@ pickfit can check, one operate_gui per feature: a goal a user would do in the ap
 its path under ~/pickfit-out/, or a folder to search such as ~/ where the app keeps its data, with the text it \
 must hold and/or its format), clipboard (the app copies a result), or screen_text (text the app computes or \
 converts, never the text typed). Put input files the goal needs in inputs (text, or pickfit's sample png/jpeg). \
+Examples: a notes or editor app: type {nonce}, save to ~/pickfit-out/note.md, check that file contains {nonce}; \
+an image tool: open ~/pickfit-in/photo.png (sample png), export ~/pickfit-out/photo.webp, check format webp; \
+a model browser: download the smallest GGUF it lists, check folder ~/ for format gguf; a document search: an \
+input file holding {nonce}, search for {nonce}, check screen_text for the input file's name; a converter: \
+check the converted text, not the text typed. \
 A passing operate_gui is the only way a GUI app reaches level function: cite it as a smoke test with \
 expected_signal `gui check: passed` and in features as checked. A goal that needs an account, a key, a \
 microphone, a camera, a GPU or a model download larger than about 300 MB is not a check: report that feature \
