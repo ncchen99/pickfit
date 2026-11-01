@@ -10,8 +10,11 @@ the checks that passed, each as the exact command the agent ran. In a new box:
 4. cut the network and run every check: install online, smoke test offline;
 5. turn the network back on and rerun any check that failed offline; one that
    passes then is marked as needing the network.
-6. GUI launches run last, the same way (offline, then online for a failure):
-   each one stops every process of the box user, background setups included.
+6. GUI launches and operations run last, the same way (offline, then online for
+   a failure): each one stops every process of the box user, background setups
+   included. An operation first reruns its recorded actions with a fresh nonce
+   (no model); if pickfit's check fails that way, the operating loop runs again
+   on the same goal and the same check must pass (gui_operate.py).
 7. once the level is settled, rerun each failed feature check once, online, after
    its setup: a failure is kept only if it repeats (features.py). These reruns
    never change the level.
@@ -30,10 +33,19 @@ from typing import TYPE_CHECKING, Any
 
 from pickfit.verify import gui
 from pickfit.verify.box import Box, BoxError, ExecResult
+from pickfit.verify.gui_operate import OperateArgs, run_operation
 from pickfit.verify.features import failed_run
 from pickfit.verify.task import prepare_box
 from pickfit.verify.mcp import is_mcp
-from pickfit.verify.verdict import MCP_KINDS, ResolvedCheck, evaluate_check, mcp_problems, supported_level
+from pickfit.verify.verdict import (
+    GUI_KINDS,
+    MCP_KINDS,
+    ResolvedCheck,
+    evaluate_check,
+    gui_op_problems,
+    mcp_problems,
+    supported_level,
+)
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import CommandRecord
@@ -59,11 +71,12 @@ def replay_timeout(recorded_s: float | None) -> int:
 @dataclass(frozen=True)
 class ReplayCommand:
     command_id: int
-    tool: str  # run_command, run_background or launch_gui
+    tool: str  # run_command, run_background, launch_gui or operate_gui
     command: str
     port: int | None = None
     wait_s: int | None = None
     seconds: float | None = None  # how long it took for the agent
+    operate: dict[str, Any] | None = None  # operate_gui: the spec and the recorded actions
 
 
 @dataclass(frozen=True)
@@ -96,7 +109,11 @@ def plan_from(verdict: LogVerdict, commands: list[CommandRecord], rerun_failed: 
 
     def command(cid: int) -> ReplayCommand:
         c = by_id[cid]
-        return ReplayCommand(cid, c.tool, c.command, c.port, c.wait_s, c.seconds)
+        operate = None
+        if c.tool == "operate_gui" and c.operate:
+            operate = {"spec": c.operate["spec"], "actions": c.operate.get("actions") or [],
+                       "model": c.operate.get("model")}
+        return ReplayCommand(cid, c.tool, c.command, c.port, c.wait_s, c.seconds, operate)
 
     checks = [c for c in verdict.checks if c.passed]
     check_ids = {c.command_id for c in checks}
@@ -130,8 +147,9 @@ class RanCommand:
     stdout: str
     stderr: str
     network: bool  # whether the network was on
-    screenshot: str | None = None  # launch_gui: the PNG of the display
-    gui: dict[str, Any] | None = None  # launch_gui: what the launch showed (gui.GuiLaunch)
+    screenshot: str | None = None  # launch_gui, operate_gui: the PNG of the app's first window
+    gui: dict[str, Any] | None = None  # launch_gui, operate_gui: what the launch showed (gui.GuiLaunch)
+    operate: dict[str, Any] | None = None  # operate_gui: how it went (gui_operate.Operation)
 
     @property
     def ok(self) -> bool:
@@ -177,6 +195,7 @@ class ReplayResult:
     error: str | None = None
     seconds: float = 0.0
     box: dict[str, Any] = field(default_factory=dict)
+    cost_usd: float = 0.0  # operations: the operator's and the screen reader's calls
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -186,14 +205,49 @@ class Replayer:
     """Runs one ReplayPlan in one fresh, started Box."""
 
     def __init__(self, box: Box, *, log: Callable[[str], None] = print,
-                 command_timeout_s: int = COMMAND_TIMEOUT_S, evidence_dir: Path | None = None) -> None:
+                 command_timeout_s: int = COMMAND_TIMEOUT_S, evidence_dir: Path | None = None,
+                 operator: dict[str, Any] | None = None) -> None:
         self.box = box
         self.log = log
         self.timeout = command_timeout_s
-        self.evidence_dir = evidence_dir  # where launch_gui screenshots go
+        self.evidence_dir = evidence_dir  # where launch_gui and operate_gui screenshots go
+        self.operator = operator or {}  # operate_gui: run_operation's model, read_screen, scope and test seams
         self.launches = 0
+        self.cost_usd = 0.0
+
+    def _operate(self, cmd: ReplayCommand) -> RanCommand:
+        """The recorded actions with a fresh nonce; if pickfit's check fails that way, the loop on the same goal."""
+        if not self.box.display or not cmd.operate:
+            raise BoxError("an operation needs a box with a display and its recorded spec")
+        args = OperateArgs.model_validate(cmd.operate["spec"])
+        first = None
+        for actions in (cmd.operate.get("actions") or [], None):
+            self.launches += 1
+            tag = f"replay-{cmd.command_id}-{self.launches}"
+            if actions is None:
+                self.log(f"  replay [{cmd.command_id}] the recorded actions did not pass: operating again")
+            result, op, png = run_operation(self.box, args, tag, actions=actions, evidence_dir=self.evidence_dir,
+                                            log=self.log, **self.operator)
+            self.cost_usd += op.cost_usd
+            if actions is not None:
+                op.model = cmd.operate.get("model")  # who chose the actions when they were recorded
+            else:
+                op.first = first
+            if op.passed or actions is None or op.stop == "no_window":
+                break
+            first = op
+        ran = self._ran(cmd, result)
+        ran.gui, ran.operate = op.launch, op.to_dict()
+        if png and self.evidence_dir is not None:
+            path = self.evidence_dir / f"{tag}.png"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(png)
+            ran.screenshot = str(path)
+        return ran
 
     def rerun(self, cmd: ReplayCommand, max_s: int | None = None) -> RanCommand:
+        if cmd.tool == "operate_gui":
+            return self._operate(cmd)
         if cmd.tool == "launch_gui":
             if not self.box.display:
                 raise BoxError("a GUI launch needs a box with a display")
@@ -227,9 +281,11 @@ class Replayer:
     def _check(self, check: ReplayCheck) -> tuple[RanCommand, bool, list[str]]:
         ran = self.rerun(check.run)
         ok, problems = evaluate_check(ran, check.expected_exit_code, check.expected_signal,
-                                      trusted_only=check.kind == "gui")
+                                      trusted_only=check.kind in GUI_KINDS)
         if check.kind in MCP_KINDS:
             problems += mcp_problems(check.kind, ran.stdout)
+        if check.kind == "gui_op":
+            problems += gui_op_problems(ran.exit_code, ran.stdout)
         return ran, ok and not problems, problems
 
     def run(self, plan: ReplayPlan, task: VerifyTask) -> ReplayResult:
@@ -242,6 +298,7 @@ class Replayer:
         except BoxError as err:
             result.passed, result.error = False, f"box error: {err}"
         result.seconds = round(time.monotonic() - began, 1)
+        result.cost_usd = round(self.cost_usd, 6)
         verdict = "passed" if result.passed else f"failed ({result.error})"
         self.log(f"  replay {verdict} · level {result.level} · offline {result.offline} · {result.seconds:.0f}s")
         return result
@@ -267,8 +324,9 @@ class Replayer:
                 broken[setup.command_id] = f"setup {setup.command_id} exited {ran.exit_code}: {_one_line(setup.command)}"
         known = {c.command_id: c for c in (*plan.setups, *(k.run for k in plan.checks))}
         by_id = {c.run.command_id: c for c in plan.checks}
-        # GUI launches last: each stops every box-user process, background setups included.
-        for phase in ([c for c in plan.checks if c.kind != "gui"], [c for c in plan.checks if c.kind == "gui"]):
+        # GUI launches and operations last: each stops every box-user process, background setups included.
+        for phase in ([c for c in plan.checks if c.kind not in GUI_KINDS],
+                      [c for c in plan.checks if c.kind in GUI_KINDS]):
             box.set_network(False)
             outcomes = []
             for check in phase:
@@ -293,7 +351,7 @@ class Replayer:
                     outcome.run, outcome.passed = ran, ok
             result.checks += outcomes
         box.set_network(True)
-        plan_checks = sorted(plan.checks, key=lambda c: c.kind == "gui")  # the order result.checks has
+        plan_checks = sorted(plan.checks, key=lambda c: c.kind in GUI_KINDS)  # the order result.checks has
         background = {s.command_id for s in plan.setups if s.tool == "run_background"}
         resolved = [ResolvedCheck(
             command_id=c.command_id, command=c.command, tool="", setup_ids=[], expected_signal=c.expected_signal,
@@ -335,8 +393,11 @@ class Replayer:
 
 def judged_launch(checks: list[CheckResult]) -> CheckResult | None:
     """The GUI launch a run stands on: the first that passed, else the last that ran (the judge and the record
-    both use this one)."""
+    both use this one). Without a launch_gui, an operation's start is its launch: its window screenshot is the
+    one taken before the first action."""
     launches = [c for c in checks if c.kind == "gui" and c.run is not None]
+    if not launches:
+        launches = [c for c in checks if c.kind == "gui_op" and c.run is not None and c.run.screenshot]
     return next((c for c in launches if c.passed), launches[-1] if launches else None)
 
 
