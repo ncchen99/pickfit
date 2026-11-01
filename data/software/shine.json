@@ -59,17 +59,20 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-shine-20261101-180227-dfbf",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g @nk02/shine@0.1.2",
-          "purpose": null
+          "command": "npm install -g @nk02/shine@0.1.2 && shine version\n",
+          "purpose": "npm install -g @nk02/shine@0.1.2"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "shine version",
+        "expected_signal": "0.1.2"
+      },
       "first_task": "shine version"
     },
     "linux": {
@@ -106,7 +109,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T11:57:43.687147+08:00",
+    "checked_at": "2026-11-01T19:31:36.345197+08:00",
     "runs": [
       {
         "id": "verify-shine-20261101-114646-ff10",
@@ -243,6 +246,148 @@
             "reason": "not_shown",
             "failure": null,
             "note": "its check passed, but the output does not show it: Output shows only alt-text placeholders with no inline image rendering."
+          }
+        ]
+      },
+      {
+        "id": "verify-shine-20261101-180227-dfbf",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T19:31:36.345197+08:00",
+        "tool_version": "0.1.2",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @nk02/shine@0.1.2 && shine version\n",
+            "purpose": "npm install -g @nk02/shine@0.1.2"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "shine version",
+            "expected_signal": "0.1.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.1.2 (4e8a3ec5f85095ea96200a0c74b0ee61c7c8f851, 2026-07-10T19:57:56Z)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "shine --plain README.md",
+            "expected_signal": "mono is the default black-background theme",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mono is the default black-background theme. Press t or T in the TUI to switch themes.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "shine --outline README.md",
+            "expected_signal": "# shine",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "# shine",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "shine --check README.md",
+            "expected_signal": "markdown warning(s):",
+            "exit_code": 2,
+            "passed": true,
+            "observed_excerpt": "6 markdown warning(s):",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "shine --plain /tmp/test.md",
+            "expected_signal": "Test Document",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Test Document",
+            "setup": [
+              {
+                "command": "cat > /tmp/test.md <<'MD'\n# Test Document\n\n## Introduction\n\nThis is a test document for shine.\n\n## Features Section\n\nSome content here.\n\n### Subsection\n\nMore details.\n\n## Introduction\n\nDuplicate heading to trigger check.\n\n![Alt text](fixtures/LOGO.jpeg)\n![](missing-alt.jpg)\n\n[Local link](./exists.md)\n[Broken link](./missing.md)\n\n| Header 1 | Header 2 |\n|----------|----------|\n| Cell 1   | This is a very long cell content that might trigger table readability warnings if it is long enough to be considered hard to scan |\nMD\ncat /tmp/test.md",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cat > /tmp/imgtest.md <<'MD'\n# Image Test\n![Logo with alt](fixtures/LOGO.jpeg)\n![No alt](fixtures/LOGO.jpeg)\n![](missing.jpg)\nMD\nshine --plain /tmp/imgtest.md\necho ---OUTLINE---\nshine --outline /tmp/imgtest.md",
+            "expected_signal": "Image Test",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Image Test",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show plain README text, outline headings starting with # shine, and version 0.1.2 output, all exiting 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-shine-20261101-180227-dfbf/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-shine-20261101-180227-dfbf/check-1-cmd5.judged.png",
+            "runs/verify/verify-shine-20261101-180227-dfbf/check-2-cmd6.judged.png",
+            "runs/verify/verify-shine-20261101-180227-dfbf/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.045362,
+        "features": [
+          {
+            "feature": "preview Markdown without leaving the terminal",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "browse interactive preview with search and outline",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "check docs for publishing issues",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "render local images inline in terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only text link placeholders, no inline image rendering."
           }
         ]
       }
@@ -622,5 +767,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:18:41+08:00",
-  "updated_at": "2026-11-01T11:57:43.700285+08:00"
+  "updated_at": "2026-11-01T19:31:36.347762+08:00"
 }
