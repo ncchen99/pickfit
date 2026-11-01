@@ -54,7 +54,7 @@ STAGE_TERMS = "web-terms"
 OPERATOR_MODEL = "open-modal"
 FALLBACK_MODEL = "open"
 JUDGE_MODEL = "prod"
-OPERATOR_MAX_TOKENS = 6_000  # reasoning shares the limit; browser-use's JSON needs room
+OPERATOR_MAX_TOKENS = 10_000  # reasoning shares the limit; 6,000 was cut off on a 60-question page (11/2)
 OPERATOR_EFFORT = "low"
 JUDGE_MAX_TOKENS = 3_000
 OPERATE_CAP_USD = 0.60  # per site, per model provider
@@ -513,7 +513,7 @@ def check_result(outcome: dict[str, Any] | None, before_text: str, after: dict[s
         why = None
         if len(target) < 3:
             why = "the claimed result text is too short to check"
-        elif target not in _norm(after.get("text") or ""):
+        elif target not in _norm(after.get("text") or "") and target not in _norm(after.get("output_values") or ""):
             why = "the claimed text is not on the page"
         elif target in _norm(before_text):
             why = "the claimed text was on the page before the agent acted"
@@ -602,7 +602,9 @@ Rules (pickfit's guard enforces them; a refused request shows "Blocked by pickfi
 email, share or send contact or feedback forms. Never type an email address, password, phone or card number.
 - Free text you make up (a note, a title, text to convert or format) must contain the marker "{nonce}", e.g. \
 "{nonce} hello world". Where a field needs a real value (a search term, a name to guess, a city, a number), type \
-a real value instead. When the tool needs a file, use one of: {', '.join(files)}.
+a real value instead. When the tool needs a file, use the upload_file action on the page's file input (or the \
+button that opens it) with one of these paths: {', '.join(files)}. Clicking an upload button alone opens a \
+dialog you cannot use.
 - If the core use needs an account or payment, stop and say so (blocked_by: account_required or paywall).
 - Work calmly; at most {max_steps} steps. Do not retry the same failing action more than twice.
 When done, report: the feature; what shows the result (text_on_page, downloaded_file or page_state); an exact \
@@ -664,7 +666,7 @@ def verify_site(target: WebTarget, *, max_steps: int = MAX_STEPS, revisit: str |
     samples = sample_files(nonce)
     sample_paths = [f"/home/web/samples/{n}" for n in samples]
     wait = min(max(WAIT_BETWEEN_ACTIONS, pre.crawl_delay or 0.0), CRAWL_DELAY_MAX)
-    task = task_text(target, nonce, list(samples), max_steps)
+    task = task_text(target, nonce, sample_paths, max_steps)
     result["nonce"] = nonce
     spent = OperatorLedger()
     judge_cost = 0.0

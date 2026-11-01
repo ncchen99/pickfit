@@ -239,3 +239,8 @@ def test_typed_text_counts_only_when_the_app_rendered_it_outside_inputs():
     as_text_claim = wv.check_result(outcome("text_on_page", "pickfitab12 hello world"), "Backlog", card, [], typed,
                                     before_static="Backlog")
     assert not as_text_claim["passed"], "a text result must be more than the typed text"
+
+
+def test_a_result_shown_in_a_read_only_field_counts():
+    after = {"text": "Amount\nResult", "output_values": "92.54 EUR"}
+    assert wv.check_result(outcome("text_on_page", "92.54 EUR"), "Amount\nResult", after, [], ["100"])["passed"]

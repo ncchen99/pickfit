@@ -203,6 +203,8 @@ CAPTURE_JS = r"""(async () => {
     url: location.href, title: document.title, lang: document.documentElement.lang || '',
     text: (document.body ? document.body.innerText : '').slice(0, %d),
     static_text: rendered.join('\n').slice(0, %d),
+    output_values: q('input[readonly],textarea[readonly],input[disabled],textarea[disabled]').filter(vis)
+      .map(e => e.value).filter(Boolean).slice(0, 40).join('\n').slice(0, 4000),
     inputs: q('input:not([type=hidden]),textarea,select,[contenteditable=true]').filter(vis).length,
     passwords: q('input[type=password]').filter(vis).length,
     buttons: q('button,[role=button],input[type=submit],input[type=button]').filter(vis).length,
