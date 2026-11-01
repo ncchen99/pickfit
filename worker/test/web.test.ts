@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Env } from '../src/env.ts';
 import type { FindOutput, PickOut } from '../src/find.ts';
+import { runDay } from '../src/evidence.ts';
 import { catalogStats, EMPTY_FORM, esc, guiSentence, levelLabel, ranSentence, renderResults, safeUrl, yourSystem, type FormValues } from '../src/page.ts';
 import { BODY_MAX_BYTES, MAX_IN_FLIGHT, SEARCHES_PER_MINUTE, visitorKey } from '../src/web.ts';
 import { makeWorker } from '../src/worker.ts';
@@ -627,4 +628,11 @@ test('render: a GUI app\'s launch is described as such, and only a real screen g
 test('render: a model timeout says so', () => {
   const out = { ...output([pick()]), matched_by: 'rules', degraded: true, degraded_reason: 'model_timeout' };
   assert.match(renderResults({ out, guides: {} }, EMPTY_FORM, fixtureCatalog()), /Muse Spark didn’t answer in time, so these results are ranked by rules\./);
+});
+
+test('a run is dated by its UTC day everywhere, the day the page shows', () => {
+  // 01:45 in Taipei on 31 Oct is still 30 Oct in UTC: the agent text and the card value say 30 Oct, like the ticket.
+  assert.equal(runDay('2026-10-31T01:45:18.636290+08:00'), '2026-10-30');
+  assert.equal(runDay('2026-10-31T12:00:00Z'), '2026-10-31');
+  assert.equal(runDay('not a date'), 'not a date');
 });

@@ -59,6 +59,15 @@ function guiText(guide: InstallGuide): string | null {
   );
 }
 
+/**
+ * A run's day as YYYY-MM-DD in UTC. checked_at carries the runner's own offset (a run at 01:45 +08:00 on
+ * 31 Oct is 30 Oct in UTC), and the web page shows UTC days, so every text that dates a run uses this.
+ */
+export function runDay(checkedAt: string): string {
+  const t = new Date(checkedAt);
+  return Number.isNaN(t.getTime()) ? checkedAt.slice(0, 10) : t.toISOString().slice(0, 10);
+}
+
 /** "pickfit installed it in a fresh linux/x86_64 sandbox (...) on 2026-10-28; a smoke test ... passed." */
 export function ranSentence(guide: InstallGuide): string {
   const r = guide.run;
@@ -67,5 +76,5 @@ export function ranSentence(guide: InstallGuide): string {
     r.method === 'sandbox'
       ? `installed it in a fresh ${r.os}/${r.arch} sandbox${runner} and replayed the steps from scratch`
       : `installed it by hand on ${r.os}/${r.arch}${runner}`;
-  return `pickfit ${where} on ${r.checked_at.slice(0, 10)}; ${mcpText(guide) ?? guiText(guide) ?? LEVEL_TEXT[r.level] ?? r.level}.`;
+  return `pickfit ${where} on ${runDay(r.checked_at)}; ${mcpText(guide) ?? guiText(guide) ?? LEVEL_TEXT[r.level] ?? r.level}.`;
 }
