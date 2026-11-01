@@ -122,6 +122,23 @@ def find_vboxmanage() -> str:
     raise BoxError("VBoxManage not found; install Oracle VirtualBox 7.2 (base package only)")
 
 
+# A box error can become a run's blocking_error, so its text names no folder of this machine: paths under the
+# home folder are written ~/..., others by file name only.
+def host_path(path: Path | str) -> str:
+    p = Path(path)
+    try:
+        return "~/" + p.resolve().relative_to(Path.home().resolve()).as_posix()
+    except ValueError:
+        return p.name
+
+
+def scrub_host(text: str) -> str:
+    """Text with the home folder written as ~ (VBoxManage's errors name files under it)."""
+    parts = [re.escape(p) for p in re.split(r"[\\/]+", str(Path.home()))]
+    pattern = r"[\\/]+".join(parts) + r"(?![A-Za-z0-9_.-])"
+    return re.sub(pattern, "~", text, flags=re.IGNORECASE if os.name == "nt" else 0)
+
+
 def expected_vbm_code(code: int) -> int:
     """What `guestcontrol run` exits with for a guest exit code (VBoxManage's RTEXITCODE mapping)."""
     if code == 0:
@@ -520,7 +537,7 @@ class VBox:
             # password in --putenv; chained, it would print with any traceback.
             raise BoxError(f"VBoxManage {' '.join(args[:2])} timed out after {timeout_s:.0f}s") from None
         if check and proc.returncode != 0:
-            raise BoxError(f"VBoxManage {' '.join(args[:3])} failed: {proc.stderr.strip()[-400:]}")
+            raise BoxError(f"VBoxManage {' '.join(args[:3])} failed: {scrub_host(proc.stderr.strip()[-400:])}")
         return proc
 
     def info(self, vm: str) -> dict[str, str]:
@@ -597,7 +614,7 @@ def manifest_path(name: str, state_dir: Path | None = None) -> Path:
 def load_manifest(name: str, state_dir: Path | None = None, hint: str = "") -> dict[str, Any]:
     path = manifest_path(name, state_dir)
     if not path.exists():
-        raise BoxError(f"no prepared {name!r} ({path} is missing){hint}")
+        raise BoxError(f"no prepared {name!r} ({host_path(path)} is missing){hint}")
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -628,7 +645,8 @@ class Router:
         try:
             self.serial_log.write_bytes(b"")
         except OSError as err:
-            raise BoxError(f"cannot empty the router's serial log {self.serial_log}: {err}") from None
+            raise BoxError(f"cannot empty the router's serial log {host_path(self.serial_log)}: "
+                           f"{err.strerror or type(err).__name__}") from None
         self.vbox("startvm", self.name, "--type", "headless", timeout_s=120)
         deadline = time.monotonic() + ROUTER_WAIT_S
         m = None
@@ -639,7 +657,7 @@ class Router:
                 break
             time.sleep(1)
         if m is None:
-            raise BoxError(f"the router did not report ready within {ROUTER_WAIT_S}s ({self.serial_log})")
+            raise BoxError(f"the router did not report ready within {ROUTER_WAIT_S}s ({host_path(self.serial_log)})")
         self.ready = dict(zip(("rules", "extra", "forward", "ipv6_off", "dnsmasq", "uplink"), m.groups()))
         bad = []
         if self.ready["rules"] != manifest.get("rules"):
@@ -733,7 +751,7 @@ class VBoxBox(Box):
         began = time.monotonic()
         # Outside the try: a refused start must not tear down the other box. The lock is held until close().
         if not self._host_lock.acquire():
-            raise BoxError(f"{self.base} is already running for another box (lock {self._host_lock.path} is "
+            raise BoxError(f"{self.base} is already running for another box (lock {host_path(self._host_lock.path)} is "
                            "held); run one at a time")
         try:
             self._refuse_foreign_run()
@@ -1008,7 +1026,7 @@ class VBoxBox(Box):
             proc = self.vbox("guestcontrol", self.base, "copyto", "--username", WIN_USER, "--passwordfile",
                              self._pwfile(WIN_USER), str(src), target, timeout_s=120, check=False)
         if proc.returncode != 0:
-            raise BoxError(f"cannot write {path}: {proc.stderr.strip()[-300:]}")
+            raise BoxError(f"cannot write {path}: {scrub_host(proc.stderr.strip()[-300:])}")
 
     def read_file(self, path: str, max_bytes: int = 64_000) -> bytes:
         self._require_started()
@@ -1231,7 +1249,7 @@ def _wait_serial(serial_log: Path, pattern: str, timeout_s: float, start: int = 
         if m:
             return m
         time.sleep(1)
-    raise BoxError(f"{pattern!r} did not appear on {serial_log} within {timeout_s:.0f}s")
+    raise BoxError(f"{pattern!r} did not appear on {host_path(serial_log)} within {timeout_s:.0f}s")
 
 
 def prepare_router(*, iso: Path | None = None, name: str = ROUTER_VM, vboxmanage: Sequence[str] | str | None = None,
@@ -1248,7 +1266,7 @@ def prepare_router(*, iso: Path | None = None, name: str = ROUTER_VM, vboxmanage
     iso = iso or state / "iso" / ALPINE_ISO
     digest = hashlib.sha256(iso.read_bytes()).hexdigest()
     if digest != ALPINE_SHA256:
-        raise BoxError(f"{iso} sha256 {digest} is not the published {ALPINE_SHA256}")
+        raise BoxError(f"{host_path(iso)} sha256 {digest} is not the published {ALPINE_SHA256}")
     if vbox("showvminfo", name, check=False).returncode == 0:
         raise BoxError(f"{name!r} already exists; `VBoxManage unregistervm {name} --delete` to rebuild it")
     manifest_path(name, state).unlink(missing_ok=True)
