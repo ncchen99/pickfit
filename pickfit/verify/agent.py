@@ -505,6 +505,8 @@ https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2
 config.json, tokenizer.json, model.safetensors under \
 https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct/resolve/main/)
 - Ollama-style pull: smollm2:135m (271 MB, Apache-2.0)
+- A GGUF repo with every quant of one model, for a tool that compares or benchmarks quants: \
+bartowski/SmolLM2-135M-Instruct-GGUF (Apache-2.0, about 60-150 MB per quant)
 The inference check takes about four commands (download, server, a health or models request, generation): \
 keep them in reserve, and explore with read_file and list_dir, which are free, rather than --help runs. \
 If the tool has its own pull or download command, use it with one of these (or the smallest model its own \
@@ -572,7 +574,8 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
     if box.gpu:
         lines.insert(3, f"GPU: one NVIDIA {box.gpu_name or box.gpu} (driver, libcuda and nvidia-smi present, no CUDA "
                         "toolkit: use builds or wheels that bring their CUDA runtime), so GPU examples can run here; "
-                        "use the smallest model the tool supports." + big_box(box))
+                        "use the smallest model the tool supports: when its example names a model too large for "
+                        "this box, run the same command on the smallest model it accepts." + big_box(box))
     if box.display and ex.kind.value == "desktop_app":
         lines.insert(3, "This is a desktop (GUI) app: install the app itself (a release build if there is one for "
                         "Linux; an AppImage runs with --appimage-extract-and-run, no FUSE needed), then start it "
