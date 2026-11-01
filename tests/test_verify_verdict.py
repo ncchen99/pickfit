@@ -118,6 +118,10 @@ def test_other_masks_are_left_for_the_log_rules(command: str):
     ("find /tmp -maxdepth 3 -name 'x*'; pwd; tar -xzf /tmp/x.tgz -C /tmp", "tar -xzf /tmp/x.tgz -C /tmp"),
     ("curl -L --fail -o /tmp/k.zip u && unzip -l /tmp/k.zip && unzip -q -o /tmp/k.zip -d /tmp",
      "curl -L --fail -o /tmp/k.zip u && unzip -q -o /tmp/k.zip -d /tmp"),
+    # A sum printed to look at goes; a sum checked (`-c`) stays.
+    ("curl -fLO u/x.tgz && curl -fLO u/SUMS && cat SUMS && sha256sum x.tgz && tar -xzf x.tgz",
+     "curl -fLO u/x.tgz && curl -fLO u/SUMS && tar -xzf x.tgz"),
+    ("cd /tmp/d && cat x.tgz.sha256 && sha256sum -c x.tgz.sha256 && tar -tzf x.tgz", "cd /tmp/d && sha256sum -c x.tgz.sha256"),
 ])
 def test_an_install_step_loses_its_looking_around(command: str, tidy: str):
     assert install_command(command) == tidy
@@ -138,6 +142,8 @@ def test_an_install_step_loses_its_looking_around(command: str, tidy: str):
     "yes | head -5 && tool init",
     "cat > f <<'EOF' && ls\nbody\nEOF\ntool f",  # the heredoc body follows `ls`: never dropped with it
     "chmod +x ~/bin/lox && curl -fsSL u.sha256 | cat && sha256sum ~/bin/lox",  # `| cat` would be last
+    "curl -fLO u/x.tgz && echo \"abc  x.tgz\" | sha256sum -c && tar -xzf x.tgz",
+    "curl -fLO u/r && curl -fLO u/SUMS && sha256sum -c --ignore-missing SUMS 2>&1",
 ])
 def test_an_install_step_that_only_installs_is_left_alone(command: str):
     assert install_command(command) == command

@@ -582,8 +582,8 @@ def unmasked(command: str) -> tuple[str, str] | None:
 # Commands that only look around: they list, read, print or locate, and write nothing.
 _LOOKS = {"ls", "pwd", "tree", "file", "stat", "du", "df", "wc", "which", "whereis", "type", "whoami", "id",
           "uname", "echo", "printf", "cat", "head", "tail", "less", "more", "grep", "egrep", "fgrep", "rg", "sort",
-          "uniq", "cut", "tr", "column", "nl", "realpath", "readlink", "basename", "dirname", "date", "true", ":",
-          "md5sum", "sha1sum", "sha256sum", "sha512sum"}
+          "uniq", "cut", "tr", "column", "nl", "realpath", "readlink", "basename", "dirname", "date", "true", ":"}
+_SUMS = {"md5sum", "sha1sum", "sha256sum", "sha512sum"}  # printing a sum looks; `-c` checks one
 _FIND_ACTS = re.compile(r"\s-(?:exec|execdir|ok|okdir|delete|fprint\w*|fls)\b")
 _QUIET = re.compile(r"\s*(?:\d?>\s*/dev/null|&>\s*/dev/null|2>&1|>&2)")
 _VERSION_ARGS = {"--version", "-V", "-v", "version"}
@@ -591,7 +591,7 @@ _VERSION_ARGS = {"--version", "-V", "-v", "version"}
 
 def _looks(text: str, last: bool) -> bool:
     """Whether a pipeline element only looks around (see _LOOKS; `find` without actions, `tar -t`,
-    `command -v`). `prog --version` counts too, except as the last command, where it is the step's own
+    `command -v`, a checksum printed but not checked). `prog --version` counts too, except as the last command, where it is the step's own
     check. Anything with a redirect, a heredoc, $(...), a subshell or only assignments is kept."""
     bare = _QUIET.sub("", text).strip()
     if not bare or re.search(r"[<>`]|\$\(", bare) or bare[0] in "({":
@@ -610,6 +610,8 @@ def _looks(text: str, last: bool) -> bool:
         return words[1:2] in (["-l"], ["-Z"], ["-Z1"])
     if name == "command":
         return words[1:2] == ["-v"]
+    if name in _SUMS:
+        return not {"-c", "--check"} & set(words)  # `sha256sum -c` checks the download: it stays
     if len(words) == 2 and words[1] in _VERSION_ARGS:
         return not last
     return name in _LOOKS
