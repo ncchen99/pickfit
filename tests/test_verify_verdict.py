@@ -116,6 +116,8 @@ def test_other_masks_are_left_for_the_log_rules(command: str):
     ("cat > ~/bin/t <<'EOS'\n#!/bin/sh\nls; echo hi\nEOS\nchmod +x ~/bin/t\n~/bin/t --version\necho EXIT:$?\n~/bin/t --help",
      "cat > ~/bin/t <<'EOS'\n#!/bin/sh\nls; echo hi\nEOS\nchmod +x ~/bin/t\n~/bin/t --help"),
     ("find /tmp -maxdepth 3 -name 'x*'; pwd; tar -xzf /tmp/x.tgz -C /tmp", "tar -xzf /tmp/x.tgz -C /tmp"),
+    ("curl -L --fail -o /tmp/k.zip u && unzip -l /tmp/k.zip && unzip -q -o /tmp/k.zip -d /tmp",
+     "curl -L --fail -o /tmp/k.zip u && unzip -q -o /tmp/k.zip -d /tmp"),
 ])
 def test_an_install_step_loses_its_looking_around(command: str, tidy: str):
     assert install_command(command) == tidy

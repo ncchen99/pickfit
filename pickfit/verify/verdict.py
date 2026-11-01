@@ -606,6 +606,8 @@ def _looks(text: str, last: bool) -> bool:
         return not _FIND_ACTS.search(" " + bare)
     if name == "tar":
         return len(words) > 1 and (words[1] == "--list" or bool(re.fullmatch(r"-?[vzjJfa]*t[vzjJfa]*", words[1])))
+    if name == "unzip":
+        return words[1:2] in (["-l"], ["-Z"], ["-Z1"])
     if name == "command":
         return words[1:2] == ["-v"]
     if len(words) == 2 and words[1] in _VERSION_ARGS:
@@ -617,7 +619,7 @@ def install_command(command: str) -> str:
     """An install step without the looking around: what a fresh box replays and the guide shows.
 
     At the top level it drops pipelines that only look (_looks: ls, find, pwd, cat, head, tail, wc,
-    echo or printf without a redirect, `tar -t`, a `prog --version` before the end) and the
+    echo or printf without a redirect, `tar -t`, `unzip -l`, a `prog --version` before the end) and the
     `| head`/`| tail` cut off any pipeline (not a head an endless feed needs, as in unmasked). What
     installs stays as written: cd, export, assignments, mkdir, downloads, extraction, heredocs. Where a
     dropped command sat between two others, the weaker joint is kept (`a && ls; b` -> `a; b`), so what
