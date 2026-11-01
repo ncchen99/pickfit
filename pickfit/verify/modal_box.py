@@ -480,6 +480,7 @@ class ModalBox(Box):
             steps.append(("the virtual display", xvfb))
             pid = next((line.split()[1] for line in xvfb.stdout.splitlines() if line.startswith("xvfb_pid ")), "")
             self.xvfb_pid = int(pid) if pid.isdigit() else None
+            self._fail_on(steps, missing=self.xvfb_pid is None)
             bus = self._exec_raw(["/usr/bin/bash", "-c", SYSTEM_BUS], 30, as_root=True,
                                  stdin=SYSTEM_BUS_CONF_SOURCE.encode())
             steps.append(("the system bus", bus))
