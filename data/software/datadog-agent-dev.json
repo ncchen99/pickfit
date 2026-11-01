@@ -74,9 +74,64 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "suspected_tool_fault",
+    "checked_at": "2026-11-01T17:43:18.863948+08:00",
+    "runs": [
+      {
+        "id": "verify-datadog-agent-dev-20261101-174027-75f8",
+        "level": "unverified",
+        "unverified_reason": "suspected_tool_fault",
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T17:43:18.863948+08:00",
+        "tool_version": "0.40.0",
+        "install_method": "brew",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "brew install --cask dda",
+            "purpose": "brew install --cask dda"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "dda --help 2>&1\necho \"EC:$?\"\ndda --version 2>&1\necho \"EC2:$?\"\ndda 2>&1 | head -n 50\necho \"EC3:$?\"",
+            "expected_signal": "ModuleNotFoundError: No module named 'dda'",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "ModuleNotFoundError: No module named 'dda'",
+            "setup": [
+              {
+                "command": "brew install --cask dda",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask dda installs dda",
+            "actually_needed": "brew cask installs binary but binary immediately fails with ModuleNotFoundError: No module named 'dda' even with clean env (env -i)",
+            "kind": "tool_handled"
+          }
+        ],
+        "blocking_error": "suspected tool fault, not proven: nothing checked further (the log names no failing command); ModuleNotFoundError: No module named 'dda' on any invocation (dda --help, --version, or bare)",
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-datadog-agent-dev-20261101-174027-75f8/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.056676
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -253,5 +308,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:46:44+08:00",
-  "updated_at": "2026-11-01T17:36:40+08:00"
+  "updated_at": "2026-11-01T17:43:18.869354+08:00"
 }
