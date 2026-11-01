@@ -64,7 +64,14 @@ def _top_level(command: str) -> list[tuple[str, str]]:
     Quotes, $(...), backticks, (...) subshells, comments and heredoc bodies are
     skipped, so only operators that bash itself sees at the top split the text.
     """
-    parts: list[tuple[str, str]] = []
+    parts = [(op, command[start:end]) for op, start, end, _ in _scan(command)]
+    return [(o, t) for o, t in parts if t.strip() or o]
+
+
+def _scan(command: str) -> list[tuple[str, int, int, int]]:
+    """_top_level's parts as (operator before, start, end, body end): command[start:end] is the text,
+    and command[start:body end] adds the heredoc bodies that follow it (body end = end without any)."""
+    parts: list[tuple[str, int, int, int]] = []
     op, start, depth, i, n = "", 0, 0, 0, len(command)
     heredocs: list[tuple[str, bool]] = []
     while i < n:
@@ -114,17 +121,18 @@ def _top_level(command: str) -> list[tuple[str, str]]:
             elif ch == "\n":
                 found = "\n"
             if found:
-                parts.append((op, command[start:i]))
-                op = found
+                end = i
+                op_before, op = op, found
                 i += len(found)
                 if found == "\n" and heredocs:
                     i = _skip_heredocs(command, i, heredocs)
                     heredocs = []
+                parts.append((op_before, start, end, i if i > end + len(found) else end))
                 start = i
                 continue
         i += 1
-    parts.append((op, command[start:]))
-    return [(o, t) for o, t in parts if t.strip() or o]
+    parts.append((op, start, n, n))
+    return parts
 
 
 def _skip_heredocs(command: str, i: int, heredocs: list[tuple[str, bool]]) -> int:
@@ -569,6 +577,95 @@ def unmasked(command: str) -> tuple[str, str] | None:
     if clean == command.rstrip() or not clean or masked_exit(clean) is not None:
         return None
     return clean, command.rstrip()[len(clean):].strip()
+
+
+# Commands that only look around: they list, read, print or locate, and write nothing.
+_LOOKS = {"ls", "pwd", "tree", "file", "stat", "du", "df", "wc", "which", "whereis", "type", "whoami", "id",
+          "uname", "echo", "printf", "cat", "head", "tail", "less", "more", "grep", "egrep", "fgrep", "rg", "sort",
+          "uniq", "cut", "tr", "column", "nl", "realpath", "readlink", "basename", "dirname", "date", "true", ":",
+          "md5sum", "sha1sum", "sha256sum", "sha512sum"}
+_FIND_ACTS = re.compile(r"\s-(?:exec|execdir|ok|okdir|delete|fprint\w*|fls)\b")
+_QUIET = re.compile(r"\s*(?:\d?>\s*/dev/null|&>\s*/dev/null|2>&1|>&2)")
+_VERSION_ARGS = {"--version", "-V", "-v", "version"}
+
+
+def _looks(text: str, last: bool) -> bool:
+    """Whether a pipeline element only looks around (see _LOOKS; `find` without actions, `tar -t`,
+    `command -v`). `prog --version` counts too, except as the last command, where it is the step's own
+    check. Anything with a redirect, a heredoc, $(...), a subshell or only assignments is kept."""
+    bare = _QUIET.sub("", text).strip()
+    if not bare or re.search(r"[<>`]|\$\(", bare) or bare[0] in "({":
+        return False
+    words = bare.split()
+    while words and _ASSIGNMENT.match(words[0]):
+        words = words[1:]
+    if not words:
+        return False  # `VERSION=1.2` sets what later commands use
+    name = words[0].rsplit("/", 1)[-1]
+    if name == "find":
+        return not _FIND_ACTS.search(" " + bare)
+    if name == "tar":
+        return len(words) > 1 and (words[1] == "--list" or bool(re.fullmatch(r"-?[vzjJfa]*t[vzjJfa]*", words[1])))
+    if name == "command":
+        return words[1:2] == ["-v"]
+    if len(words) == 2 and words[1] in _VERSION_ARGS:
+        return not last
+    return name in _LOOKS
+
+
+def install_command(command: str) -> str:
+    """An install step without the looking around: what a fresh box replays and the guide shows.
+
+    At the top level it drops pipelines that only look (_looks: ls, find, pwd, cat, head, tail, wc,
+    echo or printf without a redirect, `tar -t`, a `prog --version` before the end) and the
+    `| head`/`| tail` cut off any pipeline (not a head an endless feed needs, as in unmasked). What
+    installs stays as written: cd, export, assignments, mkdir, downloads, extraction, heredocs. Where a
+    dropped command sat between two others, the weaker joint is kept (`a && ls; b` -> `a; b`), so what
+    ran unconditionally still does. Unchanged when the command has `||` or a background `&`, when only
+    looking is left, or when a heredoc would end up joined by anything but a newline.
+    """
+    units = [(op, command[s:e], command[s:b], b > e) for op, s, e, b in _scan(command)]
+    units = [u for u in units if u[1].strip() or u[2].strip()]
+    if not units or any(op in ("||", "&") for op, *_ in units):
+        return command
+    pipelines: list[list[tuple[str, str, str, bool]]] = []
+    for unit in units:
+        if unit[0] == "|" and pipelines:
+            pipelines[-1].append(unit)
+        else:
+            pipelines.append([unit])
+    changed = False
+    for pipeline in pipelines:
+        while len(pipeline) > 1:
+            words = pipeline[-1][1].split()
+            if not (words[:1] in (["head"], ["tail"]) and all(_CUT_ARG.match(w) for w in words[1:])
+                    and not pipeline[-1][3]):
+                break
+            if words[0] == "head" and _ENDLESS.search(pipeline[-2][1]):
+                break
+            pipeline.pop()
+            changed = True
+    kept: list[tuple[str, list[tuple[str, str, str, bool]]]] = []  # (joint before, pipeline)
+    joints: list[str] = []
+    for k, pipeline in enumerate(pipelines):
+        joints.append(pipeline[0][0])
+        if all(_looks(u[1], k == len(pipelines) - 1) and not u[3] for u in pipeline):
+            changed = True
+            continue
+        joint = "\n" if "\n" in joints else ";" if ";" in joints else "&&"
+        kept.append((joint if kept else "", pipeline))
+        joints = []
+    if not changed or not kept:
+        return command
+    out = ""
+    for k, (joint, pipeline) in enumerate(kept):
+        text = " | ".join(u[2].strip() for u in pipeline)
+        if k and kept[k - 1][1][-1][3] and joint != "\n":
+            return command  # a heredoc's terminator line must end its line
+        out += text if not k else ("\n" if joint == "\n" else f" {joint} " if joint == "&&" else "; ") + text
+    if masked_exit(out) and not masked_exit(command):
+        return command  # `curl … | cat && sha256sum x`: without the last command, `| cat` would decide
+    return out
 
 
 def last_command(command: str) -> str:

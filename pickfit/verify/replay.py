@@ -1,7 +1,8 @@
 """Replay: a fresh box reruns the recorded steps, with the smoke tests offline (P3.5).
 
 No model is involved. The plan comes from the log verdict: the cited steps and
-the checks that passed, each as the exact command the agent ran. In a new box:
+the checks that passed, each as the exact command the agent ran (in a bash box, a
+step without the looking around chained into it: install_command). In a new box:
 
 1. write the README and the sample files, as the agent had them;
 2. run the steps in order with the network on; stop at the first failure;
@@ -24,7 +25,7 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable, Sequence
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -33,7 +34,8 @@ from pickfit.verify.box import Box, BoxError, ExecResult
 from pickfit.verify.features import failed_run
 from pickfit.verify.task import prepare_box
 from pickfit.verify.mcp import is_mcp
-from pickfit.verify.verdict import MCP_KINDS, ResolvedCheck, evaluate_check, mcp_problems, supported_level
+from pickfit.verify.verdict import (MCP_KINDS, ResolvedCheck, evaluate_check, install_command, mcp_problems,
+                                    supported_level)
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import CommandRecord
@@ -87,16 +89,24 @@ class ReplayPlan:
         return asdict(self)
 
 
-def plan_from(verdict: LogVerdict, commands: list[CommandRecord], rerun_failed: Sequence[int] = ()) -> ReplayPlan:
+def plan_from(verdict: LogVerdict, commands: list[CommandRecord], rerun_failed: Sequence[int] = (),
+              tidy_steps: bool = False) -> ReplayPlan:
     """The steps and the passing checks of a log verdict, as commands to rerun.
 
     rerun_failed: command ids of failed feature checks, rerun once after the checks.
+    tidy_steps: each run_command step without its looking around (install_command; bash boxes), so the
+    install guide, which takes the replayed steps, holds only what installs, and this replay shows it
+    is enough. Setups and checks run as the agent ran them: their output is what they show.
     """
     by_id = {c.command_id: c for c in commands if c.command_id is not None}
 
     def command(cid: int) -> ReplayCommand:
         c = by_id[cid]
         return ReplayCommand(cid, c.tool, c.command, c.port, c.wait_s, c.seconds)
+
+    def step(cid: int) -> ReplayCommand:
+        c = command(cid)
+        return replace(c, command=install_command(c.command)) if tidy_steps and c.tool == "run_command" else c
 
     checks = [c for c in verdict.checks if c.passed]
     check_ids = {c.command_id for c in checks}
@@ -113,7 +123,7 @@ def plan_from(verdict: LogVerdict, commands: list[CommandRecord], rerun_failed: 
                                   check.expected_signal if check else "", check.kind if check else "example"))
     failed_setups = sorted({s for f in failed for s in f.setup_ids} - set(setup_ids) - check_ids - steps)
     return ReplayPlan(
-        steps=tuple(command(i) for i in verdict.step_ids),
+        steps=tuple(step(i) for i in verdict.step_ids),
         setups=tuple(command(i) for i in setup_ids),
         checks=tuple(ReplayCheck(command(c.command_id), tuple(s for s in c.setup_ids if s not in steps),
                                  c.expected_exit_code, c.expected_signal, c.kind) for c in checks),

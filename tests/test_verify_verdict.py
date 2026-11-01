@@ -9,6 +9,7 @@ import pytest
 from pickfit.verify.agent import CommandRecord, FinishArgs
 from pickfit.verify.verdict import (
     check_kind,
+    install_command,
     local_installs,
     log_verdict,
     masked_exit,
@@ -94,6 +95,50 @@ def test_a_trailing_tail_head_or_echo_is_dropped(command: str, clean: str, dropp
 ])
 def test_other_masks_are_left_for_the_log_rules(command: str):
     assert unmasked(command) is None
+
+
+@pytest.mark.parametrize(("command", "tidy"), [
+    ("curl -fsSL https://bun.sh/install | bash 2>&1 | tail -20; ls ~/.bun/bin/bun; ~/.bun/bin/bun --version",
+     "curl -fsSL https://bun.sh/install | bash 2>&1; ~/.bun/bin/bun --version"),
+    ("git clone u x && ls x | head -n 50 && du -sh x", "git clone u x"),
+    ("curl -L -o /tmp/a.tar.xz u && tar -tf /tmp/a.tar.xz | head -n 20 && mkdir -p /tmp/e && "
+     "tar -xf /tmp/a.tar.xz -C /tmp/e && ls -R /tmp/e",
+     "curl -L -o /tmp/a.tar.xz u && mkdir -p /tmp/e && tar -xf /tmp/a.tar.xz -C /tmp/e"),
+    ("curl -fsSL u -o /tmp/i.sh && ls -l /tmp/i.sh && head -c 2000 /tmp/i.sh; echo \"---\"; wc -c /tmp/i.sh",
+     "curl -fsSL u -o /tmp/i.sh"),
+    ("openssl version; echo \"---\"; sh /tmp/install.sh", "sh /tmp/install.sh"),
+    ("bash /tmp/b.sh 2>&1 | tail -10; export PATH=\"$HOME/.bun/bin:$PATH\" && bun --version",
+     "bash /tmp/b.sh 2>&1; export PATH=\"$HOME/.bun/bin:$PATH\" && bun --version"),
+    # The weaker joint stays, so what ran whatever came before still does.
+    ("a && ls; b", "a; b"),
+    ("a; ls && b", "a; b"),
+    ("rm x\nls -l ~/.local/bin/\nsh install.sh 2>&1\necho DONE:$?\nx --version", "rm x\nsh install.sh 2>&1\nx --version"),
+    ("cat > ~/bin/t <<'EOS'\n#!/bin/sh\nls; echo hi\nEOS\nchmod +x ~/bin/t\n~/bin/t --version\necho EXIT:$?\n~/bin/t --help",
+     "cat > ~/bin/t <<'EOS'\n#!/bin/sh\nls; echo hi\nEOS\nchmod +x ~/bin/t\n~/bin/t --help"),
+    ("find /tmp -maxdepth 3 -name 'x*'; pwd; tar -xzf /tmp/x.tgz -C /tmp", "tar -xzf /tmp/x.tgz -C /tmp"),
+])
+def test_an_install_step_loses_its_looking_around(command: str, tidy: str):
+    assert install_command(command) == tidy
+
+
+@pytest.mark.parametrize("command", [
+    "pipx install evnx",
+    "cd repo && make install",
+    "VERSION=1.2 && curl -fLo x https://e.x/$VERSION/x",
+    "pip install x || true",  # `||` is left as it is
+    "tool serve &",
+    "ls -la",  # only looking: nothing would be left
+    "tool --version",  # the step's own check
+    "echo 'export PATH=$HOME/.bun/bin:$PATH' >> ~/.bashrc && source ~/.bashrc",
+    "find . -name '*.pyc' -delete && pip install .",
+    "cat install.sh | sh",
+    "x=$(ls dist) && pip install dist/$x",
+    "yes | head -5 && tool init",
+    "cat > f <<'EOF' && ls\nbody\nEOF\ntool f",  # the heredoc body follows `ls`: never dropped with it
+    "chmod +x ~/bin/lox && curl -fsSL u.sha256 | cat && sha256sum ~/bin/lox",  # `| cat` would be last
+])
+def test_an_install_step_that_only_installs_is_left_alone(command: str):
+    assert install_command(command) == command
 
 
 def test_check_kind():
