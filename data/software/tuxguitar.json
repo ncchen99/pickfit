@@ -51,13 +51,17 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-tuxguitar-20261102-012509-115f",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub ar.com.tuxguitar.TuxGuitar",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add Flathub remote per user"
+        },
+        {
+          "command": "flatpak install --user -y flathub ar.com.tuxguitar.TuxGuitar",
+          "purpose": "install TuxGuitar flatpak"
         }
       ],
       "manual_steps": [],
@@ -79,10 +83,104 @@
     "url": "https://github.com/helge17/tuxguitar/releases/tag/2.1.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T01:27:34.183569+08:00",
+    "runs": [
+      {
+        "id": "verify-tuxguitar-20261102-012509-115f",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T01:27:34.183569+08:00",
+        "tool_version": null,
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add Flathub remote per user"
+          },
+          {
+            "command": "flatpak install --user -y flathub ar.com.tuxguitar.TuxGuitar",
+            "purpose": "install TuxGuitar flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run ar.com.tuxguitar.TuxGuitar",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows TuxGuitar's main editor with menus, toolbars, a notation/tablature staff, and track list fully drawn.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tuxguitar-20261102-012509-115f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tuxguitar-20261102-012509-115f/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.023866,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "flatpak run ar.com.tuxguitar.TuxGuitar",
+          "window_title": "TuxGuitar - Untitled.tg",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "edit tablature and scores",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "import Guitar Pro and PowerTab files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "export tablatures to PDF and audio",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "edit MIDI via tablature interface",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -299,5 +397,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:41+08:00",
-  "updated_at": "2026-11-02T01:22:09+08:00"
+  "updated_at": "2026-11-02T01:27:34.186408+08:00"
 }

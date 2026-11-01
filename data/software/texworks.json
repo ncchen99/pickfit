@@ -55,13 +55,17 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-texworks-20261102-012922-cb32",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub org.tug.texworks",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add flathub remote user"
+        },
+        {
+          "command": "flatpak install --user -y flathub org.tug.texworks",
+          "purpose": "install texworks via flatpak"
         }
       ],
       "manual_steps": [],
@@ -83,10 +87,104 @@
     "url": "https://github.com/TeXworks/texworks/releases/tag/release-0.6.11"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T01:32:20.276215+08:00",
+    "runs": [
+      {
+        "id": "verify-texworks-20261102-012922-cb32",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T01:32:20.276215+08:00",
+        "tool_version": "0.6.11",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add flathub remote user"
+          },
+          {
+            "command": "flatpak install --user -y flathub org.tug.texworks",
+            "purpose": "install texworks via flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run org.tug.texworks",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "TeXworks editor window with menu bar, pdfLaTeX toolbar, empty document area, and status bar is fully drawn.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-texworks-20261102-012922-cb32/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-texworks-20261102-012922-cb32/replay-5-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.029321,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "flatpak run org.tug.texworks",
+          "window_title": "untitled-1.tex - TeXworks",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "edit TeX documents in Unicode-aware editor",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "preview typeset documents in integrated PDF viewer",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "synchronize TeX source and PDF output",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "extend functionality via scripting interface",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -335,5 +433,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:47+08:00",
-  "updated_at": "2026-11-02T01:22:09+08:00"
+  "updated_at": "2026-11-02T01:32:20.278240+08:00"
 }

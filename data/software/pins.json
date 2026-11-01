@@ -51,13 +51,17 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-pins-20261102-012225-07bb",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub io.github.fabrialberio.pinapp",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "Add Flathub remote for user"
+        },
+        {
+          "command": "flatpak install --user -y flathub io.github.fabrialberio.pinapp",
+          "purpose": "Install Pins via Flatpak"
         }
       ],
       "manual_steps": [],
@@ -79,10 +83,104 @@
     "url": "https://github.com/fabrialberio/Pins/releases/tag/v2.4.8"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T01:25:07.957844+08:00",
+    "runs": [
+      {
+        "id": "verify-pins-20261102-012225-07bb",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T01:25:07.957844+08:00",
+        "tool_version": "2.4.8",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "Add Flathub remote for user"
+          },
+          {
+            "command": "flatpak install --user -y flathub io.github.fabrialberio.pinapp",
+            "purpose": "Install Pins via Flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run io.github.fabrialberio.pinapp",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows the Pins main window displaying a grid of application icons including Chromium, Help, ImageMagick, Pins, Print Settings, and Zutty.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-pins-20261102-012225-07bb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-pins-20261102-012225-07bb/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.02832,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "flatpak run io.github.fabrialberio.pinapp",
+          "window_title": "pinapp",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "edit .desktop files to customize app menu",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "change app icons",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "create custom shortcuts to websites",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "hide apps from app menu",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -315,5 +413,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:43+08:00",
-  "updated_at": "2026-11-02T01:22:09+08:00"
+  "updated_at": "2026-11-02T01:25:07.958923+08:00"
 }

@@ -50,13 +50,17 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-word-sys-pdf-editor-20261102-012225-78a9",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub io.github.word_sys.word-sys-pdf-editor",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "Add Flathub remote per-user"
+        },
+        {
+          "command": "flatpak install --user -y flathub io.github.word_sys.word-sys-pdf-editor",
+          "purpose": "Install PDF editor via Flatpak"
         }
       ],
       "manual_steps": [],
@@ -78,10 +82,104 @@
     "url": "https://github.com/word-sys/word-sys-pdf-editor/releases/tag/v1.12.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T01:25:23.998873+08:00",
+    "runs": [
+      {
+        "id": "verify-word-sys-pdf-editor-20261102-012225-78a9",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T01:25:23.998873+08:00",
+        "tool_version": "1.12.0",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "Add Flathub remote per-user"
+          },
+          {
+            "command": "flatpak install --user -y flathub io.github.word_sys.word-sys-pdf-editor",
+            "purpose": "Install PDF editor via Flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run io.github.word_sys.word-sys-pdf-editor",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The app shows its fully drawn main start screen with editing toolbar and New PDF and Open File options ready to use.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-word-sys-pdf-editor-20261102-012225-78a9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-word-sys-pdf-editor-20261102-012225-78a9/replay-7-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.061219,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "flatpak run io.github.word_sys.word-sys-pdf-editor",
+          "window_title": "word-sys PDF Editor",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "edit text, image and object content",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "merge PDFs with visual page ordering",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "sign PDFs with PAdES digital signatures",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "export PDFs to DOCX, PPTX and TXT",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -338,5 +436,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:44+08:00",
-  "updated_at": "2026-11-02T01:22:09+08:00"
+  "updated_at": "2026-11-02T01:25:24.000622+08:00"
 }
