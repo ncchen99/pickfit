@@ -48,12 +48,16 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-concessio-20261101-173508-0dd5",
+      "run_id": "verify-concessio-20261101-230235-8ffe",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>&1\nflatpak remote-list 2>&1\nflatpak install flathub io.github.ronniedroid.concessio -y 2>&1",
-          "purpose": "Add Flathub remote and install Concessio via flatpak"
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>&1 && echo \"added\" && flatpak remote-list 2>&1\nflatpak remote-list --user 2>&1; flatpak remote-list --system 2>&1",
+          "purpose": "add Flathub remote for flatpak"
+        },
+        {
+          "command": "flatpak install --user -y flathub io.github.ronniedroid.concessio 2>&1",
+          "purpose": "install io.github.ronniedroid.concessio from Flathub"
         }
       ],
       "manual_steps": [],
@@ -75,27 +79,31 @@
     "url": "https://github.com/ronniedroid/concessio/releases/tag/v1.0.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T17:37:27.224707+08:00",
+    "checked_at": "2026-11-01T23:28:30.699075+08:00",
     "runs": [
       {
-        "id": "verify-concessio-20261101-173508-0dd5",
-        "level": "install",
+        "id": "verify-concessio-20261101-230235-8ffe",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx-gui:d66116882a17",
-        "checked_at": "2026-11-01T17:37:27.224707+08:00",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-01T23:28:30.699075+08:00",
         "tool_version": "v1.0.0",
         "install_method": "other",
         "replayed": true,
         "steps": [
           {
-            "command": "flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>&1\nflatpak remote-list 2>&1\nflatpak install flathub io.github.ronniedroid.concessio -y 2>&1",
-            "purpose": "Add Flathub remote and install Concessio via flatpak"
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>&1 && echo \"added\" && flatpak remote-list 2>&1\nflatpak remote-list --user 2>&1; flatpak remote-list --system 2>&1",
+            "purpose": "add Flathub remote for flatpak"
+          },
+          {
+            "command": "flatpak install --user -y flathub io.github.ronniedroid.concessio 2>&1",
+            "purpose": "install io.github.ronniedroid.concessio from Flathub"
           }
         ],
         "smoke_tests": [
@@ -107,70 +115,117 @@
             "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "flatpak run io.github.ronniedroid.concessio",
+            "expected_signal": "rwxrwxrwx",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"rwxrwxrwx\": yes",
+            "setup": [],
+            "offline": false
           }
         ],
         "pitfalls": [
           {
             "readme_said": "flatpak install flathub io.github.ronniedroid.concessio",
-            "actually_needed": "First add Flathub remote: flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "actually_needed": "add Flathub remote first: flatpak remote-add --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "changing numeric permissions updates symbolic",
+            "actually_needed": "must press Enter to commit numeric field change",
+            "kind": "note"
+          },
+          {
+            "readme_said": "open file via portal",
+            "actually_needed": "dbus session bus unavailable in this sandbox so file chooser never opens; needed flatpak override --filesystem for test files",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The window shows the Concessio welcome illustration with title, tagline, and Get started button.",
+          "observed": "Welcome screen with illustration, app name, tagline, and Get started button.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-concessio-20261101-173508-0dd5/report.json",
+          "trace_path": "runs/verify/verify-concessio-20261101-230235-8ffe/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-concessio-20261101-173508-0dd5/replay-5-1.app.judged.png"
+            "runs/verify/verify-concessio-20261101-230235-8ffe/replay-9-1.app.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.025982,
+        "cost_usd": 0.419127,
         "gui": {
-          "tier": "ui_rendered",
+          "tier": "action_checked",
           "screen": "first_run",
           "command": "flatpak run io.github.ronniedroid.concessio",
           "window_title": "Concessio",
-          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+          "display": "Xvfb 1280x800x24, no window manager, no GPU",
+          "operations": [
+            {
+              "feature": "convert between symbolic and numeric permissions",
+              "goal": "On the main page, locate the numeric permission field (initially showing 644). Clear it and type 777 and press Enter to confirm, so that the symbolic representation below updates to show rwxrwxrwx.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "rwxrwxrwx"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"rwxrwxrwx\": yes",
+              "smoke_test": 1,
+              "actions": 6,
+              "replay": "actions",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-concessio-20261101-230235-8ffe/replay-12-3-op-1.png",
+                "runs/verify/verify-concessio-20261101-230235-8ffe/replay-12-3-op-2.png",
+                "runs/verify/verify-concessio-20261101-230235-8ffe/replay-12-3-op-3.png",
+                "runs/verify/verify-concessio-20261101-230235-8ffe/replay-12-3-op-4.png",
+                "runs/verify/verify-concessio-20261101-230235-8ffe/replay-12-3-op-5.png",
+                "runs/verify/verify-concessio-20261101-230235-8ffe/replay-12-3-op-6.png"
+              ]
+            }
+          ]
         },
         "features": [
           {
             "feature": "convert between symbolic and numeric permissions",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_display",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "Convert symbolic/numeric permissions is GUI toggle interaction, no CLI; verified window opens"
+            "note": null
           },
           {
             "feature": "open a file to read its permissions",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "other",
             "failure": null,
-            "note": "Open file to read permissions requires GUI file chooser"
+            "note": "no failed check in the log; file chooser never opened - dbus session bus unavailable"
           },
           {
             "feature": "calculate umask and resulting permissions",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "other",
             "failure": null,
-            "note": "Umask calculation is GUI page, no CLI"
+            "note": "no failed check in the log; Umask page shows 022->644/755 but check failed as text already present; portal needed for editing"
           },
           {
             "feature": "change file permissions with undo",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "not_attempted",
             "failure": null,
-            "note": "Change permissions with undo is GUI action, no CLI"
+            "note": "operation budget exhausted after 6 GUI ops"
           }
         ]
       }
@@ -391,5 +446,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:44+08:00",
-  "updated_at": "2026-11-01T17:37:27.248810+08:00"
+  "updated_at": "2026-11-01T23:28:30.706708+08:00"
 }
