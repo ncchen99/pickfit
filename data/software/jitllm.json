@@ -63,18 +63,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-jitllm-20261101-174853-81e0",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install jitllm",
-          "purpose": null
+          "command": "brew tap jitllm/jitllm 2>&1\nbrew trust jitllm/jitllm 2>&1\nbrew install jitllm 2>&1\n",
+          "purpose": "brew tap and install jitllm via Homebrew"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "jitllm convert qwen3-30b-a3b"
+      "check": {
+        "command": "which jitllm && which jitllmd && jitllm --help 2>&1 | head -n 100; echo ---VERSION---; jitllm --version 2>&1; jitllm version 2>&1; jitllmd --help 2>&1",
+        "expected_signal": "jitllm convert"
+      },
+      "first_task": "jitllm convert -o ~/models/stories260K.jlm ~/models/stories260K.gguf 2>&1"
     },
     "linux": {
       "basis": "replayed",
@@ -82,11 +85,11 @@
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://jitllm.org/install.sh -o /tmp/jitllm-install.sh && wc -c /tmp/jitllm-install.sh && head -c 4000 /tmp/jitllm-install.sh",
+          "command": "curl -fsSL https://jitllm.org/install.sh -o /tmp/jitllm-install.sh",
           "purpose": "Download install script for inspection"
         },
         {
-          "command": "sh /tmp/jitllm-install.sh && ls -l ~/.local/bin/jitllm ~/.local/bin/jitllmd",
+          "command": "sh /tmp/jitllm-install.sh",
           "purpose": "Install jitllm and jitllmd from release script"
         }
       ],
@@ -127,8 +130,174 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T02:45:14.731539+08:00",
+    "checked_at": "2026-11-01T17:53:51.736661+08:00",
     "runs": [
+      {
+        "id": "verify-jitllm-20261101-174853-81e0",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T17:53:51.736661+08:00",
+        "tool_version": "0.2.6",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew tap jitllm/jitllm 2>&1\nbrew trust jitllm/jitllm 2>&1\nbrew install jitllm 2>&1\n",
+            "purpose": "brew tap and install jitllm via Homebrew"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "which jitllm && which jitllmd && jitllm --help 2>&1 | head -n 100; echo ---VERSION---; jitllm --version 2>&1; jitllm version 2>&1; jitllmd --help 2>&1",
+            "expected_signal": "jitllm convert",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "jitllm convert [-o DIR] [-chat-template FILE] <model.gguf|model-dir|URL|NAME> [mmproj.gguf|URL] [out.jlm]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "jitllmd service status 2>&1",
+            "expected_signal": "localhost:4242: nothing answers",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "loaded none",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "jitllm convert -o ~/models/stories260K.jlm ~/models/stories260K.gguf 2>&1",
+            "expected_signal": "5 blocks of 0.18 MiB",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "5 blocks of 0.18 MiB, 48 tensors; page i is at 319488 + i*184320",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "jitllm run -n 16 ~/models/stories260K.jlm/stories260K.jlm \"Hello, my name is\" 2>&1",
+            "expected_signal": "Hello, my name is Jack",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Hello, my name is Jack. He liked to play with his toys and",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "jitllm convert -o ~/models/stories260K.jlm ~/models/stories260K.gguf 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://localhost:4242/v1/models | python3 -m json.tool 2>&1\ncurl -s http://localhost:4242/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"tiny\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"max_tokens\":16,\"temperature\":0}' 2>&1",
+            "expected_signal": "\"id\": \"tiny\"",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "{\"error\":{\"message\":\"server: not found: no model \\\"tiny\\\" is loaded or in the models folder /Users/sbx/models (by id, file name or alias); `jitllmd models` lists them\",\"type\":\"invalid_request_error\"}}",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/stories260K.gguf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "jitllm convert -o ~/models/stories260K.jlm ~/models/stories260K.gguf 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "jitllmd serve -addr localhost:4242 -models /Users/sbx/models 2>&1",
+                "background": true,
+                "port": 4242
+              },
+              {
+                "command": "cp ~/models/stories260K.jlm/stories260K.jlm ~/models/stories260K.jlm.file 2>&1\nmv ~/models/stories260K.jlm.file ~/models/stories260K.jlm2 2>&1\nls -lh ~/models/*.jlm* ~/models/stories260K.jlm/ 2>&1\n# also copy as proper file in models\ncp ~/models/stories260K.jlm/stories260K.jlm ~/models/tiny.jlm && ls -lh ~/models/*.jlm 2>&1\njitllmd models -addr localhost:4242 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "jitllm convert qwen3-30b-a3b (and flags after file)",
+            "actually_needed": "Go flag parser requires flags BEFORE file: jitllm convert -o DIR <file> and jitllm run -n 16 <file> \"prompt\"; placing -o or -n after file errors",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "jitllm convert -o output writes file directly",
+            "actually_needed": "-o is a directory; convert creates DIR/basename.jlm inside it, nested when -o already looks like *.jlm; server only lists *.jlm files directly under -models, so copy to ~/models/tiny.jlm for discovery",
+            "kind": "note"
+          },
+          {
+            "readme_said": "curl http://localhost:4242/v1/chat/completions with model qwen3-30b-a3b",
+            "actually_needed": "base model without chat template is rejected for chat; use /v1/completions or a chat-template model for chat completions",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Binaries found, help/version shown, model converted, and 16-token generation produced the expected Jack continuation.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-jitllm-20261101-174853-81e0/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-jitllm-20261101-174853-81e0/check-1-cmd2.judged.png",
+            "runs/verify/verify-jitllm-20261101-174853-81e0/check-2-cmd7.judged.png",
+            "runs/verify/verify-jitllm-20261101-174853-81e0/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.09041,
+        "features": [
+          {
+            "feature": "Generate optimized kernels for your hardware",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows 0 blocks run and kernels declined with Quantize error, not optimized execution."
+          },
+          {
+            "feature": "Run models bigger than memory via paging",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows a tiny model with 5 frames and 0 evictions, not a model bigger than memory."
+          },
+          {
+            "feature": "Serve chat and completions via compatible APIs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          }
+        ]
+      },
       {
         "id": "verify-jitllm-20261029-024402-c583",
         "level": "service",
@@ -144,11 +313,11 @@
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://jitllm.org/install.sh -o /tmp/jitllm-install.sh && wc -c /tmp/jitllm-install.sh && head -c 4000 /tmp/jitllm-install.sh",
+            "command": "curl -fsSL https://jitllm.org/install.sh -o /tmp/jitllm-install.sh",
             "purpose": "Download install script for inspection"
           },
           {
-            "command": "sh /tmp/jitllm-install.sh && ls -l ~/.local/bin/jitllm ~/.local/bin/jitllmd",
+            "command": "sh /tmp/jitllm-install.sh",
             "purpose": "Install jitllm and jitllmd from release script"
           }
         ],
@@ -607,5 +776,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:36+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T23:02:55.139037+08:00"
 }

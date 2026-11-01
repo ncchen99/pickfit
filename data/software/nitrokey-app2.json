@@ -1,0 +1,356 @@
+{
+  "schema_version": "software.v1",
+  "slug": "nitrokey-app2",
+  "repo_id": "gh:431097971",
+  "name": "Nitrokey App 2",
+  "summary": "Graphical app to manage, access and update Nitrokey 3 and Passkey devices.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "other",
+  "kind": "desktop_app",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [],
+  "alternatives_to": [],
+  "features": [
+    "manage Nitrokey 3 and Passkey devices",
+    "access and update Nitrokey 3 devices"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://www.nitrokey.com/products/nitrokeys",
+  "repo": {
+    "url": "https://github.com/Nitrokey/nitrokey-app2",
+    "full_name": "Nitrokey/nitrokey-app2",
+    "created_at": "2021-11-23T12:48:20Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.10 or later"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-nitrokey-app2-20261101-174926-7cc9",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/apps && curl -L -o ~/apps/nitrokey-app2 https://github.com/Nitrokey/nitrokey-app2/releases/download/v2.7.1/nitrokey-app-v2.7.1-x64-linux-binary && chmod +x ~/apps/nitrokey-app2",
+          "purpose": "download official Linux x64 binary release from GitHub and chmod +x to ~/apps/nitrokey-app2"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "DISPLAY=:99 ~/apps/nitrokey-app2"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v2.7.1",
+    "published_at": "2026-05-18T08:07:00Z",
+    "url": "https://github.com/Nitrokey/nitrokey-app2/releases/tag/v2.7.1"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T17:51:55.066216+08:00",
+    "runs": [
+      {
+        "id": "verify-nitrokey-app2-20261101-174926-7cc9",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:d66116882a17",
+        "checked_at": "2026-11-01T17:51:55.066216+08:00",
+        "tool_version": "2.7.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/apps && curl -L -o ~/apps/nitrokey-app2 https://github.com/Nitrokey/nitrokey-app2/releases/download/v2.7.1/nitrokey-app-v2.7.1-x64-linux-binary && chmod +x ~/apps/nitrokey-app2",
+            "purpose": "download official Linux x64 binary release from GitHub and chmod +x to ~/apps/nitrokey-app2"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "DISPLAY=:99 ~/apps/nitrokey-app2",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak install flathub com.nitrokey.nitrokey-app2",
+            "actually_needed": "flathub remote not pre-configured; needs 'flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo' first, and binary release is available directly from GitHub",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "flatpak run com.nitrokey.nitrokey-app2",
+            "actually_needed": "installed via direct binary ~/apps/nitrokey-app2 instead of flatpak; launched with DISPLAY=:99, CLI --help does not exit but starts GUI event loop",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The app shows its fully drawn main screen with a welcome message and a prompt to insert a Nitrokey device.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nitrokey-app2-20261101-174926-7cc9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nitrokey-app2-20261101-174926-7cc9/replay-11-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.073076,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "DISPLAY=:99 ~/apps/nitrokey-app2",
+          "window_title": "Nitrokey App",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "manage Nitrokey 3 and Passkey devices",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "manage Nitrokey 3/Passkey devices requires physical USB Nitrokey hardware not present in box"
+          },
+          {
+            "feature": "access and update Nitrokey 3 devices",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "access and update Nitrokey 3 devices requires physical device and firmware update flow"
+          }
+        ]
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Nitrokey/nitrokey-app2",
+      "fetched_at": "2026-11-01T16:51:52+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Nitrokey/nitrokey-app2/blob/main/README.md",
+      "fetched_at": "2026-11-01T16:42:57+08:00"
+    },
+    {
+      "id": "release:v2.7.1",
+      "kind": "release",
+      "url": "https://github.com/Nitrokey/nitrokey-app2/releases/tag/v2.7.1",
+      "fetched_at": "2026-11-01T16:42:57+08:00"
+    },
+    {
+      "id": "flathub:com.nitrokey.nitrokey-app2",
+      "kind": "package_registry",
+      "url": "https://flathub.org/apps/com.nitrokey.nitrokey-app2",
+      "fetched_at": "2026-11-01T16:51:52+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Graphical application to manage and use Nitrokey 3 devices",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:08:20+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "flathub:com.nitrokey.nitrokey-app2",
+      "quote": "flatpak run com.nitrokey.nitrokey-app2",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:08:20+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Graphical application to manage and use Nitrokey 3 devices",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:08:20+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Graphical application to manage and use Nitrokey 3 devices",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:08:20+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Nitrokey App 2",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:08:20+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "flathub:com.nitrokey.nitrokey-app2",
+      "quote": "flatpak apps for Linux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:08:20+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Nitrokey App 2 requires Python 3.10 or later.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:08:20+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T16:51:52+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T16:51:52+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-01T16:51:52+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T16:51:52+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.7.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T16:42:57+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "This application allows to manage Nitrokey 3 and Nitrokey Passkey devices.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:08:20+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "flathub:com.nitrokey.nitrokey-app2",
+      "quote": "which allows accessing, updating and managing Nitrokey 3 devices.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:08:20+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "flathub:com.nitrokey.nitrokey-app2",
+      "quote": "flatpak install flathub com.nitrokey.nitrokey-app2",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:08:20+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-01T16:42:42+08:00",
+  "updated_at": "2026-11-01T23:08:24.401926+08:00"
+}

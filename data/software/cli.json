@@ -56,22 +56,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-cli-20261101-133323-20e4",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install dark-bio/tap/ark-cli",
-          "purpose": null
+          "command": "brew install dark-bio/tap/ark-cli 2>&1",
+          "purpose": "install ark via brew stable"
         }
       ],
-      "manual_steps": [
-        "Plug in your Ark hardware device",
-        "Press the Ark button with the pin that came with the Ark",
-        "Pair the Ark with Ark Companion on a phone and approve on the phone"
-      ],
-      "check": null,
-      "first_task": "ark devices"
+      "manual_steps": [],
+      "check": {
+        "command": "ark --version 2>&1",
+        "expected_signal": "ark 0.5.0"
+      },
+      "first_task": "ark devices 2>&1"
     },
     "linux": {
       "basis": "replayed",
@@ -79,7 +78,7 @@
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh -o /tmp/ark-installer.sh && ls -l /tmp/ark-installer.sh && head -c 2000 /tmp/ark-installer.sh",
+          "command": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh -o /tmp/ark-installer.sh",
           "purpose": "download installer script only"
         },
         {
@@ -128,8 +127,119 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:56:03.648359+08:00",
+    "checked_at": "2026-11-01T13:36:06.351768+08:00",
     "runs": [
+      {
+        "id": "verify-cli-20261101-133323-20e4",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T13:36:06.351768+08:00",
+        "tool_version": "0.5.0",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install dark-bio/tap/ark-cli 2>&1",
+            "purpose": "install ark via brew stable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ark --version 2>&1",
+            "expected_signal": "ark 0.5.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ark 0.5.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ark devices 2>&1",
+            "expected_signal": "No Arks found",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No Arks found",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ark data samples 2>&1",
+            "expected_signal": "ACB",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ACB 116 African Caribbean in Barbados",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ark doctor 2>&1",
+            "expected_signal": "ark 0.5.0",
+            "exit_code": 3,
+            "passed": true,
+            "observed_excerpt": "· ark 0.5.0, not looked up under CI",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show ark 0.5.0 version, No Arks found device message, and population samples table starting with ACB.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-cli-20261101-133323-20e4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-cli-20261101-133323-20e4/check-1-cmd2.judged.png",
+            "runs/verify/verify-cli-20261101-133323-20e4/check-2-cmd4.judged.png",
+            "runs/verify/verify-cli-20261101-133323-20e4/check-3-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.035516,
+        "features": [
+          {
+            "feature": "run apps and print reports",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "Needs Ark hardware to run app; ark run fails no-device"
+          },
+          {
+            "feature": "upload variant calls to the Ark",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "Needs Ark hardware to upload VCF; fails no-device"
+          },
+          {
+            "feature": "download public data onto the Ark",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "Needs Ark hardware to fetch; fails no-device"
+          },
+          {
+            "feature": "list dataset slots and their state",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "Needs Ark hardware to list slots; ark data list fails no-device"
+          }
+        ]
+      },
       {
         "id": "verify-cli-20261031-035507-5384",
         "level": "function",
@@ -145,7 +255,7 @@
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh -o /tmp/ark-installer.sh && ls -l /tmp/ark-installer.sh && head -c 2000 /tmp/ark-installer.sh",
+            "command": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh -o /tmp/ark-installer.sh",
             "purpose": "download installer script only"
           },
           {
@@ -601,5 +711,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:39+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T23:02:54.418876+08:00"
 }

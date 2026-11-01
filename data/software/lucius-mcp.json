@@ -63,18 +63,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-lucius-mcp-20261101-170004-cde9",
       "method": "uv",
       "steps": [
         {
-          "command": "uvx --from lucius-mcp --refresh start",
-          "purpose": null
+          "command": "uv tool install lucius-mcp 2>&1",
+          "purpose": "install lucius-mcp via uv tool install"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "uv run lucius test_case"
+      "check": {
+        "command": "lucius test_case get --help 2>&1",
+        "expected_signal": "Mapped tool: get_test_case_details"
+      },
+      "first_task": null
     },
     "linux": {
       "basis": "replayed",
@@ -120,7 +123,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:08:14.272106+08:00",
+    "checked_at": "2026-11-01T17:05:30.833014+08:00",
     "runs": [
       {
         "id": "verify-lucius-mcp-20261031-030648-8d0c",
@@ -292,6 +295,189 @@
             "reason": "needs_account",
             "failure": null,
             "note": "All test-plan tools require Allure endpoint and API token; no account in box."
+          }
+        ]
+      },
+      {
+        "id": "verify-lucius-mcp-20261101-170004-cde9",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T17:05:30.833014+08:00",
+        "tool_version": "0.16.6",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install lucius-mcp 2>&1",
+            "purpose": "install lucius-mcp via uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- start 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lucius test_case get --help 2>&1",
+            "expected_signal": "Mapped tool: get_test_case_details",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Mapped tool: get_test_case_details",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Python 3.10 through 3.14 supported, 3.15 experimental",
+            "actually_needed": "Installed and ran successfully on Python 3.15.2",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show successful MCP handshake with 70 tools and correct CLI help mapping.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lucius-mcp-20261101-170004-cde9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lucius-mcp-20261101-170004-cde9/check-1-cmd6.judged.png",
+            "runs/verify/verify-lucius-mcp-20261101-170004-cde9/check-2-cmd10.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.074613,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "start"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "lucius-mcp",
+          "server_version": "0.16.6",
+          "tools": [
+            "create_test_case",
+            "get_test_case_details",
+            "update_test_case",
+            "delete_test_case",
+            "delete_archived_test_cases",
+            "list_test_cases",
+            "get_custom_fields",
+            "delete_unused_custom_fields",
+            "list_custom_field_values",
+            "create_custom_field_value",
+            "update_custom_field_value",
+            "delete_custom_field_value",
+            "get_test_case_custom_fields",
+            "search_test_cases",
+            "generate_test_code",
+            "create_launch",
+            "get_launch",
+            "get_test_result",
+            "prepare_attachment_download",
+            "get_project",
+            "list_launches",
+            "list_launch_test_results",
+            "rerun_test_results_manually",
+            "start_manual_test_session",
+            "submit_manual_test_results",
+            "upload_test_results",
+            "attach_file_to_launch",
+            "add_test_result_attachment",
+            "delete_launch",
+            "close_launch",
+            "reopen_launch",
+            "list_integrations",
+            "create_shared_step",
+            "list_shared_steps",
+            "update_shared_step",
+            "delete_shared_step",
+            "delete_archived_shared_steps",
+            "link_shared_step",
+            "unlink_shared_step",
+            "list_test_layers",
+            "create_test_layer",
+            "update_test_layer",
+            "delete_test_layer",
+            "list_test_layer_schemas",
+            "create_test_layer_schema",
+            "update_test_layer_schema",
+            "delete_test_layer_schema",
+            "create_test_suite",
+            "list_test_suites",
+            "get_test_suite_contents",
+            "assign_test_cases_to_suite",
+            "delete_test_suite",
+            "create_test_plan",
+            "update_test_plan",
+            "manage_test_plan_content",
+            "list_test_plans",
+            "run_test_plan",
+            "delete_test_plan",
+            "create_defect",
+            "get_defect",
+            "link_defect_to_test_case",
+            "list_defect_test_cases",
+            "unlink_issue_from_test_case",
+            "update_defect",
+            "delete_defect",
+            "list_defects",
+            "create_defect_matcher",
+            "update_defect_matcher",
+            "delete_defect_matcher",
+            "list_defect_matchers"
+          ],
+          "tool_count": 70,
+          "called_tool": null,
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "manage test case lifecycle",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "All test_case tools require ALLURE_ENDPOINT and ALLURE_API_TOKEN; handshake ok but tool calls error without credentials"
+          },
+          {
+            "feature": "generate framework-specific code from test cases",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "generate_test_code requires Allure project and token"
+          },
+          {
+            "feature": "manage launches and test results",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Launch management tools all require Allure API token"
+          },
+          {
+            "feature": "manage test plans and content",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Test plan tools require Allure credentials"
           }
         ]
       }
@@ -859,5 +1045,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T17:05:30.845844+08:00"
 }

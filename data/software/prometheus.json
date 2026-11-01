@@ -62,18 +62,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "pip",
+      "basis": "replayed",
+      "run_id": "verify-prometheus-20261101-185619-7dec",
+      "method": "brew",
       "steps": [
         {
-          "command": "pip install 'oara-prometheus[full]'",
-          "purpose": null
+          "command": "brew tap 2>&1\nbrew update 2>&1 | tail -c 3000\nbrew install oaralabs/tap/oara 2>&1",
+          "purpose": "brew install oaralabs/tap/oara (ranked candidate 1)"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "oara doctor"
+      "check": {
+        "command": "oara --version 2>&1",
+        "expected_signal": "prometheus 0.9.17"
+      },
+      "first_task": "oara doctor 2>&1"
     },
     "linux": {
       "basis": "replayed",
@@ -109,7 +112,7 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:55:09.989538+08:00",
+    "checked_at": "2026-11-01T19:32:22.160021+08:00",
     "runs": [
       {
         "id": "verify-prometheus-20261031-005236-d68c",
@@ -193,6 +196,128 @@
         },
         "actor_model": "muse-spark-1.3",
         "cost_usd": 0.142185
+      },
+      {
+        "id": "verify-prometheus-20261101-185619-7dec",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T19:32:22.160021+08:00",
+        "tool_version": "0.9.17",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew tap 2>&1\nbrew update 2>&1 | tail -c 3000\nbrew install oaralabs/tap/oara 2>&1",
+            "purpose": "brew install oaralabs/tap/oara (ranked candidate 1)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "oara --version 2>&1",
+            "expected_signal": "prometheus 0.9.17",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "◉ prometheus 0.9.17 · OAra Labs",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "oara --help 2>&1",
+            "expected_signal": "daemon Start always-on daemon",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "daemon Start always-on daemon",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "oara doctor 2>&1",
+            "expected_signal": "Platform:",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "Platform:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "oara setup --fast 2>&1",
+            "expected_signal": "Probing for local inference servers",
+            "exit_code": 2,
+            "passed": true,
+            "observed_excerpt": "Probing for local inference servers …",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "oara setup --fast writes working config with web API enabled",
+            "actually_needed": "setup --fast refuses to write config when no inference server detected on standard ports; requires running llama.cpp/Ollama or --probe-url to a reachable server",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "brew install oaralabs/tap/oara completes quickly",
+            "actually_needed": "first install timed out after 300s due to many dependencies (python@3.14, pillow, etc); retry with longer timeout and uninstall/reinstall needed to complete",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.9.17 printed, full help text displayed, and doctor diagnostics completing with RESULT.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-prometheus-20261101-185619-7dec/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-prometheus-20261101-185619-7dec/check-1-cmd7.judged.png",
+            "runs/verify/verify-prometheus-20261101-185619-7dec/check-2-cmd8.judged.png",
+            "runs/verify/verify-prometheus-20261101-185619-7dec/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.082182,
+        "features": [
+          {
+            "feature": "run as daemon on owned hardware",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "daemon requires inference server and config; oara doctor shows web.enabled false, needs more setup than budget allows"
+          },
+          {
+            "feature": "run scheduled and background tasks",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "scheduled/background tasks need daemon running; not attempted"
+          },
+          {
+            "feature": "message you on Telegram when tasks finish",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Telegram messaging needs bot token, not available"
+          },
+          {
+            "feature": "use local inference servers for models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "local inference servers (llama.cpp/Ollama) not running; probe found none"
+          }
+        ]
       }
     ]
   },
@@ -564,5 +689,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T19:32:22.163442+08:00"
 }

@@ -410,3 +410,29 @@ def test_only_mcp_servers_carry_mcp_facts(db: PipelineDB, tmp_path: Path) -> Non
     out = tmp_path / "software"
     write_profiles(db, model=MODEL, out_dir=out, now=NOW)
     assert "mcp" not in read(out, "tinyq")  # not even "mcp": null, so other records stay byte-identical
+
+
+def test_a_store_listing_is_a_source_the_model_can_quote(db: PipelineDB, tmp_path: Path) -> None:
+    from dataclasses import asdict
+
+    from pickfit.discover.listings import Listing
+
+    store_install = "flatpak install flathub io.github.someone.Tinyq"
+    key = add(db, 8, "someone/tinyq", extraction(
+        platforms=cited(["linux"], "Flathub (flatpak apps for Linux)"),
+        install_methods=[{"method": "other", "command": store_install, "platforms": ["linux"]}]))
+    x = Listing(source="flathub", item_id="io.github.someone.Tinyq", name="Tinyq", kind="gui",
+                url="https://flathub.org/apps/io.github.someone.Tinyq", summary="Query JSON Lines",
+                license="MIT", github="someone/tinyq", install_command=store_install)
+    db.save_listing(source="flathub", item_id=x.item_id, item_url=x.url, name=x.name, facts=asdict(x),
+                    linked_repo="someone/tinyq", repo_id=key, outcome="candidate", known_before=False,
+                    run_id="discover-flathub-test", seen_at="2026-11-01T17:00:00+08:00")
+    out = tmp_path / "software"
+    write_profiles(db, model=MODEL, out_dir=out, now=NOW)
+    record = read(out, "tinyq")
+    store = {"id": "flathub:io.github.someone.Tinyq", "kind": "package_registry",
+             "url": "https://flathub.org/apps/io.github.someone.Tinyq", "fetched_at": "2026-11-01T17:00:00+08:00"}
+    assert store in record["sources"]
+    assert record["platforms"] == ["linux"]
+    assert {e["field"]: e["source_id"] for e in record["evidence"]}["/platforms"] == store["id"]
+    assert record["install"]["linux"]["steps"] == [{"command": store_install, "purpose": None}]

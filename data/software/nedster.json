@@ -64,7 +64,27 @@
     "api_keys": []
   },
   "install": {
-    "macos": null,
+    "macos": {
+      "basis": "replayed",
+      "run_id": "verify-nedster-20261101-122156-bd86",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone https://github.com/unrealumanga/Nedster.git /tmp/Nedster 2>&1 && ls /tmp/Nedster/install.sh 2>&1 && wc -l /tmp/Nedster/install.sh",
+          "purpose": "git clone Nedster to obtain install.sh"
+        },
+        {
+          "command": "uv tool install --force /tmp/Nedster",
+          "purpose": "uv tool install --force /tmp/Nedster (core of install.sh, clean without sudo)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "nedster --version",
+        "expected_signal": "Nedster 4.0.0a1"
+      },
+      "first_task": null
+    },
     "linux": {
       "basis": "replayed",
       "run_id": "verify-nedster-20261031-031701-3a92",
@@ -99,7 +119,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:18:44.749722+08:00",
+    "checked_at": "2026-11-01T12:26:39.286834+08:00",
     "runs": [
       {
         "id": "verify-nedster-20261031-031701-3a92",
@@ -222,6 +242,90 @@
             "reason": "other",
             "failure": null,
             "note": "bare nedster in non-TTY printed usage instead of opening TUI; TUI also needs Ollama model"
+          }
+        ]
+      },
+      {
+        "id": "verify-nedster-20261101-122156-bd86",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T12:26:39.286834+08:00",
+        "tool_version": "4.0.0a1",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/unrealumanga/Nedster.git /tmp/Nedster 2>&1 && ls /tmp/Nedster/install.sh 2>&1 && wc -l /tmp/Nedster/install.sh",
+            "purpose": "git clone Nedster to obtain install.sh"
+          },
+          {
+            "command": "uv tool install --force /tmp/Nedster",
+            "purpose": "uv tool install --force /tmp/Nedster (core of install.sh, clean without sudo)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nedster --version",
+            "expected_signal": "Nedster 4.0.0a1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Nedster 4.0.0a1",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "./install.sh installs nedster and runs nedster setup (brew install --cask ollama-app)",
+            "actually_needed": "install.sh fails on standard non-admin user: brew cask needs sudo for /Applications; install succeeds via uv tool install but setup must be skipped",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows nedster --version printing Nedster 4.0.0a1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nedster-20261101-122156-bd86/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nedster-20261101-122156-bd86/check-1-cmd15.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.088224,
+        "features": [
+          {
+            "feature": "run read-edit-test loop locally",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "read-edit-test loop needs Ollama model 4-35B, not available headless"
+          },
+          {
+            "feature": "return JSON outcome backed by test runs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "JSON outcome requires model inference; budget exhausted before clean re-run"
+          },
+          {
+            "feature": "chat in terminal coding UI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "TUI chat needs interactive terminal/display"
           }
         ]
       }
@@ -609,5 +713,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:59+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T12:26:39.292816+08:00"
 }

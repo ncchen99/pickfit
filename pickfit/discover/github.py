@@ -34,6 +34,7 @@ SEARCH_INTERVAL_S = 2.1
 SEARCH_PAGE_MAX = 100  # per_page limit of the search API
 SEARCH_RESULTS_MAX = 1000  # the search API never returns more than this per query
 RELEASES_PER_REPO = 10
+GRAPHQL_BATCH = 50  # repositories per GraphQL query; each costs about one point of 5,000 an hour
 README_MAX_CHARS = 200_000
 # Root files that show whether a repo installs an executable (rules.py reads them).
 MANIFESTS = ("package.json", "pyproject.toml", "Cargo.toml", "setup.cfg")
@@ -309,6 +310,60 @@ class GitHub:
         resp = self._get("repo", f"/repos/{full_name}")
         return resp.json() if resp is not None else None
 
+    def repos(self, full_names: list[str], batch: int = GRAPHQL_BATCH) -> dict[str, dict[str, Any] | None]:
+        """Many repositories through GraphQL, `batch` per query: lowercased owner/name as asked ->
+        the repo in normalize_repo's shape (renames followed), or None when it does not exist."""
+        wanted = list(dict.fromkeys(name.lower() for name in full_names))
+        out: dict[str, dict[str, Any] | None] = {}
+        for start in range(0, len(wanted), batch):
+            chunk = wanted[start:start + batch]
+            parts = []
+            for i, name in enumerate(chunk):
+                owner, repo = name.split("/", 1)
+                parts.append(f"r{i}: repository(owner: {json.dumps(owner)}, name: {json.dumps(repo)}) "
+                             "{ ...repo }")
+            data = self._graphql("query {\n" + "\n".join(parts) + "\n}\n" + _REPO_FRAGMENT)
+            for i, name in enumerate(chunk):
+                node = data.get(f"r{i}")
+                out[name] = _graphql_repo(node) if node else None
+        return out
+
+    def _graphql(self, query: str) -> dict[str, Any]:
+        """POST one GraphQL query; NOT_FOUND errors leave their field null, any other error fails."""
+        server_errors = 0
+        while True:
+            with self._count_lock:
+                self.requests["graphql"] += 1
+            started = monotonic()
+            try:
+                resp = self._http.post("/graphql", json={"query": query}, headers=self._headers)
+            except httpx2.TransportError as err:
+                resp, status = None, type(err).__name__
+            else:
+                status = resp.status_code
+            self._trace({"ts": taipei_now().isoformat(timespec="seconds"), "kind": "graphql",
+                         "status": status, "repos": query.count(": repository("),
+                         "latency_s": round(monotonic() - started, 3)})
+            if resp is not None and resp.status_code == 200:
+                body = resp.json()
+                errors = [e for e in body.get("errors") or [] if e.get("type") != "NOT_FOUND"]
+                if errors:
+                    raise GitHubError(f"GraphQL: {str(errors[0].get('message'))[:200]}")
+                return body.get("data") or {}
+            if resp is not None:
+                wait = self._rate_limit_wait(resp)
+                if wait is not None:
+                    if wait > self._max_wait:
+                        raise GitHubError(f"GraphQL: rate limited for {wait:.0f}s more")
+                    sleep(wait)
+                    continue
+                if resp.status_code < 500:
+                    raise GitHubError(f"GraphQL: HTTP {resp.status_code} {self._message(resp)}")
+            server_errors += 1
+            if server_errors >= SERVER_ERROR_TRIES:
+                raise GitHubError(f"GraphQL: {status} after {SERVER_ERROR_TRIES} tries")
+            sleep(2.0 * server_errors)
+
     def issues(self, full_name: str, per_page: int = 100) -> list[dict[str, Any]]:
         """The newest issues and pull requests in either state, newest first (scoring)."""
         resp = self._get("issues", f"/repos/{full_name}/issues",
@@ -365,6 +420,37 @@ def normalize_repo(item: dict[str, Any]) -> dict[str, Any]:
     for flag in ("archived", "disabled", "fork", "is_template"):
         repo[flag] = bool(repo[flag])
     return repo
+
+
+_REPO_FRAGMENT = """fragment repo on Repository {
+  databaseId nameWithOwner name url description homepageUrl
+  primaryLanguage { name } repositoryTopics(first: 20) { nodes { topic { name } } }
+  stargazerCount forkCount issues(states: OPEN) { totalCount } pullRequests(states: OPEN) { totalCount }
+  createdAt updatedAt pushedAt isArchived isDisabled isFork isTemplate
+  defaultBranchRef { name } diskUsage hasIssuesEnabled owner { login } licenseInfo { spdxId }
+}"""
+
+
+def _graphql_repo(node: dict[str, Any]) -> dict[str, Any]:
+    """A GraphQL Repository as the REST repository object normalize_repo reads.
+
+    open_issues_count counts open issues and pull requests, as REST does.
+    """
+    return normalize_repo({
+        "id": node.get("databaseId"), "full_name": node.get("nameWithOwner"), "name": node.get("name"),
+        "html_url": node.get("url"), "description": node.get("description"),
+        "homepage": node.get("homepageUrl"), "language": (node.get("primaryLanguage") or {}).get("name"),
+        "topics": [n["topic"]["name"] for n in (node.get("repositoryTopics") or {}).get("nodes") or []],
+        "stargazers_count": node.get("stargazerCount"), "forks_count": node.get("forkCount"),
+        "open_issues_count": ((node.get("issues") or {}).get("totalCount") or 0)
+                             + ((node.get("pullRequests") or {}).get("totalCount") or 0),
+        "created_at": node.get("createdAt"), "updated_at": node.get("updatedAt"),
+        "pushed_at": node.get("pushedAt"), "archived": node.get("isArchived"),
+        "disabled": node.get("isDisabled"), "fork": node.get("isFork"), "is_template": node.get("isTemplate"),
+        "default_branch": (node.get("defaultBranchRef") or {}).get("name"), "size": node.get("diskUsage"),
+        "has_issues": node.get("hasIssuesEnabled"), "owner": node.get("owner") or {},
+        "license": {"spdx_id": (node.get("licenseInfo") or {}).get("spdxId")},
+    })
 
 
 def normalize_release(release: dict[str, Any]) -> dict[str, Any]:

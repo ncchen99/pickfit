@@ -4,8 +4,10 @@ One row per repository, keyed by `gh:<GitHub numeric repo id>` so a rename does
 not create a second candidate; earlier owner/name pairs go to `aliases`
 (architecture A.4). Each stage of the funnel writes its own columns or table:
 discovery (repo snapshot, which queries found it; for a channel other than GitHub
-search, such as Show HN, one `channel_hits` row per post), details (README,
-releases, files), rules (label and reasons), extraction (one row per model call).
+search, such as Show HN, one `channel_hits` row per post; for a package store,
+Flathub or Homebrew Cask, one `listings` row per app with what the store says),
+details (README, releases, files), rules (label and reasons), extraction (one row
+per model call).
 Nothing here is the canonical data; data/software/ is written later from these rows.
 """
 
@@ -122,6 +124,22 @@ CREATE TABLE IF NOT EXISTS channel_hits (
     PRIMARY KEY (channel, item_id)
 );
 CREATE INDEX IF NOT EXISTS channel_hits_repo ON channel_hits (repo_id);
+CREATE TABLE IF NOT EXISTS listings (
+    source TEXT NOT NULL,
+    item_id TEXT NOT NULL,
+    item_url TEXT NOT NULL,
+    name TEXT NOT NULL,
+    facts TEXT NOT NULL,
+    linked_repo TEXT,
+    repo_id TEXT,
+    outcome TEXT NOT NULL,
+    known_before INTEGER,
+    run_id TEXT NOT NULL,
+    first_seen_at TEXT NOT NULL,
+    last_seen_at TEXT NOT NULL,
+    PRIMARY KEY (source, item_id)
+);
+CREATE INDEX IF NOT EXISTS listings_repo ON listings (repo_id);
 """
 
 
@@ -241,6 +259,30 @@ class PipelineDB:
             out.append(hit)
         return out
 
+    def save_listing(self, *, source: str, item_id: str, item_url: str, name: str, facts: dict[str, Any],
+                     linked_repo: str | None, repo_id: str | None, outcome: str, known_before: bool | None,
+                     run_id: str, seen_at: str | None = None) -> None:
+        """Record one app of a package store (Flathub, Homebrew Cask) and what became of it; an app
+        seen again is refreshed but keeps whether its repo was in the pool at first sight."""
+        now = seen_at or taipei_now().isoformat(timespec="seconds")
+        with self._write() as conn:
+            conn.execute(
+                "INSERT INTO listings (source, item_id, item_url, name, facts, linked_repo, repo_id, outcome, "
+                "known_before, run_id, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT (source, item_id) DO UPDATE SET item_url = excluded.item_url, name = excluded.name, "
+                "facts = excluded.facts, linked_repo = excluded.linked_repo, repo_id = excluded.repo_id, "
+                "outcome = excluded.outcome, known_before = COALESCE(listings.known_before, excluded.known_before), "
+                "run_id = excluded.run_id, last_seen_at = excluded.last_seen_at",
+                (source, item_id, item_url, name, _dumps(facts), linked_repo, repo_id, outcome,
+                 None if known_before is None else int(known_before), run_id, now, now))
+
+    def listings(self, source: str | None = None, repo_id: str | None = None) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute("SELECT * FROM listings WHERE (? IS NULL OR source = ?) "
+                                "AND (? IS NULL OR repo_id = ?) ORDER BY source, item_id",
+                                (source, source, repo_id, repo_id)).fetchall()
+        return [_row_to_listing(row) for row in rows]
+
     def log_query(self, *, run_id: str, query_id: str, category: str, q: str, ran_at: str,
                   total_count: int | None, returned: int, new: int) -> None:
         with self._write() as conn:
@@ -255,7 +297,8 @@ class PipelineDB:
         """Repos never fetched, fetched with an error, or pushed since the last fetch."""
         with self._connect() as conn:
             rows = conn.execute("SELECT repo_id, repo, details_at, details_pushed_at, details_error "
-                                "FROM candidates ORDER BY first_seen_at, repo_id").fetchall()
+                                "FROM candidates WHERE repo_id LIKE 'gh:%' "
+                                "ORDER BY first_seen_at, repo_id").fetchall()
         out = []
         for row in rows:
             repo = _loads(row["repo"])
@@ -294,15 +337,22 @@ class PipelineDB:
     # -- reading candidates
 
     def candidate(self, repo_id: str) -> dict[str, Any] | None:
+        """One candidate; `listings` holds the package-store apps that led to it (candidate rows only)."""
         with self._connect() as conn:
             row = conn.execute("SELECT * FROM candidates WHERE repo_id = ?", (repo_id,)).fetchone()
-        return _row_to_candidate(row) if row else None
+        if row is None:
+            return None
+        return _row_to_candidate(row, [x for x in self.listings(repo_id=repo_id) if x["outcome"] == "candidate"])
 
     def candidates(self, where: str = "", params: tuple = ()) -> list[dict[str, Any]]:
         with self._connect() as conn:
             rows = conn.execute(f"SELECT * FROM candidates {where} ORDER BY first_seen_at, repo_id",
                                 params).fetchall()
-        return [_row_to_candidate(row) for row in rows]
+        listed: dict[str, list[dict[str, Any]]] = {}
+        for x in self.listings():
+            if x["outcome"] == "candidate" and x["repo_id"]:
+                listed.setdefault(x["repo_id"], []).append(x)
+        return [_row_to_candidate(row, listed.get(row["repo_id"], [])) for row in rows]
 
     # -- extraction
 
@@ -423,6 +473,7 @@ class PipelineDB:
                                        "repos_new": len({h["repo_id"] for h in hits
                                                          if h["channel"] == ch and h["known_before"] is False})}
                                   for ch in sorted({h["channel"] for h in hits})},
+                "listings": self._listings_funnel(),
                 "in_both_categories": sum(1 for c in cands if len(c["categories"]) > 1),
                 "renamed": sum(1 for c in cands if c["aliases"]),
                 "queries": queries,
@@ -464,6 +515,21 @@ class PipelineDB:
         }
 
 
+    def _listings_funnel(self) -> dict[str, Any]:
+        """Per package store: apps by outcome, and of the candidates, repos already in the pool or new."""
+        out: dict[str, Any] = {}
+        for x in self.listings():
+            src = out.setdefault(x["source"], {"apps": 0, "by_outcome": Counter(), "repos": set(),
+                                                "repos_new": set()})
+            src["apps"] += 1
+            src["by_outcome"][x["outcome"]] += 1
+            if x["outcome"] == "candidate":
+                src["repos"].add(x["repo_id"])
+                if x["known_before"] is False:
+                    src["repos_new"].add(x["repo_id"])
+        return {name: {"apps": s["apps"], "by_outcome": dict(s["by_outcome"]), "repos": len(s["repos"]),
+                       "repos_new": len(s["repos_new"])} for name, s in sorted(out.items())}
+
     def _prescreen_funnel(self) -> dict[str, Any] | None:
         rows = self.prescreens()
         if not rows:
@@ -500,12 +566,13 @@ class PipelineDB:
         }
 
 
-_CHANNEL_PREFIXES = ("show_hn", "submission", "reverify")
+_CHANNEL_PREFIXES = ("show_hn", "submission", "reverify", "flathub", "homebrew_cask")
 
 
 def _channels(query_ids: list[str]) -> set[str]:
     """Which channels found a candidate, from its query ids: `show_hn:<category>`,
-    `submission:<id>`, `reverify:<id>`, or GitHub search's `<category>:<topic>`."""
+    `submission:<id>`, `reverify:<id>`, `flathub:<app id>`, `homebrew_cask:<token>`, or
+    GitHub search's `<category>:<topic>`."""
     return {q.split(":", 1)[0] if q.split(":", 1)[0] in _CHANNEL_PREFIXES else "github_search"
             for q in query_ids}
 
@@ -515,14 +582,23 @@ def _preferred(categories: list[str]) -> str:
     return ranked[0] if ranked else categories[0]
 
 
-def _row_to_candidate(row: sqlite3.Row) -> dict[str, Any]:
+def _row_to_candidate(row: sqlite3.Row, listings: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     c = dict(row)
     for key, default in (("aliases", []), ("categories", []), ("queries", []), ("repo", {}),
                          ("releases", []), ("files", []), ("manifests", {}), ("rule_reasons", [])):
         c[key] = _loads(c[key], default)
     if c["rule_passed"] is not None:
         c["rule_passed"] = bool(c["rule_passed"])
+    c["listings"] = listings or []
     return c
+
+
+def _row_to_listing(row: sqlite3.Row) -> dict[str, Any]:
+    x = dict(row)
+    x["facts"] = _loads(x["facts"], {})
+    if x["known_before"] is not None:
+        x["known_before"] = bool(x["known_before"])
+    return x
 
 
 def _row_to_extraction(row: sqlite3.Row) -> dict[str, Any]:

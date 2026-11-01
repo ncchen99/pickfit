@@ -1,4 +1,5 @@
-"""`pickfit discover`: find candidates (GitHub search or Show HN), store them, fetch details, apply rules."""
+"""`pickfit discover`: find candidates (GitHub search, Show HN or a package store), store them, fetch
+details, apply rules."""
 
 from __future__ import annotations
 
@@ -10,15 +11,19 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
+from pickfit.discover import cask, flathub
 from pickfit.discover.github import (PUSHED_DAYS, RATE_LIMIT_MAX_WAIT_S, GitHub, GitHubError, build_queries,
                                      normalize_repo, runs_dir)
+from pickfit.discover.listings import pick, search_store
 from pickfit.discover.rules import RULES_VERSION, classify
 from pickfit.discover.showhn import DEFAULT_DAYS, HN, search_show_hn
 from pickfit.discover.store import PipelineDB
 from pickfit.env import get_env
 from pickfit.ledger import taipei_now
 
-CHANNELS = ("github", "show_hn")
+CHANNELS = ("github", "show_hn", "flathub", "homebrew_cask")
+STORES = ("flathub", "homebrew_cask")
+DEFAULT_SEED = "p2.7"
 DEFAULT_PER_QUERY = 100
 DETAIL_WORKERS = 4  # REST calls in flight; GitHub asks clients not to hammer it concurrently
 
@@ -51,8 +56,10 @@ def search(gh: GitHub, db: PipelineDB, *, today: date, per_query: int, pushed_da
             f"took {returned}, new {new}  [{query.q}]")
 
 
-def fetch_details(gh: GitHub, db: PipelineDB, *, workers: int, log: Callable[[str], None]) -> None:
-    todo = db.needs_details()
+def fetch_details(gh: GitHub, db: PipelineDB, *, workers: int, log: Callable[[str], None],
+                  only: set[str] | None = None) -> None:
+    """README, releases and files for every candidate that needs them, or only for `only` (repo ids)."""
+    todo = [r for r in db.needs_details() if only is None or r["repo_id"] in only]
     log(f"details: {len(todo)} repos to fetch")
     done = 0
     with ThreadPoolExecutor(max_workers=workers) as pool:
@@ -68,10 +75,13 @@ def fetch_details(gh: GitHub, db: PipelineDB, *, workers: int, log: Callable[[st
                 log(f"details: {done}/{len(todo)}")
 
 
-def apply_rules(db: PipelineDB) -> Counter[str]:
-    """Label every candidate that has details; return the label counts."""
+def apply_rules(db: PipelineDB, only: set[str] | None = None) -> Counter[str]:
+    """Label every candidate that has details, or only those in `only` (repo ids); return the label
+    counts. The owner counts behind the owner-burst flag are always over every detailed candidate."""
     candidates = [c for c in db.candidates() if c["details_at"] and not c["details_error"]]
     owners = Counter(c["repo"].get("owner") for c in candidates)
+    if only is not None:
+        candidates = [c for c in candidates if c["repo_id"] in only]
     labels: Counter[str] = Counter()
     for c in candidates:
         result = classify(c, owners)
@@ -86,11 +96,14 @@ def run_discover(*, token: str, db_path: Path | None = None, channel: str = "git
                  categories: list[str] | None = None, skip_details: bool = False,
                  today: date | None = None, now: datetime | None = None, gh: GitHub | None = None,
                  hn: HN | None = None, max_rate_wait_s: float = RATE_LIMIT_MAX_WAIT_S,
+                 pick_n: int = 0, seed: str = DEFAULT_SEED, store_http: Any = None,
                  log: Callable[[str], None] | None = None) -> dict[str, Any]:
     """Run the free part of the funnel and return the funnel counts.
 
     channel "github" runs the topic searches; "show_hn" reads the last `days` of Show HN
-    posts (pickfit.discover.showhn) and adds `show_hn` to the funnel.
+    posts (pickfit.discover.showhn) and adds `show_hn` to the funnel. "flathub" and
+    "homebrew_cask" read the store's catalog (pickfit.discover.listings); details are then
+    fetched only for the batch of `pick_n` (pick), which the funnel lists under `pick`.
     """
     if channel not in CHANNELS:
         raise ValueError(f"unknown channel {channel!r}; expected one of {CHANNELS}")
@@ -100,9 +113,18 @@ def run_discover(*, token: str, db_path: Path | None = None, channel: str = "git
     gh = gh or GitHub(token, rate_limit_max_wait_s=max_rate_wait_s)
     own_hn = hn is None and channel == "show_hn"
     run_id = f"discover-{'' if channel == 'github' else channel + '-'}" + taipei_now().strftime("%Y%m%d-%H%M%S")
-    show_hn = None
+    show_hn = store = picked = passed_over = None
     try:
-        if channel == "show_hn":
+        if channel in STORES:
+            now = now or datetime.now(UTC)
+            if channel == "flathub":
+                listings, catalog = flathub.parse_catalog(flathub.fetch_catalog(store_http)), flathub.CATALOG
+            else:
+                listings, catalog = cask.parse(*cask.fetch(store_http)), cask.CATALOG
+            store = search_store(channel, listings, gh, db, catalog=catalog, now=now, run_id=run_id, log=log)
+            if pick_n > 0:
+                picked, passed_over = pick_batch(gh, db, channel, pick_n, seed, log=log)
+        elif channel == "show_hn":
             hn = hn or HN()
             show_hn = search_show_hn(gh, db, hn, now=now or datetime.now(UTC), days=days,
                                      categories=categories, run_id=run_id, log=log)
@@ -110,9 +132,11 @@ def run_discover(*, token: str, db_path: Path | None = None, channel: str = "git
             # GitHub reads created:/pushed: dates in UTC.
             search(gh, db, today=today or datetime.now(UTC).date(), per_query=per_query,
                    pushed_days=pushed_days, categories=categories, run_id=run_id, log=log)
-        if not skip_details:
+        if not skip_details and channel not in STORES:
             fetch_details(gh, db, workers=DETAIL_WORKERS, log=log)
-        labels = apply_rules(db)
+        # A store run labels only the candidates its pick looked at.
+        labels = apply_rules(db, only={x["repo_id"] for x in (picked or []) + (passed_over or [])}
+                             if channel in STORES else None)
         log(f"rules: {dict(labels)}")
     finally:
         log(f"github requests: {dict(gh.requests)}")
@@ -125,4 +149,37 @@ def run_discover(*, token: str, db_path: Path | None = None, channel: str = "git
     funnel = db.funnel(prescreen_status())
     if show_hn is not None:
         funnel["show_hn"] = {"run_id": run_id, "days": days, **show_hn.to_dict()}
+    if store is not None:
+        funnel[channel] = {"run_id": run_id, **store.to_dict()}
+        funnel["pick"] = [_picked(db, x) for x in picked or []]
+        funnel["pick_passed_over"] = [_picked(db, x) for x in passed_over or []]
     return funnel
+
+
+def pick_batch(gh: GitHub, db: PipelineDB, source: str, n: int, seed: str, *,
+               log: Callable[[str], None]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """The first `n` of the store's candidates in the seed's order that pass the rules, and those
+    passed over on the way (rejected by the rules). Details are fetched only for the ones looked at."""
+    order = pick(db, source, len(db.listings(source)), seed)
+    picked: list[dict[str, Any]] = []
+    passed_over: list[dict[str, Any]] = []
+    i = 0
+    while len(picked) < n and i < len(order):
+        chunk = order[i:i + n - len(picked)]
+        i += len(chunk)
+        fetch_details(gh, db, workers=DETAIL_WORKERS, log=log, only={x["repo_id"] for x in chunk})
+        apply_rules(db, only={x["repo_id"] for x in chunk})
+        for x in chunk:
+            if len(picked) == n:
+                break
+            (picked if (db.candidate(x["repo_id"]) or {}).get("rule_passed") else passed_over).append(x)
+    log(f"pick {source}: {len(picked)} picked, {len(passed_over)} passed over by the rules")
+    return picked, passed_over
+
+
+def _picked(db: PipelineDB, listing: dict[str, Any]) -> dict[str, Any]:
+    c = db.candidate(listing["repo_id"]) or {}
+    return {"item_id": listing["item_id"], "name": listing["name"], "kind": listing["facts"].get("kind"),
+            "repo_id": listing["repo_id"], "repo": listing["linked_repo"], "known_before": listing["known_before"],
+            "popularity": listing["facts"].get("popularity"), "rule_label": c.get("rule_label"),
+            "rule_passed": c.get("rule_passed")}
