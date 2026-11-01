@@ -78,10 +78,10 @@ POSES = {
         belly=(100, 173),
     ),
     "turn": dict(
-        eyes=((92, 118, 1.0), (141, 113, 0.78)),
-        cap="M28 112 C 48 96, 70 90, 92 93 C 101 94, 106 99, 110 104 L116 111 L122 103 "
-        "C 130 96, 152 94, 178 99 L178 40 L28 40 Z",
-        blush=((78, 134, 7, 3.8), (153, 133, 4.5, 3.2)),
+        eyes=((92, 118, 1.0), (145, 112, 0.78)),
+        cap="M28 112 C 48 96, 72 90, 96 93 C 110 94, 117 99, 122 104 L128 111 L134 103 "
+        "C 142 96, 158 94, 178 99 L178 40 L28 40 Z",
+        blush=((78, 134, 7, 3.8), (156, 134, 4, 3)),
         band=(((32, 133), (112, 155), (168, 130)), ((32, 143.5), (112, 166), (168, 140.5))),
         end_x=98,
         wings=("M54 139 C 66 145, 70 161, 60 173 C 52 171, 44 159, 46 145 Z",),
@@ -186,8 +186,8 @@ def beak(kind="closed", pose="front"):
     s = f'stroke="{INK}" stroke-width="2.4" stroke-linejoin="round"'
     if pose == "turn":
         # on the face between the eyes (nearer the far one), pointing right
-        up = "M114.5 121.5 L136 127 L113 127.5 Z"
-        lo = "M113 127.5 L136 127 L115 133 Z"
+        up = "M126.5 121.5 L148 127 L125 127.5 Z"
+        lo = "M125 127.5 L148 127 L127 133 Z"
         inner = f'<path d="{lo}" fill="{BEAK}" {s}/><path d="{up}" fill="{BEAK_TOP}" {s}/>'
         return f'<g class="beak">{inner}</g>'
     if kind == "open":
@@ -329,7 +329,7 @@ def exclaim(cls="exclaim"):
 
 
 # ---------------------------------------------------------------- props
-BEAK_TIP = (136, 127)  # tip of the turned beak: where props are held
+BEAK_TIP = (148, 127)  # tip of the turned beak: where props are held
 
 
 def leaf(cls="leaf"):

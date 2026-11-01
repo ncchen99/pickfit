@@ -94,7 +94,8 @@ All animations are short loops (1.8–3.4 s) using CSS keyframes inside each SVG
 - v1: three-quarter view, long needle beak on the side of the head, tail straight up from the crown, tape as a band. Read as a ball with a stem.
 - v2: front face with a large beak between the eyes, tail from behind, big wings, tape draped as two strips. Read as a bird, but the beak and wings were too big and the tape too busy.
 - v3: egg body, tuft, small dot eyes, tiny diamond beak, v1-style tape band, small wings, and a turned pose for holding things. The dot eyes felt less cute, and the turned face was crowded at its right edge.
-- v4 (current): v3 with the bigger v1 eyes back, and the turned face re-spaced: the beak moved onto the face, the cap point follows it, and the tape end and leaf moved with the beak tip.
+- v4: v3 with the bigger v1 eyes back, and the turned face re-spaced: the beak moved onto the face, the cap point follows it, and the tape end and leaf moved with the beak tip.
+- v5 (final): turned beak nudged right, about halfway back toward v3, with the cap point, far eye, tape end and leaf moved along; final.
 
 ## Provenance
 
