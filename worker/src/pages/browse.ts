@@ -124,7 +124,7 @@ export function renderBrowse(catalog: Catalog, params: URLSearchParams, nonce: s
   return renderShell({
     nonce,
     title: 'Browse verified tools · pickfit',
-    description: 'Developer CLIs, local AI tools and MCP servers that pickfit installed and tested in a fresh sandbox.',
+    description: 'Developer CLIs, local AI tools, MCP servers and web apps that pickfit tried itself: installed in a fresh sandbox, or used in a sandboxed browser.',
     active: 'browse',
     main,
   });

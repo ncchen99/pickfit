@@ -144,7 +144,7 @@ function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, 
   }
   parts.push(
     matchedBy === 'rules'
-      ? `Ranked by rules (request keywords, verification on your OS, treasure score) among ${considered} tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.`
+      ? `Ranked by rules (request keywords, a web app first among close fits, verification on your OS, treasure score) among ${considered} tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.`
       : `Chosen by ${matchedBy} among ${considered} tools that passed pickfit's hard filters; code checked each reason against the profile.`,
   );
   return parts.join(' ');

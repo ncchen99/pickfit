@@ -413,7 +413,7 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
   );
 }
 
-const BY_RULES = 'these results are ranked by rules (the words in your request, then verification on your OS, then the hidden-gem score) without Muse Spark';
+const BY_RULES = 'these results are ranked by rules (the words in your request, then no-install web apps among close fits, then verification on your OS, then the hidden-gem score) without Muse Spark';
 const BUDGET: Record<BudgetStop | 'other', { title: string; text: string }> = {
   web_daily: {
     title: 'Model matching paused until 00:00 UTC',
@@ -440,7 +440,7 @@ const DEGRADED: Record<string, { title: string; text: string }> = {
   },
   model_off: {
     title: 'Model matching is off on this server',
-    text: 'These results are ranked by rules: the words in your request, then verification on your OS, then the hidden-gem score.',
+    text: 'These results are ranked by rules: the words in your request, then no-install web apps among close fits, then verification on your OS, then the hidden-gem score.',
   },
 };
 DEGRADED.no_api_key = DEGRADED.model_off;
@@ -496,7 +496,7 @@ export function renderResults(
   const said: string[] = [`<h2 class="results-title">${esc(resultsTitle(out))}</h2>`];
   if (out.considered > 0) said.push(`<p class="match-line">${matchLine(out)}</p>`);
   if (out.picks.length === 0) {
-    said.push(`<p class="match-line">${esc(out.coverage_note ?? 'pickfit covers developer CLI tools, local AI tools and MCP servers today.')}</p>`);
+    said.push(`<p class="match-line">${esc(out.coverage_note ?? 'pickfit covers developer CLI tools, local AI tools, MCP servers and some web apps today.')}</p>`);
   }
   // A partial or missing fit is said before the picks, not after them.
   const fitFirst = out.picks.length > 0 && (out.match_quality === 'partial' || out.match_quality === 'none') && out.coverage_note;
@@ -767,7 +767,7 @@ export function renderPage(input: PageInput): string {
     nonce: input.nonce,
     title: 'pickfit: software that fits, tried on first',
     description:
-      'Describe the job in one sentence. pickfit suggests lesser-known developer CLI tools, local AI tools and MCP servers it has installed and tested, with the evidence and the steps that worked.',
+      'Describe the job in one sentence. pickfit suggests lesser-known developer CLI tools, local AI tools, MCP servers and web apps it has tested itself, with the evidence and the steps that worked.',
     active: 'find',
     bodyClass: served ? 'is-results' : '',
     main,
