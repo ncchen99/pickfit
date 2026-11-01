@@ -873,8 +873,12 @@ def evaluate(target: WebTarget, result: dict[str, Any], seen: dict[str, Any], ou
     for key in ("install", "function_judge"):
         if isinstance(result.get(key), dict):
             result[key].pop("screenshot_jpeg_b64", None)
-    why = None if level == "function" else (check.get("why") if function else
-                                             result.get("error") or "no function phase")
+    if level == "function":
+        result["account_required"] = False  # the core use worked without an account
+    judged = result.get("function_judge") or {}
+    why = None if level == "function" else (
+        (check.get("why") or f"the function judge did not see the feature work: {judged.get('observed', '?')}"[:300])
+        if function else result.get("error") or "no function phase")
     return finish(level, why)
 
 
