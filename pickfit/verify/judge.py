@@ -150,7 +150,8 @@ class JudgeResult:
 
 def pick_checks(checks: list[CheckResult], limit: int = MAX_IMAGES) -> list[CheckResult]:
     """Passing checks to show: README examples first, then one version/help check."""
-    passing = [c for c in checks if c.passed and c.run is not None and c.kind != "gui"]  # GUI: judge_gui
+    # GUI launches go to judge_gui; an operation is pickfit's own check, read by the feature judge.
+    passing = [c for c in checks if c.passed and c.run is not None and c.kind not in ("gui", "gui_op")]
     examples = [c for c in passing if c.kind != "version"]
     versions = [c for c in passing if c.kind == "version"]
     return (examples[: limit - 1] + versions[:1] + examples[limit - 1:])[:limit]

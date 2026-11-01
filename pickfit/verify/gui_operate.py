@@ -67,6 +67,7 @@ FILE_MAX_BYTES = 4_000_000
 CLIPBOARD_MAX_BYTES = 64_000
 SEARCH_MAX_FILES = 20_000
 INPUT_DIR = f"{BOX_HOME}/pickfit-in"
+OUTPUT_DIR = f"{BOX_HOME}/pickfit-out"  # made before the app starts, for goals that save a file
 NONCE_FIELD = "{nonce}"
 FORMATS = ("text", "json", "html", "svg", "csv", "srt", "png", "jpeg", "gif", "webp", "pdf", "zip", "gguf", "wav")
 SAMPLES = ("png", "jpeg")
@@ -962,13 +963,15 @@ def check_screen(png: bytes | None, spec: GuiCheckSpec, nonce: str, typed: list[
 
 
 def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[dict[str, Any]] | None = None,
-                  model: str | None = OPERATOR_MODEL, read_screen: ScreenReader | None = None,
+                  first: Operation | None = None, model: str | None = OPERATOR_MODEL,
+                  read_screen: ScreenReader | None = None,
                   evidence_dir: Path | None = None, log: Log = print, timeout_s: int | None = None,
                   run_id: str | None = None, scope: str | None = None, scope_cap_usd: float | None = None,
                   sleep: Callable[[float], None] = time.sleep, **call_kwargs: Any
                   ) -> tuple[ExecResult, Operation, bytes | None]:
     """Start the app, operate it (the model's loop, or `actions` recorded before), check, stop.
 
+    first: in a replay, the recorded actions' attempt that did not pass before this loop ran.
     Returns (the record to keep, how it went, the launch's window screenshot for the GUI judge).
     """
     began = time.monotonic()
@@ -976,10 +979,11 @@ def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[
     op = Operation(feature=args.feature, goal=args.goal, check=args.check.model_dump(),
                    inputs=[i.model_dump() for i in args.inputs], nonce=nonce,
                    mode="actions" if actions is not None else "operated",
-                   model=None if actions is not None else resolve_model(model))
+                   model=None if actions is not None else resolve_model(model), first=first)
     stopped = gui.stop_box_user(box)  # the app is the only box-user process: no server, nothing left over
     if "PICKFIT_KILLED" not in stopped.stdout:
         op.error = "box-user processes survived the stop before the launch"
+    box.exec(f"/usr/bin/mkdir -p {INPUT_DIR} {OUTPUT_DIR}", 30)  # where goals read and save
     written: list[str] = []
     for item in args.inputs:
         path = home_path(item.path)

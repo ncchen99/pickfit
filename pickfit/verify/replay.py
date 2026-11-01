@@ -226,13 +226,11 @@ class Replayer:
             tag = f"replay-{cmd.command_id}-{self.launches}"
             if actions is None:
                 self.log(f"  replay [{cmd.command_id}] the recorded actions did not pass: operating again")
-            result, op, png = run_operation(self.box, args, tag, actions=actions, evidence_dir=self.evidence_dir,
-                                            log=self.log, **self.operator)
+            result, op, png = run_operation(self.box, args, tag, actions=actions, first=first,
+                                            evidence_dir=self.evidence_dir, log=self.log, **self.operator)
             self.cost_usd += op.cost_usd
             if actions is not None:
                 op.model = cmd.operate.get("model")  # who chose the actions when they were recorded
-            else:
-                op.first = first
             if op.passed or actions is None or op.stop == "no_window":
                 break
             first = op
