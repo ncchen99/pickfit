@@ -338,6 +338,41 @@ def _add_queue_commands(sub: argparse._SubParsersAction) -> None:
     r.set_defaults(func=_reverify)
 
 
+# --- usage outcomes from D1 ------------------------------------------------------
+
+
+def _outcomes_sync(args: argparse.Namespace) -> int:
+    from pickfit.d1 import D1, D1Error
+    from pickfit.ledger import taipei_now
+    from pickfit.outcomes import load_exclude, sync
+
+    try:
+        exclude = load_exclude(args.exclude)
+        return sync(args.data, D1(remote=not args.local, worker_dir=args.worker), now=taipei_now(),
+                    dry_run=args.dry_run, exclude=exclude)
+    except (D1Error, ValueError) as err:
+        print(f"pickfit: {err}", file=sys.stderr)
+        return 2
+
+
+def _add_outcomes_command(sub: argparse._SubParsersAction) -> None:
+    from pickfit.d1 import DEFAULT_WORKER_DIR
+    from pickfit.profiles import DEFAULT_OUT
+
+    o = sub.add_parser("outcomes", help="usage reports from the Worker's D1")
+    osub = o.add_subparsers(dest="outcomes_command", required=True)
+    s = osub.add_parser("sync", help="read report_outcome counts from D1 (read-only) into data/software and "
+                                     "refresh scores; outside reports only ($0)")
+    s.add_argument("--dry-run", action="store_true", help="print what would change per slug; write nothing")
+    s.add_argument("--exclude", type=Path, default=None,
+                   help="file of rec_ids (one per line, kept outside the repo) to leave out: our own checks "
+                        "sent without X-Pickfit-Reporter")
+    s.add_argument("--local", action="store_true", help="the local D1 of `wrangler dev` instead of the remote one")
+    s.add_argument("--worker", type=Path, default=DEFAULT_WORKER_DIR, help="the Worker directory (wrangler runs there)")
+    s.add_argument("--data", type=Path, default=DEFAULT_OUT, help="records directory (default data/software)")
+    s.set_defaults(func=_outcomes_sync)
+
+
 # --- publish (P4.2) ---------------------------------------------------------------
 
 
@@ -377,6 +412,7 @@ def main(argv: list[str] | None = None) -> int:
     _add_pipeline_commands(sub)
     _add_score_command(sub)
     _add_queue_commands(sub)
+    _add_outcomes_command(sub)
     _add_publish_command(sub)
 
     from pickfit.verify.cli import add_parser as add_verify_parser
