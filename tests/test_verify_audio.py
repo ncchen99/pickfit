@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -105,6 +106,18 @@ def test_the_server_refuses_reconfiguration_and_keeps_the_words_off_command_line
     argv, uid, stdin = box.harness[-1]
     assert wav and why is None and wav.startswith(gui.EVIDENCE_DIR + "/") and uid == gui.DISPLAY_UID
     assert stdin == "I saw an apple, a tiger, and an oven.\n" and "tiger" not in " ".join(argv) + wav
+
+
+def test_the_sentence_starts_over_each_time_a_program_opens_the_microphone():
+    # A recorder that stops at the first pause (voice activity detection) would otherwise get only the tail.
+    box = MicBox()
+    pid, why = audio.start_playback(box, f"{gui.EVIDENCE_DIR}/speech-3-ab.wav")
+    argv, uid, _ = box.harness[-1]
+    script = argv[-1]
+    assert pid == 4321 and why is None and uid == gui.DISPLAY_UID
+    assert "stdbuf -oL /usr/bin/pactl --server=" in script and " subscribe " in script and "on source-output" in script
+    assert f"sleep {audio.LEAD_S}" in script and f"sleep {audio.PAUSE_S}" in script and "USR1" in script
+    assert subprocess.run(["/bin/bash", "-n", "-c", script]).returncode == 0
 
 
 # ---------------------------------------------------------------- listen

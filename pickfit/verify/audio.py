@@ -59,6 +59,7 @@ ASOUND_CONF = "pcm.!default { type pulse }\nctl.!default { type pulse }\n"
 VOICE = "slt"  # flite's cmu_us_slt (CMU ARCTIC), built into Debian's flite
 SPEECH_STRETCH = 1.1  # a little slower than flite's default
 PAUSE_S = 1.5  # between two sayings of the sentence
+LEAD_S = 0.8  # silence before the sentence when a program opens the microphone (capture starts a little late)
 PLAY_MAX_S = 1800  # a player pickfit failed to stop dies anyway
 LISTEN_MAX_S = 600  # a listen's command, at most (the box caps it too)
 SPOKEN_FIELD = "{spoken}"
@@ -183,9 +184,19 @@ def speak(box: Box, words: list[str], tag: str | int) -> tuple[str | None, str |
 
 
 def start_playback(box: Box, wav: str) -> tuple[int | None, str | None]:
-    """DISPLAY_UID plays the WAV into SPEAKER, again after each pause, until stopped; (its process group, None)."""
-    loop = (f"while :; do /usr/bin/paplay --server={PULSE_SERVER} --device={SPEAKER} {wav}; "
-            f"/usr/bin/sleep {PAUSE_S}; done")
+    """DISPLAY_UID plays the WAV into SPEAKER, again after each pause, until stopped; (its process group, None).
+
+    Each time a program opens a recording stream (a new source-output), the loop starts over with LEAD_S of
+    silence, so a recorder that stops at the first pause hears the whole sentence, not its tail.
+    """
+    paplay = f"/usr/bin/paplay --server={PULSE_SERVER} --device={SPEAKER} {wav}"
+    # USR1 kills the step in progress and starts again from the lead; `wait` returns at once for a trapped signal.
+    player = ("trap 'kill -KILL $c 2>/dev/null; r=1' USR1; while :; do r=0; "
+              f"for s in '/usr/bin/sleep {LEAD_S}' {shlex.quote(paplay)} '/usr/bin/sleep {PAUSE_S}'; do "
+              "$s & c=$!; wait $c; [ $r = 1 ] && break; done; done")
+    loop = (f"/usr/bin/bash -c {shlex.quote(player)} & p=$!; "
+            f"/usr/bin/stdbuf -oL /usr/bin/pactl --server={PULSE_SERVER} subscribe | while read -r l; do "
+            "case $l in *\"'new' on source-output\"*) kill -USR1 $p;; esac; done")
     script = (f"{{ /usr/bin/setsid /usr/bin/timeout -s KILL {PLAY_MAX_S} /usr/bin/bash -c {shlex.quote(loop)} "
               "> /dev/null 2>&1 < /dev/null & }; echo \"player $!\"")
     done = _as_harness(box, script, 30)
