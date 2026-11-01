@@ -127,7 +127,8 @@ FINISH_TOOL = _fn(
             "items": {"type": "object", "properties": {
                 "command_id": _INT, "setup_ids": {"type": "array", "items": _INT},
                 "expected_signal": {"type": "string", "description": (
-                    "Text copied exactly from its output that shows it worked.")},
+                    "Text copied exactly from its output that shows it worked, and that a fresh box's rerun prints "
+                    "too: not a timing, a measured number, a benchmark's pick or sampled text.")},
                 "expected_exit_code": {"type": "integer", "description": (
                     "0, or the non-zero code the README gives for this outcome (a linter that finds "
                     "problems exits 1).")},
