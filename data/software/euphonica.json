@@ -1,0 +1,418 @@
+{
+  "schema_version": "software.v1",
+  "slug": "euphonica",
+  "repo_id": "gh:815783368",
+  "name": "Euphonica",
+  "summary": "MPD-powered local music player with library browsing, dynamic playlists and visualiser",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "other",
+  "kind": "desktop_app",
+  "audience": "end_user",
+  "maturity": "beta",
+  "tags": [
+    "audio-visualizer",
+    "gnome",
+    "gtk4",
+    "libadwaita",
+    "libadwaita-rs",
+    "mpd",
+    "mpd-client",
+    "music",
+    "music-player",
+    "rust"
+  ],
+  "use_cases": [
+    "play local music collection via MPD",
+    "build dynamic playlists and save as static playlists",
+    "visualize playback with spectrum visualiser",
+    "fetch album art and synced lyrics"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "play music via built-in MPD instance",
+    "create client-side dynamic playlists",
+    "view customisable spectrum visualiser",
+    "fetch album art and synced lyrics"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/htkhiem/euphonica",
+    "full_name": "htkhiem/euphonica",
+    "created_at": "2024-06-16T06:21:04Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": [
+      "TheAudioDB API key for artist avatars"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "flatpak install flathub io.github.htkhiem.Euphonica",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "flatpak run io.github.htkhiem.Euphonica"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "GPL-3.0",
+  "processing": "hybrid",
+  "last_release": null,
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "suspected_tool_fault",
+    "checked_at": "2026-11-02T01:18:04.865700+08:00",
+    "runs": [
+      {
+        "id": "verify-euphonica-20261102-011619-145d",
+        "level": "unverified",
+        "unverified_reason": "suspected_tool_fault",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T01:18:04.865700+08:00",
+        "tool_version": "0.99.8-beta",
+        "install_method": "other",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "Add Flathub remote for user"
+          },
+          {
+            "command": "flatpak install --user -y flathub io.github.htkhiem.Euphonica",
+            "purpose": "Install Euphonica flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "dbus-run-session -- flatpak run io.github.htkhiem.Euphonica",
+            "expected_signal": "gui tier: window",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "exit_code 134",
+            "setup": [
+              {
+                "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "flatpak install --user -y flathub io.github.htkhiem.Euphonica",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak run io.github.htkhiem.Euphonica",
+            "actually_needed": "wrap launch with dbus session in this box: dbus-run-session -- flatpak run io.github.htkhiem.Euphonica (first launch without session bus failed with Gtk-WARNING Unable to acquire session bus)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Flatpak bundles MPD and runs standalone with no extra system requirements stated",
+            "actually_needed": "a running PipeWire daemon; without it the app aborts in get_pipewire_devices (utils.rs:686 context.connect unwrap with CreationFailed) instead of starting",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": "suspected tool fault, not proven: nothing checked further (the log names no failing command); App panics on startup without PipeWire: thread 'main' panicked at src/utils.rs:686:38: called Result::unwrap() on Err(CreationFailed) (context.connect(None).unwrap() in get_pipewire_devices) after \"Generating a default MPD config file...\"",
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-euphonica-20261102-011619-145d/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.136572
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/htkhiem/euphonica",
+      "fetched_at": "2026-11-01T17:20:21+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/htkhiem/euphonica/blob/main/README.md",
+      "fetched_at": "2026-11-02T01:08:48+08:00"
+    },
+    {
+      "id": "release:v0.99.8-beta-1",
+      "kind": "release",
+      "url": "https://github.com/htkhiem/euphonica/releases/tag/v0.99.8-beta-1",
+      "fetched_at": "2026-11-02T01:08:48+08:00"
+    },
+    {
+      "id": "flathub:io.github.htkhiem.Euphonica",
+      "kind": "package_registry",
+      "url": "https://flathub.org/apps/io.github.htkhiem.Euphonica",
+      "fetched_at": "2026-11-01T17:20:21+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Adaptive GTK4+`libadwaita` UI exposing most MPD features",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "flatpak run io.github.htkhiem.Euphonica",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A library-oriented music player, with delusions of grandeur.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Local music player with delusions of grandeur, powered by MPD",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Euphonica",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "flathub:io.github.htkhiem.Euphonica",
+      "quote": "store: Flathub (flatpak apps for Linux)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Fetch album arts, artist avatars and synced song lyrics from external sources (currently supports Last.fm, MusicBrainz, TheAudioDB and LRCLIB).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "release:v0.99.8-beta-1",
+      "quote": "Enable with your API key then re-fetch metadata to get them.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T17:20:21+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T17:20:21+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-01T17:20:21+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T17:20:21+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "release:v0.99.8-beta-1",
+      "quote": "tag: v0.99.8-beta-1",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "**Both a self-contained music player and an MPD-compatible client.** It does this by orchestrating its own MPD instance if needed.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Save a dynamic playlist's current state as an MPD-side static playlist whenver you want.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Customisable spectrum visualiser, reading from MPD FIFO or system PipeWire.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Fetch album arts, artist avatars and synced song lyrics from external sources (currently supports Last.fm, MusicBrainz, TheAudioDB and LRCLIB).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**Both a self-contained music player and an MPD-compatible client.** It does this by orchestrating its own MPD instance if needed.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Advanced client-side dynamic playlists.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Customisable spectrum visualiser, reading from MPD FIFO or system PipeWire.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Fetch album arts, artist avatars and synced song lyrics from external sources (currently supports Last.fm, MusicBrainz, TheAudioDB and LRCLIB).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "flathub:io.github.htkhiem.Euphonica",
+      "quote": "flatpak install flathub io.github.htkhiem.Euphonica",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Fetch album arts, artist avatars and synced song lyrics from external sources (currently supports Last.fm, MusicBrainz, TheAudioDB and LRCLIB).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T01:09:12+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-01T16:42:43+08:00",
+  "updated_at": "2026-11-02T01:18:04.866872+08:00"
+}

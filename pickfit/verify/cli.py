@@ -41,6 +41,8 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--mode", choices=["chain", "replay"], default=None,
                    help="carry history by previous_response_id (chain) or resend it (replay)")
     v.add_argument("--max-turns", type=int, default=None, help="turn limit (default 25)")
+    v.add_argument("--max-operations", type=int, default=None,
+                   help="--display: operate_gui calls per run (default 6); 0 checks install only")
     v.add_argument("--gpu", choices=["T4", "L4", "A10"], default=None,
                    help="Modal: give each box this NVIDIA GPU (for tools whose core job needs one)")
     v.add_argument("--runtime", choices=["gvisor", "vm"], default="gvisor",
@@ -146,6 +148,8 @@ def run(args: argparse.Namespace) -> int:
         limits = replace(limits, **GUI_LIMITS)
     if args.max_turns:
         limits = replace(limits, max_turns=args.max_turns)
+    if args.max_operations is not None:
+        limits = replace(limits, max_operations=max(0, args.max_operations))
     if args.gpu and args.runner != "modal":
         print("pickfit verify: --gpu needs --runner modal")
         return 2
