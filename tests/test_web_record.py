@@ -132,3 +132,15 @@ def test_record_targets_pick_web_apps_without_a_browser_run(data_dir: Path, tmp_
     web_write_back(web_run(visit(), FEATURES, tmp_path), "fixture-web-sketch", data_dir)
     assert record_targets([], data_dir) == []
     assert [t.slug for t in record_targets(["fixture-web-sketch"], data_dir)] == ["fixture-web-sketch"]
+
+
+def test_hidden_records_are_neither_visited_nor_written(data_dir: Path, tmp_path: Path):
+    from pickfit.verify.web_record import record_targets
+
+    path = data_dir / "fixture-web-sketch.json"
+    record = json.loads(path.read_text())
+    record["status"], record["status_reason"] = "hidden", "will not be recommended"
+    path.write_text(json.dumps(record))
+    assert record_targets([], data_dir) == [] and record_targets(["fixture-web-sketch"], data_dir) == []
+    written, why = web_write_back(web_run(visit(), FEATURES, tmp_path), "fixture-web-sketch", data_dir)
+    assert not written and "hidden" in why

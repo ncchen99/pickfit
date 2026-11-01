@@ -66,8 +66,8 @@ def record_targets(slugs: list[str], data_dir: Path | None = None) -> list[WebTa
     targets = []
     for path in paths:
         record = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8"))
-        if record.kind != "web_app" or record.web is None:
-            continue
+        if record.kind != "web_app" or record.web is None or record.status != "listed":
+            continue  # a hidden or removed record is never visited
         if not slugs and any(r.web is not None for r in record.verification.runs):
             continue
         targets.append(target_from_record(record))
@@ -243,6 +243,8 @@ def web_write_back(run: VerificationRun, slug: str, data_dir: Path = DATA_DIR) -
     record = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8"))
     if record.kind != "web_app" or record.web is None:
         return False, f"not written: {slug} is kind {record.kind}, not web_app"
+    if record.status != "listed":
+        return False, f"not written: {slug} is {record.status} ({record.status_reason or 'no reason given'})"
     if guard.registrable(site_of(str(record.web.url))) != guard.registrable(site_of(str(run.web.url))):
         return False, f"not written: the run opened {run.web.url}, the record's URL is {record.web.url}"
     same = next((r for r in record.verification.runs if (r.os, r.arch, r.method) == (run.os, run.arch, run.method)
