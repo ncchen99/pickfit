@@ -72,11 +72,14 @@ class BudgetExceeded(RuntimeError):
 
 
 def pipeline_daily_cap(day: date) -> float:
-    """$3 a day before 2026-10-29 (validation), $25 from then on; $80 on 10/31 and $45 on 11/1-11/2 (plan section 2)."""
+    """$3 a day before 2026-10-29 (validation), $25 from then on; $80 on 10/31, $45 on 11/1-11/2 and
+    $35 on 11/3 (plan section 2; 念誠 raised 11/3 for the web app category)."""
     if day < date(2026, 10, 29):
         return 3.0
     if day == date(2026, 10, 31):
         return 80.0
+    if day == date(2026, 11, 3):
+        return 35.0
     return 45.0 if date(2026, 11, 1) <= day <= date(2026, 11, 2) else 25.0
 
 
@@ -86,7 +89,9 @@ class Caps:
     daily_usd: Callable[[date], float]
 
 
-PIPELINE_TOTAL_USD = 120.0
+# 念誠 raised the total from $120 to $160 on 11/1 for the web app category; past Meta's $150 of
+# credits is his call (plan section 2).
+PIPELINE_TOTAL_USD = 160.0
 PIPELINE_CAPS = Caps(total_usd=PIPELINE_TOTAL_USD, daily_usd=pipeline_daily_cap)
 
 

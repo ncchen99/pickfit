@@ -77,32 +77,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-talos-20261031-002041-b4f8",
+      "run_id": "verify-talos-20261101-225841-d9b5",
       "method": "source",
       "steps": [
         {
-          "command": "rm -rf ~/talos && git clone https://github.com/talos-kernel/talos.git ~/talos && ls ~/talos/requirements.lock ~/talos/requirements-dev.lock",
-          "purpose": "clone source for lock files and code"
+          "command": "git clone --depth 1 https://github.com/talos-kernel/talos.git talos",
+          "purpose": "git clone talos repo shallow"
         },
         {
-          "command": "python3 -m venv ~/talos/.venv && ~/talos/.venv/bin/python -m pip install --require-hashes -r ~/talos/requirements.lock -r ~/talos/requirements-dev.lock",
-          "purpose": "create venv and install hashed requirements"
-        },
-        {
-          "command": "chmod 755 ~/talos/bin/talos && mkdir -p ~/.local/bin && ln -sf ~/talos/bin/talos ~/.local/bin/talos && export PATH=\"$HOME/.local/bin:$PATH\" && which talos && talos --help",
-          "purpose": "expose talos on PATH via symlink"
-        },
-        {
-          "command": "mkdir -p ~/talos/data ~/talos/workspace && chmod 700 ~/talos/data && ls -ld ~/talos/data ~/talos/workspace",
-          "purpose": "create data and workspace dirs for event log"
+          "command": "cd talos && python3 -m venv .venv && . .venv/bin/activate && pip install --require-hashes -r requirements.lock -r requirements-dev.lock",
+          "purpose": "pip install --require-hashes requirements.lock + requirements-dev.lock in venv"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "cd ~/talos && ./bin/talos version",
-        "expected_signal": "0.20.0-rc.1"
+        "command": "cd talos && . .venv/bin/activate && export PATH=\"$PWD/bin:$PATH\" && talos version",
+        "expected_signal": "0.20.0-rc.2"
       },
-      "first_task": "cd ~/talos && ./bin/talos version"
+      "first_task": "cd talos && . .venv/bin/activate && export PATH=\"$PWD/bin:$PATH\" && talos version"
     },
     "windows": null
   },
@@ -117,60 +109,52 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:25:23.652368+08:00",
+    "checked_at": "2026-11-01T23:00:23.054545+08:00",
     "runs": [
       {
-        "id": "verify-talos-20261031-002041-b4f8",
+        "id": "verify-talos-20261101-225841-d9b5",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:25:23.652368+08:00",
-        "tool_version": "0.20.0-rc.1",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T23:00:23.054545+08:00",
+        "tool_version": "0.20.0-rc.2",
         "install_method": "source",
         "replayed": true,
         "steps": [
           {
-            "command": "rm -rf ~/talos && git clone https://github.com/talos-kernel/talos.git ~/talos && ls ~/talos/requirements.lock ~/talos/requirements-dev.lock",
-            "purpose": "clone source for lock files and code"
+            "command": "git clone --depth 1 https://github.com/talos-kernel/talos.git talos",
+            "purpose": "git clone talos repo shallow"
           },
           {
-            "command": "python3 -m venv ~/talos/.venv && ~/talos/.venv/bin/python -m pip install --require-hashes -r ~/talos/requirements.lock -r ~/talos/requirements-dev.lock",
-            "purpose": "create venv and install hashed requirements"
-          },
-          {
-            "command": "chmod 755 ~/talos/bin/talos && mkdir -p ~/.local/bin && ln -sf ~/talos/bin/talos ~/.local/bin/talos && export PATH=\"$HOME/.local/bin:$PATH\" && which talos && talos --help",
-            "purpose": "expose talos on PATH via symlink"
-          },
-          {
-            "command": "mkdir -p ~/talos/data ~/talos/workspace && chmod 700 ~/talos/data && ls -ld ~/talos/data ~/talos/workspace",
-            "purpose": "create data and workspace dirs for event log"
+            "command": "cd talos && python3 -m venv .venv && . .venv/bin/activate && pip install --require-hashes -r requirements.lock -r requirements-dev.lock",
+            "purpose": "pip install --require-hashes requirements.lock + requirements-dev.lock in venv"
           }
         ],
         "smoke_tests": [
           {
-            "command": "cd ~/talos && ./bin/talos version",
-            "expected_signal": "0.20.0-rc.1",
+            "command": "cd talos && . .venv/bin/activate && export PATH=\"$PWD/bin:$PATH\" && talos version",
+            "expected_signal": "0.20.0-rc.2",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "0.20.0-rc.1",
+            "observed_excerpt": "0.20.0-rc.2",
             "setup": [],
             "offline": true
           },
           {
-            "command": "cd ~/talos && . .venv/bin/activate && python -m talos status",
+            "command": "cd talos && . .venv/bin/activate && export PATH=\"$PWD/bin:$PATH\" && python -m talos status",
             "expected_signal": "no event log yet",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "no event log yet at /home/sbx/talos/data/eventlog.db — it has not run.",
+            "observed_excerpt": "no event log yet at /home/sbx/work/talos/data/eventlog.db — it has not run.",
             "setup": [],
             "offline": true
           },
           {
-            "command": "cd ~/talos && . .venv/bin/activate && python -m talos events --tool run_shell",
+            "command": "cd talos && mkdir -p data && . .venv/bin/activate && export PATH=\"$PWD/bin:$PATH\" && python -m talos events --tool run_shell",
             "expected_signal": "nothing matched",
             "exit_code": 0,
             "passed": true,
@@ -179,69 +163,116 @@
             "offline": true
           },
           {
-            "command": "cd ~/talos && . .venv/bin/activate && python -m talos why 4831",
+            "command": "cd talos && . .venv/bin/activate && export PATH=\"$PWD/bin:$PATH\" && python -m talos health",
+            "expected_signal": "status ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "status ok ✓",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd talos && . .venv/bin/activate && export PATH=\"$PWD/bin:$PATH\" && python -m talos why 4831",
             "expected_signal": "no event 4831",
             "exit_code": 1,
             "passed": true,
             "observed_excerpt": "no event 4831 in this log",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "cd talos && . .venv/bin/activate && export PATH=\"$PWD/bin:$PATH\" && python -m talos local-check --provider ollama",
+            "expected_signal": "local privacy check failed",
+            "exit_code": 2,
+            "passed": true,
+            "observed_excerpt": "local privacy check failed: <urlopen error [Errno 111] Connection refused>",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "pip install --require-hashes -r requirements.lock -r requirements-dev.lock",
-            "actually_needed": "git clone https://github.com/talos-kernel/talos.git ~/talos first; the lock files only exist inside the checkout",
+            "readme_said": "python -m talos events --tool run_shell filters event log",
+            "actually_needed": "data/ directory must exist first; without it events/why raise sqlite3.OperationalError: unable to open database file; mkdir -p data fixes it and then returns 'nothing matched'",
             "kind": "readme_wrong"
           },
           {
-            "readme_said": "curl -fsSL https://talos-agent.ch/install.sh | bash runs the full suite and finishes",
-            "actually_needed": "installer aborts after 64 test failures in this box (missing bubblewrap so run_shell refuses, /tmp ancestor-writable skill checks); kept no symlink/config. Fell back to source install and skipped the proof suites.",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "python -m talos events --tool run_shell works after install",
-            "actually_needed": "mkdir -p ~/talos/data ~/talos/workspace && chmod 700 ~/talos/data before querying events; without data/ events crashes with sqlite3.OperationalError: unable to open database file while status handles the missing log gracefully",
-            "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "read install.sh before running it",
-            "actually_needed": "script downloads extra files at run time (tarball, checksum, signature, verifier wheels) that cannot all be read in advance",
+            "readme_said": "python -m talos why 4831 explains allow/deny",
+            "actually_needed": "returns exit 1 with 'no event 4831 in this log' on fresh install - expected empty log behavior",
             "kind": "note"
+          },
+          {
+            "readme_said": "pip install --require-hashes -r requirements.lock -r requirements-dev.lock",
+            "actually_needed": "requires prior git clone and python3 -m venv .venv activation; PATH export PWD/bin needed for talos binary",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show status reporting no event log yet, events filter returning nothing matched, and version printing 0.20.0-rc.1.",
+          "observed": "Screenshots show status reporting no event log yet, events filter returning nothing matched, and version printing 0.20.0-rc.2.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-talos-20261031-002041-b4f8/report.json",
+          "trace_path": "runs/verify/verify-talos-20261101-225841-d9b5/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-talos-20261031-002041-b4f8/check-1-cmd10.judged.png",
-            "runs/verify/verify-talos-20261031-002041-b4f8/check-2-cmd14.judged.png",
-            "runs/verify/verify-talos-20261031-002041-b4f8/check-3-cmd9.judged.png"
+            "runs/verify/verify-talos-20261101-225841-d9b5/check-1-cmd4.judged.png",
+            "runs/verify/verify-talos-20261101-225841-d9b5/check-2-cmd8.judged.png",
+            "runs/verify/verify-talos-20261101-225841-d9b5/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.180339
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.053983,
+        "features": [
+          {
+            "feature": "run AI agent in terminal and Telegram",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Outputs show only health ok and no event log yet, not an agent running."
+          },
+          {
+            "feature": "search, write and run tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows nothing matched, so no tool search or run shown."
+          },
+          {
+            "feature": "run local models via Ollama",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows connection refused error, not a working local model."
+          },
+          {
+            "feature": "review tool outcomes via audit trail",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Outputs show zero events and no event found, not a tool outcome review."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T23:00:23+08:00",
     "quality": {
-      "total": 68.4,
+      "total": 73.3,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.5057,
+          "score": 0.6141,
           "weight": 40.0
         },
         "install_docs": {
@@ -282,7 +313,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 34.13
+      "value": 36.58
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -597,5 +628,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T23:00:23.059167+08:00"
 }

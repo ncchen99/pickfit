@@ -87,7 +87,7 @@
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/treeleaves30760/all-code/main/install.sh -o /tmp/install.sh && echo DOWNLOADED && wc -c /tmp/install.sh",
+          "command": "curl -fsSL https://raw.githubusercontent.com/treeleaves30760/all-code/main/install.sh -o /tmp/install.sh",
           "purpose": "download install.sh for reading before running"
         },
         {
@@ -136,108 +136,6 @@
     "unverified_reason": null,
     "checked_at": "2026-11-01T12:29:31.379378+08:00",
     "runs": [
-      {
-        "id": "verify-all-code-20261031-020854-86bb",
-        "level": "function",
-        "unverified_reason": null,
-        "os": "linux",
-        "arch": "x86_64",
-        "method": "sandbox",
-        "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:09:41.218134+08:00",
-        "tool_version": "2.5.1",
-        "install_method": "script",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "curl -fsSL https://raw.githubusercontent.com/treeleaves30760/all-code/main/install.sh -o /tmp/install.sh && echo DOWNLOADED && wc -c /tmp/install.sh",
-            "purpose": "download install.sh for reading before running"
-          },
-          {
-            "command": "sh /tmp/install.sh",
-            "purpose": "install alc via the README install.sh script"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "alc --version",
-            "expected_signal": "alc 2.5.1",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "alc 2.5.1",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "alc doctor",
-            "expected_signal": "needs attention",
-            "exit_code": 1,
-            "passed": true,
-            "observed_excerpt": "✗ needs attention — 3 issues",
-            "setup": [],
-            "offline": true
-          }
-        ],
-        "pitfalls": [
-          {
-            "readme_said": "curl -fsSL .../install.sh | sh installs alc",
-            "actually_needed": "install still succeeds (exit 0); warning that `--tmux` needs tmux 3.2+ is expected on minimal boxes without root",
-            "kind": "sandbox"
-          }
-        ],
-        "blocking_error": null,
-        "judge": {
-          "verdict": "working",
-          "observed": "alc doctor exits with needs attention listing 3 issues and alc --version prints alc 2.5.1.",
-          "model": "muse-spark-1.3"
-        },
-        "evidence": {
-          "trace_path": "runs/verify/verify-all-code-20261031-020854-86bb/report.json",
-          "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-all-code-20261031-020854-86bb/check-1-cmd4.judged.png",
-            "runs/verify/verify-all-code-20261031-020854-86bb/check-2-cmd3.judged.png"
-          ],
-          "evidence_url": null
-        },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.064302,
-        "features": [
-          {
-            "feature": "Run Claude Code on Codex login",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "needs `codex login` credentials plus `claude` binary; neither available in box"
-          },
-          {
-            "feature": "Launch every agent on one login",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "same `codex login` drives every agent; no login or agent binaries in box"
-          },
-          {
-            "feature": "Mirror sessions to browser for remote control",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "mirroring needs a running agent session (login + agent binary) and a browser page"
-          },
-          {
-            "feature": "Launch agents with chosen provider",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "launching on a chosen provider needs that provider's key/login"
-          }
-        ]
-      },
       {
         "id": "verify-all-code-20261101-122628-ed2b",
         "level": "function",
@@ -347,6 +245,108 @@
             "reason": "needs_account",
             "failure": null,
             "note": "Launch with chosen provider needs API key or local Ollama/vLLM server"
+          }
+        ]
+      },
+      {
+        "id": "verify-all-code-20261031-020854-86bb",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:09:41.218134+08:00",
+        "tool_version": "2.5.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/treeleaves30760/all-code/main/install.sh -o /tmp/install.sh",
+            "purpose": "download install.sh for reading before running"
+          },
+          {
+            "command": "sh /tmp/install.sh",
+            "purpose": "install alc via the README install.sh script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "alc --version",
+            "expected_signal": "alc 2.5.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "alc 2.5.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "alc doctor",
+            "expected_signal": "needs attention",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "✗ needs attention — 3 issues",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL .../install.sh | sh installs alc",
+            "actually_needed": "install still succeeds (exit 0); warning that `--tmux` needs tmux 3.2+ is expected on minimal boxes without root",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "alc doctor exits with needs attention listing 3 issues and alc --version prints alc 2.5.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-all-code-20261031-020854-86bb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-all-code-20261031-020854-86bb/check-1-cmd4.judged.png",
+            "runs/verify/verify-all-code-20261031-020854-86bb/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.064302,
+        "features": [
+          {
+            "feature": "Run Claude Code on Codex login",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs `codex login` credentials plus `claude` binary; neither available in box"
+          },
+          {
+            "feature": "Launch every agent on one login",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "same `codex login` drives every agent; no login or agent binaries in box"
+          },
+          {
+            "feature": "Mirror sessions to browser for remote control",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "mirroring needs a running agent session (login + agent binary) and a browser page"
+          },
+          {
+            "feature": "Launch agents with chosen provider",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "launching on a chosen provider needs that provider's key/login"
           }
         ]
       }
@@ -710,5 +710,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-01T12:29:31.384787+08:00"
+  "updated_at": "2026-11-01T23:02:54.193682+08:00"
 }

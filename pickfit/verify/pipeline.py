@@ -192,7 +192,8 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
         box_usd += confirm_box.usd_per_second() * phases["confirm_box_s"]
         _dump(evidence_dir / "confirm.json", {"plan": plan_failure.to_dict(), "result": confirm.to_dict()})
     if agent.verdict is not None and is_passed(agent.verdict.level):
-        plan = plan_from(agent.verdict, report.commands, rerun_failed=failed_ids(report.features))
+        plan = plan_from(agent.verdict, report.commands, rerun_failed=failed_ids(report.features),
+                         tidy_steps=getattr(box, "shell", "bash") == "bash")
         replay_box = make_box(run_id, "replay")
         box_began = time.monotonic()
         scope = dict(run_id=run_id, scope=f"verify:{task.slug}", scope_cap_usd=limits.scope_cap_usd)

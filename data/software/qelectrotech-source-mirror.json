@@ -46,22 +46,18 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-qelectrotech-source-mirror-20261101-231158-cc91",
+      "run_id": "verify-qelectrotech-source-mirror-20261101-175018-15a0",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo && flatpak remote-ls flathub 2>&1 | grep -i qelectro; echo done1\nflatpak remotes 2>&1",
-          "purpose": "add flathub remote for flatpak --user"
-        },
-        {
-          "command": "flatpak install --user -y flathub org.qelectrotech.QElectroTech",
-          "purpose": "flatpak install org.qelectrotech.QElectroTech from flathub"
+          "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>&1\nflatpak install --user -y flathub org.qelectrotech.QElectroTech 2>&1",
+          "purpose": "add flathub remote and install org.qelectrotech.QElectroTech via flatpak --user"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "flatpak info org.qelectrotech.QElectroTech",
-        "expected_signal": "Version: 0.100"
+        "command": "QT_QPA_PLATFORM=offscreen flatpak run org.qelectrotech.QElectroTech --help",
+        "expected_signal": "Usage : qelectrotech"
       },
       "first_task": "flatpak run org.qelectrotech.QElectroTech"
     },
@@ -82,38 +78,34 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T23:30:35.644509+08:00",
+    "checked_at": "2026-11-01T17:53:15.663915+08:00",
     "runs": [
       {
-        "id": "verify-qelectrotech-source-mirror-20261101-231158-cc91",
+        "id": "verify-qelectrotech-source-mirror-20261101-175018-15a0",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx-gui:242bd3411e2e",
-        "checked_at": "2026-11-01T23:30:35.644509+08:00",
-        "tool_version": null,
+        "image": "pickfit-sbx-gui:d66116882a17",
+        "checked_at": "2026-11-01T17:53:15.663915+08:00",
+        "tool_version": "0.100.0",
         "install_method": "other",
         "replayed": true,
         "steps": [
           {
-            "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo && flatpak remote-ls flathub 2>&1 | grep -i qelectro; echo done1\nflatpak remotes 2>&1",
-            "purpose": "add flathub remote for flatpak --user"
-          },
-          {
-            "command": "flatpak install --user -y flathub org.qelectrotech.QElectroTech",
-            "purpose": "flatpak install org.qelectrotech.QElectroTech from flathub"
+            "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>&1\nflatpak install --user -y flathub org.qelectrotech.QElectroTech 2>&1",
+            "purpose": "add flathub remote and install org.qelectrotech.QElectroTech via flatpak --user"
           }
         ],
         "smoke_tests": [
           {
-            "command": "flatpak info org.qelectrotech.QElectroTech",
-            "expected_signal": "Version: 0.100",
+            "command": "QT_QPA_PLATFORM=offscreen flatpak run org.qelectrotech.QElectroTech --help",
+            "expected_signal": "Usage : qelectrotech",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Version: 0.100",
+            "observed_excerpt": "Usage : qelectrotech [options] [fichier]...",
             "setup": [],
             "offline": true
           },
@@ -129,33 +121,28 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "flatpak run org.qelectrotech.QElectroTech (assumes flathub configured)",
-            "actually_needed": "flatpak remote-add --user flathub https://flathub.org/repo/flathub.flatpakrepo before install",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "GUI should open and save/export dialogs work",
-            "actually_needed": "on this headless Xvfb without window manager, File/Print dialogs render as black overlays blocking interaction, preventing file save/export in operate_gui",
+            "readme_said": "flatpak run org.qelectrotech.QElectroTech",
+            "actually_needed": "needs DISPLAY=:99 via launch_gui; headless --help needs QT_QPA_PLATFORM=offscreen",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows flatpak info for QElectroTech with Version: 0.100 installed. / Screenshot shows QElectroTech main window with menu bar, Projects title-block templates, and Collections panel fully drawn.",
+          "observed": "Screenshot shows Usage line for qelectrotech plus French description and available options. / The screenshot shows QElectroTech's main working window with menu bar, Projects title-blocks list, Collections panel, and Selection properties.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-qelectrotech-source-mirror-20261101-231158-cc91/report.json",
+          "trace_path": "runs/verify/verify-qelectrotech-source-mirror-20261101-175018-15a0/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-qelectrotech-source-mirror-20261101-231158-cc91/check-1-cmd7.judged.png",
-            "runs/verify/verify-qelectrotech-source-mirror-20261101-231158-cc91/replay-5-1.app.judged.png"
+            "runs/verify/verify-qelectrotech-source-mirror-20261101-175018-15a0/check-1-cmd6.judged.png",
+            "runs/verify/verify-qelectrotech-source-mirror-20261101-175018-15a0/replay-7-1.app.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.296447,
+        "cost_usd": 0.043718,
         "gui": {
           "tier": "ui_rendered",
           "screen": "main_ui",
@@ -168,33 +155,33 @@
             "feature": "create diagrams and schematics",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "other",
+            "reason": "needs_display",
             "failure": null,
-            "note": "no failed check in the log; file ~/pickfit-out/diagram.qet missing; dialog black overlay blocked Save As"
+            "note": "create diagrams requires interactive GUI, not exercisable via CLI in headless box"
           },
           {
             "feature": "choose from symbol library",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "other",
+            "reason": "needs_display",
             "failure": null,
-            "note": "requires selecting symbol from library and verifying canvas; no CLI check, GUI check blocked by same dialog issue"
+            "note": "symbol library browsing requires GUI interaction"
           },
           {
             "feature": "create own element collection",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "other",
+            "reason": "needs_display",
             "failure": null,
-            "note": "element editor collection creation needs GUI file save, not attemptable after F1/F4 failures"
+            "note": "element editor requires GUI"
           },
           {
             "feature": "print to PDF and export images",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "other",
+            "reason": "needs_display",
             "failure": null,
-            "note": "no failed check in the log; file ~/pickfit-out/export.pdf missing; Print dialog rendered as black overlay"
+            "note": "print to PDF/export requires GUI project"
           }
         ]
       }
@@ -415,5 +402,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:47+08:00",
-  "updated_at": "2026-11-01T23:30:35.648211+08:00"
+  "updated_at": "2026-11-01T23:09:15.531375+08:00"
 }

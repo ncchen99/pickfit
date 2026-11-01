@@ -93,11 +93,11 @@
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://mithraeums.github.io/hako.sh -o /tmp/hako.sh && ls -l /tmp/hako.sh && wc -c /tmp/hako.sh",
+          "command": "curl -fsSL https://mithraeums.github.io/hako.sh -o /tmp/hako.sh",
           "purpose": "Download installer proxy only"
         },
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/mithraeums/hako-code/main/install.sh -o /tmp/hako-install.sh && wc -c /tmp/hako-install.sh && wc -l /tmp/hako-install.sh",
+          "command": "curl -fsSL https://raw.githubusercontent.com/mithraeums/hako-code/main/install.sh -o /tmp/hako-install.sh",
           "purpose": "Download real installer script"
         },
         {
@@ -131,143 +131,6 @@
     "unverified_reason": null,
     "checked_at": "2026-11-01T13:01:21.862249+08:00",
     "runs": [
-      {
-        "id": "verify-hako-code-20261031-033756-9bd5",
-        "level": "service",
-        "unverified_reason": null,
-        "os": "linux",
-        "arch": "x86_64",
-        "method": "sandbox",
-        "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T03:39:42.161376+08:00",
-        "tool_version": "v0.3.0",
-        "install_method": "script",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "curl -fsSL https://mithraeums.github.io/hako.sh -o /tmp/hako.sh && ls -l /tmp/hako.sh && wc -c /tmp/hako.sh",
-            "purpose": "Download installer proxy only"
-          },
-          {
-            "command": "curl -fsSL https://raw.githubusercontent.com/mithraeums/hako-code/main/install.sh -o /tmp/hako-install.sh && wc -c /tmp/hako-install.sh && wc -l /tmp/hako-install.sh",
-            "purpose": "Download real installer script"
-          },
-          {
-            "command": "sh /tmp/hako-install.sh",
-            "purpose": "Install hako via vetted script"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "hako --help",
-            "expected_signal": "usage: hako [options]",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "usage: hako [options]",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "curl -sS http://127.0.0.1:8787/api/models",
-            "expected_signal": "\"known\":[\"hako-sho\",\"hako-koi\"]",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "{\"installed\":[],\"found\":[],\"known\":[\"hako-sho\",\"hako-koi\"],\"catalog\":[],\"provider\":\"none\",\"model\":\"\"}",
-            "setup": [
-              {
-                "command": "hako --serve --port 8787 --no-color",
-                "background": true,
-                "port": 8787
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "curl -sS http://127.0.0.1:8787/api/sessions",
-            "expected_signal": "\"current\":\"6ae4f224d776\"",
-            "exit_code": 0,
-            "passed": false,
-            "observed_excerpt": "{\"dir\":\"/home/sbx/work\",\"current\":\"6ae4f27370c6\",\"sessions\":[]}",
-            "setup": [
-              {
-                "command": "hako --serve --port 8787 --no-color",
-                "background": true,
-                "port": 8787
-              }
-            ],
-            "offline": null
-          }
-        ],
-        "pitfalls": [
-          {
-            "readme_said": "curl -fsSL https://mithraeums.github.io/hako.sh | sh",
-            "actually_needed": "downloaded proxy and real installer, read both, then ran local file; installer fetched a prebuilt binary tarball verified by sha256 which cannot be read as text",
-            "kind": "note"
-          },
-          {
-            "readme_said": "README badge shows v0.2.9",
-            "actually_needed": "installed v0.3.0 reported as hako v0.3.0",
-            "kind": "note"
-          },
-          {
-            "readme_said": "README documents :providers/:models/:sessions interactive commands",
-            "actually_needed": "used hako --serve API paths /api/models and /api/sessions found by scanning binary; --help and README do not document them",
-            "kind": "note"
-          }
-        ],
-        "blocking_error": null,
-        "judge": {
-          "verdict": "working",
-          "observed": "Screenshots show the models API returning the known models and hako --help showing usage instructions.",
-          "model": "muse-spark-1.3"
-        },
-        "evidence": {
-          "trace_path": "runs/verify/verify-hako-code-20261031-033756-9bd5/report.json",
-          "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-hako-code-20261031-033756-9bd5/check-1-cmd14.judged.png",
-            "runs/verify/verify-hako-code-20261031-033756-9bd5/check-2-cmd4.judged.png"
-          ],
-          "evidence_url": null
-        },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.134581,
-        "features": [
-          {
-            "feature": "Run standalone terminal coding agent",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "other",
-            "failure": null,
-            "note": "its check did not pass in the log; serve root returned embedded studio UI"
-          },
-          {
-            "feature": "Use local models or cloud providers",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_shown",
-            "failure": null,
-            "note": "its check passed, but the output does not show it: Output shows empty installed/found lists with provider none, not a working model."
-          },
-          {
-            "feature": "Read, edit files and run shell",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "needs a provider; bench exits 'no provider configured' with none"
-          },
-          {
-            "feature": "Use persistent sessions and skills",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "other",
-            "failure": null,
-            "note": "its check passed in the agent's box but did not pass again in a fresh box"
-          }
-        ]
-      },
       {
         "id": "verify-hako-code-20261101-125816-0788",
         "level": "function",
@@ -391,6 +254,143 @@
             "reason": "not_shown",
             "failure": null,
             "note": "its check passed, but the output does not show it: Outputs show provider error and server startup with provider none, not persistent sessions or skills use."
+          }
+        ]
+      },
+      {
+        "id": "verify-hako-code-20261031-033756-9bd5",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T03:39:42.161376+08:00",
+        "tool_version": "v0.3.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://mithraeums.github.io/hako.sh -o /tmp/hako.sh",
+            "purpose": "Download installer proxy only"
+          },
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/mithraeums/hako-code/main/install.sh -o /tmp/hako-install.sh",
+            "purpose": "Download real installer script"
+          },
+          {
+            "command": "sh /tmp/hako-install.sh",
+            "purpose": "Install hako via vetted script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "hako --help",
+            "expected_signal": "usage: hako [options]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: hako [options]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -sS http://127.0.0.1:8787/api/models",
+            "expected_signal": "\"known\":[\"hako-sho\",\"hako-koi\"]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"installed\":[],\"found\":[],\"known\":[\"hako-sho\",\"hako-koi\"],\"catalog\":[],\"provider\":\"none\",\"model\":\"\"}",
+            "setup": [
+              {
+                "command": "hako --serve --port 8787 --no-color",
+                "background": true,
+                "port": 8787
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sS http://127.0.0.1:8787/api/sessions",
+            "expected_signal": "\"current\":\"6ae4f224d776\"",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "{\"dir\":\"/home/sbx/work\",\"current\":\"6ae4f27370c6\",\"sessions\":[]}",
+            "setup": [
+              {
+                "command": "hako --serve --port 8787 --no-color",
+                "background": true,
+                "port": 8787
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://mithraeums.github.io/hako.sh | sh",
+            "actually_needed": "downloaded proxy and real installer, read both, then ran local file; installer fetched a prebuilt binary tarball verified by sha256 which cannot be read as text",
+            "kind": "note"
+          },
+          {
+            "readme_said": "README badge shows v0.2.9",
+            "actually_needed": "installed v0.3.0 reported as hako v0.3.0",
+            "kind": "note"
+          },
+          {
+            "readme_said": "README documents :providers/:models/:sessions interactive commands",
+            "actually_needed": "used hako --serve API paths /api/models and /api/sessions found by scanning binary; --help and README do not document them",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the models API returning the known models and hako --help showing usage instructions.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hako-code-20261031-033756-9bd5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hako-code-20261031-033756-9bd5/check-1-cmd14.judged.png",
+            "runs/verify/verify-hako-code-20261031-033756-9bd5/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.134581,
+        "features": [
+          {
+            "feature": "Run standalone terminal coding agent",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; serve root returned embedded studio UI"
+          },
+          {
+            "feature": "Use local models or cloud providers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows empty installed/found lists with provider none, not a working model."
+          },
+          {
+            "feature": "Read, edit files and run shell",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs a provider; bench exits 'no provider configured' with none"
+          },
+          {
+            "feature": "Use persistent sessions and skills",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
           }
         ]
       }
@@ -770,5 +770,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-01T13:01:21.865663+08:00"
+  "updated_at": "2026-11-01T23:02:54.925168+08:00"
 }
