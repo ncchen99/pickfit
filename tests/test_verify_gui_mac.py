@@ -193,3 +193,40 @@ def test_no_new_menu_bar_item_means_no_click():
     result, shown, png = gui_mac.launch(box, "open ~/Applications/X.app", 1, 30)
     assert shown.tier == "process_alive" and box.screen().clicks == []
     assert png == PNG and result.exit_code == 1  # a picture of the failure, which does not pass
+
+
+def test_the_judge_reads_a_macos_launch_in_macos_terms_with_pickfits_menu_bar_note(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    from PIL import Image
+
+    from pickfit.verify import judge
+    from pickfit.verify.replay import CheckResult, RanCommand
+
+    shot = tmp_path / "replay-1.png"
+    Image.new("RGB", (1280, 800)).save(shot)
+    shown = gui_mac.MacGuiLaunch(tier="window", windows=[gui.GuiWindow(**MENU)])
+    stdout = gui_mac.observation(shown, [], clicked=(1044, 15))
+    run = RanCommand(1, "open ~/Applications/X.app", 0, 9.0, False, stdout, "", False, screenshot=str(shot),
+                     gui=shown.to_dict())
+    check = CheckResult(1, run.command, "gui", 0, "gui tier: window", passed=True, offline=True, run=run)
+    seen: dict[str, Any] = {}
+
+    def fake_call(kind: str, body: dict[str, Any], **kw: Any) -> Any:
+        seen["body"] = body
+        out = judge.GuiJudgeOutput(screen="main_ui", observed="the app's menu", error_text=None, evidence_regions=[])
+        return SimpleNamespace(parsed=out, usage=None, cost_usd=0.0, model="m", reasoning_summary=None,
+                               parse_error=None)
+
+    monkeypatch.setattr(judge, "call_meta", fake_call)
+    result = judge.judge_gui("X", check, tmp_path, model="dev", log=lambda s: None)
+    assert result is not None and result.verdict == "working"
+    assert seen["body"]["instructions"] == judge.MAC_GUI_INSTRUCTIONS and "macOS" in judge.MAC_GUI_INSTRUCTIONS
+    text = seen["body"]["input"][0]["content"][0]["text"]
+    assert "pickfit's note: the app showed no window but a menu bar item: pickfit clicked it at 1044,15" in text
+    linux = RanCommand(1, "x", 0, 1.0, False, "gui tier: window", "", False, screenshot=str(shot),
+                       gui={"windows": [MENU], "display": gui.DISPLAY_NOTE})
+    judge.judge_gui("X", CheckResult(1, "x", "gui", 0, "gui tier: window", True, True, run=linux), tmp_path,
+                    model="dev", log=lambda s: None)
+    assert seen["body"]["instructions"] == judge.GUI_INSTRUCTIONS
+    assert "pickfit's note" not in seen["body"]["input"][0]["content"][0]["text"]

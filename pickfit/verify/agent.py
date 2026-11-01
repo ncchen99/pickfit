@@ -400,8 +400,11 @@ MAC_GUI_RULES = """\
 GUI apps: this macOS box shows a desktop where you (sbx) are logged in. Install a desktop (GUI) app as a user \
 would without admin rights: a Homebrew cask with `brew install --cask --appdir=$HOME/Applications <cask>` \
 (you cannot write /Applications; a cask that runs a .pkg installer or needs sudo cannot install here: finish \
-unverified with the reason), or the app's own .dmg or .zip: download it, `hdiutil attach -nobrowse -mountpoint \
-$HOME/mnt/<name> <file>.dmg` (or unzip), copy the .app into ~/Applications, then `hdiutil detach`. Start it with \
+unverified with the reason), or the app's own .dmg or .zip in two cited steps: `curl -fL -o \
+~/Downloads/<file>.dmg <url>`, then `mkdir -p ~/mnt/<name> && hdiutil attach -nobrowse -mountpoint ~/mnt/<name> \
+~/Downloads/<file>.dmg && cp -R ~/mnt/<name>/<App>.app ~/Applications/ && hdiutil detach ~/mnt/<name>` (a .zip: \
+`unzip -q <file>.zip -d ~/Applications`). The replay runs only your cited steps, in a new VM: never cite a step \
+that resumes a download (curl -C -), tests for (ls) or copies a file an earlier try left behind. Start it with \
 launch_gui by its path, `open ~/Applications/<App>.app` (Launch Services may not know a just-installed app by \
 name yet). Start the app only with launch_gui: do not run its executable or a command-line helper it ships with \
 run_command or run_background first (a copy left running makes macOS refuse the launch, or shows a window \
