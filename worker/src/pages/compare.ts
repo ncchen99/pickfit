@@ -7,7 +7,7 @@
  */
 import { bestGuide, OSES, verifiedOn, type Arch, type Catalog, type Entry, type OS } from '../catalog.ts';
 import { featuresOut } from '../features.ts';
-import { day, formOf, KIND, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, system } from '../ui/facts.ts';
+import { day, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, system, kindLine } from '../ui/facts.ts';
 import { esc, link, listOf, SLUG } from '../ui/html.ts';
 import { icon } from '../ui/icons.ts';
 import { age, badge, coverage, fitz, tape } from '../ui/kit.ts';
@@ -39,8 +39,15 @@ export function compareTable(entries: Entry[], opts: Opts): string {
     const top = known.reduce((a, b) => ((low ? b[0] < a[0] : b[0] > a[0]) ? b : a));
     return known.filter(([v]) => v === top[0]).length === 1 ? top[1] : -1;
   };
-  const row = (label: string, cells: string[], best = -1) =>
-    `<tr><th scope="row">${esc(label)}</th>${cells.map((c, i) => `<td>${c}${i === best ? BEST : ''}</td>`).join('')}</tr>`;
+  /** Rows where every tool says the same thing leave the table for one "same for all" line: only differences compete. */
+  const same: string[] = [];
+  const row = (label: string, cells: string[], best = -1) => {
+    if (cols > 1 && cells.every((c) => c === cells[0])) {
+      same.push(`<div><dt>${esc(label)}</dt><dd>${cells[0]}</dd></div>`);
+      return '';
+    }
+    return `<tr><th scope="row">${esc(label)}</th>${cells.map((c, i) => `<td>${c}${i === best ? BEST : ''}</td>`).join('')}</tr>`;
+  };
   const group = (label: string) => `<tr class="grp"><th colspan="${cols + 1}" scope="colgroup">${esc(label)}</th></tr>`;
 
   const head = entries
@@ -50,7 +57,7 @@ export function compareTable(entries: Entry[], opts: Opts): string {
         : '';
       return (
         `<th scope="col"><a href="/tool/${esc(e.slug)}">${esc(e.name)}</a>` +
-        `<div class="small quiet">${esc(KIND[e.category] ?? '')} · ${esc(formOf(e))}</div>` +
+        `<div class="small quiet">${esc(kindLine(e))}</div>` +
         (e.scores?.treasure ? `<div>${badge('gem', 'Hidden gem', { icon: 'gem' })}</div>` : '') +
         `${remove}</th>`
       );
@@ -130,9 +137,12 @@ export function compareTable(entries: Entry[], opts: Opts): string {
   rows.push(row('Last release', entries.map((e) => (e.last_release ? `${esc(day(e.last_release))}<div class="small quiet">${esc(age(e.last_release, opts.now) ?? '')}</div>` : unknown)), bestOf(releases)));
   rows.push(row('Links', entries.map((e) => [link(e.repo_url, 'Source'), e.homepage && e.homepage !== e.repo_url ? link(e.homepage, 'Homepage') : '', `<a href="/tool/${esc(e.slug)}">Profile</a>`].filter(Boolean).join(' · '))));
 
+  // A group heading with no rows left under it goes too.
+  const body = rows.filter(Boolean).filter((r, i, all) => !(r.startsWith('<tr class="grp">') && (i === all.length - 1 || all[i + 1].startsWith('<tr class="grp">'))));
   return (
     `<div class="table-wrap"><table class="dt cmp-table"><caption class="sr">Side-by-side comparison</caption>` +
-    `<thead><tr><td></td>${head}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`
+    `<thead><tr><td></td>${head}</tr></thead><tbody>${body.join('')}</tbody></table></div>` +
+    (same.length ? `<div class="cmp-same"><p class="cmp-same-title">Same for all of them</p><dl class="facts-dl">${same.join('')}</dl></div>` : '')
   );
 }
 
@@ -179,7 +189,7 @@ export function renderCompare(catalog: Catalog, params: URLSearchParams, nonce: 
         `<p class="quiet">Tick <b>Compare</b> on a result or in <a href="/browse">Browse</a>, or add tools here.</p></div></div>`;
   const main =
     `<section class="head mat after-top"><div class="wrap head-row"><div>` +
-    `<h1>Compare tools</h1><p class="lede">The same facts side by side, from pickfit’s own runs: where each tool was verified, what setup takes, what was checked, and what it costs.</p>` +
+    `<h1>Compare tools</h1><p class="lede">Only the differences, from pickfit’s own runs.</p>` +
     `${add}</div>${fitz('comparing', 150, { eager: true })}</div><div class="ruler" aria-hidden="true"></div></section>` +
     `<div class="wrap sec-tight">${body}</div>` +
     `<script type="application/json" data-compare-shown>${JSON.stringify(entries.map((e) => ({ slug: e.slug, name: e.name }))).replace(/</g, '\\u003c')}</script>`;

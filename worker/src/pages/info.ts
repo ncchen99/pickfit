@@ -33,7 +33,7 @@ export function renderHow(catalog: Catalog, nonce: string): string {
     `<h2 id="labels">What the labels mean</h2>` +
     `<h3>Stitching</h3><p>The rufous running stitch on a ticket separates the claim from the run record. pickfit draws it only under evidence from its own run. A tool pickfit has not run, such as a well-known option Fitz mentions from general knowledge, never gets stitches, a badge, steps or a link.</p>` +
     `<h3 id="scores">Quality and popularity</h3><div class="levels">${tape('Quality', 84)}${tape('Popularity', 22, { tone: 'quiet' })}</div>` +
-    `<p>Two scores out of 100, computed apart (formula b3.v5). <b>Quality</b> is a weighted mean: the sandbox run (how far it got, how many install actions, how many README fixes it needed) 40%, how complete the install docs are 25% (Muse Spark grades them, quoting the README), maintenance 10%, issue responsiveness 10%, engineering hygiene 5%; reports from real use join as they accumulate. <b>Popularity</b> compares stars, forks, downloads and Hacker News points with other tools of the same kind. The example tapes above are illustrative.</p>` +
+    `<p>Two scores out of 100, computed apart. <b>Quality</b> is a weighted mean: the sandbox run (how far it got, how many install actions, how many README fixes it needed) 40%, how complete the install docs are 25% (Muse Spark grades them, quoting the README), maintenance 10%, issue responsiveness 10%, engineering hygiene 5%; reports from real use join as they accumulate. <b>Popularity</b> compares stars, forks, downloads and Hacker News points with other tools of the same kind. The example tapes above are illustrative.</p>` +
     `<p>${badge('gem', 'Hidden gem', { icon: 'gem' })} marks a verified tool with quality 80 or more and popularity 45 or less: ${s.gems} tools today. Fitz ranks by fit to your need, not by either score.</p>` +
     `<h3>Features checked</h3><p>The run tries each main feature the README advertises. Some need an account, a GPU, a display or hardware the sandbox doesn’t have; those stay unchecked, and the ticket gives the reason. A feature whose test failed with the tool’s own error is marked as failed.</p>` +
     `<h3>Match labels</h3><p>When the model is paused, pickfit ranks by rules and labels each pick ${badge('pass', 'Good match')} ${badge('caution', 'Partial match')} or ${badge('caution', 'Weak match')} by which of your words its profile mentions. With the model, Muse Spark writes the fit sentence and code checks each of its reasons.</p>` +
@@ -41,7 +41,7 @@ export function renderHow(catalog: Catalog, nonce: string): string {
     `<p>Privacy: no account, no IP address stored. Your sentence goes to Meta’s Muse Spark with storage turned off; pickfit keeps only the conditions it parsed, such as the task and the OS. Compare picks stay in your own browser.</p></div>${rulesLabel()}</div>` +
     `<div class="tip">${fitz('peek', 52)}<h3>Found a tool that should be here?</h3><p>Authors and users can submit a GitHub project through the MCP <code>submit_software</code> tool. It gets the same review: read, installed, replayed, scored. Submitting never earns a better rank.</p><p><a class="more" href="/agents">Connect an agent${icon('arrow-right')}</a></p></div>` +
     `</article></div>`;
-  return renderShell({ nonce, title: 'How pickfit works · pickfit', description: 'How pickfit finds, reads, installs, verifies and matches software, and what each label means.', active: 'how', main });
+  return renderShell({ nonce, title: 'How pickfit works · pickfit', description: 'How pickfit finds, reads, installs, verifies and matches software, and what each label means.', active: 'how', tray: false, main });
 }
 
 export function renderAgents(origin: string, nonce: string): string {
@@ -66,7 +66,7 @@ export function renderAgents(origin: string, nonce: string): string {
     `<h2>Try it</h2><p>Ask your agent in plain words, for example:</p>${command('Find me a free tool that works offline on my Mac to turn meeting recordings into subtitles, and install it.')}` +
     `<div class="tip">${fitz('peek', 52)}<h3>No sign-up, no ads</h3><p>The MCP needs no account and returns no referral links. Answers carry a <code>how_we_know</code> line and the run’s <code>evidence_url</code>, so your agent can tell you where each claim came from.</p></div>` +
     `</article></div>`;
-  return renderShell({ nonce, title: 'Connect your agent · pickfit', description: 'Use pickfit from Claude Code, Claude Desktop, Cursor or any MCP client.', active: 'agents', main });
+  return renderShell({ nonce, title: 'Connect your agent · pickfit', description: 'Use pickfit from Claude Code, Claude Desktop, Cursor or any MCP client.', active: 'agents', tray: false, main });
 }
 
 export function renderNotFound(nonce: string): string {

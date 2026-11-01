@@ -84,7 +84,7 @@ Every component is a string helper in `worker/src/ui/kit.ts` with its CSS in `wo
 | Badge | `.badge` + `-pass` / `-gem` / `-free` / `-caution` / `-quiet` | static |
 | Tape meter | `tape()` | value, empty (not scored: hatched track and "not scored") |
 | Coverage bar | `coverage()` | checked / not checked / failed segments with counts |
-| Fitting ticket | `.ticket` | resting, hover (lift-2), `:target` (stitch ring), entering (stitch draws on) |
+| Fitting ticket | `.pick` | resting, hover (lift-2), `:target` (stitch ring), entering (stitch draws on). At a glance it shows only the name, one fit sentence, a 4-cell verdict (your system, proof, setup, price), the seam, the first install command with Copy and one README-fix line. Reasons with citations, meters, the test record and every step sit behind one "Why it fits and how we know" expander. |
 | Fact sheet | `.facts` | known value, unknown ("not stated") |
 | Seam | `.seam` | verified evidence only |
 | Fitz says | `.says` | speech bubble with a Fitz state; `role="status"` when it reports progress |
@@ -117,6 +117,8 @@ Every component is a string helper in `worker/src/ui/kit.ts` with its CSS in `wo
 | Favicon, nav mark | `icons/fitz-32.svg`, `icons/fitz-16.svg` | |
 | 404 | `expressions/fitz-surprised.svg` | |
 
+**One Fitz per screen** (11/1 distill): Fitz speaks once, where something changed. Results carry one Fitz in the header; model-paused, partial-fit and clarifying notes are a quiet status list under it, not notices of their own.
+
 Rule from the mascot README: Fitz is happy or proud only next to something that passed a test. A partial or weak match gets `neutral` or `thinking`, and an unverified option gets no Fitz at all.
 
 ## 7. Motion
@@ -132,6 +134,10 @@ Rule from the mascot README: Fitz is happy or proud only next to something that 
 - Illustration: Fitz and its props (package, leaf, tape) only. No stock photos, no 3D blobs, no gradients.
 - Texture: the cutting-mat grid on mat fields only. Paper stays flat.
 
-## 9. Refused (from Impeccable's craft floor, and ours)
+## 9. Density (Impeccable distill, 11/1)
+
+One focal point per view: the request field on the home hero, the fit sentence and install command on a ticket, the install steps on a tool page, the list on Browse, the differing rows on Compare (identical rows collapse into "Same for all of them"). Home sections below the hero are a title plus one line each. Browse shows 30 cards and a "Show more"; the text filter searches all of them.
+
+## 10. Refused (from Impeccable's craft floor, and ours)
 
 No eyebrow labels over headings, no gradient text, no glass, no side-stripe accent borders, no hard offset shadows, no nested cards, no identical icon-tile rows as page structure, no "AI is thinking" pulse. Fitz does that job, honestly labelled. No status-chip clutter: at most three badges on a ticket. No number without its source.

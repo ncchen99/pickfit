@@ -129,7 +129,7 @@ export const SCRIPT = `
     for (const a of $$('[data-tray-link]')) a.href = items.length ? href(items) : '/compare';
     if (!tray) return;
     const onCompare = location.pathname === '/compare';
-    tray.hidden = !items.length || onCompare;
+    tray.hidden = !items.length || onCompare || document.body.dataset.tray === 'off';
     document.body.classList.toggle('has-tray', !tray.hidden);
     list.replaceChildren(...items.map((i) => {
       const li = document.createElement('li');
@@ -197,6 +197,16 @@ export const SCRIPT = `
   });
 
   // ---------------------------------------------------------------- browse filter (in this page, no request)
+  const grid = $('[data-grid]');
+  const more = $('[data-more]');
+  if (grid && more) {
+    more.addEventListener('click', () => {
+      const later = $$('.cat-card.later', grid);
+      later.slice(0, 30).forEach((c) => c.classList.remove('later'));
+      const left = later.length - 30;
+      if (left > 0) more.textContent = 'Show ' + Math.min(30, left) + ' more'; else more.parentElement.remove();
+    });
+  }
   const filter = $('[data-filter]');
   if (filter) {
     const cards = $$('[data-text]');
@@ -211,6 +221,7 @@ export const SCRIPT = `
         if (hit) n++;
       }
       if (shownCount) shownCount.textContent = String(n);
+      if (grid) grid.classList.toggle('filtering', q.length > 0);
       if (empty) empty.hidden = n > 0;
     });
   }

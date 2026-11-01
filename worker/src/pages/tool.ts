@@ -9,7 +9,7 @@ import { bestGuide, OSES, verifiedOn, type Catalog, type Entry, type OS } from '
 import { featuresOut } from '../features.ts';
 import { installGuide } from '../install.ts';
 import { EMPTY_FORM, installSection, levelLine } from '../page.ts';
-import { day, formOf, guiSentence, howRan, KIND, KIND_PLURAL, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, system } from '../ui/facts.ts';
+import { day, guiSentence, howRan, KIND, KIND_PLURAL, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, system, kindLine } from '../ui/facts.ts';
 import { esc, link, listOf, safeUrl } from '../ui/html.ts';
 import { icon } from '../ui/icons.ts';
 import { age, badge, compareToggle, coverage, fitz, SEAM, tape, type FitzName } from '../ui/kit.ts';
@@ -28,7 +28,7 @@ function faceFor(entry: Entry): FitzName {
 function factSheet(entry: Entry, now: Date): string {
   const unknown = '<span class="unknown">not stated</span>';
   const rows: [string, string][] = [
-    ['Kind', `${esc(KIND[entry.category] ?? entry.category)}, ${esc(formOf(entry))}`],
+    ['Kind', esc(kindLine(entry))],
     ['Verified on', verifiedOn(entry).length ? esc(listOf(verifiedOn(entry).map((os) => osName(os)))) : '<span class="no">Not verified yet</span>'],
     ['Claims to run on', entry.platforms.length ? esc(listOf(entry.platforms.map((os) => osName(os)))) : unknown],
     ['Price', entry.pricing ? esc(PRICE[entry.pricing]) + (entry.pricing_note ? `<div class="small quiet">${esc(entry.pricing_note)}</div>` : '') : unknown],
@@ -56,16 +56,24 @@ function prerequisites(entry: Entry): string {
     : '<p class="quiet">The README lists nothing you need first.</p>';
 }
 
+/** features.ts writes "<reason>: <the run's note>"; a person needs only the note when there is one. */
+const featureWhy = (detail: string) => {
+  const at = detail.indexOf(': ');
+  return (at > 0 ? detail.slice(at + 2) : detail).replace(/^not checked:?\s*/i, '');
+};
+
 /** Every advertised feature with what the run did about it. */
 function featureList(entry: Entry): string {
   const guide = bestGuide(entry);
   const f = featuresOut(entry, guide);
   if (!f.checked.length && !f.not_checked.length) return '';
   const items = [
-    ...f.checked.map((c) => `<li class="feat-ok">${icon('check')}<div>${esc(c.feature)}<small>Checked with <code>${esc(c.check)}</code></small></div></li>`),
+    ...f.checked.map(
+      (c) => `<li class="feat-ok">${icon('check')}<div>${esc(c.feature)}<details class="feat-check"><summary>Checked</summary><code>${esc(c.check)}</code></details></div></li>`,
+    ),
     ...f.not_checked.map((n) => {
       const failed = n.reason === 'test_failed';
-      return `<li class="${failed ? 'feat-fail' : 'feat-open'}">${icon(failed ? 'x' : 'circle-dashed')}<div>${esc(n.feature)}<small>${failed ? 'Failed: ' : /^not checked/i.test(n.detail) ? '' : 'Not checked: '}${esc(n.detail.replace(/^not checked/, 'Not checked'))}</small></div></li>`;
+      return `<li class="${failed ? 'feat-fail' : 'feat-open'}">${icon(failed ? 'x' : 'circle-dashed')}<div>${esc(n.feature)}<small>${failed ? 'Failed: ' : 'Not checked: '}${esc(featureWhy(n.detail))}</small></div></li>`;
     }),
   ];
   return (
@@ -145,8 +153,8 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
     `${fitz(faceFor(entry), 150, { eager: true })}</div></div><div class="ruler" aria-hidden="true"></div></section>` +
     `<div class="wrap layout"><div>` +
     `<section class="block" aria-labelledby="about-title"><h2 id="about-title">What it is</h2>${about}</section>` +
-    featureList(entry) +
     runs(catalog, entry) +
+    featureList(entry) +
     `</div><aside class="side" aria-label="At a glance">` +
     `<div class="panel"><h2>At a glance</h2>${factSheet(entry, now)}</div>` +
     `<div class="panel"><h2>Measures</h2><div class="t-measure">` +

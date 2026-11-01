@@ -18,6 +18,8 @@ export interface ShellInput {
   active: NavKey;
   /** Classes on <body>: the page's layout mode. */
   bodyClass?: string;
+  /** false on reading pages: the compare tray would only cover the text. */
+  tray?: boolean;
   main: string;
 }
 
@@ -98,7 +100,7 @@ export function renderShell(input: ShellInput): string {
 <link rel="preload" href="${FITZ_BASE}states/fitz-searching.svg" as="image" type="image/svg+xml">
 <style nonce="${nonce}">${CSS}</style>
 </head>
-<body class="${esc(input.bodyClass ?? '')}">
+<body class="${esc(input.bodyClass ?? '')}"${input.tray === false ? ' data-tray="off"' : ''}>
 <a class="skip" href="#main">Skip to content</a>
 ${nav(input.active)}
 <main id="main">${input.main}</main>

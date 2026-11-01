@@ -13,7 +13,7 @@ import type { FindOutput, PickOut } from './find.ts';
 import { fitNote } from './fit.ts';
 import { PIPE_TO_SHELL, type InstallOutput } from './install.ts';
 import { compareTable } from './pages/compare.ts';
-import { day, formOf, guiSentence, howRan, KIND, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system } from './ui/facts.ts';
+import { day, guiSentence, howRan, KIND, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system, kindLine } from './ui/facts.ts';
 import { esc, link, listOf } from './ui/html.ts';
 import { icon } from './ui/icons.ts';
 import { badge, command, compareToggle, coverage, fitz, glance, notice, says, SEAM, tape, type FitzName } from './ui/kit.ts';
@@ -72,7 +72,7 @@ export interface Showcase {
   recent: { entry: Entry; guide: InstallGuide }[];
 }
 
-export function catalogShowcase(catalog: Catalog, recentCount = 6): Showcase {
+export function catalogShowcase(catalog: Catalog, recentCount = 3): Showcase {
   const runs = catalog.entries
     .flatMap((entry) => {
       const guide = bestGuide(entry);
@@ -157,27 +157,27 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
   });
   parts.push(`<ol class="steps">${steps.join('')}</ol>`);
   if (guide.manual_steps.length) {
-    parts.push(`<h5>You do these yourself</h5><ul><li>${guide.manual_steps.map((s) => esc(s.title)).join('</li><li>')}</li></ul>`);
+    parts.push(`<h4>You do these yourself</h4><ul><li>${guide.manual_steps.map((s) => esc(s.title)).join('</li><li>')}</li></ul>`);
   }
   if (guide.verify) {
     parts.push(
-      `<h5>Check that it works</h5>${command(guide.verify.command)}` +
+      `<h4>Check that it works</h4>${command(guide.verify.command)}` +
         `<p class="quiet small">The output should contain “${esc(guide.verify.expected_contains)}”.</p>`,
     );
   }
   if (guide.first_task) {
     const setup = guide.first_task_setup.map((s) => command(s.command)).join('');
-    parts.push(`<h5>First thing to try</h5>${setup}${command(guide.first_task)}`);
+    parts.push(`<h4>First thing to try</h4>${setup}${command(guide.first_task)}`);
   }
   const cfg = guide.mcp_client_config;
   if (cfg) {
     const env = cfg.env.length
-      ? `<h5>You fill in</h5><ul>${cfg.env
+      ? `<h4>You fill in</h4><ul>${cfg.env
           .map((e) => `<li><code translate="no">${esc(e.name)}</code>${e.purpose ? `: ${esc(e.purpose)}` : ''}${e.required ? ' (required)' : ''}</li>`)
           .join('')}</ul>`
       : '';
     parts.push(
-      `<h5>Add it to your agent</h5>${command(cfg.claude_code)}` +
+      `<h4>Add it to your agent</h4>${command(cfg.claude_code)}` +
         `<details class="json"><summary class="small">JSON for Claude Desktop, Cursor and other clients</summary>${command(cfg.json)}</details>` +
         env +
         (cfg.note ? `<p class="quiet small">${esc(cfg.note)}</p>` : ''),
@@ -186,7 +186,7 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
   const issues = readerIssues(guide.known_issues);
   if (issues.length) {
     parts.push(
-      `<h5>Where the README and reality differ</h5><ul class="issues">${issues
+      `<h4>Where the README and reality differ</h4><ul class="issues">${issues
         .map((i) => `<li><span class="quiet">README:</span> ${esc(i.readme_said)}<br><span class="quiet">What worked:</span> ${esc(i.actually_needed)}</li>`)
         .join('')}</ul>`,
     );
@@ -260,8 +260,17 @@ function glanceStrip(pick: PickOut, guide: InstallOutput | undefined, form: Form
   const offline = off === true ? '<small>Works offline</small>' : off === false && form.offline ? '<small>Needed the network</small>' : '';
   cells.push(glance('badge-check', 'Proof', esc(levelLabel(v.level, { gui: v.gui, mcp: guide?.mcp_client_config ?? null })) + offline, passed(v.gui) ? 'pass' : 'caution'));
   if (guide && guide.steps.length) cells.push(glance('terminal', 'Setup', esc(setupWords(guide.steps.length, guide.manual_steps.length)), 'plain'));
-  cells.push(glance('tag', 'Price', esc(PRICE[pick.pricing]), pick.pricing === 'unknown' ? 'quiet' : pick.pricing === 'free' ? 'pass' : 'plain'));
+  cells.push(glance('tag', 'Price', esc(PRICE[pick.pricing]), pick.pricing === 'unknown' ? 'quiet' : 'plain'));
   return `<div class="glance t-glance">${cells.join('')}</div>`;
+}
+
+/** The evidence no one else has, in one line: what the README got wrong and what worked. */
+function readmeFix(guide: InstallOutput): string {
+  const issues = readerIssues(guide.known_issues);
+  const fix = issues.find((i) => i.kind === 'readme_wrong') ?? issues[0];
+  return fix
+    ? `<p class="t-fix">${icon('scissors')}<span><b>README fix:</b> ${esc(fix.actually_needed)}</span></p>`
+    : '';
 }
 
 /** The one action on a ticket: the first command of the run that worked, ready to copy. */
@@ -273,7 +282,9 @@ function quickInstall(guide: InstallOutput | undefined, form: FormValues): strin
   const more = guide.steps.length - 1 + guide.manual_steps.length;
   return (
     `<div class="t-install"><p class="t-install-label">${icon('terminal')}Install${elsewhere ? `, as it ran on ${esc(system(v.os, v.arch))}` : ''}` +
-    `${more ? `<span class="quiet"> · step 1 of ${guide.steps.length + guide.manual_steps.length}</span>` : ''}</p>${command(first.command)}</div>`
+    `${more ? `<span class="quiet"> · step 1 of ${guide.steps.length + guide.manual_steps.length}</span>` : ''}</p>${command(first.command)}` +
+    readmeFix(guide) +
+    `</div>`
   );
 }
 
@@ -295,7 +306,7 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
     .map((t) => `<li>${esc(t)}</li>`)
     .join('');
   const guide = result.guides[pick.slug];
-  const kind = entry ? `${KIND[entry.category] ?? ''} · ${formOf(entry)}` : '';
+  const kind = entry ? kindLine(entry) : '';
   const links = [
     link(pick.repo, `${icon('external-link')}Source code`),
     pick.homepage && pick.homepage !== pick.repo ? link(pick.homepage, `${icon('external-link')}Homepage`) : '',
@@ -339,7 +350,7 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
   );
 }
 
-const BY_RULES = 'these results are ranked by rules (words in your request, verification on your OS, treasure score) without Muse Spark';
+const BY_RULES = 'these results are ranked by rules (the words in your request, then verification on your OS, then the hidden-gem score) without Muse Spark';
 const BUDGET: Record<BudgetStop | 'other', { title: string; text: string }> = {
   web_daily: {
     title: 'Model matching paused until 00:00 UTC',
@@ -366,7 +377,7 @@ const DEGRADED: Record<string, { title: string; text: string }> = {
   },
   model_off: {
     title: 'Model matching is off on this server',
-    text: 'These results are ranked by rules (words in your request, verification on your OS, treasure score).',
+    text: 'These results are ranked by rules: the words in your request, then verification on your OS, then the hidden-gem score.',
   },
 };
 DEGRADED.no_api_key = DEGRADED.model_off;
@@ -419,16 +430,12 @@ export function renderResults(
 ): string {
   const { out } = result;
   const parts: string[] = [];
-  if (out.degraded) {
-    const d = out.degraded_reason === 'over_budget' ? BUDGET[opts.budget ?? 'other'] : (DEGRADED[out.degraded_reason ?? ''] ?? MODEL_FAILED);
-    parts.push(notice('busy', d.title, d.text, 'resting'));
-  }
   const said: string[] = [`<h2 class="results-title">${esc(resultsTitle(out))}</h2>`];
   if (out.considered > 0) said.push(`<p class="match-line">${matchLine(out)}</p>`);
   if (out.picks.length === 0) {
     said.push(`<p class="match-line">${esc(out.coverage_note ?? 'pickfit covers developer CLI tools, local AI tools and MCP servers today.')}</p>`);
   }
-  // A partial or missing fit is said before the picks, not after them, as a caption under Fitz.
+  // A partial or missing fit is said before the picks, not after them.
   const fitFirst = out.picks.length > 0 && (out.match_quality === 'partial' || out.match_quality === 'none') && out.coverage_note;
   const slugs = out.picks.map((p) => p.slug);
   const cmpHref = `/compare?tools=${slugs.map(encodeURIComponent).join(',')}${form.os ? `&amp;os=${form.os}` : ''}${form.arch ? `&amp;arch=${form.arch}` : ''}`;
@@ -437,14 +444,27 @@ export function renderResults(
       (out.picks.length > 1 ? `<a class="btn btn-quiet btn-sm" href="${cmpHref}">${icon('scale')}Compare these</a>` : '') +
       `</div>`
     : '';
-  const head =
-    `<div class="res-head">${says(resultsFitz(out), said.join(''), { size: 104 })}${tools}</div>` +
-    (fitFirst ? `<p class="fit-first">${icon('triangle-alert')}<span>${esc(out.coverage_note)}</span></p>` : '');
-  if (out.clarifying_question) {
-    parts.push(
-      `<div class="ask-note">${fitz('thinking', 64)}<p><span class="lead-in">To narrow it down:</span> ${esc(out.clarifying_question)} Set it above and search again.</p></div>`,
+  // Everything else the search has to say goes in one quiet status list under Fitz: one Fitz per screen.
+  const status: string[] = [];
+  if (out.degraded) {
+    const d = out.degraded_reason === 'over_budget' ? BUDGET[opts.budget ?? 'other'] : (DEGRADED[out.degraded_reason ?? ''] ?? MODEL_FAILED);
+    status.push(`<li class="st st-busy" role="status">${icon('clock')}<span><strong>${esc(d.title)}.</strong> ${esc(d.text)}</span></li>`);
+  }
+  if (fitFirst) {
+    const note = out.coverage_note!;
+    const cut = note.indexOf('. ');
+    status.push(
+      cut > 0 && cut < note.length - 2
+        ? `<li class="st st-caution">${icon('triangle-alert')}<details><summary>${esc(note.slice(0, cut + 1))}</summary>${esc(note.slice(cut + 2))}</details></li>`
+        : `<li class="st st-caution">${icon('triangle-alert')}<span>${esc(note)}</span></li>`,
     );
   }
+  if (out.clarifying_question) {
+    status.push(`<li class="st st-info">${icon('circle-help')}<span><strong>To narrow it down:</strong> ${esc(out.clarifying_question)} Set it above and search again.</span></li>`);
+  }
+  const head =
+    `<div class="res-head">${says(resultsFitz(out), said.join(''), { size: 104 })}${tools}</div>` +
+    (status.length ? `<ul class="res-status">${status.join('')}</ul>` : '');
   // "Built-in is enough" is said before anything is sold.
   if (out.no_install_option) {
     parts.push(
@@ -494,9 +514,9 @@ export function renderResults(
     : '';
   if (outside && out.picks.length === 0) {
     // Nothing fits: Fitz's note on the left, the unverified option beside it.
-    parts.splice(out.degraded ? 1 : 0, 0, `<div class="nofit"><div>${head}</div>${outside}</div>`);
+    parts.unshift(`<div class="nofit"><div>${head}</div>${outside}</div>`);
   } else {
-    parts.splice(out.degraded ? 1 : 0, 0, head);
+    parts.unshift(head);
     if (outside) parts.push(outside);
   }
   if (opts.cached) parts.push('<p class="quiet small">Shown from the same search made in the last few minutes.</p>');
@@ -613,7 +633,7 @@ const RULES: [Parameters<typeof icon>[0], string, string][] = [
 
 export function rulesLabel(): string {
   return (
-    `<div class="label-tag"><h3>Fitz’s rules</h3><ul class="rules">` +
+    `<div class="label-tag"><ul class="rules" aria-label="Fitz’s rules">` +
     RULES.map(([ico, title]) => `<li>${icon(ico)}<b>${esc(title)}</b></li>`).join('') +
     `</ul></div>`
   );
@@ -643,7 +663,7 @@ export function renderPage(input: PageInput): string {
     `<ul class="proof"><li>${icon('book-open')}<span><strong>${stats.listed}</strong> READMEs read</span></li>` +
     `<li>${icon('shield-check')}<span><strong>${stats.replayed}</strong> installed and replayed in a sandbox</span></li>` +
     `<li>${icon('gem')}<span><strong>${stats.gems}</strong> hidden gems</span></li></ul>` +
-    `</div><div class="hero-fitz">${fitz('hello', 320, { eager: true })}<p class="says-note" aria-hidden="true">I try every tool on first.</p></div></div>` +
+    `</div><div class="hero-fitz">${fitz('hello', 320, { eager: true })}</div></div>` +
     `<div class="ruler" aria-hidden="true"></div></section>` +
     `<p id="status" class="sr" aria-live="polite"></p>` +
     `<section id="results" class="results wrap" tabindex="-1" aria-label="Results">${input.results}</section>` +

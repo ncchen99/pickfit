@@ -74,6 +74,13 @@ export const FORM: Record<string, string> = {
 };
 export const formOf = (entry: Pick<Entry, 'kind'>) => FORM[entry.kind] ?? entry.kind.replace(/_/g, ' ');
 
+/** "Local AI · command-line tool"; just "MCP server" when the two say the same thing. */
+export function kindLine(entry: Pick<Entry, 'kind' | 'category'>): string {
+  const kind = KIND[entry.category] ?? '';
+  const form = formOf(entry);
+  return kind.toLowerCase() === form.toLowerCase() || !kind ? form.charAt(0).toUpperCase() + form.slice(1) : `${kind} · ${form}`;
+}
+
 export const PRICE: Record<string, string> = { free: 'Free', freemium: 'Free tier, paid plans', paid: 'Paid', unknown: 'Price not stated' };
 export const PROCESSING: Record<string, string> = { local: 'Runs on your machine', cloud: 'Uses a cloud service', hybrid: 'Local and cloud', unknown: '' };
 

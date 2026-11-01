@@ -5,7 +5,7 @@
  * types never reaches a request URL or a log.
  */
 import { bestGuide, OSES, verifiedOn, type Catalog, type Entry, type OS } from '../catalog.ts';
-import { formOf, KIND, KIND_PLURAL, levelLabel, OS_NAME, osName, PRICE } from '../ui/facts.ts';
+import { formOf, KIND, KIND_PLURAL, levelLabel, OS_NAME, osName, PRICE, kindLine } from '../ui/facts.ts';
 import { esc, listOf } from '../ui/html.ts';
 import { icon } from '../ui/icons.ts';
 import { badge, compareToggle, fitz } from '../ui/kit.ts';
@@ -51,15 +51,18 @@ function href(q: BrowseQuery, change: Partial<BrowseQuery>): string {
 const chipLink = (on: boolean, to: string, text: string) =>
   `<a class="chip${on ? ' on' : ''}" href="${to}"${on ? ' aria-current="true"' : ''}>${on ? icon('check') : ''}${esc(text)}</a>`;
 
-function card(entry: Entry): string {
+/** Cards shown before "Show more" (with the script; without it, all of them). */
+const FIRST = 30;
+
+function card(entry: Entry, i: number): string {
   const oses = verifiedOn(entry);
   const guide = bestGuide(entry);
   const verified = oses.length > 0;
   const text = [entry.name, entry.summary, entry.tags.join(' '), entry.use_cases.join(' '), KIND[entry.category] ?? '', formOf(entry)].join(' ').toLowerCase();
   return (
-    `<li class="cat-card${verified ? '' : ' unverified'}" data-text="${esc(text)}">` +
+    `<li class="cat-card${verified ? '' : ' unverified'}${i >= FIRST ? ' later' : ''}" data-text="${esc(text)}">` +
     `<h3><a href="/tool/${esc(entry.slug)}">${esc(entry.name)}</a></h3>` +
-    `<p class="small quiet">${esc(KIND[entry.category] ?? '')} · ${esc(formOf(entry))}</p>` +
+    `<p class="small quiet">${esc(kindLine(entry))}</p>` +
     `<p>${esc(entry.summary)}</p>` +
     (verified ? '<div class="seam" aria-hidden="true"></div>' : '') +
     `<div class="row">` +
@@ -91,17 +94,20 @@ export function renderBrowse(catalog: Catalog, params: URLSearchParams, nonce: s
     `<label class="find-in">${icon('search')}<span class="sr">Filter these tools</span><input type="search" data-filter placeholder="Filter by name or task" autocomplete="off"></label>` +
     `<fieldset><legend>Kind</legend><div class="chips">${chipLink(!q.kind, href(q, { kind: '' }), 'All')}${KINDS.map((k) => chipLink(q.kind === k, href(q, { kind: k }), KIND_PLURAL[k])).join('')}</div></fieldset>` +
     `<fieldset><legend>Verified on</legend><div class="chips">${chipLink(!q.os, href(q, { os: '' }), 'Any OS')}${OSES.map((o) => chipLink(q.os === o, href(q, { os: o }), OS_NAME[o])).join('')}</div></fieldset>` +
+    `<details class="more-filters"${q.gem || q.all || q.sort !== 'gems' ? ' open' : ''}><summary>More filters</summary>` +
     `<fieldset><legend>Show</legend><div class="chips">${chipLink(q.gem, href(q, { gem: !q.gem }), 'Hidden gems only')}${chipLink(q.all, href(q, { all: !q.all }), `Include ${unverified} not yet verified`)}</div></fieldset>` +
-    `<fieldset><legend>Order</legend><div class="chips">${chipLink(q.sort === 'gems', href(q, { sort: 'gems' }), 'Hidden gems first')}${chipLink(q.sort === 'newest', href(q, { sort: 'newest' }), 'Newest runs')}${chipLink(q.sort === 'name', href(q, { sort: 'name' }), 'A to Z')}</div></fieldset>` +
+    `<fieldset><legend>Order</legend><div class="chips">${chipLink(q.sort === 'gems', href(q, { sort: 'gems' }), 'Hidden gems first')}${chipLink(q.sort === 'newest', href(q, { sort: 'newest' }), 'Newest runs')}${chipLink(q.sort === 'name', href(q, { sort: 'name' }), 'A to Z')}</div></fieldset></details>` +
     `</form>`;
   const main =
     `<section class="head mat after-top"><div class="wrap head-row"><div><h1>Browse verified tools</h1>` +
-    `<p class="lede">Every tool here was installed by pickfit in a fresh sandbox; the stitches mark it. Filter by what you need, open one for the full record, or tick two to compare.</p></div>` +
+    `<p class="lede">Every tool here was installed by pickfit in a fresh sandbox.</p></div>` +
     `${fitz('idle', 150, { eager: true })}</div><div class="ruler" aria-hidden="true"></div></section>` +
     `<div class="wrap layout layout-browse"><aside class="side side-left">${filters}</aside><div>` +
     `<p class="cat-count"><span data-shown>${list.length}</span> of ${list.length} ${q.all ? 'tools' : 'verified tools'}${q.kind ? ` · ${esc(KIND_PLURAL[q.kind])}` : ''}${q.os ? ` · verified on ${esc(OS_NAME[q.os])}` : ''}</p>` +
+    `<h2 class="sr">Tools</h2>` +
     (list.length
-      ? `<ul class="cat-grid">${list.map(card).join('')}</ul>`
+      ? `<ul class="cat-grid" data-grid>${list.map(card).join('')}</ul>` +
+        (list.length > FIRST ? `<p class="pager js-only"><button type="button" class="btn btn-quiet" data-more>Show ${Math.min(FIRST, list.length - FIRST)} more</button></p>` : '')
       : '') +
     `<div class="empty"${list.length ? ' hidden' : ''} data-filter-empty>${fitz('sorry', 80)}<div><p><b>Nothing here fits that filter.</b></p><p class="quiet">Try fewer filters, or <a href="/">describe the job</a> and let Fitz look.</p></div></div>` +
     `</div></div>`;

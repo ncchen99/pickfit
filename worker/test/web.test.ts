@@ -131,7 +131,7 @@ test('a search is find_software plus get_install_guide: reasons, verification, s
   assert.match(first, /class="mine mine-yes">Verified on your OS: it ran on macOS arm64\./);
   assert.match(first, /<details class="install" open><summary>Install steps that worked on macOS arm64/);
   assert.match(first, /brew install fixture\/tap\/fixture-llm-runner/);
-  assert.match(first, /You do these yourself<\/h5><ul><li>Allow incoming connections/);
+  assert.match(first, /You do these yourself<\/h4><ul><li>Allow incoming connections/);
   assert.match(first, /The output should contain “fixture-llm-runner 0\.4\.1”/);
   assert.match(first, /fixture-llm-runner serve --model tiny-test/);
   // Only run on Linux: said plainly, with the Linux steps labelled as such.
@@ -189,7 +189,9 @@ test('nothing fits: the coverage note, no picks', async () => {
 test('a model failure says the results are ranked by rules', async () => {
   const s = site({}, () => Response.json({ error: 'bad request' }, { status: 400 }));
   const html = await (await s.search(MAC_LLM)).text();
-  assert.match(html, /<div class="notice busy" role="status"><img class="fitz fitz-resting"[^>]*><div><h2>Ranked without the model this time<\/h2>/);
+  // Said once, in the status list under Fitz, before any pick.
+  assert.match(html, /<li class="st st-busy" role="status"><svg[^>]*>.*?<\/svg><span><strong>Ranked without the model this time\.<\/strong>/);
+  assert.ok(html.indexOf('st-busy') < html.indexOf('<article class="pick"'));
   assert.match(html, /\d+ verified tools meet your conditions; these are ranked by rules, without a model\./);
   assert.ok(html.includes('<article class="pick"'));
 });
@@ -199,7 +201,7 @@ test('web searches stop calling Meta at WEB_DAILY_CAP_USD; agents keep the rest 
   s.sqlite.prepare('INSERT INTO meta_budget (day, calls, cost_usd) VALUES (?, 1, 2.0)').run('2026-10-30');
   const html = await (await s.search(MAC_LLM)).text();
   assert.equal(s.metaCalls.length, 0);
-  assert.match(html, /<h2>Model matching paused until 00:00 UTC<\/h2>/);
+  assert.match(html, /<strong>Model matching paused until 00:00 UTC\.<\/strong>/);
   assert.ok(html.includes('<article class="pick"'), 'still shows rules results');
   await s.settle();
   assert.equal(events(s, 'find')[0].degraded_reason, 'over_budget');
@@ -312,9 +314,9 @@ test('before any search the page shows real catalog runs, never invented ones', 
   assert.match(fix, /<a href="\/tool\/fixture-llm-runner">Fixture LLM Runner<\/a>/);
   assert.match(fix, /<b>README said<\/b><span>make install<\/span>/);
   assert.match(fix, /<b>What worked<\/b><span>the install script/);
-  // The newest runs: one row per verified tool (6 fixtures), with where and when, linking to its profile.
+  // The newest runs: three rows, each a verified tool with where and when, linking to its profile.
   const runs = html.slice(html.indexOf('<ul class="runs-list">'), html.indexOf('</ul></div></section>'));
-  assert.equal(runs.split('<li class="run-row">').length - 1, 6);
+  assert.equal(runs.split('<li class="run-row">').length - 1, 3);
   assert.match(runs, /<a class="name" href="\/tool\/[a-z0-9-]+">/);
   assert.match(html, /6 of 6 tools installed and replayed\. Only those are ever suggested\./);
   // The counts in the hero are the catalog's.
@@ -386,7 +388,7 @@ test('the total cap stops the page too, and the notice does not promise a reset'
   s.sqlite.prepare('INSERT INTO meta_budget (day, calls, cost_usd) VALUES (?, 1, 39.99)').run('2026-10-20');
   const html = await (await s.search(MAC_LLM)).text();
   assert.equal(s.metaCalls.length, 0);
-  assert.match(html, /<h2>Model matching is paused<\/h2><p>pickfit’s overall budget for Meta model calls is used up/);
+  assert.match(html, /<strong>Model matching is paused\.<\/strong> pickfit’s overall budget for Meta model calls is used up/);
   assert.ok(!html.includes('00:00 UTC'));
 });
 
@@ -582,7 +584,7 @@ test('an MCP server pick shows its handshake and how to add it to an agent', asy
   const pick = html.split('<article class="pick"')[1];
   assert.match(pick, /An MCP client called one of its tools<\/p>/);
   assert.match(pick, /An MCP client handshake over stdio listed its 2 tools \(search_notes, read_note\), and a call to search_notes returned a result\./);
-  assert.match(pick, /<h5>Add it to your agent<\/h5><div class="cmd"><pre translate="no"><code>claude mcp add/);
+  assert.match(pick, /<h4>Add it to your agent<\/h4><div class="cmd"><pre translate="no"><code>claude mcp add/);
   assert.match(pick, /JSON for Claude Desktop, Cursor and other clients/);
   assert.match(pick, /<code translate="no">NOTES_SYNC_TOKEN<\/code>: sync service token \(required\)/);
 });
