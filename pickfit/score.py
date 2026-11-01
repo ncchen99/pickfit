@@ -1126,8 +1126,12 @@ def _score_web(path: Path, record: SoftwareRecord, row: dict[str, Any], *, snaps
     return row
 
 
+def _of_kind(paths: list[Path], kind: str | None) -> list[Path]:
+    return [p for p in paths if json.loads(p.read_text(encoding="utf-8")).get("kind") == kind] if kind else paths
+
+
 def score_records(data_dir: Path, *, db_path: Path | None, model: str, slugs: list[str] | None = None,
-                  force: bool = False, dry_run: bool = False, use_github: bool = True,
+                  kind: str | None = None, force: bool = False, dry_run: bool = False, use_github: bool = True,
                   use_registries: bool = True, concurrency: int = DEFAULT_CONCURRENCY, limit: int | None = None,
                   now: datetime | None = None, log: Callable[[str], None] | None = None,
                   registries: Any = None, **call: Any) -> ScoreSummary:
@@ -1139,6 +1143,7 @@ def score_records(data_dir: Path, *, db_path: Path | None, model: str, slugs: li
     if slugs:
         wanted = set(slugs)
         paths = [p for p in paths if p.stem in wanted]
+    paths = _of_kind(paths, kind)
     if limit is not None:
         paths = paths[:limit]
     snapshots: dict[str, dict[str, Any]] = {}
@@ -1203,7 +1208,7 @@ def score_records(data_dir: Path, *, db_path: Path | None, model: str, slugs: li
     return summary
 
 
-def refresh_records(data_dir: Path, *, slugs: list[str] | None = None, dry_run: bool = False,
+def refresh_records(data_dir: Path, *, slugs: list[str] | None = None, kind: str | None = None, dry_run: bool = False,
                     now: datetime | None = None, log: Callable[[str], None] | None = None) -> ScoreSummary:
     """`pickfit score --refresh`: refresh_scores over the records, writing only scores and updated_at.
     No GitHub, registry or model call. A record whose formula cannot be refreshed is left as it is
@@ -1213,6 +1218,7 @@ def refresh_records(data_dir: Path, *, slugs: list[str] | None = None, dry_run: 
     paths = sorted(data_dir.glob("*.json"))
     if slugs:
         paths = [p for p in paths if p.stem in set(slugs)]
+    paths = _of_kind(paths, kind)
     summary = ScoreSummary()
     for path in paths:
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -1251,7 +1257,7 @@ def main_score(args: Any) -> int:
     started = time.monotonic()
     if getattr(args, "refresh", False):
         summary = refresh_records(Path(args.data_dir) if args.data_dir else DEFAULT_OUT, slugs=args.slug,
-                                  dry_run=args.dry_run, log=lambda line: print(line, file=sys.stderr))
+                                  kind=getattr(args, "kind", None), dry_run=args.dry_run, log=lambda line: print(line, file=sys.stderr))
         out = summary.to_dict()
         out["seconds"] = round(time.monotonic() - started, 1)
         if not args.verbose:
@@ -1261,7 +1267,8 @@ def main_score(args: Any) -> int:
     try:
         summary = score_records(Path(args.data_dir) if args.data_dir else DEFAULT_OUT,
                                 db_path=Path(args.db) if args.db else pipeline_db_path(),
-                                model=resolve_model(args.model), slugs=args.slug, force=args.force,
+                                model=resolve_model(args.model), slugs=args.slug, kind=getattr(args, "kind", None),
+                                force=args.force,
                                 dry_run=args.dry_run, use_github=not args.no_github,
                                 use_registries=not args.no_registries,
                                 concurrency=args.concurrency, limit=args.limit,

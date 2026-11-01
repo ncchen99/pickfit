@@ -699,6 +699,9 @@ def test_score_records_scores_a_web_app_from_its_hn_post_with_no_model_or_github
     # Without lookups, the stored points stay; the same scores are not rewritten.
     again = score_records(out, db_path=None, model=MODEL, use_github=False, use_registries=False, now=LATER)
     assert again.unchanged == ["fixture-web-sketch"]
+    # --kind picks records by kind.
+    assert score_records(out, db_path=None, model=MODEL, kind="cli_tool", use_github=False, use_registries=False).rows == []
+    assert len(score_records(out, db_path=None, model=MODEL, kind="web_app", use_github=False, use_registries=False).rows) == 1
 
 
 def test_refresh_follows_the_web_run_and_clears_a_web_app_scored_by_another_formula() -> None:

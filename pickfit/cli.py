@@ -277,6 +277,7 @@ def _add_score_command(sub: argparse._SubParsersAction) -> None:
 
     s = sub.add_parser("score", help="quality, popularity and treasure scores for data/software (rubric call is paid)")
     s.add_argument("--slug", action="append", help="score only this record (repeatable; default all)")
+    s.add_argument("--kind", default=None, help="score only records of this kind, e.g. web_app (with --slug: both)")
     s.add_argument("--limit", type=int, default=None, help="score at most N records (in slug order)")
     s.add_argument("--data-dir", default=None, help="records to score (default data/software)")
     s.add_argument("--db", default=None, help="pipeline database with the GitHub snapshots (default runs/pipeline.db)")
