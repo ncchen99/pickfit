@@ -892,6 +892,15 @@ class VerificationRun(_Model):
         exclude_if=lambda value: value is None,
         description="MCP servers: the handshake a fresh box completed; required for a passed run of one.",
     )
+    gpu: str | None = Field(
+        default=None, max_length=80, exclude_if=lambda value: value is None,
+        description="The GPU the box had, as its driver named it (e.g. Tesla T4); none: the box had no GPU.",
+    )
+    microphone: str | None = Field(
+        default=None, max_length=200, exclude_if=lambda value: value is None,
+        description=("The box's microphone: a simulated one that played words pickfit spoke for each check; "
+                     "none: the box had no audio input."),
+    )
     features: list[FeatureCheck] = Field(
         default=[],
         max_length=FEATURES_MAX,

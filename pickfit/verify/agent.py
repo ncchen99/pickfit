@@ -42,6 +42,7 @@ from pickfit.meta import MetaResult, ToolCall, call_meta, resolve_model
 from pickfit.schema import InstallMethod, PitfallKind, UnverifiedReason, VerificationLevel, is_passed
 from pickfit.verify import gui
 from pickfit.verify import gui_operate
+from pickfit.verify.audio import ListenArgs, run_listen
 from pickfit.verify.box import Box, BoxError, ExecResult
 from pickfit.verify import features as feature_checks
 from pickfit.verify.features import FINISH_FEATURES, FinishFeature, resolve_features
@@ -215,16 +216,39 @@ OPERATE_GUI_TOOL = _fn(
              "folder to search ending in / (e.g. ~/ for wherever the app keeps its data); else null.")},
          "contains": {"type": "array", "items": {"type": "string"}, "description": (
              "Text the result must hold ({nonce} allowed). For screen_text, a result the app computes or "
-             "converts, never the text typed.")},
+             "converts, never the text typed. In a box with a simulated microphone, the item {spoken} stands for "
+             "each word pickfit speaks into it during the operation.")},
          "format": {"type": ["string", "null"], "enum": [*gui_operate.FORMATS, None],
                     "description": "file: the format the file must have, or null."}},
          "required": ["kind", "path", "contains", "format"], "additionalProperties": False}},
     ["command", "wait_s", "feature", "goal", "inputs", "check"])
 GUI_TOOLS: list[dict[str, Any]] = [*TOOLS[:-1], LAUNCH_GUI_TOOL, OPERATE_GUI_TOOL, FINISH_TOOL]
+LISTEN_TOOL = _fn(
+    "listen", "Check a feature that records speech (dictation, transcription, voice commands) with a command-line "
+    "tool: pickfit speaks a short sentence of fresh random words into the box's simulated microphone, again and "
+    "again, while it runs your command as the box user, then checks that every word is in what the command printed "
+    "or in the file it wrote. Nobody sees the words before the check, so the command cannot hold them. Returns its "
+    "command_id and pickfit's own lines, ending with `mic check: passed` or `mic check: failed (why)`, then the "
+    "command's own output. Uses one unit of the command budget.",
+    {"command": {"type": "string", "description": (
+        "The tool's own command that records from the microphone and transcribes, as a user would run it; give it "
+        "a recording time of about 8-15 seconds when it takes one.")},
+     "timeout_s": {"type": "integer", "description": "Kill after this many seconds (max 600)."},
+     "feature": {"type": ["integer", "null"], "description": "The listed feature this exercises: 1 for F1."},
+     "check": {"type": "object", "description": "Where pickfit looks for the words.", "properties": {
+         "kind": {"type": "string", "enum": ["output", "file"],
+                  "description": "output: what the command printed; file: a file it wrote."},
+         "path": {**_NULL_STR, "description": "file: the file (or a folder ending in /); else null."}},
+         "required": ["kind", "path"], "additionalProperties": False}},
+    ["command", "timeout_s", "feature", "check"])
 
 
 def tools_for(box: Box) -> list[dict[str, Any]]:
-    """TOOLS with run_command naming the box's shell (bash, or pwsh in the Windows box)."""
+    """The box's tools: GUI tools with a display, listen with a simulated microphone, and run_command naming the
+    box's shell (bash, or pwsh in the Windows box)."""
+    if box.display or box.audio:
+        tools = GUI_TOOLS if box.display else TOOLS
+        return [*tools[:-1], *([LISTEN_TOOL] if box.audio else []), FINISH_TOOL]
     if box.shell == "bash":
         return TOOLS
     tools = json.loads(json.dumps(TOOLS))
@@ -454,6 +478,19 @@ not the app's). A Tkinter \
 app needs /usr/bin/python3 (it has tkinter; python3.12 on PATH does not): make its venv with \
 /usr/bin/python3 -m venv."""
 
+MIC_RULES = """\
+
+Microphone: this box has a simulated microphone, PulseAudio's default source (ALSA's default device records from \
+it too; PortAudio, ffmpeg -f pulse, arecord and parecord all work). During a check pickfit plays a short spoken \
+English sentence into it on a loop. For a feature that records or transcribes speech, install the tool and the \
+speech model it needs (the smallest that works; a download is a cited step), then check the feature: a \
+command-line tool with listen (its own command that records and transcribes, checked on what it prints or the \
+file it writes); a desktop app with operate_gui, putting {spoken} in check.contains (for example a dictation app: \
+start recording, wait about 10 seconds, stop, save the transcript to ~/pickfit-out/; check that file for \
+{spoken}). Never put {spoken} in a goal, an input or a command, and never look for the words another way: the \
+tool must hear them. Cite a passing listen as a smoke test with expected_signal `mic check: passed`. A listen \
+reruns in the fresh box offline with new words, so the tool must transcribe locally."""
+
 # Public models small enough for an inference check, licenses and URLs checked 2026-10-29.
 # stories260K: karpathy/tinyllamas weights (MIT), GGUF by ggml-org. SmolLM2-135M-Instruct:
 # HuggingFaceTB (Apache-2.0), GGUF by bartowski; Ollama's smollm2:135m is the same model.
@@ -522,8 +559,9 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
         f"The README is saved in the work dir as README.md ({len(task.readme)} characters).",
     ]
     if box.gpu:
-        lines.insert(3, f"GPU: one NVIDIA {box.gpu} (driver and nvidia-smi present, no CUDA toolkit), so GPU "
-                        "examples can run here; use the smallest model the tool supports.")
+        lines.insert(3, f"GPU: one NVIDIA {box.gpu_name or box.gpu} (driver, libcuda and nvidia-smi present, no CUDA "
+                        "toolkit: use builds or wheels that bring their CUDA runtime), so GPU examples can run here; "
+                        "use the smallest model the tool supports.")
     if box.display and ex.kind.value == "desktop_app":
         lines.insert(3, "This is a desktop (GUI) app: install the app itself (a release build if there is one for "
                         "Linux; an AppImage runs with --appimage-extract-and-run, no FUSE needed), then start it "
@@ -606,6 +644,7 @@ class CommandRecord:
     gui: dict[str, Any] | None = None  # launch_gui, operate_gui: what the launch showed (gui.GuiLaunch)
     operate: dict[str, Any] | None = None  # operate_gui: the spec and how it went (gui_operate.Operation)
     unmasked_from: str | None = None  # run_command: the model's command, when pickfit ran it without its mask
+    listen: dict[str, Any] | None = None  # listen: the spec and how it went (audio.Listening)
 
 
 @dataclass
@@ -694,7 +733,13 @@ class VerifyAgent:
                                                 minutes=round(limits.max_seconds / 60),
                                                 stdout_chars=f"{STDOUT_CHARS:,}", box_kind=box.kind,
                                                 box_rule=box.user_rule) + (GUI_RULES if box.display else "")
-        self.tools = GUI_TOOLS if box.display else tools_for(box)
+        if box.gpu:  # a GPU example is a check here
+            self.instructions = (self.instructions.replace("needs no account, API key, GPU or GUI",
+                                                           "needs no account, API key or GUI (a GPU is here)")
+                                 .replace("a microphone, a camera, a GPU or a model", "a microphone, a camera or a model"))
+        if box.audio:  # a microphone too
+            self.instructions = self.instructions.replace("a microphone, a camera", "a camera") + MIC_RULES
+        self.tools = tools_for(box)
         self.commands_used = 0
         self.finish_retries = 0
         self.verdict: LogVerdict | None = None
@@ -720,7 +765,7 @@ class VerifyAgent:
         self.started = self.clock()
         box = self.box
         self.report.box = {"runner": box.runner, "image": box.image, "os": box.os, "arch": box.arch,
-                           "start_s": getattr(box, "start_s", None)}
+                           "start_s": getattr(box, "start_s", None), "gpu": box.gpu_name, "audio": box.audio}
         self._say(f"verify {self.task.slug} · run {self.run_id} · {self.model} · mode {self.mode} · "
                   f"{box.runner} {box.os}/{box.arch}")
         try:
@@ -956,6 +1001,8 @@ class VerifyAgent:
                 return self._launch_gui(_LaunchGuiArgs.model_validate(raw), turn)
             if call.name == "operate_gui" and self.box.display:
                 return self._operate_gui(OperateArgs.model_validate(raw), turn)
+            if call.name == "listen" and self.box.audio:
+                return self._listen(ListenArgs.model_validate(raw), turn)
         except (ValueError, ValidationError) as err:
             self._say(f"  {call.name}: bad arguments")
             return f"error: invalid arguments for {call.name}: {_one_line(str(err), 600)}"
@@ -1100,18 +1147,31 @@ class VerifyAgent:
                      operate={"spec": args.model_dump(), **op.to_dict()})
         return self._format_exec(n, result, [], args.wait_s)
 
+    def _listen(self, args: ListenArgs, turn: int) -> str:
+        refused = self._budget_left()
+        if refused:
+            self._say(f"  ♪ {_one_line(args.command, 200)} → refused (budget)")
+            return refused
+        self.commands_used += 1
+        n = self.commands_used
+        args = args.model_copy(update={"timeout_s": self._timeout(args.timeout_s)})
+        self._say(f"  ♪ F{args.feature or '?'} · {_one_line(args.command, 200)}   [cmd {n}/{self.limits.max_commands}]")
+        result, heard = run_listen(self.box, args, n, log=self._say)
+        self._record(turn, "listen", args.command, result, listen={"spec": args.model_dump(), **asdict(heard)})
+        return self._format_exec(n, result, [], args.timeout_s)
+
     def _record(self, turn: int, tool: str, command: str, result: ExecResult,
                 hints: list[RuleHit] | None = None, purpose: str | None = None,
                 port: int | None = None, wait_s: int | None = None, screenshot: str | None = None,
                 gui: dict[str, Any] | None = None, operate: dict[str, Any] | None = None,
-                unmasked_from: str | None = None) -> None:
-        budgeted = tool in ("run_command", "run_background", "launch_gui", "operate_gui")
+                unmasked_from: str | None = None, listen: dict[str, Any] | None = None) -> None:
+        budgeted = tool in ("run_command", "run_background", "launch_gui", "operate_gui", "listen")
         self.report.commands.append(CommandRecord(
             turn=turn, tool=tool, command=command, exit_code=result.exit_code, seconds=result.seconds,
             timed_out=result.timed_out, stdout=result.stdout, stderr=result.stderr,
             hints=[asdict(h) for h in hints or []], purpose=purpose,
             command_id=self.commands_used if budgeted else None, port=port, wait_s=wait_s,
-            screenshot=screenshot, gui=gui, operate=operate, unmasked_from=unmasked_from))
+            screenshot=screenshot, gui=gui, operate=operate, unmasked_from=unmasked_from, listen=listen))
         if not budgeted:
             return
         status = "timed out" if result.timed_out else f"exit {result.exit_code}"

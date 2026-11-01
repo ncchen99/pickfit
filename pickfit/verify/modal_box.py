@@ -51,6 +51,16 @@
   the box user's, nor bind-mount /proc/self/ns/user, so the shim drops --unshare-net and that bind and the app shares
   the box user's network namespace, which the offline cut covers. Measured 2026-11-01: a GNOME app installed in 43 s
   and showed its window offline.
+- gpu="T4" (or L4, A10) asks Modal for an NVIDIA card. Modal gives one only under gVisor (measured 2026-11-02:
+  runtime="vm" with a GPU is refused, "GPUs are not supported with the VM runtime"): gVisor's nvproxy adds
+  /dev/nvidiactl, /dev/nvidiaN, /dev/nvidia-uvm and /dev/nvidia-uvm-tools (mode 0666) and passes only the driver
+  calls it knows to the host's driver; Modal mounts the driver's libraries and nvidia-smi (no CUDA toolkit). The
+  box user reaches the card from its network namespace with no capabilities; nothing else about the box changes.
+  Root reads the card's name with nvidia-smi at start (the run records it), and a box whose card does not answer
+  fails to start. The limits test's gpu_contained probe checks the box user's devices.
+- audio=True adds AUDIO_PACKAGES and a simulated microphone (audio.py): root starts PulseAudio as DISPLAY_UID in the
+  display's network namespace (made for an audio box without a display too); the box user's apps reach it by its
+  socket file, as they reach Xvfb.
 - Commands name their programs by absolute path: the box user's ~/.local/bin comes first on its PATH.
 
 Credentials come from MODAL_TOKEN_ID / MODAL_TOKEN_SECRET in .env and go to
@@ -84,6 +94,7 @@ from pickfit.verify.box import (
     _Capture,
     sandbox_image_tag,
 )
+from pickfit.verify.audio import AUDIO_PACKAGES, PULSE_SERVER, pulse_script
 from pickfit.verify.gui import DISPLAY, DISPLAY_UID, EVIDENCE_DIR, GUI_PACKAGES, HARNESS_PATH, PYTHON, xvfb_script
 
 APP_NAME = "pickfit-verify"
@@ -96,6 +107,7 @@ GIB_USD_PER_S = 0.00000667
 # plain rate (same note, read 2026-10-28). Only the small cards: a local AI
 # tool's smoke test runs the smallest model it supports.
 GPU_USD_PER_S = {"T4": 0.59 / 3600, "L4": 0.80 / 3600, "A10": 1.10 / 3600}
+GPU_NAME = "/usr/bin/nvidia-smi --query-gpu=name --format=csv,noheader"  # root, at start: the card the run records
 BOX_UID = 1000
 NET_UID = 1002  # gVisor: owns the box user's network namespace and runs its uplink; root only inside that namespace
 UPLINK = "/usr/bin/slirp4netns"
@@ -231,17 +243,17 @@ os.execv(sys.argv[1], sys.argv[1:])
 """
 
 
-def image_layers(runtime: str = "gvisor", display: bool = False) -> tuple[str, tuple[str, ...]]:
+def image_layers(runtime: str = "gvisor", display: bool = False, audio: bool = False) -> tuple[str, tuple[str, ...]]:
     """(published image name, apt packages added on top of sandbox.Dockerfile) for a kind of box.
 
     The plain box keeps `pickfit-sbx:<Dockerfile hash>`; a variant hashes the Dockerfile and its packages.
     """
     packages = (*(VM_PACKAGES if runtime == "vm" else ()), *(GUI_PACKAGES if display else ()),
-                *(FLATPAK_PACKAGES if display else ()))
+                *(FLATPAK_PACKAGES if display else ()), *(AUDIO_PACKAGES if audio else ()))
     if not packages:
         return sandbox_image_tag(), ()
     digest = hashlib.sha256(SANDBOX_DOCKERFILE.read_bytes() + "\n".join(packages).encode()).hexdigest()[:12]
-    kinds = "-".join(k for k, on in (("vm", runtime == "vm"), ("gui", display)) if on)
+    kinds = "-".join(k for k, on in (("vm", runtime == "vm"), ("gui", display), ("audio", audio)) if on)
     return f"pickfit-sbx-{kinds}:{digest}", packages
 
 
@@ -252,14 +264,14 @@ def modal_client() -> Any:
 
 
 def publish_image(client: Any, app: Any, *, log: Callable[[str], None] = print, runtime: str = "gvisor",
-                  display: bool = False) -> str:
+                  display: bool = False, audio: bool = False) -> str:
     """Build the sandbox image from sandbox.Dockerfile (plus the variant's packages) and publish it.
 
     Modal caches the build, so an unchanged Dockerfile takes a few seconds.
     """
     import modal
 
-    name, packages = image_layers(runtime, display)
+    name, packages = image_layers(runtime, display, audio)
     began = time.monotonic()
     image = modal.Image.from_dockerfile(SANDBOX_DOCKERFILE, context_dir=SANDBOX_DOCKERFILE.parent,
                                         ignore=lambda path: True)
@@ -272,13 +284,13 @@ def publish_image(client: Any, app: Any, *, log: Callable[[str], None] = print, 
 
 
 def ensure_published_image(log: Callable[[str], None] = print, *, runtime: str = "gvisor",
-                           display: bool = False) -> str:
+                           display: bool = False, audio: bool = False) -> str:
     """Publish the image for the current Dockerfile before parallel boxes start; returns its name."""
     import modal
 
     client = modal_client()
     app = modal.App.lookup(APP_NAME, create_if_missing=True, client=client)
-    return publish_image(client, app, log=log, runtime=runtime, display=display)
+    return publish_image(client, app, log=log, runtime=runtime, display=display, audio=audio)
 
 
 def _missing_image(err: Exception) -> bool:
@@ -386,7 +398,8 @@ class ModalBox(Box):
 
     def __init__(self, *, limits: BoxLimits = BoxLimits(), tags: dict[str, str] | None = None,
                  app_name: str = APP_NAME, client: Any = None, gpu: str | None = None,
-                 runtime: str = "gvisor", display: bool = False, log: Callable[[str], None] = print) -> None:
+                 runtime: str = "gvisor", display: bool = False, audio: bool = False,
+                 log: Callable[[str], None] = print) -> None:
         self.xvfb_pid: int | None = None
         if gpu is not None and gpu not in GPU_USD_PER_S:
             raise ValueError(f"gpu must be one of {sorted(GPU_USD_PER_S)}, got {gpu!r}")
@@ -399,7 +412,8 @@ class ModalBox(Box):
         self.runtime = runtime
         self.runner = f"modal-{runtime}"
         self.display = DISPLAY if display else None
-        self.image = image_layers(runtime, display)[0]
+        self.audio = audio
+        self.image = image_layers(runtime, display, audio)[0]
         self.tags = {"pickfit": "verify", **(tags or {})}
         self.app_name = app_name
         self.client = client
@@ -410,7 +424,8 @@ class ModalBox(Box):
         self.network_enabled = True
         self.sandbox_id: str | None = None
         self.netns_pid: int | None = None  # gVisor: the holder of the box user's network namespace
-        self.display_netns_pid: int | None = None  # display boxes: the holder of the display's namespace
+        self.display_netns_pid: int | None = None  # display and audio boxes: the holder of the harness's namespace
+        self.pulse_pid: int | None = None  # audio boxes: pickfit's PulseAudio server
 
     # -- lifecycle
 
@@ -434,7 +449,7 @@ class ModalBox(Box):
         began = time.monotonic()
         self.client = self.client or modal_client()
         app = modal.App.lookup(self.app_name, create_if_missing=True, client=self.client)
-        self.image = image_layers(self.runtime, self.display is not None)[0]
+        self.image = image_layers(self.runtime, self.display is not None, self.audio)[0]
 
         def create() -> Any:
             return modal.Sandbox.create("sleep", str(self.limits.lifetime_s), app=app, client=self.client,
@@ -447,7 +462,7 @@ class ModalBox(Box):
                 if not _missing_image(err):
                     raise
                 publish_image(self.client, app, log=self.log, runtime=self.runtime,  # first box after a change
-                              display=self.display is not None)
+                              display=self.display is not None, audio=self.audio)
                 self.sandbox = create()
         except Exception as err:
             raise BoxError(f"Modal sandbox create failed: {type(err).__name__}: {err}") from err
@@ -469,12 +484,18 @@ class ModalBox(Box):
                                                   as_root=True)))
         steps.append(("box setup", self._exec_raw(["/usr/bin/chown", "-R", f"{BOX_UID}:{BOX_UID}", BOX_HOME], 60,
                                                   as_root=True)))
-        if self.display:  # root starts it as DISPLAY_UID: the box user can draw on it, not kill or replace it
+        if self.gpu:  # the card Modal attached, as its driver names it; none answering is a failed start
+            card = self._exec_raw(["/usr/bin/bash", "-c", GPU_NAME], 60, as_root=True)
+            steps.append(("the GPU", card))
+            self.gpu_name = next((line.strip() for line in card.stdout.splitlines() if line.strip()), None)
+            self._fail_on(steps, missing=not self.gpu_name)
+        if self.display or self.audio:  # the harness's own network namespace, loopback only
             held = self._exec_raw(["/usr/bin/bash", "-c", display_netns_script(self.runtime)], 60, as_root=True)
             pid = next((line.split()[1] for line in held.stdout.splitlines() if line.startswith("netns_pid ")), "")
             self.display_netns_pid = int(pid) if pid.isdigit() else None
             steps.append(("the display's network namespace", held))
             self._fail_on(steps, missing=self.display_netns_pid is None)
+        if self.display:  # root starts it as DISPLAY_UID: the box user can draw on it, not kill or replace it
             script = xvfb_script(tuple(self.seccomp()), tuple(self.display_enter()))
             xvfb = self._exec_raw(["/usr/bin/bash", "-c", script], 60, as_root=True)
             steps.append(("the virtual display", xvfb))
@@ -488,6 +509,14 @@ class ModalBox(Box):
             if self.runtime == "gvisor":
                 steps.append(("flatpak's bubblewrap", self._exec_raw(["/usr/bin/bash", "-c", INSTALL_BWRAP_SHIM], 30,
                                                                      as_root=True, stdin=BWRAP_SHIM_SOURCE.encode())))
+        if self.audio:  # root starts it as DISPLAY_UID: the box user records from it, cannot reconfigure or stop it
+            drop = (*self.display_enter(), *_drop_to(DISPLAY_UID), *self.seccomp(), "/usr/bin/env", "-i",
+                    f"PATH={HARNESS_PATH}", f"HOME={EVIDENCE_DIR}", "LANG=C.UTF-8")
+            pulse = self._exec_raw(["/usr/bin/bash", "-c", pulse_script(drop)], 60, as_root=True)
+            steps.append(("the simulated microphone", pulse))
+            pid = next((line.split()[1] for line in pulse.stdout.splitlines() if line.startswith("pulse_pid ")), "")
+            self.pulse_pid = int(pid) if pid.isdigit() else None
+            self._fail_on(steps, missing=self.pulse_pid is None)
         self._fail_on(steps, missing=bool(self.display and self.xvfb_pid is None))
         self.start_s = round(time.monotonic() - began, 2)
 
@@ -526,6 +555,8 @@ class ModalBox(Box):
         env = [f"{key}={value}" for key, value in BOX_ENV.items()]
         if self.display and self.runtime == "gvisor":
             env.append(f"FLATPAK_BWRAP={BWRAP_SHIM}")
+        if self.audio:
+            env.append(f"PULSE_SERVER={PULSE_SERVER}")
         return [*self.enter(), *_drop_to(BOX_UID), *self.seccomp(), "/usr/bin/env", "-i", *env, "/usr/bin/bash", "-c",
                 guard]
 

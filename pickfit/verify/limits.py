@@ -24,7 +24,14 @@ runs the box user in its own network namespace and cuts that namespace's only
 uplink, measured 2026-10-31). A gVisor box also checks, offline, that the box
 user cannot enter the box's own network namespace or the uplink's, signal the
 uplink's uid or add a route, and that only the namespace's holder is left of
-that uid (no uplink runs).
+that uid (no uplink runs). A GPU box (gVisor only) also checks that the card
+answers the box user and that it adds only NVIDIA's four device nodes, which
+gVisor's nvproxy serves (gpu_contained); the run records the card's name.
+A box with a simulated microphone (audio.py) checks that pickfit's PulseAudio
+runs as the display uid with no network, refuses the box user's module loads,
+exit and kill; that the box user records pickfit's words through ALSA and
+PulseAudio while they play and silence after; and that while they play no
+command line, environment, stream or module it can read holds them.
 
 A box with a display checks that Xvfb runs as pickfit's display uid, survives
 the box user's kill and a second server on :99, does not listen on TCP; that the
@@ -43,7 +50,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from pickfit.ledger import taipei_now
-from pickfit.verify import gui
+from pickfit.verify import audio, gui
 from pickfit.verify.box import Box, BoxError, ExecResult
 
 PYPI = "curl -sS -I -m 15 -o /dev/null -w '%{http_code}' https://pypi.org/simple/pip/"
@@ -220,6 +227,39 @@ params = ctypes.create_string_buffer(120)
 fd = libc.syscall(425, 4, params)
 print("io_uring fd", fd) if fd >= 0 else print("io_uring refused errno", ctypes.get_errno())
 PICKFIT_PY"""
+# A GPU box (gVisor only): the card answers the box user, and its devices are the plain box's plus NVIDIA's.
+GPU_PROBE = r"""nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>&1; echo "smi_exit $?"
+nvidia-smi --query-compute-apps=pid,process_name --format=csv,noheader 2>&1 | sed 's/^/app /'
+echo "kernel $(uname -r)"
+find /dev \( -type c -o -type b \) -printf 'dev %y %P\n' 2>&1; true"""
+# What a plain gVisor box gives the box user (measured 2026-11-02), and what nvproxy adds for the card.
+PLAIN_DEVICES = ("null", "zero", "full", "random", "urandom", "tty", "pts/ptmx", "net/tun", "fuse")
+GPU_DEVICES = re.compile(r"nvidiactl|nvidia\d+|nvidia-uvm|nvidia-uvm-tools")
+# A box with a simulated microphone (audio.py). The box user tries to reconfigure, stop or kill pickfit's PulseAudio
+# server: a module that would read a file as the server's uid, a TCP listener, exit, SIGKILL; then lists the modules.
+AUDIO_HELD_PROBE = (f"pactl load-module module-pipe-source file={gui.EVIDENCE_DIR}/x.fifo 2>&1; "
+                    "pactl load-module module-native-protocol-tcp 2>&1; pactl exit 2>&1; "
+                    "kill -KILL $(pgrep -x pulseaudio) 2>&1; sleep 1; "
+                    "pactl list short modules | sed 's/^/module /'; pactl info > /dev/null && echo still-up; "
+                    "(echo > /dev/tcp/127.0.0.1/4713) 2>/dev/null && echo 'open 4713'; true")
+# The box user records from the default source through ALSA (arecord) and PulseAudio (parecord); prints each file's
+# length and loudness (RMS of 16-bit samples).
+RECORD_PROBE = r"""rm -f mic-a.wav mic-p.wav; arecord -q -d {secs} -f S16_LE -r 16000 -c 1 mic-a.wav 2>&1
+timeout {secs} parecord --file-format=wav --rate=16000 --channels=1 mic-p.wav 2>&1
+python3 -I - <<'PICKFIT_PY'
+import array, math, os, wave
+for f in ("mic-a.wav", "mic-p.wav"):
+    if not os.path.exists(f):
+        print("missing", f)
+        continue
+    w = wave.open(f)
+    a = array.array("h", w.readframes(w.getnframes()))
+    print("rms", f, round(w.getnframes() / w.getframerate(), 1), round(math.sqrt(sum(x * x for x in a) / max(1, len(a)))))
+PICKFIT_PY"""
+# What the box user can see of the words while they play: every command line it can read, its own environment,
+# and every stream and module the server shows.
+WORDS_PROBE = ("for p in /proc/[0-9]*; do tr '\\0' ' ' < $p/cmdline 2>/dev/null; echo; done; env; "
+               f"pactl list 2>&1; ls -la {gui.EVIDENCE_DIR} 2>&1; true")
 IP_HTTPS = "curl -sS -m 10 -o /dev/null -w '%{http_code}' https://1.1.1.1/"  # Cloudflare answers on its literal IP
 IPV6_PROBE = ("ip -6 -o addr show scope global; for u in 'https://[2606:4700:4700::1111]/' 'http://[fd00:ec2::254]/' "
               "'http://[fe80::1%25eth0]/'; do curl -sS -m 5 -o /dev/null -w \"%{http_code} $u\\n\" \"$u\" 2>&1; done")
@@ -319,6 +359,84 @@ def _vsock(box: Box) -> ProbeResult:
     return ProbeResult("vsock_closed", user_ok and decisive, "the box user opens no vsock connection (EAFNOSUPPORT) "
                        "and inherits none; root's try decides", result.exit_code, result.seconds,
                        f"{note}; {_detail(result)}"[-300:])
+
+
+def gpu_contained(result: ExecResult) -> bool:
+    """The card answers the box user (nvidia-smi names it), no other process shows on it, the kernel is gVisor's (so
+    the NVIDIA nodes are nvproxy's, which passes only the driver calls it knows), and every device the box user sees
+    is a character device of the plain box or one of NVIDIA's: no block device, no /dev/mem, no /dev/kvm, no DRM."""
+    lines = result.stdout.splitlines()
+    devices = [line.split(None, 2)[1:] for line in lines if line.startswith("dev ")]
+    named = bool(lines) and not lines[0].lower().startswith(("nvidia-smi", "no devices", "failed")) and "," in lines[0]
+    return (named and "smi_exit 0" in lines and not any(line.startswith("app ") for line in lines)
+            and any(line.startswith("kernel ") and "gvisor" in line for line in lines)
+            and bool(devices) and all(len(d) == 2 and d[0] == "c" and (d[1] in PLAIN_DEVICES or GPU_DEVICES.fullmatch(d[1]))
+                                      for d in devices)
+            and any(GPU_DEVICES.fullmatch(d[1]) for d in devices if len(d) == 2))
+
+
+def _loudness(stdout: str) -> dict[str, tuple[float, int]]:
+    """RECORD_PROBE's lines: file -> (seconds, RMS)."""
+    out = {}
+    for line in stdout.splitlines():
+        parts = line.split()
+        if len(parts) == 4 and parts[0] == "rms":
+            out[parts[1]] = (float(parts[2]), int(parts[3]))
+    return out
+
+
+def _audio_probes(box: Box, add: Callable[[ProbeResult], None]) -> None:
+    """The simulated microphone: pickfit's server runs as the display uid, outside the box user's reach and with no
+    network; the box user records pickfit's words through ALSA and PulseAudio while they play, and silence after;
+    while they play, nothing the box user can read holds them."""
+    uid = str(gui.DISPLAY_UID)
+    try:
+        seen = box.harness_exec(["/usr/bin/ps", "-o", "uid=,comm=", "-C", "pulseaudio"], 20).stdout.split()
+        pid = getattr(box, "pulse_pid", None)
+        nets = box.harness_exec(["/usr/bin/readlink", f"/proc/{pid}/ns/net", f"/proc/{box.xvfb_pid or pid}/ns/net",
+                                 "/proc/1/ns/net"], 20).stdout.split() if pid else []
+    except BoxError:
+        seen, nets = [], []
+    user = box.exec("ps -o uid=,comm= -C pulseaudio; readlink /proc/self/ns/net", 20)
+    ok = seen[::2] == [uid] and "1000" not in user.stdout.split()[::2]
+    add(ProbeResult("audio_server_uid", ok, f"pickfit's PulseAudio runs as uid {uid} (root's view), not the box user",
+                    user.exit_code, user.seconds, f"root sees {' '.join(seen) or 'none'}; {_detail(user)}"[-300:]))
+    user_ns = user.stdout.split()[-1:] if user.stdout.split() else []
+    apart = (len(nets) == 3 and nets[0] != nets[2] and nets[0] not in user_ns
+             and (not box.display or nets[0] == nets[1]))
+    held = box.exec(AUDIO_HELD_PROBE, 40)
+    modules = [line for line in held.stdout.splitlines() if line.startswith("module ")]
+    ok = (apart and len(modules) == len(audio.MODULES) and "still-up" in held.stdout
+          and "Operation not permitted" in held.stdout and "open 4713" not in held.stdout
+          and not any("pipe-source" in m or "protocol-tcp" in m for m in modules))
+    add(ProbeResult("audio_server_held", ok, "the box user cannot load a module (a file reader, a TCP listener), "
+                    "stop or kill the server, which runs in the harness's network namespace (no network) and "
+                    "listens on no TCP port", held.exit_code, held.seconds,
+                    f"server ns {nets[:1]} box {nets[2:]} box user {user_ns}; {_detail(held)}"[-300:]))
+    common = audio.tokens(box.exec(WORDS_PROBE, 60).stdout)  # words the box user reads anyway cannot show a leak
+    words = [w for w in audio.new_words(12) if w not in common][:audio.WORD_COUNT]
+    wav, why = audio.speak(box, words, "limits")
+    pid, why = audio.start_playback(box, wav) if wav else (None, why)
+    try:
+        playing = box.exec(RECORD_PROBE.format(secs=6), 60)
+        shown = box.exec(WORDS_PROBE, 60) if pid else None
+    finally:
+        audio.stop_playback(box, pid)
+    quiet = box.exec("sleep 2; " + RECORD_PROBE.format(secs=3), 60)
+    loud, after = _loudness(playing.stdout), _loudness(quiet.stdout)
+    ok = (pid is not None and set(loud) == set(after) == {"mic-a.wav", "mic-p.wav"}
+          and all(rms > 300 and secs >= 2 for secs, rms in loud.values()) and all(rms < 50 for _, rms in after.values()))
+    add(ProbeResult("audio_mic_records", ok, "while pickfit plays its words, the box user records them from the default "
+                    "source through ALSA and PulseAudio (RMS > 300); after it stops, silence (RMS < 50)",
+                    playing.exit_code, playing.seconds,
+                    f"{why or ''} playing {loud}; after {after}".strip()[-300:]))
+    text = (shown.stdout + shown.stderr).lower() if shown else ""
+    leaked = [w for w in words if w in audio.tokens(text)]
+    ok = shown is not None and "pickfit_mic" in text and not leaked and "permission denied" in text
+    add(ProbeResult("audio_words_hidden", ok, "while the words play, no command line, environment, stream or module "
+                    "the box user can read holds them, and pickfit's evidence directory is closed to it",
+                    shown.exit_code if shown else None, shown.seconds if shown else 0.0,
+                    f"leaked {leaked}; {len(text)} characters read"))
 
 
 def _userns(box: Box) -> ProbeResult:
@@ -631,6 +749,13 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
             add(_probe(box, "no_io_uring", IO_URING_PROBE, 20, "the box user cannot set up io_uring",
                        lambda r: "io_uring refused" in r.stdout))
         add(_vsock(box))
+        if box.audio:
+            _audio_probes(box, add)
+        if box.gpu:
+            add(_probe(box, "gpu_contained", GPU_PROBE, 60, "the GPU answers the box user (nvidia-smi names it), no "
+                       "other process shows on it, the kernel is gVisor's, and the box user's devices are the plain "
+                       "box's character devices plus NVIDIA's four (no block device, /dev/mem, /dev/kvm or DRM)",
+                       gpu_contained))
     if box.display:
         add(_probe(box, "display_up", f"DISPLAY={box.display} /usr/bin/xdpyinfo", 20, f"Xvfb answers on {box.display}",
                    lambda r: r.exit_code == 0 and "dimensions:" in r.stdout))
@@ -749,6 +874,7 @@ def save_limits(results: list[ProbeResult], box: Box, runs_dir: Path) -> Path:
     path = runs_dir / "verify" / f"limits-{box.runner}-{stamp}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {"runner": box.runner, "image": box.image, "start_s": getattr(box, "start_s", None),
+               "gpu": box.gpu_name, "audio": box.audio,
                "checked_at": taipei_now().isoformat(timespec="seconds"),
                "passed": sum(r.ok for r in results), "total": len(results),
                "probes": [asdict(r) for r in results]}
@@ -762,7 +888,8 @@ def limits_test(make_box: Callable[[str, str], Box], runs_dir: Path, log: Callab
     box = make_box(f"limits-{taipei_now().strftime('%Y%m%d-%H%M%S')}", "limits")
     try:
         box.start()
-        log(f"limits test · {box.runner} · {box.image} · started in {getattr(box, 'start_s', None)}s")
+        log(f"limits test · {box.runner} · {box.image}{' · GPU ' + str(box.gpu_name) if box.gpu else ''} · "
+            f"started in {getattr(box, 'start_s', None)}s")
         results = run_limits_test(box, log)
     finally:
         box.close()

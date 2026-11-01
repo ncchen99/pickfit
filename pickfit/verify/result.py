@@ -71,6 +71,7 @@ from pickfit.schema import (
     is_passed,
 )
 from pickfit.score import refresh_scores
+from pickfit.verify.audio import MICROPHONE
 from pickfit.verify.failure import (
     WRITTEN_REASONS,
     cited_workarounds,
@@ -266,6 +267,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
             command, before = fitted
             smoke_index[c.command_id] = len(smoke)
             excerpt = _gui_result(c.run.stdout) if c.kind == "gui_op" else \
+                _own_line(c.run.stdout, "mic result: ") if c.kind == "mic" else \
                 _excerpt(c.run.stdout, c.run.stderr, c.expected_signal)
             smoke.append(SmokeTest(
                 command=command, expected_signal=_clip(c.expected_signal, 300) or "",
@@ -365,7 +367,8 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         evidence=RunEvidence(trace_path=_rel(evidence_dir / "report.json"),
                              screenshot_paths=[p for p in map(_rel, screenshots or []) if p]),
         actor_model=report.model, cost_usd=round(report.cost_usd + judge_cost_usd, 6), features=features, gui=gui,
-        mcp=handshake if is_passed(level) else None)
+        mcp=handshake if is_passed(level) else None, gpu=_clip(report.box.get("gpu"), 80),
+        microphone=MICROPHONE if report.box.get("audio") else None)
     return run, notes
 
 
@@ -396,13 +399,20 @@ def gui_check(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     windows = launch.get("windows") or []
     title = max(windows, key=lambda w: w.get("width", 0) * w.get("height", 0)).get("title") if windows else None
     fitted = _clip(command, COMMAND_MAX)
+    gpu = report.box.get("gpu")
+    display = GUI_DISPLAY.replace("no GPU", f"GPU {gpu}") if gpu else GUI_DISPLAY
     return GuiCheck(tier=tier, screen=screen, command=fitted or "-", window_title=_clip(title, 200),
-                    display=GUI_DISPLAY)
+                    display=_clip(display, 120) or GUI_DISPLAY)
+
+
+def _own_line(stdout: str, prefix: str) -> str:
+    """pickfit's own line with this prefix, for the smoke test's excerpt."""
+    return next((line for line in stdout.splitlines() if line.startswith(prefix)), "")
 
 
 def _gui_result(stdout: str) -> str:
     """An operation's own result line (pickfit's), for the smoke test's excerpt."""
-    return next((line for line in stdout.splitlines() if line.startswith("gui result: ")), "")
+    return _own_line(stdout, "gui result: ")
 
 
 def gui_operations(report: VerifyReport, replay: ReplayResult, smoke_index: dict[int, int]) -> list[GuiOperation]:

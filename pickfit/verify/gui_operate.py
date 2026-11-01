@@ -18,7 +18,10 @@ A launch (gui.py) shows that the app draws its own UI. Operating it shows that a
 5. root stops every box-user process, as after a launch.
 
 The goal, the inputs and the check come from the verify agent (operate_gui) and may hold {nonce}: pickfit
-fills in a fresh word for every operation, so a result holding it was made during that operation. Expected
+fills in a fresh word for every operation, so a result holding it was made during that operation. In a box with a
+simulated microphone (audio.py), the check may hold the item {spoken}: pickfit speaks fresh words into the
+microphone from before the app starts until the check, and each must be in the result as a whole word; the words
+are in no goal, input or screenshot the operator sees, and one the operator typed shows nothing. Expected
 text the operator typed itself is marked "typed by the operator": the result then shows that the app kept
 the input, which is a feature only when keeping or saving it is (the feature judge reads that line).
 
@@ -48,7 +51,7 @@ from pydantic import BaseModel, Field, field_validator
 from pickfit.ledger import BudgetExceeded
 from pickfit.meta import call_meta, resolve_model
 from pickfit.schema import meta_strict_schema
-from pickfit.verify import gui
+from pickfit.verify import audio, gui
 from pickfit.verify.box import BOX_HOME, ExecResult
 
 if TYPE_CHECKING:
@@ -338,6 +341,11 @@ def spec_problems(args: OperateArgs, readme: str = "") -> list[str]:
         problems.append(f"{labels[0]!r} is in the README: a label or screen name the app always shows, not a result "
                         "of this operation. Expect text the app makes from the goal's input (put {nonce} in an "
                         "input file or the text to convert), or check a file it saves")
+    if any(audio.SPOKEN_FIELD in t for t in [args.goal, *(i.text or "" for i in args.inputs), check.path or ""]):
+        problems.append("{spoken} goes only in check.contains: the app must hear the words, so no goal or input "
+                        "may hold them")
+    if any(audio.SPOKEN_FIELD in c and c.strip() != audio.SPOKEN_FIELD for c in check.contains):
+        problems.append("{spoken} is an item of its own in check.contains (pickfit checks each spoken word)")
     texts = [args.goal, *(i.text or "" for i in args.inputs), *check.contains, check.path or ""]
     if any(_OWN_LINES.search(t) for t in texts):
         problems.append("the goal and check may not hold pickfit's own result lines (gui check, gui result...)")
@@ -474,15 +482,22 @@ def judge(path, data, st):
         format_ok = False
     text = norm(data.decode("utf-8", "replace"))
     found = [norm(c) in text for c in P["contains"]]
+    words = set(re.findall(r"[a-z]+", text.lower()))  # spoken words (audio.py): whole words, any case
+    heard = [w.lower() in words for w in P["words"]]
     excerpt = ""
+    raw = data.decode("utf-8", "replace")
     for c in P["contains"]:
-        i = data.decode("utf-8", "replace").find(c)
+        i = raw.find(c)
         if i >= 0:
-            raw = data.decode("utf-8", "replace")
             excerpt = raw[max(0, i - 80): i + len(c) + 80]
             break
+    for w in P["words"] if not excerpt else []:
+        m = re.search(r"(?i)\b" + re.escape(w) + r"\b", raw)
+        if m:
+            excerpt = raw[max(0, m.start() - 80): m.end() + 120]
+            break
     return {"path": path, "bytes": st.st_size, "sha256": hashlib.sha256(data).hexdigest(), "mtime": st.st_mtime,
-            "truncated": st.st_size > len(data), "format_ok": format_ok, "contains": found,
+            "truncated": st.st_size > len(data), "format_ok": format_ok, "contains": found, "words": heard,
             "excerpt": "".join(ch if ch.isprintable() else " " for ch in excerpt)[:300]}
 out = {"now": time.time()}
 target = P["target"]
@@ -522,10 +537,10 @@ else:
                 if data is None:
                     continue
                 seen = judge(entry.path, data, st)
-                score = sum(seen["contains"]) + (1 if seen["format_ok"] else 0)
+                score = sum(seen["contains"]) + sum(seen["words"]) + (1 if seen["format_ok"] else 0)
                 if best is None or score > best[0]:
                     best = (score, seen)
-                if all(seen["contains"]) and seen["format_ok"] is not False:
+                if all(seen["contains"]) and all(seen["words"]) and seen["format_ok"] is not False:
                     break
             else:
                 continue
@@ -550,8 +565,8 @@ def file_probe(box: Box, params: dict[str, Any]) -> dict[str, Any]:
     """Run root's file check; its report, or {"error": why}."""
     nonce = secrets.token_hex(12)
     full = {"home": BOX_HOME, "uid": int(BOX_UID), "max": FILE_MAX_BYTES, "nonce": nonce,
-            "max_files": SEARCH_MAX_FILES, "format": None, "contains": [], "since": 0, "before": None, "skip": [],
-            "skip_dirs": list(SEARCH_SKIP_DIRS), **params}
+            "max_files": SEARCH_MAX_FILES, "format": None, "contains": [], "words": [], "since": 0, "before": None,
+            "skip": [], "skip_dirs": list(SEARCH_SKIP_DIRS), **params}
     source = _FILE_PY.replace("@PARAMS@", repr(json.dumps(full)))
     done = box.harness_exec([gui.PYTHON, "-I", "-S", "-"], 120, stdin=source.encode())
     lines = [line[len(nonce) + 1:] for line in done.stdout.splitlines() if line.startswith(nonce + " ")]
@@ -751,6 +766,7 @@ class Operation:
     inputs: list[dict[str, Any]]
     nonce: str
     mode: str  # operated: the model chose each action; actions: recorded actions replayed
+    words: list[str] = field(default_factory=list)  # {spoken}: what pickfit spoke into the microphone
     model: str | None = None
     steps: list[Step] = field(default_factory=list)
     stop: str = ""  # done, give_up, step_cap, error, budget, no_window; actions: replayed
@@ -935,6 +951,9 @@ def observation_lines(op: Operation, launch: gui.GuiLaunch) -> str:
     lines = gui.observation(launch).splitlines()[:-1]
     feature = f" (feature F{op.feature})" if op.feature else ""
     lines.append(f"gui goal: {_quote(fill(op.goal, op.nonce))}{feature}")
+    if op.words:
+        lines.append(f"mic: pickfit spoke {len(op.words)} fresh words (flite) into the box's simulated microphone "
+                     "from before the app started until the check; neither the operator nor the box had them as text")
     actions = [s for s in op.steps if s.action and s.action["kind"] not in ("done", "give_up")]
     if op.first is not None:
         lines.append(f"gui operate: the {len(op.first.actions())} recorded actions did not pass "
@@ -969,7 +988,21 @@ def app_lines(op: Operation, launch: gui.GuiLaunch) -> str:
 
 
 def expected_texts(spec: GuiCheckSpec, nonce: str) -> list[str]:
-    return [fill(c, nonce) for c in spec.contains]
+    """The expected texts, {nonce} filled in; {spoken} is checked word by word (spoken_line)."""
+    return [fill(c, nonce) for c in spec.contains if c.strip() != audio.SPOKEN_FIELD]
+
+
+def spoken(spec: GuiCheckSpec) -> bool:
+    return any(c.strip() == audio.SPOKEN_FIELD for c in spec.contains)
+
+
+def spoken_part(words: list[str], found: list[bool], typed: list[str]) -> tuple[bool, str]:
+    """(every spoken word found and none typed by the operator, the line's part about them)."""
+    echoed = audio.typed_words(words, typed)
+    part = audio.words_line("spoken words", words, found)
+    if echoed:
+        part += f" (typed by the operator: {', '.join(echoed)}; that shows nothing)"
+    return all(found) and not echoed, part
 
 
 def _contains_line(expected: list[str], found: list[bool], typed: list[str]) -> str:
@@ -982,11 +1015,12 @@ def _contains_line(expected: list[str], found: list[bool], typed: list[str]) -> 
 
 
 def check_file(box: Box, spec: GuiCheckSpec, nonce: str, since: float, before: str | None,
-               skip: list[str], typed: list[str]) -> dict[str, Any]:
+               skip: list[str], typed: list[str], words: list[str] | None = None) -> dict[str, Any]:
     target = home_path(spec.path or "")
     expected = expected_texts(spec, nonce)
+    words = words or []
     report = file_probe(box, {"mode": "after", "target": target, "since": since - 1, "before": before, "skip": skip,
-                              "format": spec.format, "contains": expected})
+                              "format": spec.format, "contains": expected, "words": words})
     shown = target if target.endswith("/") else target
     if "error" in report:
         return {"passed": False, "why": f"pickfit's file check failed: {report['error']}",
@@ -996,10 +1030,11 @@ def check_file(box: Box, spec: GuiCheckSpec, nonce: str, since: float, before: s
         why = report.get("why") or "not found"
         where = f"no file under {shown}" if target.endswith("/") else f"file {shown}"
         return {"passed": False, "why": f"{where}: {why}", "line": f"{where}: {why}"}
-    holds = (not spec.format or found["format_ok"]) and all(found["contains"])
+    holds = (not spec.format or found["format_ok"]) and all(found["contains"]) and all(found.get("words") or [])
     if target.endswith("/") and not holds:  # the best of the files written there, none of which holds it
         what = " and ".join(filter(None, [f"format {spec.format}" if spec.format else "",
-                                          "the expected text" if expected else ""]))
+                                          "the expected text" if expected else "",
+                                          "every spoken word" if words else ""]))
         return {"passed": False, "why": f"no file under {shown} written after the app started has {what}",
                 "line": f"no file under {shown} written after the app started has {what} "
                         f"({report.get('scanned', 0)} entries scanned)",
@@ -1012,6 +1047,10 @@ def check_file(box: Box, spec: GuiCheckSpec, nonce: str, since: float, before: s
     if expected:
         parts.append(_contains_line(expected, found["contains"], typed))
         ok = ok and all(found["contains"])
+    if words:
+        heard, part = spoken_part(words, list(found.get("words") or [False] * len(words)), typed)
+        parts.append(part)
+        ok = ok and heard
     where = f"a file under {shown}" if target.endswith("/") else f"file {shown}"
     result = {"passed": ok, "line": f"{where}: " + "; ".join(parts),
               "seen": {"path": found["path"], "excerpt": found.get("excerpt")}, "sha256": found["sha256"]}
@@ -1020,7 +1059,8 @@ def check_file(box: Box, spec: GuiCheckSpec, nonce: str, since: float, before: s
     return result
 
 
-def check_clipboard(display: XvfbDisplay, spec: GuiCheckSpec, nonce: str, typed: list[str]) -> dict[str, Any]:
+def check_clipboard(display: XvfbDisplay, spec: GuiCheckSpec, nonce: str, typed: list[str],
+                    words: list[str] | None = None) -> dict[str, Any]:
     try:
         data = display.clipboard()
     except DisplayError as err:
@@ -1031,8 +1071,12 @@ def check_clipboard(display: XvfbDisplay, spec: GuiCheckSpec, nonce: str, typed:
     expected = expected_texts(spec, nonce)
     found = [_norm(e) in _norm(text) for e in expected]
     ok = all(found)
+    parts = [_contains_line(expected, found, typed)] if expected else []
+    if words:
+        heard, part = spoken_part(words, audio.heard(text, words), typed)
+        ok, parts = ok and heard, [*parts, part]
     result = {"passed": ok, "line": f"clipboard (read by the display user): {len(text)} characters; "
-                                    + _contains_line(expected, found, typed), "seen": {"clipboard": text[:300]}}
+                                    + "; ".join(parts), "seen": {"clipboard": text[:300]}}
     if not ok:
         result["why"] = "the clipboard does not hold what the check expects"
     return result
@@ -1042,12 +1086,15 @@ ScreenReader = Callable[[bytes, list[str]], "tuple[list[str], float, str]"]
 
 
 def check_screen(png: bytes | None, spec: GuiCheckSpec, nonce: str, typed: list[str],
-                 read: ScreenReader | None, before: bytes | None = None) -> dict[str, Any]:
+                 read: ScreenReader | None, before: bytes | None = None, words: list[str] | None = None
+                 ) -> dict[str, Any]:
     """The expected text on pickfit's last screenshot, and not on its first (`before`, the window as it opened):
-    a result the operation made, never a label, heading or menu that was there anyway or text typed."""
-    expected = expected_texts(spec, nonce)
+    a result the operation made, never a label, heading or menu that was there anyway or text typed. Spoken words
+    count as whole words, in any case."""
+    words = words or []
+    expected = [*expected_texts(spec, nonce), *words]
     typed_norm = [_norm(t) for t in typed]
-    echoed = [e for e in expected if any(_norm(e) in t for t in typed_norm)]
+    echoed = [e for e in expected if any(_norm(e) in t for t in typed_norm)] + audio.typed_words(words, typed)
     if echoed:
         return {"passed": False, "why": f"{_quote(echoed[0])} was typed by the operator, so seeing it shows nothing",
                 "line": "on screen: not checked (the expected text was typed by the operator)"}
@@ -1057,7 +1104,11 @@ def check_screen(png: bytes | None, spec: GuiCheckSpec, nonce: str, typed: list[
         texts, cost, model = read(png, expected)
     except Exception as err:  # budget or API failure: nothing is confirmed
         return {"passed": False, "why": f"the screen judge failed: {type(err).__name__}", "line": "on screen: unread"}
-    found = [any(_norm(e) in _norm(t) for t in texts) for e in expected]
+    def seen(texts: list[str]) -> list[bool]:
+        plain = [any(_norm(e) in _norm(t) for t in texts) for e in expected[:len(expected) - len(words)]]
+        return plain + audio.heard(" ".join(texts), words)
+
+    found = seen(texts)
     already: list[bool] = [False] * len(expected)
     if all(found) and before is not None:
         try:
@@ -1066,7 +1117,7 @@ def check_screen(png: bytes | None, spec: GuiCheckSpec, nonce: str, typed: list[
             return {"passed": False, "why": f"the screen judge failed: {type(err).__name__}", "cost_usd": cost,
                     "line": "on screen: unread"}
         cost += more
-        already = [any(_norm(e) in _norm(t) for t in early) for e in expected]
+        already = seen(early)
     ok = all(found) and not any(already)
     marks = [("yes, but already there before the first action" if a else "yes") if f else "no"
              for f, a in zip(found, already)]
@@ -1094,13 +1145,19 @@ def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[
     """
     began = time.monotonic()
     nonce = new_nonce()
+    words = audio.new_words() if spoken(args.check) else []
     op = Operation(feature=args.feature, goal=args.goal, check=args.check.model_dump(),
                    inputs=[i.model_dump() for i in args.inputs], nonce=nonce,
                    mode="actions" if actions is not None else "operated",
-                   model=None if actions is not None else resolve_model(model), first=first)
+                   model=None if actions is not None else resolve_model(model), first=first, words=words)
     stopped = gui.stop_box_user(box)  # the app is the only box-user process: no server, nothing left over
     if "PICKFIT_KILLED" not in stopped.stdout:
         op.error = "box-user processes survived the stop before the launch"
+    player: int | None = None
+    if words and op.error is None:  # the words play from before the app starts until the check
+        wav, why = audio.speak(box, words, tag) if box.audio else (None, "this box has no simulated microphone")
+        player, why = audio.start_playback(box, wav) if wav else (None, why)
+        op.error = None if player else why
     box.exec(f"/usr/bin/mkdir -p {INPUT_DIR} {OUTPUT_DIR}", 30)  # where goals read and save
     written: list[str] = []
     for item in args.inputs:
@@ -1109,6 +1166,22 @@ def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[
         written.append(path)
     target = home_path(args.check.path) if args.check.kind == "file" and args.check.path else None
     before = file_probe(box, {"mode": "before", "target": target or BOX_HOME + "/"})
+    try:
+        return _operated(box, args, tag, op, nonce, words, written, before, actions=actions, model=model,
+                         max_steps=max_steps, read_screen=read_screen, evidence_dir=evidence_dir, log=log,
+                         timeout_s=timeout_s, run_id=run_id, scope=scope, scope_cap_usd=scope_cap_usd, sleep=sleep,
+                         began=began, **call_kwargs)
+    finally:
+        audio.stop_playback(box, player)
+
+
+def _operated(box: Box, args: OperateArgs, tag: str | int, op: Operation, nonce: str, words: list[str],
+              written: list[str], before: dict[str, Any], *,
+              actions: list[dict[str, Any]] | None, model: str | None, max_steps: int,
+              read_screen: ScreenReader | None, evidence_dir: Path | None, log: Log, timeout_s: int | None,
+              run_id: str | None, scope: str | None, scope_cap_usd: float | None, sleep: Callable[[float], None],
+              began: float, **call_kwargs: Any) -> tuple[ExecResult, Operation, bytes | None]:
+    """run_operation from the app's start to the record (the microphone, if any, plays throughout)."""
     since = float(before.get("now") or 0.0)
     opened = gui.open_app(box, args.command, tag, args.wait_s, timeout_s=timeout_s)
     shown = opened.shown
@@ -1147,15 +1220,16 @@ def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[
             op.error = "; ".join(filter(None, [op.error, f"last screenshot: {err}"]))
         kind = args.check.kind
         if kind == "clipboard":
-            op.result = check_clipboard(display, args.check, nonce, op.typed())
+            op.result = check_clipboard(display, args.check, nonce, op.typed(), words)
         elif kind == "screen_text":
-            op.result = check_screen(last_png, args.check, nonce, op.typed(), read_screen, before=first_png)
+            op.result = check_screen(last_png, args.check, nonce, op.typed(), read_screen, before=first_png,
+                                     words=words)
             op.cost_usd += float(op.result.pop("cost_usd", 0.0) or 0.0)
     png, survived = gui.close_app(box, opened, tag)
     if survived:
         op.error = "; ".join(filter(None, [op.error, "box-user processes survived the stop"]))
     if op.stop != "no_window" and args.check.kind == "file":
-        op.result = check_file(box, args.check, nonce, since, before.get("before"), written, op.typed())
+        op.result = check_file(box, args.check, nonce, since, before.get("before"), written, op.typed(), words)
     op.passed = bool(op.result.get("passed")) and not survived and not opened.timed_out and op.stop != "no_window"
     op.launch = shown.to_dict()
     op.seconds = round(time.monotonic() - began, 1)
