@@ -277,3 +277,8 @@ def test_text_drawn_outside_the_dom_counts_when_only_the_after_screenshot_shows_
     assert not typed[0]["passed"] and typed[1] == 0.0, "typed text is never read back as a result"
     other = {"passed": False, "kind": "text_on_page", "why": "the claimed text was on the page before the agent acted"}
     assert wv.screenshot_check(other, claim, before, after, [], run_id="r", scope="s", reader=reader)[1] == 0.0
+
+
+def test_the_task_asks_for_a_visible_result_and_explains_canvas_apps():
+    task = wv.task_text(TARGET, "pickfitab12", ["/home/web/samples/sample.txt"], 10)
+    assert "Never report a result you cannot see" in task and "send_keys" in task

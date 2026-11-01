@@ -658,6 +658,10 @@ dialog you cannot use.
 chat, emote, vote, follow, like, share or invite, no names or nicknames. Use the tool on your own.
 - If the core use needs an account or payment, stop and say so (blocked_by: account_required or paywall).
 - Work calmly; at most {max_steps} steps. Do not retry the same failing action more than twice.
+- Finish the whole use: after acting, wait until the result appears, then copy its exact visible text from the \
+current page. Never report a result you cannot see in the current screenshot.
+- Canvas apps and games: click inside the canvas or press keys (send_keys, e.g. Enter, Space, arrow keys); a \
+title screen usually needs Enter or a click. In a game, make at least one real move and see the game respond.
 When done, report: the feature; what shows the result (text_on_page, downloaded_file or page_state); an exact \
 short piece of visible text that shows the result (not text that was on the page before you started, and not \
 only the text you typed); and what blocked you, if anything."""
@@ -996,7 +1000,7 @@ def reevaluate(run_dir: Path, target: WebTarget, log: Callable[[str], None] = pr
 
 # This task's caps (the coordinator's brief, 11/2): Meta for judges, Modal for the operator and the VMs,
 # Baseten for the fallback operator; and the whole Meta pipeline must stay under PIPELINE_STOP_USD.
-MY_CAPS_USD = {"meta": 8.0, "modal": 15.0, "baseten": 5.0}
+MY_CAPS_USD = {"meta": 8.0, "modal": 20.0, "baseten": 5.0}  # Modal $15 -> $20 for second visits (念誠, 11/2)
 PIPELINE_STOP_USD = 158.0
 # Planning: batch 1's means rounded up (Modal $0.14 a site); each site also checks a worst case before it starts.
 PER_SITE_USD = {"meta": 0.03, "modal": 0.18, "baseten": 0.05}
