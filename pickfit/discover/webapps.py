@@ -1103,6 +1103,25 @@ def recheck_terms(db: WebSites, *, source: str | None = None, log: Callable[[str
     return dict(out)
 
 
+def probe_https(db: WebSites, *, log: Callable[[str], None]) -> int:
+    """Selected sites whose home page answered over http only: GET the https address once and, when it
+    serves the page, record it (checks.home.https_url) as the address a record gives. Returns how many."""
+    fetch = Fetcher()
+    found = 0
+    for r in db.rows(outcome="selected"):
+        home = (r["checks"] or {}).get("home") or {}
+        url = home.get("final_url") or r["site_url"]
+        if not url.startswith("http://") or home.get("https_url") is not None:
+            continue
+        got = fetch.get("home_https", "https://" + url.removeprefix("http://"))
+        ok = got["status"] == 200 and "html" in (got["type"] or "") and got["url"].startswith("https://")
+        checks = {**r["checks"], "home": {**home, "https_url": got["url"] if ok else ""}}
+        db.save_check(r["source"], r["item_id"], outcome=r["outcome"], checks=checks, page=r["page"], readme=r["readme"])
+        found += ok
+        log(f"  https {'ok' if ok else 'no'}: {r['site_key']} ({got['status'] or got['error']})")
+    return found
+
+
 def funnel(db: WebSites) -> dict[str, Any]:
     out = {}
     for source in SOURCES:

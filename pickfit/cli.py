@@ -129,6 +129,8 @@ def _webapps(args: argparse.Namespace) -> int:
         from pickfit.meta import resolve_model
         from pickfit.webrecords import write_web_records
 
+        if not args.dry_run:
+            webapps.probe_https(db, log=log)
         summary = write_web_records(db, model=resolve_model(args.model), dry_run=args.dry_run, log=log)
         print(json.dumps(summary.to_dict(), ensure_ascii=False, indent=2))
         return 0

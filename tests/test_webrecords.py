@@ -26,6 +26,8 @@ def test_web_url_prefers_https_final_url():
     assert wr.web_url(site) == "https://a.com/app"
     assert wr.web_url({"site_url": "http://a.com", "checks": {}}) is None
     assert wr.web_url({"site_url": "https://a.com", "checks": {"home": {"final_url": "http://a.com"}}}) == "https://a.com"
+    probed = {"site_url": "http://a.com/x", "checks": {"home": {"final_url": "http://a.com/x", "https_url": "https://a.com/x"}}}
+    assert wr.web_url(probed) == "https://a.com/x"
 
 
 PAGE = ("title: Word Pad\ndescription: Count words in your browser.\n\nWord Pad\n"

@@ -67,8 +67,10 @@ def site_id(site: dict[str, Any]) -> str:
 
 
 def web_url(site: dict[str, Any]) -> str | None:
-    """The https address to open: where the home page ended up, else the link itself."""
-    for url in ((site.get("checks") or {}).get("home", {}).get("final_url"), site.get("site_url")):
+    """The https address to open: where the home page ended up, else the link itself, else the https address
+    a probe found for a site that answered over http (webapps.probe_https)."""
+    home = (site.get("checks") or {}).get("home", {})
+    for url in (home.get("final_url"), site.get("site_url"), home.get("https_url")):
         if url and url.startswith("https://"):
             return url
     return None
