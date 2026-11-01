@@ -35,5 +35,5 @@
 2. 開源：Flathub 看 AppStream 的 `project_license`（排除 `LicenseRef-*`、proprietary 與非商業、source-available 授權）；cask 看 GitHub 的授權。
 3. 有在維護：最新版本（Flathub 的 release 日期）或 GitHub 最近 push 在 365 天內，repo 沒封存；cask 沒被 deprecate 或 disable。
 4. 不用帳號：名稱、摘要與說明沒寫「需要帳號」「要登入」之類（只認明寫的要求；抽取與驗證時再看一次）。
-5. 有人用、但不出名：在通過 1–4 的 App 裡，人氣介於該來源的第 50 與第 90 百分位之間。Flathub 用上游的 GitHub 星數，cask 用 365 天安裝數（另要求 30 天內有安裝）。
+5. 有人用、但不出名：在通過 1–4 的 App 裡，人氣介於該來源的第 25 與第 75 百分位之間（中間一半）。Flathub 用上游的 GitHub 星數，cask 用 365 天安裝數（另要求 30 天內有安裝）。
 6. 從符合的 App 裡用固定種子的雜湊排序抽樣，每個來源 10–20 款。

@@ -45,7 +45,8 @@ def _discover(args: argparse.Namespace) -> int:
         return 2
     funnel = run_discover(token=token, channel=args.channel, per_query=args.per_query,
                           pushed_days=args.pushed_days, days=args.days, categories=args.category,
-                          skip_details=args.skip_details, max_rate_wait_s=args.max_rate_wait)
+                          skip_details=args.skip_details, max_rate_wait_s=args.max_rate_wait,
+                          pick_n=args.pick, seed=args.seed)
     print(json.dumps(funnel, ensure_ascii=False, indent=2))
     return 0
 
@@ -106,14 +107,20 @@ def _funnel(args: argparse.Namespace) -> int:
 
 def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     from pickfit.discover.github import PUSHED_DAYS, RATE_LIMIT_MAX_WAIT_S, TOPICS
-    from pickfit.discover.run import CHANNELS, DEFAULT_PER_QUERY
+    from pickfit.discover.run import CHANNELS, DEFAULT_PER_QUERY, DEFAULT_SEED
     from pickfit.discover.showhn import DEFAULT_DAYS
     from pickfit.schema import LISTED_CATEGORIES
 
-    d = sub.add_parser("discover", help="find candidates (GitHub search or Show HN), fetch details, apply rules ($0)")
+    d = sub.add_parser("discover", help="find candidates (GitHub search, Show HN, Flathub, Homebrew Cask), "
+                                        "fetch details, apply rules ($0)")
     d.add_argument("--channel", choices=CHANNELS, default="github",
                    help="github: topic searches per category (default); show_hn: recent Show HN posts "
-                        "that point to a GitHub repo")
+                        "that point to a GitHub repo; flathub, homebrew_cask: the store's catalog under "
+                        "neutral rules (docs/source-terms.md)")
+    d.add_argument("--pick", type=int, default=0,
+                   help="flathub, homebrew_cask: list a batch of N candidates and fetch their details")
+    d.add_argument("--seed", default=DEFAULT_SEED,
+                   help=f"flathub, homebrew_cask: the batch is ordered by sha256(seed:app id) (default {DEFAULT_SEED})")
     d.add_argument("--days", type=int, default=DEFAULT_DAYS,
                    help=f"show_hn: posts from the last N days (default {DEFAULT_DAYS})")
     d.add_argument("--per-query", type=int, default=DEFAULT_PER_QUERY,
