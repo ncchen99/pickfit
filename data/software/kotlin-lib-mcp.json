@@ -62,29 +62,33 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-kotlin-lib-mcp-20261101-005740-68d6",
+      "run_id": "verify-kotlin-lib-mcp-20261101-161753-ec52",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fL -o /tmp/jdk25.tar.gz \"https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25+36/OpenJDK25U-jdk_x64_linux_hotspot_25_36.tar.gz\" 2>&1 | tail -20; ls -lh /tmp/jdk25.tar.gz 2>&1\n# fallback check api\n",
-          "purpose": "download JDK 25 Temurin tarball"
+          "command": "curl -L --fail -o /tmp/jdk.tar.gz \"https://api.adoptium.net/v3/binary/latest/25/ga/linux/x64/jdk/hotspot/normal/eclipse\" && ls -lh /tmp/jdk.tar.gz",
+          "purpose": "download JDK 25 Temurin tarball via Adoptium API"
         },
         {
-          "command": "mkdir -p /tmp/jdk && tar -xzf /tmp/jdk25.tar.gz -C /tmp/jdk --strip-components=1 && /tmp/jdk/bin/java -version && ls /tmp/jdk/bin/java",
-          "purpose": "unpack JDK 25 to /tmp/jdk"
+          "command": "mkdir -p /tmp/jdk && tar -xzf /tmp/jdk.tar.gz -C /tmp/jdk --strip-components=1 && /tmp/jdk/bin/java -version && ls /tmp/jdk/bin/java",
+          "purpose": "extract JDK to /tmp/jdk and verify java -version"
         },
         {
-          "command": "export JAVA_HOME=/tmp/jdk && export PATH=$JAVA_HOME/bin:$PATH && java -version 2>&1 && curl -fL -o /tmp/server2.zip https://github.com/aoreshkov/kotlin-lib-mcp/releases/download/v0.10.1/kotlin-lib-mcp-server-0.10.1.zip && ls -lh /tmp/server2.zip && rm -rf /tmp/kotlin-lib-mcp-server-0.10.1 && unzip -q /tmp/server2.zip -d /tmp",
-          "purpose": "download and unzip kotlin-lib-mcp server 0.10.1 release zip"
+          "command": "curl -L --fail -o /tmp/kotlin-lib.zip \"https://github.com/aoreshkov/kotlin-lib-mcp/releases/download/v0.10.1/kotlin-lib-mcp-server-0.10.1.zip\" && ls -lh /tmp/kotlin-lib.zip && unzip -l /tmp/kotlin-lib.zip",
+          "purpose": "download kotlin-lib-mcp release zip v0.10.1 from GitHub"
         },
         {
-          "command": "mkdir -p ~/.local/bin && cat > ~/.local/bin/kotlin-lib-mcp <<'EOS'\n#!/bin/sh\nexport JAVA_HOME=/tmp/jdk\nexport PATH=\"$JAVA_HOME/bin:$PATH\"\nexec /tmp/kotlin-lib-mcp-server-0.10.1/bin/server \"$@\"\nEOS\nchmod +x ~/.local/bin/kotlin-lib-mcp",
-          "purpose": "create wrapper script in ~/.local/bin that sets JAVA_HOME and launches server"
+          "command": "mkdir -p $HOME/.local/bin\nunzip -q -o /tmp/kotlin-lib.zip -d /tmp\nls /tmp/kotlin-lib-mcp-server-0.10.1/bin/\nexport JAVA_HOME=/tmp/jdk && export PATH=$JAVA_HOME/bin:$PATH\n/tmp/kotlin-lib-mcp-server-0.10.1/bin/server --version\necho ---help---\n/tmp/kotlin-lib-mcp-server-0.10.1/bin/server --help 2>&1",
+          "purpose": "unzip release zip to /tmp"
+        },
+        {
+          "command": "cat > $HOME/.local/bin/kotlin-lib-mcp-server <<'EOS'\n#!/bin/sh\nexport JAVA_HOME=/tmp/jdk\nexport PATH=\"$JAVA_HOME/bin:$PATH\"\nexec /tmp/kotlin-lib-mcp-server-0.10.1/bin/server \"$@\"\nEOS\nchmod +x $HOME/.local/bin/kotlin-lib-mcp-server\n$HOME/.local/bin/kotlin-lib-mcp-server --version 2>&1\necho EXIT:$?\n$HOME/.local/bin/kotlin-lib-mcp-server --help 2>&1",
+          "purpose": "create wrapper script in ~/.local/bin that sets JAVA_HOME and execs server"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "~/.local/bin/kotlin-lib-mcp --version",
+        "command": "export JAVA_HOME=/tmp/jdk && export PATH=$JAVA_HOME/bin:$PATH\n/tmp/kotlin-lib-mcp-server-0.10.1/bin/server --version",
         "expected_signal": "kotlin-lib-mcp 0.10.1"
       },
       "first_task": null
@@ -106,42 +110,46 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:59:17.748994+08:00",
+    "checked_at": "2026-11-01T16:19:48.230460+08:00",
     "runs": [
       {
-        "id": "verify-kotlin-lib-mcp-20261101-005740-68d6",
+        "id": "verify-kotlin-lib-mcp-20261101-161753-ec52",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:59:17.748994+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:19:48.230460+08:00",
         "tool_version": "0.10.1",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fL -o /tmp/jdk25.tar.gz \"https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25+36/OpenJDK25U-jdk_x64_linux_hotspot_25_36.tar.gz\" 2>&1 | tail -20; ls -lh /tmp/jdk25.tar.gz 2>&1\n# fallback check api\n",
-            "purpose": "download JDK 25 Temurin tarball"
+            "command": "curl -L --fail -o /tmp/jdk.tar.gz \"https://api.adoptium.net/v3/binary/latest/25/ga/linux/x64/jdk/hotspot/normal/eclipse\" && ls -lh /tmp/jdk.tar.gz",
+            "purpose": "download JDK 25 Temurin tarball via Adoptium API"
           },
           {
-            "command": "mkdir -p /tmp/jdk && tar -xzf /tmp/jdk25.tar.gz -C /tmp/jdk --strip-components=1 && /tmp/jdk/bin/java -version && ls /tmp/jdk/bin/java",
-            "purpose": "unpack JDK 25 to /tmp/jdk"
+            "command": "mkdir -p /tmp/jdk && tar -xzf /tmp/jdk.tar.gz -C /tmp/jdk --strip-components=1 && /tmp/jdk/bin/java -version && ls /tmp/jdk/bin/java",
+            "purpose": "extract JDK to /tmp/jdk and verify java -version"
           },
           {
-            "command": "export JAVA_HOME=/tmp/jdk && export PATH=$JAVA_HOME/bin:$PATH && java -version 2>&1 && curl -fL -o /tmp/server2.zip https://github.com/aoreshkov/kotlin-lib-mcp/releases/download/v0.10.1/kotlin-lib-mcp-server-0.10.1.zip && ls -lh /tmp/server2.zip && rm -rf /tmp/kotlin-lib-mcp-server-0.10.1 && unzip -q /tmp/server2.zip -d /tmp",
-            "purpose": "download and unzip kotlin-lib-mcp server 0.10.1 release zip"
+            "command": "curl -L --fail -o /tmp/kotlin-lib.zip \"https://github.com/aoreshkov/kotlin-lib-mcp/releases/download/v0.10.1/kotlin-lib-mcp-server-0.10.1.zip\" && ls -lh /tmp/kotlin-lib.zip && unzip -l /tmp/kotlin-lib.zip",
+            "purpose": "download kotlin-lib-mcp release zip v0.10.1 from GitHub"
           },
           {
-            "command": "mkdir -p ~/.local/bin && cat > ~/.local/bin/kotlin-lib-mcp <<'EOS'\n#!/bin/sh\nexport JAVA_HOME=/tmp/jdk\nexport PATH=\"$JAVA_HOME/bin:$PATH\"\nexec /tmp/kotlin-lib-mcp-server-0.10.1/bin/server \"$@\"\nEOS\nchmod +x ~/.local/bin/kotlin-lib-mcp",
-            "purpose": "create wrapper script in ~/.local/bin that sets JAVA_HOME and launches server"
+            "command": "mkdir -p $HOME/.local/bin\nunzip -q -o /tmp/kotlin-lib.zip -d /tmp\nls /tmp/kotlin-lib-mcp-server-0.10.1/bin/\nexport JAVA_HOME=/tmp/jdk && export PATH=$JAVA_HOME/bin:$PATH\n/tmp/kotlin-lib-mcp-server-0.10.1/bin/server --version\necho ---help---\n/tmp/kotlin-lib-mcp-server-0.10.1/bin/server --help 2>&1",
+            "purpose": "unzip release zip to /tmp"
+          },
+          {
+            "command": "cat > $HOME/.local/bin/kotlin-lib-mcp-server <<'EOS'\n#!/bin/sh\nexport JAVA_HOME=/tmp/jdk\nexport PATH=\"$JAVA_HOME/bin:$PATH\"\nexec /tmp/kotlin-lib-mcp-server-0.10.1/bin/server \"$@\"\nEOS\nchmod +x $HOME/.local/bin/kotlin-lib-mcp-server\n$HOME/.local/bin/kotlin-lib-mcp-server --version 2>&1\necho EXIT:$?\n$HOME/.local/bin/kotlin-lib-mcp-server --help 2>&1",
+            "purpose": "create wrapper script in ~/.local/bin that sets JAVA_HOME and execs server"
           }
         ],
         "smoke_tests": [
           {
-            "command": "~/.local/bin/kotlin-lib-mcp --version",
+            "command": "export JAVA_HOME=/tmp/jdk && export PATH=$JAVA_HOME/bin:$PATH\n/tmp/kotlin-lib-mcp-server-0.10.1/bin/server --version",
             "expected_signal": "kotlin-lib-mcp 0.10.1",
             "exit_code": 0,
             "passed": true,
@@ -150,7 +158,7 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- kotlin-lib-mcp --transport stdio 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- $HOME/.local/bin/kotlin-lib-mcp-server --transport stdio",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -159,49 +167,76 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_latest_version --args '{\"coordinate\":\"org.jetbrains.kotlin:kotlin-stdlib\"}' -- kotlin-lib-mcp --transport stdio 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call fetch_library --args '{\"coordinate\":\"org.slf4j:slf4j-api:2.0.9\"}' -- $HOME/.local/bin/kotlin-lib-mcp-server --transport stdio",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=get_latest_version content=text text_chars=126",
+            "observed_excerpt": "tools/call: ok tool=fetch_library content=text,resource_link text_chars=160",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --call list_packages --args '{\"coordinate\":\"org.slf4j:slf4j-api:2.0.9\"}' -- $HOME/.local/bin/kotlin-lib-mcp-server --transport stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list_packages content=text text_chars=77",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --call search_source --args '{\"coordinate\":\"org.slf4j:slf4j-api:2.0.9\",\"query\":\"info\"}' -- $HOME/.local/bin/kotlin-lib-mcp-server --transport stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search_source content=text text_chars=16",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --call list_declarations --args '{\"coordinate\":\"org.slf4j:slf4j-api:2.0.9\"}' -- $HOME/.local/bin/kotlin-lib-mcp-server --transport stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list_declarations content=text text_chars=77",
             "setup": [],
             "offline": false
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "Requires JDK 25+ runtime, launch via bin/server",
-            "actually_needed": "JDK not preinstalled; manually downloaded Temurin 25 and created wrapper setting JAVA_HOME",
+            "readme_said": "Requires JDK 25+ runtime",
+            "actually_needed": "No JDK preinstalled; manually downloaded Temurin JDK 25.0.5 tarball from api.adoptium.net and extracted to /tmp/jdk, set JAVA_HOME",
             "kind": "sandbox"
           },
           {
-            "readme_said": "The sandbox run installed it under /tmp, and its launch command or wrapper points there.",
-            "actually_needed": "The run installed into /tmp; install into a permanent directory and point the MCP client's launch command there.",
-            "kind": "note"
+            "readme_said": "claude mcp add kotlin-lib -- /path/to/kotlin-lib-mcp-server-<version>/bin/server --transport stdio",
+            "actually_needed": "Created wrapper ~/.local/bin/kotlin-lib-mcp-server that exports JAVA_HOME=/tmp/jdk before exec; direct bin/server needs JAVA_HOME set to JDK 25",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 12 tools, successful get_latest_version call returning kotlin-stdlib versions, and version 0.10.1 output.",
+          "observed": "Screenshots show MCP handshake with 12 tools, successful fetch_library call returning extracted sources, and version 0.10.1 output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-kotlin-lib-mcp-20261101-005740-68d6/report.json",
+          "trace_path": "runs/verify/verify-kotlin-lib-mcp-20261101-161753-ec52/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-kotlin-lib-mcp-20261101-005740-68d6/check-1-cmd7.judged.png",
-            "runs/verify/verify-kotlin-lib-mcp-20261101-005740-68d6/check-2-cmd8.judged.png",
-            "runs/verify/verify-kotlin-lib-mcp-20261101-005740-68d6/check-3-cmd11.judged.png"
+            "runs/verify/verify-kotlin-lib-mcp-20261101-161753-ec52/check-1-cmd9.judged.png",
+            "runs/verify/verify-kotlin-lib-mcp-20261101-161753-ec52/check-2-cmd10.judged.png",
+            "runs/verify/verify-kotlin-lib-mcp-20261101-161753-ec52/check-3-cmd8.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.086266,
+        "cost_usd": 0.089365,
         "mcp": {
           "transport": "stdio",
           "launch": [
-            "kotlin-lib-mcp",
+            "$HOME/.local/bin/kotlin-lib-mcp-server",
             "--transport",
             "stdio"
           ],
@@ -224,9 +259,45 @@
             "get_latest_version"
           ],
           "tool_count": 12,
-          "called_tool": "get_latest_version",
+          "called_tool": "fetch_library",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "fetch real sources of Maven libraries",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "expose public API surface and KDoc",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: list_packages and list_declarations returned only coordinate echo with 77 chars, no API data."
+          },
+          {
+            "feature": "read raw source and search code",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: search_source returned only query echo with 16 chars, no source matches."
+          },
+          {
+            "feature": "diff versions and public API changes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "diff_api/diff_versions not tested - command budget exhausted before second version fetch and diff call"
+          }
+        ]
       }
     ]
   },
@@ -797,5 +868,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:45+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T16:19:48.232154+08:00"
 }

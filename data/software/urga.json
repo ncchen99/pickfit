@@ -77,17 +77,17 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-urga-20261031-000945-5ae5",
+      "run_id": "verify-urga-20261101-164155-cd34",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -sL -o /tmp/urga.tar.gz https://github.com/ingvarch/urga/releases/download/v0.16.0/urga_0.16.0_linux_amd64.tar.gz && mkdir -p /tmp/urga-extract ~/.local/bin && tar -xzf /tmp/urga.tar.gz -C /tmp/urga-extract && ls -la /tmp/urga-extract && cp /tmp/urga-extract/urga ~/.local/bin/urga && chmod +x ~/.local/bin/urga && ~/.local/bin/urga --version",
-          "purpose": "Download linux_amd64 release archive and install binary to ~/.local/bin"
+          "command": "cd /tmp && curl -fL -o urga.tar.gz https://github.com/ingvarch/urga/releases/download/v0.16.0/urga_0.16.0_linux_amd64.tar.gz && tar tzf urga.tar.gz && mkdir -p ~/.local/bin && tar xzf urga.tar.gz -C /tmp && ls -lh /tmp/urga* && cp /tmp/urga ~/.local/bin/urga && chmod +x ~/.local/bin/urga && ~/.local/bin/urga --help 2>&1",
+          "purpose": "download linux_amd64 tarball from GitHub releases and install to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "curl -sL -o /tmp/urga.tar.gz https://github.com/ingvarch/urga/releases/download/v0.16.0/urga_0.16.0_linux_amd64.tar.gz && mkdir -p /tmp/urga-extract ~/.local/bin && tar -xzf /tmp/urga.tar.gz -C /tmp/urga-extract && ls -la /tmp/urga-extract && cp /tmp/urga-extract/urga ~/.local/bin/urga && chmod +x ~/.local/bin/urga && ~/.local/bin/urga --version",
+        "command": "urga -version",
         "expected_signal": "urga v0.16.0"
       },
       "first_task": null
@@ -122,70 +122,105 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:11:31.727636+08:00",
+    "checked_at": "2026-11-01T16:42:33.763541+08:00",
     "runs": [
       {
-        "id": "verify-urga-20261031-000945-5ae5",
+        "id": "verify-urga-20261101-164155-cd34",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:11:31.727636+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:42:33.763541+08:00",
         "tool_version": "v0.16.0",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -sL -o /tmp/urga.tar.gz https://github.com/ingvarch/urga/releases/download/v0.16.0/urga_0.16.0_linux_amd64.tar.gz && mkdir -p /tmp/urga-extract ~/.local/bin && tar -xzf /tmp/urga.tar.gz -C /tmp/urga-extract && ls -la /tmp/urga-extract && cp /tmp/urga-extract/urga ~/.local/bin/urga && chmod +x ~/.local/bin/urga && ~/.local/bin/urga --version",
-            "purpose": "Download linux_amd64 release archive and install binary to ~/.local/bin"
+            "command": "cd /tmp && curl -fL -o urga.tar.gz https://github.com/ingvarch/urga/releases/download/v0.16.0/urga_0.16.0_linux_amd64.tar.gz && tar tzf urga.tar.gz && mkdir -p ~/.local/bin && tar xzf urga.tar.gz -C /tmp && ls -lh /tmp/urga* && cp /tmp/urga ~/.local/bin/urga && chmod +x ~/.local/bin/urga && ~/.local/bin/urga --help 2>&1",
+            "purpose": "download linux_amd64 tarball from GitHub releases and install to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "curl -sL -o /tmp/urga.tar.gz https://github.com/ingvarch/urga/releases/download/v0.16.0/urga_0.16.0_linux_amd64.tar.gz && mkdir -p /tmp/urga-extract ~/.local/bin && tar -xzf /tmp/urga.tar.gz -C /tmp/urga-extract && ls -la /tmp/urga-extract && cp /tmp/urga-extract/urga ~/.local/bin/urga && chmod +x ~/.local/bin/urga && ~/.local/bin/urga --version",
+            "command": "urga -version",
             "expected_signal": "urga v0.16.0",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "urga v0.16.0 (64bc170), built 2026-10-30T16:02:36Z",
-            "setup": [],
-            "offline": false
-          },
-          {
-            "command": "urga --help",
-            "expected_signal": "Usage of urga:",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Usage of urga:",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "go install / make build / sudo apt install .deb / sudo dnf install .rpm / yay -S urga / brew install",
-            "actually_needed": "Skipped ranked candidates 1 (go install) and 2 (make build) because they need a Go toolchain which must not be installed in the box; skipped 3 (sudo apt install .deb) and 4 (sudo dnf install .rpm) because the box user has no sudo/root; skipped 5 (yay -S urga) because the box is Debian-based with no…",
+            "readme_said": "go install github.com/ingvarch/urga/cmd/urga@latest",
+            "actually_needed": "requires Go toolchain not present in box; used pre-built linux_amd64 tarball instead",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "sudo apt install ./urga_*_amd64.deb / sudo dnf / yay -S urga",
+            "actually_needed": "no sudo/root or AUR available; extracting tarball to ~/.local/bin works without root",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "README implies binary archive install is alternative",
+            "actually_needed": "tarball contains single binary 'urga' plus LICENSE/README; direct copy to ~/.local/bin works",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows install listing and `urga v0.16.0` version output.",
+          "observed": "Screenshot shows urga printing version v0.16.0 with build hash and timestamp.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-urga-20261031-000945-5ae5/report.json",
+          "trace_path": "runs/verify/verify-urga-20261101-164155-cd34/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-urga-20261031-000945-5ae5/check-1-cmd2.judged.png"
+            "runs/verify/verify-urga-20261101-164155-cd34/check-1-cmd6.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.025663
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.037142,
+        "features": [
+          {
+            "feature": "List jobs, allocations, and cluster resources",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "List jobs/allocations requires NOMAD_ADDR and NOMAD_TOKEN and a live Nomad cluster"
+          },
+          {
+            "feature": "Watch job deployments live",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Watch job deployments live requires connected Nomad cluster"
+          },
+          {
+            "feature": "Show and follow task logs and files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Show and follow task logs/files requires Nomad cluster with allocations"
+          },
+          {
+            "feature": "Start, stop, scale and restart jobs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Start/stop/scale/restart jobs requires Nomad cluster with token"
+          }
+        ]
       }
     ]
   },
@@ -555,5 +590,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:20+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:42:33.765501+08:00"
 }

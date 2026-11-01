@@ -53,24 +53,28 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-arxiv-digest-20261031-004250-416b",
-      "method": "source",
+      "run_id": "verify-arxiv-digest-20261101-164523-b2e8",
+      "method": "uv",
       "steps": [
         {
-          "command": "git clone https://github.com/saeedrafsharx/arxiv-digest /home/sbx/arxiv-digest",
-          "purpose": "clone upstream repo to get source"
+          "command": "cd /home/sbx/work && git clone https://github.com/saeedrafsharx/arxiv-digest.git repo && ls -la repo && cat repo/README.md",
+          "purpose": "clone repo from GitHub"
         },
         {
-          "command": "uv tool install /home/sbx/arxiv-digest",
-          "purpose": "install via uv"
+          "command": "uv python install 3.13",
+          "purpose": "ensure Python 3.13 installed"
+        },
+        {
+          "command": "cd /home/sbx/work/repo && uv tool install . 2>&1",
+          "purpose": "uv tool install . in repo"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "arxd --help",
-        "expected_signal": "Get arxiv papers in a gist"
+        "command": "arxd --help; arxd search --help",
+        "expected_signal": "usage: arxiv-digest"
       },
-      "first_task": null
+      "first_task": "arxd search \"quantum\" --max 2 2>&1"
     },
     "windows": null
   },
@@ -87,104 +91,161 @@
     "url": "https://github.com/saeedrafsharx/arxiv-digest/releases/tag/v0.1.1"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:44:49.061453+08:00",
+    "checked_at": "2026-11-01T16:46:58.718150+08:00",
     "runs": [
       {
-        "id": "verify-arxiv-digest-20261031-004250-416b",
-        "level": "install",
+        "id": "verify-arxiv-digest-20261101-164523-b2e8",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:44:49.061453+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:46:58.718150+08:00",
         "tool_version": "0.1.0",
-        "install_method": "source",
+        "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "git clone https://github.com/saeedrafsharx/arxiv-digest /home/sbx/arxiv-digest",
-            "purpose": "clone upstream repo to get source"
+            "command": "cd /home/sbx/work && git clone https://github.com/saeedrafsharx/arxiv-digest.git repo && ls -la repo && cat repo/README.md",
+            "purpose": "clone repo from GitHub"
           },
           {
-            "command": "uv tool install /home/sbx/arxiv-digest",
-            "purpose": "install via uv"
+            "command": "uv python install 3.13",
+            "purpose": "ensure Python 3.13 installed"
+          },
+          {
+            "command": "cd /home/sbx/work/repo && uv tool install . 2>&1",
+            "purpose": "uv tool install . in repo"
           }
         ],
         "smoke_tests": [
           {
-            "command": "arxd --help",
-            "expected_signal": "Get arxiv papers in a gist",
+            "command": "arxd --help; arxd search --help",
+            "expected_signal": "usage: arxiv-digest",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Get arxiv papers in a gist",
+            "observed_excerpt": "usage: arxiv-digest [-h] {setup,search} ...",
             "setup": [],
             "offline": true
           },
           {
-            "command": "arxd search --help",
-            "expected_signal": "Topic to search",
+            "command": "arxd search \"quantum\" --max 2 2>&1",
+            "expected_signal": "Search result",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "query Topic to search",
+            "observed_excerpt": "Search result",
             "setup": [],
-            "offline": true
+            "offline": false
           },
           {
-            "command": "~/.local/share/uv/tools/arxiv-digest/bin/python -c \"from pathlib import Path; from arxiv_digest.parse import parse_xml; from arxiv_digest.render import render_markdown; xml=Path('/tmp/arxiv-digest/tests/fixtures/arxiv_response.xml').read_text(); papers=parse_xml(xml); print(f'Parsed {len(papers)} papers'); render_markdown(papers, '/tmp/offline_digest.md'); print(Path('/tmp/offline_digest.md').read_text()[:2500])\"",
-            "expected_signal": "Found **10 papers**",
-            "exit_code": 1,
-            "passed": false,
-            "observed_excerpt": "FileNotFoundError: [Errno 2] No such file or directory: '/tmp/arxiv-digest/tests/fixtures/arxiv_response.xml'",
+            "command": "arxd search \"machine learning\" --max 3 2>&1",
+            "expected_signal": "Search result",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Search result",
             "setup": [],
-            "offline": null
+            "offline": false
+          },
+          {
+            "command": "arxd search \"neural network\" --max 5 2>&1",
+            "expected_signal": "Search result",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Search result",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "arxd search \"quantum\" --max 2 --markdown /tmp/digest.md 2>&1 && echo \"---MD---\" && cat /tmp/digest.md 2>&1",
+            "expected_signal": "Found **2 papers**",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Found **2 papers**.",
+            "setup": [],
+            "offline": false
           }
         ],
         "pitfalls": [
           {
             "readme_said": "uv tool install .",
-            "actually_needed": "git clone repo first; work dir contained only README.md, then run uv tool install from the cloned repo root",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "uv tool install . with system Python",
-            "actually_needed": "uv automatically provisioned Python 3.15 for the tool despite box python3.12 and requires-python >=3.13",
-            "kind": "tool_handled"
+            "actually_needed": "requires Python >=3.13; box had 3.12 so needed uv python install 3.13",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows arxd help output with usage and the tagline Get arxiv papers in a gist.",
+          "observed": "Screenshots show successful arXiv searches returning result tables and help output displaying usage information.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-arxiv-digest-20261031-004250-416b/report.json",
+          "trace_path": "runs/verify/verify-arxiv-digest-20261101-164523-b2e8/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-arxiv-digest-20261031-004250-416b/check-1-cmd8.judged.png"
+            "runs/verify/verify-arxiv-digest-20261101-164523-b2e8/check-1-cmd11.judged.png",
+            "runs/verify/verify-arxiv-digest-20261101-164523-b2e8/check-2-cmd12.judged.png",
+            "runs/verify/verify-arxiv-digest-20261101-164523-b2e8/check-3-cmd10.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.125892
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.073099,
+        "features": [
+          {
+            "feature": "search arXiv papers",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "filter arXiv papers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only a generic search table with no filter criteria or filtering operation demonstrated."
+          },
+          {
+            "feature": "rank arXiv papers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only a search table with no ranking scores or ranked ordering demonstrated."
+          },
+          {
+            "feature": "generate concise digests of arXiv papers",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T16:46:58+08:00",
     "quality": {
-      "total": 58.5,
+      "total": 71.0,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -225,7 +286,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 45.45
+      "value": 55.17
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -444,5 +505,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:46:58.720425+08:00"
 }

@@ -53,12 +53,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-repoguard-20261101-002345-3bd6",
+      "run_id": "verify-repoguard-20261101-160148-e6da",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g repoguard-rules",
-          "purpose": "npm install -g repoguard-rules"
+          "purpose": "install repoguard globally via npm install -g repoguard-rules"
         }
       ],
       "manual_steps": [],
@@ -82,30 +82,30 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:25:14.681587+08:00",
+    "checked_at": "2026-11-01T16:02:51.988421+08:00",
     "runs": [
       {
-        "id": "verify-repoguard-20261101-002345-3bd6",
+        "id": "verify-repoguard-20261101-160148-e6da",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:25:14.681587+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:02:51.988421+08:00",
         "tool_version": "1.7.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g repoguard-rules",
-            "purpose": "npm install -g repoguard-rules"
+            "purpose": "install repoguard globally via npm install -g repoguard-rules"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- repoguard mcp 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- repoguard mcp",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -114,39 +114,75 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call repoguard_get_rules --args '{}' -- repoguard mcp 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call repoguard_audit --args '{\"directory\": \"/tmp/repo_test\"}' -- repoguard mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=repoguard_audit content=text text_chars=1392",
+            "setup": [
+              {
+                "command": "cat > /tmp/setup_secrets.sh <<'EOS'\n#!/bin/bash\nset -e\n# Create a sample project for audit tests\nmkdir -p /tmp/repo_test\ncd /tmp/repo_test\ngit init -q\ncat > test.py <<'PY'\n# Sample file with leaked secret pattern\nimport os\napi_key = \"sk-proj-1234567890abcdefOPENAI\"\nDATABASE_URL = \"postgres://admin:SuperSecret123@localhost/db\"\nPY\ncat > app.ts <<'TS'\n// Sample with :any type violation\nfunction foo(x: any) { console.log(x) }\nTS\necho \"created files\"\nls -la\nEOS\nchmod +x /tmp/setup_secrets.sh\n/tmp/setup_secrets.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call repoguard_get_rules --args '{}' -- repoguard mcp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "tools/call: ok tool=repoguard_get_rules content=text text_chars=3878",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "cd /tmp/repo_test && git config user.email \"test@test.com\" && git config user.name \"test\" && git commit -m \"initial\" 2>&1\necho 'BAD: any hack' >> app.ts\npython3 ~/.pickfit/mcp_probe.py --call repoguard_diff --args '{}' -- repoguard mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=repoguard_diff content=text text_chars=232",
+            "setup": [
+              {
+                "command": "cat > /tmp/setup_secrets.sh <<'EOS'\n#!/bin/bash\nset -e\n# Create a sample project for audit tests\nmkdir -p /tmp/repo_test\ncd /tmp/repo_test\ngit init -q\ncat > test.py <<'PY'\n# Sample file with leaked secret pattern\nimport os\napi_key = \"sk-proj-1234567890abcdefOPENAI\"\nDATABASE_URL = \"postgres://admin:SuperSecret123@localhost/db\"\nPY\ncat > app.ts <<'TS'\n// Sample with :any type violation\nfunction foo(x: any) { console.log(x) }\nTS\necho \"created files\"\nls -la\nEOS\nchmod +x /tmp/setup_secrets.sh\n/tmp/setup_secrets.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "Launch via npx repoguard-rules mcp and global binary repoguard-rules",
-            "actually_needed": "Package bin is repoguard and repoguard-cli, not repoguard-rules; installed MCP server runs as repoguard mcp",
+            "readme_said": "npm package is repoguard-rules with bin repoguard-rules / npx repoguard-rules",
+            "actually_needed": "global install provides bin `repoguard` (and `repoguard-cli`), not `repoguard-rules`; launch is `repoguard mcp`",
             "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "npx repoguard-rules mcp launches server",
+            "actually_needed": "installed globally works as `repoguard mcp` without npx -y fetch",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show successful MCP handshake with 4 tools listed and a successful repoguard_get_rules call returning architectural rules.",
+          "observed": "Screenshots show MCP handshake with 4 tools and successful repoguard_audit and repoguard_get_rules calls returning audit scores and rule lists.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-repoguard-20261101-002345-3bd6/report.json",
+          "trace_path": "runs/verify/verify-repoguard-20261101-160148-e6da/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-repoguard-20261101-002345-3bd6/check-1-cmd7.judged.png",
-            "runs/verify/verify-repoguard-20261101-002345-3bd6/check-2-cmd8.judged.png"
+            "runs/verify/verify-repoguard-20261101-160148-e6da/check-1-cmd4.judged.png",
+            "runs/verify/verify-repoguard-20261101-160148-e6da/check-2-cmd6.judged.png",
+            "runs/verify/verify-repoguard-20261101-160148-e6da/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.043108,
+        "cost_usd": 0.058933,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -164,9 +200,45 @@
             "repoguard_fix"
           ],
           "tool_count": 4,
-          "called_tool": "repoguard_get_rules",
+          "called_tool": "repoguard_audit",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "generate tailored AI context files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "No MCP tool generates .cursorrules/CLAUDE.md; CLI `repoguard init` does this but MCP only exposes audit/diff/rules/fix"
+          },
+          {
+            "feature": "audit codebase architectural health",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "audit uncommitted git diffs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows Git diff failed error with no diff audit performed."
+          },
+          {
+            "feature": "detect leaked secrets and credentials",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Outputs show only any-type violation and layering rule, no secret or credential detection."
+          }
+        ]
       }
     ]
   },
@@ -551,5 +623,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:21:26+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T16:02:51.990399+08:00"
 }

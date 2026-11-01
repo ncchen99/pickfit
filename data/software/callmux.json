@@ -56,20 +56,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-callmux-20261101-002158-cb6e",
+      "run_id": "verify-callmux-20261101-154322-7221",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g callmux",
-          "purpose": "Install callmux globally via npm"
+          "purpose": "install callmux globally via npm"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "callmux --version; echo ---; callmux -v",
-        "expected_signal": "0.25.0"
+        "command": "callmux --help",
+        "expected_signal": "callmux_parallel"
       },
-      "first_task": null
+      "first_task": "callmux instructions --profile codex --mode meta-only"
     },
     "windows": null
   },
@@ -84,39 +84,48 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:24:00.891587+08:00",
+    "checked_at": "2026-11-01T15:47:37.700456+08:00",
     "runs": [
       {
-        "id": "verify-callmux-20261101-002158-cb6e",
+        "id": "verify-callmux-20261101-154322-7221",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:24:00.891587+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T15:47:37.700456+08:00",
         "tool_version": "0.25.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g callmux",
-            "purpose": "Install callmux globally via npm"
+            "purpose": "install callmux globally via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "callmux --version; echo ---; callmux -v",
-            "expected_signal": "0.25.0",
+            "command": "callmux --help",
+            "expected_signal": "callmux_parallel",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "0.25.0",
+            "observed_excerpt": "Sugar for callmux_parallel: fan out N tool calls",
             "setup": [],
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- callmux -- npx -y @modelcontextprotocol/server-github",
+            "command": "callmux instructions --profile codex --mode meta-only",
+            "expected_signal": "callmux Agent Instructions",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "# callmux Agent Instructions",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- callmux -- npx -y @modelcontextprotocol/server-filesystem /tmp",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -125,12 +134,63 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call callmux_status --args '{}' -- callmux -- npx -y @modelcontextprotocol/server-github",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call callmux_parallel --args '{\"calls\":[{\"tool\":\"list_directory\",\"arguments\":{\"path\":\"/tmp/callmux_test\"}},{\"tool\":\"get_file_info\",\"arguments\":{\"path\":\"/tmp/callmux_test/a.txt\"}}]}' -- callmux -- npx -y @modelcontextprotocol/server-filesystem /tmp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=callmux_parallel content=text text_chars=1657",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/callmux_test && echo \"hello\" > /tmp/callmux_test/a.txt && echo \"world\" > /tmp/callmux_test/b.txt && ls -l /tmp/callmux_test",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call callmux_batch --args '{\"tool\":\"get_file_info\",\"items\":[{\"path\":\"/tmp/callmux_test/a.txt\"},{\"path\":\"/tmp/callmux_test/b.txt\"}]}' -- callmux -- npx -y @modelcontextprotocol/server-filesystem /tmp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=callmux_batch content=text text_chars=1712",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/callmux_test && echo \"hello\" > /tmp/callmux_test/a.txt && echo \"world\" > /tmp/callmux_test/b.txt && ls -l /tmp/callmux_test",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call callmux_pipeline --args '{\"steps\":[{\"tool\":\"list_directory\",\"arguments\":{\"path\":\"/tmp/callmux_test\"}},{\"tool\":\"get_file_info\",\"arguments\":{\"path\":\"/tmp/callmux_test/a.txt\"}}]}' -- callmux -- npx -y @modelcontextprotocol/server-filesystem /tmp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=callmux_pipeline content=text text_chars=761",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/callmux_test && echo \"hello\" > /tmp/callmux_test/a.txt && echo \"world\" > /tmp/callmux_test/b.txt && ls -l /tmp/callmux_test",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call callmux_status --args '{}' -- callmux -- npx -y @modelcontextprotocol/server-filesystem /tmp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "tools/call: ok tool=callmux_status content=text text_chars=2277",
-            "setup": [],
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/callmux_test && echo \"hello\" > /tmp/callmux_test/a.txt && echo \"world\" > /tmp/callmux_test/b.txt && ls -l /tmp/callmux_test",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
@@ -138,21 +198,21 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show callmux MCP handshake with 11 tools listed, successful callmux_status tool call, and version 0.25.0 output.",
+          "observed": "Screenshots show Agent Instructions header, successful MCP handshake with 11 tools, and help listing meta-tools including callmux_parallel.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-callmux-20261101-002158-cb6e/report.json",
+          "trace_path": "runs/verify/verify-callmux-20261101-154322-7221/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-callmux-20261101-002158-cb6e/check-1-cmd5.judged.png",
-            "runs/verify/verify-callmux-20261101-002158-cb6e/check-2-cmd6.judged.png",
-            "runs/verify/verify-callmux-20261101-002158-cb6e/check-3-cmd4.judged.png"
+            "runs/verify/verify-callmux-20261101-154322-7221/check-1-cmd10.judged.png",
+            "runs/verify/verify-callmux-20261101-154322-7221/check-2-cmd3.judged.png",
+            "runs/verify/verify-callmux-20261101-154322-7221/check-3-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.047552,
+        "cost_usd": 0.088566,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -160,7 +220,8 @@
             "--",
             "npx",
             "-y",
-            "@modelcontextprotocol/server-github"
+            "@modelcontextprotocol/server-filesystem",
+            "/tmp"
           ],
           "url": null,
           "protocol_version": "2025-11-25",
@@ -180,9 +241,43 @@
             "callmux_status"
           ],
           "tool_count": 11,
-          "called_tool": "callmux_status",
+          "called_tool": "callmux_parallel",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "execute tool calls in parallel",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows status partial with error content, not successful concurrent results."
+          },
+          {
+            "feature": "batch same tool over many items",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows status partial with tool_not_found error, not bulk success."
+          },
+          {
+            "feature": "chain tools into pipelines",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows status failed at step 0 with tool_not_found error."
+          },
+          {
+            "feature": "hot-reload MCP servers without restarting agent",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows degraded status with connect timed out, not a hot-reload."
+          }
+        ]
       }
     ]
   },
@@ -599,5 +694,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:42+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T15:47:37.702217+08:00"
 }

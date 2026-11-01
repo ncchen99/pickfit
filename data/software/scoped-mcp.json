@@ -63,23 +63,16 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-scoped-mcp-20261101-002748-756c",
+      "run_id": "verify-scoped-mcp-20261101-160334-0685",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install scoped-mcp 2>&1",
           "purpose": "install scoped-mcp via uv tool install"
-        },
-        {
-          "command": "mkdir -p /tmp/scoped_test/base manifests && cat > manifests/research-agent.yml <<'YML'\nagent_type: research\ndescription: \"test agent\"\nmodules:\n  filesystem:\n    mode: read\n    config:\n      base_path: /tmp/scoped_test/base\nYML\n",
-          "purpose": "create minimal manifest manifests/research-agent.yml"
         }
       ],
       "manual_steps": [],
-      "check": {
-        "command": "scoped-mcp --help",
-        "expected_signal": "Per-agent scoped MCP tool proxy"
-      },
+      "check": null,
       "first_task": null
     },
     "windows": null
@@ -99,18 +92,18 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:29:37.435998+08:00",
+    "checked_at": "2026-11-01T16:05:07.840539+08:00",
     "runs": [
       {
-        "id": "verify-scoped-mcp-20261101-002748-756c",
+        "id": "verify-scoped-mcp-20261101-160334-0685",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:29:37.435998+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:05:07.840539+08:00",
         "tool_version": "1.19.3",
         "install_method": "uv",
         "replayed": true,
@@ -118,70 +111,89 @@
           {
             "command": "uv tool install scoped-mcp 2>&1",
             "purpose": "install scoped-mcp via uv tool install"
-          },
-          {
-            "command": "mkdir -p /tmp/scoped_test/base manifests && cat > manifests/research-agent.yml <<'YML'\nagent_type: research\ndescription: \"test agent\"\nmodules:\n  filesystem:\n    mode: read\n    config:\n      base_path: /tmp/scoped_test/base\nYML\n",
-            "purpose": "create minimal manifest manifests/research-agent.yml"
           }
         ],
         "smoke_tests": [
           {
-            "command": "scoped-mcp --help",
-            "expected_signal": "Per-agent scoped MCP tool proxy",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Per-agent scoped MCP tool proxy with credential isolation and audit logging.",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "AGENT_ID=research-01 AGENT_TYPE=research python3 ~/.pickfit/mcp_probe.py -- scoped-mcp --manifest manifests/research-agent.yml",
-            "expected_signal": "handshake: ok",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "handshake: ok",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "AGENT_ID=research-01 AGENT_TYPE=research python3 ~/.pickfit/mcp_probe.py --call filesystem_list_dir --args '{}' -- scoped-mcp --manifest manifests/research-agent.yml",
+            "command": "AGENT_ID=test-01 AGENT_TYPE=test python3 ~/.pickfit/mcp_probe.py --timeout 30 --call filesystem_read_file --args '{\"path\":\"test.txt\"}' -- scoped-mcp --manifest /tmp/test_manifest.yml 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=filesystem_list_dir content=- text_chars=0",
-            "setup": [],
+            "observed_excerpt": "tools/call: ok tool=filesystem_read_file content=text text_chars=16",
+            "setup": [
+              {
+                "command": "cat > /tmp/test_manifest.yml <<'YAML'\nagent_type: test\ndescription: \"test agent\"\nmodules:\n  filesystem:\n    mode: read\n    config:\n      base_path: /tmp/test_fs\n  sqlite:\n    mode: read\n    config:\n      db_dir: /tmp/test_sqlite\nYAML\nmkdir -p /tmp/test_fs /tmp/test_sqlite\ncat /tmp/test_manifest.yml",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/test_fs/agents/test-01 2>&1\nmkdir -p /tmp/test_fs/agents/other-agent 2>&1\nprintf \"hello from agent\" > /tmp/test_fs/agents/test-01/test.txt\nprintf \"secret\" > /tmp/test_fs/agents/other-agent/secret.txt\nls -R /tmp/test_fs 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "AGENT_ID=test-01 AGENT_TYPE=test python3 ~/.pickfit/mcp_probe.py --timeout 30 --call filesystem_list_dir --args '{\"path\":\".\"}' -- scoped-mcp --manifest /tmp/test_manifest.yml 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=filesystem_list_dir content=text text_chars=12",
+            "setup": [
+              {
+                "command": "cat > /tmp/test_manifest.yml <<'YAML'\nagent_type: test\ndescription: \"test agent\"\nmodules:\n  filesystem:\n    mode: read\n    config:\n      base_path: /tmp/test_fs\n  sqlite:\n    mode: read\n    config:\n      db_dir: /tmp/test_sqlite\nYAML\nmkdir -p /tmp/test_fs /tmp/test_sqlite\ncat /tmp/test_manifest.yml",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/test_fs/agents/test-01 2>&1\nmkdir -p /tmp/test_fs/agents/other-agent 2>&1\nprintf \"hello from agent\" > /tmp/test_fs/agents/test-01/test.txt\nprintf \"secret\" > /tmp/test_fs/agents/other-agent/secret.txt\nls -R /tmp/test_fs 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "pip install scoped-mcp and run scoped-mcp --manifest",
+            "actually_needed": "requires AGENT_ID and AGENT_TYPE env vars or server exits with ConfigError; also needs manifest file and base_path/db_dir to exist",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "filesystem_list_dir path=\"/\" example",
+            "actually_needed": "root path \"/\" rejected; use \".\" to list agent-scoped directory",
+            "kind": "readme_wrong"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake succeeding with 3 tools, filesystem_list_dir call succeeding, and --help describing the per-agent proxy.",
+          "observed": "Both screenshots show successful MCP handshake with 3 tools and successful tool calls returning file content and directory listing.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-scoped-mcp-20261101-002748-756c/report.json",
+          "trace_path": "runs/verify/verify-scoped-mcp-20261101-160334-0685/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-scoped-mcp-20261101-002748-756c/check-1-cmd14.judged.png",
-            "runs/verify/verify-scoped-mcp-20261101-002748-756c/check-2-cmd15.judged.png",
-            "runs/verify/verify-scoped-mcp-20261101-002748-756c/check-3-cmd13.judged.png"
+            "runs/verify/verify-scoped-mcp-20261101-160334-0685/check-1-cmd9.judged.png",
+            "runs/verify/verify-scoped-mcp-20261101-160334-0685/check-2-cmd11.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.132705,
+        "cost_usd": 0.064686,
         "mcp": {
           "transport": "stdio",
           "launch": [
             "scoped-mcp",
             "--manifest",
-            "manifests/research-agent.yml"
+            "/tmp/test_manifest.yml"
           ],
           "url": null,
           "protocol_version": "2025-11-25",
-          "server_name": "scoped-mcp/research-01",
+          "server_name": "scoped-mcp/test-01",
           "server_version": "3.4.11",
           "tools": [
             "scoped_mcp_status",
@@ -189,9 +201,43 @@
             "filesystem_read_file"
           ],
           "tool_count": 3,
-          "called_tool": "filesystem_list_dir",
+          "called_tool": "filesystem_read_file",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Filter tools per agent",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; handshake returned 3 tools (scoped_mcp_status + 2 filesystem) matching manifest allowlist"
+          },
+          {
+            "feature": "Enforce resource boundaries between agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows allowed reads succeeding but no denied cross-agent access proving boundaries."
+          },
+          {
+            "feature": "Isolate credentials from agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "credential isolation requires Vault/env secrets backend not exercised in probe"
+          },
+          {
+            "feature": "Log tool calls to audit trail",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; audit log JSONL entry with tool, agent_id, session_id written via --audit-log"
+          }
+        ]
       }
     ]
   },
@@ -242,15 +288,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-01T16:05:07+08:00",
     "quality": {
-      "total": 84.4,
+      "total": 70.5,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -292,8 +338,8 @@
       ]
     },
     "treasure": {
-      "is_treasure": true,
-      "value": 54.94
+      "is_treasure": false,
+      "value": 45.9
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -712,5 +758,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T16:05:07.842422+08:00"
 }

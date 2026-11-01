@@ -63,20 +63,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-hazzel-20261031-002643-9aee",
+      "run_id": "verify-hazzel-20261101-161959-b27d",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install git+https://github.com/mukundzha/hazzel --force && HAZZEL_NO_UPDATE_CHECK=1 hazzel --version",
-          "purpose": "install hazzel from git main via uv tool"
+          "command": "uv tool install hazzel && hazzel --version && hazzel --help",
+          "purpose": "install hazzel via uv tool install (ranked candidate 2)"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "HAZZEL_NO_UPDATE_CHECK=1 hazzel --version",
+        "command": "hazzel --version",
         "expected_signal": "Hazzel 1.6.2"
       },
-      "first_task": "HAZZEL_NO_UPDATE_CHECK=1 hazzel --list-models"
+      "first_task": "printf \"/status\\n/exit\\n\" | hazzel 2>&1"
     },
     "windows": null
   },
@@ -95,30 +95,30 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:29:18.195470+08:00",
+    "checked_at": "2026-11-01T16:21:32.983114+08:00",
     "runs": [
       {
-        "id": "verify-hazzel-20261031-002643-9aee",
+        "id": "verify-hazzel-20261101-161959-b27d",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:29:18.195470+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:21:32.983114+08:00",
         "tool_version": "1.6.2",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install git+https://github.com/mukundzha/hazzel --force && HAZZEL_NO_UPDATE_CHECK=1 hazzel --version",
-            "purpose": "install hazzel from git main via uv tool"
+            "command": "uv tool install hazzel && hazzel --version && hazzel --help",
+            "purpose": "install hazzel via uv tool install (ranked candidate 2)"
           }
         ],
         "smoke_tests": [
           {
-            "command": "HAZZEL_NO_UPDATE_CHECK=1 hazzel --version",
+            "command": "hazzel --version",
             "expected_signal": "Hazzel 1.6.2",
             "exit_code": 0,
             "passed": true,
@@ -127,48 +127,81 @@
             "offline": true
           },
           {
-            "command": "HAZZEL_NO_UPDATE_CHECK=1 hazzel --help",
-            "expected_signal": "--list-models",
+            "command": "printf \"/status\\n/exit\\n\" | hazzel 2>&1",
+            "expected_signal": "Git status",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "usage: hazzel [-h] [-p [TEXT]] [-y] [--output-format {text,json}] [--version] [--list-models]",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "HAZZEL_NO_UPDATE_CHECK=1 hazzel --list-models",
-            "expected_signal": "groq openai/gpt-oss-120b",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "groq openai/gpt-oss-120b GPT OSS 120B 131072",
-            "setup": [],
+            "observed_excerpt": "Git status · master",
+            "setup": [
+              {
+                "command": "rm -rf .git demo.txt && git init -q && git config user.email \"t@t.com\" && git config user.name \"t\" && echo \"hello\" > demo.txt && git add demo.txt && git commit -qm init && echo \"more\" >> demo.txt && git status --short",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "uvx hazzel / pip install hazzel gives hazzel --list-models (README v1.6.2)",
-            "actually_needed": "install from git main (uv tool install git+https://github.com/mukundzha/hazzel) where --list-models exists; PyPI hazzel 1.6.2 errors with 'unrecognized arguments: --list-models' (exit 2)",
+            "readme_said": "hazzel --list-models prints the built-in model catalog and exits — no key, config, or network needed",
+            "actually_needed": "hazzel 1.6.2 has no --list-models flag: \"error: unrecognized arguments: --list-models\" (command 5 exit 2)",
             "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show the model list containing groq openai/gpt-oss-120b and version output Hazzel 1.6.2.",
+          "observed": "Screenshots show /status displaying Git status on master with changes and --version printing Hazzel 1.6.2.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-hazzel-20261031-002643-9aee/report.json",
+          "trace_path": "runs/verify/verify-hazzel-20261101-161959-b27d/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-hazzel-20261031-002643-9aee/check-1-cmd11.judged.png",
-            "runs/verify/verify-hazzel-20261031-002643-9aee/check-2-cmd9.judged.png"
+            "runs/verify/verify-hazzel-20261101-161959-b27d/check-1-cmd13.judged.png",
+            "runs/verify/verify-hazzel-20261101-161959-b27d/check-2-cmd3.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.097425
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.068486,
+        "features": [
+          {
+            "feature": "Edit files with diff approval",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Edit with diff approval requires LLM provider key (GROQ_API_KEY etc.)"
+          },
+          {
+            "feature": "Undo agent edits selectively",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Selective /undo /redo requires prior agent edits which need LLM key"
+          },
+          {
+            "feature": "Review and commit git changes",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Run sandboxed shell commands",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Sandboxed shell commands are dispatched via LLM; cannot trigger without API key"
+          }
+        ]
       }
     ]
   },
@@ -524,5 +557,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:21:32.985072+08:00"
 }

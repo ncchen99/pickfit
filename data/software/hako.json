@@ -76,16 +76,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-hako-20261031-003835-13de",
+      "run_id": "verify-hako-20261101-161753-cf79",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/mithraeums/hako/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -l /tmp/install.sh",
-          "purpose": "Download actual install.sh"
+          "command": "curl -fsSL https://mithraeums.github.io/hakm.sh -o /tmp/hakm.sh && ls -lh /tmp/hakm.sh && head -n 200 /tmp/hakm.sh",
+          "purpose": "download proxy installer hakm.sh"
+        },
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/mithraeums/hako/main/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 400 /tmp/install.sh",
+          "purpose": "download actual install.sh from github"
         },
         {
           "command": "sh /tmp/install.sh",
-          "purpose": "Run hakm installer script"
+          "purpose": "install hakm release binary via install.sh"
         }
       ],
       "manual_steps": [],
@@ -93,7 +97,7 @@
         "command": "hakm --version",
         "expected_signal": "hakm v0.0.4"
       },
-      "first_task": "hakm ~/models/smollm2b.mlf2 --raw -t 0 -n 16 \"def fibonacci(n):\""
+      "first_task": "hakm list"
     },
     "windows": null
   },
@@ -112,29 +116,33 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:40:17.171705+08:00",
+    "checked_at": "2026-11-01T16:18:48.802708+08:00",
     "runs": [
       {
-        "id": "verify-hako-20261031-003835-13de",
+        "id": "verify-hako-20261101-161753-cf79",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:40:17.171705+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:18:48.802708+08:00",
         "tool_version": "v0.0.4",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/mithraeums/hako/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -l /tmp/install.sh",
-            "purpose": "Download actual install.sh"
+            "command": "curl -fsSL https://mithraeums.github.io/hakm.sh -o /tmp/hakm.sh && ls -lh /tmp/hakm.sh && head -n 200 /tmp/hakm.sh",
+            "purpose": "download proxy installer hakm.sh"
+          },
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/mithraeums/hako/main/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 400 /tmp/install.sh",
+            "purpose": "download actual install.sh from github"
           },
           {
             "command": "sh /tmp/install.sh",
-            "purpose": "Run hakm installer script"
+            "purpose": "install hakm release binary via install.sh"
           }
         ],
         "smoke_tests": [
@@ -148,74 +156,78 @@
             "offline": true
           },
           {
-            "command": "hakm --help",
-            "expected_signal": "hakm list",
+            "command": "hakm list",
+            "expected_signal": "none installed",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "hakm list models in ~/.hako/models",
+            "observed_excerpt": "(none installed — hakm pull <id>)",
             "setup": [],
-            "offline": true
-          },
-          {
-            "command": "hakm ~/models/smollm2b.mlf2 --raw -t 0 -n 16 \"def fibonacci(n):\"",
-            "expected_signal": "def fibonacci(n):",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "def fibonacci(n):",
-            "setup": [
-              {
-                "command": "mkdir -p ~/models && curl -fL -o ~/models/SmolLM2-135M-Instruct-Q8_0.gguf https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf && ls -lh ~/models/",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "curl -fL -o /tmp/gguf2mlf.py https://raw.githubusercontent.com/mithraeums/hako/main/tools/gguf2mlf.py && wc -c /tmp/gguf2mlf.py",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "python3 /tmp/gguf2mlf.py ~/models/SmolLM2-135M-Instruct-Q8_0.gguf ~/models/smollm2b.mlf2 && ls -lh ~/models/smollm2b.mlf2",
-                "background": false,
-                "port": null
-              }
-            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "hakm pull hako-sho and ./hakm hako-sho --raw examples",
-            "actually_needed": "Used 138 MB SmolLM2-135M-Instruct Q8_0 GGUF converted with tools/gguf2mlf.py to .mlf2; stock hako-sho is ~1.9 GB",
-            "kind": "note"
-          },
-          {
-            "readme_said": "./hakm M --info arch banner then exit",
-            "actually_needed": "hakm ~/models/smollm2b.mlf2 --info prints arch banner to stderr with empty stdout, exit 0",
-            "kind": "note"
-          },
-          {
-            "readme_said": "make builds ./hakm and make test runs ASan gates",
-            "actually_needed": "Release binary via install.sh works; make test needs make/cc which this box lacks (make: command not found)",
+            "readme_said": "make test works with no deps (libc+libm+pthread)",
+            "actually_needed": "box has no make/cc toolchain; install.sh correctly fell back to release binary, make test cannot run here",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "./hakm \"$M\" --info etc require model path",
+            "actually_needed": "without model, invoking --info without positional model mis-resolves --info as model id and prints 'hakm pull --info' hint; correct order is hakm <model> --info",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot 1 shows fibonacci code generation with engine stats, screenshot 2 shows hakm v0.0.4 version string.",
+          "observed": "Screenshots show empty list with none-installed hint and hakm v0.0.4 version output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-hako-20261031-003835-13de/report.json",
+          "trace_path": "runs/verify/verify-hako-20261101-161753-cf79/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-hako-20261031-003835-13de/check-1-cmd14.judged.png",
-            "runs/verify/verify-hako-20261031-003835-13de/check-2-cmd4.judged.png"
+            "runs/verify/verify-hako-20261101-161753-cf79/check-1-cmd9.judged.png",
+            "runs/verify/verify-hako-20261101-161753-cf79/check-2-cmd4.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.134667
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.057695,
+        "features": [
+          {
+            "feature": "run interactive multi-turn chat REPL",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "interactive REPL needs hako-sho/koi mlf2 (~1.9GB), no tiny model support"
+          },
+          {
+            "feature": "generate raw greedy completions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "raw greedy completion needs hako model weights"
+          },
+          {
+            "feature": "serve resident model reusing KV cache",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "--serve resident KV cache needs model to keep warm"
+          },
+          {
+            "feature": "run 3B and 7B models on CPU",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "3B/7B CPU inference requires downloading 1.9GB+ weights"
+          }
+        ]
       }
     ]
   },
@@ -569,5 +581,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:18:48.803972+08:00"
 }

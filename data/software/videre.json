@@ -75,24 +75,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-videre-20261101-002755-80f0",
+      "run_id": "verify-videre-20261101-163632-20d8",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fL -o /tmp/videre.tar.gz https://github.com/aegea-dev/videre/releases/download/v0.64.2/videre-v0.64.2-x86_64-unknown-linux-gnu.tar.gz",
-          "purpose": "download x86_64 Linux binary tarball from GitHub releases v0.64.2"
+          "command": "mkdir -p ~/.local/bin && curl -fL -o /tmp/videre.tar.gz https://github.com/aegea-dev/videre/releases/download/v0.64.2/videre-v0.64.2-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/videre.tar.gz -C /tmp && ls -R /tmp",
+          "purpose": "download videre x86_64 binary tarball from GitHub releases"
         },
         {
-          "command": "tar -xzf /tmp/videre.tar.gz -C /tmp && cp /tmp/videre ~/.local/bin/videre && chmod +x ~/.local/bin/videre",
-          "purpose": "extract and install binary to ~/.local/bin"
+          "command": "mv /tmp/videre ~/.local/bin/videre && chmod +x ~/.local/bin/videre && ls -lh ~/.local/bin/videre && ~/.local/bin/videre --version && ~/.local/bin/videre --help",
+          "purpose": "install binary to ~/.local/bin and verify version"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "~/.local/bin/videre --version",
-        "expected_signal": "videre 0.64.2"
+        "command": "mkdir -p /tmp/empty_import && videre --library /tmp/testlib import --dry-run /tmp/empty_import 2>&1",
+        "expected_signal": "Nothing importable found under /tmp/empty_import."
       },
-      "first_task": null
+      "first_task": "mkdir -p /tmp/empty_import && videre --library /tmp/testlib import --dry-run /tmp/empty_import 2>&1"
     },
     "windows": null
   },
@@ -109,104 +109,134 @@
     "url": "https://github.com/aegea-dev/videre/releases/tag/v0.64.2"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:29:08.495437+08:00",
+    "checked_at": "2026-11-01T16:37:45.634526+08:00",
     "runs": [
       {
-        "id": "verify-videre-20261101-002755-80f0",
-        "level": "install",
+        "id": "verify-videre-20261101-163632-20d8",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:29:08.495437+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:37:45.634526+08:00",
         "tool_version": "0.64.2",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fL -o /tmp/videre.tar.gz https://github.com/aegea-dev/videre/releases/download/v0.64.2/videre-v0.64.2-x86_64-unknown-linux-gnu.tar.gz",
-            "purpose": "download x86_64 Linux binary tarball from GitHub releases v0.64.2"
+            "command": "mkdir -p ~/.local/bin && curl -fL -o /tmp/videre.tar.gz https://github.com/aegea-dev/videre/releases/download/v0.64.2/videre-v0.64.2-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/videre.tar.gz -C /tmp && ls -R /tmp",
+            "purpose": "download videre x86_64 binary tarball from GitHub releases"
           },
           {
-            "command": "tar -xzf /tmp/videre.tar.gz -C /tmp && cp /tmp/videre ~/.local/bin/videre && chmod +x ~/.local/bin/videre",
-            "purpose": "extract and install binary to ~/.local/bin"
+            "command": "mv /tmp/videre ~/.local/bin/videre && chmod +x ~/.local/bin/videre && ls -lh ~/.local/bin/videre && ~/.local/bin/videre --version && ~/.local/bin/videre --help",
+            "purpose": "install binary to ~/.local/bin and verify version"
           }
         ],
         "smoke_tests": [
           {
-            "command": "~/.local/bin/videre --version",
+            "command": "mv /tmp/videre ~/.local/bin/videre && chmod +x ~/.local/bin/videre && ls -lh ~/.local/bin/videre && ~/.local/bin/videre --version && ~/.local/bin/videre --help",
             "expected_signal": "videre 0.64.2",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "mv: cannot stat '/tmp/videre': No such file or directory",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "mkdir -p /tmp/empty_import && videre --library /tmp/testlib import --dry-run /tmp/empty_import 2>&1",
+            "expected_signal": "Nothing importable found under /tmp/empty_import.",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "videre 0.64.2",
+            "observed_excerpt": "Nothing importable found under /tmp/empty_import.",
             "setup": [],
             "offline": true
-          },
-          {
-            "command": "mkdir -p /tmp/testvidere_final && cp /tmp/testlib/sample.jpg /tmp/testvidere_final/a.png && cp /tmp/testlib/sample.jpg /tmp/testvidere_final/b.png && ~/.local/bin/videre --library /tmp/testvidere_final scan",
-            "expected_signal": "2/2 images processed",
-            "exit_code": 1,
-            "passed": false,
-            "observed_excerpt": "cp: cannot stat '/tmp/testlib/sample.jpg': No such file or directory",
-            "setup": [],
-            "offline": null
-          },
-          {
-            "command": "~/.local/bin/videre --library /tmp/testvidere_final dedupe --json",
-            "expected_signal": "\"total_files\":2",
-            "exit_code": 1,
-            "passed": false,
-            "observed_excerpt": "{\"schema_version\":1,\"error\":{\"message\":\"library /tmp/testvidere_final is not initialized: /tmp/testvidere_final/.videre does not exist\"}}",
-            "setup": [],
-            "offline": null
           }
         ],
         "pitfalls": [
           {
             "readme_said": "cargo install videre --locked",
-            "actually_needed": "No Rust toolchain in box; used binary download from latest release (README's documented alternative) to ~/.local/bin",
+            "actually_needed": "Rust toolchain not present in box; used prebuilt binary from GitHub releases instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "brew install aegea-dev/tap/videre",
+            "actually_needed": "Homebrew not available on Linux box; binary download is Linux alternative documented later",
             "kind": "sandbox"
           },
           {
             "readme_said": "videre search \"golden gate bridge at sunset\"",
-            "actually_needed": "Search requires prior `videre embed` which downloads ~1.5 GB model; without it search exits 1 with guidance to run `videre embed`",
+            "actually_needed": "search requires prior `videre embed` which downloads ~1.5 GB model; without it search exits 1 with 'no embeddings' error",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows videre --version printing videre 0.64.2.",
+          "observed": "Screenshot shows the dry-run import reporting nothing importable under /tmp/empty_import.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-videre-20261101-002755-80f0/report.json",
+          "trace_path": "runs/verify/verify-videre-20261101-163632-20d8/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-videre-20261101-002755-80f0/check-1-cmd13.judged.png"
+            "runs/verify/verify-videre-20261101-163632-20d8/check-1-cmd14.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.086359
+        "cost_usd": 0.069598,
+        "features": [
+          {
+            "feature": "find and remove duplicate photos",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          },
+          {
+            "feature": "search photos by text description",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "videre embed needs ~1.5GB SigLIP model; search exits 1 without embeddings"
+          },
+          {
+            "feature": "recognise faces and search by person",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          },
+          {
+            "feature": "import from Google Takeout and others",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output reports nothing importable found with no import performed."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:32:32+08:00",
+    "computed_at": "2026-11-01T16:37:45+08:00",
     "quality": {
-      "total": 65.7,
+      "total": 74.2,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
+          "score": 0.68,
           "weight": 40.0
         },
         "install_docs": {
@@ -247,7 +277,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 37.19
+      "value": 42.0
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -568,5 +598,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:23:05+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T16:37:45.671938+08:00"
 }
