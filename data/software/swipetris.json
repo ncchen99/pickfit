@@ -57,20 +57,20 @@
   "processing": "hybrid",
   "last_release": null,
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-02T01:46:13.283085+08:00",
+    "checked_at": "2026-11-02T02:55:16.674578+08:00",
     "runs": [
       {
-        "id": "web-swipetris-20261102-014613-59e5",
-        "level": "install",
+        "id": "web-swipetris-20261102-025516-4d7b",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-vm-chromium",
         "image": "pickfit-web:5ba46ffecfd8",
-        "checked_at": "2026-11-02T01:46:13.283085+08:00",
+        "checked_at": "2026-11-02T02:55:16.674578+08:00",
         "tool_version": null,
         "install_method": null,
         "replayed": false,
@@ -86,7 +86,7 @@
             "expected_signal": "the app's main screen",
             "exit_code": null,
             "passed": true,
-            "observed_excerpt": "The screenshot shows the Swipetris marketing landing page with a Play Now button and a phone mockup of the block-stacking game.",
+            "observed_excerpt": "The screenshot shows the Swipetris marketing landing page with game description, Play Now button, and a phone mockup of the block-stacking game.",
             "setup": [],
             "offline": null
           },
@@ -94,33 +94,41 @@
             "command": "browser: Use play daily falling-blocks sequence and get a visible result",
             "expected_signal": "the page visibly changed the way the feature should",
             "exit_code": null,
-            "passed": false,
-            "observed_excerpt": "'DAY BEST 232,596' appeared on the page; the judge did not see the feature work: The landing page with PLAY NOW changed to an active game board with stacked colored blocks and DAY BEST 232,596.",
+            "passed": true,
+            "observed_excerpt": "'0 LINES · LV 1' appeared on the page; the judge saw the feature work: The landing page with PLAY NOW changed to an active Tetris board filled with stacked colored blocks.",
             "setup": [],
             "offline": null
+          },
+          {
+            "command": "browser offline: With the network off, use play daily falling-blocks sequence again",
+            "expected_signal": "the page visibly changed the way the feature should",
+            "exit_code": null,
+            "passed": true,
+            "observed_excerpt": "offline: '0 LINES · LV 1' appeared on the page; the judge did not see the feature work: ",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The screenshot shows the Swipetris marketing landing page with a Play Now button and a phone mockup of the block-stacking game.",
+          "observed": "The screenshot shows the Swipetris marketing landing page with game description, Play Now button, and a phone mockup of the block-stacking game.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/web/swipetris/web-swipetris-20261102-014613-59e5/messages.jsonl",
-          "log_path": "runs/web/swipetris/web-swipetris-20261102-014613-59e5/harness.log",
+          "trace_path": "runs/web/swipetris/web-swipetris-20261102-025516-4d7b/messages.jsonl",
+          "log_path": "runs/web/swipetris/web-swipetris-20261102-025516-4d7b/harness.log",
           "screenshot_paths": [
-            "runs/web/swipetris/web-swipetris-20261102-014613-59e5/install.png",
-            "runs/web/swipetris/web-swipetris-20261102-014613-59e5/after.png",
-            "runs/web/swipetris/web-swipetris-20261102-014613-59e5/offline.png",
-            "runs/web/swipetris/web-swipetris-20261102-014613-59e5/offline_agent_after.png",
-            "runs/web/swipetris/web-swipetris-20261102-014613-59e5/offline_replay.png"
+            "runs/web/swipetris/web-swipetris-20261102-025516-4d7b/install.png",
+            "runs/web/swipetris/web-swipetris-20261102-025516-4d7b/after.png",
+            "runs/web/swipetris/web-swipetris-20261102-025516-4d7b/offline.png",
+            "runs/web/swipetris/web-swipetris-20261102-025516-4d7b/offline_replay.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.2282,
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.1242,
         "web": {
           "url": "https://swipetris.com",
           "final_url": "https://swipetris.com/",
@@ -135,29 +143,45 @@
           "data_sent": "unknown",
           "data_sent_note": "pickfit typed only short values, too short to trace in requests.",
           "pwa": true,
-          "offline": "not_tested",
+          "offline": "verified",
           "operations": [
             {
               "feature": "play daily falling-blocks sequence",
               "goal": "Use play daily falling-blocks sequence and get a visible result",
               "check": "element",
               "expected": [
-                "DAY BEST 232,596"
+                "0 LINES · LV 1"
               ],
-              "passed": false,
-              "observed": "'DAY BEST 232,596' appeared on the page; the judge did not see the feature work: The landing page with PLAY NOW changed to an active game board with stacked colored blocks and DAY BEST 232,596.",
+              "passed": true,
+              "observed": "'0 LINES · LV 1' appeared on the page; the judge saw the feature work: The landing page with PLAY NOW changed to an active Tetris board filled with stacked colored blocks.",
               "smoke_test": 1,
               "actions": 10,
-              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B"
+              "operator_model": "meta-models/muse-spark-open-1026"
+            },
+            {
+              "feature": "play daily falling-blocks sequence",
+              "goal": "With the network off, use play daily falling-blocks sequence again",
+              "check": "element",
+              "expected": [
+                "0 LINES · LV 1"
+              ],
+              "passed": true,
+              "observed": "offline: '0 LINES · LV 1' appeared on the page; the judge did not see the feature work: ",
+              "smoke_test": 2,
+              "actions": 0,
+              "operator_model": "meta-models/muse-spark-open-1026"
             }
           ]
         },
         "features": [
           {
             "feature": "play daily falling-blocks sequence",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
             "failure": null,
             "note": null
           },
@@ -403,5 +427,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T23:44:54+08:00",
-  "updated_at": "2026-11-02T01:51:28.029918+08:00"
+  "updated_at": "2026-11-02T03:00:23.811354+08:00"
 }
