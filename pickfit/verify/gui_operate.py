@@ -60,6 +60,8 @@ REASONING_EFFORT = "low"
 MAX_OUTPUT_TOKENS = 1_500
 MAX_STEPS = 28  # actions per operation, done and give_up included (a first-run wizard alone can take 8)
 HISTORY_STEPS = 12  # earlier actions the operator is reminded of
+# Going in circles: the same action LOOP_REPEATS times among the last LOOP_WINDOW (clicks within LOOP_RADIUS px).
+LOOP_WINDOW, LOOP_REPEATS, LOOP_RADIUS = 8, 3, 40
 TYPE_MAX = 300
 WAIT_MAX_S = 10
 SETTLE_MAX_S = 6.0  # a screenshot waits this long at most for two equal frames
@@ -806,6 +808,29 @@ def _png_url(data: bytes) -> str:
     return "data:image/png;base64," + base64.b64encode(data).decode()
 
 
+def _same(a: dict[str, Any], b: dict[str, Any]) -> bool:
+    """The same action, give or take where a click lands (a control is wider than one pixel)."""
+    if a["kind"] != b["kind"]:
+        return False
+    if a["kind"] in ("click", "scroll"):
+        return abs(a["x"] - b["x"]) <= LOOP_RADIUS and abs(a["y"] - b["y"]) <= LOOP_RADIUS
+    return a == b
+
+
+def circling(steps: list[Step]) -> str | None:
+    """A note when the operator keeps repeating one action (or two in turn: open a dialog, close it) among its
+    last LOOP_WINDOW actions: that path does not lead to the goal."""
+    recent = [s.action for s in steps if s.action and s.action["kind"] not in ("wait", "done", "give_up")]
+    recent = recent[-LOOP_WINDOW:]
+    for act in recent[-2:]:
+        times = sum(_same(act, other) for other in recent)
+        if times >= LOOP_REPEATS:
+            return (f"You have done {describe(act)} {times} times in your last {len(recent)} actions: you are going "
+                    "in circles. That control does not lead to the goal here: use a different control or path "
+                    "(another button, tab, menu, a keyboard shortcut, or Escape and start over), or give_up.")
+    return None
+
+
 def _operator_turn(goal: str, steps: list[Step], step_no: int, max_steps: int, note: str | None,
                    marked: bool = False) -> str:
     lines = [f"Goal: {goal}", "", f"This is step {step_no} of at most {max_steps}."]
@@ -844,6 +869,9 @@ def operate(display: Display, goal: str, *, model: str | None = OPERATOR_MODEL, 
         step = Step(screenshot=save(step_no, png), sha256=sha, changed=changed(previous, png), action=None)
         if not step.changed and steps and steps[-1].action and steps[-1].action["kind"] != "wait":
             note = (note + " " if note else "") + "Your last action did not change the screen."
+        loop = circling(steps)
+        if loop:
+            note = (note + " " if note else "") + loop
         last = steps[-1].action if steps else None
         mark = (last["x"], last["y"]) if last and last["kind"] in ("click", "scroll") else None
         shown, view = view_of(png, mark)
