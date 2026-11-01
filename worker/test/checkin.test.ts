@@ -20,6 +20,7 @@ test('a brew install from a tap: the command on PATH and the formula by its own 
   assert.match(how, /still_using if it is installed and they still use it; abandoned if it is gone or they stopped/);
   assert.match(how, /last_used: this_week, this_month, older or unknown/);
   assert.match(how, /never the command output, an exact date, a path, or other software\. If the user says no, report nothing\./);
+  assert.match(how, /scripts\/checkin\.py .*sends only after a yes\.$/);
 });
 
 test('a script install has no package to list; a pipe-to-shell step is never a check', () => {

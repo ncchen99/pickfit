@@ -132,6 +132,8 @@ export function checkIn(entry: Entry, guide: InstallGuide | null, os: OS, now: D
       `, and ask at most one question: did they use it this week, this month, or longer ago? ` +
       `Then report_outcome with this rec_id: still_using if it is installed and they still use it; abandoned if it is gone or they stopped; ` +
       `replaced, with replaced_by, if they switched to something else. Pass last_used: this_week, this_month, older or unknown. ` +
-      `Send only that: never the command output, an exact date, a path, or other software. If the user says no, report nothing.`,
+      `Send only that: never the command output, an exact date, a path, or other software. If the user says no, report nothing. ` +
+      `If they would rather check on their own, offer to save rec_id, slug, name and check_in to a file for pickfit's one-shot ` +
+      `scripts/checkin.py (github.com/ncchen99/pickfit): it shows what it will send and sends only after a yes.`,
   };
 }
