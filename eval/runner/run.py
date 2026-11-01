@@ -844,7 +844,10 @@ def candidate_record(candidates: Path | None) -> dict[str, Any]:
 def deployment_status(spec: dict[str, Any]) -> dict[str, Any]:
     record: dict[str, Any] = {"env": spec["env"], "host": spec["host"]}
     try:
-        with urllib.request.urlopen(f"https://{spec['host']}/", timeout=20) as response:
+        # Cloudflare answers 1010 (403) to urllib's default User-Agent; say who is asking.
+        request = urllib.request.Request(f"https://{spec['host']}/", headers={
+            "User-Agent": "pickfit-eval-runner (A3 snapshot)", "Accept": "application/json"})
+        with urllib.request.urlopen(request, timeout=20) as response:
             record["root"] = json.loads(response.read().decode("utf-8"))
     except Exception as err:  # recorded, not fatal: the record shows what could not be read
         record["root_error"] = repr(err)
