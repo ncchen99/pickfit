@@ -75,24 +75,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-videre-20261101-163632-20d8",
+      "run_id": "verify-videre-20261102-003721-0c36",
       "method": "binary",
       "steps": [
         {
-          "command": "mkdir -p ~/.local/bin && curl -fL -o /tmp/videre.tar.gz https://github.com/aegea-dev/videre/releases/download/v0.64.2/videre-v0.64.2-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/videre.tar.gz -C /tmp",
-          "purpose": "download videre x86_64 binary tarball from GitHub releases"
-        },
-        {
-          "command": "mv /tmp/videre ~/.local/bin/videre && chmod +x ~/.local/bin/videre && ~/.local/bin/videre --help",
-          "purpose": "install binary to ~/.local/bin and verify version"
+          "command": "mkdir -p ~/.local/bin /tmp/videre-dl && curl -fL -o /tmp/videre-dl/videre.tar.gz https://github.com/aegea-dev/videre/releases/download/v0.64.2/videre-v0.64.2-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/videre-dl/videre.tar.gz -C /tmp/videre-dl && install -m 755 /tmp/videre-dl/videre ~/.local/bin/videre && ~/.local/bin/videre --version",
+          "purpose": "Download and install videre binary"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "mkdir -p /tmp/empty_import && videre --library /tmp/testlib import --dry-run /tmp/empty_import 2>&1",
-        "expected_signal": "Nothing importable found under /tmp/empty_import."
+        "command": "videre --version",
+        "expected_signal": "videre 0.64.2"
       },
-      "first_task": "mkdir -p /tmp/empty_import && videre --library /tmp/testlib import --dry-run /tmp/empty_import 2>&1"
+      "first_task": "cd /home/sbx/videre-test && videre scan"
     },
     "windows": null
   },
@@ -111,10 +107,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T16:37:45.634526+08:00",
+    "checked_at": "2026-11-02T00:38:46.031284+08:00",
     "runs": [
       {
-        "id": "verify-videre-20261101-163632-20d8",
+        "id": "verify-videre-20261102-003721-0c36",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -122,81 +118,117 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:f56cd5b7aa53",
-        "checked_at": "2026-11-01T16:37:45.634526+08:00",
-        "tool_version": "0.64.2",
+        "checked_at": "2026-11-02T00:38:46.031284+08:00",
+        "tool_version": "videre 0.64.2",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p ~/.local/bin && curl -fL -o /tmp/videre.tar.gz https://github.com/aegea-dev/videre/releases/download/v0.64.2/videre-v0.64.2-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/videre.tar.gz -C /tmp",
-            "purpose": "download videre x86_64 binary tarball from GitHub releases"
-          },
-          {
-            "command": "mv /tmp/videre ~/.local/bin/videre && chmod +x ~/.local/bin/videre && ~/.local/bin/videre --help",
-            "purpose": "install binary to ~/.local/bin and verify version"
+            "command": "mkdir -p ~/.local/bin /tmp/videre-dl && curl -fL -o /tmp/videre-dl/videre.tar.gz https://github.com/aegea-dev/videre/releases/download/v0.64.2/videre-v0.64.2-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/videre-dl/videre.tar.gz -C /tmp/videre-dl && install -m 755 /tmp/videre-dl/videre ~/.local/bin/videre && ~/.local/bin/videre --version",
+            "purpose": "Download and install videre binary"
           }
         ],
         "smoke_tests": [
           {
-            "command": "mv /tmp/videre ~/.local/bin/videre && chmod +x ~/.local/bin/videre && ls -lh ~/.local/bin/videre && ~/.local/bin/videre --version && ~/.local/bin/videre --help",
+            "command": "videre --version",
             "expected_signal": "videre 0.64.2",
-            "exit_code": 1,
-            "passed": false,
-            "observed_excerpt": "mv: cannot stat '/tmp/videre': No such file or directory",
-            "setup": [],
-            "offline": null
-          },
-          {
-            "command": "mkdir -p /tmp/empty_import && videre --library /tmp/testlib import --dry-run /tmp/empty_import 2>&1",
-            "expected_signal": "Nothing importable found under /tmp/empty_import.",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Nothing importable found under /tmp/empty_import.",
+            "observed_excerpt": "videre 0.64.2",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "cd /home/sbx/videre-test && videre scan",
+            "expected_signal": "Wrote 3 record(s)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Wrote 3 record(s) to \"/home/sbx/videre-test/.videre/hashes.db\"",
+            "setup": [
+              {
+                "command": "pip install --quiet pillow && mkdir -p ~/videre-test && python3 <<'PY'\nfrom PIL import Image\n# two different solid images\nImage.new(\"RGB\", (64, 64), (255, 0, 0)).save(\"/home/sbx/videre-test/red.png\")\nImage.new(\"RGB\", (64, 64), (0, 0, 255)).save(\"/home/sbx/videre-test/blue.png\")\nPY\ncp /home/sbx/videre-test/red.png /home/sbx/videre-test/red-copy.png\nls -l /home/sbx/videre-test && md5sum /home/sbx/videre-test/*",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/videre-test && videre dedupe",
+            "expected_signal": "1 exact group(s), 1 file(s) to remove.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1 exact group(s), 1 file(s) to remove.",
+            "setup": [
+              {
+                "command": "pip install --quiet pillow && mkdir -p ~/videre-test && python3 <<'PY'\nfrom PIL import Image\n# two different solid images\nImage.new(\"RGB\", (64, 64), (255, 0, 0)).save(\"/home/sbx/videre-test/red.png\")\nImage.new(\"RGB\", (64, 64), (0, 0, 255)).save(\"/home/sbx/videre-test/blue.png\")\nPY\ncp /home/sbx/videre-test/red.png /home/sbx/videre-test/red-copy.png\nls -l /home/sbx/videre-test && md5sum /home/sbx/videre-test/*",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /home/sbx/videre-test && videre scan",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/videre-test && videre faces",
+            "expected_signal": "0 face(s) found",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2 image(s) processed, 0 face(s) found, done in 3.5s",
+            "setup": [
+              {
+                "command": "pip install --quiet pillow && mkdir -p ~/videre-test && python3 <<'PY'\nfrom PIL import Image\n# two different solid images\nImage.new(\"RGB\", (64, 64), (255, 0, 0)).save(\"/home/sbx/videre-test/red.png\")\nImage.new(\"RGB\", (64, 64), (0, 0, 255)).save(\"/home/sbx/videre-test/blue.png\")\nPY\ncp /home/sbx/videre-test/red.png /home/sbx/videre-test/red-copy.png\nls -l /home/sbx/videre-test && md5sum /home/sbx/videre-test/*",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
           }
         ],
         "pitfalls": [
           {
             "readme_said": "cargo install videre --locked",
-            "actually_needed": "Rust toolchain not present in box; used prebuilt binary from GitHub releases instead",
+            "actually_needed": "downloaded x86_64-unknown-linux-gnu tar.gz from GitHub releases (v0.64.2) and installed videre binary to ~/.local/bin; cargo toolchain must not be installed per box rules",
             "kind": "sandbox"
           },
           {
-            "readme_said": "brew install aegea-dev/tap/videre",
-            "actually_needed": "Homebrew not available on Linux box; binary download is Linux alternative documented later",
+            "readme_said": "cd ~/Photos; videre scan assumes existing photos",
+            "actually_needed": "videre scan/dedupe output goes to stderr; pip install pillow to generate test PNGs",
             "kind": "sandbox"
-          },
-          {
-            "readme_said": "videre search \"golden gate bridge at sunset\"",
-            "actually_needed": "search requires prior `videre embed` which downloads ~1.5 GB model; without it search exits 1 with 'no embeddings' error",
-            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows the dry-run import reporting nothing importable under /tmp/empty_import.",
+          "observed": "Screenshots show scan wrote 3 records, dedupe found 1 exact group with 1 file to remove, and version is 0.64.2.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-videre-20261101-163632-20d8/report.json",
+          "trace_path": "runs/verify/verify-videre-20261102-003721-0c36/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-videre-20261101-163632-20d8/check-1-cmd14.judged.png"
+            "runs/verify/verify-videre-20261102-003721-0c36/check-1-cmd6.judged.png",
+            "runs/verify/verify-videre-20261102-003721-0c36/check-2-cmd7.judged.png",
+            "runs/verify/verify-videre-20261102-003721-0c36/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.069598,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.08148,
         "features": [
           {
             "feature": "find and remove duplicate photos",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "other",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "its check passed in the agent's box but is too long for the record"
+            "note": null
           },
           {
             "feature": "search photos by text description",
@@ -204,23 +236,23 @@
             "smoke_tests": [],
             "reason": "needs_more_resources",
             "failure": null,
-            "note": "videre embed needs ~1.5GB SigLIP model; search exits 1 without embeddings"
+            "note": "text search needs videre embed (~1.5 GB model download), too large for this box"
           },
           {
             "feature": "recognise faces and search by person",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "other",
+            "reason": "not_shown",
             "failure": null,
-            "note": "its check passed in the agent's box but is too long for the record"
+            "note": "its check passed, but the output does not show it: Output reports 0 face(s) found, showing nothing detected."
           },
           {
             "feature": "import from Google Takeout and others",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_shown",
+            "reason": "other",
             "failure": null,
-            "note": "its check passed, but the output does not show it: Output reports nothing importable found with no import performed."
+            "note": "no Google Takeout/Apple Photos/Lightroom sample in box; import correctly rejects ordinary folder"
           }
         ]
       }
@@ -598,5 +630,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:23:05+08:00",
-  "updated_at": "2026-11-01T19:32:21.483958+08:00"
+  "updated_at": "2026-11-02T00:39:30.925020+08:00"
 }
