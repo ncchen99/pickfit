@@ -45,7 +45,7 @@ from pickfit.verify import gui_operate
 from pickfit.verify.box import Box, BoxError, ExecResult
 from pickfit.verify import features as feature_checks
 from pickfit.verify.features import FINISH_FEATURES, FinishFeature, resolve_features
-from pickfit.verify.gui_operate import OperateArgs, run_operation, spec_problems
+from pickfit.verify.gui_operate import OperateArgs, box_home, run_operation, spec_problems
 from pickfit.verify.judge import judge_model_for, read_screen_text
 from pickfit.verify.plan import InstallPlan, plan_for
 from pickfit.verify.rules import RuleHit, error_signature, match_rules
@@ -1120,7 +1120,7 @@ class VerifyAgent:
         if self._elapsed() + OPERATE_RESERVE_S >= self.limits.max_seconds - WRAP_UP_SECONDS:
             self._say(f"  ◈ {_one_line(args.goal, 120)} → refused (time)")
             return "error: too little time is left for an operation (a few minutes). Call finish."
-        problems = spec_problems(args, self.task.readme, home=str(self.box.home))
+        problems = spec_problems(args, self.task.readme, home=box_home(self.box))
         done = [c.operate["spec"].get("feature") for c in self.report.commands if c.operate]
         if len(done) >= OPERATE_MAX:
             problems.append(f"this run has used its {OPERATE_MAX} operations")

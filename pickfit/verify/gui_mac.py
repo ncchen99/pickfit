@@ -33,7 +33,7 @@ import re
 import secrets
 import shlex
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from pickfit.verify import gui
@@ -252,6 +252,22 @@ def approve(cfg):
                     "approved": ok})
     print(json.dumps(out))
 
+def sparkle(cfg):
+    # App bundles that update themselves with Sparkle, and their bundle ids (the app's own Info.plist: data).
+    import plistlib
+    out = []
+    for path in bundles(cfg["roots"]):
+        if not os.path.isdir(os.path.join(path, "Contents", "Frameworks", "Sparkle.framework")):
+            continue
+        try:
+            with open(os.path.join(path, "Contents", "Info.plist"), "rb") as fh:
+                ident = plistlib.load(fh).get("CFBundleIdentifier")
+        except Exception:
+            continue
+        if isinstance(ident, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9.-]{0,200}", ident):
+            out.append({"bundle": path, "id": ident})
+    print(json.dumps(out))
+
 def stop(cfg):
     # bundles_only: just the running apps (an executable inside a .app that is not macOS's), not servers.
     baseline, bundles_only = cfg["baseline"], cfg.get("bundles_only", False)
@@ -295,6 +311,8 @@ if __name__ == "__main__":
         bar_items()
     elif cmd == "approve":
         approve(cfg)
+    elif cmd == "sparkle":
+        sparkle(cfg)
     elif cmd == "stop":
         stop(cfg)
 '''.replace("@UID@", str(MAC_UID)).replace("@SYSTEM@", repr(SYSTEM_PREFIXES)).replace(
@@ -336,6 +354,24 @@ def approve_first_launch(box: TartBox) -> list[dict[str, Any]]:
     """Answer the first-launch prompt for quarantined bundles Gatekeeper accepts as notarized (see module doc)."""
     data = _json_line(_helper(box, "approve", {"roots": [MAC_HOME, "/opt/homebrew/Caskroom"]}, 300))
     return [d for d in data if isinstance(d, dict)] if isinstance(data, list) else []
+
+
+def answer_update_prompts(box: TartBox) -> list[str]:
+    """Answer Sparkle's first-launch question ("Check for updates automatically?") with Don't Check, for each app
+    bundle that embeds Sparkle, as a user does: it stores SUEnableAutomaticChecks = false in the app's defaults,
+    which pickfit writes as sbx before the launch. The sheet covered Neon Vision Editor's window and the operator
+    never got past it (11/2). Returns the bundle ids answered."""
+    data = _json_line(_helper(box, "sparkle", {"roots": [MAC_HOME, "/opt/homebrew/Caskroom"]}, 120))
+    answered = []
+    for item in data if isinstance(data, list) else []:
+        ident = item.get("id") if isinstance(item, dict) else None
+        if not isinstance(ident, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9.-]{0,200}", ident):
+            continue
+        done = box.harness_exec(["/bin/launchctl", "asuser", str(MAC_UID), "/usr/bin/sudo", "-n", "-u", MAC_USER,
+                                 "/usr/bin/defaults", "write", ident, "SUEnableAutomaticChecks", "-bool", "false"], 30)
+        if done.exit_code == 0:
+            answered.append(ident)
+    return answered
 
 
 def start_argv(command: str, tag: str | int) -> list[str]:
@@ -380,7 +416,7 @@ def _scale(windows: list[GuiWindow], factor: float) -> None:
 
 
 def observation(launch: GuiLaunch, approved: list[dict[str, Any]], *, kept: bool = False,
-                clicked: tuple[int, int] | None = None, restarted: int = 0) -> str:
+                clicked: tuple[int, int] | None = None, restarted: int = 0, updates: int = 0) -> str:
     """pickfit's own lines (stdout): what the agent cites and the replay checks. Nothing the app chooses."""
     meaning = {"window": "a window of the app's own process is shown",
                "process_alive": "the app is still running but showed no window of its own",
@@ -407,6 +443,9 @@ def observation(launch: GuiLaunch, approved: list[dict[str, Any]], *, kept: bool
     if blocked:
         lines.append(f"{len(blocked)} quarantined app bundle(s) Gatekeeper does not accept as notarized were left "
                      "blocked, as macOS blocks them for a user")
+    if updates:
+        lines.append(f"pickfit answered the update prompt (\"Check for updates automatically?\") with Don't Check for "
+                     f"{updates} app bundle(s) that use Sparkle, as a user does")
     if launch.error:
         lines.append(f"note: {launch.error}")
     if kept:
@@ -456,6 +495,7 @@ class MacOpened:
     approved: list[dict[str, Any]]
     clicked: tuple[int, int] | None = None
     restarted: int = 0
+    updates: list[str] = field(default_factory=list)  # bundle ids whose update prompt pickfit answered
 
 
 def open_app(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s: int | None = None
@@ -475,6 +515,7 @@ def open_app(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout
     ok, line = stop(box, bundles_only=True)
     restarted = _stopped_count(line) if ok else 0
     approved = approve_first_launch(box)
+    updates = answer_update_prompts(box)
     before = procs(box)
     items_before = _json_line(_helper(box, "items", timeout_s=30, session=True))
     started = box.harness_exec(start_argv(command, tag), 30)
@@ -520,7 +561,7 @@ def open_app(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout
             if factor != 1.0:  # a HiDPI mode: bounds are in points
                 _scale(shown.windows + shown.other_windows, factor)
     return MacOpened(shown=_mac(shown), png=png, seconds=seconds, timed_out=timed_out, approved=approved,
-                     clicked=clicked, restarted=restarted)
+                     clicked=clicked, restarted=restarted, updates=updates)
 
 
 def close_app(box: TartBox, opened: MacOpened, tag: str | int) -> tuple[bytes | None, bool]:
@@ -559,7 +600,7 @@ def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s
     code = 0 if shown.tier == "window" and png is not None and not opened.timed_out and not survived else 1
     result = ExecResult(command=command, exit_code=code,
                         stdout=observation(shown, opened.approved, kept=keep_running, clicked=opened.clicked,
-                                           restarted=opened.restarted),
+                                           restarted=opened.restarted, updates=len(opened.updates)),
                         stderr=app_facts(shown, opened.approved), seconds=opened.seconds, timed_out=opened.timed_out)
     return result, shown, png
 

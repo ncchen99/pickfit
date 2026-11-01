@@ -45,6 +45,7 @@ class FakeMacBox:
                  approve: list[dict[str, Any]] | None = None, started: str = "started\n",
                  reports: list[dict[str, Any]] | None = None) -> None:
         self.session = SESSION
+        self.sparkle: list[dict[str, str]] = []
         self.reports = reports if reports is not None else ([report] if report is not None else [])
         self.stop_out = stop_out
         self.approve = approve or []
@@ -66,6 +67,8 @@ class FakeMacBox:
             out = json.dumps(self.approve)
         elif argv[-1] == "items":
             out = json.dumps(["11", "12"])
+        elif argv[-1] == "sparkle":
+            out = json.dumps(self.sparkle)
         elif argv[-1] == "watch":
             if self.reports:
                 out = f"{gui.MARK}{payload['nonce']} {json.dumps(self.reports.pop(0))}\n"
@@ -114,15 +117,15 @@ def test_a_window_of_its_own_passes_with_pickfits_screenshot():
     assert "first-launch prompt with Open for 1 app bundle(s)" in result.stdout
     assert "CotEditor" not in result.stdout  # the app's names are data, not pickfit's lines
     assert "window 1 owner: 'CotEditor'" in result.stderr and "CotEditor.app" in result.stderr
-    names = [argv[-1] if argv[-1] in ("procs", "approve", "items", "watch", "stop") else "start"
+    names = [argv[-1] if argv[-1] in ("procs", "approve", "sparkle", "items", "watch", "stop") else "start"
              for argv, _ in box.calls]
-    assert names == ["stop", "approve", "procs", "items", "start", "watch", "stop"]  # snapshots before the start
+    assert names == ["stop", "approve", "sparkle", "procs", "items", "start", "watch", "stop"]  # all before the start
     assert box.calls[0][1] == {"baseline": SESSION, "bundles_only": True}  # a running copy would take the launch
-    watch_argv, cfg = box.calls[5]
+    watch_argv, cfg = box.calls[6]
     assert watch_argv[:3] == ["/bin/launchctl", "asuser", "1001"]  # the watcher sits in the desktop session
     assert cfg["before"] == SESSION and cfg["user"] == "sbx" and cfg["min_w"] == gui.MIN_WIDTH
     assert cfg["items_before"] == ["11", "12"] and not cfg.get("any_layer")
-    assert box.calls[6][1] == {"baseline": SESSION, "bundles_only": False}  # then only the login session is left
+    assert box.calls[7][1] == {"baseline": SESSION, "bundles_only": False}  # then only the login session is left
     assert "already running" not in result.stdout
     assert box.screen().clicks == []  # a window of its own: pickfit clicks nothing
     assert shown.to_dict()["display"] == gui_mac.DISPLAY_NOTE and len(gui_mac.DISPLAY_NOTE) <= 120  # not Xvfb
@@ -325,3 +328,14 @@ def test_the_operator_on_a_mac_keeps_command_apart_from_control():
     assert "cmd+shift+g" in gui_operate.MAC_OPERATOR_INSTRUCTIONS and "no window manager" not in \
         gui_operate.MAC_OPERATOR_INSTRUCTIONS
     assert gui_mac.VncDisplay.os == "macos"
+
+
+def test_sparkles_update_prompt_is_answered_before_the_launch_and_said():
+    box = FakeMacBox(report=_report())
+    box.sparkle = [{"bundle": "/Users/sbx/Applications/Neon.app", "id": "com.example.neon"},
+                   {"bundle": "/Users/sbx/Applications/Bad.app", "id": "bad id; rm -rf"}]
+    result, shown, png = gui_mac.launch(box, "open ~/Applications/Neon.app", 1, 30)
+    writes = [argv for argv, _ in box.calls if "defaults" in " ".join(argv)]
+    assert writes == [["/bin/launchctl", "asuser", "1001", "/usr/bin/sudo", "-n", "-u", "sbx", "/usr/bin/defaults",
+                       "write", "com.example.neon", "SUEnableAutomaticChecks", "-bool", "false"]]
+    assert "with Don't Check for 1 app bundle(s) that use Sparkle" in result.stdout

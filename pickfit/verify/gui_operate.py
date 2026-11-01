@@ -312,6 +312,12 @@ class OperateArgs(BaseModel):
         return _plain(value)
 
 
+def box_home(box: Box) -> str:
+    """The box user's home as pickfit's checks name it: a macOS box's own (/Users/sbx); every Linux box's is
+    BOX_HOME (its test fakes map that onto a temporary folder)."""
+    return str(box.home) if getattr(box, "os", "linux") == "macos" else BOX_HOME
+
+
 def home_path(path: str, home: str = BOX_HOME) -> str:
     """~/x and relative paths in the box user's home, as an absolute path (no .. allowed)."""
     path = path.strip()
@@ -554,7 +560,7 @@ def file_probe(box: Box, params: dict[str, Any]) -> dict[str, Any]:
     """Run root's file check; its report, or {"error": why}. A box may name its user's uid and pickfit's Python
     (a macOS box: sbx is 1001, and the Command Line Tools' Python)."""
     nonce = secrets.token_hex(12)
-    full = {"home": str(box.home), "uid": int(getattr(box, "user_uid", BOX_UID)), "max": FILE_MAX_BYTES, "nonce": nonce,
+    full = {"home": box_home(box), "uid": int(getattr(box, "user_uid", BOX_UID)), "max": FILE_MAX_BYTES, "nonce": nonce,
             "max_files": SEARCH_MAX_FILES, "format": None, "contains": [], "since": 0, "before": None, "skip": [],
             "skip_dirs": list(SEARCH_SKIP_DIRS), **params}
     source = _FILE_PY.replace("@PARAMS@", repr(json.dumps(full)))
@@ -1026,7 +1032,7 @@ def _contains_line(expected: list[str], found: list[bool], typed: list[str]) -> 
 
 def check_file(box: Box, spec: GuiCheckSpec, nonce: str, since: float, before: str | None,
                skip: list[str], typed: list[str]) -> dict[str, Any]:
-    target = home_path(spec.path or "")
+    target = home_path(spec.path or "", box_home(box))
     expected = expected_texts(spec, nonce)
     report = file_probe(box, {"mode": "after", "target": target, "since": since - 1, "before": before, "skip": skip,
                               "format": spec.format, "contains": expected})
@@ -1144,7 +1150,7 @@ def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[
     mac = box.os == "macos"  # a tart box's desktop (gui_mac, VncDisplay), else pickfit's Xvfb (gui, XvfbDisplay)
     if mac:
         from pickfit.verify import gui_mac
-    home = str(box.home)
+    home = box_home(box)
     stopped = (gui_mac.stop_box_user if mac else gui.stop_box_user)(box)  # the app is the only box-user process
     if "PICKFIT_KILLED" not in stopped.stdout:
         op.error = "box-user processes survived the stop before the launch"

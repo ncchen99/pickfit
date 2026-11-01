@@ -1043,6 +1043,14 @@ mkdir -p "$prefs/ByHost"
 cp /Users/admin/Library/Preferences/com.apple.SetupAssistant.plist "$prefs/"
 chown -R {MAC_USER}:staff {MAC_HOME}/Library
 sudo -u {MAC_USER} defaults -currentHost write com.apple.screensaver idleTime -int 0
+# 4. A quiet desktop for an operated app: no apps in the Dock and no desktop widgets (a stray click there opens Notes,
+#    Reminders or Games, 11/2), and a click on the wallpaper does not hide every window.
+for args in "com.apple.dock persistent-apps -array" "com.apple.dock persistent-others -array" \
+    "com.apple.dock show-recents -bool false" "com.apple.WindowManager StandardHideWidgets -int 1" \
+    "com.apple.WindowManager StageManagerHideWidgets -int 1" \
+    "com.apple.WindowManager EnableStandardClickToShowDesktop -bool false"; do
+  sudo -u {MAC_USER} defaults write $args
+done
 """
 # sbx's desktop is up: it is the console user and its Dock and Finder run.
 DESKTOP_UP = (f'[ "$(stat -f %Su /dev/console)" = {MAC_USER} ] && pgrep -u {MAC_USER} -x Dock >/dev/null && '
