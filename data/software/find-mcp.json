@@ -52,16 +52,19 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-find-mcp-20261101-002834-c5c6",
+      "run_id": "verify-find-mcp-20261101-021626-580c",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g @agentage/find-mcp",
+          "command": "ls ~/.pickfit/mcp_probe.py && npm install -g @agentage/find-mcp",
           "purpose": "install @agentage/find-mcp globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "agentage-find-mcp --version",
+        "expected_signal": "1.13.3"
+      },
       "first_task": null
     },
     "windows": null
@@ -81,30 +84,39 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:29:49.790756+08:00",
+    "checked_at": "2026-11-01T02:17:43.807039+08:00",
     "runs": [
       {
-        "id": "verify-find-mcp-20261101-002834-c5c6",
+        "id": "verify-find-mcp-20261101-021626-580c",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:29:49.790756+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:17:43.807039+08:00",
         "tool_version": "1.13.3",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g @agentage/find-mcp",
+            "command": "ls ~/.pickfit/mcp_probe.py && npm install -g @agentage/find-mcp",
             "purpose": "install @agentage/find-mcp globally via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- agentage-find-mcp",
+            "command": "agentage-find-mcp --version",
+            "expected_signal": "1.13.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.13.3",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- agentage-find-mcp",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -113,39 +125,58 @@
             "offline": false
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call mcp_categories --args '{}' -- agentage-find-mcp",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call mcp_categories --args '{}' -- agentage-find-mcp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "tools/call: ok tool=mcp_categories content=text text_chars=2148",
             "setup": [],
             "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call mcp_search --args '{\"query\":\"postgres\"}' -- agentage-find-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=mcp_search content=text text_chars=6442",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call mcp_get --args '{\"slug\":\"io-github-pgedge-postgres-mcp\"}' -- agentage-find-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=mcp_get content=text text_chars=2486",
+            "setup": [],
+            "offline": false
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "launch via npx -y @agentage/find-mcp",
-            "actually_needed": "installed binary is named agentage-find-mcp (npm scoped package binary sanitization); use agentage-find-mcp for stdio launch when installed with npm install -g",
+            "readme_said": "launch via npx -y @agentage/find-mcp and binary assumed find-mcp",
+            "actually_needed": "global install provides binary agentage-find-mcp (bin.agentage-find-mcp); probe used agentage-find-mcp, npx -y @agentage/find-mcp equivalent for ephemeral use",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both probes show successful initialize, 3 tools listed, handshake ok, and mcp_categories call returning category data.",
+          "observed": "Screenshots show MCP handshake ok with 3 tools, successful mcp_categories call, and version 1.13.3 output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-find-mcp-20261101-002834-c5c6/report.json",
+          "trace_path": "runs/verify/verify-find-mcp-20261101-021626-580c/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-find-mcp-20261101-002834-c5c6/check-1-cmd5.judged.png",
-            "runs/verify/verify-find-mcp-20261101-002834-c5c6/check-2-cmd6.judged.png"
+            "runs/verify/verify-find-mcp-20261101-021626-580c/check-1-cmd5.judged.png",
+            "runs/verify/verify-find-mcp-20261101-021626-580c/check-2-cmd6.judged.png",
+            "runs/verify/verify-find-mcp-20261101-021626-580c/check-3-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.037805,
+        "cost_usd": 0.048758,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -163,7 +194,39 @@
           "tool_count": 3,
           "called_tool": "mcp_categories",
           "offline": false
-        }
+        },
+        "features": [
+          {
+            "feature": "find MCP servers by keyword with filters",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "get server packages, tools, and install command",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "list category, language, and license filters",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -593,5 +656,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:38:07+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T02:17:43.810456+08:00"
 }

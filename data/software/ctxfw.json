@@ -78,16 +78,19 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-ctxfw-20261101-001823-8014",
+      "run_id": "verify-ctxfw-20261101-020925-9d3d",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install ctxfw 2>&1",
-          "purpose": "install ctxfw via uv tool install ctxfw"
+          "purpose": "Install ctxfw via uv tool install"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "ctxfw --version 2>&1",
+        "expected_signal": "ctxfw 4.1.1"
+      },
       "first_task": null
     },
     "windows": {
@@ -120,28 +123,37 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:19:00.204270+08:00",
+    "checked_at": "2026-11-01T02:10:39.047014+08:00",
     "runs": [
       {
-        "id": "verify-ctxfw-20261101-001823-8014",
+        "id": "verify-ctxfw-20261101-020925-9d3d",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:19:00.204270+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:10:39.047014+08:00",
         "tool_version": "4.1.1",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install ctxfw 2>&1",
-            "purpose": "install ctxfw via uv tool install ctxfw"
+            "purpose": "Install ctxfw via uv tool install"
           }
         ],
         "smoke_tests": [
+          {
+            "command": "ctxfw --version 2>&1",
+            "expected_signal": "ctxfw 4.1.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ctxfw 4.1.1",
+            "setup": [],
+            "offline": true
+          },
           {
             "command": "python3 ~/.pickfit/mcp_probe.py -- ctxfw mcp 2>&1",
             "expected_signal": "handshake: ok",
@@ -152,33 +164,64 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call evaluate_spec_axioms --args '{\"brief_text\":\"Test spec with enough content to evaluate. This is a simple test.\"}' -- ctxfw mcp 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call prune_file --args '{\"path\": \"/tmp/sample.py\"}' -- ctxfw mcp 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=evaluate_spec_axioms content=text text_chars=652",
+            "observed_excerpt": "tools/call: ok tool=prune_file content=text text_chars=95",
+            "setup": [
+              {
+                "command": "cat > /tmp/sample.py << 'PY'\ndef hello(name: str) -> str:\n    return f\"hello {name}\"\n\nclass Foo:\n    def bar(self, x: int) -> int:\n        return x*2\nPY\necho \"written\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call evaluate_spec_axioms --args '{\"brief_text\": \"System must handle user authentication with state machine INIT->AUTH->DONE, error codes E001-E005, variable x in [0,100], negative invariants: 1) never store plaintext passwords 2) never expose internal errors 3) never allow unauthenticated access 4) never bypass rate limits 5) never log sensitive data. Bounded domains defined.\"}' -- ctxfw mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=evaluate_spec_axioms content=text text_chars=927",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call resolve_context_bundle --args '{\"target_file\": \"/tmp/proj/main.py\", \"project_root\": \"/tmp/proj\"}' -- ctxfw mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"resolve_context_bundle\", \"count\": 5, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"ctxfw\", \"mcp\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2024-11-05\", \"server\": \"context-firewall-mcp\", \"tools\": [\"prune_file\", \"resolve_context_bundle\", \"evaluate_spec_ax…",
+            "setup": [
+              {
+                "command": "cat > /tmp/sample.py << 'PY'\ndef hello(name: str) -> str:\n    return f\"hello {name}\"\n\nclass Foo:\n    def bar(self, x: int) -> int:\n        return x*2\nPY\necho \"written\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show MCP handshake succeeding with 5 tools listed and evaluate_spec_axioms returning a QUARANTINED result.",
+          "observed": "Screenshots show ctxfw 4.1.1 version, MCP handshake with 5 tools listed, and successful prune_file call returning pruned code.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-ctxfw-20261101-001823-8014/report.json",
+          "trace_path": "runs/verify/verify-ctxfw-20261101-020925-9d3d/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-ctxfw-20261101-001823-8014/check-1-cmd3.judged.png",
-            "runs/verify/verify-ctxfw-20261101-001823-8014/check-2-cmd4.judged.png"
+            "runs/verify/verify-ctxfw-20261101-020925-9d3d/check-1-cmd12.judged.png",
+            "runs/verify/verify-ctxfw-20261101-020925-9d3d/check-2-cmd4.judged.png",
+            "runs/verify/verify-ctxfw-20261101-020925-9d3d/check-3-cmd6.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.042959,
+        "cost_usd": 0.083088,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -197,9 +240,37 @@
             "query_audit_ledger"
           ],
           "tool_count": 5,
-          "called_tool": "evaluate_spec_axioms",
+          "called_tool": "prune_file",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "compact peripheral code via AST pruning",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "block indirect prompt injection attacks",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; No dedicated SARA injection tool exposed; tried evaluate_patch as closest, returned tools/call error"
+          },
+          {
+            "feature": "enforce axiomatic integrity on specs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows aci_score 0.7 below promised 0.9000 with only 1 invariant found."
+          }
+        ]
       }
     ]
   },
@@ -650,5 +721,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:52+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T02:10:39.048810+08:00"
 }

@@ -56,18 +56,18 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-agenticschema-20261101-005459-27c4",
+      "run_id": "verify-agenticschema-20261101-022427-7630",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g @agenticschema/server",
-          "purpose": "Install @agenticschema/server globally via npm"
+          "purpose": "install @agenticschema/server globally via npm"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "agenticschema --help",
-        "expected_signal": "agenticschema: serve a page's Schema.org markup"
+        "expected_signal": "agenticschema: serve a page's Schema.org markup as an MCP server"
       },
       "first_task": null
     },
@@ -88,31 +88,31 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:56:23.048706+08:00",
+    "checked_at": "2026-11-01T02:26:00.841370+08:00",
     "runs": [
       {
-        "id": "verify-agenticschema-20261101-005459-27c4",
+        "id": "verify-agenticschema-20261101-022427-7630",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:56:23.048706+08:00",
-        "tool_version": "0.4.0",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:26:00.841370+08:00",
+        "tool_version": "0.0.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g @agenticschema/server",
-            "purpose": "Install @agenticschema/server globally via npm"
+            "purpose": "install @agenticschema/server globally via npm"
           }
         ],
         "smoke_tests": [
           {
             "command": "agenticschema --help",
-            "expected_signal": "agenticschema: serve a page's Schema.org markup",
+            "expected_signal": "agenticschema: serve a page's Schema.org markup as an MCP server",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "agenticschema: serve a page's Schema.org markup as an MCP server",
@@ -120,7 +120,7 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- agenticschema https://en.wikipedia.org/wiki/Backpack 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 -- agenticschema https://en.wikipedia.org/wiki/Backpack",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -129,7 +129,7 @@
             "offline": false
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --call get_article --args '{}' -- agenticschema https://en.wikipedia.org/wiki/Backpack 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 20 --call get_article --args '{}' -- agenticschema https://en.wikipedia.org/wiki/Backpack",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
@@ -140,29 +140,34 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "Launch with npx @agenticschema/server --live",
-            "actually_needed": "Published npm version 0.4.0 has no --live flag; server is page-bound and requires URL argument(s) e.g. agenticschema https://en.wikipedia.org/wiki/Backpack",
+            "readme_said": "npx @agenticschema/server --live starts persistent Live Search MCP server",
+            "actually_needed": "@agenticschema/server CLI rejects --live (unknown option); stdio mode requires one or more URLs",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "npx @agenticschema/server --json --fallback / --context --early-abort / --resolution L0 examples",
+            "actually_needed": "server package only supports --max-tools, --no-actions, --allow-host, --http, --port, --quiet",
             "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 3 tools, get_article returning Article markup, and help describing Schema.org MCP server.",
+          "observed": "Screenshots show MCP handshake succeeding, get_article tool returning Article markup, and help describing Schema.org MCP server.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-agenticschema-20261101-005459-27c4/report.json",
+          "trace_path": "runs/verify/verify-agenticschema-20261101-022427-7630/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-agenticschema-20261101-005459-27c4/check-1-cmd6.judged.png",
-            "runs/verify/verify-agenticschema-20261101-005459-27c4/check-2-cmd7.judged.png",
-            "runs/verify/verify-agenticschema-20261101-005459-27c4/check-3-cmd10.judged.png"
+            "runs/verify/verify-agenticschema-20261101-022427-7630/check-1-cmd12.judged.png",
+            "runs/verify/verify-agenticschema-20261101-022427-7630/check-2-cmd13.judged.png",
+            "runs/verify/verify-agenticschema-20261101-022427-7630/check-3-cmd11.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.055083,
+        "cost_usd": 0.089914,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -181,7 +186,35 @@
           "tool_count": 3,
           "called_tool": "get_article",
           "offline": false
-        }
+        },
+        "features": [
+          {
+            "feature": "Turn webpages into typed JSON",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Expose websites as callable WebMCP tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Requires browser script tag and document.modelContext"
+          },
+          {
+            "feature": "Generate Epistemic Context for AI search",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "Epistemic Context CLI not in server package"
+          }
+        ]
       }
     ]
   },
@@ -205,15 +238,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:56:23+08:00",
+    "computed_at": "2026-11-01T02:26:00+08:00",
     "quality": {
-      "total": 86.6,
+      "total": 80.3,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -254,7 +287,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 64.17
+      "value": 59.5
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -561,5 +594,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:42+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T02:26:00.844324+08:00"
 }

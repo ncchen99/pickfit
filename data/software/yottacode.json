@@ -76,28 +76,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-yottacode-20261031-002738-e636",
+      "run_id": "verify-yottacode-20261101-031100-45b8",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://yottacode.ai/cli/install.sh -o /tmp/yottacode-install.sh && wc -c /tmp/yottacode-install.sh && head -c 2000 /tmp/yottacode-install.sh",
-          "purpose": "Download installer script for reading"
+          "command": "curl -fsSL https://yottacode.ai/cli/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -l /tmp/install.sh",
+          "purpose": "download install script from https://yottacode.ai/cli/install.sh"
         },
         {
-          "command": "bash /tmp/yottacode-install.sh --no-modify-rc && ls -l \"$HOME/.yottacode/bin/yottacode\"",
-          "purpose": "Run installer script after reading"
-        },
-        {
-          "command": "mkdir -p \"$HOME/.local/bin\" && ln -sf \"$HOME/.yottacode/bin/yottacode\" \"$HOME/.local/bin/yottacode\" && yottacode --version",
-          "purpose": "Link binary onto PATH and check version"
+          "command": "bash /tmp/install.sh --no-modify-rc 2>&1",
+          "purpose": "run install script with --no-modify-rc, installs 0.5.0 to ~/.yottacode/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "yottacode version",
+        "command": "export PATH=\"$HOME/.yottacode/bin:$PATH\" && yottacode --version\n",
         "expected_signal": "yottacode version 0.5.0"
       },
-      "first_task": "yottacode version"
+      "first_task": null
     },
     "windows": null
   },
@@ -116,112 +112,110 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:28:51.124412+08:00",
+    "checked_at": "2026-11-01T03:12:00.608071+08:00",
     "runs": [
       {
-        "id": "verify-yottacode-20261031-002738-e636",
+        "id": "verify-yottacode-20261101-031100-45b8",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:28:51.124412+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T03:12:00.608071+08:00",
         "tool_version": "0.5.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://yottacode.ai/cli/install.sh -o /tmp/yottacode-install.sh && wc -c /tmp/yottacode-install.sh && head -c 2000 /tmp/yottacode-install.sh",
-            "purpose": "Download installer script for reading"
+            "command": "curl -fsSL https://yottacode.ai/cli/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -l /tmp/install.sh",
+            "purpose": "download install script from https://yottacode.ai/cli/install.sh"
           },
           {
-            "command": "bash /tmp/yottacode-install.sh --no-modify-rc && ls -l \"$HOME/.yottacode/bin/yottacode\"",
-            "purpose": "Run installer script after reading"
-          },
-          {
-            "command": "mkdir -p \"$HOME/.local/bin\" && ln -sf \"$HOME/.yottacode/bin/yottacode\" \"$HOME/.local/bin/yottacode\" && yottacode --version",
-            "purpose": "Link binary onto PATH and check version"
+            "command": "bash /tmp/install.sh --no-modify-rc 2>&1",
+            "purpose": "run install script with --no-modify-rc, installs 0.5.0 to ~/.yottacode/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "yottacode version",
+            "command": "export PATH=\"$HOME/.yottacode/bin:$PATH\" && yottacode --version\n",
             "expected_signal": "yottacode version 0.5.0",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "yottacode version 0.5.0 (b4c91bd, dirty)",
             "setup": [],
             "offline": true
-          },
-          {
-            "command": "yottacode --help",
-            "expected_signal": "Available Commands:",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Available Commands:",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "yottacode provider list",
-            "expected_signal": "no providers configured",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "no providers configured — try `yottacode provider add`",
-            "setup": [],
-            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -fsSL https://yottacode.ai/cli/install.sh | bash",
-            "actually_needed": "Download to /tmp/yottacode-install.sh with curl, read it with read_file, then run `bash /tmp/yottacode-install.sh --no-modify-rc`; do not pipe the URL straight into bash.",
+            "readme_said": "curl -fsSL https://yottacode.ai/cli/install.sh | bash installs yottacode ready to run",
+            "actually_needed": "installer puts binary in $HOME/.yottacode/bin which is not on default PATH (~/.local/bin); needed manual ln -sf ~/.yottacode/bin/yottacode ~/.local/bin/yottacode or export PATH",
             "kind": "sandbox"
           },
           {
-            "readme_said": "Installer finishes with `Then run yottacode` implying it is immediately on PATH.",
-            "actually_needed": "Symlink $HOME/.yottacode/bin/yottacode to $HOME/.local/bin/yottacode (or export PATH=\"$HOME/.yottacode/bin:$PATH\") because the installer default $HOME/.yottacode/bin is not on the box PATH which starts with ~/.local/bin.",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "Install script installs the yottacode binary from GitHub releases.",
-            "actually_needed": "Installer fetches prebuilt tarball yottacode_0.5.0_linux_amd64.tar.gz plus SHA256SUMS and verifies checksum before installing; the binary payload cannot be read as text before execution.",
+            "readme_said": "yottacode setup then yottacode",
+            "actually_needed": "both require a provider/API key (OPENAI_API_KEY etc) or Ollama; doctor exits 1 with 'no model set: pass --model <name>, export YOTTACODE_MODEL, or run yottacode setup'",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show expected outputs: no providers configured message and yottacode version 0.5.0.",
+          "observed": "Screenshot shows yottacode --version printing yottacode version 0.5.0 (b4c91bd, dirty).",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-yottacode-20261031-002738-e636/report.json",
+          "trace_path": "runs/verify/verify-yottacode-20261101-031100-45b8/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-yottacode-20261031-002738-e636/check-1-cmd8.judged.png",
-            "runs/verify/verify-yottacode-20261031-002738-e636/check-2-cmd6.judged.png"
+            "runs/verify/verify-yottacode-20261101-031100-45b8/check-1-cmd4.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.064474
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.064116,
+        "features": [
+          {
+            "feature": "turn issues into tested pull requests",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "turn issues into tested PRs requires LLM provider (OPENAI_API_KEY) and GitHub integration, not testable offline"
+          },
+          {
+            "feature": "manage branches, commits and pull requests",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; worktree help shows isolated worktrees under .yottacode/worktrees"
+          },
+          {
+            "feature": "approve file writes and shell commands",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; permissions help shows approval-first permission rules"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T03:12:00+08:00",
     "quality": {
-      "total": 65.7,
+      "total": 70.2,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
+          "score": 0.6,
           "weight": 40.0
         },
         "install_docs": {
@@ -262,7 +256,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 43.43
+      "value": 46.4
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -569,5 +563,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:13+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T03:12:00.611236+08:00"
 }

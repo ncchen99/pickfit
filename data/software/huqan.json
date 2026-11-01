@@ -75,17 +75,17 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-huqan-20261101-000737-e666",
+      "run_id": "verify-huqan-20261101-020743-30ae",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g huqan",
-          "purpose": "install huqan globally via npm"
+          "purpose": "install huqan via npm global"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "huqan --version",
+        "command": "huqan --version 2>&1; echo EXIT:$?\nnode --version",
         "expected_signal": "1.1.1"
       },
       "first_task": null
@@ -120,30 +120,30 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:08:47.024105+08:00",
+    "checked_at": "2026-11-01T02:09:21.655001+08:00",
     "runs": [
       {
-        "id": "verify-huqan-20261101-000737-e666",
+        "id": "verify-huqan-20261101-020743-30ae",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:08:47.024105+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:09:21.655001+08:00",
         "tool_version": "1.1.1",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g huqan",
-            "purpose": "install huqan globally via npm"
+            "purpose": "install huqan via npm global"
           }
         ],
         "smoke_tests": [
           {
-            "command": "huqan --version",
+            "command": "huqan --version 2>&1; echo EXIT:$?\nnode --version",
             "expected_signal": "1.1.1",
             "exit_code": 0,
             "passed": true,
@@ -152,7 +152,7 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- huqan-mcp",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- huqan-mcp 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -161,11 +161,20 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call huqan.status --args '{}' -- huqan-mcp",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call huqan.policy --args '{\"tool\":\"bash\",\"input\":\"rm -rf /\",\"goal\":\"delete everything\"}' -- huqan-mcp 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=huqan.status content=text text_chars=2948",
+            "observed_excerpt": "tools/call: ok tool=huqan.policy content=text text_chars=3472",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call huqan.policy --args '{\"tool\":\"huqan.learn\",\"input\":\"test\"}' -- huqan-mcp 2>&1\npython3 ~/.pickfit/mcp_probe.py --call huqan.trust_receipt --args '{\"workspaceId\":\"default\"}' -- huqan-mcp 2>&1\npython3 ~/.pickfit/mcp_probe.py --call huqan.audit --args '{\"workspaceId\":\"default\"}' -- huqan-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=huqan.policy content=text text_chars=3551",
             "setup": [],
             "offline": true
           }
@@ -174,21 +183,21 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 26 tools, successful huqan.status call returning system_status, and CLI version 1.1.1.",
+          "observed": "Screenshots show MCP handshake with 26 tools, policy blocking rm -rf /, and CLI reporting version 1.1.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-huqan-20261101-000737-e666/report.json",
+          "trace_path": "runs/verify/verify-huqan-20261101-020743-30ae/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-huqan-20261101-000737-e666/check-1-cmd5.judged.png",
-            "runs/verify/verify-huqan-20261101-000737-e666/check-2-cmd6.judged.png",
-            "runs/verify/verify-huqan-20261101-000737-e666/check-3-cmd7.judged.png"
+            "runs/verify/verify-huqan-20261101-020743-30ae/check-1-cmd4.judged.png",
+            "runs/verify/verify-huqan-20261101-020743-30ae/check-2-cmd6.judged.png",
+            "runs/verify/verify-huqan-20261101-020743-30ae/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.044244,
+        "cost_usd": 0.108131,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -227,9 +236,37 @@
             "huqan.audit"
           ],
           "tool_count": 26,
-          "called_tool": "huqan.status",
+          "called_tool": "huqan.policy",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "block risky agent actions before execution",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "record decisions as verifiable Trust Receipts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only an audit report, with no verifiable Trust Receipt content visible."
+          },
+          {
+            "feature": "hold mutating calls for human approval",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; huqan.policy for huqan.learn returned action review requiresApproval true"
+          }
+        ]
       }
     ]
   },
@@ -665,5 +702,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T02:09:21.657300+08:00"
 }

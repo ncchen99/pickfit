@@ -71,20 +71,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-renovate-mcp-20261101-002826-3be1",
-      "method": "binary",
+      "run_id": "verify-renovate-mcp-20261101-023552-c737",
+      "method": "npm",
       "steps": [
         {
-          "command": "curl -fsSL https://nodejs.org/dist/v24.11.0/node-v24.11.0-linux-x64.tar.xz -o /tmp/node.tar.xz && mkdir -p /tmp/node24 && tar -xJf /tmp/node.tar.xz -C /tmp/node24 --strip-components=1 && /tmp/node24/bin/node --version && echo ok",
-          "purpose": "download Node.js 24.11.0 tarball required by README"
-        },
-        {
-          "command": "mkdir -p $HOME/.local/node24 && tar -xJf /tmp/node.tar.xz -C $HOME/.local/node24 --strip-components=1 && $HOME/.local/node24/bin/node --version\n# make it available via PATH: symlink into ~/.local/bin which is already on PATH\nln -sf $HOME/.local/node24/bin/node $HOME/.local/bin/node\nln -sf $HOME/.local/node24/bin/npm $HOME/.local/bin/npm\nln -sf $HOME/.local/node24/bin/npx $HOME/.local/bin/npx\nnode --version; npm --version",
-          "purpose": "extract Node 24.11 to ~/.local/node24 and symlink to ~/.local/bin"
-        },
-        {
-          "command": "npm install -g renovate-mcp",
-          "purpose": "npm install -g renovate-mcp"
+          "command": "npm install -g renovate-mcp@1.7.1",
+          "purpose": "npm install -g renovate-mcp@1.7.1"
         }
       ],
       "manual_steps": [],
@@ -108,38 +100,30 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:31:16.143124+08:00",
+    "checked_at": "2026-11-01T02:39:35.244787+08:00",
     "runs": [
       {
-        "id": "verify-renovate-mcp-20261101-002826-3be1",
+        "id": "verify-renovate-mcp-20261101-023552-c737",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:31:16.143124+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:39:35.244787+08:00",
         "tool_version": "1.7.1",
-        "install_method": "binary",
+        "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://nodejs.org/dist/v24.11.0/node-v24.11.0-linux-x64.tar.xz -o /tmp/node.tar.xz && mkdir -p /tmp/node24 && tar -xJf /tmp/node.tar.xz -C /tmp/node24 --strip-components=1 && /tmp/node24/bin/node --version && echo ok",
-            "purpose": "download Node.js 24.11.0 tarball required by README"
-          },
-          {
-            "command": "mkdir -p $HOME/.local/node24 && tar -xJf /tmp/node.tar.xz -C $HOME/.local/node24 --strip-components=1 && $HOME/.local/node24/bin/node --version\n# make it available via PATH: symlink into ~/.local/bin which is already on PATH\nln -sf $HOME/.local/node24/bin/node $HOME/.local/bin/node\nln -sf $HOME/.local/node24/bin/npm $HOME/.local/bin/npm\nln -sf $HOME/.local/node24/bin/npx $HOME/.local/bin/npx\nnode --version; npm --version",
-            "purpose": "extract Node 24.11 to ~/.local/node24 and symlink to ~/.local/bin"
-          },
-          {
-            "command": "npm install -g renovate-mcp",
-            "purpose": "npm install -g renovate-mcp"
+            "command": "npm install -g renovate-mcp@1.7.1",
+            "purpose": "npm install -g renovate-mcp@1.7.1"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- renovate-mcp",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 90 -- renovate-mcp 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -148,11 +132,59 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call get_version --args '{}' -- renovate-mcp",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call read_config --args '{\"repoPath\":\"/tmp/testrepo\"}' --timeout 90 -- renovate-mcp 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=get_version content=text text_chars=233",
+            "observed_excerpt": "tools/call: ok tool=read_config content=text text_chars=329",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cat > /tmp/testrepo/renovate.json <<'EOF'\n{\n  \"$schema\": \"https://docs.renovatebot.com/renovate-schema.json\",\n  \"extends\": [\"config:recommended\"],\n  \"packageRules\": [\n    {\n      \"matchDepTypes\": [\"devDependencies\"],\n      \"groupName\": \"dev deps\"\n    }\n  ]\n}\nEOF\ncat /tmp/testrepo/renovate.json\necho \"---\"\nmkdir -p /tmp/testrepo/sub\necho \"FROM node:20\" > /tmp/testrepo/Dockerfile\necho \"dockerfile created\"\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call suggest_presets --args '{\"query\":\"automerge patches, group dev deps\"}' --timeout 90 -- renovate-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=suggest_presets content=text text_chars=3335",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call preview_custom_manager --args '{\"repoPath\":\"/tmp/testrepo\",\"manager\":{\"customType\":\"regex\",\"managerFilePatterns\":[\"**/Dockerfile\"],\"matchStrings\":[\"FROM (?<depName>[^:]+):(?<currentValue>[^\\\\s]+)\"]}}' --timeout 90 -- renovate-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=preview_custom_manager content=text text_chars=433",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cat > /tmp/testrepo/renovate.json <<'EOF'\n{\n  \"$schema\": \"https://docs.renovatebot.com/renovate-schema.json\",\n  \"extends\": [\"config:recommended\"],\n  \"packageRules\": [\n    {\n      \"matchDepTypes\": [\"devDependencies\"],\n      \"groupName\": \"dev deps\"\n    }\n  ]\n}\nEOF\ncat /tmp/testrepo/renovate.json\necho \"---\"\nmkdir -p /tmp/testrepo/sub\necho \"FROM node:20\" > /tmp/testrepo/Dockerfile\necho \"dockerfile created\"\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call validate_config --args '{\"configContent\":{\"extends\":[\"config:recommended\"]}}' --timeout 90 -- renovate-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=validate_config content=text text_chars=182",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call lint_config --args '{\"configContent\":{\"extends\":[\"config:recommended\"]}}' --timeout 90 -- renovate-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=lint_config content=text text_chars=37",
             "setup": [],
             "offline": true
           }
@@ -160,27 +192,28 @@
         "pitfalls": [
           {
             "readme_said": "Requires Node.js ≥ 24.11",
-            "actually_needed": "Box has Node 22.23.4 — had to download and install Node 24.11.0 tarball to ~/.local/node24 and symlink into ~/.local/bin",
+            "actually_needed": "Server installed and handshaked successfully on Node 22.23.4 with EBADENGINE warnings only",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show successful MCP handshake with 18 tools and get_version returning 1.7.1.",
+          "observed": "Screenshots show renovate-mcp handshake with 18 tools and successful read_config and suggest_presets tool calls.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-renovate-mcp-20261101-002826-3be1/report.json",
+          "trace_path": "runs/verify/verify-renovate-mcp-20261101-023552-c737/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-renovate-mcp-20261101-002826-3be1/check-1-cmd8.judged.png",
-            "runs/verify/verify-renovate-mcp-20261101-002826-3be1/check-2-cmd7.judged.png"
+            "runs/verify/verify-renovate-mcp-20261101-023552-c737/check-1-cmd5.judged.png",
+            "runs/verify/verify-renovate-mcp-20261101-023552-c737/check-2-cmd7.judged.png",
+            "runs/verify/verify-renovate-mcp-20261101-023552-c737/check-3-cmd8.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.063261,
+        "cost_usd": 0.084412,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -211,9 +244,52 @@
             "get_version"
           ],
           "tool_count": 18,
-          "called_tool": "get_version",
+          "called_tool": "read_config",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Read and explain Renovate configs",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Discover presets from intent",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Preview custom managers",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Validate and lint configs",
+            "status": "checked",
+            "smoke_tests": [
+              4,
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -292,15 +368,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-01T02:39:35+08:00",
     "quality": {
-      "total": 83.0,
+      "total": 98.0,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.7,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -343,7 +419,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 44.57
+      "value": 52.63
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -874,5 +950,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T02:39:35.248346+08:00"
 }

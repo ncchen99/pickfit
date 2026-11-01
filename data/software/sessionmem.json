@@ -78,12 +78,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-sessionmem-20261101-000851-5845",
+      "run_id": "verify-sessionmem-20261101-020925-111e",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g sessionmem",
-          "purpose": "install sessionmem via npm install -g"
+          "purpose": "install sessionmem via npm"
         }
       ],
       "manual_steps": [],
@@ -91,7 +91,7 @@
         "command": "sessionmem --version",
         "expected_signal": "1.10.1"
       },
-      "first_task": "sessionmem ping"
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -123,25 +123,25 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:09:53.582726+08:00",
+    "checked_at": "2026-11-01T02:11:35.936981+08:00",
     "runs": [
       {
-        "id": "verify-sessionmem-20261101-000851-5845",
+        "id": "verify-sessionmem-20261101-020925-111e",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:09:53.582726+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:11:35.936981+08:00",
         "tool_version": "1.10.1",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g sessionmem",
-            "purpose": "install sessionmem via npm install -g"
+            "purpose": "install sessionmem via npm"
           }
         ],
         "smoke_tests": [
@@ -155,15 +155,6 @@
             "offline": true
           },
           {
-            "command": "sessionmem ping",
-            "expected_signal": "status: ok",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "status: ok",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "python3 ~/.pickfit/mcp_probe.py -- sessionmem run",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
@@ -173,40 +164,100 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call stats --args '{}' -- sessionmem run",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call startup_inject_memories --args '{}' -- sessionmem run",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=stats content=text text_chars=65",
+            "observed_excerpt": "tools/call: ok tool=startup_inject_memories content=text text_chars=22",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call searchMemoryIndex --args '{\"query\":\"Postgres\",\"limit\":10}' -- sessionmem run",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=searchMemoryIndex content=text text_chars=54",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call retrieveMemories --args '{\"query\":\"test\",\"limit\":5}' -- sessionmem run",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=retrieveMemories content=text text_chars=96",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call storeMemory --args '{\"memoryId\":\"test-mem-001\",\"sessionId\":\"test-session-001\",\"sourceAdapter\":\"generic\",\"kind\":\"decision\",\"content\":\"Test decision: use Postgres for session storage\",\"importance\":0.8}' -- sessionmem run",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"storeMemory\", \"count\": 15, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"sessionmem\", \"run\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"sessionmem\", \"tools\": [\"searchMemoryIndex\", \"memoryTimeline\", \"retrieveMemories\", \"storeMemory\"…",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call batchStoreMemory --args '{\"memories\":[{\"memoryId\":\"test-mem-002\",\"sessionId\":\"test-session-003\",\"sourceAdapter\":\"generic\",\"kind\":\"fact\",\"content\":\"Stack uses TypeScript and Next.js\",\"importance\":0.7}]}' -- sessionmem run",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"batchStoreMemory\", \"count\": 15, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"sessionmem\", \"run\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"sessionmem\", \"tools\": [\"searchMemoryIndex\", \"memoryTimeline\", \"retrieveMemories\", \"storeMe…",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call ingestSessionEvents --args '{\"sessionId\":\"test-session-002\",\"events\":[{\"tool\":\"Bash\",\"input\":{\"command\":\"echo hello\"},\"output\":\"hello\",\"timestamp\":\"2025-01-01T00:00:00Z\"}]}' -- sessionmem run",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"ingestSessionEvents\", \"count\": 15, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"sessionmem\", \"run\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"sessionmem\", \"tools\": [\"searchMemoryIndex\", \"memoryTimeline\", \"retrieveMemories\", \"stor…",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "SESSIONMEM_DB_PATH=/tmp/sessionmem-test.db python3 ~/.pickfit/mcp_probe.py --call ingestSessionEvents --args '{\"sessionId\":\"test-session-002\",\"events\":[{\"tool\":\"Bash\",\"input\":{\"command\":\"echo hello\"},\"output\":\"hello\",\"timestamp\":\"2025-01-01T00:00:00Z\"}]}' -- sessionmem run",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"ingestSessionEvents\", \"count\": 15, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"sessionmem\", \"run\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"sessionmem\", \"tools\": [\"searchMemoryIndex\", \"memoryTimeline\", \"retrieveMemories\", \"stor…",
+            "setup": [
+              {
+                "command": "SESSIONMEM_DB_PATH=/tmp/sessionmem-test.db python3 ~/.pickfit/mcp_probe.py --call storeMemory --args '{\"memoryId\":\"test-mem-001\",\"sessionId\":\"test-session-001\",\"sourceAdapter\":\"generic\",\"kind\":\"decision\",\"content\":\"Test decision: use Postgres for session storage\",\"importance\":0.8}' -- sessionmem run\n# Also try ingest with isolated db",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "sessionmem doctor reports PASS when configured",
-            "actually_needed": "doctor reports FAIL for autostart/memory store until ping initializes DB; requires autostart enable and ping",
-            "kind": "note"
+            "readme_said": "storeMemory importance as float example 0.8 implied",
+            "actually_needed": "importance must be int (schema expects int, e.g. 1) - probe error -32602 invalid number at importance",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks show expected signals: ping reports status ok, MCP probe reports handshake ok with 15 tools, and --version prints 1.10.1.",
+          "observed": "Screenshots show MCP handshake with 15 tools, successful startup_inject_memories tool call, and version 1.10.1 output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-sessionmem-20261101-000851-5845/report.json",
+          "trace_path": "runs/verify/verify-sessionmem-20261101-020925-111e/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-sessionmem-20261101-000851-5845/check-1-cmd5.judged.png",
-            "runs/verify/verify-sessionmem-20261101-000851-5845/check-2-cmd6.judged.png",
-            "runs/verify/verify-sessionmem-20261101-000851-5845/check-3-cmd2.judged.png"
+            "runs/verify/verify-sessionmem-20261101-020925-111e/check-1-cmd5.judged.png",
+            "runs/verify/verify-sessionmem-20261101-020925-111e/check-2-cmd8.judged.png",
+            "runs/verify/verify-sessionmem-20261101-020925-111e/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.030796,
+        "cost_usd": 0.082476,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -235,9 +286,49 @@
             "startup_inject_memories"
           ],
           "tool_count": 15,
-          "called_tool": "stats",
+          "called_tool": "startup_inject_memories",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "store project decisions across sessions",
+            "status": "test_failed",
+            "smoke_tests": [
+              5,
+              6
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "storeMemory/batchStoreMemory error with float importance; with int it succeeds but not as isolated passing command in record"
+          },
+          {
+            "feature": "capture session events while working",
+            "status": "test_failed",
+            "smoke_tests": [
+              7,
+              8
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "ingestSessionEvents returned call_error 3 times (exit 5)"
+          },
+          {
+            "feature": "load relevant memories at session start",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Startup call returned only 'Relevant prior context' with no memories and retrieve shows total 0."
+          },
+          {
+            "feature": "search stored memories by text",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Search for Postgres returned empty memories list with hasMore false."
+          }
+        ]
       }
     ]
   },
@@ -271,15 +362,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-01T02:11:35+08:00",
     "quality": {
-      "total": 94.1,
+      "total": 86.6,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -322,7 +413,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 53.73
+      "value": 49.45
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -693,5 +784,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:25+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T02:11:35.939900+08:00"
 }

@@ -79,20 +79,17 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-openhire-20261101-002217-22bd",
+      "run_id": "verify-openhire-20261101-020925-7eab",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install openhire --force",
-          "purpose": "install openhire via uv tool install"
+          "command": "uv tool install openhire 2>&1",
+          "purpose": "Install openhire via uv tool install openhire"
         }
       ],
       "manual_steps": [],
-      "check": {
-        "command": "ohp version",
-        "expected_signal": "openhire 0.8.47"
-      },
-      "first_task": "ohp version"
+      "check": null,
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -124,39 +121,30 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:23:21.378746+08:00",
+    "checked_at": "2026-11-01T02:11:53.313774+08:00",
     "runs": [
       {
-        "id": "verify-openhire-20261101-002217-22bd",
+        "id": "verify-openhire-20261101-020925-7eab",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:23:21.378746+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:11:53.313774+08:00",
         "tool_version": "0.8.47",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install openhire --force",
-            "purpose": "install openhire via uv tool install"
+            "command": "uv tool install openhire 2>&1",
+            "purpose": "Install openhire via uv tool install openhire"
           }
         ],
         "smoke_tests": [
           {
-            "command": "ohp version",
-            "expected_signal": "openhire 0.8.47",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "openhire 0.8.47",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- ohp serve\n",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- ohp serve 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -165,11 +153,29 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call list_portals --args '{}' -- ohp serve\n",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search_jobs --args '{\"limit\":3}' -- ohp serve 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=list_portals content=text text_chars=27202",
+            "observed_excerpt": "tools/call: ok tool=search_jobs content=text text_chars=2089",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call check_employer --args '{\"company\":\"Waymo\"}' -- ohp serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=check_employer content=text text_chars=3944",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call check_applications --args '{\"fingerprint\":\"test-fingerprint-123\"}' -- ohp serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=check_applications content=text text_chars=610",
             "setup": [],
             "offline": true
           }
@@ -189,21 +195,21 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake succeeding, list_portals returning 32 portals, and version output matching 0.8.47.",
+          "observed": "Screenshots show MCP server initializing, listing 13 tools, and successfully executing search_jobs and check_employer calls.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-openhire-20261101-002217-22bd/report.json",
+          "trace_path": "runs/verify/verify-openhire-20261101-020925-7eab/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-openhire-20261101-002217-22bd/check-1-cmd4.judged.png",
-            "runs/verify/verify-openhire-20261101-002217-22bd/check-2-cmd5.judged.png",
-            "runs/verify/verify-openhire-20261101-002217-22bd/check-3-cmd7.judged.png"
+            "runs/verify/verify-openhire-20261101-020925-7eab/check-1-cmd3.judged.png",
+            "runs/verify/verify-openhire-20261101-020925-7eab/check-2-cmd4.judged.png",
+            "runs/verify/verify-openhire-20261101-020925-7eab/check-3-cmd5.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.068711,
+        "cost_usd": 0.065851,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -230,9 +236,35 @@
             "authorize_application"
           ],
           "tool_count": 13,
-          "called_tool": "list_portals",
+          "called_tool": "search_jobs",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "find jobs from employers own ATS",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output returns zero results with status index_empty and data source unreachable, not jobs found."
+          },
+          {
+            "feature": "check if job postings are still open",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows no tracked jobs and asks to add job_ids, not whether postings are open."
+          },
+          {
+            "feature": "verify if employer company is real",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output is truncated after checks array starts without showing any real-or-not verdict."
+          }
+        ]
       }
     ]
   },
@@ -799,5 +831,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T02:11:53.317047+08:00"
 }

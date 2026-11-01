@@ -63,12 +63,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-distillery-20261101-002553-b399",
+      "run_id": "verify-distillery-20261101-022228-82dd",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install 'distillery-mcp[fastembed]>=0.6.0' 2>&1",
-          "purpose": "install distillery-mcp[fastembed]>=0.6.0 via uv tool install"
+          "purpose": "install distillery-mcp with fastembed via uv tool"
         }
       ],
       "manual_steps": [],
@@ -92,64 +92,104 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:27:48.288135+08:00",
+    "checked_at": "2026-11-01T02:24:18.741964+08:00",
     "runs": [
       {
-        "id": "verify-distillery-20261101-002553-b399",
+        "id": "verify-distillery-20261101-022228-82dd",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:27:48.288135+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:24:18.741964+08:00",
         "tool_version": "0.7.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install 'distillery-mcp[fastembed]>=0.6.0' 2>&1",
-            "purpose": "install distillery-mcp[fastembed]>=0.6.0 via uv tool install"
+            "purpose": "install distillery-mcp with fastembed via uv tool"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 /home/sbx/.pickfit/mcp_probe.py -- distillery-mcp 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- distillery-mcp 2>&1",
             "expected_signal": "handshake: ok",
-            "exit_code": 2,
-            "passed": false,
-            "observed_excerpt": "pickfit-mcp: {\"error\": \"the server closed stdout before answering initialize\", \"exit\": 1, \"launch\": [\"distillery-mcp\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"transport\": \"stdio\", \"url\": null}",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
             "setup": [],
-            "offline": null
+            "offline": true
           },
           {
-            "command": "python3 /home/sbx/.pickfit/mcp_probe.py --call distillery_status --args '{}' -- distillery-mcp 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call distillery_store --args '{\"content\":\"We decided to use DuckDB for local storage\",\"entry_type\":\"idea\",\"author\":\"test-user\"}' -- distillery-mcp 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=distillery_status content=text text_chars=330",
+            "observed_excerpt": "tools/call: ok tool=distillery_store content=text text_chars=105",
             "setup": [],
-            "offline": false
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call distillery_find_similar --args '{\"content\":\"We decided to use DuckDB for local storage\"}' -- distillery-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=distillery_find_similar content=text text_chars=53",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call distillery_search --args '{\"query\":\"DuckDB local storage decision\"}' -- distillery-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=distillery_search content=text text_chars=492",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call distillery_list --args '{\"limit\":5}' -- distillery-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=distillery_list content=text text_chars=504",
+            "setup": [],
+            "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "example entry_type 'decision' in /distill docs",
+            "actually_needed": "distillery_store only accepts bookmark, digest, feed, github, idea, inbox, meeting, minutes, person, project, reference, session – use 'idea' or 'session'",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "distillery-mcp --version",
+            "actually_needed": "--version flag not supported; use --help",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows MCP probe listed 17 tools and distillery_status returned status ok.",
+          "observed": "Screenshots show MCP handshake, store persisting an entry, and find_similar returning successfully.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-distillery-20261101-002553-b399/report.json",
+          "trace_path": "runs/verify/verify-distillery-20261101-022228-82dd/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-distillery-20261101-002553-b399/check-1-cmd5.judged.png"
+            "runs/verify/verify-distillery-20261101-022228-82dd/check-1-cmd4.judged.png",
+            "runs/verify/verify-distillery-20261101-022228-82dd/check-2-cmd9.judged.png",
+            "runs/verify/verify-distillery-20261101-022228-82dd/check-3-cmd10.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.042019,
+        "cost_usd": 0.073812,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -179,9 +219,47 @@
             "distillery_status"
           ],
           "tool_count": 17,
-          "called_tool": "distillery_status",
-          "offline": false
-        }
+          "called_tool": "distillery_store",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "Capture, classify, connect and surface team knowledge",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Capture session knowledge with dedup detection",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Find-similar on identical content returned zero results."
+          },
+          {
+            "feature": "Search team knowledge with semantic search",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Synthesize multiple entries with citations",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: List returned entries but no synthesis with citations."
+          }
+        ]
       }
     ]
   },
@@ -218,15 +296,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-01T02:24:18+08:00",
     "quality": {
-      "total": 89.0,
+      "total": 81.5,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -267,7 +345,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 45.03
+      "value": 41.24
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -606,5 +684,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T02:24:18.743313+08:00"
 }

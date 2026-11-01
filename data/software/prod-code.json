@@ -74,21 +74,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-prod-code-20261101-001900-0582",
+      "run_id": "verify-prod-code-20261101-020743-96c3",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://prod.codes/install.sh -o /tmp/install.sh && ls -lh /tmp/install.sh && wc -l /tmp/install.sh",
-          "purpose": "Download install script from https://prod.codes/install.sh"
+          "command": "curl -fsSL https://prod.codes/install.sh -o /tmp/install.sh && ls -lh /tmp/install.sh && head -n 200 /tmp/install.sh",
+          "purpose": "download install.sh from https://prod.codes/install.sh"
         },
         {
           "command": "sh /tmp/install.sh",
-          "purpose": "Run installer to fetch prod-code binary to ~/.local/bin"
+          "purpose": "run install.sh to install prod-code binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "prod-code --version",
+        "expected_signal": "prod-code 0.3.45"
+      },
+      "first_task": "prod-code cluster"
     },
     "windows": null
   },
@@ -107,32 +110,41 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:19:55.335042+08:00",
+    "checked_at": "2026-11-01T02:09:09.178577+08:00",
     "runs": [
       {
-        "id": "verify-prod-code-20261101-001900-0582",
+        "id": "verify-prod-code-20261101-020743-96c3",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:19:55.335042+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:09:09.178577+08:00",
         "tool_version": "0.3.45",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://prod.codes/install.sh -o /tmp/install.sh && ls -lh /tmp/install.sh && wc -l /tmp/install.sh",
-            "purpose": "Download install script from https://prod.codes/install.sh"
+            "command": "curl -fsSL https://prod.codes/install.sh -o /tmp/install.sh && ls -lh /tmp/install.sh && head -n 200 /tmp/install.sh",
+            "purpose": "download install.sh from https://prod.codes/install.sh"
           },
           {
             "command": "sh /tmp/install.sh",
-            "purpose": "Run installer to fetch prod-code binary to ~/.local/bin"
+            "purpose": "run install.sh to install prod-code binary to ~/.local/bin"
           }
         ],
         "smoke_tests": [
+          {
+            "command": "prod-code --version",
+            "expected_signal": "prod-code 0.3.45",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "prod-code 0.3.45",
+            "setup": [],
+            "offline": true
+          },
           {
             "command": "python3 ~/.pickfit/mcp_probe.py -- prod-code mcp",
             "expected_signal": "handshake: ok",
@@ -143,39 +155,58 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call code_grep --args '{\"pattern\":\"hello\"}' -- prod-code mcp\n",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call code_grep --args '{\"pattern\":\"fn main\"}' -- prod-code mcp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=code_grep content=text text_chars=29",
+            "observed_excerpt": "tools/call: ok tool=code_grep content=text text_chars=31",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "prod-code update --check",
+            "expected_signal": "already up to date",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "prod-code is already up to date (v0.3.45).",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "prod-code cluster",
+            "expected_signal": "prod-code cluster",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "⚡ prod-code cluster (1 node(s))",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "README examples reference install via curl pipe and version 0.3.29",
-            "actually_needed": "Latest release is 0.3.45; installer fetched prod-code-0.3.45 binary automatically",
+            "readme_said": "install .deb v0.3.29 and cargo install examples reference 0.3.29",
+            "actually_needed": "install.sh fetched latest v0.3.45; binary reports 0.3.45",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show successful MCP initialize, 70 tools listed, handshake ok, and code_grep returning no matches.",
+          "observed": "Screenshots show MCP handshake with 70 tools, successful code_grep tool call, and prod-code 0.3.45 version output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-prod-code-20261101-001900-0582/report.json",
+          "trace_path": "runs/verify/verify-prod-code-20261101-020743-96c3/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-prod-code-20261101-001900-0582/check-1-cmd6.judged.png",
-            "runs/verify/verify-prod-code-20261101-001900-0582/check-2-cmd8.judged.png"
+            "runs/verify/verify-prod-code-20261101-020743-96c3/check-1-cmd7.judged.png",
+            "runs/verify/verify-prod-code-20261101-020743-96c3/check-2-cmd10.judged.png",
+            "runs/verify/verify-prod-code-20261101-020743-96c3/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.051858,
+        "cost_usd": 0.082735,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -261,7 +292,33 @@
           "tool_count": 70,
           "called_tool": "code_grep",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "semantic navigation of remote code",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists available tool names instead of showing grep matches for fn main."
+          },
+          {
+            "feature": "safe refactoring of code",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "safe refactoring tools (code_rename, code_validate_edit, etc.) require a gateway node at PROD_CODE_REMOTE; code_validate_edit returned error without gateway"
+          },
+          {
+            "feature": "run builds and tests on remote nodes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "remote builds/tests (code_check, code_test, code_exec, code_status) require gateway cluster; code_status and code_check errored with connection refused in this box"
+          }
+        ]
       }
     ]
   },
@@ -764,5 +821,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:31+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T02:09:09.179849+08:00"
 }

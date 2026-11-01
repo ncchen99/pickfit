@@ -70,20 +70,23 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-dbmcp-20261101-003128-8660",
+      "run_id": "verify-dbmcp-20261101-030325-50bf",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://dbmcp.haymon.ai/install.sh -o /tmp/install.sh && ls -lh /tmp/install.sh && wc -l /tmp/install.sh",
-          "purpose": "download install.sh"
+          "command": "curl -fsSL https://dbmcp.haymon.ai/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -n 200 /tmp/install.sh",
+          "purpose": "download install script"
         },
         {
-          "command": "bash /tmp/install.sh",
-          "purpose": "install dbmcp via install.sh"
+          "command": "bash /tmp/install.sh 2>&1",
+          "purpose": "install dbmcp binary via install.sh"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "dbmcp --version 2>&1",
+        "expected_signal": "dbmcp 0.15.2"
+      },
       "first_task": null
     },
     "windows": {
@@ -114,77 +117,153 @@
     "url": "https://github.com/haymon-ai/dbmcp/releases/tag/v0.15.2"
   },
   "verification": {
-    "level": "function",
+    "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:34:24.500881+08:00",
+    "checked_at": "2026-11-01T03:04:32.895957+08:00",
     "runs": [
       {
-        "id": "verify-dbmcp-20261101-003128-8660",
-        "level": "function",
+        "id": "verify-dbmcp-20261101-030325-50bf",
+        "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:34:24.500881+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T03:04:32.895957+08:00",
         "tool_version": "0.15.2",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://dbmcp.haymon.ai/install.sh -o /tmp/install.sh && ls -lh /tmp/install.sh && wc -l /tmp/install.sh",
-            "purpose": "download install.sh"
+            "command": "curl -fsSL https://dbmcp.haymon.ai/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -n 200 /tmp/install.sh",
+            "purpose": "download install script"
           },
           {
-            "command": "bash /tmp/install.sh",
-            "purpose": "install dbmcp via install.sh"
+            "command": "bash /tmp/install.sh 2>&1",
+            "purpose": "install dbmcp binary via install.sh"
           }
         ],
         "smoke_tests": [
           {
-            "command": "DBMCP_DB_BACKEND=sqlite DBMCP_DB_NAME=/tmp/test.db python3 ~/.pickfit/mcp_probe.py -- dbmcp stdio",
+            "command": "dbmcp --version 2>&1",
+            "expected_signal": "dbmcp 0.15.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "dbmcp 0.15.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- dbmcp stdio --db-backend sqlite --db-name /tmp/test.db 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
-            "setup": [],
+            "setup": [
+              {
+                "command": "python3 -c \"\nimport sqlite3, os\ndb='/tmp/test.db'\nif os.path.exists(db): os.remove(db)\ncon=sqlite3.connect(db)\ncur=con.cursor()\ncur.execute('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, email TEXT, ssn TEXT)')\ncur.execute('INSERT INTO users VALUES (1, \\\"Alice\\\", \\\"alice@example.com\\\", \\\"123-45-6789\\\")')\ncur.execute('INSERT INTO users VALUES (2, \\\"Bob\\\", \\\"bob@test.org\\\", \\\"987-65-4321\\\")')\ncur.execute('CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, amount REAL)')\ncur.execute('INSERT INTO orders VALUES (1, 1, 99.5)')\ncur.execute('CREATE VIEW user_orders AS SELECT u.name, o.amount FROM users u JOIN orders o ON u.id=o.user_id')\ncon.commit()\ncon.close()\nprint('created db')\n\"\nls -lh /tmp/test.db",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call listTables --args '{}' -- dbmcp stdio --db-backend sqlite --db-name /tmp/test.db 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=listTables content=text text_chars=30",
+            "setup": [
+              {
+                "command": "python3 -c \"\nimport sqlite3, os\ndb='/tmp/test.db'\nif os.path.exists(db): os.remove(db)\ncon=sqlite3.connect(db)\ncur=con.cursor()\ncur.execute('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, email TEXT, ssn TEXT)')\ncur.execute('INSERT INTO users VALUES (1, \\\"Alice\\\", \\\"alice@example.com\\\", \\\"123-45-6789\\\")')\ncur.execute('INSERT INTO users VALUES (2, \\\"Bob\\\", \\\"bob@test.org\\\", \\\"987-65-4321\\\")')\ncur.execute('CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, amount REAL)')\ncur.execute('INSERT INTO orders VALUES (1, 1, 99.5)')\ncur.execute('CREATE VIEW user_orders AS SELECT u.name, o.amount FROM users u JOIN orders o ON u.id=o.user_id')\ncon.commit()\ncon.close()\nprint('created db')\n\"\nls -lh /tmp/test.db",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call readQuery --args '{\"query\":\"SELECT * FROM users\"}' -- dbmcp stdio --db-backend sqlite --db-name /tmp/test.db 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=readQuery content=text text_chars=147",
+            "setup": [
+              {
+                "command": "python3 -c \"\nimport sqlite3, os\ndb='/tmp/test.db'\nif os.path.exists(db): os.remove(db)\ncon=sqlite3.connect(db)\ncur=con.cursor()\ncur.execute('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, email TEXT, ssn TEXT)')\ncur.execute('INSERT INTO users VALUES (1, \\\"Alice\\\", \\\"alice@example.com\\\", \\\"123-45-6789\\\")')\ncur.execute('INSERT INTO users VALUES (2, \\\"Bob\\\", \\\"bob@test.org\\\", \\\"987-65-4321\\\")')\ncur.execute('CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, amount REAL)')\ncur.execute('INSERT INTO orders VALUES (1, 1, 99.5)')\ncur.execute('CREATE VIEW user_orders AS SELECT u.name, o.amount FROM users u JOIN orders o ON u.id=o.user_id')\ncon.commit()\ncon.close()\nprint('created db')\n\"\nls -lh /tmp/test.db",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call readQuery --args '{\"query\":\"SELECT * FROM users\"}' -- dbmcp stdio --db-backend sqlite --db-name /tmp/test.db --pii true 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=readQuery content=text text_chars=145",
+            "setup": [
+              {
+                "command": "python3 -c \"\nimport sqlite3, os\ndb='/tmp/test.db'\nif os.path.exists(db): os.remove(db)\ncon=sqlite3.connect(db)\ncur=con.cursor()\ncur.execute('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, email TEXT, ssn TEXT)')\ncur.execute('INSERT INTO users VALUES (1, \\\"Alice\\\", \\\"alice@example.com\\\", \\\"123-45-6789\\\")')\ncur.execute('INSERT INTO users VALUES (2, \\\"Bob\\\", \\\"bob@test.org\\\", \\\"987-65-4321\\\")')\ncur.execute('CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, amount REAL)')\ncur.execute('INSERT INTO orders VALUES (1, 1, 99.5)')\ncur.execute('CREATE VIEW user_orders AS SELECT u.name, o.amount FROM users u JOIN orders o ON u.id=o.user_id')\ncon.commit()\ncon.close()\nprint('created db')\n\"\nls -lh /tmp/test.db",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- dbmcp stdio --db-backend sqlite --db-name /tmp/test.db --db-read-only false 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "python3 -c \"\nimport sqlite3, os\ndb='/tmp/test.db'\nif os.path.exists(db): os.remove(db)\ncon=sqlite3.connect(db)\ncur=con.cursor()\ncur.execute('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, email TEXT, ssn TEXT)')\ncur.execute('INSERT INTO users VALUES (1, \\\"Alice\\\", \\\"alice@example.com\\\", \\\"123-45-6789\\\")')\ncur.execute('INSERT INTO users VALUES (2, \\\"Bob\\\", \\\"bob@test.org\\\", \\\"987-65-4321\\\")')\ncur.execute('CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, amount REAL)')\ncur.execute('INSERT INTO orders VALUES (1, 1, 99.5)')\ncur.execute('CREATE VIEW user_orders AS SELECT u.name, o.amount FROM users u JOIN orders o ON u.id=o.user_id')\ncon.commit()\ncon.close()\nprint('created db')\n\"\nls -lh /tmp/test.db",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "launch command is `dbmcp`",
-            "actually_needed": "binary requires subcommand `dbmcp stdio` (and `dbmcp http`); plain `dbmcp` exits with usage and probe fails",
+            "readme_said": "launch command `dbmcp`",
+            "actually_needed": "must use subcommand `dbmcp stdio` with required --db-backend and --db-name args; bare `dbmcp` exits with usage",
             "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "The server's tools/list shows each tool's description to the calling agent as is",
-            "actually_needed": "Tool listDatabases's description has instruction-like text aimed at the agent (text about how to use other tools). pickfit neither kept nor followed it; read what the server sends before enabling it.",
-            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows MCP probe initializing dbmcp 0.15.2, listing 8 tools, and reporting handshake: ok.",
+          "observed": "Screenshots show version 0.15.2, successful MCP handshake with 5 tools, and successful listTables call returning orders and users.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-dbmcp-20261101-003128-8660/report.json",
+          "trace_path": "runs/verify/verify-dbmcp-20261101-030325-50bf/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-dbmcp-20261101-003128-8660/check-1-cmd15.judged.png"
+            "runs/verify/verify-dbmcp-20261101-030325-50bf/check-1-cmd3.judged.png",
+            "runs/verify/verify-dbmcp-20261101-030325-50bf/check-2-cmd7.judged.png",
+            "runs/verify/verify-dbmcp-20261101-030325-50bf/check-3-cmd8.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.122619,
+        "cost_usd": 0.098087,
         "mcp": {
           "transport": "stdio",
           "launch": [
             "dbmcp",
-            "stdio"
+            "stdio",
+            "--db-backend",
+            "sqlite",
+            "--db-name",
+            "/tmp/test.db"
           ],
           "url": null,
           "protocol_version": "2025-11-25",
@@ -192,18 +271,55 @@
           "server_version": "0.15.2",
           "tools": [
             "explainQuery",
-            "listDatabases",
-            "listFunctions",
-            "listProcedures",
             "listTables",
             "listTriggers",
             "listViews",
             "readQuery"
           ],
-          "tool_count": 8,
-          "called_tool": null,
+          "tool_count": 5,
+          "called_tool": "listTables",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Connect AI assistants to SQL databases",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Discover database schemas via MCP tools",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Redact PII from query output",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Block writes with read-only mode",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; read-only default hides writeQuery/dropTable (5 tools), with --db-read-only false shows 7 tools"
+          }
+        ]
       }
     ]
   },
@@ -278,15 +394,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-01T03:04:32+08:00",
     "quality": {
-      "total": 70.4,
+      "total": 78.0,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.68,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -329,7 +445,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 30.2
+      "value": 33.46
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -780,5 +896,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:52+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T03:04:32.899497+08:00"
 }
