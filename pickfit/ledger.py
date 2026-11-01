@@ -103,11 +103,16 @@ def pipeline_caps() -> Caps:
     if not 0 <= lowered <= PIPELINE_TOTAL_USD:
         raise ValueError(f"PICKFIT_PIPELINE_TOTAL_CAP_USD must be between 0 and {PIPELINE_TOTAL_USD:g}")
     return Caps(total_usd=lowered, daily_usd=pipeline_daily_cap)
+
+
 # Baseten's hackathon credits are separate from Meta's, so they get their own budget in the same
-# file. $100 of credits, $80 hard stop: the account has a card on file that is charged past them.
+# file. $100 of credits, $80 hard stop of our own: the key is the hackathon's and is not charged past them.
 def baseten_daily_cap(day: date) -> float:
-    """$25 a day; $35 on 11/1 so feature coverage finishes that day (念誠 11/1, total unchanged)."""
-    return 35.0 if day == date(2026, 11, 1) else 25.0
+    """$25 a day; $45 on 11/1 for feature coverage and its rerun after the head/tail fix.
+
+    念誠 raised 11/1 to $35, then to $45; the total is unchanged.
+    """
+    return 45.0 if day == date(2026, 11, 1) else 25.0
 
 
 BASETEN_CAPS = Caps(total_usd=80.0, daily_usd=baseten_daily_cap)
