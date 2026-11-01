@@ -399,6 +399,9 @@ MAC_GUI_RULES = """\
 
 GUI apps: this macOS box shows a desktop where you (sbx) are logged in. Install a desktop (GUI) app as a user \
 would without admin rights: a Homebrew cask with `brew install --cask --appdir=$HOME/Applications <cask>` \
+(from a third-party tap, one cited step that also taps and trusts it, as Homebrew now requires: `brew tap \
+<user>/<tap> && brew trust --tap <user>/<tap> && brew install --cask --appdir=$HOME/Applications \
+<user>/<tap>/<cask>`) \
 (you cannot write /Applications; a cask that runs a .pkg installer or needs sudo cannot install here: finish \
 unverified with the reason), or the app's own .dmg or .zip in two cited steps: `curl -fL -o \
 ~/Downloads/<file>.dmg <url>`, then `mkdir -p ~/mnt/<name> ~/Applications && hdiutil attach -nobrowse -mountpoint ~/mnt/<name> \
