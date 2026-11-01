@@ -173,4 +173,4 @@ Before collecting any candidate repositories or writing any software profiles, w
 
 ## License
 
-Third-party software dependencies, sandbox container packages, web fonts (`Bricolage Grotesque`, SIL Open Font License 1.1), icons (`Lucide`, ISC License), and public data sources are documented in [`NOTICE`](NOTICE). Original artwork for **Fitz the tailorbird** (`brand/mascot/`) was created during the hackathon. Project source license: `TODO(verify: project license for pickfit code and LICENSE file at repo root)`.
+Third-party software dependencies, sandbox container packages, web fonts (`Bricolage Grotesque`, SIL Open Font License 1.1), icons (`Lucide`, ISC License), and public data sources are documented in [`NOTICE`](NOTICE). Original artwork for **Fitz the tailorbird** (`brand/mascot/`) was created during the hackathon. pickfit's own code is under the [MIT License](LICENSE).
