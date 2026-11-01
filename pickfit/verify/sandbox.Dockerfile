@@ -6,11 +6,14 @@
 # harness (as root, before the agent starts) route cloud metadata to nowhere.
 # slirp4netns is a gVisor box's network uplink: the box user's own network
 # namespace reaches out only through it, so the network cut can close DNS too.
+# libicu: .NET aborts without it (exit 134), and nearly every desktop Linux has it;
+# its package name carries the ICU version, so it is looked up.
 FROM python:3.12-slim
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       bzip2 ca-certificates curl file git iproute2 libgomp1 procps slirp4netns unzip xz-utils zstd \
+      $(apt-cache pkgnames libicu | grep -E '^libicu[0-9]+$') \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=node:22-slim /usr/local/bin/node /usr/local/bin/node

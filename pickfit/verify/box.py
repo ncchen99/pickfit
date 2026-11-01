@@ -51,6 +51,10 @@ BOX_ENV = {
     "NPM_CONFIG_PREFIX": f"{BOX_HOME}/.local",
     "NPM_CONFIG_UPDATE_NOTIFIER": "false",
     "DEBIAN_FRONTEND": "noninteractive",
+    # .NET 7+ maps its JIT code twice (W^X) through a memfd it sizes to 2 TB; under the box's
+    # `ulimit -f` cap that ftruncate raises SIGXFSZ and every dotnet command dies (exit 153).
+    # Off, JIT pages are plain RWX inside the .NET process; no limit of the box changes.
+    "DOTNET_EnableWriteXorExecute": "0",
 }
 
 # Output kept per stream: the first HEAD bytes and the last TAIL bytes.
