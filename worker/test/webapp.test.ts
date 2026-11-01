@@ -200,6 +200,9 @@ test('page: the tool page of a web app, browse and compare', async () => {
   const cmp = await get(`/compare?tools=${SLUG},fixture-json-query`);
   assert.match(cmp, /Nothing to install, just open it/);
   assert.match(cmp, /In a browser, any OS/);
+  const how = await get('/how');
+  assert.match(how, /<h3 id="web">Web apps: no install, just open it<\/h3>/);
+  assert.match(how, /1 web app passed so far/);
   const home = await get('/');
   assert.match(home, /name="private" value="1"/);
   assert.match(home, /<strong>1<\/strong> web app used in a browser/);
