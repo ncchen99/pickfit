@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { loadCatalog, type GuiEvidence } from '../src/catalog.ts';
 import { ranSentence } from '../src/evidence.ts';
+import { guiSentence, levelLabel } from '../src/page.ts';
 import { installGuide } from '../src/install.ts';
 import { fixtureIndex } from './helpers.ts';
 
@@ -49,4 +50,27 @@ test('each screen reads as what it is; other software keeps its own sentence', (
   assert.match(plain.how_we_know, /the install finished and the tool started/);
   const guide = loadCatalog(withGui()).bySlug.get('fixture-chat-tui')!.install.linux!;
   assert.match(ranSentence(guide), /^pickfit installed it in a fresh linux\/x86_64 sandbox/);
+});
+
+test('an operated GUI app says which feature passed pickfit\'s own check, and its headline says it worked', () => {
+  const operated: GuiEvidence = {
+    ...GUI,
+    tier: 'action_checked',
+    screen: 'main_ui',
+    operations: [
+      { feature: 'save notes', check: 'file', passed: true, replay: 'actions', goal: 'Type {nonce} and save it.', observed: 'file ...: contains "pickfit1a2b3c": yes' },
+      { feature: 'export PDF', check: 'file', passed: false, replay: 'operated', goal: 'Export it as PDF.', observed: 'no file under /home/sbx/' },
+    ],
+  };
+  const out = installGuide(loadCatalog(withGui(operated)), { slug: 'fixture-chat-tui', os: 'linux' });
+  assert.match(out.how_we_know, /A model \(Muse Spark Open\) then operated it from screenshots, pickfit performing every click and keystroke/);
+  assert.match(out.how_we_know, /save notes \(checked by a file the app saved, which pickfit read itself\)/);
+  assert.doesNotMatch(out.how_we_know, /export PDF/);
+  assert.doesNotMatch(out.how_we_know, /did not use any of its features/);
+  assert.equal(levelLabel('function', { gui: operated }), 'A feature worked when operated');
+  assert.match(guiSentence(operated), /its main screen rendered\. A model \(Muse Spark Open\) then operated it/);
+  // Operations that did not reach action_checked change nothing.
+  const tried: GuiEvidence = { ...operated, tier: 'ui_rendered', operations: [{ ...operated.operations![0], passed: false }] };
+  assert.equal(levelLabel('install', { gui: tried }), 'It opens to its main screen');
+  assert.match(guiSentence(tried), /pickfit did not use any of its features/);
 });

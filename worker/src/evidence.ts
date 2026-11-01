@@ -1,5 +1,5 @@
 /** how_we_know text, built by code from the verification record (never by the model). */
-import type { GuiEvidence, InstallGuide } from './catalog.ts';
+import type { GuiEvidence, GuiOperation, InstallGuide } from './catalog.ts';
 
 const LEVEL_TEXT: Record<string, string> = {
   install: 'the install finished and the tool started',
@@ -26,15 +26,36 @@ const SCREEN_TEXT: Record<GuiEvidence['screen'], string> = {
   other: 'it showed something other than its own UI',
 };
 
-/** A GUI app's launch: what opened, what the screen judge saw, and that no feature was exercised. */
+const CHECK_TEXT: Record<GuiOperation['check'], string> = {
+  file: 'a file the app saved, which pickfit read itself',
+  clipboard: 'what the app put on the clipboard, which pickfit read itself',
+  screen_text: "text the app showed, read off pickfit's own screenshot",
+};
+
+/**
+ * The goals a GUI app was operated toward and passed, in words, or null when its tier is not action_checked.
+ * "a model (Muse Spark Open) then operated it from screenshots, ...: save notes (checked by a file ...)"
+ */
+export function operatedText(gui: GuiEvidence): string | null {
+  const passed = (gui.operations ?? []).filter((o) => o.passed);
+  if (gui.tier !== 'action_checked' || passed.length === 0) return null;
+  const what = passed.map((o) => `${o.feature ?? 'a task'} (checked by ${CHECK_TEXT[o.check]})`).join('; ');
+  return (
+    'a model (Muse Spark Open) then operated it from screenshots, pickfit performing every click and keystroke, ' +
+    `and the result passed pickfit's own check in a fresh sandbox: ${what}`
+  );
+}
+
+/** A GUI app's launch: what opened, what the screen judge saw, and whether a feature was operated and checked. */
 function guiText(guide: InstallGuide): string | null {
   const g = guide.run.gui;
   if (!g) return null;
   const offline = g.launch_offline ? ', and the launch passed again with the network off' : '';
+  const operated = operatedText(g);
   return (
     `the app opened a window of its own on a virtual display (${g.display}) and a separate model, ` +
     `reading a screenshot of that window, judged that ${SCREEN_TEXT[g.screen]}${offline}. ` +
-    'That shows it installs and starts; pickfit did not use any of its features'
+    (operated ? operated[0].toUpperCase() + operated.slice(1) : 'That shows it installs and starts; pickfit did not use any of its features')
   );
 }
 

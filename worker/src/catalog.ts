@@ -22,16 +22,35 @@ export interface RunSummary {
 
 /**
  * What pickfit saw when a GUI app launched on a virtual display (verification.runs[].gui). The window
- * title is the app's own text and is not in the index. A launch supports level install only.
+ * title is the app's own text and is not in the index. A launch supports level install; an operation
+ * pickfit checked (tier action_checked) supports function.
  */
 export interface GuiEvidence {
-  /** window: a window of the app's own process (per the X server); ui_rendered: the screen judge saw the app's own UI. */
-  tier: 'window' | 'ui_rendered';
+  /**
+   * window: a window of the app's own process (per the X server); ui_rendered: the screen judge saw the app's own UI;
+   * action_checked: also, Muse Spark Open operated it from screenshots and pickfit's own check of the result passed.
+   */
+  tier: 'window' | 'ui_rendered' | 'action_checked';
   /** What a separate model saw in a screenshot of the app's own windows. */
   screen: 'main_ui' | 'first_run' | 'sign_in_wall' | 'crash_or_error' | 'blank_or_loading' | 'other';
   display: string;
   /** The launch passed again with the network off in the fresh-sandbox replay. */
   launch_offline: boolean | null;
+  /** Goals pickfit operated the app toward in the fresh-sandbox replay; absent when none ran. */
+  operations?: GuiOperation[];
+}
+
+/** One goal pickfit operated a GUI app toward (gui_operate.py), and what its own check found. */
+export interface GuiOperation {
+  feature: string | null;
+  /** file: a file the app wrote, read by root; clipboard: read by pickfit's display user; screen_text: read off pickfit's screenshot. */
+  check: 'file' | 'clipboard' | 'screen_text';
+  passed: boolean;
+  /** actions: the recorded clicks and keys passed again; operated: the operator reached the goal again. */
+  replay: 'actions' | 'operated';
+  goal: string;
+  /** pickfit's own line about what the check found. */
+  observed: string;
 }
 
 /** One advertised feature as the run behind a guide covered it (index.py _feature_coverage). */
