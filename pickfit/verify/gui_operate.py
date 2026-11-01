@@ -67,7 +67,10 @@ VIEW_MARGIN = 12  # pixels around what the app draws, in the operator's view
 VIEW_MAX_ZOOM = 2.0
 FILE_MAX_BYTES = 4_000_000
 CLIPBOARD_MAX_BYTES = 64_000
-SEARCH_MAX_FILES = 20_000
+SEARCH_MAX_FILES = 50_000  # entries a folder search visits
+# Toolchains and package trees an install leaves in the home: never where an app keeps what a user made.
+SEARCH_SKIP_DIRS = ("node_modules", "squashfs-root", ".npm", ".cargo", ".rustup", "go", "site-packages",
+                    "__pycache__", ".git", ".venv", "pickfit-in", ".pickfit-bg", ".pickfit-gui")
 INPUT_DIR = f"{BOX_HOME}/pickfit-in"
 OUTPUT_DIR = f"{BOX_HOME}/pickfit-out"  # made before the app starts, for goals that save a file
 NONCE_FIELD = "{nonce}"
@@ -78,13 +81,16 @@ BOX_UID = 1000  # the box user (box.py runs every box command as it)
 _OWN_LINES = re.compile(r"gui\s+(?:check|result|tier|goal|operate)\b", re.I)
 _MODIFIERS = {"ctrl", "alt", "shift", "super"}
 _KEYSYMS = {"Return", "Tab", "Escape", "BackSpace", "Delete", "Insert", "Home", "End", "Page_Up", "Page_Down",
-            "Up", "Down", "Left", "Right", "space", "Menu", *(f"F{i}" for i in range(1, 13))}
+            "Up", "Down", "Left", "Right", "space", "Menu", "slash", "backslash", "comma", "period", "minus",
+            "equal", "plus", "semicolon", "apostrophe", "bracketleft", "bracketright", "grave",
+            *(f"F{i}" for i in range(1, 13))}
 _KEY_ALIASES = {"enter": "Return", "return": "Return", "esc": "Escape", "escape": "Escape", "tab": "Tab",
                 "backspace": "BackSpace", "delete": "Delete", "del": "Delete", "insert": "Insert", "home": "Home",
                 "end": "End", "pageup": "Page_Up", "page_up": "Page_Up", "pagedown": "Page_Down",
                 "page_down": "Page_Down", "up": "Up", "down": "Down", "left": "Left", "right": "Right",
                 "space": "space", "menu": "Menu", "control": "ctrl", "ctl": "ctrl", "cmd": "ctrl",
-                "command": "ctrl", "meta": "super", "win": "super", "option": "alt"}
+                "command": "ctrl", "meta": "super", "win": "super", "option": "alt", "/": "slash", ",": "comma",
+                ".": "period", "-": "minus", "=": "equal", ";": "semicolon", "[": "bracketleft", "]": "bracketright"}
 
 Log = Callable[[str], None]
 
@@ -490,7 +496,8 @@ else:
                 if entry.is_symlink():
                     continue
                 if entry.is_dir(follow_symlinks=False):
-                    stack.append(entry.path)
+                    if entry.name not in P["skip_dirs"]:
+                        stack.append(entry.path)
                     continue
                 if not entry.is_file(follow_symlinks=False) or entry.path in skip:
                     continue
@@ -533,7 +540,7 @@ def file_probe(box: Box, params: dict[str, Any]) -> dict[str, Any]:
     nonce = secrets.token_hex(12)
     full = {"home": BOX_HOME, "uid": int(BOX_UID), "max": FILE_MAX_BYTES, "nonce": nonce,
             "max_files": SEARCH_MAX_FILES, "format": None, "contains": [], "since": 0, "before": None, "skip": [],
-            **params}
+            "skip_dirs": list(SEARCH_SKIP_DIRS), **params}
     source = _FILE_PY.replace("@PARAMS@", repr(json.dumps(full)))
     done = box.harness_exec([gui.PYTHON, "-I", "-S", "-"], 120, stdin=source.encode())
     lines = [line[len(nonce) + 1:] for line in done.stdout.splitlines() if line.startswith(nonce + " ")]
