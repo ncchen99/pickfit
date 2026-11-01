@@ -56,6 +56,15 @@ Software profiles (data/software/*.json)
   BSD-2-Clause) and cask install counts from formulae.brew.sh, used only to pick
   candidates and never stored. A record's profile still comes from the app's GitHub
   repository; it lists the app's Flathub or cask page as a source.
+- Hosted web app candidates (kind web_app) come from the same Show HN APIs and from
+  GitHub repositories whose homepage is a website (terms and rules in
+  docs/source-terms.md). For each site pickfit reads robots.txt, the home page and one
+  terms page as "pickfit/0.1", and leaves out sites whose robots.txt or terms forbid
+  automated access. A home page drawn by script is loaded once in headless Chromium
+  through Playwright (Apache-2.0; run with `uv run --with playwright`, not a project
+  dependency). The page text stays in the local pipeline database only until extraction
+  has read it; a record keeps extracted facts with short verbatim quotes, and lists the
+  site, the Show HN post and the repository it came from.
 
 Web page assets (worker/public/assets, worker/src/ui)
 - Bricolage Grotesque (SIL Open Font License 1.1; Copyright 2022 The Bricolage Grotesque
