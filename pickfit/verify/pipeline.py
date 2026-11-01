@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from pickfit.meta import is_open_model, resolve_model
+from pickfit.meta import resolve_model
 from pickfit.schema import VerificationRun, is_passed
 from pickfit.verify.agent import DEFAULT_MODE, AgentLimits, HistoryMode, VerifyAgent, VerifyReport, new_run_id
 from pickfit.verify.box import Box, BoxError
@@ -42,7 +42,7 @@ from pickfit.verify.failure import (
     output_limit,
     tool_command,
 )
-from pickfit.verify.judge import JudgeResult, judge_checks, judge_gui, merge
+from pickfit.verify.judge import OPEN_JUDGE_MODEL, JudgeResult, judge_checks, judge_gui, judge_model_for, merge
 from pickfit.verify.mcp import is_mcp
 from pickfit.verify.replay import Replayer, ReplayResult, judged_launch, plan_from
 from pickfit.verify.result import DATA_DIR, build_run, save_run, write_back
@@ -96,16 +96,6 @@ def _start(box: Box) -> float:
     began = time.monotonic()
     box.start()
     return round(time.monotonic() - began, 1)
-
-
-# The agent may run on Muse Spark Open (Baseten); the output, screenshot and feature judges stay on
-# muse-spark-1.3.
-OPEN_JUDGE_MODEL = "prod"
-
-
-def judge_model_for(model: str | None) -> str | None:
-    """The judges' model for an agent model: muse-spark-1.3 when the agent runs on Muse Spark Open."""
-    return OPEN_JUDGE_MODEL if is_open_model(model) else model
 
 
 def _judge_features(task: VerifyTask, report: VerifyReport, replay: ReplayResult, evidence_dir: Path, *,
