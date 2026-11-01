@@ -75,24 +75,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-xrat-20261031-001909-3d47",
+      "run_id": "verify-xrat-20261101-154322-3b0e",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/mhyrzt/xrat/master/install.sh -o /tmp/install-xrat.sh && ls -l /tmp/install-xrat.sh && wc -l /tmp/install-xrat.sh",
-          "purpose": "Download install script for reading"
+          "command": "curl -fsSL https://raw.githubusercontent.com/mhyrzt/xrat/master/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
+          "purpose": "download install script"
         },
         {
-          "command": "bash /tmp/install-xrat.sh --no-desktop -y",
-          "purpose": "Install xrat via install script non-interactive"
+          "command": "bash /tmp/install.sh --yes --no-desktop 2>&1",
+          "purpose": "install xrat via script --yes --no-desktop"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "xrat --version",
-        "expected_signal": "xrat 0.33.0"
+        "expected_signal": "xrat 0.34.0"
       },
-      "first_task": "xrat list configs"
+      "first_task": "xrat import /tmp/links.txt"
     },
     "windows": null
   },
@@ -111,68 +111,65 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:20:43.322182+08:00",
+    "checked_at": "2026-11-01T15:44:37.397147+08:00",
     "runs": [
       {
-        "id": "verify-xrat-20261031-001909-3d47",
+        "id": "verify-xrat-20261101-154322-3b0e",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:20:43.322182+08:00",
-        "tool_version": "0.33.0",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T15:44:37.397147+08:00",
+        "tool_version": "0.34.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/mhyrzt/xrat/master/install.sh -o /tmp/install-xrat.sh && ls -l /tmp/install-xrat.sh && wc -l /tmp/install-xrat.sh",
-            "purpose": "Download install script for reading"
+            "command": "curl -fsSL https://raw.githubusercontent.com/mhyrzt/xrat/master/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
+            "purpose": "download install script"
           },
           {
-            "command": "bash /tmp/install-xrat.sh --no-desktop -y",
-            "purpose": "Install xrat via install script non-interactive"
+            "command": "bash /tmp/install.sh --yes --no-desktop 2>&1",
+            "purpose": "install xrat via script --yes --no-desktop"
           }
         ],
         "smoke_tests": [
           {
             "command": "xrat --version",
-            "expected_signal": "xrat 0.33.0",
+            "expected_signal": "xrat 0.34.0",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "xrat 0.33.0",
+            "observed_excerpt": "xrat 0.34.0",
             "setup": [],
             "offline": true
           },
           {
-            "command": "xrat --help",
-            "expected_signal": "Show the managed proxy runtime status",
+            "command": "xrat import /tmp/links.txt",
+            "expected_signal": "OK Imported 3 parsed nodes.",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "status Show the managed proxy runtime status.",
-            "setup": [],
+            "observed_excerpt": "OK Imported 3 parsed nodes.",
+            "setup": [
+              {
+                "command": "cat > /tmp/links.txt <<'EOF'\nvless://00000000-0000-0000-0000-000000000001@127.0.0.1:443?security=tls#TestVLESS\nvmess://eyJhZGQiOiIxMjcuMC4wLjEiLCJhaWQiOiIwIiwiaG9zdCI6IiIsImlkIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAyIiwibmV0Ijoid3MiLCJwYXRoIjoiLyIsInBvcnQiOiI0NDMiLCJwcyI6IlRlc3RWbWVzcyIsInNjaSI6ImF1dG8iLCJzbmkiOiIiLCJ0bHMiOiJ0bHMiLCJ0eXBlIjoibm9uZSIsInYiOiIyIn0=\ntrojan://password@127.0.0.1:443#TestTrojan\nEOF\ncat /tmp/links.txt",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           },
           {
             "command": "xrat list configs",
-            "expected_signal": "No configs matched.",
+            "expected_signal": "TestVLESS",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "No configs matched.",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "xrat status",
-            "expected_signal": "status stopped",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "status stopped",
+            "observed_excerpt": "7ee347af 727cd5e8 enabled vless 127.0.0.1 443 - - - TestVLESS",
             "setup": [
               {
-                "command": "xrat daemon start && xrat status && xrat daemon status",
+                "command": "cat > /tmp/links.txt <<'EOF'\nvless://00000000-0000-0000-0000-000000000001@127.0.0.1:443?security=tls#TestVLESS\nvmess://eyJhZGQiOiIxMjcuMC4wLjEiLCJhaWQiOiIwIiwiaG9zdCI6IiIsImlkIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAyIiwibmV0Ijoid3MiLCJwYXRoIjoiLyIsInBvcnQiOiI0NDMiLCJwcyI6IlRlc3RWbWVzcyIsInNjaSI6ImF1dG8iLCJzbmkiOiIiLCJ0bHMiOiJ0bHMiLCJ0eXBlIjoibm9uZSIsInYiOiIyIn0=\ntrojan://password@127.0.0.1:443#TestTrojan\nEOF\ncat /tmp/links.txt",
                 "background": false,
                 "port": null
               }
@@ -181,50 +178,130 @@
           },
           {
             "command": "xrat daemon status",
-            "expected_signal": "ready yes",
+            "expected_signal": "Daemon is not running",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "ready yes",
+            "observed_excerpt": "WARN Daemon is not running. Start with `xrat daemon start`.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "xrat test",
+            "expected_signal": "REF STATUS",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "REF STATUS ICMP PROTO ADDRESS PORT NAME",
             "setup": [
               {
-                "command": "xrat daemon start && xrat status && xrat daemon status",
+                "command": "cat > /tmp/links.txt <<'EOF'\nvless://00000000-0000-0000-0000-000000000001@127.0.0.1:443?security=tls#TestVLESS\nvmess://eyJhZGQiOiIxMjcuMC4wLjEiLCJhaWQiOiIwIiwiaG9zdCI6IiIsImlkIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAyIiwibmV0Ijoid3MiLCJwYXRoIjoiLyIsInBvcnQiOiI0NDMiLCJwcyI6IlRlc3RWbWVzcyIsInNjaSI6ImF1dG8iLCJzbmkiOiIiLCJ0bHMiOiJ0bHMiLCJ0eXBlIjoibm9uZSIsInYiOiIyIn0=\ntrojan://password@127.0.0.1:443#TestTrojan\nEOF\ncat /tmp/links.txt",
                 "background": false,
                 "port": null
               }
             ],
             "offline": true
+          },
+          {
+            "command": "xrat scan --ips 127.0.0.1 --port 443",
+            "expected_signal": "OK Persisted 1 scanner rows.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "OK Persisted 1 scanner rows.",
+            "setup": [
+              {
+                "command": "cat > /tmp/links.txt <<'EOF'\nvless://00000000-0000-0000-0000-000000000001@127.0.0.1:443?security=tls#TestVLESS\nvmess://eyJhZGQiOiIxMjcuMC4wLjEiLCJhaWQiOiIwIiwiaG9zdCI6IiIsImlkIjoiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAyIiwibmV0Ijoid3MiLCJwYXRoIjoiLyIsInBvcnQiOiI0NDMiLCJwcyI6IlRlc3RWbWVzcyIsInNjaSI6ImF1dG8iLCJzbmkiOiIiLCJ0bHMiOiJ0bHMiLCJ0eXBlIjoibm9uZSIsInYiOiIyIn0=\ntrojan://password@127.0.0.1:443#TestTrojan\nEOF\ncat /tmp/links.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "xrat rotate status",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "error: daemon is not running. Start it now with `xrat daemon start`, or install it for login startup with `xrat daemon install --start` (socket: /home/sbx/.config/xrat/runtime/daemon.sock)",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
             "readme_said": "curl -fsSL https://raw.githubusercontent.com/mhyrzt/xrat/master/install.sh | bash",
-            "actually_needed": "downloaded install.sh to /tmp/install-xrat.sh, read it, then ran bash /tmp/install-xrat.sh --no-desktop -y for a non-interactive install",
+            "actually_needed": "Download script first, then bash /tmp/install.sh --yes --no-desktop to avoid interactive prompts and desktop integration in headless sandbox",
             "kind": "sandbox"
           },
           {
-            "readme_said": "xrat status # check the connection",
-            "actually_needed": "xrat status exits 1 with 'daemon is not running' until xrat daemon start is run; systemd is unavailable in the box so the standalone daemon must be started, after which xrat status exits 0 reporting a stopped runtime",
+            "readme_said": "xrat status shows managed proxy runtime",
+            "actually_needed": "xrat status requires daemon; setup reports daemon unavailable without systemd: exits 1 with 'daemon is not running'",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "xrat rotate controls rotation",
+            "actually_needed": "rotate subcommands require daemon; xrat rotate status fails without daemon",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show xrat reporting No configs matched, status stopped, and version 0.33.0.",
+          "observed": "Screenshots show import of 3 nodes, config list containing TestVLESS, and version xrat 0.34.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-xrat-20261031-001909-3d47/report.json",
+          "trace_path": "runs/verify/verify-xrat-20261101-154322-3b0e/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-xrat-20261031-001909-3d47/check-1-cmd7.judged.png",
-            "runs/verify/verify-xrat-20261031-001909-3d47/check-2-cmd10.judged.png",
-            "runs/verify/verify-xrat-20261031-001909-3d47/check-3-cmd4.judged.png"
+            "runs/verify/verify-xrat-20261101-154322-3b0e/check-1-cmd6.judged.png",
+            "runs/verify/verify-xrat-20261101-154322-3b0e/check-2-cmd8.judged.png",
+            "runs/verify/verify-xrat-20261101-154322-3b0e/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.075798
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.072665,
+        "features": [
+          {
+            "feature": "import subscriptions",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "test proxy latency",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "rotate proxies",
+            "status": "test_failed",
+            "smoke_tests": [
+              6
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "daemon not running without systemd, rotate status exits 1"
+          },
+          {
+            "feature": "scan edge IPs",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -588,5 +665,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:22+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T15:44:37.399134+08:00"
 }

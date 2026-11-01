@@ -47,19 +47,15 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-withmcp-20261101-001726-41d3",
+      "run_id": "verify-withmcp-20261101-162631-d21e",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -L -o /tmp/withmcp.tar.gz https://github.com/lava/withmcp/releases/download/v0.1.0/withmcp-v0.1.0-x86_64-unknown-linux-musl.tar.gz",
-          "purpose": "download prebuilt binary tarball v0.1.0"
+          "command": "curl -L -o /tmp/withmcp.tar.gz https://github.com/lava/withmcp/releases/download/v0.1.0/withmcp-v0.1.0-x86_64-unknown-linux-musl.tar.gz && tar tzf /tmp/withmcp.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/withmcp.tar.gz -C /tmp && find /tmp -maxdepth 3 -type f -name \"withmcp*\" -ls",
+          "purpose": "download prebuilt musl binary tarball from GitHub releases v0.1.0"
         },
         {
-          "command": "tar xzf /tmp/withmcp.tar.gz -C /tmp",
-          "purpose": "extract tarball"
-        },
-        {
-          "command": "cp /tmp/withmcp-v0.1.0-x86_64-unknown-linux-musl/withmcp ~/.local/bin/withmcp",
+          "command": "install -m 755 /tmp/withmcp-v0.1.0-x86_64-unknown-linux-musl/withmcp ~/.local/bin/withmcp",
           "purpose": "install binary to ~/.local/bin"
         }
       ],
@@ -68,7 +64,7 @@
         "command": "withmcp --version",
         "expected_signal": "withmcp 0.1.0"
       },
-      "first_task": "withmcp"
+      "first_task": "WITHMCP_CONFIG_DIR=/tmp/withmcp-config withmcp list"
     },
     "windows": null
   },
@@ -87,32 +83,28 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:18:28.571609+08:00",
+    "checked_at": "2026-11-01T16:27:39.191684+08:00",
     "runs": [
       {
-        "id": "verify-withmcp-20261101-001726-41d3",
+        "id": "verify-withmcp-20261101-162631-d21e",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:18:28.571609+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:27:39.191684+08:00",
         "tool_version": "0.1.0",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -L -o /tmp/withmcp.tar.gz https://github.com/lava/withmcp/releases/download/v0.1.0/withmcp-v0.1.0-x86_64-unknown-linux-musl.tar.gz",
-            "purpose": "download prebuilt binary tarball v0.1.0"
+            "command": "curl -L -o /tmp/withmcp.tar.gz https://github.com/lava/withmcp/releases/download/v0.1.0/withmcp-v0.1.0-x86_64-unknown-linux-musl.tar.gz && tar tzf /tmp/withmcp.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/withmcp.tar.gz -C /tmp && find /tmp -maxdepth 3 -type f -name \"withmcp*\" -ls",
+            "purpose": "download prebuilt musl binary tarball from GitHub releases v0.1.0"
           },
           {
-            "command": "tar xzf /tmp/withmcp.tar.gz -C /tmp",
-            "purpose": "extract tarball"
-          },
-          {
-            "command": "cp /tmp/withmcp-v0.1.0-x86_64-unknown-linux-musl/withmcp ~/.local/bin/withmcp",
+            "command": "install -m 755 /tmp/withmcp-v0.1.0-x86_64-unknown-linux-musl/withmcp ~/.local/bin/withmcp",
             "purpose": "install binary to ~/.local/bin"
           }
         ],
@@ -127,67 +119,127 @@
             "offline": true
           },
           {
-            "command": "withmcp --help",
-            "expected_signal": "withmcp - launch a coding-agent harness",
+            "command": "WITHMCP_CONFIG_DIR=/tmp/withmcp-config withmcp list",
+            "expected_signal": "github https://api.githubcopilot.com/mcp/",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "withmcp - launch a coding-agent harness with extra MCP servers",
-            "setup": [],
+            "observed_excerpt": "github https://api.githubcopilot.com/mcp/ (not enabled)",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/withmcp-test && cat > /tmp/withmcp-test/setup.sh <<'EOS'\nexport WITHMCP_CONFIG_DIR=/tmp/withmcp-config\nmkdir -p $WITHMCP_CONFIG_DIR/profiles\ncat > $WITHMCP_CONFIG_DIR/profiles/default.toml <<'TOML'\n[servers.linear]\nurl = \"https://mcp.linear.app/mcp\"\n\n[servers.github]\nurl = \"https://api.githubcopilot.com/mcp/\"\n\n[groups.webdev]\nservers = [\"github\", \"playwright\"]\n\n[servers.playwright]\ncommand = \"npx\"\nargs = [\"@playwright/mcp@latest\"]\nTOML\ncat $WITHMCP_CONFIG_DIR/profiles/default.toml\nEOS\nchmod +x /tmp/withmcp-test/setup.sh\nbash /tmp/withmcp-test/setup.sh && echo SETUP_OK",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           },
           {
-            "command": "withmcp",
-            "expected_signal": "Configured Servers:",
+            "command": "WITHMCP_CONFIG_DIR=/tmp/withmcp-config withmcp +webdev which claude",
+            "expected_signal": "command line via group `webdev`",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Configured Servers:",
-            "setup": [],
+            "observed_excerpt": "on github as default_github command line via group `webdev`",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/withmcp-test && cat > /tmp/withmcp-test/setup.sh <<'EOS'\nexport WITHMCP_CONFIG_DIR=/tmp/withmcp-config\nmkdir -p $WITHMCP_CONFIG_DIR/profiles\ncat > $WITHMCP_CONFIG_DIR/profiles/default.toml <<'TOML'\n[servers.linear]\nurl = \"https://mcp.linear.app/mcp\"\n\n[servers.github]\nurl = \"https://api.githubcopilot.com/mcp/\"\n\n[groups.webdev]\nservers = [\"github\", \"playwright\"]\n\n[servers.playwright]\ncommand = \"npx\"\nargs = [\"@playwright/mcp@latest\"]\nTOML\ncat $WITHMCP_CONFIG_DIR/profiles/default.toml\nEOS\nchmod +x /tmp/withmcp-test/setup.sh\nbash /tmp/withmcp-test/setup.sh && echo SETUP_OK",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "WITHMCP_CONFIG_DIR=/tmp/withmcp-config withmcp +linear which claude",
+            "expected_signal": "on linear as default_linear command line",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "on linear as default_linear command line",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/withmcp-test && cat > /tmp/withmcp-test/setup.sh <<'EOS'\nexport WITHMCP_CONFIG_DIR=/tmp/withmcp-config\nmkdir -p $WITHMCP_CONFIG_DIR/profiles\ncat > $WITHMCP_CONFIG_DIR/profiles/default.toml <<'TOML'\n[servers.linear]\nurl = \"https://mcp.linear.app/mcp\"\n\n[servers.github]\nurl = \"https://api.githubcopilot.com/mcp/\"\n\n[groups.webdev]\nservers = [\"github\", \"playwright\"]\n\n[servers.playwright]\ncommand = \"npx\"\nargs = [\"@playwright/mcp@latest\"]\nTOML\ncat $WITHMCP_CONFIG_DIR/profiles/default.toml\nEOS\nchmod +x /tmp/withmcp-test/setup.sh\nbash /tmp/withmcp-test/setup.sh && echo SETUP_OK",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
             "readme_said": "cargo install --git https://github.com/lava/withmcp",
-            "actually_needed": "box has no Rust toolchain (cargo/rustc not found); used published binary release withmcp-v0.1.0-x86_64-unknown-linux-musl.tar.gz instead",
+            "actually_needed": "box has no Rust toolchain; used prebuilt binary withmcp-v0.1.0-x86_64-unknown-linux-musl.tar.gz from GitHub releases",
             "kind": "sandbox"
           },
           {
             "readme_said": "withmcp docs # reference for agents",
-            "actually_needed": "v0.1.0 binary has no docs subcommand, treats docs as harness: unsupported harness docs",
+            "actually_needed": "binary 0.1.0 reports 'error: unsupported harness docs' – docs subcommand not present, use --help instead",
             "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show withmcp printing usage with Configured Servers list and reporting version 0.1.0.",
+          "observed": "Screenshots show withmcp listing servers with github URL, resolving webdev group servers, and printing version 0.1.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-withmcp-20261101-001726-41d3/report.json",
+          "trace_path": "runs/verify/verify-withmcp-20261101-162631-d21e/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-withmcp-20261101-001726-41d3/check-1-cmd13.judged.png",
-            "runs/verify/verify-withmcp-20261101-001726-41d3/check-2-cmd11.judged.png"
+            "runs/verify/verify-withmcp-20261101-162631-d21e/check-1-cmd8.judged.png",
+            "runs/verify/verify-withmcp-20261101-162631-d21e/check-2-cmd12.judged.png",
+            "runs/verify/verify-withmcp-20261101-162631-d21e/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.064278
+        "cost_usd": 0.072733,
+        "features": [
+          {
+            "feature": "manage system-wide collection of MCP servers",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "toggle individual servers or groups",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run one-off session with server enabled",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:32:32+08:00",
+    "computed_at": "2026-11-01T16:27:39+08:00",
     "quality": {
-      "total": 73.8,
+      "total": 67.4,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -228,7 +280,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 61.84
+      "value": 56.48
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -485,5 +537,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:20:29+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T16:27:39.193936+08:00"
 }

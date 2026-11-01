@@ -63,21 +63,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-kashkeshet-20261101-002204-ee4a",
+      "run_id": "verify-kashkeshet-20261101-155248-2d93",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://github.com/sam-mfb/kashkeshet/releases/latest/download/kashkeshet-installer.sh -o /tmp/kashkeshet-installer.sh && wc -c /tmp/kashkeshet-installer.sh && head -n 200 /tmp/kashkeshet-installer.sh",
+          "command": "curl -fsSL https://github.com/sam-mfb/kashkeshet/releases/latest/download/kashkeshet-installer.sh -o /tmp/kashkeshet-installer.sh && ls -lh /tmp/kashkeshet-installer.sh && wc -l /tmp/kashkeshet-installer.sh",
           "purpose": "download installer script"
         },
         {
-          "command": "sh /tmp/kashkeshet-installer.sh --verbose 2>&1",
-          "purpose": "install kkt via installer script"
+          "command": "sh /tmp/kashkeshet-installer.sh && ls -lh ~/.cargo/bin/kkt && ~/.cargo/bin/kkt --version",
+          "purpose": "run installer script installing kkt to ~/.cargo/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "kkt --help\n",
+        "expected_signal": "Kashkeshet (kkt)"
+      },
+      "first_task": "kkt status"
     },
     "windows": null
   },
@@ -96,41 +99,68 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:23:07.948776+08:00",
+    "checked_at": "2026-11-01T15:53:54.794413+08:00",
     "runs": [
       {
-        "id": "verify-kashkeshet-20261101-002204-ee4a",
+        "id": "verify-kashkeshet-20261101-155248-2d93",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:23:07.948776+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T15:53:54.794413+08:00",
         "tool_version": "0.7.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://github.com/sam-mfb/kashkeshet/releases/latest/download/kashkeshet-installer.sh -o /tmp/kashkeshet-installer.sh && wc -c /tmp/kashkeshet-installer.sh && head -n 200 /tmp/kashkeshet-installer.sh",
+            "command": "curl -fsSL https://github.com/sam-mfb/kashkeshet/releases/latest/download/kashkeshet-installer.sh -o /tmp/kashkeshet-installer.sh && ls -lh /tmp/kashkeshet-installer.sh && wc -l /tmp/kashkeshet-installer.sh",
             "purpose": "download installer script"
           },
           {
-            "command": "sh /tmp/kashkeshet-installer.sh --verbose 2>&1",
-            "purpose": "install kkt via installer script"
+            "command": "sh /tmp/kashkeshet-installer.sh && ls -lh ~/.cargo/bin/kkt && ~/.cargo/bin/kkt --version",
+            "purpose": "run installer script installing kkt to ~/.cargo/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --url http://127.0.0.1:7420/mcp 2>&1",
+            "command": "kkt --help\n",
+            "expected_signal": "Kashkeshet (kkt)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Kashkeshet (kkt): a local server where AI agents talk to each other in channels, over MCP. Start it with `kkt serve`",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "kkt status",
+            "expected_signal": "No setup record",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No setup record; checking this machine's kkt service. Run `kkt setup` to configure this machine.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "kkt doctor",
+            "expected_signal": "problem: key file",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "problem: key file: /home/sbx/.config/kkt/access-key: No such file or directory (os error 2)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --url http://127.0.0.1:7420/mcp",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
             "setup": [
               {
-                "command": "kkt serve --no-access-key --bind 127.0.0.1:7420 2>&1",
+                "command": "kkt serve --no-access-key",
                 "background": true,
                 "port": 7420
               }
@@ -138,14 +168,29 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call register --args '{\"name\":\"testbot\"}' --url http://127.0.0.1:7420/mcp 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call register --args '{\"format\":\"json\"}' --url http://127.0.0.1:7420/mcp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=register content=text text_chars=510",
+            "observed_excerpt": "tools/call: ok tool=register content=text text_chars=165",
             "setup": [
               {
-                "command": "kkt serve --no-access-key --bind 127.0.0.1:7420 2>&1",
+                "command": "kkt serve --no-access-key",
+                "background": true,
+                "port": 7420
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:7420/ -o /tmp/web.html && wc -c /tmp/web.html && grep -i \"kashkeshet\\|channel\" /tmp/web.html",
+            "expected_signal": "channelRows",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "const channelRows = new Map();",
+            "setup": [
+              {
+                "command": "kkt serve --no-access-key",
                 "background": true,
                 "port": 7420
               }
@@ -153,32 +198,42 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://.../kashkeshet-installer.sh | sh",
+            "actually_needed": "download script to file first, read it, then run sh /tmp/kashkeshet-installer.sh",
+            "kind": "note"
+          },
+          {
+            "readme_said": "kkt doctor expects success",
+            "actually_needed": "doctor exits 1 when no server/key configured, reporting fixes",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both probes show MCP initialize ok with 26 tools, handshake ok, and register call returning a token.",
+          "observed": "Screenshots show status reporting No setup record, doctor reporting missing key files, and help describing Kashkeshet (kkt) commands.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-kashkeshet-20261101-002204-ee4a/report.json",
+          "trace_path": "runs/verify/verify-kashkeshet-20261101-155248-2d93/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-kashkeshet-20261101-002204-ee4a/check-1-cmd10.judged.png",
-            "runs/verify/verify-kashkeshet-20261101-002204-ee4a/check-2-cmd12.judged.png"
+            "runs/verify/verify-kashkeshet-20261101-155248-2d93/check-1-cmd5.judged.png",
+            "runs/verify/verify-kashkeshet-20261101-155248-2d93/check-2-cmd6.judged.png",
+            "runs/verify/verify-kashkeshet-20261101-155248-2d93/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.08718,
+        "cost_usd": 0.071873,
         "mcp": {
           "transport": "streamable_http",
           "launch": [
             "kkt",
             "serve",
-            "--no-access-key",
-            "--bind",
-            "127.0.0.1:7420"
+            "--no-access-key"
           ],
           "url": "http://127.0.0.1:7420/mcp",
           "protocol_version": "2025-11-25",
@@ -215,7 +270,33 @@
           "tool_count": 26,
           "called_tool": "register",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "let AI agents chat with each other",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows register succeeded and lists chat tools but no agents actually exchanging messages."
+          },
+          {
+            "feature": "set up chat channels for agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; tools/list includes create_channel, join_channel, list_channels etc."
+          },
+          {
+            "feature": "monitor conversations from web page",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; HTTP web page at 127.0.0.1:7420 serves dashboard JS with channel/agent handling"
+          }
+        ]
       }
     ]
   },
@@ -660,5 +741,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:24:21+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T15:53:54.796876+08:00"
 }

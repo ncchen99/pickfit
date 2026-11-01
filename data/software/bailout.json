@@ -70,16 +70,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-bailout-20261101-002249-f801",
+      "run_id": "verify-bailout-20261101-154810-be94",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://bailout.dev/install.sh -o /tmp/install.sh && ls -lh /tmp/install.sh && wc -l /tmp/install.sh",
-          "purpose": "download install script from bailout.dev to /tmp/install.sh"
+          "command": "curl -fsSL https://bailout.dev/install.sh -o /tmp/bailout-install.sh && ls -lh /tmp/bailout-install.sh && wc -c /tmp/bailout-install.sh",
+          "purpose": "download install script from bailout.dev"
         },
         {
-          "command": "bash /tmp/install.sh",
-          "purpose": "run bash /tmp/install.sh to install bailout v0.7.3 to ~/.local/bin"
+          "command": "bash /tmp/bailout-install.sh",
+          "purpose": "run install script to install verified binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -87,7 +87,7 @@
         "command": "bailout --version",
         "expected_signal": "bailout 0.7.3"
       },
-      "first_task": "bailout update"
+      "first_task": "timeout 30 bash -c 'BAILOUT_NO_UPDATE=1 bailout --max-steps 2 \"check what is missing before I can use my usual dev tools here\" 2>&1; echo EXIT:$?'"
     },
     "windows": null
   },
@@ -106,29 +106,29 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T12:19:36.057608+08:00",
+    "checked_at": "2026-11-01T15:50:57.925730+08:00",
     "runs": [
       {
-        "id": "verify-bailout-20261101-002249-f801",
+        "id": "verify-bailout-20261101-154810-be94",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:24:42.012832+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T15:50:57.925730+08:00",
         "tool_version": "0.7.3",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://bailout.dev/install.sh -o /tmp/install.sh && ls -lh /tmp/install.sh && wc -l /tmp/install.sh",
-            "purpose": "download install script from bailout.dev to /tmp/install.sh"
+            "command": "curl -fsSL https://bailout.dev/install.sh -o /tmp/bailout-install.sh && ls -lh /tmp/bailout-install.sh && wc -c /tmp/bailout-install.sh",
+            "purpose": "download install script from bailout.dev"
           },
           {
-            "command": "bash /tmp/install.sh",
-            "purpose": "run bash /tmp/install.sh to install bailout v0.7.3 to ~/.local/bin"
+            "command": "bash /tmp/bailout-install.sh",
+            "purpose": "run install script to install verified binary to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -142,52 +142,80 @@
             "offline": true
           },
           {
-            "command": "bailout --help",
-            "expected_signal": "Usage: bailout",
+            "command": "timeout 30 bash -c 'BAILOUT_NO_UPDATE=1 bailout --max-steps 2 \"check what is missing before I can use my usual dev tools here\" 2>&1; echo EXIT:$?'",
+            "expected_signal": "Stopped at 2 model steps",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Usage: bailout [--max-steps N] [PROMPT]",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "bailout update",
-            "expected_signal": "Already current",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Already current · v0.7.3",
+            "observed_excerpt": "bailout: Stopped at 2 model steps. Ask to continue, or use --max-steps N.",
             "setup": [],
             "offline": false
           },
           {
-            "command": "timeout 10 bailout 'check what is missing before I can use my usual dev tools here'",
-            "expected_signal": "=== OS ===",
-            "exit_code": 124,
+            "command": "timeout 30 bash -c 'BAILOUT_NO_UPDATE=1 bailout --max-steps 2 \"pi stopped launching after a config change. diagnose and repair it\" 2>&1; echo EXIT:$?'",
+            "expected_signal": "Stopped at 2 model steps",
+            "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "$ echo \"=== OS ===\" && cat /etc/os-release 2>/dev/null; echo; echo \"=== Arch ===\" && uname -m; echo; echo \"=== Shell ===\" && echo $SHELL; echo; echo \"=== Home ===\" && echo $HOME; echo; echo \"=== PATH ===\" && echo $PATH",
+            "observed_excerpt": "bailout: Stopped at 2 model steps. Ask to continue, or use --max-steps N.",
             "setup": [],
             "offline": false
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://bailout.dev/install.sh | bash",
+            "actually_needed": "download to /tmp/bailout-install.sh first, read it, then bash /tmp/bailout-install.sh to avoid piping unknown script",
+            "kind": "note"
+          },
+          {
+            "readme_said": "bailout 'check what is missing...' runs until finished",
+            "actually_needed": "use --max-steps 2 and BAILOUT_NO_UPDATE=1 with timeout to get deterministic exit; bare invocation is interactive and times out, and with --max-steps may exit 1 not 0 depending on wrapper",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show update reporting Already current v0.7.3, bailout running OS and dev-tool checks, and --version printing bailout 0.7.3.",
+          "observed": "Screenshots show bailout ran two bash tool steps then stopped at the 2-step limit in checks 1-2, and printed version 0.7.3 in check 3.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-bailout-20261101-002249-f801/report.json",
+          "trace_path": "runs/verify/verify-bailout-20261101-154810-be94/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-bailout-20261101-002249-f801/check-1-cmd11.judged.png",
-            "runs/verify/verify-bailout-20261101-002249-f801/check-2-cmd10.judged.png",
-            "runs/verify/verify-bailout-20261101-002249-f801/check-3-cmd8.judged.png"
+            "runs/verify/verify-bailout-20261101-154810-be94/check-1-cmd6.judged.png",
+            "runs/verify/verify-bailout-20261101-154810-be94/check-2-cmd7.judged.png",
+            "runs/verify/verify-bailout-20261101-154810-be94/check-3-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.060699
+        "cost_usd": 0.074827,
+        "features": [
+          {
+            "feature": "bootstrap fresh machine or repair setup",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists OS and tool paths and stops at 2 steps with no bootstrap or repair done."
+          },
+          {
+            "feature": "inspect machine and install missing tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only inspects OS/tools and stops with no install of missing tools shown."
+          },
+          {
+            "feature": "repair broken agent configuration",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only searches for pi and lists files with no backup, repair, or verification shown."
+          }
+        ]
       },
       {
         "id": "verify-bailout-20261101-121523-1cfb",
@@ -629,5 +657,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:19:48+08:00",
-  "updated_at": "2026-11-01T16:23:27.021376+08:00"
+  "updated_at": "2026-11-01T17:39:38.471295+08:00"
 }

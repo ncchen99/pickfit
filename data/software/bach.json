@@ -61,20 +61,24 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-bach-20261031-001540-9285",
-      "method": "source",
+      "run_id": "verify-bach-20261101-163415-e501",
+      "method": "npm",
       "steps": [
         {
-          "command": "rm -rf /tmp/bach-check && git clone --depth 1 https://github.com/ellmos-ai/bach.git bach && ls bach/bach.py bach/system/bach.py",
-          "purpose": "Clone BACH source into work dir"
+          "command": "npm install -g ellmos-codecommander-mcp ellmos-filecommander-mcp 2>&1",
+          "purpose": "npm install -g ellmos-codecommander-mcp ellmos-filecommander-mcp"
+        },
+        {
+          "command": "git clone https://github.com/ellmos-ai/bach.git /tmp/bach 2>&1 && ls /tmp/bach/bach.py 2>&1 && cat /tmp/bach/pyproject.toml 2>&1",
+          "purpose": "git clone https://github.com/ellmos-ai/bach.git /tmp/bach for python CLI"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "python3 bach/bach.py --version",
+        "command": "cd /tmp/bach && python bach.py --version 2>&1",
         "expected_signal": "BACH v3.15.0"
       },
-      "first_task": "python3 bach/bach.py --startup"
+      "first_task": "cd /tmp/bach && python bach.py --startup 2>&1"
     },
     "windows": null
   },
@@ -93,30 +97,34 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:17:23.722978+08:00",
+    "checked_at": "2026-11-01T16:36:28.116865+08:00",
     "runs": [
       {
-        "id": "verify-bach-20261031-001540-9285",
+        "id": "verify-bach-20261101-163415-e501",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:17:23.722978+08:00",
-        "tool_version": "v3.15.0",
-        "install_method": "source",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:36:28.116865+08:00",
+        "tool_version": "3.15.0",
+        "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "rm -rf /tmp/bach-check && git clone --depth 1 https://github.com/ellmos-ai/bach.git bach && ls bach/bach.py bach/system/bach.py",
-            "purpose": "Clone BACH source into work dir"
+            "command": "npm install -g ellmos-codecommander-mcp ellmos-filecommander-mcp 2>&1",
+            "purpose": "npm install -g ellmos-codecommander-mcp ellmos-filecommander-mcp"
+          },
+          {
+            "command": "git clone https://github.com/ellmos-ai/bach.git /tmp/bach 2>&1 && ls /tmp/bach/bach.py 2>&1 && cat /tmp/bach/pyproject.toml 2>&1",
+            "purpose": "git clone https://github.com/ellmos-ai/bach.git /tmp/bach for python CLI"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 bach/bach.py --version",
+            "command": "cd /tmp/bach && python bach.py --version 2>&1",
             "expected_signal": "BACH v3.15.0",
             "exit_code": 0,
             "passed": true,
@@ -125,8 +133,8 @@
             "offline": true
           },
           {
-            "command": "python3 bach/bach.py --help",
-            "expected_signal": "Registry-Based CLI",
+            "command": "cd /tmp/bach && python bach.py --help 2>&1",
+            "expected_signal": "BACH v3.15.0 - Registry-Based CLI",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "BACH v3.15.0 - Registry-Based CLI",
@@ -134,39 +142,123 @@
             "offline": true
           },
           {
-            "command": "python3 bach/bach.py --startup",
-            "expected_signal": "READY - Session gestartet",
+            "command": "cd /tmp/bach && python bach.py --startup 2>&1",
+            "expected_signal": "BACH SESSION STARTUP",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "READY - Session gestartet",
+            "observed_excerpt": "BACH SESSION STARTUP",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/bach && python bach.py task add \"Test prioritization task\" 2>&1",
+            "expected_signal": "Task 1 erstellt",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[OK] Task 1 erstellt: Test prioritization task",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/bach && python bach.py task list 2>&1",
+            "expected_signal": "Test prioritization task",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[1] P3 Test prioritization task →OLLAMA",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/bach && python bach.py agent list 2>&1",
+            "expected_signal": "VERFUEGBARE AGENTS",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "=== VERFUEGBARE AGENTS ===",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/bach && python bach.py scheduler status 2>&1",
+            "expected_signal": "SCHEDULER STATUS",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "=== SCHEDULER STATUS ===",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "pip install -e . (and optionally pip install -e \".[console]\" / npm install -g ellmos-codecommander-mcp ellmos-filecommander-mcp)",
-            "actually_needed": "Skipped npm candidate (it installs only optional companion MCP servers ellmos-codecommander-mcp/ellmos-filecommander-mcp, not the BACH CLI) and pip candidates failed: pip install -e ./bach tries to clone private git dependencies like assistant-core (fatal: could not read Username) so it cannot work…",
+            "readme_said": "npm install -g ellmos-codecommander-mcp installs binary ellmos-codecommander-mcp",
+            "actually_needed": "binaries are installed as ellmos-codecommander and ellmos-filecommander in ~/.local/bin (symlinks to dist/index.js)",
             "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "pip install -e . installs BACH",
+            "actually_needed": "pip install fails without GitHub auth for private deps (assistant-core etc. git+https clone error 128); however python bach.py --version/startup/task/agent/scheduler work directly after git clone without pip install",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "ellmos-filecommander-mcp --help",
+            "actually_needed": "MCP servers are stdio JSON-RPC servers that block on start and print 'ellmos FileCommander MCP Server gestartet' instead of showing help",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show startup completing with READY - Session gestartet and version printing BACH v3.15.0.",
+          "observed": "Screenshots show version string, full CLI help listing, and complete session startup ending in READY.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-bach-20261031-001540-9285/report.json",
+          "trace_path": "runs/verify/verify-bach-20261101-163415-e501/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-bach-20261031-001540-9285/check-1-cmd11.judged.png",
-            "runs/verify/verify-bach-20261031-001540-9285/check-2-cmd9.judged.png"
+            "runs/verify/verify-bach-20261101-163415-e501/check-1-cmd6.judged.png",
+            "runs/verify/verify-bach-20261101-163415-e501/check-2-cmd7.judged.png",
+            "runs/verify/verify-bach-20261101-163415-e501/check-3-cmd8.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.07602
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.073886,
+        "features": [
+          {
+            "feature": "work autonomously, learn and self-organize",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Startup prints status lists but shows no autonomous action, learning, or self-organization done."
+          },
+          {
+            "feature": "manage tasks with prioritization and deadlines",
+            "status": "checked",
+            "smoke_tests": [
+              3,
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "orchestrate complex tasks with expert agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Agent list only lists stopped agents without orchestrating any complex task."
+          },
+          {
+            "feature": "automate time-based jobs and workflows",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Scheduler status shows STOPPED with 0 total and 0 active jobs."
+          }
+        ]
       }
     ]
   },
@@ -512,5 +604,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:55+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:36:28.119017+08:00"
 }

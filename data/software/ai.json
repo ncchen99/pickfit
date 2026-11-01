@@ -56,19 +56,16 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-ai-20261101-000948-35cc",
+      "run_id": "verify-ai-20261101-161753-73b1",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g contentrain",
+          "command": "npm install -g contentrain 2>&1",
           "purpose": "install contentrain globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": {
-        "command": "contentrain --version",
-        "expected_signal": "0.18.24"
-      },
+      "check": null,
       "first_task": null
     },
     "windows": null
@@ -88,46 +85,51 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:11:59.751170+08:00",
+    "checked_at": "2026-11-01T16:19:55.468525+08:00",
     "runs": [
       {
-        "id": "verify-ai-20261101-000948-35cc",
+        "id": "verify-ai-20261101-161753-73b1",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:11:59.751170+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:19:55.468525+08:00",
         "tool_version": "0.18.24",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g contentrain",
+            "command": "npm install -g contentrain 2>&1",
             "purpose": "install contentrain globally via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "contentrain --version",
-            "expected_signal": "0.18.24",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "[log] 0.18.24",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "cd /tmp/mcp-test && python3 ~/.pickfit/mcp_probe.py --timeout 30 -- contentrain serve --stdio 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 -- contentrain serve --stdio 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/contentrain-test && python3 ~/.pickfit/mcp_probe.py --timeout 30 --call contentrain_status --args '{}' -- contentrain serve --stdio 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=contentrain_status content=text text_chars=986",
             "setup": [
               {
-                "command": "rm -rf /tmp/mcp-test && mkdir -p /tmp/mcp-test && cd /tmp/mcp-test && git init -q -b master && git config user.email \"test@test.com\" && git config user.name \"test\" && echo \"hello\" > README.md && git add . && git commit -qm \"initial\" && contentrain init --yes 2>&1; echo \"EXIT:$?\"; ls -la .contentrain/ 2>&1 | head -n 50",
+                "command": "mkdir -p /tmp/contentrain-test/src && cat > /tmp/contentrain-test/src/Hero.tsx <<'EOF'\nexport default function Hero() {\n  return (\n    <section>\n      <h1>Welcome to our platform</h1>\n      <p>Start your free trial today</p>\n      <button>Get Started</button>\n    </section>\n  )\n}\nEOF\necho \"created test file\"; ls -R /tmp/contentrain-test",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/contentrain-test && git init -b main && git config user.email \"a@b.com\" && git config user.name \"A\" && git add . && git commit -m init 2>&1 | tail; contentrain init --yes 2>&1; echo EXIT:$?; ls -la .contentrain 2>&1 | head -n 60",
                 "background": false,
                 "port": null
               }
@@ -135,31 +137,40 @@
             "offline": true
           },
           {
-            "command": "cd /tmp/mcp-test && python3 ~/.pickfit/mcp_probe.py --timeout 30 --call contentrain_status --args '{}' -- contentrain serve --stdio 2>&1",
+            "command": "cd /tmp/contentrain-test && python3 ~/.pickfit/mcp_probe.py --timeout 30 --call contentrain_describe_format --args '{}' -- contentrain serve --stdio 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=contentrain_status content=text text_chars=990",
+            "observed_excerpt": "tools/call: ok tool=contentrain_describe_format content=text text_chars=9144",
             "setup": [
               {
-                "command": "rm -rf /tmp/mcp-test && mkdir -p /tmp/mcp-test && cd /tmp/mcp-test && git init -q -b master && git config user.email \"test@test.com\" && git config user.name \"test\" && echo \"hello\" > README.md && git add . && git commit -qm \"initial\" && contentrain init --yes 2>&1; echo \"EXIT:$?\"; ls -la .contentrain/ 2>&1 | head -n 50",
+                "command": "mkdir -p /tmp/contentrain-test/src && cat > /tmp/contentrain-test/src/Hero.tsx <<'EOF'\nexport default function Hero() {\n  return (\n    <section>\n      <h1>Welcome to our platform</h1>\n      <p>Start your free trial today</p>\n      <button>Get Started</button>\n    </section>\n  )\n}\nEOF\necho \"created test file\"; ls -R /tmp/contentrain-test",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/contentrain-test && git init -b main && git config user.email \"a@b.com\" && git config user.name \"A\" && git add . && git commit -m init 2>&1 | tail; contentrain init --yes 2>&1; echo EXIT:$?; ls -la .contentrain 2>&1 | head -n 60",
                 "background": false,
                 "port": null
               }
             ],
             "offline": true
+          },
+          {
+            "command": "cd /tmp/contentrain-test && python3 ~/.pickfit/mcp_probe.py --timeout 30 --call contentrain_scan --args '{\"mode\":\"candidate\",\"paths\":[\"src\"]}' -- contentrain serve --stdio 2>&1",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"contentrain_scan\", \"count\": 22, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"contentrain\", \"serve\", \"--stdio\"], \"noise\": 1, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"contentrain-mcp\", \"tools\": [\"contentrain_status\", \"contentrain_describe\", \"c…",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "npx contentrain init creates .contentrain workspace",
-            "actually_needed": "must be inside a git repo with a master branch and at least one commit; add --yes to avoid interactive prompt or init hangs and exits 1 with 'not a valid object name: master'",
+            "readme_said": "npx contentrain init works without git",
+            "actually_needed": "needs git repo initialized and committed; without it init fails with fatal: not a valid object name: 'master' even with --yes",
             "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "npx contentrain serve --stdio launches MCP server",
-            "actually_needed": "server only works when run from directory containing initialized .contentrain workspace; global install (npm install -g contentrain) provides 'contentrain serve --stdio' on PATH for offline replay instead of npx fetcher",
-            "kind": "note"
           },
           {
             "readme_said": "An MCP server over stdio writes only JSON-RPC messages to stdout",
@@ -170,21 +181,21 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 22 tools, successful contentrain_status tool call, and CLI version 0.18.24.",
+          "observed": "Screenshots show MCP handshake succeeding with 22 tools listed and both contentrain_status and contentrain_describe_format calls returning content.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-ai-20261101-000948-35cc/report.json",
+          "trace_path": "runs/verify/verify-ai-20261101-161753-73b1/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-ai-20261101-000948-35cc/check-1-cmd8.judged.png",
-            "runs/verify/verify-ai-20261101-000948-35cc/check-2-cmd9.judged.png",
-            "runs/verify/verify-ai-20261101-000948-35cc/check-3-cmd11.judged.png"
+            "runs/verify/verify-ai-20261101-161753-73b1/check-1-cmd4.judged.png",
+            "runs/verify/verify-ai-20261101-161753-73b1/check-2-cmd13.judged.png",
+            "runs/verify/verify-ai-20261101-161753-73b1/check-3-cmd15.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.083286,
+        "cost_usd": 0.07384,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -223,7 +234,35 @@
           "tool_count": 22,
           "called_tool": "contentrain_status",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Extract, govern and ship structured content",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows status as initialized with config, not an extraction or shipment of content."
+          },
+          {
+            "feature": "Turn hardcoded strings into structured content",
+            "status": "test_failed",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": "tool",
+            "note": "contentrain_scan candidate mode returned tools/call: error"
+          },
+          {
+            "feature": "Serve same content across web, docs and mobile",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only describes JSON/Markdown storage in git, not serving content to web, docs or mobile."
+          }
+        ]
       }
     ]
   },
@@ -564,5 +603,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T16:19:55.470108+08:00"
 }

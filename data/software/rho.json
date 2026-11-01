@@ -59,20 +59,24 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-rho-20261029-030213-06c2",
+      "run_id": "verify-rho-20261101-162631-a1e8",
       "method": "binary",
       "steps": [
         {
-          "command": "mkdir -p ~/.local/bin /tmp/rho-clean && curl -fsSL -o /tmp/rho-clean/rho.tar.gz https://github.com/casonadams/rho/releases/download/v0.12.1/rho-0.12.1-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/rho-clean/rho.tar.gz -C /tmp/rho-clean && cp /tmp/rho-clean/rho ~/.local/bin/rho && chmod +x ~/.local/bin/rho",
-          "purpose": "download x86_64-linux release tarball and install rho to ~/.local/bin"
+          "command": "mkdir -p ~/.local/bin && curl -fL https://github.com/casonadams/rho/releases/download/v0.12.2/rho-0.12.2-x86_64-unknown-linux-gnu.tar.gz -o /tmp/rho.tar.gz && tar -tzf /tmp/rho.tar.gz | head -n 20 && tar -xzf /tmp/rho.tar.gz -C /tmp && ls -l /tmp/rho* /tmp/*.bin 2>&1 | head -n 20; find /tmp -maxdepth 3 -type f -name \"rho\" -o -name \"rho-*\"",
+          "purpose": "Download latest x86_64-unknown-linux-gnu tarball from GitHub releases"
+        },
+        {
+          "command": "install -m 755 /tmp/rho ~/.local/bin/rho && ~/.local/bin/rho --version && ~/.local/bin/rho --help",
+          "purpose": "Install binary to ~/.local/bin and verify --help works"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "rho --version",
-        "expected_signal": "rho 0.12.1"
+        "expected_signal": "rho 0.12.2"
       },
-      "first_task": "rho mcp"
+      "first_task": null
     },
     "windows": null
   },
@@ -91,52 +95,65 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T03:03:26.847253+08:00",
+    "checked_at": "2026-11-01T16:27:53.190041+08:00",
     "runs": [
       {
-        "id": "verify-rho-20261029-030213-06c2",
+        "id": "verify-rho-20261101-162631-a1e8",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T03:03:26.847253+08:00",
-        "tool_version": "0.12.1",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:27:53.190041+08:00",
+        "tool_version": "0.12.2",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p ~/.local/bin /tmp/rho-clean && curl -fsSL -o /tmp/rho-clean/rho.tar.gz https://github.com/casonadams/rho/releases/download/v0.12.1/rho-0.12.1-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/rho-clean/rho.tar.gz -C /tmp/rho-clean && cp /tmp/rho-clean/rho ~/.local/bin/rho && chmod +x ~/.local/bin/rho",
-            "purpose": "download x86_64-linux release tarball and install rho to ~/.local/bin"
+            "command": "mkdir -p ~/.local/bin && curl -fL https://github.com/casonadams/rho/releases/download/v0.12.2/rho-0.12.2-x86_64-unknown-linux-gnu.tar.gz -o /tmp/rho.tar.gz && tar -tzf /tmp/rho.tar.gz | head -n 20 && tar -xzf /tmp/rho.tar.gz -C /tmp && ls -l /tmp/rho* /tmp/*.bin 2>&1 | head -n 20; find /tmp -maxdepth 3 -type f -name \"rho\" -o -name \"rho-*\"",
+            "purpose": "Download latest x86_64-unknown-linux-gnu tarball from GitHub releases"
+          },
+          {
+            "command": "install -m 755 /tmp/rho ~/.local/bin/rho && ~/.local/bin/rho --version && ~/.local/bin/rho --help",
+            "purpose": "Install binary to ~/.local/bin and verify --help works"
           }
         ],
         "smoke_tests": [
           {
             "command": "rho --version",
-            "expected_signal": "rho 0.12.1",
+            "expected_signal": "rho 0.12.2",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "rho 0.12.1",
+            "observed_excerpt": "rho 0.12.2",
             "setup": [],
             "offline": true
           },
           {
-            "command": "rho --help",
-            "expected_signal": "Self-Update:",
+            "command": "rho --help 2>&1",
+            "expected_signal": "Minimal agentic coding CLI harness",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Self-Update:",
+            "observed_excerpt": "Minimal agentic coding CLI harness",
             "setup": [],
             "offline": true
           },
           {
-            "command": "rho mcp",
-            "expected_signal": "Configured MCP Servers (0 total):",
+            "command": "rho join --help 2>&1",
+            "expected_signal": "Invitation ticket URI (rho://...)",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Configured MCP Servers (0 total):",
+            "observed_excerpt": "<TICKET> Invitation ticket URI (rho://...)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rho agent serve --help 2>&1",
+            "expected_signal": "Capability level granted to joining peers: read_only, propose, full",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "--cap <CAP> Capability level granted to joining peers: read_only, propose, full [default: read_only]",
             "setup": [],
             "offline": true
           }
@@ -144,27 +161,62 @@
         "pitfalls": [
           {
             "readme_said": "cargo install rho",
-            "actually_needed": "download rho-0.12.1-x86_64-unknown-linux-gnu.tar.gz from GitHub releases and copy extracted rho binary to ~/.local/bin",
-            "kind": null
+            "actually_needed": "Download prebuilt x86_64-unknown-linux-gnu tarball from GitHub releases (https://github.com/casonadams/rho/releases/download/v0.12.2/rho-0.12.2-x86_64-unknown-linux-gnu.tar.gz) and install to ~/.local/bin; box has no Rust toolchain and must not install one",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show expected outputs: empty MCP server list and version rho 0.12.1.",
+          "observed": "Screenshots show rho help tagline, join ticket URI help, and version 0.12.2 all printed with exit 0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-rho-20261029-030213-06c2/report.json",
+          "trace_path": "runs/verify/verify-rho-20261101-162631-a1e8/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-rho-20261029-030213-06c2/check-1-cmd14.judged.png",
-            "runs/verify/verify-rho-20261029-030213-06c2/check-2-cmd12.judged.png"
+            "runs/verify/verify-rho-20261101-162631-a1e8/check-1-cmd11.judged.png",
+            "runs/verify/verify-rho-20261101-162631-a1e8/check-2-cmd12.judged.png",
+            "runs/verify/verify-rho-20261101-162631-a1e8/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.077234
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.081627,
+        "features": [
+          {
+            "feature": "Run local private coding agent CLI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only --help environment and usage text, not an agent run."
+          },
+          {
+            "feature": "Share live sessions peer-to-peer securely",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only join usage help, not a live shared session."
+          },
+          {
+            "feature": "Delegate tasks to peer agent nodes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only agent serve usage help, not delegated task execution."
+          },
+          {
+            "feature": "Read, edit and search code files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; Created sample.py and rho accepted file arg (provider error expected without Ollama)"
+          }
+        ]
       }
     ]
   },
@@ -496,5 +548,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:27:53.239390+08:00"
 }
