@@ -60,18 +60,22 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-moose-20261102-004144-94ca",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub io.github.moooossee.Moose",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add flathub user remote"
+        },
+        {
+          "command": "flatpak install -y --user flathub io.github.moooossee.Moose",
+          "purpose": "install Moose flatpak as user"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "flatpak run io.github.moooossee.Moose"
     },
     "windows": null
   },
@@ -88,22 +92,127 @@
     "url": "https://github.com/moooossee/moose/releases/tag/v0.7.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T00:51:03.992135+08:00",
+    "runs": [
+      {
+        "id": "verify-moose-20261102-004144-94ca",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T00:51:03.992135+08:00",
+        "tool_version": "0.7.5",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add flathub user remote"
+          },
+          {
+            "command": "flatpak install -y --user flathub io.github.moooossee.Moose",
+            "purpose": "install Moose flatpak as user"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run io.github.moooossee.Moose",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak install flathub io.github.moooossee.Moose",
+            "actually_needed": "first add flathub as user remote and install with --user flag (no root): flatpak remote-add --user --if-not-exists flathub ... && flatpak install -y --user flathub io.github.moooossee.Moose",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Attach images, PDFs, text files / Keep a document library",
+            "actually_needed": "Flatpak file chooser Import button never opened a dialog here (no desktop portal), so file-based features cannot be exercised",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The app shows a welcome onboarding screen with a moose illustration, intro text, and a Start Guide button.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-moose-20261102-004144-94ca/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-moose-20261102-004144-94ca/replay-5-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.178306,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "flatpak run io.github.moooossee.Moose",
+          "window_title": "Moose",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "chat with local and cloud AI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "local chat needs Ollama model download, cloud needs API key; no model fetched here"
+          },
+          {
+            "feature": "browse and download AI models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "model catalog browse works but download of smallest model exceeds box budget"
+          },
+          {
+            "feature": "chat with attached files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "attach/import needs file chooser which never opened without portal"
+          },
+          {
+            "feature": "search document library for conversations",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Import button never opened file dialog without portal; search not exercised"
+          }
+        ]
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-02T00:52:29+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 65.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.6,
           "weight": 40.0
         },
         "install_docs": {
@@ -144,7 +253,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 34.29
+      "value": 32.7
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -443,5 +552,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:59+08:00",
-  "updated_at": "2026-11-01T16:45:25+08:00"
+  "updated_at": "2026-11-02T00:52:29.548473+08:00"
 }

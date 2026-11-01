@@ -5,6 +5,7 @@
  */
 import { bestGuide, OSES, verifiedOn, verifiedOnUserSystem, type Arch, type Entry, type InstallGuide, type OS } from './catalog.ts';
 import { featuresOut } from './features.ts';
+import { runDay } from './evidence.ts';
 
 const MCP_TOOLS_SHOWN = 40;
 
@@ -52,7 +53,7 @@ export type CardField = (typeof CARD_FIELDS)[number];
 function runLabel(entry: Entry, os: OS): string {
   const guide = entry.install[os]!;
   const how = guide.basis === 'replayed' ? 'sandbox install, replayed from scratch' : 'installed by hand';
-  return `${os} ${guide.run.arch}: ${how}, ${guide.run.level} check passed, ${guide.run.checked_at.slice(0, 10)}`;
+  return `${os} ${guide.run.arch}: ${how}, ${guide.run.level} check passed, ${runDay(guide.run.checked_at)}`;
 }
 
 export function toCard(entry: Entry, os?: OS, arch?: Arch): Card {
