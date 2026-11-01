@@ -83,7 +83,7 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-stackengine-20261101-001916-1fff",
+      "run_id": "verify-stackengine-20261101-114646-1242",
       "method": "npm",
       "steps": [
         {
@@ -96,7 +96,7 @@
         "command": "stackengine --version",
         "expected_signal": "stackengine v1.0.6"
       },
-      "first_task": "stackengine init"
+      "first_task": "stackengine redact /tmp/prod.yaml -o /tmp/prod.redacted.yaml && echo \"EXIT:$?\" && ls -lh /tmp/prod.redacted.yaml .stackengine/vault.lock && cat /tmp/prod.redacted.yaml"
     },
     "windows": {
       "basis": "readme_claim",
@@ -128,18 +128,18 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:20:06.254789+08:00",
+    "checked_at": "2026-11-01T11:58:13.234369+08:00",
     "runs": [
       {
-        "id": "verify-stackengine-20261101-001916-1fff",
+        "id": "verify-stackengine-20261101-114646-1242",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:20:06.254789+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T11:58:13.234369+08:00",
         "tool_version": "1.0.6",
         "install_method": "npm",
         "replayed": true,
@@ -160,23 +160,14 @@
             "offline": true
           },
           {
-            "command": "stackengine init",
-            "expected_signal": "StackEngine Workspace Initialized",
+            "command": "stackengine redact /tmp/prod.yaml -o /tmp/prod.redacted.yaml && echo \"EXIT:$?\" && ls -lh /tmp/prod.redacted.yaml .stackengine/vault.lock && cat /tmp/prod.redacted.yaml",
+            "expected_signal": "Tokenized 3 credential(s)",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "\u001b[1;34m◆\u001b[0m \u001b[1mStackEngine Workspace Initialized\u001b[0m",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "stackengine redact prod.yaml",
-            "expected_signal": "Tokenized 5 credential(s)",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "\u001b[36m▶\u001b[0m Tokenized 5 credential(s) from prod.yaml:",
+            "observed_excerpt": "\u001b[36m▶\u001b[0m Tokenized 3 credential(s) from prod.yaml:",
             "setup": [
               {
-                "command": "rm -rf .stackengine prod.yaml prod.yaml.redacted\ncat > prod.yaml <<'YAML'\ndatabase:\n  host: prod-db.example.com\n  password: S3cur3P@ssw0rd!\n  dsn: postgres://admin:S3cur3P@ssw0rd!@prod-db:5432/app\naws:\n  access_key_id: AKIAIOSFODNN7EXAMPLE\n  secret_access_key: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY\napi:\n  key: sk-proj-abc123def456ghi789\npem_key: |\n  -----BEGIN RSA PRIVATE KEY-----\n  MIIEpAIBAAKCAQEA7b\n  -----END RSA PRIVATE KEY-----\nYAML",
+                "command": "cat > /tmp/prod.yaml <<'YAML'\napiVersion: v1\nkind: Secret\nmetadata:\n  name: test-secret\n  namespace: prod\ndata:\n  # database uri with password\n  db_uri: \"postgres://user:MySup3rDBPassword!@db.example.com:5432/mydb\"\n  api_key: \"AKIAIOSFODNN7EXAMPLE\"\n  # PEM block\n  private_key: |\n    -----BEGIN RSA PRIVATE KEY-----\n    MIIEowIBAAKCAQEA7b...\n    -----END RSA PRIVATE KEY-----\nYAML\ncat /tmp/prod.yaml\n",
                 "background": false,
                 "port": null
               }
@@ -184,25 +175,66 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "stackengine copy reads clipboard",
+            "actually_needed": "headless Linux has no display; tool exits 1 with 'Cannot access system clipboard (timeout or no GUI display found)'",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three commands succeeded, showing workspace initialization, redaction of 5 credentials, and version v1.0.6.",
+          "observed": "Screenshots show redaction tokenizing 3 credentials with redacted file written and version v1.0.6 printed.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-stackengine-20261101-001916-1fff/report.json",
+          "trace_path": "runs/verify/verify-stackengine-20261101-114646-1242/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-stackengine-20261101-001916-1fff/check-1-cmd9.judged.png",
-            "runs/verify/verify-stackengine-20261101-001916-1fff/check-2-cmd10.judged.png",
-            "runs/verify/verify-stackengine-20261101-001916-1fff/check-3-cmd6.judged.png"
+            "runs/verify/verify-stackengine-20261101-114646-1242/check-1-cmd6.judged.png",
+            "runs/verify/verify-stackengine-20261101-114646-1242/check-2-cmd14.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.055826
+        "cost_usd": 0.106919,
+        "features": [
+          {
+            "feature": "redact secrets from a file",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "restore secrets using saved token map",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; restore re-injected credentials and purged vault.lock"
+          },
+          {
+            "feature": "redact clipboard contents in-place",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "copy requires xclip/wl-clipboard and display; box has no GUI"
+          },
+          {
+            "feature": "start local redaction proxy",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "proxy started on 18080 and proxied requests, but clean recheck not possible within command budget"
+          }
+        ]
       }
     ]
   },
@@ -602,5 +634,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:23:43+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T11:58:13.235551+08:00"
 }

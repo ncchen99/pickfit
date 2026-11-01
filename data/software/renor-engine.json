@@ -58,19 +58,16 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-renor-engine-20261101-002203-1e04",
+      "run_id": "verify-renor-engine-20261101-114502-72ce",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g renor-engine",
+          "command": "npm install -g renor-engine\n",
           "purpose": "install renor-engine globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": {
-        "command": "renor-engine --version",
-        "expected_signal": "1.3.0"
-      },
+      "check": null,
       "first_task": null
     },
     "windows": null
@@ -90,55 +87,37 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:22:49.833865+08:00",
+    "checked_at": "2026-11-01T11:45:55.289963+08:00",
     "runs": [
       {
-        "id": "verify-renor-engine-20261101-002203-1e04",
+        "id": "verify-renor-engine-20261101-114502-72ce",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:22:49.833865+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T11:45:55.289963+08:00",
         "tool_version": "1.3.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g renor-engine",
+            "command": "npm install -g renor-engine\n",
             "purpose": "install renor-engine globally via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "renor-engine --version",
-            "expected_signal": "1.3.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "1.3.0",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "renor-engine --help",
-            "expected_signal": "Start MCP server (stdio transport)",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "mcp Start MCP server (stdio transport) for agent connectivity",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py --timeout 30 -- renor-engine mcp 2>&1",
+            "command": "VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py -- renor-engine mcp\n",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
             "setup": [
               {
-                "command": "mkdir -p /tmp/renor-vault && VAULT_PATH=/tmp/renor-vault renor-engine --help 2>&1 | head -n 20\nls -la /tmp/renor-vault",
+                "command": "mkdir -p /tmp/renor-vault && echo \"VAULT prepared\"\n",
                 "background": false,
                 "port": null
               }
@@ -146,14 +125,44 @@
             "offline": true
           },
           {
-            "command": "VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py --timeout 30 --call status --args '{}' -- renor-engine mcp 2>&1",
+            "command": "VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py --call remember_fact --args '{\"subject\":\"Ada\",\"predicate\":\"favorite_color\",\"object\":\"cerulean\"}' -- renor-engine mcp\n",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=status content=text text_chars=59",
+            "observed_excerpt": "tools/call: ok tool=remember_fact content=text text_chars=259",
             "setup": [
               {
-                "command": "mkdir -p /tmp/renor-vault && VAULT_PATH=/tmp/renor-vault renor-engine --help 2>&1 | head -n 20\nls -la /tmp/renor-vault",
+                "command": "mkdir -p /tmp/renor-vault && echo \"VAULT prepared\"\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py --call note --args '{\"text\":\"Test note about blue notebook on desk\"}' -- renor-engine mcp\n",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=note content=text text_chars=64",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/renor-vault && echo \"VAULT prepared\"\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py --call search --args '{\"query\":\"Ada favorite color\"}' -- renor-engine mcp\n",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search content=text text_chars=158",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/renor-vault && echo \"VAULT prepared\"\n",
                 "background": false,
                 "port": null
               }
@@ -165,21 +174,21 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "MCP handshake lists 8 tools, status tool call returns empty counts, and --version prints 1.3.0.",
+          "observed": "Screenshots show Renor MCP server initializing, listing 8 tools, and successfully executing remember_fact and note calls.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-renor-engine-20261101-002203-1e04/report.json",
+          "trace_path": "runs/verify/verify-renor-engine-20261101-114502-72ce/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-renor-engine-20261101-002203-1e04/check-1-cmd4.judged.png",
-            "runs/verify/verify-renor-engine-20261101-002203-1e04/check-2-cmd5.judged.png",
-            "runs/verify/verify-renor-engine-20261101-002203-1e04/check-3-cmd7.judged.png"
+            "runs/verify/verify-renor-engine-20261101-114502-72ce/check-1-cmd5.judged.png",
+            "runs/verify/verify-renor-engine-20261101-114502-72ce/check-2-cmd6.judged.png",
+            "runs/verify/verify-renor-engine-20261101-114502-72ce/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.044323,
+        "cost_usd": 0.047072,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -201,9 +210,42 @@
             "note"
           ],
           "tool_count": 8,
-          "called_tool": "status",
+          "called_tool": "remember_fact",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "save and recall memory across agent sessions",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "store memory as local Markdown files",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "serve stored memory over MCP",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -605,5 +647,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:23:38+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T11:45:55.291926+08:00"
 }

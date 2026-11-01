@@ -71,16 +71,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-gsl-lang-20261101-001915-7b0c",
+      "run_id": "verify-gsl-lang-20261101-120203-9b17",
       "method": "binary",
       "steps": [
         {
-          "command": "mkdir -p /tmp/gsl_dl2 && curl -fL -o /tmp/gsl_dl2/gsl.tgz https://github.com/dnnrly/gsl-lang/releases/download/v0.7.0/gsl-lang_0.7.0_linux_amd64.tar.gz\n",
-          "purpose": "download prebuilt Linux amd64 binary from GitHub releases v0.7.0"
-        },
-        {
-          "command": "tar xzf /tmp/gsl_dl2/gsl.tgz -C /tmp/gsl_dl2 && mkdir -p ~/.local/bin && cp /tmp/gsl_dl2/gsl-query /tmp/gsl_dl2/gsl-diagram ~/.local/bin/ && chmod +x ~/.local/bin/gsl-query ~/.local/bin/gsl-diagram\n",
-          "purpose": "extract tarball and install gsl-query and gsl-diagram to ~/.local/bin"
+          "command": "curl -fsSL -o /tmp/gsl2.tar.gz https://github.com/dnnrly/gsl-lang/releases/download/v0.7.0/gsl-lang_0.7.0_linux_amd64.tar.gz && tar -xzf /tmp/gsl2.tar.gz -C /tmp && cp /tmp/gsl-query /tmp/gsl-diagram ~/.local/bin/",
+          "purpose": "download and install prebuilt gsl-query and gsl-diagram binaries from GitHub releases"
         }
       ],
       "manual_steps": [],
@@ -120,29 +116,25 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:20:16.529099+08:00",
+    "checked_at": "2026-11-01T12:03:19.663201+08:00",
     "runs": [
       {
-        "id": "verify-gsl-lang-20261101-001915-7b0c",
+        "id": "verify-gsl-lang-20261101-120203-9b17",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:20:16.529099+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T12:03:19.663201+08:00",
         "tool_version": "0.7.0",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p /tmp/gsl_dl2 && curl -fL -o /tmp/gsl_dl2/gsl.tgz https://github.com/dnnrly/gsl-lang/releases/download/v0.7.0/gsl-lang_0.7.0_linux_amd64.tar.gz\n",
-            "purpose": "download prebuilt Linux amd64 binary from GitHub releases v0.7.0"
-          },
-          {
-            "command": "tar xzf /tmp/gsl_dl2/gsl.tgz -C /tmp/gsl_dl2 && mkdir -p ~/.local/bin && cp /tmp/gsl_dl2/gsl-query /tmp/gsl_dl2/gsl-diagram ~/.local/bin/ && chmod +x ~/.local/bin/gsl-query ~/.local/bin/gsl-diagram\n",
-            "purpose": "extract tarball and install gsl-query and gsl-diagram to ~/.local/bin"
+            "command": "curl -fsSL -o /tmp/gsl2.tar.gz https://github.com/dnnrly/gsl-lang/releases/download/v0.7.0/gsl-lang_0.7.0_linux_amd64.tar.gz && tar -xzf /tmp/gsl2.tar.gz -C /tmp && cp /tmp/gsl-query /tmp/gsl-diagram ~/.local/bin/",
+            "purpose": "download and install prebuilt gsl-query and gsl-diagram binaries from GitHub releases"
           }
         ],
         "smoke_tests": [
@@ -156,86 +148,122 @@
             "offline": true
           },
           {
-            "command": "gsl-query --help",
-            "expected_signal": "Execute queries against GSL",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Execute queries against GSL (Graph Specification Language) graphs and output filtered/transformed results.",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "cat > /tmp/model.gsl <<'GSL'\nset critical\n\nnode gateway [team=\"gateway\"] @critical\nnode orders [team=\"orders\"] @critical\nnode orders_db [text=\"PostgreSQL\", team=\"platform\"] @critical\nnode payments [team=\"payments\"]\nnode users [team=\"identity\"]\n\ngateway -> orders [protocol=\"http\"]\norders -> payments [protocol=\"grpc\"]\norders -> users [protocol=\"grpc\"]\norders -> orders_db [protocol=\"sql\"]\nGSL\ncat /tmp/model.gsl\ngsl-query \"\" < /tmp/model.gsl\n",
-            "expected_signal": "gateway->orders [protocol=\"http\"]",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "gateway->orders [protocol=\"http\"]",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "gsl-query '(subgraph node.id == \"orders\" traverse in all) as BLAST | from * | (subgraph node in @critical) as CRIT | BLAST & CRIT' < /tmp/model.gsl\n",
-            "expected_signal": "node gateway [team=\"gateway\"] @critical",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "node gateway [team=\"gateway\"] @critical",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "gsl-query 'from *' < /tmp/model.gsl | gsl-diagram -f mermaid -t component",
             "expected_signal": "graph TB",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "graph TB",
-            "setup": [],
+            "setup": [
+              {
+                "command": "cat > /tmp/model.gsl <<'EOS'\nset critical\n\nnode gateway [team=\"gateway\"] @critical\nnode orders [team=\"orders\"] @critical\nnode orders_db [text=\"PostgreSQL\", team=\"platform\"] @critical\nnode payments [team=\"payments\"]\nnode users [team=\"identity\"]\n\ngateway -> orders [protocol=\"http\"]\norders -> payments [protocol=\"grpc\"]\norders -> users [protocol=\"grpc\"]\norders -> orders_db [protocol=\"sql\"]\nEOS\ncat /tmp/model.gsl",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "gsl-query '(subgraph node.id == \"orders\" traverse in all) as BLAST | from * | (subgraph node in @critical) as CRIT | BLAST & CRIT' < /tmp/model.gsl",
+            "expected_signal": "gateway->orders",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gateway->orders [protocol=\"http\"]",
+            "setup": [
+              {
+                "command": "cat > /tmp/model.gsl <<'EOS'\nset critical\n\nnode gateway [team=\"gateway\"] @critical\nnode orders [team=\"orders\"] @critical\nnode orders_db [text=\"PostgreSQL\", team=\"platform\"] @critical\nnode payments [team=\"payments\"]\nnode users [team=\"identity\"]\n\ngateway -> orders [protocol=\"http\"]\norders -> payments [protocol=\"grpc\"]\norders -> users [protocol=\"grpc\"]\norders -> orders_db [protocol=\"sql\"]\nEOS\ncat /tmp/model.gsl",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "gsl-query 'subgraph edge depends on edge.stage == \"gate\" scope' < /tmp/model2_local.gsl",
+            "expected_signal": "PROMOTE: registry->canary",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PROMOTE: registry->canary [stage=\"promote\"] {",
+            "setup": [
+              {
+                "command": "cat > /tmp/model2_local.gsl <<'EOS'\nnode checkout\nnode build\nnode test\nnode scan\nnode image\nnode registry\nnode config\nnode controlplane\nnode approve\nnode canary\nnode prod\nnode smoke\n\nCHECKOUT: checkout -> build [stage=\"build\"] {\n    TEST: build -> test [stage=\"test\"]\n    SCAN: build -> scan [stage=\"scan\"]\n    PKG: build -> image [stage=\"package\"]\n}\nPUSH: image -> registry [stage=\"push\", parent=PKG]\nCONFIG: config -> controlplane [stage=\"apply\"]\nGATE: controlplane -> approve [stage=\"gate\", parent=CONFIG]\nPROMOTE: registry -> canary [stage=\"promote\", parent=GATE] {\n    CANARY: canary -> prod [stage=\"ship\"]\n    SMOKE: prod -> smoke [stage=\"smoke\"]\n}\nEOS\ncat /tmp/model2_local.gsl",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "go install github.com/dnnrly/gsl-lang/cmd/gsl-query@latest requires Go 1.26",
-            "actually_needed": "Box has no Go toolchain; installed prebuilt binaries gsl-lang_0.7.0_linux_amd64.tar.gz from GitHub releases instead, which README mentions as alternative",
+            "readme_said": "go install github.com/dnnrly/gsl-lang/cmd/gsl-query@latest requires Go 1.26 or newer",
+            "actually_needed": "Go toolchain not available in box; used prebuilt binaries from GitHub releases (gsl-lang_0.7.0_linux_amd64.tar.gz) which need no Go",
             "kind": "sandbox"
-          },
-          {
-            "readme_said": "gsl-query --version implied",
-            "actually_needed": "Tool uses subcommand `gsl-query version` not --version flag (--version returns unknown flag)",
-            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show GSL working: identity query echoed the model, blast-radius query returned gateway and orders, and version printed 0.7.0.",
+          "observed": "Screenshots show mermaid output starting with graph TB, query result containing gateway->orders, and gsl-query version 0.7.0 details.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-gsl-lang-20261101-001915-7b0c/report.json",
+          "trace_path": "runs/verify/verify-gsl-lang-20261101-120203-9b17/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-gsl-lang-20261101-001915-7b0c/check-1-cmd6.judged.png",
-            "runs/verify/verify-gsl-lang-20261101-001915-7b0c/check-2-cmd7.judged.png",
-            "runs/verify/verify-gsl-lang-20261101-001915-7b0c/check-3-cmd12.judged.png"
+            "runs/verify/verify-gsl-lang-20261101-120203-9b17/check-1-cmd10.judged.png",
+            "runs/verify/verify-gsl-lang-20261101-120203-9b17/check-2-cmd11.judged.png",
+            "runs/verify/verify-gsl-lang-20261101-120203-9b17/check-3-cmd14.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.076087
+        "cost_usd": 0.088291,
+        "features": [
+          {
+            "feature": "derive diagrams and views from one graph",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "query blast radius of retiring service",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "model workflow prerequisites between edges",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:32:32+08:00",
+    "computed_at": "2026-11-01T12:03:19+08:00",
     "quality": {
-      "total": 82.7,
+      "total": 90.2,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -276,7 +304,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 72.36
+      "value": 78.92
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -613,5 +641,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:19:10+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T12:03:19.666145+08:00"
 }

@@ -68,24 +68,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-range-20261101-001444-cd05",
+      "run_id": "verify-range-20261101-120613-8f57",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL https://github.com/andreygrehov/range/releases/latest/download/range_$(uname -s)_$(uname -m).tar.gz | tar -xz && ls -lh range",
-          "purpose": "download and extract latest release tarball via curl | tar"
+          "command": "curl -fsSL https://github.com/andreygrehov/range/releases/latest/download/range_$(uname -s)_$(uname -m).tar.gz | tar -xz",
+          "purpose": "download release tarball via curl and extract"
         },
         {
-          "command": "mkdir -p ~/.local/bin && mv range ~/.local/bin/range && ls -lh ~/.local/bin/range",
-          "purpose": "move binary to ~/.local/bin"
+          "command": "mkdir -p ~/.local/bin && cp ./range ~/.local/bin/range && chmod +x ~/.local/bin/range",
+          "purpose": "copy binary to ~/.local/bin on PATH"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "range --help",
-        "expected_signal": "range — use a remote environment before downloading it"
+        "expected_signal": "range — use a remote environment"
       },
-      "first_task": "range doctor"
+      "first_task": "range build /tmp/mydir3 -o /tmp/test3.range"
     },
     "windows": null
   },
@@ -104,35 +104,35 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:15:42.241919+08:00",
+    "checked_at": "2026-11-01T12:07:20.276813+08:00",
     "runs": [
       {
-        "id": "verify-range-20261101-001444-cd05",
+        "id": "verify-range-20261101-120613-8f57",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:15:42.241919+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T12:07:20.276813+08:00",
         "tool_version": null,
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://github.com/andreygrehov/range/releases/latest/download/range_$(uname -s)_$(uname -m).tar.gz | tar -xz && ls -lh range",
-            "purpose": "download and extract latest release tarball via curl | tar"
+            "command": "curl -fsSL https://github.com/andreygrehov/range/releases/latest/download/range_$(uname -s)_$(uname -m).tar.gz | tar -xz",
+            "purpose": "download release tarball via curl and extract"
           },
           {
-            "command": "mkdir -p ~/.local/bin && mv range ~/.local/bin/range && ls -lh ~/.local/bin/range",
-            "purpose": "move binary to ~/.local/bin"
+            "command": "mkdir -p ~/.local/bin && cp ./range ~/.local/bin/range && chmod +x ~/.local/bin/range",
+            "purpose": "copy binary to ~/.local/bin on PATH"
           }
         ],
         "smoke_tests": [
           {
             "command": "range --help",
-            "expected_signal": "range — use a remote environment before downloading it",
+            "expected_signal": "range — use a remote environment",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "range — use a remote environment before downloading it",
@@ -140,77 +140,100 @@
             "offline": true
           },
           {
-            "command": "range doctor",
-            "expected_signal": "Host linux/amd64",
-            "exit_code": 1,
-            "passed": true,
-            "observed_excerpt": "Host linux/amd64",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "mkdir -p /tmp/buildtest2 && echo \"hello\" > /tmp/buildtest2/hello.txt && range build /tmp/buildtest2 -o /tmp/test2.range",
-            "expected_signal": "Built /tmp/test2.range",
+            "command": "range build /tmp/mydir3 -o /tmp/test3.range",
+            "expected_signal": "Built /tmp/test3.range",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Built /tmp/test2.range",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "range inspect /tmp/test2.range",
-            "expected_signal": "URI: /tmp/test2.range",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "URI: /tmp/test2.range",
-            "setup": [],
+            "observed_excerpt": "Built /tmp/test3.range",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/mydir3 && echo \"hello world\" > /tmp/mydir3/file.txt",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "range --version should report version and prerequisites are Go 1.25+ and QEMU",
-            "actually_needed": "range has no --version flag (unknown command); binary install works without Go/QEMU; only run/shell need root or KVM+QEMU and nbd module",
+            "readme_said": "README shows curl | tar pipeline and ./range doctor, implies --version",
+            "actually_needed": "--version is unknown command; use --help; binary runs as ./range then needs move to ~/.local/bin",
             "kind": "readme_wrong"
           },
           {
-            "readme_said": "./range doctor and range run/shell examples work out of the box",
-            "actually_needed": "range doctor correctly reports MISSING root and nbd and exits 1 in unprivileged sandbox; run/shell require privileged runtime and cannot be tested here, but build/inspect do work",
-            "kind": "sandbox"
+            "readme_said": "Prerequisites list Go 1.25 and QEMU/KVM",
+            "actually_needed": "binary install needs no Go; QEMU/root/nbd only needed at runtime, doctor reports MISSING root and nbd on sandbox",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show doctor reporting host details, build creating the range artifact, and help displaying usage.",
+          "observed": "Image 1 shows successful build of /tmp/test3.range with size stats, and Image 2 shows range help with the remote-environment tagline.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-range-20261101-001444-cd05/report.json",
+          "trace_path": "runs/verify/verify-range-20261101-120613-8f57/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-range-20261101-001444-cd05/check-1-cmd11.judged.png",
-            "runs/verify/verify-range-20261101-001444-cd05/check-2-cmd12.judged.png",
-            "runs/verify/verify-range-20261101-001444-cd05/check-3-cmd10.judged.png"
+            "runs/verify/verify-range-20261101-120613-8f57/check-1-cmd13.judged.png",
+            "runs/verify/verify-range-20261101-120613-8f57/check-2-cmd10.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.057348
+        "cost_usd": 0.088152,
+        "features": [
+          {
+            "feature": "open shell inside remote image without downloading",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "needs root/kvm, doctor says root MISSING"
+          },
+          {
+            "feature": "run commands with mounts, ports and variables",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "run with -p/-e needs same runtime"
+          },
+          {
+            "feature": "build own environment artifacts",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run isolated sessions with resource limits",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "isolated VM sessions require KVM/QEMU and nbd"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:31:38+08:00",
+    "computed_at": "2026-11-01T12:07:20+08:00",
     "quality": {
-      "total": 81.2,
+      "total": 74.8,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -250,8 +273,8 @@
       "packages": []
     },
     "treasure": {
-      "is_treasure": true,
-      "value": 64.8
+      "is_treasure": false,
+      "value": 59.69
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -556,5 +579,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:20:54+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T12:07:20.279537+08:00"
 }

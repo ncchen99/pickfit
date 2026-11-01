@@ -65,20 +65,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-botsay-20261101-002142-c7be",
+      "run_id": "verify-botsay-20261101-115829-b1c5",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL -o /tmp/botsay2.tar.gz https://github.com/maebert/botsay/releases/download/v0.2.2/botsay-v0.2.2-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/botsay2.tar.gz -C /tmp && cp /tmp/botsay-v0.2.2-x86_64-unknown-linux-musl/botsay ~/.local/bin/botsay && chmod +x ~/.local/bin/botsay",
-          "purpose": "download x86_64-musl release tarball and install botsay to ~/.local/bin"
+          "command": "curl -fL https://github.com/maebert/botsay/releases/download/v0.2.2/botsay-v0.2.2-x86_64-unknown-linux-musl.tar.gz -o /tmp/botsay.tar.gz",
+          "purpose": "download prebuilt Linux x86_64 release tarball from GitHub Releases"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/botsay.tar.gz -C /tmp && cp /tmp/botsay-v0.2.2-x86_64-unknown-linux-musl/botsay ~/.local/bin/botsay && chmod +x ~/.local/bin/botsay && ln -sf ~/.local/bin/botsay ~/.local/bin/botthink",
+          "purpose": "extract and install binary to ~/.local/bin/botsay and link botthink"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "botsay --version\n",
+        "command": "botsay --version",
         "expected_signal": "botsay 0.2.2"
       },
-      "first_task": "botsay hello\n"
+      "first_task": "botsay hello"
     },
     "windows": null
   },
@@ -97,30 +101,34 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:22:37.077252+08:00",
+    "checked_at": "2026-11-01T11:59:25.147307+08:00",
     "runs": [
       {
-        "id": "verify-botsay-20261101-002142-c7be",
+        "id": "verify-botsay-20261101-115829-b1c5",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:22:37.077252+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T11:59:25.147307+08:00",
         "tool_version": "0.2.2",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL -o /tmp/botsay2.tar.gz https://github.com/maebert/botsay/releases/download/v0.2.2/botsay-v0.2.2-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/botsay2.tar.gz -C /tmp && cp /tmp/botsay-v0.2.2-x86_64-unknown-linux-musl/botsay ~/.local/bin/botsay && chmod +x ~/.local/bin/botsay",
-            "purpose": "download x86_64-musl release tarball and install botsay to ~/.local/bin"
+            "command": "curl -fL https://github.com/maebert/botsay/releases/download/v0.2.2/botsay-v0.2.2-x86_64-unknown-linux-musl.tar.gz -o /tmp/botsay.tar.gz",
+            "purpose": "download prebuilt Linux x86_64 release tarball from GitHub Releases"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/botsay.tar.gz -C /tmp && cp /tmp/botsay-v0.2.2-x86_64-unknown-linux-musl/botsay ~/.local/bin/botsay && chmod +x ~/.local/bin/botsay && ln -sf ~/.local/bin/botsay ~/.local/bin/botthink",
+            "purpose": "extract and install binary to ~/.local/bin/botsay and link botthink"
           }
         ],
         "smoke_tests": [
           {
-            "command": "botsay --version\n",
+            "command": "botsay --version",
             "expected_signal": "botsay 0.2.2",
             "exit_code": 0,
             "passed": true,
@@ -129,16 +137,7 @@
             "offline": true
           },
           {
-            "command": "botsay --help\n",
-            "expected_signal": "Usage: botsay",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Usage: botsay [OPTIONS] [MESSAGE]...",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "botsay hello\n",
+            "command": "botsay hello",
             "expected_signal": "│ hello │",
             "exit_code": 0,
             "passed": true,
@@ -147,11 +146,20 @@
             "offline": true
           },
           {
-            "command": "botsay -s manu hello\n",
+            "command": "botsay -s manu hello",
             "expected_signal": "│ hello │",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "│ hello │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "botthink \"hmm...\"",
+            "expected_signal": "hmm...",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ hmm... │",
             "setup": [],
             "offline": true
           },
@@ -167,34 +175,69 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "cargo install --git https://github.com/maebert/botsay (requires Rust 1.85+)",
-            "actually_needed": "installed prebuilt binary botsay-v0.2.2-x86_64-unknown-linux-musl.tar.gz from GitHub Releases; no Rust toolchain in box and policy forbids installing one",
+            "readme_said": "cargo install --git https://github.com/maebert/botsay (requires Rust toolchain 1.85+)",
+            "actually_needed": "Used prebuilt binary from GitHub Releases (botsay-v0.2.2-x86_64-unknown-linux-musl.tar.gz) because Rust toolchain/brew not available in box; manually linked botthink",
             "kind": "sandbox"
-          },
-          {
-            "readme_said": "Homebrew also installs botthink; with Cargo make symlink manually",
-            "actually_needed": "botthink not provided by binary; create symlink manually still applies",
-            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three screenshots show botsay printing the hello speech bubble and version 0.2.2 with exit 0.",
+          "observed": "All three screenshots show the expected hello speech bubble with different bots and the version string botsay 0.2.2.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-botsay-20261101-002142-c7be/report.json",
+          "trace_path": "runs/verify/verify-botsay-20261101-115829-b1c5/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-botsay-20261101-002142-c7be/check-1-cmd7.judged.png",
-            "runs/verify/verify-botsay-20261101-002142-c7be/check-2-cmd8.judged.png",
-            "runs/verify/verify-botsay-20261101-002142-c7be/check-3-cmd5.judged.png"
+            "runs/verify/verify-botsay-20261101-115829-b1c5/check-1-cmd6.judged.png",
+            "runs/verify/verify-botsay-20261101-115829-b1c5/check-2-cmd7.judged.png",
+            "runs/verify/verify-botsay-20261101-115829-b1c5/check-3-cmd12.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.051564
+        "cost_usd": 0.060291,
+        "features": [
+          {
+            "feature": "Display messages with cute robot",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Generate seeded robots in seed colors",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows a robot but shows no color and no repeat to prove same seed same color."
+          },
+          {
+            "feature": "Draw thought balloons instead",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Browse robots in seed gallery",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -530,5 +573,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:22:55+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T11:59:25.148615+08:00"
 }
