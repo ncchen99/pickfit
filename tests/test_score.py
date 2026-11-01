@@ -582,3 +582,132 @@ def test_mcp_servers_have_their_own_popularity_refs() -> None:
     # The same npm download count says less about an MCP server, which npx fetches on every client start.
     assert popularity(signals, "mcp_server", 60) < popularity(signals, "dev_cli", 60)
     assert VERIFICATION_DEPTH["mcp_server"]["function"] < VERIFICATION_DEPTH["mcp_server"]["service"] == 1.0
+
+
+# --- hosted web apps: web.v1 -----------------------------------------------------------------
+
+from pickfit.score import (  # noqa: E402
+    WEB_FORMULA_VERSION,
+    browser_facts_score,
+    build_web_scores,
+    hn_item_id,
+    web_popularity,
+    web_weights,
+)
+
+WEB_FIXTURE = ROOT / "worker" / "test" / "fixtures" / "software" / "fixture-web-sketch.json"
+
+
+def web_record(**facts: Any) -> dict[str, Any]:
+    """The fixture web app with its browser run's facts changed."""
+    data = json.loads(WEB_FIXTURE.read_text(encoding="utf-8"))
+    data["verification"]["runs"][0]["web"].update(facts)
+    return data
+
+
+def web_scores(data: dict[str, Any], *, stars: int | None = None, hn: int | None = 4) -> dict[str, Any]:
+    return build_web_scores(SoftwareRecord.model_validate(data), stars=stars, hn=hn, now=NOW)
+
+
+def test_web_quality_is_the_browser_run_and_its_facts_with_no_readme_or_repo_parts() -> None:
+    scores = web_scores(web_record())
+    q = scores["quality"]
+    assert scores["formula_version"] == WEB_FORMULA_VERSION and scores["docs_rubric"] is None
+    assert {k: c["weight"] for k, c in q["components"].items() if c["weight"]} == {
+        "sandbox_verification": 50, "browser_facts": 40, "usage_outcomes": 10}
+    assert (q["total"], q["confidence"], q["cap_reason"]) == (100.0, 0.9, None)
+    # The record validates with these scores, and weights still sum to 100.
+    data = web_record()
+    data["scores"] = scores
+    assert SoftwareRecord.model_validate(data).scores.quality.components.browser_facts.weight == 40
+
+
+@pytest.mark.parametrize(("facts", "expected"), [
+    ({}, 1.0),
+    ({"ads_seen": True}, 0.8),
+    ({"account_needed": True}, 0.7),
+    ({"data_sent": "observed", "data_sent_note": None}, 0.7),
+    # unknown drops out: 0.3 + 0.2 + 0.2 of 0.7
+    ({"data_sent": "unknown"}, 1.0),
+    ({"offline": "not_offline"}, 0.8),
+    ({"ads_seen": None, "account_needed": None, "data_sent": "unknown", "offline": "not_tested", "pwa": False}, 0.0),
+])
+def test_browser_facts_score_what_the_run_saw_and_drop_what_it_could_not_tell(facts: dict[str, Any], expected: float) -> None:
+    verification = SoftwareRecord.model_validate(web_record(**facts)).verification
+    assert browser_facts_score(verification) == expected
+
+
+def test_a_web_app_that_only_loaded_scores_lower_and_an_unverified_one_is_capped_with_no_total() -> None:
+    data = web_record(operations=[], data_sent="unknown")
+    run = data["verification"]["runs"][0]
+    run.update(level="install", features=[])
+    data["verification"]["level"] = "install"
+    q = web_scores(data)["quality"]
+    assert q["components"]["sandbox_verification"]["score"] == 0.6
+    assert q["total"] == round(100 * (0.6 * 50 + 1.0 * 40) / 90, 1)  # 77.8: not a treasure
+    run.update(level="unverified", unverified_reason="not_run", smoke_tests=[])
+    run["web"].update(screen="sign_in_wall")
+    data["verification"].update(level="unverified", unverified_reason="not_run")
+    q = web_scores(data)["quality"]
+    assert (q["total"], q["cap_reason"], q["cap"]) == (None, "unverified", 69)
+
+
+def test_web_popularity_is_stars_with_a_repo_else_the_cited_show_hn_points() -> None:
+    assert web_popularity({"stars": None, "hn_top_score": 4}) == 41.7
+    assert web_popularity({"stars": 31, "hn_top_score": None}) == 49.8
+    assert web_popularity({"stars": None, "hn_top_score": None}) is None
+    # The selection bands (2..5 points, 3..31 stars) sit about 20..50: good and not famous can be a treasure.
+    assert [web_popularity({"hn_top_score": p}) for p in (2, 5)] == [28.4, 46.4]
+    assert [web_popularity({"stars": s}) for s in (3, 1048)] == [19.9, 100.0]
+    no_repo = web_scores(web_record(), stars=500, hn=4)
+    assert no_repo["popularity"]["signals"]["stars"] is None and no_repo["popularity"]["score"] == 41.7
+    with_repo = web_record()
+    with_repo.update(repo_id="gh:900000999", repo={"url": "https://example.invalid/fixture/sketch", "full_name": "fixture/sketch",
+                                                    "created_at": "2026-05-01T00:00:00Z", "archived": False})
+    scored = web_scores(with_repo, stars=31, hn=200)
+    assert scored["popularity"]["signals"]["hn_top_score"] is None and scored["popularity"]["score"] == 49.8
+    assert scored["treasure"]["is_treasure"] is False  # 49.8 > 45
+
+
+def test_usage_weight_comes_out_of_browser_facts() -> None:
+    assert {k: v for k, v in web_weights(20).items() if v} == {"sandbox_verification": 50, "browser_facts": 30, "usage_outcomes": 20}
+    assert sum(web_weights(30).values()) == 100
+
+
+def test_score_records_scores_a_web_app_from_its_hn_post_with_no_model_or_github_call(tmp_path: Path) -> None:
+    out = tmp_path / "software"
+    out.mkdir()
+    (out / "fixture-web-sketch.json").write_text(WEB_FIXTURE.read_text(encoding="utf-8"))
+    assert hn_item_id(SoftwareRecord.model_validate_json(WEB_FIXTURE.read_text(encoding="utf-8"))) == 1
+
+    class HN:
+        def __init__(self) -> None:
+            self.urls: list[str] = []
+
+        def get_json(self, url: str, params: Any = None) -> Any:
+            self.urls.append(url)
+            return {"id": 1, "score": 4, "type": "story"}
+
+    hn = HN()
+    summary = score_records(out, db_path=None, model=MODEL, use_github=False, now=NOW, registries=hn,
+                            grade=lambda *a, **k: pytest.fail("no rubric for a web app"))
+    assert summary.written == ["fixture-web-sketch"] and summary.cost_usd == 0
+    assert hn.urls == ["https://hacker-news.firebaseio.com/v0/item/1.json"]
+    scores = SoftwareRecord.model_validate_json((out / "fixture-web-sketch.json").read_text(encoding="utf-8")).scores
+    assert (scores.formula_version, scores.quality.total, scores.popularity.score, scores.treasure.is_treasure) == (
+        "web.v1", 100.0, 41.7, True)
+    # Without lookups, the stored points stay; the same scores are not rewritten.
+    again = score_records(out, db_path=None, model=MODEL, use_github=False, use_registries=False, now=LATER)
+    assert again.unchanged == ["fixture-web-sketch"]
+
+
+def test_refresh_follows_the_web_run_and_clears_a_web_app_scored_by_another_formula() -> None:
+    data = web_record()
+    data["scores"] = web_scores(data)
+    data["verification"]["runs"][0]["web"]["ads_seen"] = True
+    assert refresh_scores(data, LATER) == "scores refreshed from the record"
+    assert data["scores"]["quality"]["components"]["browser_facts"]["score"] == 0.8
+    assert data["scores"]["popularity"]["score"] == 41.7  # kept: refresh makes no call
+    assert refresh_scores(data, LATER) is None
+    data["scores"]["formula_version"] = FORMULA_VERSION
+    assert "rescore" in refresh_scores(data, LATER) and data["scores"] is None

@@ -1499,8 +1499,20 @@
     },
     "QualityComponents": {
       "additionalProperties": false,
-      "description": "The six quality components of B.3 (nominal weights 35/20/15/10/10/10+).",
+      "description": "The six quality components of B.3 (nominal weights 35/20/15/10/10/10+).\n\nA hosted web app (formula web.v1, pickfit/score.py) adds browser_facts and gives the four components a\nREADME and a repository feed weight 0: it is opened, not installed. Other records never carry it.",
       "properties": {
+        "browser_facts": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/QualityComponent"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Web apps only: what the browser run saw (account, data sent, ads, offline)."
+        },
         "engineering_hygiene": {
           "$ref": "#/$defs/QualityComponent"
         },

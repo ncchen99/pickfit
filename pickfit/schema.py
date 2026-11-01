@@ -1114,7 +1114,11 @@ class QualityComponent(_Model):
 
 
 class QualityComponents(_Model):
-    """The six quality components of B.3 (nominal weights 35/20/15/10/10/10+)."""
+    """The six quality components of B.3 (nominal weights 35/20/15/10/10/10+).
+
+    A hosted web app (formula web.v1, pickfit/score.py) adds browser_facts and gives the four components a
+    README and a repository feed weight 0: it is opened, not installed. Other records never carry it.
+    """
 
     sandbox_verification: QualityComponent
     install_docs: QualityComponent
@@ -1127,9 +1131,14 @@ class QualityComponents(_Model):
             "the denominator); 3-9: 10; 10-29: 20; >=30: 30 (usage_outcomes_weight)."
         )
     )
+    browser_facts: QualityComponent | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="Web apps only: what the browser run saw (account, data sent, ads, offline).",
+    )
 
     def items(self) -> list[tuple[str, QualityComponent]]:
-        return [(name, getattr(self, name)) for name in type(self).model_fields]
+        return [(name, c) for name in type(self).model_fields if (c := getattr(self, name)) is not None]
 
 
 class Quality(_Model):

@@ -203,6 +203,7 @@ test('page: the tool page of a web app, browse and compare', async () => {
   const how = await get('/how');
   assert.match(how, /<h3 id="web">Web apps: no install, just open it<\/h3>/);
   assert.match(how, /1 web app passed so far/);
+  assert.match(how, /its quality is the browser run 50% .* what the browser saw 40%/);
   const home = await get('/');
   assert.match(home, /name="private" value="1"/);
   assert.match(home, /<strong>1<\/strong> web app used in a browser/);
