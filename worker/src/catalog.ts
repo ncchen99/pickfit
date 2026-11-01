@@ -18,6 +18,10 @@ export interface RunSummary {
   evidence_url: string | null;
   /** A GUI app's launch on pickfit's virtual display; absent or null for anything else. */
   gui?: GuiEvidence | null;
+  /** The sandbox's GPU as its driver named it (e.g. Tesla T4); absent or null: no GPU. */
+  gpu?: string | null;
+  /** The sandbox's simulated microphone (it played words pickfit spoke for each check); absent or null: none. */
+  microphone?: string | null;
 }
 
 /**

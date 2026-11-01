@@ -9,7 +9,7 @@ import { bestGuide, OSES, verifiedOn, type Catalog, type Entry, type OS } from '
 import { featuresOut } from '../features.ts';
 import { installGuide } from '../install.ts';
 import { EMPTY_FORM, installSection, levelLine } from '../page.ts';
-import { day, guiSentence, howRan, KIND, KIND_PLURAL, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, system, kindLine } from '../ui/facts.ts';
+import { boxExtras, day, guiSentence, howRan, KIND, KIND_PLURAL, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, system, kindLine } from '../ui/facts.ts';
 import { esc, link, listOf, safeUrl } from '../ui/html.ts';
 import { icon } from '../ui/icons.ts';
 import { age, badge, compareToggle, coverage, fitz, SEAM, tape, type FitzName } from '../ui/kit.ts';
@@ -105,10 +105,12 @@ function runs(catalog: Catalog, entry: Entry): string {
     const evidence = safeUrl(r.evidence_url);
     return (
       `<article class="run-card" id="run-${os}"><div class="run-head"><h3>${esc(OS_NAME[os])}</h3>` +
-      `<span class="badges">${badge('pass', `Ran on ${system(r.os, r.arch)}`, { icon: 'check' })}${r.replayed ? badge('info', 'Replayed from scratch', { icon: 'refresh-cw' }) : ''}</span></div>` +
+      `<span class="badges">${badge('pass', `Ran on ${system(r.os, r.arch)}`, { icon: 'check' })}${r.replayed ? badge('info', 'Replayed from scratch', { icon: 'refresh-cw' }) : ''}` +
+      `${r.gpu ? badge('info', `GPU: ${r.gpu}`, { icon: 'cpu' }) : ''}${r.microphone ? badge('info', 'Simulated microphone', { icon: 'mic' }) : ''}</span></div>` +
       SEAM +
       levelLine(label, passed(r.gui)) +
       `<p>${esc(howRan(r))}, ${esc(day(r.checked_at))}. ${esc(extra.join(' '))}</p>` +
+      (boxExtras(r) ? `<p>The sandbox had ${esc(boxExtras(r))}.</p>` : '') +
       (r.gui ? `<p>${esc(guiSentence(r.gui))}</p>` : '') +
       (g.mcp ? `<p>An MCP client handshake over ${g.mcp.transport === 'stdio' ? 'stdio' : 'HTTP'} listed ${g.mcp.tool_count} tool${g.mcp.tool_count === 1 ? '' : 's'}${g.mcp.called_tool ? `, and a call to <code>${esc(g.mcp.called_tool)}</code> returned a result` : ''}.</p>` : '') +
       (evidence ? `<p>${link(evidence, `${icon('external-link')} Run record`)}</p>` : '') +

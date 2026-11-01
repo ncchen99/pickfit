@@ -61,6 +61,10 @@ test('every guide carries a rec_id, how_we_know, evidence_url and matched_by rul
   assert.equal(issued.evidence_url, 'https://example.invalid/runs/run-20261028-linux-1');
   assert.match(issued.how_we_know, /fresh linux\/x86_64 sandbox \(modal-gvisor\) and replayed the steps from scratch/);
   assert.match(issued.how_we_know, /no model wrote or changed them/);
+  assert.match(
+    installGuide(catalog, { slug: 'fixture-transcribe', os: 'linux' }).how_we_know,
+    /sandbox \(modal-gvisor\) with a GPU \(Tesla T4\) and a simulated microphone that played words pickfit spoke for each check and replayed/,
+  );
 
   const rec = 'rec_' + 'a'.repeat(32);
   assert.equal(installGuide(catalog, { slug: 'fixture-llm-runner', os: 'linux', rec_id: rec }).rec_id, rec);

@@ -116,6 +116,8 @@ def _run_summary(run: VerificationRun) -> dict[str, Any]:
         "tool_version": run.tool_version,
         "evidence_url": run.evidence.evidence_url,
         "gui": _gui(run),
+        "gpu": run.gpu,
+        "microphone": run.microphone,
     }
 
 
