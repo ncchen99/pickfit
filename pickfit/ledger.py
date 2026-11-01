@@ -124,10 +124,6 @@ def baseten_daily_cap(day: date) -> float:
 
 BASETEN_CAPS = Caps(total_usd=100.0, daily_usd=baseten_daily_cap)
 
-# The Modal Shared Endpoint (Muse Spark Open, paid from Modal's hackathon credits) gets its own budget
-# (plan section 2). Opened 11/2 for the web app verifier: $10 in all, $8 a day; sandboxes are not in it.
-MODAL_ENDPOINT_CAPS = Caps(total_usd=10.0, daily_usd=lambda day: 8.0)
-
 
 def taipei_now(clock: Callable[[], datetime] | None = None) -> datetime:
     return (clock or (lambda: datetime.now(UTC)))().astimezone(TAIPEI)
@@ -334,11 +330,6 @@ class Ledger:
 def default_ledger() -> Ledger:
     """The shared ledger: PICKFIT_LEDGER if set, else ~/.pickfit/ledger.sqlite."""
     return Ledger(get_env("PICKFIT_LEDGER") or DEFAULT_PATH, caps=pipeline_caps())
-
-
-def modal_endpoint_ledger() -> Ledger:
-    """The Modal Shared Endpoint budget in the shared ledger file."""
-    return Ledger(get_env("PICKFIT_LEDGER") or DEFAULT_PATH, budget="modal-endpoint", caps=MODAL_ENDPOINT_CAPS)
 
 
 def baseten_ledger() -> Ledger:

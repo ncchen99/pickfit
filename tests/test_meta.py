@@ -19,7 +19,6 @@ from pickfit import meta
 from pickfit.env import read_env
 from pickfit.ledger import BudgetExceeded, Caps, Ledger
 from pickfit.meta import (
-    MODAL_OPEN_MODEL,
     OPEN_MODEL,
     PRICES,
     ModelRefused,
@@ -399,25 +398,6 @@ def test_open_model_is_sent_to_baseten_and_billed_to_its_budget(tmp_path: Path, 
         assert conn.execute("SELECT budget, provider, model FROM calls").fetchall() == [
             ("baseten", "baseten", OPEN_MODEL)]
     assert (traces(runs)[0]["provider"], traces(runs)[0]["model"]) == ("baseten", OPEN_MODEL)
-
-
-def test_open_modal_alias_is_sent_to_the_modal_endpoint_and_its_own_budget(tmp_path: Path, runs: Path):
-    assert resolve_model("open-modal") == MODAL_OPEN_MODEL and provider_for(MODAL_OPEN_MODEL) == "modal"
-    assert is_open_model("open-modal")
-    server = FakeServer(ok({**RESPONSES_OK, "model": MODAL_OPEN_MODEL}))
-    result = call_meta("responses", {"input": "README text", "store": False}, stage="test", public_data_only=True,
-                       max_output_tokens=1000, model="open-modal", client=server.client())
-    assert (result.provider, result.model) == ("modal", MODAL_OPEN_MODEL)
-    assert result.cost_usd == pytest.approx(0.0031)  # same list price as Baseten
-    with sqlite3.connect(tmp_path / "default-ledger.sqlite") as conn:
-        assert conn.execute("SELECT budget, provider FROM calls").fetchall() == [("modal-endpoint", "modal")]
-
-
-def test_modal_client_joins_the_proxy_token(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setenv("MODAL_PROXY_TOKEN_ID", "wk-abc")
-    monkeypatch.setenv("MODAL_PROXY_TOKEN_SECRET", "ws-def")
-    client = meta.make_client("modal")
-    assert client.api_key == "wk-abc.ws-def" and "modal.direct" in str(client.base_url)
 
 
 def test_open_model_cannot_be_sent_to_meta(ledger: Ledger):
