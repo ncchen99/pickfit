@@ -177,3 +177,31 @@ def test_an_encoding_not_asked_for_fails():
         client.capture()
     client.close()
     srv.sock.close()
+
+
+def test_punctuation_keys_by_x_keysym_name():
+    assert parse_key("ctrl+slash") == (ord("/"), (MODIFIERS["ctrl"],))
+    assert parse_key("BackSpace") == (0xFF08, ()) and parse_key("Page_Down") == (0xFF56, ())
+
+
+def test_scroll_sends_wheel_buttons(server: FakeServer):
+    client = VncClient("127.0.0.1", server.port, PASSWORD).connect()
+    client.scroll(10, 1, "down", notches=2)
+    _wait(server, 5)
+    assert [e for e in server.events if e[0] == "pointer"] == [
+        ("pointer", 0, 3, 1), ("pointer", 16, 3, 1), ("pointer", 0, 3, 1), ("pointer", 16, 3, 1),
+        ("pointer", 0, 3, 1)]  # x clamped to the 4-pixel-wide fake screen
+    with pytest.raises(ValueError):
+        client.scroll(1, 1, "sideways")
+    client.close()
+
+
+def test_the_display_waits_for_two_frames_that_agree(server: FakeServer):
+    from pickfit.verify.gui_mac import VncDisplay
+
+    display = VncDisplay(f"vnc://:{PASSWORD}@127.0.0.1:{server.port}")
+    png = display.screenshot()
+    assert Image.open(io.BytesIO(png)).size == (W, H) and (display.width, display.height) == (W, H)
+    assert server.connections == 2  # the first frame, then one that agrees
+    assert display.clipboard() is None  # no box, no pasteboard to read
+    display.close()

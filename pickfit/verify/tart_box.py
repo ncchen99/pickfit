@@ -766,7 +766,7 @@ class TartBox(Box):
         if self._screen is None:
             from pickfit.verify.gui_mac import VncDisplay
 
-            self._screen = VncDisplay(self.vnc_url)
+            self._screen = VncDisplay(self.vnc_url, self)
         return self._screen
 
     def launch_gui(self, command: str, tag: str | int, wait_s: int, *, timeout_s: int | None = None) -> Any:

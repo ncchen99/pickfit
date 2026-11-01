@@ -31,6 +31,7 @@ import hashlib
 import json
 import secrets
 import shlex
+import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -52,6 +53,7 @@ SYSTEM_PREFIXES = ("/System/", "/usr/", "/bin/", "/sbin/", "/Library/Apple/", "/
 RESPAWNED_PREFIXES = ("/System/", "/usr/libexec/", "/usr/sbin/")
 QTN_USER_APPROVED = 0x40  # the quarantine flag the first-launch prompt's Open button sets
 MENU_WAIT_S, MENU_SETTLE_S = 8, 2  # after pickfit clicks a menu bar app's item
+SETTLE_GAP_S, SETTLE_MAX_S = 0.4, 4.0  # a screenshot waits until two frames this far apart agree
 DISPLAY_NOTE = "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
 
 
@@ -492,14 +494,17 @@ def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s
 
 
 class VncDisplay:
-    """The VM's display as pickfit drives it, from the host: screenshot -> PNG bytes, click, type_text, key.
+    """The VM's display as pickfit drives it from the host: the operating loop's Display (gui_operate.Display).
 
-    Coordinates are pixels of the screenshot (1280x800 on the GUI base). Key names are xdotool's (`Return`,
-    `Tab`, `ctrl+a`), with the Mac's own (`cmd+s`, `option+left`); see vnc.parse_key.
+    screenshot -> PNG bytes once the screen has settled, click(x, y, count), type_text, key, scroll, and with a
+    box, clipboard. Coordinates are pixels of the screenshot (1280x800 on the GUI base). Key names are X
+    keysyms and `+` combinations (Return, BackSpace, ctrl+slash) with the Mac's own modifiers (cmd+s,
+    option+left); see vnc.parse_key. Nothing runs in the guest for it but the clipboard read.
     """
 
-    def __init__(self, url: str) -> None:
+    def __init__(self, url: str, box: TartBox | None = None) -> None:
         self._client = VncClient.from_url(url)
+        self._box = box
 
     def _connected(self) -> VncClient:
         if self._client.sock is None:
@@ -511,24 +516,54 @@ class VncDisplay:
         client = self._client if self._client.width else self._connected()
         return client.width, client.height
 
-    def screenshot(self) -> bytes:
-        try:
-            return self._connected().screenshot()
-        except VncError:  # a dropped connection: one fresh one (a screenshot changes nothing)
-            self._client.close()
-            return self._connected().screenshot()
+    @property
+    def width(self) -> int:
+        return self.size[0]
 
-    def click(self, x: int, y: int) -> None:
-        self._connected().click(x, y)
+    @property
+    def height(self) -> int:
+        return self.size[1]
+
+    def _frame(self) -> bytes:
+        try:
+            return self._client.screenshot()
+        except VncError:  # a dropped connection: one more try (a screenshot changes nothing)
+            return self._client.screenshot()
+
+    def screenshot(self) -> bytes:
+        """The whole screen as PNG once two frames SETTLE_GAP_S apart agree (at most SETTLE_MAX_S)."""
+        frame = self._frame()
+        deadline = time.monotonic() + SETTLE_MAX_S
+        while time.monotonic() < deadline:
+            time.sleep(SETTLE_GAP_S)
+            later = self._frame()
+            if later == frame:
+                break
+            frame = later
+        return frame
+
+    def click(self, x: int, y: int, count: int = 1) -> None:
+        self._connected().click(x, y, count=max(1, min(int(count), 3)))
 
     def double_click(self, x: int, y: int) -> None:
-        self._connected().click(x, y, count=2)
+        self.click(x, y, 2)
 
     def type_text(self, text: str) -> None:
         self._connected().type_text(text)
 
     def key(self, name: str) -> None:
         self._connected().key(name)
+
+    def scroll(self, x: int, y: int, direction: str) -> None:
+        self._connected().scroll(x, y, direction)
+
+    def clipboard(self) -> bytes | None:
+        """The box user's pasteboard as text, read in its desktop session (None when it holds no text)."""
+        if self._box is None:
+            return None
+        got = self._box.harness_exec(["/bin/launchctl", "asuser", str(MAC_UID), "/usr/bin/sudo", "-n", "-u",
+                                      MAC_USER, "/usr/bin/pbpaste", "-Prefer", "txt"], 30)
+        return got.stdout.encode() if got.exit_code == 0 and got.stdout else None
 
     def close(self) -> None:
         self._client.close()

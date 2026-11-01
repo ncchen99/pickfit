@@ -31,6 +31,10 @@ KEYSYMS: dict[str, int] = {
     "down": 0xFF54, "page_up": 0xFF55, "pageup": 0xFF55, "prior": 0xFF55, "page_down": 0xFF56,
     "pagedown": 0xFF56, "next": 0xFF56, "end": 0xFF57, "insert": 0xFF63, "space": 0x20,
     **{f"f{n}": 0xFFBE + n - 1 for n in range(1, 13)},
+    # Punctuation by X keysym name (ctrl+slash), as the operating loop names keys.
+    "slash": ord("/"), "backslash": ord("\\"), "comma": ord(","), "period": ord("."), "minus": ord("-"),
+    "equal": ord("="), "semicolon": ord(";"), "apostrophe": ord("'"), "grave": ord("`"),
+    "bracketleft": ord("["), "bracketright": ord("]"),
 }
 # Virtualization.framework's server maps Alt to the Mac's Command key and Meta to Option; Super and Hyper do
 # nothing (measured 2026-11-01 with modifier+Backspace in TextEdit). Names are the Mac's keys.
@@ -323,6 +327,17 @@ class VncClient:
         for _ in range(max(1, count)):
             self._pointer(x, y, mask)
             time.sleep(pause_s)
+            self._pointer(x, y, 0)
+            time.sleep(pause_s)
+
+    def scroll(self, x: int, y: int, direction: str, *, notches: int = 5, pause_s: float = 0.03) -> None:
+        """Wheel notches at (x, y): buttons 4-7 are up, down, left, right."""
+        mask = {"up": 8, "down": 16, "left": 32, "right": 64}.get(direction)
+        if mask is None:
+            raise ValueError(f"unknown scroll direction {direction!r}")
+        self._pointer(x, y, 0)
+        for _ in range(max(1, notches)):
+            self._pointer(x, y, mask)
             self._pointer(x, y, 0)
             time.sleep(pause_s)
 
