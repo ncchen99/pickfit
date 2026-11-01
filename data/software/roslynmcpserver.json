@@ -68,18 +68,33 @@
       "first_task": "dotnet --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-roslynmcpserver-20261102-032534-8519",
       "method": "other",
       "steps": [
         {
-          "command": "dotnet tool install -g RoslynMcp.Server",
-          "purpose": null
+          "command": "curl -sSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -o /tmp/dotnet-install.sh",
+          "purpose": "Download Microsoft dotnet-install script"
+        },
+        {
+          "command": "bash /tmp/dotnet-install.sh --channel 9.0 --install-dir $HOME/.dotnet",
+          "purpose": "Install .NET 9 SDK to $HOME/.dotnet"
+        },
+        {
+          "command": "export DOTNET_ROOT=$HOME/.dotnet && export PATH=$HOME/.dotnet:$HOME/.dotnet/tools:$HOME/.local/bin:$PATH && dotnet tool install -g RoslynMcp.Server",
+          "purpose": "Install RoslynMcp.Server global tool (roslyn-mcp 0.15.0)"
+        },
+        {
+          "command": "ln -sf $HOME/.dotnet/dotnet $HOME/.local/bin/dotnet && printf '#!/bin/sh\\nexport DOTNET_ROOT=\"$HOME/.dotnet\"\\nexec \"$HOME/.dotnet/tools/roslyn-mcp\" \"$@\"\\n' > $HOME/.local/bin/roslyn-mcp && chmod +x $HOME/.local/bin/roslyn-mcp",
+          "purpose": "Expose dotnet and roslyn-mcp on default PATH with DOTNET_ROOT wrapper"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "dotnet --version"
+      "check": {
+        "command": "dotnet --version",
+        "expected_signal": "9.0.320"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -109,51 +124,176 @@
     "url": "https://github.com/JoshuaRamirez/RoslynMcpServer/releases/tag/v0.14.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_more_resources",
-    "checked_at": "2026-11-01T00:24:34.096212+08:00",
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T03:28:49.166481+08:00",
     "runs": [
       {
-        "id": "verify-roslynmcpserver-20261101-002321-f43a",
-        "level": "unverified",
-        "unverified_reason": "needs_more_resources",
+        "id": "verify-roslynmcpserver-20261102-032534-8519",
+        "level": "function",
+        "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:24:34.096212+08:00",
-        "tool_version": null,
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T03:28:49.166481+08:00",
+        "tool_version": "0.15.0",
         "install_method": "other",
-        "replayed": false,
+        "replayed": true,
         "steps": [
           {
-            "command": "curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh && ls -l /tmp/dotnet-install.sh && head -20 /tmp/dotnet-install.sh",
-            "purpose": "download dotnet-install.sh"
+            "command": "curl -sSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -o /tmp/dotnet-install.sh",
+            "purpose": "Download Microsoft dotnet-install script"
           },
           {
-            "command": "bash /tmp/dotnet-install.sh --channel 9.0 --install-dir $HOME/.dotnet 2>&1 | tail -20",
-            "purpose": "install .NET 9.0 SDK to $HOME/.dotnet"
+            "command": "bash /tmp/dotnet-install.sh --channel 9.0 --install-dir $HOME/.dotnet",
+            "purpose": "Install .NET 9 SDK to $HOME/.dotnet"
+          },
+          {
+            "command": "export DOTNET_ROOT=$HOME/.dotnet && export PATH=$HOME/.dotnet:$HOME/.dotnet/tools:$HOME/.local/bin:$PATH && dotnet tool install -g RoslynMcp.Server",
+            "purpose": "Install RoslynMcp.Server global tool (roslyn-mcp 0.15.0)"
+          },
+          {
+            "command": "ln -sf $HOME/.dotnet/dotnet $HOME/.local/bin/dotnet && printf '#!/bin/sh\\nexport DOTNET_ROOT=\"$HOME/.dotnet\"\\nexec \"$HOME/.dotnet/tools/roslyn-mcp\" \"$@\"\\n' > $HOME/.local/bin/roslyn-mcp && chmod +x $HOME/.local/bin/roslyn-mcp",
+            "purpose": "Expose dotnet and roslyn-mcp on default PATH with DOTNET_ROOT wrapper"
           }
         ],
-        "smoke_tests": [],
+        "smoke_tests": [
+          {
+            "command": "dotnet --version",
+            "expected_signal": "9.0.320",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "9.0.320",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- roslyn-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
         "pitfalls": [
           {
-            "readme_said": "dotnet --version should print 9.0.x and dotnet tool install -g RoslynMcp.Server works",
-            "actually_needed": "box has file size limit 1572864 blocks (~768 MiB, ulimit -f) causing dotnet commands that use network/NuGet to die with SIGXFSZ (File size limit exceeded, exit 153) – only dotnet --list-sdks succeeds",
+            "readme_said": "Prereq .NET 9 SDK then `dotnet tool install -g RoslynMcp.Server`",
+            "actually_needed": "Install .NET 9 SDK first via dotnet-install.sh to $HOME/.dotnet (SDK 9.0.320); box had no dotnet",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "`dotnet tool install -g` puts `roslyn-mcp` on PATH ready to run",
+            "actually_needed": "Symlink $HOME/.dotnet/dotnet to $HOME/.local/bin/dotnet and wrap $HOME/.dotnet/tools/roslyn-mcp in $HOME/.local/bin/roslyn-mcp exporting DOTNET_ROOT=$HOME/.dotnet, else apphost reports `.NET location: Not found` / libhostfxr missing",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Install script from Microsoft",
+            "actually_needed": "dotnet-install.sh downloads SDK tarball (~218MB) from builds.dotnet.microsoft.com at install time; binary payload could not be read beforehand",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
-        "judge": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show roslyn-mcp handshake ok with 66 tools and dotnet version 9.0.320.",
+          "model": "muse-spark-1.3"
+        },
         "evidence": {
-          "trace_path": "runs/verify/verify-roslynmcpserver-20261101-002321-f43a/report.json",
+          "trace_path": "runs/verify/verify-roslynmcpserver-20261102-032534-8519/report.json",
           "log_path": null,
-          "screenshot_paths": [],
+          "screenshot_paths": [
+            "runs/verify/verify-roslynmcpserver-20261102-032534-8519/check-1-cmd11.judged.png",
+            "runs/verify/verify-roslynmcpserver-20261102-032534-8519/check-2-cmd10.judged.png"
+          ],
           "evidence_url": null
         },
-        "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.096324
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.113614,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "roslyn-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2024-11-05",
+          "server_name": "roslyn-mcp",
+          "server_version": "0.15.0",
+          "tools": [
+            "move_type_to_file",
+            "move_type_to_namespace",
+            "diagnose",
+            "rename_symbol",
+            "rename_file_to_match_type",
+            "rename_namespace",
+            "extract_method",
+            "add_missing_usings",
+            "remove_unused_usings",
+            "sort_usings",
+            "generate_constructor",
+            "extract_interface",
+            "implement_interface",
+            "implement_abstract",
+            "generate_overrides",
+            "extract_variable",
+            "inline_variable",
+            "inline_method",
+            "inline_constant",
+            "extract_constant",
+            "change_signature",
+            "add_parameter",
+            "remove_parameter",
+            "reorder_parameters",
+            "change_return_type",
+            "encapsulate_field",
+            "convert_to_async",
+            "extract_base_class",
+            "pull_members_up",
+            "push_members_down",
+            "use_base_type",
+            "introduce_field",
+            "safe_delete",
+            "make_static",
+            "make_non_static",
+            "find_references",
+            "go_to_definition",
+            "get_symbol_info",
+            "find_implementations",
+            "search_symbols",
+            "get_diagnostics",
+            "get_code_metrics",
+            "analyze_control_flow",
+            "find_callers",
+            "get_type_hierarchy",
+            "get_document_outline",
+            "generate_equals_hashcode",
+            "generate_tostring",
+            "generate_property",
+            "generate_method_stub",
+            "format_document",
+            "add_null_checks",
+            "analyze_data_flow",
+            "convert_expression_body",
+            "convert_to_block_body",
+            "invert_if",
+            "add_braces",
+            "remove_braces",
+            "simplify_name",
+            "convert_property",
+            "introduce_parameter",
+            "convert_foreach_linq",
+            "convert_anonymous_to_class",
+            "convert_tuple_to_struct",
+            "convert_to_pattern_matching",
+            "convert_to_interpolated_string"
+          ],
+          "tool_count": 66,
+          "called_tool": null,
+          "offline": true
+        }
       }
     ]
   },
@@ -184,15 +324,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-02T03:30:15+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 71.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.56,
           "weight": 40.0
         },
         "install_docs": {
@@ -233,7 +373,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 36.43
+      "value": 37.59
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -564,5 +704,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:38:28+08:00",
-  "updated_at": "2026-11-01T00:45:12+08:00"
+  "updated_at": "2026-11-02T03:30:15.453035+08:00"
 }
