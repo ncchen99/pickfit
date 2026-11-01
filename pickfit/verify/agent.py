@@ -49,7 +49,7 @@ from pickfit.verify.rules import RuleHit, error_signature, match_rules
 from pickfit.verify.mcp import GUIDE as MCP_GUIDE
 from pickfit.verify.mcp import is_mcp
 from pickfit.verify.task import ReportedFailure, VerifyTask, prepare_box
-from pickfit.verify.verdict import LogVerdict, log_verdict
+from pickfit.verify.verdict import LogVerdict, log_verdict, unmasked
 
 HistoryMode = Literal["chain", "replay"]
 DEFAULT_MODE: HistoryMode = "replay"
@@ -544,6 +544,7 @@ class CommandRecord:
     wait_s: int | None = None  # run_background, launch_gui: how long it waited
     screenshot: str | None = None  # launch_gui: the PNG of the display
     gui: dict[str, Any] | None = None  # launch_gui: what the launch showed (gui.GuiLaunch)
+    unmasked_from: str | None = None  # run_command: the model's command, when pickfit ran it without its mask
 
 
 @dataclass
@@ -942,11 +943,22 @@ class VerifyAgent:
         self.commands_used += 1
         timeout = self._timeout(args.timeout_s)
         self._say(f"  $ {_one_line(args.command, 200)}   [cmd {self.commands_used}/{self.limits.max_commands}]")
-        result = self.box.exec(args.command, timeout)
-        hints = match_rules(args.command, result.exit_code, result.stdout, result.stderr)
-        self._record(turn, "run_command", args.command, result, hints, args.purpose)
+        # Muse Spark Open pipes into tail or head, or appends `; echo $?`, whatever the prompt says; that
+        # hides the exit code and the log rules reject the step. Run (and record) it without the mask.
+        command, note = args.command, ""
+        cut = unmasked(command) if getattr(self.box, "shell", "bash") == "bash" else None
+        if cut:
+            command, dropped = cut
+            self._say(f"    ran without `{_one_line(dropped, 80)}` (it hides the exit code)")
+            note = (f"note: pickfit ran this without `{dropped}` and recorded it that way: a trailing pipe into "
+                    f"tail or head, or a trailing echo, hides the exit code. exit_code below is the command's "
+                    f"own, and the output is already cut to its last {STDOUT_CHARS} characters.\n")
+        result = self.box.exec(command, timeout)
+        hints = match_rules(command, result.exit_code, result.stdout, result.stderr)
+        self._record(turn, "run_command", command, result, hints, args.purpose,
+                     unmasked_from=args.command if cut else None)
         self._note_error(result)
-        return self._format_exec(self.commands_used, result, hints, timeout)
+        return note + self._format_exec(self.commands_used, result, hints, timeout)
 
     def _run_background(self, args: _RunBackgroundArgs, turn: int) -> str:
         refused = self._budget_left()
@@ -988,14 +1000,14 @@ class VerifyAgent:
     def _record(self, turn: int, tool: str, command: str, result: ExecResult,
                 hints: list[RuleHit] | None = None, purpose: str | None = None,
                 port: int | None = None, wait_s: int | None = None, screenshot: str | None = None,
-                gui: dict[str, Any] | None = None) -> None:
+                gui: dict[str, Any] | None = None, unmasked_from: str | None = None) -> None:
         budgeted = tool in ("run_command", "run_background", "launch_gui")
         self.report.commands.append(CommandRecord(
             turn=turn, tool=tool, command=command, exit_code=result.exit_code, seconds=result.seconds,
             timed_out=result.timed_out, stdout=result.stdout, stderr=result.stderr,
             hints=[asdict(h) for h in hints or []], purpose=purpose,
             command_id=self.commands_used if budgeted else None, port=port, wait_s=wait_s,
-            screenshot=screenshot, gui=gui))
+            screenshot=screenshot, gui=gui, unmasked_from=unmasked_from))
         if not budgeted:
             return
         status = "timed out" if result.timed_out else f"exit {result.exit_code}"
