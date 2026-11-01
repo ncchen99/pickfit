@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { loadCatalog, type GuiEvidence } from '../src/catalog.ts';
 import { ranSentence } from '../src/evidence.ts';
-import { guiSentence, levelLabel } from '../src/page.ts';
+import { guiSentence, levelLabel } from '../src/ui/facts.ts';
 import { installGuide } from '../src/install.ts';
 import { fixtureIndex } from './helpers.ts';
 

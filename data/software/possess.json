@@ -53,16 +53,16 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-possess-20261101-001854-7cb6",
+      "run_id": "verify-possess-20261101-161004-f0e9",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL -o /tmp/possess-linux-x64.tar.gz https://github.com/steven-p-walsh/Possess/releases/download/v0.1.1/possess-linux-x64.tar.gz",
-          "purpose": "download prebuilt linux x64 tarball from GitHub releases"
+          "command": "curl -fsSL -o /tmp/possess-linux-x64.tar.gz https://github.com/steven-p-walsh/Possess/releases/download/v0.1.1/possess-linux-x64.tar.gz && ls -lh /tmp/possess-linux-x64.tar.gz && tar -tzf /tmp/possess-linux-x64.tar.gz",
+          "purpose": "download binary release possess-linux-x64.tar.gz from GitHub releases"
         },
         {
-          "command": "mkdir -p ~/.local/bin && tar xzf /tmp/possess-linux-x64.tar.gz -C /tmp && mv /tmp/possess ~/.local/bin/possess && chmod +x ~/.local/bin/possess",
-          "purpose": "extract binary to ~/.local/bin and make executable"
+          "command": "mkdir -p \"$HOME/.local/bin\" && tar -xzf /tmp/possess-linux-x64.tar.gz -C /tmp && install -m 0755 /tmp/possess \"$HOME/.local/bin/possess\" && ls -lh \"$HOME/.local/bin/possess\" && \"$HOME/.local/bin/possess\" --version",
+          "purpose": "extract and install binary to ~/.local/bin/possess"
         }
       ],
       "manual_steps": [],
@@ -70,7 +70,7 @@
         "command": "possess --version",
         "expected_signal": "possess 0.1.1"
       },
-      "first_task": "possess doctor"
+      "first_task": "possess doctor 2>&1"
     },
     "windows": null
   },
@@ -89,29 +89,29 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:19:46.697638+08:00",
+    "checked_at": "2026-11-01T16:11:02.970330+08:00",
     "runs": [
       {
-        "id": "verify-possess-20261101-001854-7cb6",
+        "id": "verify-possess-20261101-161004-f0e9",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:19:46.697638+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:11:02.970330+08:00",
         "tool_version": "0.1.1",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL -o /tmp/possess-linux-x64.tar.gz https://github.com/steven-p-walsh/Possess/releases/download/v0.1.1/possess-linux-x64.tar.gz",
-            "purpose": "download prebuilt linux x64 tarball from GitHub releases"
+            "command": "curl -fsSL -o /tmp/possess-linux-x64.tar.gz https://github.com/steven-p-walsh/Possess/releases/download/v0.1.1/possess-linux-x64.tar.gz && ls -lh /tmp/possess-linux-x64.tar.gz && tar -tzf /tmp/possess-linux-x64.tar.gz",
+            "purpose": "download binary release possess-linux-x64.tar.gz from GitHub releases"
           },
           {
-            "command": "mkdir -p ~/.local/bin && tar xzf /tmp/possess-linux-x64.tar.gz -C /tmp && mv /tmp/possess ~/.local/bin/possess && chmod +x ~/.local/bin/possess",
-            "purpose": "extract binary to ~/.local/bin and make executable"
+            "command": "mkdir -p \"$HOME/.local/bin\" && tar -xzf /tmp/possess-linux-x64.tar.gz -C /tmp && install -m 0755 /tmp/possess \"$HOME/.local/bin/possess\" && ls -lh \"$HOME/.local/bin/possess\" && \"$HOME/.local/bin/possess\" --version",
+            "purpose": "extract and install binary to ~/.local/bin/possess"
           }
         ],
         "smoke_tests": [
@@ -134,7 +134,7 @@
             "offline": true
           },
           {
-            "command": "possess doctor",
+            "command": "possess doctor 2>&1",
             "expected_signal": "Codex missing",
             "exit_code": 0,
             "passed": true,
@@ -143,39 +143,79 @@
             "offline": true
           },
           {
-            "command": "possess list --help",
-            "expected_signal": "List this project's sessions",
+            "command": "possess handoff --help 2>&1",
+            "expected_signal": "Switch harnesses",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "List this project's sessions across all installed harnesses",
+            "observed_excerpt": "Switch harnesses, or resume directly when the destination is the source harness",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "cargo install --path . --locked (requires Rust 1.92+)",
-            "actually_needed": "prebuilt binary possess-linux-x64.tar.gz from GitHub releases used because box has no Rust toolchain and toolchain must not be installed",
+            "readme_said": "cargo install --path . --locked (needs Rust 1.92+)",
+            "actually_needed": "Rust toolchain not installed in box; installed via binary release possess-linux-x64.tar.gz from GitHub Releases as documented in docs/installation.md",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "possess list shows sessions",
+            "actually_needed": "without any harness installed (Codex, Claude Code, OpenCode, Grok) the command returns empty output with exit 0; run possess doctor to see missing harnesses",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Doctor reports Codex missing with binary not found and version prints possess 0.1.1.",
+          "observed": "Screenshots show doctor reporting Codex missing, handoff help describing switching harnesses, and version output possess 0.1.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-possess-20261101-001854-7cb6/report.json",
+          "trace_path": "runs/verify/verify-possess-20261101-161004-f0e9/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-possess-20261101-001854-7cb6/check-1-cmd14.judged.png",
-            "runs/verify/verify-possess-20261101-001854-7cb6/check-2-cmd12.judged.png"
+            "runs/verify/verify-possess-20261101-161004-f0e9/check-1-cmd11.judged.png",
+            "runs/verify/verify-possess-20261101-161004-f0e9/check-2-cmd12.judged.png",
+            "runs/verify/verify-possess-20261101-161004-f0e9/check-3-cmd8.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.055831
+        "cost_usd": 0.051074,
+        "features": [
+          {
+            "feature": "switch coding agents without restarting conversation",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "switching agents requires installed/logged-in harnesses (Codex, Claude etc) and existing sessions; none present, no API keys"
+          },
+          {
+            "feature": "resume sessions with original or different agent",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "resume/handoff needs existing sessions from harnesses; possess handoff --help verified but no session to resume"
+          },
+          {
+            "feature": "browse project sessions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; possess list browses sessions for project (empty without harnesses, exit 0)"
+          },
+          {
+            "feature": "create handoff packages with conversation and state",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "handoff package creation requires a real session and destination harness; verified handoff CLI exists but cannot create package without sessions"
+          }
+        ]
       }
     ]
   },
@@ -503,5 +543,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:18:08+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T16:11:02.971911+08:00"
 }

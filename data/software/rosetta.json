@@ -78,26 +78,26 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-rosetta-20261101-001725-ae6c",
+      "run_id": "verify-rosetta-20261101-160740-0a39",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g @tikoci/rosetta 2>&1",
-          "purpose": "Install rosetta globally via npm (provides rosetta binary)"
+          "command": "curl -fsSL https://bun.sh/install -o /tmp/bun-install.sh && wc -l /tmp/bun-install.sh",
+          "purpose": "Download Bun installer"
         },
         {
-          "command": "curl -fsSL https://bun.sh/install | bash",
-          "purpose": "Install Bun runtime required by rosetta (bun:sqlite)"
+          "command": "bash /tmp/bun-install.sh 2>&1 | tail -10; export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && bun --version",
+          "purpose": "Install Bun runtime required by rosetta"
         },
         {
-          "command": "export PATH=\"$HOME/.bun/bin:$PATH\" && rosetta --setup",
-          "purpose": "Download rosetta SQLite database via rosetta --setup"
+          "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && npm install -g @tikoci/rosetta 2>&1",
+          "purpose": "Install rosetta globally via npm"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "export PATH=\"$HOME/.bun/bin:$PATH\" && rosetta --help",
-        "expected_signal": "rosetta 0.12.0 — MCP server for RouterOS documentation"
+        "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && rosetta --version",
+        "expected_signal": "rosetta 0.12.0"
       },
       "first_task": null
     },
@@ -118,42 +118,42 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:18:45.268997+08:00",
+    "checked_at": "2026-11-01T16:09:19.059108+08:00",
     "runs": [
       {
-        "id": "verify-rosetta-20261101-001725-ae6c",
+        "id": "verify-rosetta-20261101-160740-0a39",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:18:45.268997+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:09:19.059108+08:00",
         "tool_version": "0.12.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g @tikoci/rosetta 2>&1",
-            "purpose": "Install rosetta globally via npm (provides rosetta binary)"
+            "command": "curl -fsSL https://bun.sh/install -o /tmp/bun-install.sh && wc -l /tmp/bun-install.sh",
+            "purpose": "Download Bun installer"
           },
           {
-            "command": "curl -fsSL https://bun.sh/install | bash",
-            "purpose": "Install Bun runtime required by rosetta (bun:sqlite)"
+            "command": "bash /tmp/bun-install.sh 2>&1 | tail -10; export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && bun --version",
+            "purpose": "Install Bun runtime required by rosetta"
           },
           {
-            "command": "export PATH=\"$HOME/.bun/bin:$PATH\" && rosetta --setup",
-            "purpose": "Download rosetta SQLite database via rosetta --setup"
+            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && npm install -g @tikoci/rosetta 2>&1",
+            "purpose": "Install rosetta globally via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "export PATH=\"$HOME/.bun/bin:$PATH\" && rosetta --help",
-            "expected_signal": "rosetta 0.12.0 — MCP server for RouterOS documentation",
+            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && rosetta --version",
+            "expected_signal": "rosetta 0.12.0",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "rosetta 0.12.0 — MCP server for RouterOS documentation",
+            "observed_excerpt": "rosetta 0.12.0",
             "setup": [],
             "offline": true
           },
@@ -164,53 +164,62 @@
             "passed": true,
             "observed_excerpt": "handshake: ok",
             "setup": [],
-            "offline": true
+            "offline": false
           },
           {
-            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && python3 ~/.pickfit/mcp_probe.py --call routeros_stats --args '{}' -- rosetta 2>&1",
+            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && python3 ~/.pickfit/mcp_probe.py --call routeros_search --args '{\"query\":\"vrrp\",\"limit\":5}' -- rosetta 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=routeros_stats content=text text_chars=3262",
+            "observed_excerpt": "tools/call: ok tool=routeros_search content=text text_chars=7794",
             "setup": [],
-            "offline": true
+            "offline": false
+          },
+          {
+            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && python3 ~/.pickfit/mcp_probe.py --call routeros_command_tree --args '{\"path\":\"/ip/firewall/filter\"}' -- rosetta 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=routeros_command_tree content=text text_chars=5722",
+            "setup": [],
+            "offline": false
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "npm install provides working rosetta (launch via bunx @tikoci/rosetta)",
-            "actually_needed": "The npm package's bin/rosetta.js has shebang #!/usr/bin/env bun and delegates to bun; without Bun installed it fails with 'env: bun: No such file or directory' and requires separate Bun install via curl -fsSL https://bun.sh/install | bash",
-            "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "bunx @tikoci/rosetta fetches package on demand",
-            "actually_needed": "For offline replay, installed globally with npm install -g @tikoci/rosetta so launch command 'rosetta' is on PATH without network, then verified via MCP probe -- rosetta",
+            "readme_said": "bunx @tikoci/rosetta --setup and bunx @tikoci/rosetta browse",
+            "actually_needed": "Install Bun separately first (curl bun.sh/install) then npm install -g @tikoci/rosetta provides `rosetta` binary on PATH; box PATH needs ~/.bun/bin for Bun runtime",
             "kind": "sandbox"
           },
           {
-            "readme_said": "install step 2 runs https://bun.sh/install straight from the network",
-            "actually_needed": "nothing to change; a note: the box ran it without saving or reading it first, so pickfit did not inspect it",
+            "readme_said": "bunx @tikoci/rosetta browse --once .routeros_search",
+            "actually_needed": "Equivalent is rosetta browse --once .routeros_search; MCP tools provide same search via routeros_search",
+            "kind": "note"
+          },
+          {
+            "readme_said": "install step 2 runs bun-install.sh",
+            "actually_needed": "nothing to change; a note: the box ran bun-install.sh, downloaded, without reading it first, so pickfit did not inspect it",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show rosetta 0.12.0 MCP handshake with 14 tools, successful routeros_stats call, and full --help output.",
+          "observed": "Screenshots show MCP handshake ok with 14 tools, successful routeros_search call returning VRRP results, and version 0.12.0 output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-rosetta-20261101-001725-ae6c/report.json",
+          "trace_path": "runs/verify/verify-rosetta-20261101-160740-0a39/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-rosetta-20261101-001725-ae6c/check-1-cmd7.judged.png",
-            "runs/verify/verify-rosetta-20261101-001725-ae6c/check-2-cmd8.judged.png",
-            "runs/verify/verify-rosetta-20261101-001725-ae6c/check-3-cmd12.judged.png"
+            "runs/verify/verify-rosetta-20261101-160740-0a39/check-1-cmd13.judged.png",
+            "runs/verify/verify-rosetta-20261101-160740-0a39/check-2-cmd14.judged.png",
+            "runs/verify/verify-rosetta-20261101-160740-0a39/check-3-cmd11.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.067068,
+        "cost_usd": 0.098042,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -237,9 +246,47 @@
             "routeros_current_versions"
           ],
           "tool_count": 14,
-          "called_tool": "routeros_stats",
-          "offline": true
-        }
+          "called_tool": "routeros_search",
+          "offline": false
+        },
+        "features": [
+          {
+            "feature": "searchable access to RouterOS documentation",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "browse command hierarchy and explain commands",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "lookup hardware specs and performance benchmarks",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "command budget exhausted before routeros_device_lookup call"
+          },
+          {
+            "feature": "browse database via terminal without AI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "browse terminal command not exercised; MCP probe used for other features, budget exhausted"
+          }
+        ]
       }
     ]
   },
@@ -282,15 +329,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-01T16:09:19+08:00",
     "quality": {
-      "total": 82.3,
+      "total": 87.9,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.7225,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -333,7 +380,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 27.24
+      "value": 29.09
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -792,5 +839,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:25+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T16:09:19.061323+08:00"
 }

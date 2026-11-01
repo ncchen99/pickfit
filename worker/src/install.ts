@@ -4,6 +4,7 @@
  * that were never run are not in the index, so they cannot leak out here.
  */
 import { bestGuide, type Arch, type Catalog, type GuiEvidence, type OS } from './catalog.ts';
+import { checkIn, type CheckIn } from './checkin.ts';
 import { ranSentence } from './evidence.ts';
 import { featureSentence, featuresOut, type FeaturesOut } from './features.ts';
 import { newId, REC_ID } from './events.ts';
@@ -63,6 +64,8 @@ export interface InstallOutput {
   known_issues: { readme_said: string; actually_needed: string; kind: PitfallKind | null }[];
   /** MCP servers: how to add it to an MCP client, from the launch command the run started; null otherwise. */
   mcp_client_config: McpClientConfig | null;
+  /** How to ask, weeks later and only with the user's consent, whether they still use it; null without a guide. */
+  check_in: CheckIn | null;
   warnings: string[];
   sources: string[];
 }
@@ -71,7 +74,7 @@ export class UnknownSlugError extends Error {}
 
 export const PIPE_TO_SHELL = /\|\s*(sudo\s+)?(ba|z)?sh\b/;
 
-export function installGuide(catalog: Catalog, input: InstallInput): InstallOutput {
+export function installGuide(catalog: Catalog, input: InstallInput, now = new Date()): InstallOutput {
   const entry = catalog.bySlug.get(input.slug);
   if (!entry) {
     throw new UnknownSlugError(`Unknown slug "${input.slug}". Call find_software first and use a slug it returned.`);
@@ -148,6 +151,7 @@ export function installGuide(catalog: Catalog, input: InstallInput): InstallOutp
       kind: PITFALL_KINDS.includes(p.kind as PitfallKind) ? (p.kind as PitfallKind) : null,
     })),
     mcp_client_config: clientConfig(entry, guide),
+    check_in: guide ? checkIn(entry, guide, input.os, now) : null,
     warnings,
     sources: entry.sources,
   };

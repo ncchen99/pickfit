@@ -59,12 +59,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-iran-mcp-20261101-003402-34bb",
+      "run_id": "verify-iran-mcp-20261101-155609-f7ec",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install digikala-mcp",
-          "purpose": "install digikala-mcp via uv tool"
+          "command": "uv tool install digikala-mcp && uv tool install torob-mcp && uv tool install mrbilit-mcp && uv tool install paziresh24-mcp && uv tool install iran-news-mcp",
+          "purpose": "install 5 MCP servers via uv tool install (digikala-mcp, torob-mcp, mrbilit-mcp, paziresh24-mcp, iran-news-mcp)"
         }
       ],
       "manual_steps": [],
@@ -88,30 +88,30 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:36:25.462252+08:00",
+    "checked_at": "2026-11-01T16:01:45.226259+08:00",
     "runs": [
       {
-        "id": "verify-iran-mcp-20261101-003402-34bb",
+        "id": "verify-iran-mcp-20261101-155609-f7ec",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:36:25.462252+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:01:45.226259+08:00",
         "tool_version": "0.5.2",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install digikala-mcp",
-            "purpose": "install digikala-mcp via uv tool"
+            "command": "uv tool install digikala-mcp && uv tool install torob-mcp && uv tool install mrbilit-mcp && uv tool install paziresh24-mcp && uv tool install iran-news-mcp",
+            "purpose": "install 5 MCP servers via uv tool install (digikala-mcp, torob-mcp, mrbilit-mcp, paziresh24-mcp, iran-news-mcp)"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- digikala-mcp",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- digikala-mcp",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -120,71 +120,152 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call dk_gold_prices --args '{}' -- digikala-mcp",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- torob-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- mrbilit-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- paziresh24-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- iran-news-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --call nw_list_sources --args '{}' -- iran-news-mcp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=dk_gold_prices content=text text_chars=339",
+            "observed_excerpt": "tools/call: ok tool=nw_list_sources content=text text_chars=3028",
             "setup": [],
-            "offline": false
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --call pz_search_doctors --args '{\"city\":\"تهران\",\"text\":\"قلب\"}' -- paziresh24-mcp",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"pz_search_doctors\", \"count\": 12, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"paziresh24-mcp\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"paziresh24-mcp\", \"tools\": [\"pz_suggest\", \"pz_search_doctors\", \"pz_resolve_url\", \"pz_center\",…",
+            "setup": [],
+            "offline": null
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "launch via uvx digikala-mcp and use --help for quick check",
+            "actually_needed": "digikala-mcp --help hangs on stdio and times out; verification must use MCP probe handshake instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "install only digikala-mcp for shopping features",
+            "actually_needed": "iran-mcp is a meta-repo of 40 servers; F2-F4 require separate packages mrbilit-mcp, paziresh24-mcp, iran-news-mcp each installed via uv tool install",
+            "kind": "note"
+          },
+          {
+            "readme_said": "tool calls return instantly with shop/travel data",
+            "actually_needed": "torob/mrbilit/digikala/paziresh24 calls to Iranian sites timed out or errored in box (>60s or tool error), while iran-news local list succeeded – likely network filtering to Iranian APIs in sandbox",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show digikala-mcp v0.5.2 listing 23 tools with handshake ok and successfully calling dk_gold_prices returning gold prices.",
+          "observed": "All three MCP servers initialized, listed tools (23, 26, 22), and reported handshake: ok.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-iran-mcp-20261101-003402-34bb/report.json",
+          "trace_path": "runs/verify/verify-iran-mcp-20261101-155609-f7ec/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-iran-mcp-20261101-003402-34bb/check-1-cmd5.judged.png",
-            "runs/verify/verify-iran-mcp-20261101-003402-34bb/check-2-cmd6.judged.png"
+            "runs/verify/verify-iran-mcp-20261101-155609-f7ec/check-1-cmd5.judged.png",
+            "runs/verify/verify-iran-mcp-20261101-155609-f7ec/check-2-cmd6.judged.png",
+            "runs/verify/verify-iran-mcp-20261101-155609-f7ec/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.044243,
+        "cost_usd": 0.0778,
         "mcp": {
           "transport": "stdio",
           "launch": [
-            "digikala-mcp"
+            "iran-news-mcp"
           ],
           "url": null,
           "protocol_version": "2025-11-25",
-          "server_name": "digikala-mcp",
-          "server_version": "0.5.2",
+          "server_name": "iran-news-mcp",
+          "server_version": "0.2.2",
           "tools": [
-            "dk_search",
-            "dk_find_cheapest",
-            "dk_best_for_budget",
-            "dk_suggest",
-            "dk_filters",
-            "dk_categories",
-            "dk_category_products",
-            "dk_brand_products",
-            "dk_seller",
-            "dk_deals",
-            "dk_best_sellers",
-            "dk_fresh_search",
-            "dk_product",
-            "dk_price_history",
-            "dk_reviews",
-            "dk_questions",
-            "dk_similar",
-            "dk_compare",
-            "dk_shortlist",
-            "dk_installments",
-            "dk_plus_plans",
-            "dk_gold_prices",
-            "dk_location"
+            "nw_article",
+            "nw_list_sources",
+            "nw_latest",
+            "nw_search",
+            "nw_latest_all",
+            "nw_tech_news"
           ],
-          "tool_count": 23,
-          "called_tool": "dk_gold_prices",
+          "tool_count": 6,
+          "called_tool": "nw_list_sources",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "search and compare prices across Iranian shops",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check failed in the agent's box but not again in a fresh box"
+          },
+          {
+            "feature": "find cheapest flights, trains and hotels",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check failed in the agent's box but not again in a fresh box"
+          },
+          {
+            "feature": "find doctors and free appointment slots",
+            "status": "test_failed",
+            "smoke_tests": [
+              6
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "pz_search_doctors and pz_suggest returned tools/call error"
+          },
+          {
+            "feature": "read Iranian news headlines and articles",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists available sources, not any headlines, search results, or article text."
+          }
+        ]
       }
     ]
   },
@@ -215,15 +296,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-01T16:01:45+08:00",
     "quality": {
-      "total": 87.7,
+      "total": 80.2,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -264,7 +345,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 28.68
+      "value": 26.23
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -571,5 +652,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:34+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T16:01:45.229027+08:00"
 }

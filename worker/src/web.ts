@@ -27,7 +27,12 @@ import { findSoftware, type Deps } from './find.ts';
 import { estimateCostUsd } from './meta.ts';
 import { installGuide, type InstallOutput } from './install.ts';
 import { catalogShowcase, EMPTY_FORM, renderNotice, renderPage, renderResults, type BudgetStop, type FormValues, type SearchResult } from './page.ts';
+import { renderBrowse } from './pages/browse.ts';
+import { renderCompare } from './pages/compare.ts';
+import { renderAgents, renderHow, renderNotFound } from './pages/info.ts';
+import { renderTool } from './pages/tool.ts';
 import { findInput } from './server.ts';
+import { SLUG } from './ui/html.ts';
 
 /** Searches per visitor per minute; wrangler.jsonc's WEB_RATE_LIMITER uses the same number. */
 export const SEARCHES_PER_MINUTE = 6;
@@ -126,7 +131,8 @@ async function sha256(text: string): Promise<string> {
 
 function csp(nonce: string | null): string {
   const inline = nonce ? `'nonce-${nonce}'` : `'none'`;
-  return `default-src 'none'; script-src ${inline}; style-src ${inline}; img-src data:; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'`;
+  // Fitz, the icons and the font are this Worker's own static assets (worker/public/assets).
+  return `default-src 'none'; script-src ${inline}; style-src ${inline}; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'`;
 }
 
 function html(body: string, status: number, nonce: string | null, extra: Record<string, string> = {}): Response {
@@ -344,7 +350,23 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
         if (request.method !== 'GET' || !wantsHtml(request)) return null;
         return page(url.origin, EMPTY_FORM, '', 200, { vary: 'Accept' });
       }
-      if (url.pathname !== '/search') return null;
+      if (url.pathname !== '/search') {
+        // The catalog pages: read from the bundled index only, no model call and no D1.
+        if (request.method !== 'GET' && request.method !== 'HEAD') return null;
+        const nonce = newNonce();
+        const tool = /^\/tool\/([^/]+)\/?$/.exec(url.pathname);
+        if (tool) {
+          const slug = decodeURIComponent(tool[1]).toLowerCase();
+          const entry = SLUG.test(slug) ? catalog.bySlug.get(slug) : undefined;
+          return entry ? html(renderTool(catalog, entry, nonce), 200, nonce) : html(renderNotFound(nonce), 404, nonce);
+        }
+        if (url.pathname === '/browse') return html(renderBrowse(catalog, url.searchParams, nonce), 200, nonce);
+        if (url.pathname === '/compare') return html(renderCompare(catalog, url.searchParams, nonce), 200, nonce);
+        if (url.pathname === '/how') return html(renderHow(catalog, nonce), 200, nonce);
+        if (url.pathname === '/agents') return html(renderAgents(url.origin, nonce), 200, nonce);
+        // Anything else a browser asks for gets the not-found page; other clients keep the plain 404.
+        return wantsHtml(request) ? html(renderNotFound(nonce), 404, nonce) : null;
+      }
       if (request.method === 'GET') return new Response(null, { status: 303, headers: { location: '/' } });
       if (request.method !== 'POST') return new Response('Method not allowed', { status: 405, headers: { allow: 'POST' } });
       return search(request, env, ctx, hosts);

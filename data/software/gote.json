@@ -53,20 +53,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-gote-20261101-001551-85d3",
+      "run_id": "verify-gote-20261101-160334-5cf1",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL -o /tmp/gote https://github.com/banorton/gote/releases/latest/download/gote-linux-amd64 && chmod +x /tmp/gote && file /tmp/gote && mkdir -p ~/.local/bin && mv /tmp/gote ~/.local/bin/gote && ls -lh ~/.local/bin/gote",
-          "purpose": "Download gote-linux-amd64 binary from releases and install to ~/.local/bin"
+          "command": "curl -L -o /tmp/gote https://github.com/banorton/gote/releases/latest/download/gote-linux-amd64 && chmod +x /tmp/gote && mv /tmp/gote ~/.local/bin/gote && ls -lh ~/.local/bin/gote && file ~/.local/bin/gote",
+          "purpose": "download linux-amd64 binary from releases and install to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "gote -v 2>&1",
+        "command": "gote -v; echo ---; gote --help; echo ---; gote help",
         "expected_signal": "gote 0.3.1"
       },
-      "first_task": "gote -v 2>&1"
+      "first_task": "gote info testnote1 2>&1"
     },
     "windows": null
   },
@@ -85,30 +85,30 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:16:47.688041+08:00",
+    "checked_at": "2026-11-01T16:04:56.176265+08:00",
     "runs": [
       {
-        "id": "verify-gote-20261101-001551-85d3",
+        "id": "verify-gote-20261101-160334-5cf1",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:16:47.688041+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:04:56.176265+08:00",
         "tool_version": "0.3.1",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL -o /tmp/gote https://github.com/banorton/gote/releases/latest/download/gote-linux-amd64 && chmod +x /tmp/gote && file /tmp/gote && mkdir -p ~/.local/bin && mv /tmp/gote ~/.local/bin/gote && ls -lh ~/.local/bin/gote",
-            "purpose": "Download gote-linux-amd64 binary from releases and install to ~/.local/bin"
+            "command": "curl -L -o /tmp/gote https://github.com/banorton/gote/releases/latest/download/gote-linux-amd64 && chmod +x /tmp/gote && mv /tmp/gote ~/.local/bin/gote && ls -lh ~/.local/bin/gote && file ~/.local/bin/gote",
+            "purpose": "download linux-amd64 binary from releases and install to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "gote -v 2>&1",
+            "command": "gote -v; echo ---; gote --help; echo ---; gote help",
             "expected_signal": "gote 0.3.1",
             "exit_code": 0,
             "passed": true,
@@ -117,109 +117,143 @@
             "offline": true
           },
           {
-            "command": "gote help 2>&1",
-            "expected_signal": "gote - CLI note-taking tool",
+            "command": "gote info testnote1 2>&1",
+            "expected_signal": "\"title\": \"testnote1\"",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "gote - CLI note-taking tool",
-            "setup": [],
+            "observed_excerpt": "\"title\": \"testnote1\",",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/gote_notes/* ~/.gote/pins.json ~/.gote/index.json ~/.gote/tags.json ~/.gote/fts.json\nmkdir -p /tmp/gote_notes\ncat > /tmp/gote_notes/meeting_notes.md <<'MD'\n.work.urgent\nThis is meeting notes content about project planning and standup.\nMD\ncat > /tmp/gote_notes/recipe_ideas.md <<'MD'\n.personal.recipe\nSourdough bread recipe with detailed instructions.\nMD\ngote testnote1 2>&1\ngote index 2>&1\nls -l /tmp/gote_notes/",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           },
           {
             "command": "gote t 2>&1",
-            "expected_signal": "work (2)",
+            "expected_signal": "work (1)",
             "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "work (2)",
+            "passed": false,
+            "observed_excerpt": "No tags found.",
             "setup": [
               {
-                "command": "mkdir -p ~/gotes && cat > ~/gotes/search_design.md <<'EOF'\n.work.design\nThis note discusses BM25 ranking and search design with stemming.\nEOF\ncat > ~/gotes/standup.md <<'EOF'\n.work.meeting\nStandup notes about BM25 and project updates.\nEOF\ncat > ~/gotes/gopl.md <<'EOF'\n.reading.personal\nNotes on Go programming language book.\nEOF\ncat > ~/gotes/sourdough.md <<'EOF'\n.recipe.personal\nSourdough recipe with starter instructions.\nEOF\nls -l ~/gotes/*.md\ngote index 2>&1\necho INDEX_EXIT:$?\nls -lh ~/.gote/\ncat ~/.gote/index.json | head -n 50\necho ---\ncat ~/.gote/tags.json 2>&1 | head -n 50",
+                "command": "rm -rf /tmp/gote_notes/* ~/.gote/pins.json ~/.gote/index.json ~/.gote/tags.json ~/.gote/fts.json\nmkdir -p /tmp/gote_notes\ncat > /tmp/gote_notes/meeting_notes.md <<'MD'\n.work.urgent\nThis is meeting notes content about project planning and standup.\nMD\ncat > /tmp/gote_notes/recipe_ideas.md <<'MD'\n.personal.recipe\nSourdough bread recipe with detailed instructions.\nMD\ngote testnote1 2>&1\ngote index 2>&1\nls -l /tmp/gote_notes/",
                 "background": false,
                 "port": null
               }
             ],
-            "offline": true
+            "offline": null
           },
           {
-            "command": "echo q | gote r 2>&1",
-            "expected_signal": "[a] gopl",
+            "command": "printf \"q\\n\" | gote s meeting 2>&1",
+            "expected_signal": "[a] meeting_notes",
             "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "[a] gopl",
+            "passed": false,
+            "observed_excerpt": "No matching notes found.",
             "setup": [
               {
-                "command": "mkdir -p ~/gotes && cat > ~/gotes/search_design.md <<'EOF'\n.work.design\nThis note discusses BM25 ranking and search design with stemming.\nEOF\ncat > ~/gotes/standup.md <<'EOF'\n.work.meeting\nStandup notes about BM25 and project updates.\nEOF\ncat > ~/gotes/gopl.md <<'EOF'\n.reading.personal\nNotes on Go programming language book.\nEOF\ncat > ~/gotes/sourdough.md <<'EOF'\n.recipe.personal\nSourdough recipe with starter instructions.\nEOF\nls -l ~/gotes/*.md\ngote index 2>&1\necho INDEX_EXIT:$?\nls -lh ~/.gote/\ncat ~/.gote/index.json | head -n 50\necho ---\ncat ~/.gote/tags.json 2>&1 | head -n 50",
+                "command": "rm -rf /tmp/gote_notes/* ~/.gote/pins.json ~/.gote/index.json ~/.gote/tags.json ~/.gote/fts.json\nmkdir -p /tmp/gote_notes\ncat > /tmp/gote_notes/meeting_notes.md <<'MD'\n.work.urgent\nThis is meeting notes content about project planning and standup.\nMD\ncat > /tmp/gote_notes/recipe_ideas.md <<'MD'\n.personal.recipe\nSourdough bread recipe with detailed instructions.\nMD\ngote testnote1 2>&1\ngote index 2>&1\nls -l /tmp/gote_notes/",
                 "background": false,
                 "port": null
               }
             ],
-            "offline": true
+            "offline": null
           },
           {
-            "command": "echo q | gote s bm25 2>&1",
-            "expected_signal": "[a] standup",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "[a] standup",
+            "command": "gote pin meeting_notes 2>&1 && cat ~/.gote/pins.json 2>&1",
+            "expected_signal": "Pinned note: meeting_notes",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "cat: /home/sbx/.gote/pins.json: No such file or directory",
             "setup": [
               {
-                "command": "mkdir -p ~/gotes && cat > ~/gotes/search_design.md <<'EOF'\n.work.design\nThis note discusses BM25 ranking and search design with stemming.\nEOF\ncat > ~/gotes/standup.md <<'EOF'\n.work.meeting\nStandup notes about BM25 and project updates.\nEOF\ncat > ~/gotes/gopl.md <<'EOF'\n.reading.personal\nNotes on Go programming language book.\nEOF\ncat > ~/gotes/sourdough.md <<'EOF'\n.recipe.personal\nSourdough recipe with starter instructions.\nEOF\nls -l ~/gotes/*.md\ngote index 2>&1\necho INDEX_EXIT:$?\nls -lh ~/.gote/\ncat ~/.gote/index.json | head -n 50\necho ---\ncat ~/.gote/tags.json 2>&1 | head -n 50",
+                "command": "rm -rf /tmp/gote_notes/* ~/.gote/pins.json ~/.gote/index.json ~/.gote/tags.json ~/.gote/fts.json\nmkdir -p /tmp/gote_notes\ncat > /tmp/gote_notes/meeting_notes.md <<'MD'\n.work.urgent\nThis is meeting notes content about project planning and standup.\nMD\ncat > /tmp/gote_notes/recipe_ideas.md <<'MD'\n.personal.recipe\nSourdough bread recipe with detailed instructions.\nMD\ngote testnote1 2>&1\ngote index 2>&1\nls -l /tmp/gote_notes/",
                 "background": false,
                 "port": null
               }
             ],
-            "offline": true
+            "offline": null
           }
         ],
         "pitfalls": [
           {
             "readme_said": "curl -L -o gote https://github.com/banorton/gote/releases/latest/download/gote-mac-arm64",
-            "actually_needed": "Use gote-linux-amd64 on Linux x86_64 (ELF binary)",
+            "actually_needed": "use gote-linux-amd64 binary for Debian x86_64 (README notes to swap suffix)",
             "kind": "sandbox"
           },
           {
-            "readme_said": "mv gote /usr/local/bin/",
-            "actually_needed": "Move to ~/.local/bin (already on PATH) without root",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "gote r and gote s bm25 run interactively",
-            "actually_needed": "In non-TTY CI, pipe 'q' to quit the interactive picker: echo q | gote r",
-            "kind": "sandbox"
+            "readme_said": "gote s <query> shows results",
+            "actually_needed": "interactive selector waits for input; pipe \"q\" (printf \"q\\n\" | gote s meeting) to exit 0 non-interactively",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show version 0.3.1, full help text, and tag list containing work (2).",
+          "observed": "Screenshots show gote info returning JSON with title testnote1 and gote -v printing gote 0.3.1 with help text.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-gote-20261101-001551-85d3/report.json",
+          "trace_path": "runs/verify/verify-gote-20261101-160334-5cf1/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-gote-20261101-001551-85d3/check-1-cmd7.judged.png",
-            "runs/verify/verify-gote-20261101-001551-85d3/check-2-cmd8.judged.png",
-            "runs/verify/verify-gote-20261101-001551-85d3/check-3-cmd11.judged.png"
+            "runs/verify/verify-gote-20261101-160334-5cf1/check-1-cmd12.judged.png",
+            "runs/verify/verify-gote-20261101-160334-5cf1/check-2-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.042274
+        "cost_usd": 0.048618,
+        "features": [
+          {
+            "feature": "create and open Markdown notes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only info metadata JSON, not a note being created or opened."
+          },
+          {
+            "feature": "tag notes via first line",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "search note titles and content",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "pin notes for quick access",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:32:32+08:00",
+    "computed_at": "2026-11-01T16:04:56+08:00",
     "quality": {
-      "total": 85.1,
+      "total": 92.6,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -260,7 +294,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 75.23
+      "value": 81.86
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -533,5 +567,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:18:08+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T16:04:56.179272+08:00"
 }

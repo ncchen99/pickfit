@@ -57,7 +57,7 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-poselab-mcp-20261101-002050-b546",
+      "run_id": "verify-poselab-mcp-20261101-160740-8f16",
       "method": "uv",
       "steps": [
         {
@@ -82,18 +82,18 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:22:03.469437+08:00",
+    "checked_at": "2026-11-01T16:08:53.932139+08:00",
     "runs": [
       {
-        "id": "verify-poselab-mcp-20261101-002050-b546",
+        "id": "verify-poselab-mcp-20261101-160740-8f16",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:22:03.469437+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:08:53.932139+08:00",
         "tool_version": "0.7.0",
         "install_method": "uv",
         "replayed": true,
@@ -105,7 +105,7 @@
         ],
         "smoke_tests": [
           {
-            "command": "python3 /home/sbx/.pickfit/mcp_probe.py -- poselab-mcp",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- poselab-mcp",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -114,7 +114,7 @@
             "offline": true
           },
           {
-            "command": "python3 /home/sbx/.pickfit/mcp_probe.py --call arm_ranges --args '{}' -- poselab-mcp",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call arm_ranges --args '{}' -- poselab-mcp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
@@ -125,28 +125,33 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "Prerequisites: Blender",
-            "actually_needed": "MCP handshake and tool arm_ranges succeed without Blender installed; other tools like describe/list_rigs/where fail without a loaded rig/Blender context",
+            "readme_said": "uvx poselab-mcp launches the server",
+            "actually_needed": "install with uv tool install poselab-mcp so launch command poselab-mcp is on PATH without fetching at runtime; handshake then succeeds offline",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Prerequisites: Python 3.10+ and Blender; all tools work after load_rig",
+            "actually_needed": "Blender executable not present in box; most tools including list_rigs, load_rig, describe, move_gun, clearance, solve, scan_clip fail with 'Blender not found: set POSELAB_BLENDER'; only arm_ranges works without Blender",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show successful MCP handshake with 31 tools listed and a successful arm_ranges tool call returning data.",
+          "observed": "Both screenshots show poselab-mcp initializing, listing 31 tools with handshake ok, and arm_ranges call returning text data.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-poselab-mcp-20261101-002050-b546/report.json",
+          "trace_path": "runs/verify/verify-poselab-mcp-20261101-160740-8f16/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-poselab-mcp-20261101-002050-b546/check-1-cmd4.judged.png",
-            "runs/verify/verify-poselab-mcp-20261101-002050-b546/check-2-cmd8.judged.png"
+            "runs/verify/verify-poselab-mcp-20261101-160740-8f16/check-1-cmd3.judged.png",
+            "runs/verify/verify-poselab-mcp-20261101-160740-8f16/check-2-cmd6.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.055531,
+        "cost_usd": 0.054776,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -192,7 +197,41 @@
           "tool_count": 31,
           "called_tool": "arm_ranges",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "pose first-person arms and rifle",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "requires Blender; box has no blender executable, tool returns Blender not found"
+          },
+          {
+            "feature": "search rifle moves against goals",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "solve tool needs Blender worker; requires Blender"
+          },
+          {
+            "feature": "measure rifle clipping depth",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "clearance needs Blender to load rig geometry"
+          },
+          {
+            "feature": "scan animation clips frame by frame",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "scan_clip needs Blender and a loaded clip"
+          }
+        ]
       }
     ]
   },
@@ -885,5 +924,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:22:16+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T16:08:53.934265+08:00"
 }

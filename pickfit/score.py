@@ -21,7 +21,10 @@ quality (0-100) is a weighted mean of six components, each 0-1:
 - responsiveness 10: issues opened by people outside the project (>=2), as they stood at the
   snapshot time: share closed and mean time to close.
 - usage_outcomes 10+: external report_outcome counts only, from 3 reports; its weight grows
-  with the count (usage_outcomes_weight) and is taken from the four components above.
+  with the count (usage_outcomes_weight) and is taken from the four components above. The counts
+  come from D1 (outcomes_from_events): one result per recommendation and stage, the latest, and
+  only reports the Worker counted, so a still_using check-in weeks later counts (its rec_id window
+  is 120 days, installed and first_run 7; the Worker applies it, this module does not again).
 
 A component without data drops out of the denominator; confidence is the weight that had data.
 The lowest binding_cap() then bounds the total. popularity (0-100) is a log-normalized mean of
@@ -69,6 +72,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from pickfit.d1 import Database
 from pickfit.ledger import BudgetExceeded, taipei_now
 from pickfit.schema import (
     PASSED_LEVELS,
@@ -492,6 +496,52 @@ def usage_score(outcomes: Outcomes) -> float | None:
     if not present:
         return None
     return round(sum(w * rate for w, rate in present) / sum(w for w, _ in present), 4)
+
+
+# report_outcome rows the Worker counted: it keeps the rec_id only when the report cited one pickfit
+# issued for that slug within the window for its stage (REC_TTL_DAYS, REC_TTL_LATER_DAYS in
+# worker/src/events.ts), so rec_id IS NOT NULL is the whole test here; no window is applied again.
+OUTCOME_ROWS = (
+    "SELECT rec_id, slug, ts, stage, success, replaced_by, reporter FROM events "
+    "WHERE type = 'outcome' AND rec_id IS NOT NULL"
+)
+_REPORTERS = frozenset({"external", "eval", "demo", "dev"})  # Outcomes' StageCounts fields
+
+
+def _stage_name(row: dict[str, Any]) -> str:
+    stage, ok = row["stage"], bool(row["success"])
+    if stage == "installed":
+        return "installed" if ok else "install_failed"
+    if stage == "first_run":
+        return "first_run_ok" if ok else "first_run_failed"
+    return "still_using" if ok else "replaced" if row.get("replaced_by") else "abandoned"
+
+
+def outcomes_from_events(rows: list[dict[str, Any]], synced_at: datetime) -> dict[str, Outcomes]:
+    """Outcomes per slug from D1 outcome rows. Only counted rows (rec_id set) are used, and each
+    recommendation counts once per stage, by its latest report: an install that failed and then
+    worked is installed; still_using in week 2 then abandoned in month 3 is abandoned."""
+    latest: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for row in sorted(rows, key=lambda r: r["ts"]):
+        if row.get("rec_id") is not None and row.get("reporter") in _REPORTERS:
+            latest[(row["slug"], row["rec_id"], row["stage"])] = row
+    out: dict[str, Outcomes] = {}
+    for (slug, _, _), row in latest.items():
+        outcomes = out.setdefault(slug, Outcomes(synced_at=synced_at))
+        counts = getattr(outcomes, row["reporter"])
+        name = _stage_name(row)
+        setattr(counts, name, getattr(counts, name) + 1)
+        if row["reporter"] == "external" and name == "replaced":
+            outcomes.replaced_by[row["replaced_by"]] = outcomes.replaced_by.get(row["replaced_by"], 0) + 1
+        ts = datetime.fromisoformat(row["ts"].replace("Z", "+00:00"))
+        if outcomes.last_report_at is None or ts > outcomes.last_report_at:
+            outcomes.last_report_at = ts
+    return out
+
+
+def fetch_outcomes(db: Database, now: datetime) -> dict[str, Outcomes]:
+    """outcomes_from_events over the Worker's D1 (pickfit.d1.D1, or SqliteD1 in tests)."""
+    return outcomes_from_events(db.query(OUTCOME_ROWS), now)
 
 
 def weights(usage_weight: float) -> dict[str, float]:

@@ -66,23 +66,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-tripitaka-mcp-20261031-013829-5bd3",
+      "run_id": "verify-tripitaka-mcp-20261101-160515-14a6",
       "method": "pipx",
       "steps": [
         {
-          "command": "pipx install tripitaka-mcp && which tripitaka-mcp && tripitaka-mcp --help",
-          "purpose": "pipx install tripitaka-mcp"
+          "command": "pipx install tripitaka-mcp 2>&1",
+          "purpose": "install via pipx"
         },
         {
-          "command": "tripitaka-mcp init",
-          "purpose": "tripitaka-mcp init downloads SQLite database"
+          "command": "ls -la ~/.pickfit/mcp_probe.py 2>&1; tripitaka-mcp init 2>&1",
+          "purpose": "download SQLite database via tripitaka-mcp init"
         }
       ],
       "manual_steps": [],
-      "check": {
-        "command": "tripitaka-mcp --help",
-        "expected_signal": "Local MCP server for the Pāli Tipiṭaka"
-      },
+      "check": null,
       "first_task": null
     },
     "windows": null
@@ -102,43 +99,34 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:39:36.461316+08:00",
+    "checked_at": "2026-11-01T16:06:23.477534+08:00",
     "runs": [
       {
-        "id": "verify-tripitaka-mcp-20261031-013829-5bd3",
+        "id": "verify-tripitaka-mcp-20261101-160515-14a6",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:39:36.461316+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:06:23.477534+08:00",
         "tool_version": "1.1.0",
         "install_method": "pipx",
         "replayed": true,
         "steps": [
           {
-            "command": "pipx install tripitaka-mcp && which tripitaka-mcp && tripitaka-mcp --help",
-            "purpose": "pipx install tripitaka-mcp"
+            "command": "pipx install tripitaka-mcp 2>&1",
+            "purpose": "install via pipx"
           },
           {
-            "command": "tripitaka-mcp init",
-            "purpose": "tripitaka-mcp init downloads SQLite database"
+            "command": "ls -la ~/.pickfit/mcp_probe.py 2>&1; tripitaka-mcp init 2>&1",
+            "purpose": "download SQLite database via tripitaka-mcp init"
           }
         ],
         "smoke_tests": [
           {
-            "command": "tripitaka-mcp --help",
-            "expected_signal": "Local MCP server for the Pāli Tipiṭaka",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Local MCP server for the Pāli Tipiṭaka (offline, SQLite).",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- tripitaka-mcp serve",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- tripitaka-mcp serve 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -147,34 +135,72 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call list_structure --args '{}' -- tripitaka-mcp serve",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search_by_keyword --args '{\"keyword\": \"appamada\"}' -- tripitaka-mcp serve 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=list_structure content=text text_chars=3753",
+            "observed_excerpt": "tools/call: ok tool=search_by_keyword content=text text_chars=776",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call get_sutta --args '{\"sutta_id\": \"mn1\"}' -- tripitaka-mcp serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_sutta content=text text_chars=26360",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call get_word_definition --args '{\"word\": \"sati\"}' -- tripitaka-mcp serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_word_definition content=text text_chars=4896",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call compare_translations --args '{\"segment_id\": \"mn1:0.2\"}' -- tripitaka-mcp serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=compare_translations content=text text_chars=461",
             "setup": [],
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "tripitaka-mcp --version shows version",
+            "actually_needed": "--version is not implemented; use --help and pipx list shows 1.1.0, server reports 4.1.4",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "pipx install then serve works",
+            "actually_needed": "must run tripitaka-mcp init first to download ~118 MB SQLite database",
+            "kind": "readme_wrong"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 11 tools, successful list_structure call returning Tipitaka structure, and help describing offline Pali server.",
+          "observed": "Screenshots show MCP handshake with 11 tools and successful search_by_keyword and get_sutta calls returning Pali content.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-tripitaka-mcp-20261031-013829-5bd3/report.json",
+          "trace_path": "runs/verify/verify-tripitaka-mcp-20261101-160515-14a6/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-tripitaka-mcp-20261031-013829-5bd3/check-1-cmd3.judged.png",
-            "runs/verify/verify-tripitaka-mcp-20261031-013829-5bd3/check-2-cmd4.judged.png",
-            "runs/verify/verify-tripitaka-mcp-20261031-013829-5bd3/check-3-cmd5.judged.png"
+            "runs/verify/verify-tripitaka-mcp-20261101-160515-14a6/check-1-cmd4.judged.png",
+            "runs/verify/verify-tripitaka-mcp-20261101-160515-14a6/check-2-cmd5.judged.png",
+            "runs/verify/verify-tripitaka-mcp-20261101-160515-14a6/check-3-cmd6.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.039268,
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.051796,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -199,9 +225,49 @@
             "parse_pali_word"
           ],
           "tool_count": 11,
-          "called_tool": "list_structure",
+          "called_tool": "search_by_keyword",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "search and cite Pali Tipitaka content",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "fetch suttas by ID with citations",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "compare translations segment by segment",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Returned empty translations array with total_editions 0, no comparison shown."
+          },
+          {
+            "feature": "look up Pali word definitions",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -273,15 +339,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T16:06:23+08:00",
     "quality": {
-      "total": 84.3,
+      "total": 72.0,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -324,7 +390,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 45.86
+      "value": 39.17
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -847,5 +913,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:13+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:06:23.481905+08:00"
 }

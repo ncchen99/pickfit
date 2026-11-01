@@ -15,6 +15,8 @@ export interface EventRow {
   error_excerpt?: string | null;
   replaced_by?: string | null;
   note?: string | null;
+  /** Coarse, for still_using / replaced / abandoned only: never an exact time. */
+  last_used?: 'this_week' | 'this_month' | 'older' | 'unknown' | null;
   reporter?: Reporter | null;
   client?: string | null;
   matched_by?: string | null;
@@ -37,7 +39,10 @@ export function reporterFrom(header: string | null): Reporter {
 
 /** rec_id handles are `rec_` + 32 hex; anything else is not ours. */
 export const REC_ID = /^rec_[0-9a-f]{32}$/;
+/** installed and first_run reports cite a rec_id from the last 7 days. */
 export const REC_TTL_DAYS = 7;
+/** still_using, replaced and abandoned come weeks later, so their rec_id counts for 120 days. */
+export const REC_TTL_LATER_DAYS = 120;
 
 /**
  * For waitUntil: a failed D1 write never fails the response, but it is logged
@@ -58,9 +63,9 @@ export async function logEvent(db: D1Database, now: Date, row: EventRow, id = ne
     .prepare(
       `INSERT INTO events (id, ts, type, rec_id, slug, os, arch, category, need, results, stage, success,
                            satisfied, error_excerpt, replaced_by, note, reporter, client, matched_by, degraded,
-                           degraded_reason, model_attempts, model_statuses, meta_cost_usd, latency_ms)
+                           degraded_reason, model_attempts, model_statuses, meta_cost_usd, latency_ms, last_used)
        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22,
-               ?23, ?24, ?25)`,
+               ?23, ?24, ?25, ?26)`,
     )
     .bind(
       id,
@@ -88,6 +93,7 @@ export async function logEvent(db: D1Database, now: Date, row: EventRow, id = ne
       row.model_statuses ? JSON.stringify(row.model_statuses) : null,
       row.meta_cost_usd ?? null,
       row.latency_ms ?? null,
+      row.last_used ?? null,
     )
     .run();
   return id;
@@ -100,12 +106,18 @@ export interface IssuedRec {
 }
 
 /**
- * Did pickfit hand out `slug` under `recId` in the last 7 days? Either a
- * find_* call that recommended it, or a get_install_guide call for it.
+ * Did pickfit hand out `slug` under `recId` in the last `ttlDays` days? Either
+ * a find_* call that recommended it, or a get_install_guide call for it.
  */
-export async function issuedRec(db: D1Database, now: Date, recId: string, slug: string): Promise<IssuedRec | null> {
+export async function issuedRec(
+  db: D1Database,
+  now: Date,
+  recId: string,
+  slug: string,
+  ttlDays = REC_TTL_DAYS,
+): Promise<IssuedRec | null> {
   if (!REC_ID.test(recId)) return null;
-  const since = new Date(now.getTime() - REC_TTL_DAYS * 86_400_000).toISOString();
+  const since = new Date(now.getTime() - ttlDays * 86_400_000).toISOString();
   const { results } = await db
     .prepare(
       `SELECT type, slug, os, arch, results FROM events

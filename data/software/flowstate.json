@@ -80,20 +80,23 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-flowstate-20261101-001032-7339",
-      "method": "pip",
+      "run_id": "verify-flowstate-20261101-160740-ee50",
+      "method": "source",
       "steps": [
         {
-          "command": "rm -rf /tmp/fs-test && git clone https://github.com/dialectforge/FlowState.git /tmp/fs-test",
-          "purpose": "clone FlowState repository from GitHub"
+          "command": "git clone https://github.com/dialectforge/FlowState.git FlowState && ls FlowState/mcp-server && ls FlowState/*.py 2>&1",
+          "purpose": "Clone FlowState repo"
         },
         {
-          "command": "python3 -m venv /tmp/fs-test/.venv2 && /tmp/fs-test/.venv2/bin/python -m pip install -e /tmp/fs-test/mcp-server",
-          "purpose": "create venv and install server with pip install -e mcp-server"
+          "command": "cd FlowState && python3 -m venv .venv && .venv/bin/python -m pip install -e mcp-server 2>&1",
+          "purpose": "Create venv and pip install -e mcp-server"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "FlowState/.venv/bin/python -m flowstate --help 2>&1",
+        "expected_signal": "usage: flowstate"
+      },
       "first_task": null
     },
     "windows": {
@@ -126,43 +129,43 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:12:04.708107+08:00",
+    "checked_at": "2026-11-01T16:09:23.261566+08:00",
     "runs": [
       {
-        "id": "verify-flowstate-20261101-001032-7339",
+        "id": "verify-flowstate-20261101-160740-ee50",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:12:04.708107+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:09:23.261566+08:00",
         "tool_version": "2.4.5",
-        "install_method": "pip",
+        "install_method": "source",
         "replayed": true,
         "steps": [
           {
-            "command": "rm -rf /tmp/fs-test && git clone https://github.com/dialectforge/FlowState.git /tmp/fs-test",
-            "purpose": "clone FlowState repository from GitHub"
+            "command": "git clone https://github.com/dialectforge/FlowState.git FlowState && ls FlowState/mcp-server && ls FlowState/*.py 2>&1",
+            "purpose": "Clone FlowState repo"
           },
           {
-            "command": "python3 -m venv /tmp/fs-test/.venv2 && /tmp/fs-test/.venv2/bin/python -m pip install -e /tmp/fs-test/mcp-server",
-            "purpose": "create venv and install server with pip install -e mcp-server"
+            "command": "cd FlowState && python3 -m venv .venv && .venv/bin/python -m pip install -e mcp-server 2>&1",
+            "purpose": "Create venv and pip install -e mcp-server"
           }
         ],
         "smoke_tests": [
           {
-            "command": "FlowState/.venv/bin/flowstate --help",
+            "command": "FlowState/.venv/bin/python -m flowstate --help 2>&1",
             "expected_signal": "usage: flowstate",
-            "exit_code": 127,
-            "passed": false,
-            "observed_excerpt": "/usr/bin/bash: line 1: FlowState/.venv/bin/flowstate: No such file or directory",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: flowstate [-h] [--transport {stdio,http}] [--host HOST] [--port PORT]",
             "setup": [],
-            "offline": null
+            "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- /tmp/fs-test/.venv2/bin/python -m flowstate",
+            "command": "mkdir -p /tmp/fs-test && FLOWSTATE_WORKSPACE=/tmp/fs-test python3 ~/.pickfit/mcp_probe.py -- FlowState/.venv/bin/python -m flowstate",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -171,48 +174,63 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call manage_projects --args '{\"action\":\"list\"}' -- /tmp/fs-test/.venv2/bin/python -m flowstate",
+            "command": "FLOWSTATE_WORKSPACE=/tmp/fs-test python3 ~/.pickfit/mcp_probe.py --call manage_projects --args '{\"action\":\"create\",\"project\":\"testproj\",\"name\":\"Test Project\",\"description\":\"demo\"}' -- FlowState/.venv/bin/python -m flowstate",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=manage_projects content=text text_chars=2",
+            "observed_excerpt": "tools/call: ok tool=manage_projects content=text text_chars=254",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "FLOWSTATE_WORKSPACE=/tmp/fs-test python3 ~/.pickfit/mcp_probe.py --call start_here --args '{\"project\":\"testproj\"}' -- FlowState/.venv/bin/python -m flowstate",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=start_here content=text text_chars=646",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": ".venv/bin/python -m pytest tests -q runs after pip install -e mcp-server",
-            "actually_needed": "needs dev extras: pip install -e \"mcp-server[dev]\"; otherwise pytest not installed",
-            "kind": "readme_wrong"
+            "readme_said": ".venv/bin/python -m pip install -e mcp-server assumes .venv exists",
+            "actually_needed": "Create venv first with python3 -m venv .venv",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "The sandbox run installed it under /tmp, and its launch command or wrapper points there.",
-            "actually_needed": "The run installed into /tmp; install into a permanent directory and point the MCP client's launch command there.",
+            "readme_said": "FLOWSTATE_WORKSPACE env var usage documented but default DB location not obvious",
+            "actually_needed": "Default SQLite is at ~/.local/share/flowstate/flowstate.db not in workspace; workspace name must match exact project name for log_work/manage_todos",
             "kind": "note"
+          },
+          {
+            "readme_said": "manage_todos action=\"create\" in README example",
+            "actually_needed": "Valid actions are add, list, next etc. - create returns validation error and list with wrong project name gives KeyError",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP initialize with 12 tools, handshake ok, and manage_projects list call returning empty list.",
+          "observed": "Screenshots show --help usage, MCP handshake with 12 tools, and successful manage_projects create returning Test Project.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-flowstate-20261101-001032-7339/report.json",
+          "trace_path": "runs/verify/verify-flowstate-20261101-160740-ee50/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-flowstate-20261101-001032-7339/check-1-cmd12.judged.png",
-            "runs/verify/verify-flowstate-20261101-001032-7339/check-2-cmd13.judged.png"
+            "runs/verify/verify-flowstate-20261101-160740-ee50/check-1-cmd4.judged.png",
+            "runs/verify/verify-flowstate-20261101-160740-ee50/check-2-cmd6.judged.png",
+            "runs/verify/verify-flowstate-20261101-160740-ee50/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.087761,
+        "cost_usd": 0.107635,
         "mcp": {
           "transport": "stdio",
           "launch": [
-            "/tmp/fs-test/.venv2/bin/python",
+            "FlowState/.venv/bin/python",
             "-m",
             "flowstate"
           ],
@@ -237,7 +255,43 @@
           "tool_count": 12,
           "called_tool": "manage_projects",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Share project memory across AI apps",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only a single project creation with no evidence of sharing across multiple apps."
+          },
+          {
+            "feature": "Read short project brief when starting",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Record decisions, changes, problems and todos",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "command budget exhausted before correct probe call; manual direct JSON call with project='Test Project' kind=decision succeeded"
+          },
+          {
+            "feature": "Store memory locally in SQLite file",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows project creation but cites no SQLite file or local storage location."
+          }
+        ]
       }
     ]
   },
@@ -772,5 +826,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:31+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T16:09:23.263750+08:00"
 }

@@ -78,21 +78,21 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-angela-20261031-002444-931d",
+      "run_id": "verify-angela-20261101-162314-6c85",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -sL -o /tmp/angela.tar.gz https://github.com/NaturalSelect/angela/releases/download/v0.0.4/angela_0.0.4_Linux_x86_64.tar.gz",
-          "purpose": "Download prebuilt Linux x86_64 tarball"
+          "command": "curl -fL https://github.com/NaturalSelect/angela/releases/download/v0.0.4/angela_0.0.4_Linux_x86_64.tar.gz -o /tmp/angela.tar.gz && tar -tzf /tmp/angela.tar.gz",
+          "purpose": "download Linux x86_64 tarball from GitHub releases"
         },
         {
-          "command": "mkdir -p /tmp/angela_dl && tar -xzf /tmp/angela.tar.gz -C /tmp/angela_dl && mkdir -p ~/.local/bin && cp /tmp/angela_dl/angela_0.0.4_Linux_x86_64/angela ~/.local/bin/angela && chmod +x ~/.local/bin/angela",
-          "purpose": "Extract and install binary to ~/.local/bin"
+          "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/angela.tar.gz -O angela_0.0.4_Linux_x86_64/angela > ~/.local/bin/angela && chmod +x ~/.local/bin/angela && ~/.local/bin/angela --version",
+          "purpose": "extract binary to ~/.local/bin and verify --version"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "angela --version",
+        "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/angela.tar.gz -O angela_0.0.4_Linux_x86_64/angela > ~/.local/bin/angela && chmod +x ~/.local/bin/angela && ~/.local/bin/angela --version",
         "expected_signal": "angela version v0.0.4"
       },
       "first_task": "angela dirs"
@@ -129,34 +129,34 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:26:32.662464+08:00",
+    "checked_at": "2026-11-01T16:24:16.818788+08:00",
     "runs": [
       {
-        "id": "verify-angela-20261031-002444-931d",
+        "id": "verify-angela-20261101-162314-6c85",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:26:32.662464+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:24:16.818788+08:00",
         "tool_version": "v0.0.4",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -sL -o /tmp/angela.tar.gz https://github.com/NaturalSelect/angela/releases/download/v0.0.4/angela_0.0.4_Linux_x86_64.tar.gz",
-            "purpose": "Download prebuilt Linux x86_64 tarball"
+            "command": "curl -fL https://github.com/NaturalSelect/angela/releases/download/v0.0.4/angela_0.0.4_Linux_x86_64.tar.gz -o /tmp/angela.tar.gz && tar -tzf /tmp/angela.tar.gz",
+            "purpose": "download Linux x86_64 tarball from GitHub releases"
           },
           {
-            "command": "mkdir -p /tmp/angela_dl && tar -xzf /tmp/angela.tar.gz -C /tmp/angela_dl && mkdir -p ~/.local/bin && cp /tmp/angela_dl/angela_0.0.4_Linux_x86_64/angela ~/.local/bin/angela && chmod +x ~/.local/bin/angela",
-            "purpose": "Extract and install binary to ~/.local/bin"
+            "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/angela.tar.gz -O angela_0.0.4_Linux_x86_64/angela > ~/.local/bin/angela && chmod +x ~/.local/bin/angela && ~/.local/bin/angela --version",
+            "purpose": "extract binary to ~/.local/bin and verify --version"
           }
         ],
         "smoke_tests": [
           {
-            "command": "angela --version",
+            "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/angela.tar.gz -O angela_0.0.4_Linux_x86_64/angela > ~/.local/bin/angela && chmod +x ~/.local/bin/angela && ~/.local/bin/angela --version",
             "expected_signal": "angela version v0.0.4",
             "exit_code": 0,
             "passed": true,
@@ -166,7 +166,7 @@
           },
           {
             "command": "angela dirs",
-            "expected_signal": "/home/sbx/.config/angela",
+            "expected_signal": ".config/angela",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "/home/sbx/.config/angela",
@@ -174,11 +174,29 @@
             "offline": true
           },
           {
-            "command": "angela config validate",
-            "expected_signal": "ok: 0 file(s) loaded",
+            "command": "angela logs",
+            "expected_signal": "No logs found",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "ok: 0 file(s) loaded, 3 warning(s)",
+            "observed_excerpt": "2026/11/01 08:24:08 WARN Looks like you are not in an angela project. No logs found.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "angela agent list",
+            "expected_signal": "coder primary",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "coder primary main Angela's default agent — writes and edits code,...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cat > /tmp/test_mcp.json <<'EOF'\n{\n  \"mcp\": {\n    \"demo\": {\n      \"type\": \"stdio\",\n      \"command\": \"echo\",\n      \"args\": [\"hello\"]\n    }\n  }\n}\nEOF\ncat /tmp/test_mcp.json\nmkdir -p /tmp/mcp_test && cp /tmp/test_mcp.json /tmp/mcp_test/angela.json && angela -c /tmp/mcp_test config validate",
+            "expected_signal": "ok: 1 file(s) loaded",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ok: 1 file(s) loaded, 3 warning(s)",
             "setup": [],
             "offline": true
           }
@@ -186,33 +204,72 @@
         "pitfalls": [
           {
             "readme_said": "go install github.com/NaturalSelect/angela@latest",
-            "actually_needed": "Downloaded prebuilt angela_0.0.4_Linux_x86_64.tar.gz from GitHub Releases and copied the angela binary to ~/.local/bin",
+            "actually_needed": "Go toolchain not installed in box; installed pre-built Linux x86_64 binary from GitHub Releases v0.0.4",
             "kind": "sandbox"
           },
           {
-            "readme_said": "angela dirs shows config and data directories",
-            "actually_needed": "angela dirs prints the directory list to stderr with empty stdout",
+            "readme_said": "angela dirs shows config directories",
+            "actually_needed": "angela dirs prints to stderr, not stdout, but exits 0",
+            "kind": "note"
+          },
+          {
+            "readme_said": "angela stats shows usage",
+            "actually_needed": "angela stats exits 1 with No data available when no sessions exist",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show angela listing config dirs, validating config with ok 0 files loaded, and reporting version v0.0.4.",
+          "observed": "Screenshots show angela dirs listing config paths, logs reporting No logs found, and --version reporting v0.0.4.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-angela-20261031-002444-931d/report.json",
+          "trace_path": "runs/verify/verify-angela-20261101-162314-6c85/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-angela-20261031-002444-931d/check-1-cmd13.judged.png",
-            "runs/verify/verify-angela-20261031-002444-931d/check-2-cmd14.judged.png",
-            "runs/verify/verify-angela-20261031-002444-931d/check-3-cmd12.judged.png"
+            "runs/verify/verify-angela-20261101-162314-6c85/check-1-cmd7.judged.png",
+            "runs/verify/verify-angela-20261101-162314-6c85/check-2-cmd8.judged.png",
+            "runs/verify/verify-angela-20261101-162314-6c85/check-3-cmd5.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.072602
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.062235,
+        "features": [
+          {
+            "feature": "read, write and execute code",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists agent definitions, not actual reading, writing, or executing code."
+          },
+          {
+            "feature": "delegate to specialized background sub-agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output lists sub-agent types but shows no delegation or background execution occurring."
+          },
+          {
+            "feature": "resume, branch and export sessions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; angela session list runs (empty DB) indicating session resume/branch/export support"
+          },
+          {
+            "feature": "extend with MCP servers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows config file loaded, not an MCP server being connected or used."
+          }
+        ]
       }
     ]
   },
@@ -614,5 +671,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:13+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:24:16.820706+08:00"
 }

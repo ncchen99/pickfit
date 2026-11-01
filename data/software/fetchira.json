@@ -81,21 +81,21 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-fetchira-20261101-005803-ddab",
+      "run_id": "verify-fetchira-20261101-162314-d0d5",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g fetchira 2>&1",
-          "purpose": "npm install -g fetchira wrapper"
+          "purpose": "install npm wrapper package fetchira"
         },
         {
-          "command": "bash ~/.local/lib/node_modules/fetchira/install.sh",
-          "purpose": "run install.sh to download real binary"
+          "command": "rm ~/.local/bin/fetchira\nls -l ~/.local/bin/\nsh ~/.local/lib/node_modules/fetchira/install.sh 2>&1\necho DONE:$?\nls -lh ~/.local/bin/fetchira\n~/.local/bin/fetchira --version 2>&1",
+          "purpose": "download and install prebuilt binary via install.sh replacing wrapper"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "/home/sbx/.local/bin/fetchira --version",
+        "command": "~/.local/bin/fetchira --version 2>&1\n~/.local/bin/fetchira --help 2>&1",
         "expected_signal": "fetchira 0.1.20"
       },
       "first_task": null
@@ -117,34 +117,34 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:59:57.337769+08:00",
+    "checked_at": "2026-11-01T16:25:09.495923+08:00",
     "runs": [
       {
-        "id": "verify-fetchira-20261101-005803-ddab",
+        "id": "verify-fetchira-20261101-162314-d0d5",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:59:57.337769+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:25:09.495923+08:00",
         "tool_version": "0.1.20",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g fetchira 2>&1",
-            "purpose": "npm install -g fetchira wrapper"
+            "purpose": "install npm wrapper package fetchira"
           },
           {
-            "command": "bash ~/.local/lib/node_modules/fetchira/install.sh",
-            "purpose": "run install.sh to download real binary"
+            "command": "rm ~/.local/bin/fetchira\nls -l ~/.local/bin/\nsh ~/.local/lib/node_modules/fetchira/install.sh 2>&1\necho DONE:$?\nls -lh ~/.local/bin/fetchira\n~/.local/bin/fetchira --version 2>&1",
+            "purpose": "download and install prebuilt binary via install.sh replacing wrapper"
           }
         ],
         "smoke_tests": [
           {
-            "command": "/home/sbx/.local/bin/fetchira --version",
+            "command": "~/.local/bin/fetchira --version 2>&1\n~/.local/bin/fetchira --help 2>&1",
             "expected_signal": "fetchira 0.1.20",
             "exit_code": 0,
             "passed": true,
@@ -153,19 +153,14 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- /home/sbx/.local/bin/fetchira 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- ~/.local/bin/fetchira 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
             "setup": [
               {
-                "command": "curl -fsSL https://raw.githubusercontent.com/ImmuneFOMO/fetchira/main/fetchira.toml.example -o /tmp/fetchira.toml.example 2>&1; cat /tmp/fetchira.toml.example 2>&1 | head -n 200\nls /home/sbx/.config/fetchira/ 2>&1",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "mkdir -p /home/sbx/.config/fetchira\ncp /tmp/fetchira.toml.example /home/sbx/.config/fetchira/fetchira.toml\n# also need the initial header part - check full file\ncat /tmp/fetchira.toml.example | head -n 50",
+                "command": "mkdir -p ~/.config/fetchira && touch ~/.config/fetchira/fetchira.toml && ls -l ~/.config/fetchira/fetchira.toml",
                 "background": false,
                 "port": null
               }
@@ -173,19 +168,14 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call usage --args '{}' -- /home/sbx/.local/bin/fetchira 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call usage --args '{}' -- ~/.local/bin/fetchira 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=usage content=text text_chars=491",
+            "observed_excerpt": "tools/call: ok tool=usage content=text text_chars=402",
             "setup": [
               {
-                "command": "curl -fsSL https://raw.githubusercontent.com/ImmuneFOMO/fetchira/main/fetchira.toml.example -o /tmp/fetchira.toml.example 2>&1; cat /tmp/fetchira.toml.example 2>&1 | head -n 200\nls /home/sbx/.config/fetchira/ 2>&1",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "mkdir -p /home/sbx/.config/fetchira\ncp /tmp/fetchira.toml.example /home/sbx/.config/fetchira/fetchira.toml\n# also need the initial header part - check full file\ncat /tmp/fetchira.toml.example | head -n 50",
+                "command": "mkdir -p ~/.config/fetchira && touch ~/.config/fetchira/fetchira.toml && ls -l ~/.config/fetchira/fetchira.toml",
                 "background": false,
                 "port": null
               }
@@ -196,37 +186,37 @@
         "pitfalls": [
           {
             "readme_said": "npx -y fetchira installs and runs",
-            "actually_needed": "npm wrapper checks ~/.local/bin/fetchira exists (itself) causing infinite loop; must run install.sh to replace symlink with ELF binary",
-            "kind": "readme_wrong"
+            "actually_needed": "npm wrapper only downloads binary on first run; in non-TTY it timed out and left a symlink. Had to run install.sh explicitly to fetch binary",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "MCP server starts piped with no config",
-            "actually_needed": "stdio server requires fetchira.toml seeded from fetchira.toml.example in ~/.config/fetchira",
+            "readme_said": "MCP server starts immediately",
+            "actually_needed": "server exits with 'No such file or directory fetchira.toml' until an empty ~/.config/fetchira/fetchira.toml is created",
             "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 6 tools listed, successful usage tool call, and version 0.1.20 printed.",
+          "observed": "Screenshots show fetchira 0.1.20 version/help output, successful MCP handshake with 6 tools, and successful usage tool call.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-fetchira-20261101-005803-ddab/report.json",
+          "trace_path": "runs/verify/verify-fetchira-20261101-162314-d0d5/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-fetchira-20261101-005803-ddab/check-1-cmd12.judged.png",
-            "runs/verify/verify-fetchira-20261101-005803-ddab/check-2-cmd13.judged.png",
-            "runs/verify/verify-fetchira-20261101-005803-ddab/check-3-cmd15.judged.png"
+            "runs/verify/verify-fetchira-20261101-162314-d0d5/check-1-cmd8.judged.png",
+            "runs/verify/verify-fetchira-20261101-162314-d0d5/check-2-cmd14.judged.png",
+            "runs/verify/verify-fetchira-20261101-162314-d0d5/check-3-cmd15.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.087992,
+        "cost_usd": 0.070578,
         "mcp": {
           "transport": "stdio",
           "launch": [
-            "/home/sbx/.local/bin/fetchira"
+            "~/.local/bin/fetchira"
           ],
           "url": null,
           "protocol_version": "2025-11-25",
@@ -243,7 +233,41 @@
           "tool_count": 6,
           "called_tool": "usage",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "search the web",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "search requires Serper or other provider API key"
+          },
+          {
+            "feature": "read web pages",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "read requires provider account"
+          },
+          {
+            "feature": "perform deep research",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "deep_research requires provider account"
+          },
+          {
+            "feature": "generate images",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "create_image requires provider account"
+          }
+        ]
       }
     ]
   },
@@ -256,15 +280,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:59:57+08:00",
+    "computed_at": "2026-11-01T16:25:09+08:00",
     "quality": {
-      "total": 76.4,
+      "total": 82.7,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.7225,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -306,8 +330,8 @@
       ]
     },
     "treasure": {
-      "is_treasure": false,
-      "value": 43.24
+      "is_treasure": true,
+      "value": 46.81
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -622,5 +646,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:38:07+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T16:25:09.499054+08:00"
 }

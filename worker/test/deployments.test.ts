@@ -66,6 +66,10 @@ test('TOOLS=readonly exposes only the read tools and never mentions the others',
     const res = await d.call(name, { slug: 'fixture-llm-runner', stage: 'installed', url: 'https://github.com/a/b' });
     assert.ok(res.error || res.result?.isError, `${name} must not be callable`);
   }
+  // No report_outcome to check in with, so the guide carries no check_in.
+  const guide = await d.call('get_install_guide', { slug: 'fixture-llm-runner', os: 'macos' });
+  assert.equal(guide.result.structuredContent.check_in, null);
+  assert.ok(!JSON.stringify(guide.result).includes('report_outcome'));
   await d.settle();
   assert.equal(d.sqlite.prepare("SELECT count(*) AS n FROM events WHERE type IN ('outcome', 'submit')").get()!.n, 0);
   assert.equal(d.sqlite.prepare('SELECT count(*) AS n FROM submissions').get()!.n, 0);
@@ -170,4 +174,17 @@ test('a failed events write does not fail the response, and is logged with the r
   } finally {
     console.error = original;
   }
+});
+
+test('the full deployment: the guide has a check_in, and report_outcome takes only coarse last_used values', async () => {
+  const d = deployment({ MATCH_MODE: 'off' });
+  const guide = (await d.call('get_install_guide', { slug: 'fixture-llm-runner', os: 'macos' })).result.structuredContent;
+  assert.ok(guide.check_in.commands.length > 0);
+  const args = { slug: 'fixture-llm-runner', stage: 'still_using', rec_id: guide.rec_id };
+  const bad = await d.call('report_outcome', { ...args, last_used: '2026-10-31' });
+  assert.ok(bad.error || bad.result?.isError, 'an exact date is refused');
+  await d.settle();
+  const ok = (await d.call('report_outcome', { ...args, last_used: 'this_week' })).result.structuredContent;
+  assert.equal(ok.counted_in_score, true);
+  assert.equal(d.sqlite.prepare("SELECT last_used FROM events WHERE type = 'outcome'").get()!.last_used, 'this_week');
 });

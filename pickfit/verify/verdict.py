@@ -531,6 +531,47 @@ def masked_exit(command: str) -> str | None:
     return None
 
 
+# What `| head` and `| tail` may take for unmasked() to drop them: line or byte counts only.
+_CUT_ARG = re.compile(r"^(?:-[nc]?\+?\d*[kKmM]?|--(?:lines|bytes)=\+?\d+[kKmM]?|\+?\d+[kKmM]?|-q)$")
+# A command feeding `head` that may only end because head closes the pipe: left alone.
+_ENDLESS = re.compile(r"^\s*(?:yes|watch|top|htop|ping)\b|\s(?:-f|-F|--follow)(?:\s|$)|/dev/(?:u?random|zero)")
+
+
+def unmasked(command: str) -> tuple[str, str] | None:
+    """(the command without its trailing mask, the text dropped), or None.
+
+    The mask is a trailing `| tail …` or `| head …` with only line or byte counts, or a trailing
+    `; echo …` (or an echo on its own last line) that writes no file and runs nothing, repeated as
+    in `x 2>&1 | tail -5; echo $?`. None when there is no such mask, when what is left is still
+    masked (masked_exit: `| grep`, `|| true`, `set +e`, `!` stay as they are), or when `head` may
+    be what ends an endless feed (yes, tail -f, /dev/urandom). Dropping `| tail` never changes
+    whether the command ends, since tail reads to the end.
+    """
+    if masked_exit(command) is None:
+        return None
+    clean = command.rstrip()
+    while True:
+        parts = _top_level(clean)
+        if len(parts) < 2:
+            break
+        op, text = parts[-1]
+        words = text.split()
+        if op == "|" and words[:1] in (["head"], ["tail"]) and all(_CUT_ARG.match(w) for w in words[1:]):
+            if words[0] == "head" and _ENDLESS.search(parts[-2][1]):
+                break
+        elif not (op in (";", "\n") and words[:1] == ["echo"] and not re.search(r"[<>`]|\$\(", text)):
+            break
+        rest = clean[:len(clean) - len(text)]
+        if not rest.endswith(op):
+            break
+        clean = rest[:-len(op)].rstrip()
+    if clean.endswith(";") and not clean.endswith(";;"):
+        clean = clean[:-1].rstrip()  # `x;\necho ok`
+    if clean == command.rstrip() or not clean or masked_exit(clean) is not None:
+        return None
+    return clean, command.rstrip()[len(clean):].strip()
+
+
 def last_command(command: str) -> str:
     parts = [text for _, text in _top_level(command) if text.strip()]
     return parts[-1] if parts else command
