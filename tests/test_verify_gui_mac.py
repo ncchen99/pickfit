@@ -116,12 +116,14 @@ def test_a_window_of_its_own_passes_with_pickfits_screenshot():
     assert "window 1 owner: 'CotEditor'" in result.stderr and "CotEditor.app" in result.stderr
     names = [argv[-1] if argv[-1] in ("procs", "approve", "items", "watch", "stop") else "start"
              for argv, _ in box.calls]
-    assert names == ["approve", "procs", "items", "start", "watch", "stop"]  # snapshots before the start
-    watch_argv, cfg = box.calls[4]
+    assert names == ["stop", "approve", "procs", "items", "start", "watch", "stop"]  # snapshots before the start
+    assert box.calls[0][1] == {"baseline": SESSION, "bundles_only": True}  # a running copy would take the launch
+    watch_argv, cfg = box.calls[5]
     assert watch_argv[:3] == ["/bin/launchctl", "asuser", "1001"]  # the watcher sits in the desktop session
     assert cfg["before"] == SESSION and cfg["user"] == "sbx" and cfg["min_w"] == gui.MIN_WIDTH
     assert cfg["items_before"] == ["11", "12"] and not cfg.get("any_layer")
-    assert box.calls[5][1] == {"baseline": SESSION}  # the stop leaves only the login session
+    assert box.calls[6][1] == {"baseline": SESSION, "bundles_only": False}  # then only the login session is left
+    assert "already running" not in result.stdout
     assert box.screen().clicks == []  # a window of its own: pickfit clicks nothing
     assert shown.to_dict()["display"] == gui_mac.DISPLAY_NOTE and len(gui_mac.DISPLAY_NOTE) <= 120  # not Xvfb
 
@@ -158,10 +160,10 @@ def test_keep_running_leaves_the_app_up_for_an_operating_loop():
     box = FakeMacBox(report=_report())
     result, shown, png = gui_mac.launch(box, "open ~/Applications/X.app", 1, 20, keep_running=True)
     assert result.exit_code == 0 and png == PNG
-    assert "stop" not in [argv[-1] for argv, _ in box.calls]
+    assert [cfg for argv, cfg in box.calls if argv[-1] == "stop"] == [{"baseline": SESSION, "bundles_only": True}]
     assert result.stdout.rstrip().endswith("left the app running, to operate it.")
     assert gui_mac.stop(box) == (True, "PICKFIT_KILLED 1")
-    assert box.calls[-1][1] == {"baseline": SESSION}
+    assert box.calls[-1][1] == {"baseline": SESSION, "bundles_only": False}
 
 
 MENU = {"id": "80", "title": "", "width": 267, "height": 246, "x": 1007, "y": 31, "pid": 1796,
@@ -248,3 +250,10 @@ def test_a_macos_gui_box_allows_long_downloads_and_its_replay_follows():
     assert Replayer(gui_box, log=lambda s: None).timeout == GUI_COMMAND_S
     assert Replayer(SimpleNamespace(limits=SimpleNamespace(max_command_s=600)), log=lambda s: None).timeout == \
         COMMAND_TIMEOUT_S
+
+
+def test_a_copy_already_running_is_stopped_first_and_said():
+    box = FakeMacBox(report=_report(), stop_out="PICKFIT_KILLED 1 found 2\n")
+    result, shown, png = gui_mac.launch(box, "open ~/Applications/Transcriber.app", 1, 30)
+    assert result.exit_code == 0
+    assert "pickfit first stopped 2 app process(es) already running" in result.stdout

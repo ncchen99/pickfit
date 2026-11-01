@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import secrets
 import shlex
 import time
@@ -252,9 +253,12 @@ def approve(cfg):
     print(json.dumps(out))
 
 def stop(cfg):
-    baseline = cfg["baseline"]
+    # bundles_only: just the running apps (an executable inside a .app that is not macOS's), not servers.
+    baseline, bundles_only = cfg["baseline"], cfg.get("bundles_only", False)
     def left():
-        return {p: v for p, v in procs().items() if baseline.get(p, [None])[0] != v[0]}
+        return {p: v for p, v in procs().items() if baseline.get(p, [None])[0] != v[0]
+                and (not bundles_only or (".app/Contents/" in v[1] and not apple(v[1])))}
+    found = len(left())
     for pid, v in procs().items():  # its prompts (a Gatekeeper refusal) outlive the app; launchd restarts it
         if v[1] in PROMPTS:
             try:
@@ -264,7 +268,7 @@ def stop(cfg):
     for round_ in range(60):
         now = left()
         if not now:
-            print("PICKFIT_KILLED", round_)
+            print("PICKFIT_KILLED", round_, "found", found)
             return
         for sig in (signal.SIGSTOP, signal.SIGKILL):
             for pid in now:
@@ -376,12 +380,15 @@ def _scale(windows: list[GuiWindow], factor: float) -> None:
 
 
 def observation(launch: GuiLaunch, approved: list[dict[str, Any]], *, kept: bool = False,
-                clicked: tuple[int, int] | None = None) -> str:
+                clicked: tuple[int, int] | None = None, restarted: int = 0) -> str:
     """pickfit's own lines (stdout): what the agent cites and the replay checks. Nothing the app chooses."""
     meaning = {"window": "a window of the app's own process is shown",
                "process_alive": "the app is still running but showed no window of its own",
                "none": "the app showed no window and is not running"}[launch.tier]
     lines = [f"gui tier: {launch.tier} ({meaning})"]
+    if restarted:
+        lines.append(f"pickfit first stopped {restarted} app process(es) already running, so the launch starts the "
+                     "app instead of bringing a running copy forward")
     if clicked:
         lines.append(f"the app showed no window but a menu bar item: pickfit clicked it at {clicked[0]},{clicked[1]}, "
                      "as a user opens a menu bar app; windows below are what opened, and only the app's count")
@@ -410,10 +417,16 @@ def observation(launch: GuiLaunch, approved: list[dict[str, Any]], *, kept: bool
     return "\n".join(lines)
 
 
-def stop(box: TartBox) -> tuple[bool, str]:
-    """Stop every sbx process outside its login session; (whether none survived, the helper's line)."""
-    stopped = _helper(box, "stop", {"baseline": box.session}, 90)
+def stop(box: TartBox, *, bundles_only: bool = False) -> tuple[bool, str]:
+    """Stop every sbx process outside its login session (bundles_only: only running apps); (whether none
+    survived, the helper's line)."""
+    stopped = _helper(box, "stop", {"baseline": box.session, "bundles_only": bundles_only}, 90)
     return "PICKFIT_KILLED" in stopped.stdout, stopped.stdout.strip()[-200:]
+
+
+def _stopped_count(line: str) -> int:
+    m = re.search(r"found (\d+)", line)
+    return int(m.group(1)) if m else 0
 
 
 def app_facts(launch: GuiLaunch, approved: list[dict[str, Any]]) -> str:
@@ -444,6 +457,10 @@ def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s
     wait_s = max(1, min(int(wait_s), gui.WAIT_MAX_S))
     if not box.display or box.session is None:
         raise ValueError("a macOS GUI launch needs a TartBox made with display=True")
+    # A running copy takes the launch: macOS brings it forward instead of starting the app, so nothing new shows
+    # (local-transcriber's installer starts the app itself, 11/1). Servers outside a .app keep running.
+    ok, line = stop(box, bundles_only=True)
+    restarted = _stopped_count(line) if ok else 0
     approved = approve_first_launch(box)
     before = procs(box)
     items_before = _json_line(_helper(box, "items", timeout_s=30, session=True))
@@ -501,7 +518,7 @@ def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s
     shown = _mac(shown)
     code = 0 if shown.tier == "window" and png is not None and not timed_out and not survived else 1
     result = ExecResult(command=command, exit_code=code,
-                        stdout=observation(shown, approved, kept=keep_running, clicked=clicked),
+                        stdout=observation(shown, approved, kept=keep_running, clicked=clicked, restarted=restarted),
                         stderr=app_facts(shown, approved), seconds=seconds, timed_out=timed_out)
     return result, shown, png
 
