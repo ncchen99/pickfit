@@ -1021,7 +1021,9 @@ ScreenReader = Callable[[bytes, list[str]], "tuple[list[str], float, str]"]
 
 
 def check_screen(png: bytes | None, spec: GuiCheckSpec, nonce: str, typed: list[str],
-                 read: ScreenReader | None) -> dict[str, Any]:
+                 read: ScreenReader | None, before: bytes | None = None) -> dict[str, Any]:
+    """The expected text on pickfit's last screenshot, and not on its first (`before`, the window as it opened):
+    a result the operation made, never a label, heading or menu that was there anyway or text typed."""
     expected = expected_texts(spec, nonce)
     typed_norm = [_norm(t) for t in typed]
     echoed = [e for e in expected if any(_norm(e) in t for t in typed_norm)]
@@ -1035,13 +1037,25 @@ def check_screen(png: bytes | None, spec: GuiCheckSpec, nonce: str, typed: list[
     except Exception as err:  # budget or API failure: nothing is confirmed
         return {"passed": False, "why": f"the screen judge failed: {type(err).__name__}", "line": "on screen: unread"}
     found = [any(_norm(e) in _norm(t) for t in texts) for e in expected]
-    ok = all(found)
+    already: list[bool] = [False] * len(expected)
+    if all(found) and before is not None:
+        try:
+            early, more, _ = read(before, expected)
+        except Exception as err:  # budget or API failure: nothing is confirmed
+            return {"passed": False, "why": f"the screen judge failed: {type(err).__name__}", "cost_usd": cost,
+                    "line": "on screen: unread"}
+        cost += more
+        already = [any(_norm(e) in _norm(t) for t in early) for e in expected]
+    ok = all(found) and not any(already)
+    marks = [("yes, but already there before the first action" if a else "yes") if f else "no"
+             for f, a in zip(found, already)]
     result = {"passed": ok, "cost_usd": cost,
               "line": f"on screen (read by the screen judge, {model}, from pickfit's last screenshot): "
-                      + "; ".join(f"{_quote(e)}: {'yes' if f else 'no'}" for e, f in zip(expected, found)),
+                      + "; ".join(f"{_quote(e)}: {m}" for e, m in zip(expected, marks)),
               "seen": {"read": [t[:200] for t in texts]}}
     if not ok:
-        result["why"] = "the screen does not show the expected text"
+        result["why"] = ("the expected text was on screen before the first action: it is not a result of the "
+                         "operation" if all(found) else "the screen does not show the expected text")
     return result
 
 
@@ -1114,7 +1128,7 @@ def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[
         if kind == "clipboard":
             op.result = check_clipboard(display, args.check, nonce, op.typed())
         elif kind == "screen_text":
-            op.result = check_screen(last_png, args.check, nonce, op.typed(), read_screen)
+            op.result = check_screen(last_png, args.check, nonce, op.typed(), read_screen, before=first_png)
             op.cost_usd += float(op.result.pop("cost_usd", 0.0) or 0.0)
     png, survived = gui.close_app(box, opened, tag)
     if survived:

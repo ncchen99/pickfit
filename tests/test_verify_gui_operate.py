@@ -28,6 +28,7 @@ from pickfit.verify.replay import ReplayCheck, ReplayCommand, Replayer, ReplayPl
 from pickfit.verify.task import load_fixture
 from pickfit.verify.verdict import ResolvedCheck, check_kind, supported_level
 from test_verify_gui import DEMO_WINDOW, FIXTURES, INSTALL, LAUNCH, GuiBox, gui_judge_answer, isolated  # noqa: F401
+from test_verify_gui import png as gui_png
 from verify_fakes import FakeServer, finish, response, run_cmd
 
 NOTE_GOAL = "Type {nonce} into the note, then press ctrl+s to save it as ~/pickfit-out/note.txt."
@@ -248,22 +249,33 @@ def test_the_clipboard_is_read_by_the_display_uid_and_screen_text_never_counts_a
         read_screen=lambda png, expected: (asked.append(expected) or ([expected[0]], 0.0, "judge")),
         sleep=lambda s: None)
     assert not operation.passed and asked == [] and "was typed by the operator" in result.stdout
-    # A result the app computed counts when the reader reads it on pickfit's last screenshot.
+    # A result the app computed counts when the reader reads it on pickfit's last screenshot and not on the
+    # window as it opened (the watcher's screenshot, gui_png()).
     computed = {"kind": "screen_text", "path": None, "contains": ["7006652"], "format": None}
+
+    def reader(seen_first: bool):
+        return lambda png, expected: ((["= 7006652"] if seen_first or png != gui_png() else []), 0.004,
+                                      "muse-spark-1.3")
+
     result, operation, _ = op.run_operation(
         box, operate_args(check=computed, goal="Type 1234*5678 and press Return."), 5, log=lambda s: None,
-        client=NonceServer(*note_session("1234*5678")).client(),
-        read_screen=lambda png, expected: (["= 7006652"], 0.004, "muse-spark-1.3"), sleep=lambda s: None)
-    assert operation.passed and operation.cost_usd > 0.004
+        client=NonceServer(*note_session("1234*5678")).client(), read_screen=reader(False), sleep=lambda s: None)
+    assert operation.passed and operation.cost_usd > 0.008  # two reads: the last screen and the first
     assert 'on screen (read by the screen judge, muse-spark-1.3, from pickfit\'s last screenshot): "7006652": yes' \
         in result.stdout
+    # A label that was there when the window opened is no result of the operation.
+    result, operation, _ = op.run_operation(
+        box, operate_args(check=computed, goal="Open the Results screen."), 7, log=lambda s: None,
+        client=NonceServer(*note_session("x")).client(), read_screen=reader(True), sleep=lambda s: None)
+    assert not operation.passed and "already there before the first action" in result.stdout
     # Case counts: typing hello world is not seeing HELLO WORLD, and the app must show the converted case.
     upper = {"kind": "screen_text", "path": None, "contains": ["HELLO WORLD"], "format": None}
     for read, passed in ((["HELLO WORLD"], True), (["hello world"], False)):
         _, operation, _ = op.run_operation(
             box, operate_args(check=upper, goal="Type hello world and click UPPERCASE."), 6, log=lambda s: None,
             client=NonceServer(*note_session("hello world")).client(),
-            read_screen=lambda png, expected, read=read: (read, 0.004, "muse-spark-1.3"), sleep=lambda s: None)
+            read_screen=lambda png, expected, read=read: (read if png != gui_png() else [], 0.004, "muse-spark-1.3"),
+            sleep=lambda s: None)
         assert operation.passed is passed
 
 
@@ -398,3 +410,19 @@ def test_the_schema_holds_action_checked_to_a_checked_feature():
         VerificationRun.model_validate({**base, "gui": {**base["gui"], "tier": "ui_rendered"}})
     with pytest.raises(ValueError, match="cites a smoke test"):
         VerificationRun.model_validate({**base, "gui": {**base["gui"], "operations": [{**operation, "smoke_test": 4}]}})
+
+
+def test_an_agent_gets_two_operations_per_feature_and_six_per_run(tmp_path: Path):
+    from pickfit.verify.agent import OPERATE_MAX, CommandRecord, VerifyAgent
+
+    agent = VerifyAgent(desktop_task(), OperateBox(tmp_path / "home"), runs_dir=tmp_path, log=lambda s: None)
+    agent.started = agent.clock()
+
+    def done(feature: int) -> CommandRecord:
+        return CommandRecord(1, "operate_gui", LAUNCH, 1, 1.0, operate={"spec": {"feature": feature}})
+
+    agent.report.commands += [done(1), done(1)]
+    refused = agent._operate_gui(operate_args(feature=1), 3)
+    assert "F1 has had its 2 operations" in refused and agent.commands_used == 0  # refused before it ran
+    agent.report.commands += [done(n) for n in range(2, 2 + OPERATE_MAX)]
+    assert "used its 6 operations" in agent._operate_gui(operate_args(feature=9), 3)

@@ -72,6 +72,7 @@ MAX_NUDGES = 2
 MAX_FINISH_RETRIES = 1  # a finish the log does not support goes back to the model once
 WRAP_UP_SECONDS = 90  # leave this much of the time limit for the finish-only turn
 OPERATE_RESERVE_S = 300  # operate_gui: the operator's turns take minutes; none starts without them
+OPERATE_MAX, OPERATE_PER_FEATURE = 6, 2  # operate_gui calls per run, and per listed feature
 
 _ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b[@-Z\\-_]")
 
@@ -436,10 +437,15 @@ an image tool: open ~/pickfit-in/photo.png (sample png), export ~/pickfit-out/ph
 a model browser: download the smallest GGUF it lists, check folder ~/ for format gguf; a document search: an \
 input file holding {nonce}, search for {nonce}, check screen_text for the input file's name; a converter: \
 check the converted text, not the text typed. \
+A check must hold the feature's own result: a file it saved or exported, text it converted, computed or \
+generated, a value it copied, or something it created and then lists or stores. Never a heading, a label, a \
+menu or the name of a screen: opening a screen shows nothing about a feature, a screen_text result must not \
+be on the screen before the first action, and pickfit's feature judge refuses such checks. \
 A passing operate_gui is the only way a GUI app reaches level function: cite it as a smoke test with \
 expected_signal `gui check: passed` and in features as checked. A goal that needs an account, a key, a \
 microphone, a camera, a GPU or a model download larger than about 300 MB is not a check: report that feature \
-not_checked with the reason. One retry of a failed operate_gui with a clearer goal is fine; then move on. This box has no user namespaces, so Chromium and Electron apps usually need --no-sandbox \
+not_checked with the reason; if no listed feature can show a result here, operate nothing (the launch is \
+install). At most two operate_gui per feature and six per run: one retry with a clearer goal, then move on. This box has no user namespaces, so Chromium and Electron apps usually need --no-sandbox \
 here: add it only if the app fails without it, and record it as a pitfall of kind sandbox (this box's need, \
 not the app's). A Tkinter \
 app needs /usr/bin/python3 (it has tkinter; python3.12 on PATH does not): make its venv with \
@@ -1049,6 +1055,11 @@ class VerifyAgent:
             self._say(f"  ◈ {_one_line(args.goal, 120)} → refused (time)")
             return "error: too little time is left for an operation (a few minutes). Call finish."
         problems = spec_problems(args)
+        done = [c.operate["spec"].get("feature") for c in self.report.commands if c.operate]
+        if len(done) >= OPERATE_MAX:
+            problems.append(f"this run has used its {OPERATE_MAX} operations")
+        elif args.feature is not None and done.count(args.feature) >= OPERATE_PER_FEATURE:
+            problems.append(f"feature F{args.feature} has had its {OPERATE_PER_FEATURE} operations; report it")
         if problems:  # nothing ran: not budgeted
             self._say(f"  ◈ {_one_line(args.goal, 120)} → refused ({_one_line(problems[0], 120)})")
             return "error: pickfit cannot run this operation as asked:\n" + "\n".join(f"- {p}" for p in problems)
