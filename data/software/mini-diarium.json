@@ -72,13 +72,17 @@
       "first_task": "flatpak run io.github.fjrevoredo.mini-diarium"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-mini-diarium-20261102-011046-159e",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub io.github.fjrevoredo.mini-diarium",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "Add Flathub remote per-user"
+        },
+        {
+          "command": "flatpak install --user -y flathub io.github.fjrevoredo.mini-diarium",
+          "purpose": "Install Mini Diarium via Flatpak"
         }
       ],
       "manual_steps": [],
@@ -113,10 +117,104 @@
     "url": "https://github.com/fjrevoredo/mini-diarium/releases/tag/v0.7.6"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T01:13:25.269318+08:00",
+    "runs": [
+      {
+        "id": "verify-mini-diarium-20261102-011046-159e",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T01:13:25.269318+08:00",
+        "tool_version": "0.7.6",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "Add Flathub remote per-user"
+          },
+          {
+            "command": "flatpak install --user -y flathub io.github.fjrevoredo.mini-diarium",
+            "purpose": "Install Mini Diarium via Flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run io.github.fjrevoredo.mini-diarium",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows Mini Diarium's main empty journal library prompting to create a new journal or open an existing one.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mini-diarium-20261102-011046-159e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mini-diarium-20261102-011046-159e/replay-6-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.053925,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "flatpak run io.github.fjrevoredo.mini-diarium",
+          "window_title": "Mini Diarium",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "encrypt journal entries with AES-256-GCM",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "write rich text entries with images",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "navigate entries via calendar",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "import and export journal entries",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -405,5 +503,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:43+08:00",
-  "updated_at": "2026-11-02T01:10:20+08:00"
+  "updated_at": "2026-11-02T01:13:25.272053+08:00"
 }

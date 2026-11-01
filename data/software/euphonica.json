@@ -86,9 +86,78 @@
   "last_release": null,
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "suspected_tool_fault",
+    "checked_at": "2026-11-02T01:18:04.865700+08:00",
+    "runs": [
+      {
+        "id": "verify-euphonica-20261102-011619-145d",
+        "level": "unverified",
+        "unverified_reason": "suspected_tool_fault",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T01:18:04.865700+08:00",
+        "tool_version": "0.99.8-beta",
+        "install_method": "other",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "Add Flathub remote for user"
+          },
+          {
+            "command": "flatpak install --user -y flathub io.github.htkhiem.Euphonica",
+            "purpose": "Install Euphonica flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "dbus-run-session -- flatpak run io.github.htkhiem.Euphonica",
+            "expected_signal": "gui tier: window",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "exit_code 134",
+            "setup": [
+              {
+                "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "flatpak install --user -y flathub io.github.htkhiem.Euphonica",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak run io.github.htkhiem.Euphonica",
+            "actually_needed": "wrap launch with dbus session in this box: dbus-run-session -- flatpak run io.github.htkhiem.Euphonica (first launch without session bus failed with Gtk-WARNING Unable to acquire session bus)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Flatpak bundles MPD and runs standalone with no extra system requirements stated",
+            "actually_needed": "a running PipeWire daemon; without it the app aborts in get_pipewire_devices (utils.rs:686 context.connect unwrap with CreationFailed) instead of starting",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": "suspected tool fault, not proven: nothing checked further (the log names no failing command); App panics on startup without PipeWire: thread 'main' panicked at src/utils.rs:686:38: called Result::unwrap() on Err(CreationFailed) (context.connect(None).unwrap() in get_pipewire_devices) after \"Generating a default MPD config file...\"",
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-euphonica-20261102-011619-145d/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.136572
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -345,5 +414,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:43+08:00",
-  "updated_at": "2026-11-02T01:10:20+08:00"
+  "updated_at": "2026-11-02T01:18:04.866872+08:00"
 }

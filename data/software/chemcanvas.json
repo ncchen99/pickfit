@@ -63,18 +63,22 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "other",
+      "basis": "replayed",
+      "run_id": "verify-chemcanvas-20261102-011417-c868",
+      "method": "binary",
       "steps": [
         {
-          "command": "flatpak install flathub io.github.ksharindam.chemcanvas",
-          "purpose": null
+          "command": "curl -L -o /home/sbx/ChemCanvas-x86_64.AppImage https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage",
+          "purpose": "Download ChemCanvas AppImage release"
+        },
+        {
+          "command": "chmod +x /home/sbx/ChemCanvas-x86_64.AppImage",
+          "purpose": "Make AppImage executable"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "flatpak run io.github.ksharindam.chemcanvas"
+      "first_task": "/home/sbx/ChemCanvas-x86_64.AppImage --appimage-extract-and-run"
     },
     "windows": null
   },
@@ -91,10 +95,110 @@
     "url": "https://github.com/ksharindam/chemcanvas/releases/tag/v0.14.8"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T01:15:27.654149+08:00",
+    "runs": [
+      {
+        "id": "verify-chemcanvas-20261102-011417-c868",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T01:15:27.654149+08:00",
+        "tool_version": "0.14.8",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -L -o /home/sbx/ChemCanvas-x86_64.AppImage https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage",
+            "purpose": "Download ChemCanvas AppImage release"
+          },
+          {
+            "command": "chmod +x /home/sbx/ChemCanvas-x86_64.AppImage",
+            "purpose": "Make AppImage executable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "/home/sbx/ChemCanvas-x86_64.AppImage --appimage-extract-and-run",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "AppImage can be run without installing. Just mark it executable, and then double click.",
+            "actually_needed": "In this box (no FUSE) run with --appimage-extract-and-run",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows ChemCanvas chemical drawing editor with menus, element and bond toolbars, templates panel, and empty canvas ready for editing.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-chemcanvas-20261102-011417-c868/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-chemcanvas-20261102-011417-c868/replay-5-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.035388,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "/home/sbx/ChemCanvas-x86_64.AppImage --appimage-extract-and-run",
+          "window_title": "ChemCanvas - 0.14.8",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "import and export chemical file formats",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "save drawings to PDF, PNG and SVG",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "download structures from PubChem",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "detect aromaticity and add delocalization ring",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -367,5 +471,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:44+08:00",
-  "updated_at": "2026-11-02T01:10:20+08:00"
+  "updated_at": "2026-11-02T01:15:27.655401+08:00"
 }
