@@ -453,7 +453,10 @@ not a check: report it not_checked with the code that names our box's limit, nev
 needs_hardware (a microphone, camera or device), needs_more_resources (a model or download over about 300 MB, \
 or too big or slow here), needs_account (an account or key), needs_service (an outside service or server, \
 game or media data the box does not have). If no listed feature can show a result here, operate nothing (the \
-launch is install). At most two operate_gui per feature and six per run: one retry with a clearer goal, then move on. This box has no user namespaces, so Chromium and Electron apps usually need --no-sandbox \
+launch is install).
+A Flatpak app here cannot open a file dialog (the box runs no desktop portal): give it a file on the command line \
+(flatpak run --filesystem=home <app id> ~/pickfit-in/<file>), look for what it keeps itself with a folder search \
+of ~/.var/app/<app id>/, and report a feature that works only through a file dialog not_checked with needs_service. At most two operate_gui per feature and six per run: one retry with a clearer goal, then move on. This box has no user namespaces, so Chromium and Electron apps usually need --no-sandbox \
 here: add it only if the app fails without it, and record it as a pitfall of kind sandbox (this box's need, \
 not the app's). A Tkinter \
 app needs /usr/bin/python3 (it has tkinter; python3.12 on PATH does not): make its venv with \
