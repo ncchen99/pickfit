@@ -245,3 +245,35 @@ def test_typed_text_counts_only_when_the_app_rendered_it_outside_inputs():
 def test_a_result_shown_in_a_read_only_field_counts():
     after = {"text": "Amount\nResult", "output_values": "92.54 EUR"}
     assert wv.check_result(outcome("text_on_page", "92.54 EUR"), "Amount\nResult", after, [], ["100"])["passed"]
+
+
+def test_the_task_forbids_acting_in_public():
+    task = wv.task_text(TARGET, "pickfitab12", ["/home/web/samples/sample.txt"], 10)
+    assert "Never do anything other people could see" in task and "multiplayer" in task
+
+
+def _shot(path: Path) -> Path:
+    Image.new("RGB", (10, 10), "white").save(path)
+    return path
+
+
+def test_text_drawn_outside_the_dom_counts_when_only_the_after_screenshot_shows_it(tmp_path: Path):
+    before, after = _shot(tmp_path / "before.png"), _shot(tmp_path / "after.png")
+    missing = {"passed": False, "kind": "text_on_page", "why": "the claimed text is not on the page"}
+    claim = outcome("text_on_page", "Score: 120")
+
+    def reader(png, sought, **kw):
+        return wv.ScreenRead(shown=png.name == "after.png", read="Score: 120" if png.name == "after.png" else ""), 0.004
+
+    check, cost = wv.screenshot_check(missing, claim, before, after, [], run_id="r", scope="s", reader=reader)
+    assert check["passed"] and check["read_from_screenshot"] and cost == pytest.approx(0.008)
+
+    def credulous(png, sought, **kw):  # sees whatever it is told: the before screenshot catches it
+        return wv.ScreenRead(shown=True, read=sought), 0.004
+
+    assert not wv.screenshot_check(missing, claim, before, after, [], run_id="r", scope="s", reader=credulous)[0]["passed"]
+    typed = wv.screenshot_check(missing, outcome("text_on_page", "pickfitab12"), before, after, ["pickfitab12"],
+                                run_id="r", scope="s", reader=reader)
+    assert not typed[0]["passed"] and typed[1] == 0.0, "typed text is never read back as a result"
+    other = {"passed": False, "kind": "text_on_page", "why": "the claimed text was on the page before the agent acted"}
+    assert wv.screenshot_check(other, claim, before, after, [], run_id="r", scope="s", reader=reader)[1] == 0.0

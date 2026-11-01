@@ -251,6 +251,7 @@ def crawl_delay(parser: urllib.robotparser.RobotFileParser) -> float | None:
 @dataclass(frozen=True)
 class Policy:
     site: str  # the registrable domain under test
+    nonce: str | None = None  # the run's marker: never sent over a WebSocket (other people would see it)
     robots_txt: str | None = None
     robots_status: int | None = 404
     offline: bool = False
@@ -375,6 +376,14 @@ def decide(req: Request, policy: Policy) -> Decision:
     return ALLOW
 
 
+def websocket_refused(text: str, policy: Policy) -> str | None:
+    """A WebSocket message the page sends is dropped when it carries the run's marker: in multiplayer and
+    collaborative apps that is what other people would see (a name, a chat line, a shared item)."""
+    if policy.nonce and any(f in text or f.lower() in text.lower() for f in encodings(policy.nonce)):
+        return "typed text over a WebSocket (other people could see it)"
+    return None
+
+
 # ---------------------------------------------------------------- what left the device
 
 
@@ -444,7 +453,7 @@ class Guard:
     def __init__(self, config_path: str, log_path: str, offline_flag: str) -> None:
         with open(config_path, encoding="utf-8") as f:
             config = json.load(f)
-        self.policy = Policy(site=config["site"], robots_txt=config.get("robots_txt"),
+        self.policy = Policy(site=config["site"], nonce=config.get("nonce"), robots_txt=config.get("robots_txt"),
                              robots_status=config.get("robots_status"))
         self.log_path = log_path
         self.offline_flag = offline_flag
@@ -466,7 +475,8 @@ class Guard:
         headers = {k.lower(): v for k, v in req.headers.items()}
         body = req.raw_content or b""
         r = Request(method=req.method, url=req.pretty_url, headers=headers, body=body)
-        policy = Policy(self.policy.site, self.policy.robots_txt, self.policy.robots_status, self._offline())
+        policy = Policy(self.policy.site, self.policy.nonce, self.policy.robots_txt, self.policy.robots_status,
+                        self._offline())
         decision = decide(r, policy)
         if policy.offline:  # fail like a cut cable, not with a page: a service worker falls back on errors only
             self._write(FlowLog(method=r.method, url=r.url[:2000], host=r.host, site=registrable(r.host),
@@ -506,8 +516,11 @@ class Guard:
         text = message.content[:BODY_SCAN_BYTES].decode("utf-8", "replace") if isinstance(message.content, bytes) \
             else str(message.content)[:BODY_SCAN_BYTES]
         host = flow.request.host
+        why = websocket_refused(text, self.policy)
+        if why:
+            message.drop()
         self._write(FlowLog(method="WS", url=flow.request.pretty_url[:2000], host=host, site=registrable(host),
-                            kind="websocket", allowed=True, reason="", ws=text, size=len(text)))
+                            kind="websocket", allowed=not why, reason=why or "", ws=text, size=len(text)))
 
 
 def _addons() -> list[Any]:

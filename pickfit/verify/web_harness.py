@@ -43,6 +43,15 @@ TEXT_LIMIT = 12_000
 VIEWPORT = (1280, 900)
 ELEMENTS_CHARS = 12_000  # browser-use's element list per step (default 40,000): most of each call's tokens
 EXCLUDED_ACTIONS = ["search", "evaluate", "save_as_pdf", "write_file", "replace_file", "read_file"]
+# Controls that make the visitor visible to other people (multiplayer lines and rooms, chats, posts, shares,
+# votes) or that sign up, buy or book: never clicked, even when no form is sent (burger-person, 11/2).
+PUBLIC_ACTIONS = ("post", "publish", "share", "send", "tweet", "comment", "reply", "invite", "join", "go live",
+                  "make public", "get in line", "emote", "chat", "message", "sign up", "signup", "register",
+                  "log in", "login", "sign in", "subscribe", "buy", "checkout", "check out", "donate",
+                  "follow", "like", "upvote", "vote", "claim", "create account", "add to cart")
+# Fields whose text other people would see, besides credentials: never typed into.
+PUBLIC_FIELD_HINTS = ("nickname", "display name", "player name", "screen name", "handle", "your name", "chat",
+                      "message", "comment", "reply", "caption", "username")
 CREDENTIAL_HINTS = ("password", "passwd", "email", "e-mail", "phone", "mobile", "card", "cvv", "cvc", "iban",
                     "username", "user name", "login", "otp", "one-time", "verification code", "ssn")
 
@@ -273,33 +282,67 @@ def downloads(since: float) -> list[dict[str, Any]]:
 # ---------------------------------------------------------------- browser-use
 
 
+POINT_JS = r"""((x, y) => { const el = document.elementFromPoint(x, y);
+  const c = el && (el.closest('button,a,[role=button],input,label') || el);
+  return JSON.stringify(c ? {text: (c.innerText || c.value || '').slice(0, 80), attrs: {
+    'aria-label': c.getAttribute('aria-label') || '', type: c.getAttribute('type') || '',
+    title: c.getAttribute('title') || ''}} : {}); })(%s, %s)"""
+
+
+async def action_refused(name: str, params: dict[str, Any], browser_session: Any) -> str | None:
+    """pickfit's check of one browser-use action before it runs: typing and clicking (see the two rules above)."""
+    if name not in ("input", "click"):
+        return None
+    if params.get("index") is not None:
+        node = await browser_session.get_element_by_index(params["index"])
+        attrs = (node.attributes or {}) if node else {}
+        if name == "input":
+            return typing_refused(attrs, str(params.get("text", "")))
+        label = node.get_all_children_text(max_depth=3)[:120] if node else ""
+        return click_refused(label, attrs)
+    if name == "click" and params.get("coordinate_x") is not None:
+        found = await evaluate(browser_session, POINT_JS % (float(params["coordinate_x"]), float(params["coordinate_y"])))
+        return click_refused((found or {}).get("text", ""), (found or {}).get("attrs", {}))
+    return None
+
+
 def make_tools() -> Any:
-    """browser-use's tools minus web search, JavaScript and its scratch files; typing refuses credential fields."""
+    """browser-use's tools minus web search, JavaScript and its scratch files; every typing and click action is
+    checked first (action_refused) and refused with an error the agent sees."""
     from browser_use import Tools
     from browser_use.agent.views import ActionResult
-    from browser_use.browser import BrowserSession
-    from browser_use.tools.views import InputTextAction
 
-    tools = Tools(exclude_actions=EXCLUDED_ACTIONS)
-    original = tools.registry.registry.actions["input"].function
+    class GuardedTools(Tools):
+        async def act(self, action: Any, browser_session: Any, *args: Any, **kwargs: Any) -> Any:
+            for name, params in action.model_dump(exclude_unset=True).items():
+                try:
+                    why = await action_refused(name, params or {}, browser_session)
+                except Exception as err:  # the element vanished: let browser-use report it as usual
+                    log(f"action check skipped: {type(err).__name__}: {err}")
+                    why = None
+                if why:
+                    log(f"refused {name}: {why}")
+                    return ActionResult(error=f"pickfit refuses this {name}: {why}. Do not sign up, log in, buy, "
+                                              "book, post, share, chat, join public rooms or type personal data; "
+                                              "use the site's tool on your own.")
+            return await super().act(action, browser_session, *args, **kwargs)
 
-    @tools.registry.action(
-        "Input text into element by index. Clears existing text by default; pass text=\"\" to clear only, or "
-        "clear=False to append. Never type into password, email, phone, card or login fields.",
-        param_model=InputTextAction,
-    )
-    async def input(params: InputTextAction, browser_session: BrowserSession, has_sensitive_data: bool = False,
-                    sensitive_data: dict[str, str | dict[str, str]] | None = None) -> Any:
-        node = await browser_session.get_element_by_index(params.index)
-        why = typing_refused((node.attributes or {}) if node else {}, params.text)
-        if why:
-            log(f"refused typing: {why}")
-            return ActionResult(error="pickfit refuses typing into credential, contact or login fields and typing "
-                                      "personal data. Use the site's tool without an account.")
-        return await original(params=params, browser_session=browser_session, has_sensitive_data=has_sensitive_data,
-                              sensitive_data=sensitive_data)
+    return GuardedTools(exclude_actions=EXCLUDED_ACTIONS)
 
-    return tools
+
+def click_refused(label: str, attributes: dict[str, Any]) -> str | None:
+    """Why clicking a control with this visible label and these attributes is refused, or None.
+
+    Only short labels are read (a control's own words, not a whole card), as whole words."""
+    import re
+
+    attrs = {str(k).lower(): str(v).lower() for k, v in attributes.items()}
+    text = " ".join([label or "", attrs.get("aria-label", ""), attrs.get("value", ""), attrs.get("title", "")])
+    text = " ".join(text.lower().split())[:80]
+    for word in PUBLIC_ACTIONS:
+        if re.search(rf"(?<![a-z]){re.escape(word)}(?![a-z])", text):
+            return f"'{word}' would act in public or sign up, buy or book ({text[:60]})"
+    return None
 
 
 def typing_refused(attributes: dict[str, Any], text: str) -> str | None:
@@ -314,6 +357,8 @@ def typing_refused(attributes: dict[str, Any], text: str) -> str | None:
                                                      "aria-label", "inputmode"))
     if attrs.get("type") in ("password", "email", "tel") or any(h in described for h in CREDENTIAL_HINTS):
         return f"a credential, contact or login field ({described.strip()[:80]})"
+    if any(h in described for h in PUBLIC_FIELD_HINTS):
+        return f"a field other people would see ({described.strip()[:80]})"
     if re.search(r"[\w.+-]+@[\w-]+\.[\w.]+", text):
         return "an email address"
     if re.search(r"\b(?:\d[ -]?){13,19}\b", text):

@@ -61,3 +61,27 @@ def test_typing_into_credential_fields_or_typing_personal_data_is_refused(attrs,
                                         ({}, "Naruto")])
 def test_ordinary_inputs_are_typed(attrs, text):
     assert web_harness.typing_refused(attrs, text) is None
+
+
+@pytest.mark.parametrize("label,attrs", [
+    ("Get in line", {}), ("Post", {}), ("Share", {}), ("Send", {}), ("Join game", {}), ("Invite friends", {}),
+    ("", {"aria-label": "Like"}), ("Vote", {}), ("Sign up free", {}), ("Log in", {}), ("Claim your page", {}),
+    ("Add to cart", {}), ("Follow", {}), ("Emote", {}), ("Go live", {}),
+])
+def test_controls_that_act_in_public_or_sign_up_are_not_clicked(label, attrs):
+    assert web_harness.click_refused(label, attrs)
+
+
+@pytest.mark.parametrize("label,attrs", [
+    ("Convert", {}), ("Generate", {}), ("Easy (36 clues)", {}), ("Download PNG", {}), ("Add card", {}),
+    ("Sort order", {}), ("Compress", {}), ("Postprocess", {}), ("Unlikely", {}), ("Next", {"type": "submit"}),
+])
+def test_ordinary_controls_are_clicked(label, attrs):
+    assert web_harness.click_refused(label, attrs) is None
+
+
+@pytest.mark.parametrize("attrs", [{"placeholder": "Your nickname"}, {"aria-label": "Chat message"},
+                                   {"name": "display_name", "placeholder": "Display name"},
+                                   {"placeholder": "Write a comment"}])
+def test_fields_other_people_would_see_are_not_typed_into(attrs):
+    assert web_harness.typing_refused(attrs, "pickfitab12")

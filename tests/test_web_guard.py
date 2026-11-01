@@ -256,3 +256,13 @@ def test_chrome_background_requests_are_refused_and_not_counted():
     page_signin = req("POST", "https://accounts.google.com/o/oauth2/token", {"sec-fetch-mode": "cors",
                                                                            "sec-fetch-site": "cross-site"}, "{}")
     assert "sign-in" in decide(page_signin, SITE).reason, "a page's own sign-in call is still a side effect"
+
+
+def test_websocket_messages_carrying_the_marker_are_dropped():
+    from pickfit.verify.web_guard import websocket_refused
+
+    policy = Policy(site="example.com", nonce="pickfitab12")
+    assert websocket_refused('{"op":"join","name":"pickfitab12"}', policy)
+    assert websocket_refused('42["chat","cGlja2ZpdGFiMTI"]', policy), "base64 of the marker too"
+    assert websocket_refused('{"op":"move","x":3}', policy) is None
+    assert websocket_refused('{"name":"pickfitab12"}', Policy(site="example.com")) is None
