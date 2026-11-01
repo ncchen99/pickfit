@@ -57,18 +57,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-sessionmem-20261101-133607-91bf",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g sessionmem",
-          "purpose": null
+          "purpose": "install sessionmem via npm install -g sessionmem"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "sessionmem doctor"
+      "check": {
+        "command": "sessionmem ping",
+        "expected_signal": "sessionmem is operational"
+      },
+      "first_task": "sessionmem ping"
     },
     "linux": {
       "basis": "replayed",
@@ -117,7 +120,7 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:09:53.582726+08:00",
+    "checked_at": "2026-11-01T13:39:18.241375+08:00",
     "runs": [
       {
         "id": "verify-sessionmem-20261101-000851-5845",
@@ -232,6 +235,190 @@
           "called_tool": "stats",
           "offline": true
         }
+      },
+      {
+        "id": "verify-sessionmem-20261101-133607-91bf",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T13:39:18.241375+08:00",
+        "tool_version": "1.10.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g sessionmem",
+            "purpose": "install sessionmem via npm install -g sessionmem"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "sessionmem ping",
+            "expected_signal": "sessionmem is operational",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "message: sessionmem is operational (database reachable).",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- sessionmem run",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call storeMemory --args '{\"memoryId\":\"test-f1-id\",\"sessionId\":\"test-session-1\",\"sourceAdapter\":\"test\",\"kind\":\"decision\",\"content\":\"Test decision: use Postgres for sessionmem verification\",\"importance\":5}' -- sessionmem run",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=storeMemory content=text text_chars=749",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call ingestSessionEvents --args '{\"sessionId\":\"test-session-2\",\"events\":[{\"id\":\"evt1\",\"eventType\":\"tool_use\",\"payloadJson\":\"{\\\"tool\\\":\\\"bash\\\",\\\"input\\\":\\\"echo hello\\\"}\"}]}' -- sessionmem run",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=ingestSessionEvents content=text text_chars=33",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call startup_inject_memories --args '{}' -- sessionmem run",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=startup_inject_memories content=text text_chars=205",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call searchMemoryIndex --args '{\"query\":\"Postgres\"}' -- sessionmem run",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=searchMemoryIndex content=text text_chars=261",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm install -g sessionmem without allowScripts warning",
+            "actually_needed": "better-sqlite3 prebuild warning appears but install still succeeds and sessionmem --version works",
+            "kind": "note"
+          },
+          {
+            "readme_said": "sessionmem doctor expects PASS",
+            "actually_needed": "doctor fails on auto-start, store and checkpoint until sessionmem ping initializes DB and autostart enabled",
+            "kind": "note"
+          },
+          {
+            "readme_said": "ingestSessionEvents example informal",
+            "actually_needed": "tool requires events with id, eventType, payloadJson (JSON string) not tool/input shape",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show ping reporting operational, MCP handshake with 15 tools, and successful storeMemory call.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-sessionmem-20261101-133607-91bf/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-sessionmem-20261101-133607-91bf/check-1-cmd5.judged.png",
+            "runs/verify/verify-sessionmem-20261101-133607-91bf/check-2-cmd6.judged.png",
+            "runs/verify/verify-sessionmem-20261101-133607-91bf/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.080691,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "sessionmem",
+            "run"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "sessionmem",
+          "server_version": "1.10.1",
+          "tools": [
+            "searchMemoryIndex",
+            "memoryTimeline",
+            "retrieveMemories",
+            "storeMemory",
+            "listMemories",
+            "getMemory",
+            "forgetMemory",
+            "stats",
+            "resetAccessCounts",
+            "batchStoreMemory",
+            "ingestSessionEvents",
+            "summarizeSessionToMemory",
+            "handleSessionEnd",
+            "fetch_memories",
+            "startup_inject_memories"
+          ],
+          "tool_count": 15,
+          "called_tool": "storeMemory",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "store project decisions across sessions",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "capture session events while working",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "load relevant memories at session start",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "search stored memories by text",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -655,5 +842,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:25+08:00",
-  "updated_at": "2026-11-01T00:45:12+08:00"
+  "updated_at": "2026-11-01T13:39:18.249495+08:00"
 }
