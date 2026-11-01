@@ -417,7 +417,9 @@ with Open for apps Gatekeeper accepts as notarized, as a user does. An app Gatek
 "Not Opened") stays blocked: only if the app's own docs tell users to get past that (Open Anyway in System \
 Settings, right-click Open, or xattr), remove its quarantine with `xattr -dr com.apple.quarantine \
 ~/Applications/<App>.app` as a cited step (Open Anyway needs an admin, which you are not), and record a pitfall \
-saying the app is not notarized. Only Homebrew casks and browsers mark downloads with a quarantine: an app you \
+saying the app is not notarized. A download or installer may take up to 30 minutes here: give it run_command \
+timeout_s up to 1800 (a 1 GB file at 1.4 MB/s needs about 13 minutes). \
+Only Homebrew casks and browsers mark downloads with a quarantine: an app you \
 fetched with curl has none, so never cite xattr for it. A launch stops every process you started (servers too; macOS's own desktop \
 stays), so start servers again after it. A GUI launch supports level install at most, whatever the window shows: \
 pickfit's judge reads the screenshot itself, and a GUI app is never function from a launch. Launch it even if \

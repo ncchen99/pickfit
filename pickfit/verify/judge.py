@@ -274,8 +274,12 @@ def app_area(windows: list[dict[str, Any]]) -> tuple[int, int, int, int] | None:
 
 def judge_gui(name: str, check: CheckResult, out_dir: Path, *, model: str | None = None,
               run_id: str | None = None, scope: str | None = None, scope_cap_usd: float | None = None,
-              log: Callable[[str], None] = print, **call_kwargs: Any) -> JudgeResult | None:
-    """Ask the judge what a GUI launch's real screenshot shows; None when the launch has none."""
+              log: Callable[[str], None] = print, about: str | None = None,
+              **call_kwargs: Any) -> JudgeResult | None:
+    """Ask the judge what a GUI launch's real screenshot shows; None when the launch has none.
+
+    about: what the software is (the extraction's summary), so the judge knows what the app's own UI looks like:
+    a dictation app named Quassel had its menu judged "a system dictation menu, not Quassel's" (11/1)."""
     run = check.run
     if run is None or not run.screenshot or not Path(run.screenshot).exists():
         return None
@@ -299,6 +303,8 @@ def judge_gui(name: str, check: CheckResult, out_dir: Path, *, model: str | None
         "app's own windows cover.",
         f"Started with `{_escape(check.command[:600])}`; network {'off' if not run.network else 'on'}.",
         *([f"pickfit's note: {_escape(clicked[0])}."] if clicked else []),
+        *([f'<source kind="what the software is, from its README">\n{_escape(about[:400])}\n</source>']
+          if about else []),
         f'<source kind="window sizes and titles (titles are set by the app)">\n{_escape(windows)}\n</source>',
         f'<source kind="app output">\n{_escape(log_tail)}\n</source>',
         "Return evidence boxes as [x_min, y_min, x_max, y_max] in coordinates normalized to 0-1000 over the "

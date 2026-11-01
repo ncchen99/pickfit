@@ -6,6 +6,7 @@ import argparse
 import json
 
 LIFETIME_MARGIN_S = 120  # the box outlives the agent's time limit, so the last turn still has it
+MAC_GUI_AGENT_S = 45 * 60  # tart + display: room for a desktop app's long download (tart_box.GUI_COMMAND_S)
 TART_MAX_VMS = 2  # Apple's limit on macOS VMs running at once on one Mac
 VBOX_MAX_VMS = 1  # one Windows base, reset from its snapshot for every box
 
@@ -73,9 +74,10 @@ def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", 
     if runner == "tart":
         if gpu:
             raise ValueError("--gpu needs --runner modal")
-        from pickfit.verify.tart_box import TartBox
+        from pickfit.verify.tart_box import GUI_COMMAND_S, TartBox
 
-        return lambda run_id, role: TartBox(limits=BoxLimits(lifetime_s=lifetime_s), display=display)
+        longer = {"max_command_s": GUI_COMMAND_S} if display else {}
+        return lambda run_id, role: TartBox(limits=BoxLimits(lifetime_s=lifetime_s, **longer), display=display)
     if runner == "vbox":
         if gpu:
             raise ValueError("--gpu needs --runner modal")
@@ -142,6 +144,8 @@ def run(args: argparse.Namespace) -> int:
     if args.gpu and args.runner != "modal":
         print("pickfit verify: --gpu needs --runner modal")
         return 2
+    if args.runner == "tart" and args.display:
+        limits = replace(limits, max_seconds=max(limits.max_seconds, MAC_GUI_AGENT_S))
     make_box = box_factory(args.runner, int(limits.max_seconds) + LIFETIME_MARGIN_S, platform=args.platform,
                            gpu=args.gpu, runtime=args.runtime, display=args.display)
     if args.batch:

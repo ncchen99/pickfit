@@ -94,6 +94,9 @@ BASE_VM = "pickfit-macos-26"
 GUI_BASE_VM = f"{BASE_VM}-gui"
 GUI_DISPLAY = "1280x800px"  # pixels, so macOS runs it at 1x: framebuffer, window bounds and the judge's 1280x800 agree
 DESKTOP_WAIT_S = 120  # after the agent answers, until sbx's Dock and Finder run
+# A GUI box's longest command: a desktop app's own download or installer can run past 10 minutes (yana-ai's DMG at
+# 1.4 MB/s needed ~760 s, local-transcriber's installer fetches speech models). The VM is local: time costs nothing.
+GUI_COMMAND_S = 1800
 VNC_URL_WAIT_S = 30
 # ulimit -u counts every process of the uid, and sbx's desktop session alone runs 230-270 (measured 11/1; macOS
 # caps a uid at 1333): a GUI box's commands get this many more, or brew and hdiutil cannot fork.

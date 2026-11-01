@@ -219,8 +219,11 @@ def test_the_judge_reads_a_macos_launch_in_macos_terms_with_pickfits_menu_bar_no
                                parse_error=None)
 
     monkeypatch.setattr(judge, "call_meta", fake_call)
-    result = judge.judge_gui("X", check, tmp_path, model="dev", log=lambda s: None)
+    result = judge.judge_gui("X", check, tmp_path, model="dev", log=lambda s: None,
+                             about="Local push-to-talk voice typing that types at the cursor.")
     assert result is not None and result.verdict == "working"
+    assert ('<source kind="what the software is, from its README">\nLocal push-to-talk voice typing'
+            in seen["body"]["input"][0]["content"][0]["text"])
     assert seen["body"]["instructions"] == judge.MAC_GUI_INSTRUCTIONS and "macOS" in judge.MAC_GUI_INSTRUCTIONS
     text = seen["body"]["input"][0]["content"][0]["text"]
     assert "pickfit's note: the app showed no window but a menu bar item: pickfit clicked it at 1044,15" in text
@@ -230,3 +233,18 @@ def test_the_judge_reads_a_macos_launch_in_macos_terms_with_pickfits_menu_bar_no
                     model="dev", log=lambda s: None)
     assert seen["body"]["instructions"] == judge.GUI_INSTRUCTIONS
     assert "pickfit's note" not in seen["body"]["input"][0]["content"][0]["text"]
+
+
+def test_a_macos_gui_box_allows_long_downloads_and_its_replay_follows():
+    from types import SimpleNamespace
+
+    from pickfit.verify.cli import box_factory
+    from pickfit.verify.replay import COMMAND_TIMEOUT_S, Replayer
+    from pickfit.verify.tart_box import GUI_COMMAND_S
+
+    gui_box = box_factory("tart", 3000, display=True)("run", "agent")
+    cli_box = box_factory("tart", 3000)("run", "agent")
+    assert gui_box.limits.max_command_s == GUI_COMMAND_S == 1800 and cli_box.limits.max_command_s == 600
+    assert Replayer(gui_box, log=lambda s: None).timeout == GUI_COMMAND_S
+    assert Replayer(SimpleNamespace(limits=SimpleNamespace(max_command_s=600)), log=lambda s: None).timeout == \
+        COMMAND_TIMEOUT_S

@@ -189,7 +189,8 @@ class Replayer:
                  command_timeout_s: int = COMMAND_TIMEOUT_S, evidence_dir: Path | None = None) -> None:
         self.box = box
         self.log = log
-        self.timeout = command_timeout_s
+        # A box that allows longer commands (a macOS GUI box: GUI_COMMAND_S) gives its install steps that long too.
+        self.timeout = max(command_timeout_s, getattr(getattr(box, "limits", None), "max_command_s", 0) or 0)
         self.evidence_dir = evidence_dir  # where launch_gui screenshots go
         self.launches = 0
 
