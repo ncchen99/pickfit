@@ -87,7 +87,7 @@ def listen_args(**check: Any) -> ListenArgs:
 def test_the_words_are_fresh_distinct_and_checked_as_whole_words_in_any_case():
     words = audio.new_words()
     assert len(set(words)) == 3 and all(w in audio.WORDS for w in words)
-    assert len(set(audio.WORDS)) == len(audio.WORDS) >= 190
+    assert len(set(audio.WORDS)) == len(audio.WORDS) >= 150
     assert audio.sentence(["apple", "tiger", "oven"]) == "I saw an apple, a tiger, and an oven.\n"
     assert audio.heard("I saw an Apple, a TIGER and an oven.", ["apple", "tiger", "oven"]) == [True, True, True]
     assert audio.heard("pineapples and tigers", ["apple", "tiger"]) == [False, False]  # whole words only

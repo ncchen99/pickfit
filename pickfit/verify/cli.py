@@ -50,6 +50,10 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--audio", action="store_true",
                    help="Modal: a simulated microphone (PulseAudio) and the listen tool: pickfit speaks fresh words "
                         "into it and checks them in what the tool produced")
+    v.add_argument("--memory-mb", type=int, default=None,
+                   help="Modal: the box's memory (default 2048), for a model that needs more")
+    v.add_argument("--file-mb", type=int, default=None,
+                   help="Modal: the largest file the box user may write (default 1536), for model weights")
     v.add_argument("--platform", default="linux/amd64", help="Docker platform (Modal runs x86_64)")
     v.add_argument("--keep-box", action="store_true", help="Docker: leave the agent's container running")
     v.add_argument("--write-back", action="store_true",
@@ -67,12 +71,14 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
 
 
 def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", gpu: str | None = None,
-                runtime: str = "gvisor", display: bool = False, audio: bool = False):
+                runtime: str = "gvisor", display: bool = False, audio: bool = False, memory_mb: int | None = None,
+                file_mb: int | None = None):
     """(run_id, role) -> an unstarted box of the chosen runner."""
     from pickfit.verify.box import BoxLimits, DockerBox
 
-    if runner != "modal" and (runtime != "gvisor" or display or audio):
-        raise ValueError("--runtime, --display and --audio need --runner modal")
+    if runner != "modal" and (runtime != "gvisor" or display or audio or memory_mb or file_mb):
+        raise ValueError("--runtime, --display, --audio, --memory-mb and --file-mb need --runner modal")
+    sized = {k: v for k, v in (("memory_mb", memory_mb), ("home_mb", file_mb)) if v}
     if runner == "tart":
         if gpu:
             raise ValueError("--gpu needs --runner modal")
@@ -89,8 +95,8 @@ def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", 
         from pickfit.verify.modal_box import ModalBox
 
         return lambda run_id, role: ModalBox(tags={"pickfit.run": run_id, "pickfit.role": role},
-                                             limits=BoxLimits(lifetime_s=lifetime_s), gpu=gpu, runtime=runtime,
-                                             display=display, audio=audio)
+                                             limits=BoxLimits(lifetime_s=lifetime_s, **sized), gpu=gpu,
+                                             runtime=runtime, display=display, audio=audio)
     if gpu:
         raise ValueError("--gpu needs --runner modal")
     return lambda run_id, role: DockerBox(platform=platform, labels={"pickfit.run": run_id, "pickfit.role": role},
@@ -123,8 +129,9 @@ def run(args: argparse.Namespace) -> int:
         return 0
     if args.rejudge_features:
         return _rejudge(args)
-    if (args.runtime != "gvisor" or args.display or args.audio) and args.runner != "modal":
-        print("pickfit verify: --runtime, --display and --audio need --runner modal")
+    if (args.runtime != "gvisor" or args.display or args.audio or args.memory_mb or args.file_mb) \
+            and args.runner != "modal":
+        print("pickfit verify: --runtime, --display, --audio, --memory-mb and --file-mb need --runner modal")
         return 2
     if args.limits_test:
         from pickfit.verify.agent import _runs_dir
@@ -134,8 +141,8 @@ def run(args: argparse.Namespace) -> int:
             print("pickfit verify: --gpu needs --runner modal")
             return 2
         results, _ = limits_test(box_factory(args.runner, 900, platform=args.platform, gpu=args.gpu,
-                                             runtime=args.runtime, display=args.display, audio=args.audio),
-                                 _runs_dir(None))
+                                             runtime=args.runtime, display=args.display, audio=args.audio,
+                                             memory_mb=args.memory_mb, file_mb=args.file_mb), _runs_dir(None))
         return 0 if all(r.ok for r in results) else 1
     if not args.fixture and not args.batch:
         print("pickfit verify: give --fixture or --batch N")
@@ -149,7 +156,8 @@ def run(args: argparse.Namespace) -> int:
         print("pickfit verify: --gpu needs --runner modal")
         return 2
     make_box = box_factory(args.runner, int(limits.max_seconds) + LIFETIME_MARGIN_S, platform=args.platform,
-                           gpu=args.gpu, runtime=args.runtime, display=args.display, audio=args.audio)
+                           gpu=args.gpu, runtime=args.runtime, display=args.display, audio=args.audio,
+                           memory_mb=args.memory_mb, file_mb=args.file_mb)
     if args.batch:
         if args.runner == "tart" and args.concurrency > TART_MAX_VMS:
             print(f"pickfit verify: macOS allows {TART_MAX_VMS} VMs at once; concurrency {args.concurrency} -> "

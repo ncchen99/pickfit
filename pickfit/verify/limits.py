@@ -51,7 +51,7 @@ from pathlib import Path
 
 from pickfit.ledger import taipei_now
 from pickfit.verify import audio, gui
-from pickfit.verify.box import Box, BoxError, ExecResult
+from pickfit.verify.box import Box, BoxError, BoxLimits, ExecResult
 
 PYPI = "curl -sS -I -m 15 -o /dev/null -w '%{http_code}' https://pypi.org/simple/pip/"
 # su admin in a pseudo-terminal, answering the password prompt with the image's default password.
@@ -849,9 +849,13 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
     timed = box.exec("sleep 30", 3)
     add(ProbeResult("command_timeout", timed.timed_out and timed.seconds < 15, "sleep 30 killed at 3 s",
                     timed.exit_code, timed.seconds, _detail(timed)))
-    big = "dd if=/dev/zero of=big.bin bs=1m count=1700" if macos else "head -c 1700M /dev/zero > big.bin"
+    # Over the box's own caps (the defaults: a 1.7 GB file over 1.5 GiB, 3 GiB of memory over 2 GiB).
+    lim = getattr(box, "limits", None) or BoxLimits()
+    over_mb = lim.home_mb + 164
+    big = f"dd if=/dev/zero of=big.bin bs=1m count={over_mb}" if macos else f"head -c {over_mb}M /dev/zero > big.bin"
     add(_probe(box, "file_size_cap", f"{big}; code=$?; ls -l big.bin; rm -f big.bin; "
-               "exit $code", 180, "a 1.7 GB file is cut off", lambda r: r.exit_code != 0))
+               "exit $code", max(180, over_mb // 10), f"a {over_mb / 1000:.1f} GB file is cut off",
+               lambda r: r.exit_code != 0))
     add(_probe(box, "process_cap",
                "python3 -c \"\nimport os, time\nn = 0\ntry:\n    while n < 2000:\n        if os.fork() == 0:\n"
                "            time.sleep(15); os._exit(0)\n        n += 1\nexcept OSError as e:\n"
@@ -860,10 +864,12 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
     if macos:
         return results
     # Last: on Modal the memory limit kills the whole sandbox, not just the process.
-    expect = "3 GiB allocation fails"
+    gib = (lim.memory_mb + 1024) / 1024
+    expect = f"{gib:g} GiB allocation fails"
     try:
-        add(_probe(box, "memory_cap", "python3 -c \"b = bytearray(3 * 1024**3); print('allocated 3 GiB')\"", 90,
-                   expect, lambda r: r.exit_code != 0 and "allocated" not in r.stdout))
+        add(_probe(box, "memory_cap", f"python3 -c \"b = bytearray({lim.memory_mb + 1024} * 1024**2); "
+                   f"print('allocated {gib:g} GiB')\"", 90, expect,
+                   lambda r: r.exit_code != 0 and "allocated" not in r.stdout))
     except BoxError as err:
         add(ProbeResult("memory_cap", True, expect, None, 0.0, f"the box itself was killed: {err}"))
     return results

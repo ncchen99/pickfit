@@ -67,28 +67,25 @@ MICROPHONE = "simulated: a PulseAudio source playing fresh random words pickfit 
 WORD_COUNT = 3
 
 # Concrete, common English nouns that sound like no other word on the list and that speech recognizers spell one
-# way (no homophones, numbers, names, compounds or British/American pairs: Whisper wrote "yoghurt"). Three of
-# 196, in any order: about 1 in 1.2 million for a guess.
+# way (no homophones, numbers, names, compounds or British/American pairs: Whisper wrote "yoghurt"). Calibrated
+# 2026-11-02: each of 196 words spoken twice by flite in these sentences; the 40 that Whisper tiny.en or base.en
+# missed even once are out. Three of the 156 left, in any order: about 1 in 620,000 for a guess.
 WORDS = (
-    "anchor", "apple", "arrow", "badge", "bagel", "banana", "barrel", "basket", "beaver", "bicycle", "blanket",
-    "bottle", "bracelet", "bridge", "bucket", "buffalo", "butter", "button", "cabbage", "cactus", "camel", "camera",
-    "candle", "canoe", "carpet", "carrot", "castle", "cherry", "chimney", "circus", "cobra", "coconut", "compass",
-    "cookie", "copper", "cotton", "cowboy", "crayon", "cricket", "crystal", "cushion", "dentist", "desert", "diamond",
-    "dinosaur", "doctor", "dolphin", "donkey", "dragon", "drummer", "eagle", "elbow", "elephant", "engine",
-    "envelope", "falcon", "feather", "fence", "festival", "finger", "forest", "fountain", "galaxy", "garage",
-    "garden", "garlic", "giraffe", "glacier", "goblet", "gorilla", "guitar", "hammer", "helmet", "hippo",
-    "honey", "hospital", "igloo", "island", "jacket", "jaguar", "jelly", "jungle", "kangaroo", "kettle", "kitchen",
-    "kitten", "koala", "ladder", "lantern", "lemon", "leopard", "library", "lizard", "lobster", "magnet", "mango",
-    "marble", "meadow", "melon", "mermaid", "meteor", "mirror", "monkey", "mountain", "muffin", "museum", "napkin",
-    "needle", "noodle", "ocean", "octopus", "olive", "onion", "orange", "orchestra", "ostrich", "oven", "paddle",
-    "panda", "parrot", "peanut", "pelican", "pencil", "penguin", "pepper", "piano", "pickle", "pillow", "pirate",
-    "pizza", "planet", "pocket", "potato", "pumpkin", "puppet", "pyramid", "rabbit", "raccoon", "radio", "rainbow",
-    "river", "robot", "rocket", "saddle", "salmon", "sandal", "satellite", "saucer", "scarf", "scissors", "shadow",
-    "shovel", "silver", "skeleton", "spider", "squirrel", "station", "statue", "stomach", "strawberry", "submarine",
-    "sugar", "sunset", "sweater", "tablet", "telescope", "tennis", "thunder", "tiger", "tomato",
-    "tornado", "tractor", "trumpet", "tulip", "tunnel", "turkey", "turtle", "umbrella", "unicorn", "valley",
-    "velvet", "village", "violin", "volcano", "waffle", "wagon", "walnut", "walrus", "window", "wizard", 
-    "zebra", "zipper", "blossom", "cinnamon", "hamster", "pineapple", 
+    "anchor", "apple", "banana", "basket", "beaver", "bicycle", "blanket", "bracelet", "bridge", "bucket",
+    "buffalo", "butter", "button", "cabbage", "cactus", "camera", "candle", "canoe", "carpet", "carrot", "castle",
+    "cherry", "chimney", "circus", "cobra", "coconut", "compass", "cookie", "copper", "cotton", "cowboy", "crayon",
+    "crystal", "cushion", "dentist", "diamond", "dinosaur", "doctor", "drummer", "eagle", "elbow", "elephant",
+    "engine", "envelope", "falcon", "feather", "festival", "finger", "forest", "fountain", "galaxy", "garage",
+    "garden", "garlic", "giraffe", "glacier", "gorilla", "helmet", "hippo", "hospital", "igloo", "jacket", "jungle",
+    "kangaroo", "kitchen", "kitten", "koala", "lantern", "lemon", "leopard", "library", "lobster", "magnet",
+    "mango", "marble", "meadow", "melon", "mermaid", "meteor", "mirror", "monkey", "mountain", "muffin", "museum",
+    "noodle", "ocean", "octopus", "onion", "orange", "orchestra", "oven", "paddle", "panda", "parrot", "peanut",
+    "pelican", "pencil", "penguin", "pepper", "piano", "pickle", "pillow", "pizza", "pocket", "potato", "pumpkin",
+    "puppet", "pyramid", "rabbit", "raccoon", "radio", "rainbow", "river", "robot", "rocket", "saddle", "salmon",
+    "sandal", "satellite", "saucer", "scarf", "shadow", "shovel", "silver", "skeleton", "spider", "squirrel",
+    "station", "statue", "stomach", "strawberry", "submarine", "sunset", "sweater", "tablet", "telescope", "tennis",
+    "tiger", "tomato", "tornado", "tractor", "trumpet", "tunnel", "umbrella", "unicorn", "valley", "velvet",
+    "village", "violin", "volcano", "waffle", "window", "blossom", "cinnamon", "hamster", "pineapple",
 )
 
 
@@ -246,6 +243,7 @@ class Listening:
     seconds: float = 0.0
     error: str | None = None
     seen: dict[str, Any] = field(default_factory=dict)
+    speech: str | None = None  # the WAV pickfit played, in EVIDENCE_DIR (root can copy it out as evidence)
 
 
 MIC_PASSED_LINE = "mic check: passed"
@@ -269,6 +267,7 @@ def run_listen(box: Box, args: ListenArgs, tag: str | int, *, log: Callable[[str
         run.error = "this box has no simulated microphone"
     else:
         wav, why = speak(box, words, tag)
+        run.speech = wav
         target = home_path(args.check.path) if args.check.kind == "file" and args.check.path else None
         before = file_probe(box, {"mode": "before", "target": target}) if target else {}
         pid, why = start_playback(box, wav) if wav else (None, why)
