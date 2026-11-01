@@ -403,13 +403,15 @@ would without admin rights: a Homebrew cask with `brew install --cask --appdir=$
 unverified with the reason), or the app's own .dmg or .zip: download it, `hdiutil attach -nobrowse -mountpoint \
 $HOME/mnt/<name> <file>.dmg` (or unzip), copy the .app into ~/Applications, then `hdiutil detach`. Start it with \
 launch_gui by its path, `open ~/Applications/<App>.app` (Launch Services may not know a just-installed app by \
-name yet), never with run_command or run_background. Cite that launch_gui as a smoke test with \
+name yet). Start the app only with launch_gui: do not run its executable or a command-line helper it ships with \
+run_command or run_background first (a copy left running makes macOS refuse the launch, or shows a window \
+pickfit does not count). Cite that launch_gui as a smoke test with \
 expected_signal `gui tier: window` (pickfit's own line; window titles, app and process names are the app's and \
 do not count). Before each launch pickfit answers macOS's first-launch prompt ("downloaded from the Internet") \
 with Open for apps Gatekeeper accepts as notarized, as a user does. An app Gatekeeper rejects stays blocked: \
 remove its quarantine (xattr -dr com.apple.quarantine) only if the app's own docs tell users to, as a cited \
-step, and record it as a pitfall. A launch stops every process you started outside the desktop session, so \
-start servers again after it. A GUI launch supports level install at most, whatever the window shows: \
+step, and record it as a pitfall. A launch stops every process you started (servers too; macOS's own desktop \
+stays), so start servers again after it. A GUI launch supports level install at most, whatever the window shows: \
 pickfit's judge reads the screenshot itself, and a GUI app is never function from a launch. Launch it even if \
 it will ask for an account: the screenshot records the sign-in screen."""
 
