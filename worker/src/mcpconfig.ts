@@ -30,7 +30,7 @@ export interface McpClientConfig {
 
 const SAFE_WORD = /^[A-Za-z0-9_@%+=:,./-]+$/;
 const ENV_NAME = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
-const SERVER_NAME_MAX = 40;
+export const SERVER_NAME_MAX = 40;
 const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=/;
 
 /** POSIX shell quoting: plain words stay as they are, anything else goes in single quotes. */

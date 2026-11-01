@@ -107,9 +107,11 @@ GUI 桌面 app 的實跑另帶 `verification.gui`（`find_*` 的 pick 與 `get_i
 ### `report_outcome`
 
 - 7 個 stage 存成 `(stage, success)`，對照寫在 `migrations/0001_init.sql` 開頭；`satisfaction` 存成 1／0／-1。
-- **計分**：`rec_id` 必須是 pickfit 7 天內發給這個 slug 的（`find_*` 推薦過它，或 `get_install_guide` 給過它的指南）。合格的回報保留 `rec_id`，不合格的存成 `rec_id = NULL`，所以「`rec_id IS NOT NULL` ＝ 計分」。回 `counted_in_score` 與 `not_counted_reason`。
+- **計分**：`rec_id` 必須是 pickfit 發給這個 slug 的：`installed`、`first_run_*` 要在 7 天內，`still_using`、`replaced`、`abandoned` 是幾週後才回報的，放寬到 120 天（`REC_TTL_LATER_DAYS`）（`find_*` 推薦過它，或 `get_install_guide` 給過它的指南）。合格的回報保留 `rec_id`，不合格的存成 `rec_id = NULL`，所以「`rec_id IS NOT NULL` ＝ 計分」。回 `counted_in_score` 與 `not_counted_reason`。
 - **去重**：同一個 `(rec_id, slug, stage, success)` 只記一次，重送回 `deduplicated: true`、同一個 `report_id`（`0002` 把 `success` 加進唯一索引，否則「先失敗、修好後成功」的第二筆會被當成重複）。
 - **重驗**：`install_failed`／`first_run_failed`＋有效 `rec_id`＋知道 OS（參數或推薦時的 OS）＋有 `error_excerpt` → 寫進 `reverify_queue`；同一 `(slug, os)` 還在排隊就回 `already_queued`，做完（`done_at` 有值）後再失敗會重新排。處理在管線：`pickfit reverify`（或 `pickfit watch --reverify`，P5.3）在全新沙盒重跑。任何拿到 `rec_id` 的人都能回報，所以回報只決定「要重驗」，不決定寫什麼：驗證 agent 只看到結構化欄位（stage、OS、arch）和 pickfit 自己給過的步驟，`error_excerpt` 與 `note` 都不送進模型（`error_excerpt` 留在結果檔給人看）。只有通過、重播成功、而且步驟和紀錄不同（`first_run_failed` 也比 check 與 first task）的 run 才寫回；新步驟裡的套件名稱與網址都要出現在 README、pickfit 先前的步驟或這個 repo 本身，否則標 `held` 不寫、等人看。寫回照 `write_back` 的規則（不寫 `failed`、較強的通過紀錄保留），印出並存下該筆紀錄的 `git diff`、單獨 commit（commit 失敗就把檔案放回），再設 `done_at`。部署由人看過 diff 後自己 `pickfit publish`：`watch --reverify` 不能和 `--publish` 一起用。同一台機器上用 lock 檔認領，`reverify` 和 `watch --reverify` 不會為同一筆回報重複付費。沙盒是 Linux：macOS／Windows 的回報也在 Linux 重跑，結果會註明。
+- **還在用嗎（check-in）**：`get_install_guide` 回 `check_in`（`src/checkin.ts`）。裝好 7 天後到 `valid_until`（120 天）之間，使用者下次跟 agent 談到軟體、或自己問起時，agent **先問使用者同意**，才在本機跑幾個唯讀指令：`command -v`（Windows 用 `Get-Command`，指令名稱取自錄下的 check）；套件管理器只列這一個工具（`brew list --versions`、`npm ls -g --depth=0`，`uv tool list`、`pipx list`、`cargo install --list` 過濾到這個名字，`pip show`）；MCP server 看 `claude mcp get <name>`；macOS 的 app 用 `mdls -name kMDItemLastUsedDate`。指令只從錄下的安裝步驟產生，不經過模型。然後回報 `still_using` 或 `abandoned`（換掉了就 `replaced`），加上粗略的 `last_used`；不送指令輸出、確切時間、路徑或其他軟體。唯讀部署（`TOOLS=readonly`）沒有 `report_outcome`，`check_in` 是 `null`。沒有常駐程式：每次都是 agent 在對話裡、使用者同意後跑一次。
+- **`last_used`**：只有 `still_using`、`replaced`、`abandoned` 會存（其他 stage 一律 `null`）；`0004` 的 CHECK 只收這四個值，確切時間存不進去。
 - **個資**：`error_excerpt` 與 `note` 存之前先過 `src/scrub.ts`（家目錄的使用者名稱、email、`token=`／`Bearer` 之類的值、長串像金鑰的字元），`error_excerpt` 留最後 500 字元、`note` 最多 280 字元。`note` 是不可信的輸入：只給人看，**不出現在任何回應，也不送進模型**。
 
 ### `submit_software`
@@ -186,13 +188,19 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
     - 鍵是雜湊，不留原話；`degraded` 的結果不快取，下一次會再試模型。
     - 一個 isolate 同時最多 `MAX_IN_FLIGHT`（6）筆模型搜尋，超過回 503、`Retry-After: 10` 與「Busy」。跨 isolate 的花費由上面的預留擋。
   - **跨站**：`POST /search` 和 `/mcp` 一樣檢查 Host 與 Origin，別的網站的表單不能花這裡的預算。表單以位元組計，邊讀邊算，超過 8 KB（`Content-Length` 已超過就不讀）回 413。需求以字元（code point）計，要 3–500 字，否則回 400 並說出字數，不會默默截斷；500 個中日文字約 4.5 KB，在上限內。都不呼叫模型。
-- **設計**（10/30 改版）：用 frontend-design 與 taste-skill 做、web-design-guidelines 檢查。概念是「pickfit 在沙盒裝好一款工具時寫下的試跑紀錄，就是每個推薦印在上面的那張單子」。
-  - 首屏：「Tools that fit, [一張真的試跑紀錄] tested first.」，搜尋框就在下面。手機上順序是標題、說明、搜尋框，試跑紀錄放在後面，搜尋框在第一個畫面裡。沒有 JavaScript 時，表單送到 `/search#results`，回來的頁面直接停在結果。
-  - 結果：左邊是主張、右邊是證據，主張在捲動時停住。沒有排名數字（配對不是排名）。「內建就夠了」放在 picks 前面。沒驗證過的工具沒有試跑紀錄。
-  - 搜尋前：最新的試跑表、另一個寶藏工具被修正的 README，以及一個四段的滑桿，帶同一款工具走過讀懂、安裝、配對、交付。這些全部從索引讀，不呼叫模型、不捏造。
-  - 字級五階、一個強調色；沒有細線、外框、陰影、眉標、emoji。
-  - taste-skill 檢查器從 8 FAIL／7 WARN 降到 0 FAIL／4 WARN。剩下的 4 個 WARN 都有理由：程式碼用等寬字；沒有照片或影片（軟體的圖就是自己的介面）；動態只回應使用者的操作。
-- **安全**：每個回應一個 CSP nonce（`default-src 'none'`，只允許自己的 inline script／style、`connect-src 'self'`、`form-action 'self'`、`frame-ancestors 'none'`）。資料與模型輸出全部跳脫；連結只收 http(s)，帶 `rel="noopener noreferrer"`，`Referrer-Policy: no-referrer`。沒有第三方字型或腳本。
+- **設計**（11/1 改版，取代 10/30 版）：品牌與設計系統見 repo 根目錄的 [DESIGN.md](../DESIGN.md) 與 [PRODUCT.md](../PRODUCT.md)，方法參考 Impeccable（impeccable.style）。概念是「裁縫的試衣間」：吉祥物 Fitz（縫葉鶯）量你的條件、先在沙盒試穿、只交出合身的。
+  - 綠色裁切墊（有量測格線）是頁首、結果頁頭與頁尾的底；每個量測值（品質、知名度、功能檢查）畫成黃色量尺；只有 pickfit 自己跑過的證據上方有紅褐色縫線，沒驗證的沒有縫線、徽章、步驟或連結。
+  - 每個 pick 是一張「試衣單」：fit 句、六格速覽（你的系統、驗證等級、安裝指令數、離線、價格、最近 release，全部來自欄位或試跑紀錄）、理由與取捨、量尺，縫線下是試跑紀錄與安裝步驟。沒有排名數字（配對不是排名）。「內建就夠了」與追問都在 picks 前面。兩筆以上時可展開並排比較。
+  - Fitz 的狀態對應產品時刻（DESIGN.md 第 6 節）：搜尋中 `searching`、模型推薦 `recommending`、規則排序 `neutral`／`thinking`、沒有合適 `sorry`、模型暫停 `resting`、連線失敗 `test-failed`。只在通過測試的東西旁邊開心。
+  - 有 JavaScript 時搜尋在原地換成結果模式（首頁區塊收起、View Transition）；比較匣存在瀏覽器的 localStorage（最多 4 款）；`?` 按鈕開原生 popover 說明分數；「How to read a ticket」開 `<dialog>` 圖例。沒有 JavaScript 時每一頁照樣能用。
+  - 動態只有一個主要時刻（結果出現時縫線縫上、量尺拉到讀數），其他是 Fitz 自己 SVG 裡的循環；`prefers-reduced-motion` 時全部停在最終狀態。支援深色模式。
+- **其他頁面**（都只讀打包的索引，不呼叫模型、不碰 D1；`WEB_SEARCH=off` 時都不存在）：
+  - `GET /tool/<slug>`：一款工具的全部資料：profile、每個功能檢查了沒與原因、每個驗證過的 OS 各一張試跑紀錄加步驟、量尺、來源。沒驗證的照實說，不給步驟。
+  - `GET /browse`：已驗證的工具，依類別、OS、寶藏、排序用一般連結篩選；文字篩選只在頁面裡跑，打的字不進網址或 log。`all=1` 才列出還沒驗證的。
+  - `GET /compare?tools=a,b[,c,d]&os=`：2–4 款並排。「best here」只標記錄的數值比較（安裝指令最少、品質分數最高、檢查過的功能最多、release 最新）。
+  - `GET /how`（方法、驗證等級、標籤意義、分數公式照 `score.py`）、`GET /agents`（接 MCP）；瀏覽器開不存在的路徑得到 404 頁，其他客戶端照舊是純文字 404。
+  - 靜態檔在 `public/`（`wrangler.jsonc` 的 `assets`）：Fitz 的 SVG 由 `npm run sync:assets` 從 `brand/mascot` 複製（`test/pages.test.ts` 檢查兩邊一致），字型是自架的 Bricolage Grotesque（OFL）。CSP 因此加上 `img-src 'self'`、`font-src 'self'`。
+- **安全**：每個回應一個 CSP nonce（`default-src 'none'`，只允許自己的 inline script／style、`connect-src 'self'`、`form-action 'self'`、`frame-ancestors 'none'`）。資料與模型輸出全部跳脫；連結只收 http(s)，帶 `rel="noopener noreferrer"`，`Referrer-Policy: no-referrer`。沒有第三方字型或腳本（字型與圖都由這個 Worker 自己提供）。
 - **評測部署**：`env.eval`、`env.eval-rules` 設 `WEB_SEARCH: "off"`，`/` 永遠是 JSON、`/search` 是 404。`WEB_DAILY_CAP_USD` 與 `ratelimits` 也照列（wrangler 不會把它們繼承進 env，少了會警告），只是用不到。
 - **實測**（10/29，本機 `wrangler dev`、真資料 96 筆、5 個自擬需求，不是評測題）：8 次 `muse-spark-1.3` 共 $0.139，平均 6.9 秒。git commit 訊息（Linux x86-64）→ Eckra，在你的系統上驗證過；講課影片離線字幕（macOS arm64、免費、離線）→ babelscribe，標「沒在你的系統上驗證」；壓測 OpenAI 相容端點（Linux）→ servebench；本機記錄 LLM API 花費（免費、不限 OS）→ TokenTracker；RAW 修圖（macOS、免費，不在涵蓋範圍）→ 沒有合適的，`well_known_option` 是 darktable，標未驗證。
 
@@ -225,7 +233,7 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 
 ## D1（`migrations/`）
 
-`0001_init.sql`：`events`、`submissions`、`reverify_queue`、`meta_budget`。`0002_outcome_once_by_result.sql`：回報的去重索引加上 `success`。`0003_model_attempts.sql`：`events` 加 `degraded_reason`、`model_attempts`、`model_statuses`。**一定要先套 `0003` 再部署這版**，否則每一筆事件都寫不進去：
+`0001_init.sql`：`events`、`submissions`、`reverify_queue`、`meta_budget`。`0002_outcome_once_by_result.sql`：回報的去重索引加上 `success`。`0003_model_attempts.sql`：`events` 加 `degraded_reason`、`model_attempts`、`model_statuses`。`0004_last_used.sql`：`events` 加 `last_used`（只收 `this_week`、`this_month`、`older`、`unknown`）。**一定要先套到最新的 migration（現在是 `0004`）再部署這版**，否則每一筆事件都寫不進去：
 
 - `report_outcome` 會整個失敗：它等事件寫完才回應，寫入錯誤會讓每次呼叫都回錯誤。
 - `find_*`、`get_install_guide`、`submit_software` 照常回應，但事件寫入失敗，只在 Workers log 留下 `d1_write_failed`。`rec_id` 不會進 `events`，之後拿這些 `rec_id` 回報也不能計分。
@@ -237,7 +245,7 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 **先決條件**：`data/software/` 有真的 profile 並已 commit（P2.6），而且念誠同意部署。下面的指令都在**主 checkout** 的 `worker/` 下跑（`.env` 在主 checkout 根目錄）。
 
 1. **建 D1**：`npx wrangler d1 create pickfit`，把輸出的 `database_id` 填進 `wrangler.jsonc`（取代全 0 的佔位），commit。
-2. **遠端建表**：`npx wrangler d1 migrations apply pickfit --remote`（`0001`–`0003` 都要套，而且**要在部署這版之前套**；之後 `migrations/` 有新檔，也是先套再部署。**`pickfit publish` 不會幫你跑**；`eval` 等 env 的 D1 也要各自套）。
+2. **遠端建表**：`npx wrangler d1 migrations apply pickfit --remote`（`0001`–`0004` 都要套，而且**要在部署這版之前套**；之後 `migrations/` 有新檔，也是先套再部署。**`pickfit publish` 不會幫你跑**；`eval` 等 env 的 D1 也要各自套）。
 3. **`ALLOWED_HOSTS`**：在 `wrangler.jsonc` 的 `vars` 填 `pickfit-mcp.<workers.dev 子網域>.workers.dev`（子網域就是 P0.5 hello 部署用的那個，dashboard 的 Workers & Pages 也看得到），commit。沒填的話遠端每個請求都是 403，`pickfit publish` 也會拒絕部署。
 4. **先 dry run**：在 repo 根目錄 `uv run pickfit publish --dry-run`。它會驗 `data/software/` 每一筆、確認不是 fixture、資料都已 commit、`wrangler.jsonc` 已填好；任何一項不過就列出問題、exit 1。
 5. **部署**：`uv run pickfit publish`。它用真資料重建 `worker/src/generated/index.json`，再跑 `npx wrangler deploy`。（之後本機要回到假資料：`npm run build:index -- --data test/fixtures/software`。）
