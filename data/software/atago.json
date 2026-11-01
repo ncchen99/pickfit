@@ -68,18 +68,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-atago-20261101-163441-bbfa",
       "method": "brew",
       "steps": [
         {
           "command": "brew install --cask nao1215/tap/atago",
-          "purpose": null
+          "purpose": "install atago via brew cask nao1215/tap/atago"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "go run github.com/nao1215/atago@latest run demo.atago.yaml"
+      "check": {
+        "command": "atago --version",
+        "expected_signal": "atago v0.25.2"
+      },
+      "first_task": "atago run f1.atago.yaml"
     },
     "linux": {
       "basis": "replayed",
@@ -128,7 +131,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:29:51.742252+08:00",
+    "checked_at": "2026-11-01T16:38:36.480741+08:00",
     "runs": [
       {
         "id": "verify-atago-20261031-032846-3ee6",
@@ -280,20 +283,183 @@
             "note": null
           }
         ]
+      },
+      {
+        "id": "verify-atago-20261101-163441-bbfa",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T16:38:36.480741+08:00",
+        "tool_version": "v0.25.2",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask nao1215/tap/atago",
+            "purpose": "install atago via brew cask nao1215/tap/atago"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "atago --version",
+            "expected_signal": "atago v0.25.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "atago v0.25.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "atago run f1.atago.yaml",
+            "expected_signal": "PASSED 1 scenario: 1 passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PASSED 1 scenario: 1 passed, 0 failed, 0 errored, 0 skipped (7ms)",
+            "setup": [
+              {
+                "command": "cat > f1.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: example\nscenarios:\n  - name: echo greets the world\n    steps:\n      - run:\n          shell: true\n          command: echo \"hello atago\"\n      - assert:\n          exit_code: 0\n          stdout:\n            contains: atago\n          stderr:\n            empty: true\nYAML\ncat > f2.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: files\nscenarios:\n  - name: the generator writes the expected files\n    steps:\n      - run:\n          shell: true\n          command: mkdir -p site && echo \"<html>hello</html>\" > site/index.html\n      - assert:\n          file:\n            path: site/index.html\n            contains:\n              - \"<html\"\nYAML\ncat > f3.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: pty-test\nscenarios:\n  - name: the init wizard completes\n    steps:\n      - pty:\n          command: sh -c 'printf \"Project name: \"; read name; echo \"created $name/\"'\n          session:\n            - expect: \"Project name:\"\n            - send: \"demo\\n\"\n            - expect: \"created demo/\"\n      - assert:\n          exit_code: 0\nYAML\ncat > /tmp/prompt.sh <<'SH'\n#!/bin/sh\nprintf \"Project name: \"\nread name\necho \"created $name/\"\nSH\nchmod +x /tmp/prompt.sh\necho \"setup done\" && ls -lh *.atago.yaml\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "atago run f2.atago.yaml",
+            "expected_signal": "PASSED 1 scenario: 1 passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PASSED 1 scenario: 1 passed, 0 failed, 0 errored, 0 skipped (7ms)",
+            "setup": [
+              {
+                "command": "cat > f1.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: example\nscenarios:\n  - name: echo greets the world\n    steps:\n      - run:\n          shell: true\n          command: echo \"hello atago\"\n      - assert:\n          exit_code: 0\n          stdout:\n            contains: atago\n          stderr:\n            empty: true\nYAML\ncat > f2.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: files\nscenarios:\n  - name: the generator writes the expected files\n    steps:\n      - run:\n          shell: true\n          command: mkdir -p site && echo \"<html>hello</html>\" > site/index.html\n      - assert:\n          file:\n            path: site/index.html\n            contains:\n              - \"<html\"\nYAML\ncat > f3.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: pty-test\nscenarios:\n  - name: the init wizard completes\n    steps:\n      - pty:\n          command: sh -c 'printf \"Project name: \"; read name; echo \"created $name/\"'\n          session:\n            - expect: \"Project name:\"\n            - send: \"demo\\n\"\n            - expect: \"created demo/\"\n      - assert:\n          exit_code: 0\nYAML\ncat > /tmp/prompt.sh <<'SH'\n#!/bin/sh\nprintf \"Project name: \"\nread name\necho \"created $name/\"\nSH\nchmod +x /tmp/prompt.sh\necho \"setup done\" && ls -lh *.atago.yaml\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cat > f3.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: pty-test\nscenarios:\n  - name: the init wizard completes\n    steps:\n      - pty:\n          command: sh /tmp/prompt.sh\n          session:\n            - expect: \"Project name:\"\n            - send: \"demo\\n\"\n            - expect: \"created demo/\"\n      - assert:\n          exit_code: 0\nYAML\ncat f3.atago.yaml\natago run f3.atago.yaml",
+            "expected_signal": "PASSED 1 scenario: 1 passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PASSED 1 scenario: 1 passed, 0 failed, 0 errored, 0 skipped (10ms)",
+            "setup": [
+              {
+                "command": "cat > f1.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: example\nscenarios:\n  - name: echo greets the world\n    steps:\n      - run:\n          shell: true\n          command: echo \"hello atago\"\n      - assert:\n          exit_code: 0\n          stdout:\n            contains: atago\n          stderr:\n            empty: true\nYAML\ncat > f2.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: files\nscenarios:\n  - name: the generator writes the expected files\n    steps:\n      - run:\n          shell: true\n          command: mkdir -p site && echo \"<html>hello</html>\" > site/index.html\n      - assert:\n          file:\n            path: site/index.html\n            contains:\n              - \"<html\"\nYAML\ncat > f3.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: pty-test\nscenarios:\n  - name: the init wizard completes\n    steps:\n      - pty:\n          command: sh -c 'printf \"Project name: \"; read name; echo \"created $name/\"'\n          session:\n            - expect: \"Project name:\"\n            - send: \"demo\\n\"\n            - expect: \"created demo/\"\n      - assert:\n          exit_code: 0\nYAML\ncat > /tmp/prompt.sh <<'SH'\n#!/bin/sh\nprintf \"Project name: \"\nread name\necho \"created $name/\"\nSH\nchmod +x /tmp/prompt.sh\necho \"setup done\" && ls -lh *.atago.yaml\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "atago record --out demo.atago.yaml -- git --version && cat demo.atago.yaml && atago run demo.atago.yaml",
+            "expected_signal": "PASSED 1 scenario: 1 passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PASSED 1 scenario: 1 passed, 0 failed, 0 errored, 0 skipped (9ms)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p specs && cp f1.atago.yaml specs/ && atago list ./specs",
+            "expected_signal": "echo greets the world",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "example echo greets the world - - - -",
+            "setup": [
+              {
+                "command": "cat > f1.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: example\nscenarios:\n  - name: echo greets the world\n    steps:\n      - run:\n          shell: true\n          command: echo \"hello atago\"\n      - assert:\n          exit_code: 0\n          stdout:\n            contains: atago\n          stderr:\n            empty: true\nYAML\ncat > f2.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: files\nscenarios:\n  - name: the generator writes the expected files\n    steps:\n      - run:\n          shell: true\n          command: mkdir -p site && echo \"<html>hello</html>\" > site/index.html\n      - assert:\n          file:\n            path: site/index.html\n            contains:\n              - \"<html\"\nYAML\ncat > f3.atago.yaml <<'YAML'\nversion: \"1\"\nsuite:\n  name: pty-test\nscenarios:\n  - name: the init wizard completes\n    steps:\n      - pty:\n          command: sh -c 'printf \"Project name: \"; read name; echo \"created $name/\"'\n          session:\n            - expect: \"Project name:\"\n            - send: \"demo\\n\"\n            - expect: \"created demo/\"\n      - assert:\n          exit_code: 0\nYAML\ncat > /tmp/prompt.sh <<'SH'\n#!/bin/sh\nprintf \"Project name: \"\nread name\necho \"created $name/\"\nSH\nchmod +x /tmp/prompt.sh\necho \"setup done\" && ls -lh *.atago.yaml\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask nao1215/tap/atago",
+            "actually_needed": "brew warns 'Calling `postflight` is deprecated! Use `postflight_steps` instead' but install still succeeds and binary is linked to /opt/homebrew/bin/atago",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show atago passing both run scenarios and reporting version v0.25.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-atago-20261101-163441-bbfa/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-atago-20261101-163441-bbfa/check-1-cmd4.judged.png",
+            "runs/verify/verify-atago-20261101-163441-bbfa/check-2-cmd5.judged.png",
+            "runs/verify/verify-atago-20261101-163441-bbfa/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.058425,
+        "features": [
+          {
+            "feature": "Check exit code, stdout, and stderr",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only PASSED count with no visible exit-code/stdout/stderr assertions."
+          },
+          {
+            "feature": "Check generated files and snapshots",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only PASSED count with no visible file or snapshot checks."
+          },
+          {
+            "feature": "Drive interactive prompts and TUIs",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Record real runs as specs",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T16:38:36+08:00",
     "quality": {
-      "total": 88.6,
+      "total": 96.1,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -334,7 +500,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 49.44
+      "value": 53.62
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -681,5 +847,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:46+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:38:36.489005+08:00"
 }
