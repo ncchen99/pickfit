@@ -188,13 +188,19 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
     - 鍵是雜湊，不留原話；`degraded` 的結果不快取，下一次會再試模型。
     - 一個 isolate 同時最多 `MAX_IN_FLIGHT`（6）筆模型搜尋，超過回 503、`Retry-After: 10` 與「Busy」。跨 isolate 的花費由上面的預留擋。
   - **跨站**：`POST /search` 和 `/mcp` 一樣檢查 Host 與 Origin，別的網站的表單不能花這裡的預算。表單以位元組計，邊讀邊算，超過 8 KB（`Content-Length` 已超過就不讀）回 413。需求以字元（code point）計，要 3–500 字，否則回 400 並說出字數，不會默默截斷；500 個中日文字約 4.5 KB，在上限內。都不呼叫模型。
-- **設計**（10/30 改版）：用 frontend-design 與 taste-skill 做、web-design-guidelines 檢查。概念是「pickfit 在沙盒裝好一款工具時寫下的試跑紀錄，就是每個推薦印在上面的那張單子」。
-  - 首屏：「Tools that fit, [一張真的試跑紀錄] tested first.」，搜尋框就在下面。手機上順序是標題、說明、搜尋框，試跑紀錄放在後面，搜尋框在第一個畫面裡。沒有 JavaScript 時，表單送到 `/search#results`，回來的頁面直接停在結果。
-  - 結果：左邊是主張、右邊是證據，主張在捲動時停住。沒有排名數字（配對不是排名）。「內建就夠了」放在 picks 前面。沒驗證過的工具沒有試跑紀錄。
-  - 搜尋前：最新的試跑表、另一個寶藏工具被修正的 README，以及一個四段的滑桿，帶同一款工具走過讀懂、安裝、配對、交付。這些全部從索引讀，不呼叫模型、不捏造。
-  - 字級五階、一個強調色；沒有細線、外框、陰影、眉標、emoji。
-  - taste-skill 檢查器從 8 FAIL／7 WARN 降到 0 FAIL／4 WARN。剩下的 4 個 WARN 都有理由：程式碼用等寬字；沒有照片或影片（軟體的圖就是自己的介面）；動態只回應使用者的操作。
-- **安全**：每個回應一個 CSP nonce（`default-src 'none'`，只允許自己的 inline script／style、`connect-src 'self'`、`form-action 'self'`、`frame-ancestors 'none'`）。資料與模型輸出全部跳脫；連結只收 http(s)，帶 `rel="noopener noreferrer"`，`Referrer-Policy: no-referrer`。沒有第三方字型或腳本。
+- **設計**（11/1 改版，取代 10/30 版）：品牌與設計系統見 repo 根目錄的 [DESIGN.md](../DESIGN.md) 與 [PRODUCT.md](../PRODUCT.md)，方法參考 Impeccable（impeccable.style）。概念是「裁縫的試衣間」：吉祥物 Fitz（縫葉鶯）量你的條件、先在沙盒試穿、只交出合身的。
+  - 綠色裁切墊（有量測格線）是頁首、結果頁頭與頁尾的底；每個量測值（品質、知名度、功能檢查）畫成黃色量尺；只有 pickfit 自己跑過的證據上方有紅褐色縫線，沒驗證的沒有縫線、徽章、步驟或連結。
+  - 每個 pick 是一張「試衣單」：fit 句、六格速覽（你的系統、驗證等級、安裝指令數、離線、價格、最近 release，全部來自欄位或試跑紀錄）、理由與取捨、量尺，縫線下是試跑紀錄與安裝步驟。沒有排名數字（配對不是排名）。「內建就夠了」與追問都在 picks 前面。兩筆以上時可展開並排比較。
+  - Fitz 的狀態對應產品時刻（DESIGN.md 第 6 節）：搜尋中 `searching`、模型推薦 `recommending`、規則排序 `neutral`／`thinking`、沒有合適 `sorry`、模型暫停 `resting`、連線失敗 `test-failed`。只在通過測試的東西旁邊開心。
+  - 有 JavaScript 時搜尋在原地換成結果模式（首頁區塊收起、View Transition）；比較匣存在瀏覽器的 localStorage（最多 4 款）；`?` 按鈕開原生 popover 說明分數；「How to read a ticket」開 `<dialog>` 圖例。沒有 JavaScript 時每一頁照樣能用。
+  - 動態只有一個主要時刻（結果出現時縫線縫上、量尺拉到讀數），其他是 Fitz 自己 SVG 裡的循環；`prefers-reduced-motion` 時全部停在最終狀態。支援深色模式。
+- **其他頁面**（都只讀打包的索引，不呼叫模型、不碰 D1；`WEB_SEARCH=off` 時都不存在）：
+  - `GET /tool/<slug>`：一款工具的全部資料：profile、每個功能檢查了沒與原因、每個驗證過的 OS 各一張試跑紀錄加步驟、量尺、來源。沒驗證的照實說，不給步驟。
+  - `GET /browse`：已驗證的工具，依類別、OS、寶藏、排序用一般連結篩選；文字篩選只在頁面裡跑，打的字不進網址或 log。`all=1` 才列出還沒驗證的。
+  - `GET /compare?tools=a,b[,c,d]&os=`：2–4 款並排。「best here」只標記錄的數值比較（安裝指令最少、品質分數最高、檢查過的功能最多、release 最新）。
+  - `GET /how`（方法、驗證等級、標籤意義、分數公式照 `score.py`）、`GET /agents`（接 MCP）；瀏覽器開不存在的路徑得到 404 頁，其他客戶端照舊是純文字 404。
+  - 靜態檔在 `public/`（`wrangler.jsonc` 的 `assets`）：Fitz 的 SVG 由 `npm run sync:assets` 從 `brand/mascot` 複製（`test/pages.test.ts` 檢查兩邊一致），字型是自架的 Bricolage Grotesque（OFL）。CSP 因此加上 `img-src 'self'`、`font-src 'self'`。
+- **安全**：每個回應一個 CSP nonce（`default-src 'none'`，只允許自己的 inline script／style、`connect-src 'self'`、`form-action 'self'`、`frame-ancestors 'none'`）。資料與模型輸出全部跳脫；連結只收 http(s)，帶 `rel="noopener noreferrer"`，`Referrer-Policy: no-referrer`。沒有第三方字型或腳本（字型與圖都由這個 Worker 自己提供）。
 - **評測部署**：`env.eval`、`env.eval-rules` 設 `WEB_SEARCH: "off"`，`/` 永遠是 JSON、`/search` 是 404。`WEB_DAILY_CAP_USD` 與 `ratelimits` 也照列（wrangler 不會把它們繼承進 env，少了會警告），只是用不到。
 - **實測**（10/29，本機 `wrangler dev`、真資料 96 筆、5 個自擬需求，不是評測題）：8 次 `muse-spark-1.3` 共 $0.139，平均 6.9 秒。git commit 訊息（Linux x86-64）→ Eckra，在你的系統上驗證過；講課影片離線字幕（macOS arm64、免費、離線）→ babelscribe，標「沒在你的系統上驗證」；壓測 OpenAI 相容端點（Linux）→ servebench；本機記錄 LLM API 花費（免費、不限 OS）→ TokenTracker；RAW 修圖（macOS、免費，不在涵蓋範圍）→ 沒有合適的，`well_known_option` 是 darktable，標未驗證。
 
