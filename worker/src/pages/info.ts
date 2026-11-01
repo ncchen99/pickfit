@@ -14,10 +14,10 @@ const head = (title: string, lede: string, who: Parameters<typeof fitz>[0]) =>
 export function renderHow(catalog: Catalog, nonce: string): string {
   const s = catalogStats(catalog);
   const levels: [string, string][] = [
-    ['install', 'It installs and starts: the command runs and prints its version or help. A GUI app opened its own window.'],
-    ['function', 'Its main function works: the run gave it real input and checked the output (a file converted, a query answered).'],
-    ['service', 'Its service answers requests: a local server came up and answered; for an MCP server, a client called one of its tools.'],
-    ['inference', 'It produces model output: a local AI tool loaded a model and generated text, speech or an image.'],
+    ['install', 'The command runs and prints its version or help. A GUI app opened its own window.'],
+    ['function', 'The run gave it real input and checked the output: a file converted, a query answered.'],
+    ['service', 'A local server came up and answered. For an MCP server, a client called one of its tools.'],
+    ['inference', 'A local AI tool loaded a model and generated text, speech or an image.'],
   ];
   const main =
     head('How Fitz checks a tool', 'Every suggestion rests on a run pickfit did itself, and every reason points at the field it came from. Here is the whole method, and what each label on a ticket means.', 'testing') +
