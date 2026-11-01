@@ -297,9 +297,9 @@ def question(x, y, cls="question"):
 
 def sweat(x, y, cls="sweat"):
     return (
-        f'<g class="{cls}" transform="translate({x} {y})">'
+        f'<g transform="translate({x} {y})"><g class="{cls}">'
         f'<path d="M0 -10 C4 -4 7 0 7 3.5 A7 7 0 0 1 -7 3.5 C-7 0 -4 -4 0 -10 Z" fill="{SWEAT}"/>'
-        f'<path d="M-3 2.5 Q-3 5 -1 6" stroke="{WHITE}" stroke-width="1.8" stroke-linecap="round" fill="none"/></g>'
+        f'<path d="M-3 2.5 Q-3 5 -1 6" stroke="{WHITE}" stroke-width="1.8" stroke-linecap="round" fill="none"/></g></g>'
     )
 
 
@@ -531,11 +531,11 @@ def build_states():
     view = "0 0 300 200"
     css = (
         f"{TAIL_PIVOT}{EYE_PIVOT}"
-        f".bird{{{BIRD_PIVOT}animation:lean 3.2s ease-in-out infinite}}"
+        ".tail{animation:bob 3.2s ease-in-out infinite}"
         ".strip{animation:pull 3.2s cubic-bezier(.5,0,.3,1) infinite}"
         ".eye{animation:blink 3.2s ease-in-out infinite}"
         ".edge{animation:edge 3.2s ease-in-out infinite}"
-        "@keyframes lean{0%,100%{transform:rotate(0)}30%,70%{transform:rotate(2deg)}}"
+        "@keyframes bob{0%,100%{transform:rotate(0)}40%{transform:rotate(-5deg)}55%{transform:rotate(2deg)}}"
         "@keyframes pull{0%,8%{transform:translateX(-100px)}36%,72%{transform:translateX(0)}92%,100%{transform:translateX(-100px)}}"
         "@keyframes blink{0%,80%,88%,100%{transform:scaleY(1)}84%{transform:scaleY(.12)}}"
         "@keyframes edge{0%,34%,74%,100%{opacity:0}40%,68%{opacity:1}}"
@@ -557,10 +557,10 @@ def build_states():
         ".strip{animation:pull 3.4s cubic-bezier(.5,0,.3,1) infinite}"
         ".gap{animation:gap 3.4s ease-in-out infinite}"
         ".sweat{animation:drop 3.4s ease-in-out infinite}"
-        "@keyframes pull{0%,6%{transform:translateX(-70px)}28%{transform:translateX(0)}32%{transform:translateX(-5px)}36%,76%{transform:translateX(0)}94%,100%{transform:translateX(-70px)}}"
-        "@keyframes shake{0%,40%,66%,100%{transform:rotate(0)}44%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}56%{transform:rotate(-3deg)}62%{transform:rotate(2deg)}}"
-        "@keyframes gap{0%,30%,82%,100%{opacity:0}38%,76%{opacity:1}}"
-        "@keyframes drop{0%,36%,90%,100%{opacity:0;transform:translateY(-4px)}46%,80%{opacity:1;transform:translateY(0)}}"
+        "@keyframes pull{0%,6%{transform:translateX(-70px)}26%{transform:translateX(0)}30%{transform:translateX(-5px)}34%,52%{transform:translateX(0)}64%,100%{transform:translateX(-70px)}}"
+        "@keyframes shake{0%,64%,90%,100%{transform:rotate(0)}68%{transform:rotate(-4deg)}74%{transform:rotate(4deg)}80%{transform:rotate(-3deg)}86%{transform:rotate(2deg)}}"
+        "@keyframes gap{0%,30%,60%,100%{opacity:0}36%,54%{opacity:1}}"
+        "@keyframes drop{0%,38%,94%,100%{opacity:0;transform:translateY(-4px)}46%,86%{opacity:1;transform:translateY(0)}}"
     )
     gap = (
         f'<g class="gap" stroke="{BAD}" stroke-width="3" stroke-linecap="round" fill="none">'
@@ -598,7 +598,7 @@ def build_states():
                                               "Fitz holds out a stitched leaf: this one fits.", css))
 
     # success: hop with sparkles and a check badge
-    view = "0 -12 220 212"
+    view = "0 0 220 200"
     css = (
         f"{TAIL_PIVOT}"
         f".bird{{{BIRD_PIVOT}animation:hop 1.8s cubic-bezier(.3,0,.4,1) infinite}}"
