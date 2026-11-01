@@ -44,20 +44,24 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-waywallen-20261101-235250-d41e",
-      "method": "binary",
+      "run_id": "verify-waywallen-20261102-004140-3a13",
+      "method": "other",
       "steps": [
         {
-          "command": "mkdir -p ~/apps ~/pickfit-out && curl -L -o ~/apps/waywallen-x86_64.AppImage https://github.com/waywallen/waywallen/releases/download/v0.5.0/waywallen-0.5.0-x86_64.AppImage && chmod +x ~/apps/waywallen-x86_64.AppImage",
-          "purpose": "download v0.5.0 x86_64 AppImage release"
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add flathub remote for user install"
+        },
+        {
+          "command": "flatpak install --user -y flathub org.waywallen.waywallen",
+          "purpose": "install waywallen flatpak from flathub"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "~/apps/waywallen-x86_64.AppImage --appimage-extract-and-run --help",
-        "expected_signal": "Print help"
+        "command": "dbus-run-session -- flatpak run org.waywallen.waywallen --help",
+        "expected_signal": "Usage: waywallen"
       },
-      "first_task": "dbus-run-session -- ~/apps/waywallen-x86_64.AppImage --appimage-extract-and-run"
+      "first_task": "dbus-run-session -- flatpak run --filesystem=home org.waywallen.waywallen"
     },
     "windows": null
   },
@@ -74,45 +78,58 @@
     "url": "https://github.com/waywallen/waywallen/releases/tag/v0.5.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-02T00:13:36.585936+08:00",
+    "checked_at": "2026-11-02T00:54:35.472149+08:00",
     "runs": [
       {
-        "id": "verify-waywallen-20261101-235250-d41e",
-        "level": "install",
+        "id": "verify-waywallen-20261102-004140-3a13",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx-gui:242bd3411e2e",
-        "checked_at": "2026-11-02T00:13:36.585936+08:00",
+        "checked_at": "2026-11-02T00:54:35.472149+08:00",
         "tool_version": "0.5.0",
-        "install_method": "binary",
+        "install_method": "other",
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p ~/apps ~/pickfit-out && curl -L -o ~/apps/waywallen-x86_64.AppImage https://github.com/waywallen/waywallen/releases/download/v0.5.0/waywallen-0.5.0-x86_64.AppImage && chmod +x ~/apps/waywallen-x86_64.AppImage",
-            "purpose": "download v0.5.0 x86_64 AppImage release"
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add flathub remote for user install"
+          },
+          {
+            "command": "flatpak install --user -y flathub org.waywallen.waywallen",
+            "purpose": "install waywallen flatpak from flathub"
           }
         ],
         "smoke_tests": [
           {
-            "command": "~/apps/waywallen-x86_64.AppImage --appimage-extract-and-run --help",
-            "expected_signal": "Print help",
+            "command": "dbus-run-session -- flatpak run org.waywallen.waywallen --help",
+            "expected_signal": "Usage: waywallen",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "-h, --help Print help",
+            "observed_excerpt": "Usage: waywallen [OPTIONS]",
             "setup": [],
             "offline": true
           },
           {
-            "command": "dbus-run-session -- ~/apps/waywallen-x86_64.AppImage --appimage-extract-and-run",
+            "command": "dbus-run-session -- flatpak run --filesystem=home org.waywallen.waywallen",
             "expected_signal": "gui tier: window",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "dbus-run-session -- flatpak run --filesystem=home org.waywallen.waywallen",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: a file under /home/sbx/.var/app/org.waywallen.waywallen/data/waywallen/: 556232 bytes, written after the app started; contains \"pickfit58ef3d\": yes (typed by the operator)",
             "setup": [],
             "offline": true
           }
@@ -120,60 +137,89 @@
         "pitfalls": [
           {
             "readme_said": "flatpak install flathub org.waywallen.waywallen",
-            "actually_needed": "use README prebuilt AppImage v0.5.0 x86_64 with chmod +x instead; flatpak has no flathub remote here",
+            "actually_needed": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo before install; box had no remotes",
             "kind": "sandbox"
           },
           {
             "readme_said": "flatpak run org.waywallen.waywallen",
-            "actually_needed": "launch with dbus-run-session -- ~/apps/waywallen-x86_64.AppImage --appimage-extract-and-run; without dbus it exits 1 with dbus session bus unavailable",
+            "actually_needed": "dbus-run-session -- flatpak run --filesystem=home org.waywallen.waywallen; without it the app exits 1 with 'dbus session bus unavailable'",
             "kind": "sandbox"
-          },
-          {
-            "readme_said": "grab the latest AppImage from Releases and run it",
-            "actually_needed": "AppImage must run with --appimage-extract-and-run (no FUSE) for --help and GUI",
-            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows Usage line and Options list including --help and --version. / The app shows its main Wallpapers library screen with an empty state prompting to add a library.",
+          "observed": "Screenshot shows 'Usage: waywallen [OPTIONS]' with full options list including --help. / The app shows its main Wallpapers library view with navigation sidebar, search and toolbar, and an empty-state prompt to add a library.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-waywallen-20261101-235250-d41e/report.json",
+          "trace_path": "runs/verify/verify-waywallen-20261102-004140-3a13/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-waywallen-20261101-235250-d41e/check-1-cmd6.judged.png",
-            "runs/verify/verify-waywallen-20261101-235250-d41e/replay-9-1.app.judged.png"
+            "runs/verify/verify-waywallen-20261102-004140-3a13/check-1-cmd16.judged.png",
+            "runs/verify/verify-waywallen-20261102-004140-3a13/replay-10-1.app.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.542898,
+        "cost_usd": 0.355504,
         "gui": {
-          "tier": "ui_rendered",
+          "tier": "action_checked",
           "screen": "main_ui",
-          "command": "dbus-run-session -- ~/apps/waywallen-x86_64.AppImage --appimage-extract-and-run",
+          "command": "dbus-run-session -- flatpak run --filesystem=home org.waywallen.waywallen",
           "window_title": "waywallen",
-          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+          "display": "Xvfb 1280x800x24, no window manager, no GPU",
+          "operations": [
+            {
+              "feature": "manage local media wallpaper libraries",
+              "goal": "Add a new local media library: open the Libraries section in the left sidebar, click Add/New library, set its name to {nonce}, set its folder to /home/sbx/pickfit-in (type the path with Ctrl+L if a file dialog appears), save, and verify the library appears in the list.",
+              "check": "file",
+              "target": "/home/sbx/.var/app/org.waywallen.waywallen/data/waywallen/",
+              "expected": [
+                "{nonce}"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "a file under /home/sbx/.var/app/org.waywallen.waywallen/data/waywallen/: 556232 bytes, written after the app started; contains \"pickfit58ef3d\": yes (typed by the operator)",
+              "smoke_test": 2,
+              "actions": 12,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": [
+                "runs/verify/verify-waywallen-20261102-004140-3a13/replay-13-2-op-1.png",
+                "runs/verify/verify-waywallen-20261102-004140-3a13/replay-13-2-op-2.png",
+                "runs/verify/verify-waywallen-20261102-004140-3a13/replay-13-2-op-3.png",
+                "runs/verify/verify-waywallen-20261102-004140-3a13/replay-13-2-op-4.png",
+                "runs/verify/verify-waywallen-20261102-004140-3a13/replay-13-2-op-5.png",
+                "runs/verify/verify-waywallen-20261102-004140-3a13/replay-13-2-op-6.png",
+                "runs/verify/verify-waywallen-20261102-004140-3a13/replay-13-2-op-7.png",
+                "runs/verify/verify-waywallen-20261102-004140-3a13/replay-13-2-op-8.png",
+                "runs/verify/verify-waywallen-20261102-004140-3a13/replay-13-2-op-9.png",
+                "runs/verify/verify-waywallen-20261102-004140-3a13/replay-13-2-op-10.png",
+                "runs/verify/verify-waywallen-20261102-004140-3a13/replay-13-2-op-11.png",
+                "runs/verify/verify-waywallen-20261102-004140-3a13/replay-13-2-op-12.png"
+              ]
+            }
+          ]
         },
         "features": [
           {
             "feature": "manage local media wallpaper libraries",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "other",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "no failed check in the log; Add Library dialog opened but operator looped on path field; could not complete"
+            "note": null
           },
           {
             "feature": "discover wallpapers via plugins",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "other",
+            "reason": "not_shown",
             "failure": null,
-            "note": "no failed check in the log; Plugins section exists but image-library creation via operator timed out at step cap"
+            "note": "its check passed, but the output does not show it: The output only shows adding a local media library, with no plugin discovery result."
           },
           {
             "feature": "control wallpapers per display",
@@ -181,7 +227,7 @@
             "smoke_tests": [],
             "reason": "other",
             "failure": null,
-            "note": "no failed check in the log; Canvas rename to nonce visibly succeeded but screen_text rejected as typed; no export feature for file proof"
+            "note": "Per-display assignment needs a Wayland compositor backend (KDE/GNOME/Hyprland layer-shell); box has Xvfb only."
           },
           {
             "feature": "auto-select wallpapers with smart playlists",
@@ -189,7 +235,7 @@
             "smoke_tests": [],
             "reason": "other",
             "failure": null,
-            "note": "no failed check in the log; Operator found no Playlists section in sidebar and gave up after 5 actions"
+            "note": "no failed check in the log; Playlists sheet opened and 'New playlist' was created, but renaming it to the nonce did not persist after repeated edits; automation gave up at step cap."
           }
         ]
       }
@@ -394,5 +440,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:47+08:00",
-  "updated_at": "2026-11-02T00:36:36.107871+08:00"
+  "updated_at": "2026-11-02T01:10:19.219126+08:00"
 }

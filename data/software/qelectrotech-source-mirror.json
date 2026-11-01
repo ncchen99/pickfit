@@ -46,28 +46,28 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-qelectrotech-source-mirror-20261102-000112-547f",
+      "run_id": "verify-qelectrotech-source-mirror-20261102-004523-edfc",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -L -o /home/sbx/apps-QET.AppImage https://download.qelectrotech.org/qet/builds/AppImage/0.100.0/X86_64/QElectroTech_0.100.1-r9321-x86_64.AppImage",
-          "purpose": "download QET AppImage"
+          "command": "mkdir -p ~/apps && curl -L -o ~/apps/QElectroTech.AppImage https://download.qelectrotech.org/qet/builds/AppImage/0.100.0/X86_64/QElectroTech_0.100.1-r9321-x86_64.AppImage",
+          "purpose": "Download official AppImage release"
         },
         {
-          "command": "chmod +x /home/sbx/apps-QET.AppImage",
-          "purpose": "make AppImage executable"
+          "command": "chmod +x ~/apps/QElectroTech.AppImage",
+          "purpose": "Make AppImage executable"
         },
         {
-          "command": "/home/sbx/apps-QET.AppImage --appimage-extract",
-          "purpose": "extract AppImage contents"
+          "command": "cd ~/apps && ~/apps/QElectroTech.AppImage --appimage-extract",
+          "purpose": "Extract AppImage once (no FUSE)"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "DISPLAY=:99 ./squashfs-root/AppRun --help",
+        "command": "DISPLAY=:99 ~/apps/squashfs-root/AppRun --help",
         "expected_signal": "Usage : qelectrotech"
       },
-      "first_task": "./squashfs-root/AppRun"
+      "first_task": "~/apps/squashfs-root/AppRun"
     },
     "windows": null
   },
@@ -84,40 +84,40 @@
     "url": "https://github.com/qelectrotech/qelectrotech-source-mirror/releases/tag/0.100"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-02T00:31:42.441974+08:00",
+    "checked_at": "2026-11-02T01:08:38.156153+08:00",
     "runs": [
       {
-        "id": "verify-qelectrotech-source-mirror-20261102-000112-547f",
-        "level": "install",
+        "id": "verify-qelectrotech-source-mirror-20261102-004523-edfc",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx-gui:242bd3411e2e",
-        "checked_at": "2026-11-02T00:31:42.441974+08:00",
-        "tool_version": null,
+        "checked_at": "2026-11-02T01:08:38.156153+08:00",
+        "tool_version": "0.100.1-r9321",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -L -o /home/sbx/apps-QET.AppImage https://download.qelectrotech.org/qet/builds/AppImage/0.100.0/X86_64/QElectroTech_0.100.1-r9321-x86_64.AppImage",
-            "purpose": "download QET AppImage"
+            "command": "mkdir -p ~/apps && curl -L -o ~/apps/QElectroTech.AppImage https://download.qelectrotech.org/qet/builds/AppImage/0.100.0/X86_64/QElectroTech_0.100.1-r9321-x86_64.AppImage",
+            "purpose": "Download official AppImage release"
           },
           {
-            "command": "chmod +x /home/sbx/apps-QET.AppImage",
-            "purpose": "make AppImage executable"
+            "command": "chmod +x ~/apps/QElectroTech.AppImage",
+            "purpose": "Make AppImage executable"
           },
           {
-            "command": "/home/sbx/apps-QET.AppImage --appimage-extract",
-            "purpose": "extract AppImage contents"
+            "command": "cd ~/apps && ~/apps/QElectroTech.AppImage --appimage-extract",
+            "purpose": "Extract AppImage once (no FUSE)"
           }
         ],
         "smoke_tests": [
           {
-            "command": "DISPLAY=:99 ./squashfs-root/AppRun --help",
+            "command": "DISPLAY=:99 ~/apps/squashfs-root/AppRun --help",
             "expected_signal": "Usage : qelectrotech",
             "exit_code": 0,
             "passed": true,
@@ -126,74 +126,124 @@
             "offline": true
           },
           {
-            "command": "./squashfs-root/AppRun",
+            "command": "~/apps/squashfs-root/AppRun",
             "expected_signal": "gui tier: window",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "~/apps/squashfs-root/AppRun",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /home/sbx/pickfit-out/diagram.qet: 5630 bytes, written after the app started; format text: yes; contains \"pickfit32e1a3\": yes (typed by the operator)",
+            "setup": [
+              {
+                "command": "mkdir -p ~/pickfit-out ~/pickfit-in && ls -ld ~/pickfit-out",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "flatpak run org.qelectrotech.QElectroTech",
-            "actually_needed": "download official release AppImage QElectroTech_0.100.1-r9321 and extract with --appimage-extract then run squashfs-root/AppRun; flatpak remote not configured and would need large KDE runtime",
+            "readme_said": "flatpak install/run org.qelectrotech.QElectroTech and git clone source build",
+            "actually_needed": "Download official Linux AppImage QElectroTech_0.100.1-r9321-x86_64.AppImage from download.qelectrotech.org and extract with --appimage-extract, then run ~/apps/squashfs-root/AppRun",
+            "kind": "note"
+          },
+          {
+            "readme_said": "AppImage runs with --appimage-extract-and-run, no FUSE needed",
+            "actually_needed": "Run AppImage with --appimage-extract; direct run needs FUSE (libfuse.so.2 missing) and --appimage-extract-and-run is not implemented in this runtime",
             "kind": "sandbox"
           },
           {
-            "readme_said": "run AppImage directly",
-            "actually_needed": "AppImage cannot run directly: needs --appimage-extract (libfuse.so.2 missing); --appimage-extract-and-run not implemented",
+            "readme_said": "qelectrotech --help with no display",
+            "actually_needed": "DISPLAY=:99 ~/apps/squashfs-root/AppRun --help for CLI check",
             "kind": "sandbox"
           },
           {
-            "readme_said": "qelectrotech --help works",
-            "actually_needed": "DISPLAY=:99 required for AppRun --help; plain run fails with xcb plugin error",
+            "readme_said": "Save via File menu",
+            "actually_needed": "mkdir -p ~/pickfit-out before Save As; File menu renders as black overlay so use Text tool + Ctrl+Shift+S and type full path",
             "kind": "sandbox"
           },
           {
-            "readme_said": "GUI menus work normally",
-            "actually_needed": "File menu renders as black overlay under virtual display, blocking menu saves/prints; Ctrl+S save worked once",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "install step 3 runs apps-QET.AppImage",
-            "actually_needed": "nothing to change; a note: the box ran apps-QET.AppImage, downloaded, without reading it first, so pickfit did not inspect it",
+            "readme_said": "install step 3 runs QElectroTech.AppImage",
+            "actually_needed": "nothing to change; a note: the box ran QElectroTech.AppImage, downloaded, without reading it first, so pickfit did not inspect it",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows QElectroTech --help printing usage and available options in French with exit code 0. / The screenshot shows QElectroTech's main editor window with Projects, Collections, and Selection properties panels fully drawn.",
+          "observed": "Screenshot shows Usage line for qelectrotech with its available options in French. / The screenshot shows QElectroTech's main workspace with Projects tree, Collections panel, and Selection properties fully drawn.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-qelectrotech-source-mirror-20261102-000112-547f/report.json",
+          "trace_path": "runs/verify/verify-qelectrotech-source-mirror-20261102-004523-edfc/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-qelectrotech-source-mirror-20261102-000112-547f/check-1-cmd13.judged.png",
-            "runs/verify/verify-qelectrotech-source-mirror-20261102-000112-547f/replay-14-1.app.judged.png"
+            "runs/verify/verify-qelectrotech-source-mirror-20261102-004523-edfc/check-1-cmd13.judged.png",
+            "runs/verify/verify-qelectrotech-source-mirror-20261102-004523-edfc/replay-14-1.app.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.724835,
+        "cost_usd": 0.588498,
         "gui": {
-          "tier": "ui_rendered",
+          "tier": "action_checked",
           "screen": "main_ui",
-          "command": "./squashfs-root/AppRun",
+          "command": "~/apps/squashfs-root/AppRun",
           "window_title": "QElectroTech",
-          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+          "display": "Xvfb 1280x800x24, no window manager, no GPU",
+          "operations": [
+            {
+              "feature": "create diagrams and schematics",
+              "goal": "The folder /home/sbx/pickfit-out already exists. First press Ctrl+N to start a new project if needed. Then click the Text tool (T icon in top toolbar), click in the middle of the dotted folio, and type the word {nonce}. Then press Ctrl+Shift+S (Save As), in the file dialog type /home/sbx/pickfit-out/diagram.qet as the filename and confirm Save.",
+              "check": "file",
+              "target": "~/pickfit-out/diagram.qet",
+              "expected": [
+                "{nonce}"
+              ],
+              "format": "text",
+              "passed": true,
+              "observed": "file /home/sbx/pickfit-out/diagram.qet: 5630 bytes, written after the app started; format text: yes; contains \"pickfit32e1a3\": yes (typed by the operator)",
+              "smoke_test": 2,
+              "actions": 13,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": [
+                "runs/verify/verify-qelectrotech-source-mirror-20261102-004523-edfc/replay-20-2-op-1.png",
+                "runs/verify/verify-qelectrotech-source-mirror-20261102-004523-edfc/replay-20-2-op-2.png",
+                "runs/verify/verify-qelectrotech-source-mirror-20261102-004523-edfc/replay-20-2-op-3.png",
+                "runs/verify/verify-qelectrotech-source-mirror-20261102-004523-edfc/replay-20-2-op-4.png",
+                "runs/verify/verify-qelectrotech-source-mirror-20261102-004523-edfc/replay-20-2-op-5.png",
+                "runs/verify/verify-qelectrotech-source-mirror-20261102-004523-edfc/replay-20-2-op-6.png",
+                "runs/verify/verify-qelectrotech-source-mirror-20261102-004523-edfc/replay-20-2-op-7.png",
+                "runs/verify/verify-qelectrotech-source-mirror-20261102-004523-edfc/replay-20-2-op-8.png",
+                "runs/verify/verify-qelectrotech-source-mirror-20261102-004523-edfc/replay-20-2-op-9.png",
+                "runs/verify/verify-qelectrotech-source-mirror-20261102-004523-edfc/replay-20-2-op-10.png",
+                "runs/verify/verify-qelectrotech-source-mirror-20261102-004523-edfc/replay-20-2-op-11.png",
+                "runs/verify/verify-qelectrotech-source-mirror-20261102-004523-edfc/replay-20-2-op-12.png",
+                "runs/verify/verify-qelectrotech-source-mirror-20261102-004523-edfc/replay-20-2-op-13.png"
+              ]
+            }
+          ]
         },
         "features": [
           {
             "feature": "create diagrams and schematics",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "other",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "no failed check in the log; operator placed nonce text on folio but save with nonce failed; 2nd run saved .qet without nonce"
+            "note": null
           },
           {
             "feature": "choose from symbol library",
@@ -201,7 +251,7 @@
             "smoke_tests": [],
             "reason": "other",
             "failure": null,
-            "note": "no failed check in the log; stuck in element editor, File menu black overlay blocked save"
+            "note": "no failed check in the log; Save dialog/menu rendering glitch and missing out dir on first try; no file written"
           },
           {
             "feature": "create own element collection",
@@ -209,7 +259,7 @@
             "smoke_tests": [],
             "reason": "other",
             "failure": null,
-            "note": "no failed check in the log; File menu black overlay loop, gave up before save"
+            "note": "no failed check in the log; File menu renders as black overlay; element editor save not reached"
           },
           {
             "feature": "print to PDF and export images",
@@ -217,7 +267,7 @@
             "smoke_tests": [],
             "reason": "other",
             "failure": null,
-            "note": "no failed check in the log; Ctrl+P and toolbar printer icon did not open print dialog in VM"
+            "note": "no failed check in the log; Print/Export dialog not reached; no PDF written"
           }
         ]
       }
@@ -438,5 +488,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:47+08:00",
-  "updated_at": "2026-11-02T00:40:37.511768+08:00"
+  "updated_at": "2026-11-02T01:10:19.222925+08:00"
 }
