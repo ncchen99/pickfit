@@ -49,18 +49,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-goatedcontext-20261101-163113-c0ac",
       "method": "npm",
       "steps": [
         {
-          "command": "npx goatedcontext setup",
-          "purpose": null
+          "command": "npx goatedcontext setup 2>&1",
+          "purpose": "install ctx via npx goatedcontext setup"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "ctx agents"
+      "check": {
+        "command": "ctx --version 2>&1",
+        "expected_signal": "0.4.4"
+      },
+      "first_task": "ctx agents 2>&1"
     },
     "linux": {
       "basis": "replayed",
@@ -105,7 +108,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:18:54.345381+08:00",
+    "checked_at": "2026-11-01T16:34:39.803041+08:00",
     "runs": [
       {
         "id": "verify-goatedcontext-20261101-001810-ab92",
@@ -189,6 +192,151 @@
         },
         "actor_model": "meta-models/muse-spark-open-1026",
         "cost_usd": 0.034138
+      },
+      {
+        "id": "verify-goatedcontext-20261101-163113-c0ac",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T16:34:39.803041+08:00",
+        "tool_version": "0.4.4",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npx goatedcontext setup 2>&1",
+            "purpose": "install ctx via npx goatedcontext setup"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ctx --version 2>&1",
+            "expected_signal": "0.4.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.4.4",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ctx agents 2>&1",
+            "expected_signal": "Universal interfaces",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Universal interfaces (any agent — no goatedcontext adapter required):",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/testrepo && cd /tmp/testrepo && git init -q && git config user.email \"a@a.com\" && git config user.name \"a\" && ctx remember --scope repo --always \"Use Bun for development commands.\" 2>&1 && echo \"REMEMBER_OK\"",
+            "expected_signal": "Remembered [approved]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Remembered [approved] (5487589c): Use Bun for development commands.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ctx prefs 2>&1",
+            "expected_signal": "Use Bun for development commands",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "5487589c [approved/always] (repo/general/package-manager) positive c=1.00 Use Bun for development commands.",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cd /tmp/testrepo && git init -q && git config user.email \"a@a.com\" && git config user.name \"a\" && ctx remember --scope repo --always \"Use Bun for development commands.\" 2>&1 && echo \"REMEMBER_OK\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/testrepo && ctx agent context --task \"add zod\" --json 2>&1",
+            "expected_signal": "Use Bun for development commands.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"rule\": \"Use Bun for development commands.\",",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cd /tmp/testrepo && git init -q && git config user.email \"a@a.com\" && git config user.name \"a\" && ctx remember --scope repo --always \"Use Bun for development commands.\" 2>&1 && echo \"REMEMBER_OK\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "ctx remember --scope repo --always \"...\" works anywhere",
+            "actually_needed": "repo scope requires git repo; fails with 'Not inside a git repository' outside one, need git init or --scope global",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "ctx doctor should succeed",
+            "actually_needed": "ctx doctor exits 1 with warnings when native agents not installed (expected diagnostics, not failure)",
+            "kind": "note"
+          },
+          {
+            "readme_said": "ctx with no args opens interactive browser",
+            "actually_needed": "in non-interactive/CI it prints help and never emits terminal codes (as documented)",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.4.4, agent interfaces listing including Universal interfaces, and successful repo memory creation.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-goatedcontext-20261101-163113-c0ac/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-goatedcontext-20261101-163113-c0ac/check-1-cmd3.judged.png",
+            "runs/verify/verify-goatedcontext-20261101-163113-c0ac/check-2-cmd4.judged.png",
+            "runs/verify/verify-goatedcontext-20261101-163113-c0ac/check-3-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.048243,
+        "features": [
+          {
+            "feature": "save developer context for coding agents",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "retrieve stored context in future sessions",
+            "status": "checked",
+            "smoke_tests": [
+              3,
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "browse stored memory in terminal UI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; ctx with no args in non-interactive shell prints help, no TUI codes, as README states"
+          }
+        ]
       }
     ]
   },
@@ -520,5 +668,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:22:46+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T16:34:39.811344+08:00"
 }
