@@ -92,6 +92,16 @@ try, such as "render a graph as ASCII art"; not how to install it, where it runs
 fast it is.
 """
 
+WEB_APP = """
+9. This software is a web app people open at a URL: the "site" source is its home page as fetched. \
+install_methods and smoke_test_candidates stay empty. kind is web_app unless the sources show it is \
+something else (an app to download, a library, a self-hosted server). platforms only as a source \
+states them. processing: local when a source says the work happens in the browser or on the device \
+(nothing uploaded), cloud when it says data goes to a server, else null. manual_steps: what a person \
+must do that a browser visit does not, such as signing in for some feature.
+"""
+WEB_CACHE_KEY = "pickfit-extract-web-v1"
+
 FEATURES_ONLY = """
 This run asks only for features: the other facts about this project were read before. Rules 1-2, 5, 6 \
 and 8 apply.
@@ -117,6 +127,8 @@ def _neutralize(text: str) -> str:
 
 
 def build_sources(candidate: dict[str, Any]) -> list[Source]:
+    if candidate.get("site"):
+        return web_sources(candidate)
     repo = candidate["repo"]
     url = repo.get("html_url") or f"https://github.com/{candidate['full_name']}"
     lines = [f"name: {repo.get('full_name') or candidate['full_name']}"]
@@ -193,6 +205,34 @@ def listing_source(listing: dict[str, Any]) -> Source:
                   _neutralize(text[:STORE_TEXT_MAX]), len(text) > STORE_TEXT_MAX)
 
 
+SITE_TEXT_MAX = 30_000
+
+
+def web_sources(candidate: dict[str, Any]) -> list[Source]:
+    """A hosted web app (pickfit.discover.webapps): its home page as pickfit's fetch read it, and for an
+    open-source one the repository's description and README. A Show HN post only says where to look; its
+    words are its author's, so they are not a source here."""
+    site = candidate["site"]
+    page = site.get("page") or ""
+    url = (site.get("checks") or {}).get("home", {}).get("final_url") or site["site_url"]
+    sources = [Source("site", "website", url, _neutralize(page[:SITE_TEXT_MAX]), len(page) > SITE_TEXT_MAX)]
+    repo = candidate.get("repo") or {}
+    if repo.get("full_name"):
+        lines = [f"name: {repo['full_name']}"]
+        for label in ("description", "homepage"):
+            if repo.get(label):
+                lines.append(f"{label}: {repo[label]}")
+        if repo.get("topics"):
+            lines.append("topics: " + ", ".join(repo["topics"]))
+        sources.append(Source("description", "github_api", repo.get("html_url"), _neutralize("\n".join(lines))))
+        readme = site.get("readme") or ""
+        if readme.strip():
+            branch = repo.get("default_branch") or "HEAD"
+            sources.append(Source("readme", "readme", f"{repo.get('html_url')}/blob/{branch}/README.md",
+                                  _neutralize(readme[:README_MAX_CHARS]), len(readme) > README_MAX_CHARS))
+    return sources
+
+
 def render_sources(sources: list[Source]) -> str:
     blocks = []
     for s in sources:
@@ -205,14 +245,15 @@ def render_sources(sources: list[Source]) -> str:
 
 def build_body(sources: list[Source], features_only: bool = False) -> dict[str, Any]:
     model = ExtractedFeatures if features_only else ExtractionResult
+    web = not features_only and any(s.kind == "website" for s in sources)
     return {
-        "instructions": INSTRUCTIONS + (FEATURES_ONLY if features_only else ""),
+        "instructions": INSTRUCTIONS + (FEATURES_ONLY if features_only else WEB_APP if web else ""),
         "input": [{"role": "user", "content": [{"type": "input_text", "text": render_sources(sources)}]}],
         "text": {"format": {"type": "json_schema",
                             "name": "software_features" if features_only else "software_extraction",
                             "schema": meta_strict_schema(model), "strict": True}},
         "store": False,
-        "prompt_cache_key": FEATURES_CACHE_KEY if features_only else PROMPT_CACHE_KEY,
+        "prompt_cache_key": FEATURES_CACHE_KEY if features_only else WEB_CACHE_KEY if web else PROMPT_CACHE_KEY,
     }
 
 
@@ -402,6 +443,11 @@ def feature_rows(db: PipelineDB, repo_id: str, model: str) -> dict[str, Any] | N
 _LABEL_ORDER = {"tool": 0, "uncertain": 1}
 
 
+def _extracted(db: PipelineDB, candidate: dict[str, Any], model: str) -> bool:
+    last = db.last_extraction(candidate["repo_id"], model, exclude=(FEATURES_STATUS,))
+    return bool(last and last["status"] in _DONE and last["sources_sha"] == sources_sha(build_sources(candidate)))
+
+
 def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[str] | None = None,
                       force: bool = False, features_only: bool = False,
                       categories: list[str] | None = None) -> list[dict[str, Any]]:
@@ -453,12 +499,16 @@ def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[
 
 def run_extract(*, limit: int, model: str = "dev", reasoning_effort: str = "minimal",
                 repo_ids: list[str] | None = None, force: bool = False, features_only: bool = False,
-                categories: list[str] | None = None,
+                categories: list[str] | None = None, candidates: list[dict[str, Any]] | None = None,
                 concurrency: int = 1, max_attempts: int = MAX_ATTEMPTS,
                 db_path: Path | None = None, client: Any = None, ledger: Ledger | None = None,
                 runs_dir: Path | str | None = None, cache: bool | None = None,
                 log: Callable[[str], None] | None = None) -> dict[str, Any]:
     """Extract up to `limit` candidates, `concurrency` calls at a time; returns a run summary.
+
+    candidates: extract these (such as hosted web apps, pickfit.discover.webapps) instead of selecting
+    from the candidate pool; one already extracted from the same sources by this model is skipped
+    unless `force`.
 
     The budget or MAX_CONSECUTIVE_ERRORS failed candidates in a row stop the batch:
     no new call starts, and calls already in flight finish and are stored.
@@ -469,8 +519,11 @@ def run_extract(*, limit: int, model: str = "dev", reasoning_effort: str = "mini
     model_id = resolve_model(model)
     db = PipelineDB(db_path or pipeline_db_path())
     run_id = f"{STAGE}{'-features' if features_only else ''}-" + taipei_now().strftime("%Y%m%d-%H%M%S")
-    todo = select_candidates(db, model=model_id, limit=limit, repo_ids=repo_ids, force=force,
-                             features_only=features_only, categories=categories)
+    if candidates is not None:
+        todo = [c for c in candidates if force or not _extracted(db, c, model_id)][:limit]
+    else:
+        todo = select_candidates(db, model=model_id, limit=limit, repo_ids=repo_ids, force=force,
+                                 features_only=features_only, categories=categories)
     log(f"extract {run_id}: {len(todo)} candidates with {model_id} (effort {reasoning_effort}, "
         f"{concurrency} at a time, up to {max_attempts} attempts)")
     stop = threading.Event()

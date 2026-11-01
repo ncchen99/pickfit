@@ -1,6 +1,6 @@
-# 新來源的條款：Flathub 與 Homebrew Cask
+# 新來源的條款：Flathub、Homebrew Cask 與網頁應用
 
-2026-11-01（台北）查證 · P2.7（brief 第 2.1、8 節）。用之前先讀這份；條款有變就更新這份與 `NOTICE`。
+2026-11-01（台北）查證 · P2.7（brief 第 2.1、8 節）；網頁應用 11/1–11/2 查證 · P2.8（brief 第 2.2 節，見最後一節）。用之前先讀這份；條款有變就更新這份與 `NOTICE`。
 
 ## 結論
 
@@ -8,6 +8,7 @@
 |---|---|---|---|
 | Flathub | **可以，只走 flatpak 的套件庫** | 下載 `dl.flathub.org/repo/appstream/x86_64/appstream.xml.gz`（每台 flatpak 用戶端都下載的同一份 AppStream 目錄），一次執行一次。取 App 的 id、名稱、摘要、說明、授權、網址、版本與日期 | 不爬 flathub.org 網站、不打 `flathub.org/api`、**不用安裝數**（`/stats`） |
 | Homebrew Cask | **可以** | `formulae.brew.sh/api/cask.json`（cask 定義）與 `api/analytics/cask-install/{30d,90d,365d}.json`（安裝數），一次執行各一次 | 安裝數只當選樣訊號，不轉發原始數字 |
+| 網頁應用（Show HN、GitHub 上有線上網址的 repo） | **可以，每站先查 robots.txt 與使用條款** | 發現走既有的 HN API 與 GitHub API；每個網站只抓 robots.txt、首頁、一頁使用條款 | 禁止自動化存取的網站不收；首頁文字只在抽取前暫存，紀錄只留抽出的事實與短引用 |
 | GitLab.com、Codeberg 等其他 forge | **不用**（沿用 [research/channels.md](research/channels.md) 1.1 節） | — | GitLab.com 的 API 條款禁止大量收集；Codeberg 的 robots.txt 擋 `/api/` |
 
 ## Flathub
@@ -37,3 +38,61 @@
 4. 不用帳號：名稱、摘要與說明沒寫「需要帳號」「要登入」之類（只認明寫的要求；抽取與驗證時再看一次）。
 5. 有人用、但不出名：在通過 1–4 的 App 裡，人氣介於該來源的第 25 與第 75 百分位之間（中間一半），而且上游的 GitHub 星數不超過這些 App 星數的第 75 百分位。Flathub 的人氣就是上游的 GitHub 星數；cask 用 365 天安裝數（另要求 30 天內有安裝），星數上限擋掉在 GitHub 上很有名、但很少人用 cask 裝的 App（第一次選樣有 Folo 39K 星、ArtCraft 38K 星）。
 6. 從符合的 App 裡用固定種子的雜湊排序抽樣，每個來源 10–20 款。
+
+## 網頁應用（P2.8）
+
+程式：`pickfit/discover/webapps.py`（規則 `webapps.v1`）、`pickfit/webrecords.py`。指令：`pickfit webapps gather|pick|funnel|purge`。
+
+### 發現的管道（沿用已查過條款的 API）
+
+- **Show HN**：Algolia HN Search API 與 HN 官方 Firebase API，和 `showhn.py` 同一條路（條款見 `NOTICE`；不爬 news.ycombinator.com）。這次取 120 天（2026-07-04 15:30Z 到 11-01 15:30Z）的全部 Show HN，每天一個請求，共 120 個。貼文只留 id、網址、標題、連結、分數、留言數與時間；貼文的文字與留言是作者的，不當抽取來源，紀錄只把貼文列為 `hn` 來源（網址是從那篇貼文的連結來的）。
+- **GitHub**：GitHub REST search 與 GraphQL（pickfit 已在用）。連到 GitHub repo 的 Show HN 貼文，用 repo 的 homepage 當網址（舊的 Show HN 管道為了 repo 收這些貼文，網頁作品因為「不能安裝」被丟掉，這裡重新篩）。另用「是什麼樣的軟體、部署在哪裡」的 topic 搜尋（`web-app`、`webapp`、`web-application`、`pwa`、`progressive-web-app`、`single-page-app`、`browser-based`、`client-side`、`github-pages`、`vercel`、`netlify`、`cloudflare-pages`；不看主題），條件 `pushed:>=今天-365天 stars:>=1 fork:false archived:false`，依更新時間排序，每條取前 1,000 筆。
+
+### 每個網站的條款檢查（照順序，第一條沒過的就是結果）
+
+1. **robots.txt**（RFC 9309）：
+   - `User-agent: *` 或 `pickfit` 不准抓這個網址 → 不收（`robots_disallow`）。
+   - 不准「替使用者即時取頁面的 AI agent」抓（`ChatGPT-User`、`Claude-User`、`Perplexity-User`、`meta-externalfetcher`、`MistralAI-User`、`DuckAssistBot`、`Google-Agent`）→ 不收。pickfit 的驗證就是這種用法：一個 AI agent 替人打開網站操作。
+   - `Content-Signal` 寫 `ai-input=no` → 不收（抽取與驗證都會把頁面交給模型）。
+   - 只擋**訓練用爬蟲**（`GPTBot`、`ClaudeBot`、`CCBot`、`Google-Extended`、`meta-externalagent` 等）或寫 `ai-train=no` 的，記下來但**照收**：pickfit 不拿網站內容訓練模型，抽取用 `muse-spark-1.3`（不是 contributor 模型）。
+   - robots.txt 回 5xx 或連不上 → 照 RFC 9309 當成全部禁止（`robots_unreachable`）；4xx → 沒有 robots.txt，全部允許。
+   - 首頁轉址到別的網域，新網域的 robots.txt 也照上面查一次。
+2. **首頁**：pickfit 自己的 User-Agent（`pickfit/0.1 (+https://github.com/ncchen99/pickfit)`）GET 一次，跟隨轉址，最多 3 MB。不是 200（`site_down`）、不是 HTML（`not_html`）、轉到平台（`redirect_platform`）都不收。HTML 裡的可見文字不到 200 字的（用 script 畫出來的單頁應用，約三分之一），再用無頭 Chromium（playwright 1.64.1，Apache-2.0；`uv run --with playwright`，不加進專案相依）以同一個 User-Agent 打開一次，讀畫出來的文字與連結，和一般人用瀏覽器打開一樣（頁面自己載入的資源也會載入）。
+3. **使用條款**：首頁連到的 terms／ToS／conditions／legal 頁（同網站、terms 優先，只有 privacy 或 cookie 的不算）；首頁沒有連結（多半是用 script 畫出來的單頁應用）就試一次 `/terms`，內容讀起來是條款才算。條款裡有一句同時出現「robot、spider、scraper、crawler、bot、automated means／access／tools…、data mining、harvest」和「不得、禁止、未經同意」之類的字 → 不收（`terms_disallow`），那句話（最多 300 字）存在檢查紀錄裡。寧可多擋：有些只禁止「用自動化工具註冊帳號」的也會被擋。讀不到條款頁照收，並記 `unreadable`。
+
+每個網站只抓這三樣（robots.txt、首頁、一頁條款；首頁是 script 畫的再用瀏覽器開一次），每次請求間隔 1 秒；GitHub repo 的 README 走 GitHub API。條款規則改過一次（11/1 抽查已通過的網站，漏了「Don't … scrape」與「You may not:」底下的條列），改完用 `pickfit webapps recheck-terms` 對所有已通過的網站重抓條款頁再判一次；加上瀏覽器打開之前檢查過、首頁沒有文字的網站，用 `recheck-thin` 整個重查（含模型判讀），讓每個網站都照同一套規則。
+
+### 存什麼
+
+- `runs/pipeline.db`（不進 git）的 `web_sites` 表：每篇貼文或每個 repo 一列，含篩選結果、robots 與條款的判讀、首頁標題與 meta 描述。首頁的可見文字（最多 4 萬字）只為了抽取暫存，抽取完用 `pickfit webapps purge` 刪掉。
+- 紀錄（`data/software/`）：只有抽出的事實與每個欄位的短引用（≤300 字），來源列出網站首頁（`website`）、Show HN 貼文（`hn`，不當任何欄位的證據）、有 repo 的再列 GitHub API 與 README。
+
+### 選樣規則（中立，不看主題；`webapps.v1`）
+
+1. 是網站：貼文的連結（或貼文連到的 GitHub repo 的 homepage、或 repo 自己的 homepage）是網站；不是程式碼代管、套件庫與文件站、商店、社群與內容平台、文件與筆記本服務、大公司的產品頁（`PLATFORMS`），也不是檔案下載。
+2. 只有 GitHub：GitHub 偵測到開源授權、365 天內有 push、沒封存、不是 fork 或 template。
+3. 有人用、但不出名：先要有人用的跡象（和 cask 要「30 天內有安裝」同理）：Show HN 貼文一開始就有發文者自己的 1 分，所以網站要有一篇 ≥2 分；GitHub 一顆星可能是作者自己按的，所以要 ≥2 星。再取該來源的第 25 到第 75 百分位（中間一半）：Show HN 每個網站取它最高分的貼文，2–5 分；GitHub 3–31 星。（沒有這個門檻時，兩個來源的第 25 百分位剛好就是那個 1，什麼都沒擋。）
+4. 依 `sha256("p2.8:<網站 key>")` 排序，逐一檢查到配額（Show HN 55、GitHub 45）：貼文沒被刪或 dead、repo 還在；robots.txt；首頁；使用條款（上面三條）；Muse Spark Open 讀首頁（＋README）判斷：是在瀏覽器裡用的網頁應用（不是要下載安裝的軟體的介紹頁、內容、文件、平台、公司或作品集頁、只給程式用的 API、停用或錯誤頁）、核心功能不用帳號、可以免費用；低信心、前後矛盾與固定 5% 抽樣交給 `muse-spark-1.3` 複查，以複查為準。
+
+### 結果（2026-11-02 00:10 台北）
+
+| 步驟 | Show HN | GitHub |
+|---|---|---|
+| 取得 | 15,516 篇貼文 | 9,593 個 repo |
+| 1–2 沒過 | 不是網站或 repo 沒 homepage 4,159（repo 沒 homepage 2,614、平台 797、沒連結 416、程式碼代管 222、repo 不存在 105、下載 5） | 沒 homepage 2,127、不是開源 2,966、template 162、平台或代管 214、沒連結 6 |
+| 3 沒人用（1 分／<2 星） | 3,329 | 1,559 |
+| 3 中間一半以外 | 高於 1,844（低於 0） | 高於 628、低於 561 |
+| 在區間內的網站 | 5,647 | 1,347 |
+| 依序檢查 | 180 | 84 |
+| robots.txt 不准或連不上 | 5 | 0 |
+| 首頁打不開 | 5 | 1 |
+| 條款禁止自動化存取 | 16 | 1 |
+| 不是網頁應用 | 84（安裝軟體的介紹頁 55、內容 9、公司或作品集 7、只給程式用 6、文件 4、其他 2、平台 1） | 33（介紹頁 12、公司或作品集 9、內容 6、其他 3、文件 2、平台 1） |
+| 核心功能要帳號 | 15 | 4 |
+| **選入** | **55** | **45** |
+
+兩個來源選入的網站沒有重複；49 個有開源 repo（GitHub 45、Show HN 4）；42 個首頁是 script 畫的（用瀏覽器打開讀）；42 個有 web app manifest（可能是 PWA，離線要由驗證確認）。選入的 100 個裡，模型判斷核心功能不用帳號 90、看不出來 10；免費 100。條款頁讀到 17 個、條款頁是 script 畫的讀不到 3 個（交給瀏覽器驗證時再看）；robots.txt 擋訓練用爬蟲的 5 個（照收，見上）。
+
+花費（帳本，`webapps-` 開頭的 run，含重查）：Muse Spark Open（Baseten）299 次 $0.80、muse-spark-1.3 複查 24 次 $0.12。
+
+抽取與紀錄（11/2 00:07–00:25）：選入的 100 個用 `muse-spark-1.3`（effort minimal）抽取，100 個都成功（6 個各丟掉一段對不上來源的引用），$0.82。寫出 95 筆 `web_app` 紀錄（47 筆沒有 repo，`repo_id` 是 `web:`；48 筆有 GitHub repo），5 個沒寫：4 個抽取判斷不是網頁應用（函式庫 1、看不出種類 3）、1 個沒有摘要。全部未驗證，交給 P3.12。首頁文字在寫完紀錄後用 `pickfit webapps purge` 刪掉。
