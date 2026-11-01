@@ -54,22 +54,22 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "brew",
+      "basis": "replayed",
+      "run_id": "verify-oxi-20261101-210804-48a7",
+      "method": "script",
       "steps": [
         {
-          "command": "brew tap maziluiosif/tap",
-          "purpose": null
+          "command": "curl -fsSL https://maziluiosif.github.io/oxi/install.sh -o /tmp/oxi-install.sh && ls -lh /tmp/oxi-install.sh && wc -l /tmp/oxi-install.sh",
+          "purpose": "download install.sh script"
         },
         {
-          "command": "brew install --cask oxi",
-          "purpose": null
+          "command": "OXI_APP_DIR=$HOME/Applications OXI_BIN_DIR=$HOME/.local/bin sh /tmp/oxi-install.sh 2>&1",
+          "purpose": "install oxi.app to ~/Applications and oxi CLI via script"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "oxi"
+      "first_task": "open $HOME/Applications/oxi.app"
     },
     "linux": {
       "basis": "readme_claim",
@@ -113,22 +113,88 @@
     "url": "https://github.com/maziluiosif/oxi/releases/tag/v1.33.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T21:11:34.640821+08:00",
+    "runs": [
+      {
+        "id": "verify-oxi-20261101-210804-48a7",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@78f2945fd37d",
+        "checked_at": "2026-11-01T21:11:34.640821+08:00",
+        "tool_version": "1.33.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://maziluiosif.github.io/oxi/install.sh -o /tmp/oxi-install.sh && ls -lh /tmp/oxi-install.sh && wc -l /tmp/oxi-install.sh",
+            "purpose": "download install.sh script"
+          },
+          {
+            "command": "OXI_APP_DIR=$HOME/Applications OXI_BIN_DIR=$HOME/.local/bin sh /tmp/oxi-install.sh 2>&1",
+            "purpose": "install oxi.app to ~/Applications and oxi CLI via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open $HOME/Applications/oxi.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew tap maziluiosif/tap && brew install --cask oxi",
+            "actually_needed": "brew trust required then cask still fails with 'Calling depends_on macos: :catalina is disabled' – use curl install.sh with OXI_APP_DIR=$HOME/Applications instead",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows oxi's main chat screen with a prompt header, suggested tasks, and a message input bar.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-oxi-20261101-210804-48a7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-oxi-20261101-210804-48a7/replay-7-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.046238,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "open $HOME/Applications/oxi.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        }
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-01T21:11:34+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 69.9,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.51,
           "weight": 40.0
         },
         "install_docs": {
@@ -169,7 +235,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 37.12
+      "value": 37.61
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -452,5 +518,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T21:11:34.642336+08:00"
 }
