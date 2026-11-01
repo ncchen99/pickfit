@@ -84,6 +84,7 @@ class AgentLimits:
     max_seconds: float = 20 * 60
     scope_cap_usd: float = 0.50
     same_error_limit: int = 3
+    max_operations: int = OPERATE_MAX  # display boxes: 0 makes the run install-only (no operate_gui)
 
 
 # ---------------------------------------------------------------- tools
@@ -459,6 +460,8 @@ FLATPAK_RULE = """ A Flatpak app installs per user as two cited steps, \
 `flatpak install --user -y flathub <app id>`, and launches with `flatpak run <app id>`: a fresh box has no \
 Flathub remote until the cited step adds it."""
 
+INSTALL_ONLY_RULE = """ This run checks install only: there is no operate_gui here. After the launch_gui, report each listed feature not_checked with reason other and the note "install-only run", and finish."""
+
 # Public models small enough for an inference check, licenses and URLs checked 2026-10-29.
 # stories260K: karpathy/tinyllamas weights (MIT), GGUF by ggml-org. SmolLM2-135M-Instruct:
 # HuggingFaceTB (Apache-2.0), GGUF by bartowski; Ollama's smollm2:135m is the same model.
@@ -702,6 +705,9 @@ class VerifyAgent:
         if box.display and getattr(box, "runtime", None) == "gvisor":  # flatpak's sandbox needs gVisor's userns
             self.instructions += FLATPAK_RULE
         self.tools = GUI_TOOLS if box.display else tools_for(box)
+        if box.display and limits.max_operations <= 0:
+            self.instructions += INSTALL_ONLY_RULE
+            self.tools = [t for t in self.tools if t is not OPERATE_GUI_TOOL]
         self.commands_used = 0
         self.finish_retries = 0
         self.verdict: LogVerdict | None = None
@@ -1078,8 +1084,10 @@ class VerifyAgent:
             return "error: too little time is left for an operation (a few minutes). Call finish."
         problems = spec_problems(args, self.task.readme)
         done = [c.operate["spec"].get("feature") for c in self.report.commands if c.operate]
-        if len(done) >= OPERATE_MAX:
-            problems.append(f"this run has used its {OPERATE_MAX} operations")
+        if self.limits.max_operations <= 0:
+            problems.append("this run checks install only: report the features not_checked")
+        elif len(done) >= self.limits.max_operations:
+            problems.append(f"this run has used its {self.limits.max_operations} operations")
         elif args.feature is not None and done.count(args.feature) >= OPERATE_PER_FEATURE:
             problems.append(f"feature F{args.feature} has had its {OPERATE_PER_FEATURE} operations; report it")
         if problems:  # nothing ran: not budgeted

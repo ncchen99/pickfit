@@ -431,3 +431,17 @@ def test_an_agent_gets_two_operations_per_feature_and_six_per_run(tmp_path: Path
     assert "F1 has had its 2 operations" in refused and agent.commands_used == 0  # refused before it ran
     agent.report.commands += [done(n) for n in range(2, 2 + OPERATE_MAX)]
     assert "used its 6 operations" in agent._operate_gui(operate_args(feature=9), 3)
+
+
+def test_an_install_only_run_has_no_operate_gui_and_refuses_one_before_it_runs(tmp_path: Path):
+    from pickfit.verify.agent import INSTALL_ONLY_RULE, OPERATE_GUI_TOOL, AgentLimits, VerifyAgent
+
+    usual = VerifyAgent(desktop_task(), OperateBox(tmp_path / "home"), runs_dir=tmp_path, log=lambda s: None)
+    assert OPERATE_GUI_TOOL in usual.tools and INSTALL_ONLY_RULE not in usual.instructions
+    agent = VerifyAgent(desktop_task(), OperateBox(tmp_path / "home"), runs_dir=tmp_path, log=lambda s: None,
+                        limits=AgentLimits(max_operations=0))
+    assert OPERATE_GUI_TOOL not in agent.tools and agent.instructions.endswith(INSTALL_ONLY_RULE)
+    assert "launch_gui" in [t["name"] for t in agent.tools]
+    agent.started = agent.clock()
+    refused = agent._operate_gui(operate_args(), 3)  # a model may still call it by name
+    assert "checks install only" in refused and agent.commands_used == 0
