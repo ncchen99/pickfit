@@ -67,9 +67,9 @@ test('the seven stages are stored as (stage, success); replaced keeps replaced_b
   for (const [stage] of expected) {
     await report(h, { slug: 'fixture-llm-runner', stage, rec_id: rec, replaced_by: 'Ollama' });
   }
-  // abandoned and replaced are both ('still_using', 0): the second is a duplicate.
-  const abandoned = await report(h, { slug: 'fixture-llm-runner', stage: 'abandoned', rec_id: rec });
-  assert.equal(abandoned.deduplicated, true);
+  // Replaced by the same tool again is a duplicate.
+  const again = await report(h, { slug: 'fixture-llm-runner', stage: 'replaced', rec_id: rec, replaced_by: 'Ollama' });
+  assert.equal(again.deduplicated, true);
   const rows = outcomes(h);
   assert.deepEqual(rows.map((r) => [r.stage, r.success]), expected.map(([, stage, success]) => [stage, success]));
   assert.deepEqual(rows.map((r) => r.replaced_by), [null, null, null, 'Ollama']);
@@ -151,6 +151,25 @@ test('fetching the guide again under the same rec_id does not restart its window
   assert.equal((await at('2027-02-08T12:00:00Z', 'installed')).counted_in_score, false);
   // Day 121 is past 120 days from the first issue, whatever the later guide row says.
   assert.equal((await at('2027-02-28T12:00:01Z', 'still_using')).not_counted_reason, 'unknown_or_expired_rec_id');
+});
+
+test('a later report that changes the state is stored; one that repeats the latest is a duplicate', async () => {
+  const h = harness(null, { modelEnabled: false });
+  const rec = await recommend(h);
+  const send = (stage: OutcomeInput['stage'], replaced_by?: string) =>
+    report(h, { slug: 'fixture-llm-runner', stage, rec_id: rec, replaced_by });
+  const first = await send('still_using');
+  assert.equal((await send('still_using')).report_id, first.report_id); // repeat of the latest
+  assert.equal((await send('abandoned')).deduplicated, false);
+  const back = await send('still_using'); // used again: a third report, not a repeat of the first
+  assert.equal(back.deduplicated, false);
+  assert.notEqual(back.report_id, first.report_id);
+  assert.equal((await send('replaced', 'other-cli')).deduplicated, false); // abandoned -> replaced is new
+  assert.equal((await send('replaced', 'other-cli')).deduplicated, true);
+  assert.equal((await send('abandoned')).deduplicated, false);
+  assert.deepEqual(outcomes(h).map((r) => [r.success, r.replaced_by]), [
+    [1, null], [0, null], [1, null], [0, 'other-cli'], [0, null],
+  ]);
 });
 
 test('last_used is kept coarse, and only for the later stages', async () => {
