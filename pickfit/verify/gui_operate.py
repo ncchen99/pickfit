@@ -607,6 +607,8 @@ class OperatorAction(BaseModel):
 
 def normalize_key(name: str) -> str | None:
     """An X key combination pickfit allows (ctrl+s, Return, F5), or None."""
+    if name and not name.strip():  # a literal space
+        return "space"
     parts = [p.strip() for p in name.replace("-", "+").split("+")]
     if not parts or any(not p for p in parts) or len(parts) > 4:
         return None
