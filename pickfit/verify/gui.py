@@ -26,11 +26,13 @@ install, signing and malware checks):
   process_alive  still running after the wait, but no window of its own
   window         a mapped window of its own, at least MIN_WIDTH x MIN_HEIGHT on screen
   ui_rendered    the screen judge read a crop of the app's windows and saw its own UI
+  action_checked actions pickfit performed made a result pickfit checked itself (gui_operate.py)
 
 A launch reaches at most `window`; ui_rendered comes from the screen judge on
-the replay's screenshot. A GUI check supports level install only. Checking
-controls in the accessibility tree, or that an action changed checkable state,
-is not built; nothing claims those tiers.
+the replay's screenshot. A launch alone supports level install only; operate
+(gui_operate.py) keeps the app running after its window shows, performs the
+actions a model picks from screenshots and checks the result: a run with such
+a check of a listed feature supports function (action_checked).
 """
 
 from __future__ import annotations
@@ -59,9 +61,10 @@ APP_LOG_DIR = f"{BOX_HOME}/.pickfit-gui"
 # What the display needs, and the shared libraries Electron and Tauri apps load
 # (chromium brings GTK, NSS, GBM and ALSA). Installed on top of sandbox.Dockerfile.
 # python3-tk brings Debian's own /usr/bin/python3 with tkinter: the image's python3.12 has none.
+# xdotool and xclip: the display uid's hands (XTEST input) and its reading of the clipboard (gui_operate.py).
 GUI_PACKAGES = ("xvfb", "x11-utils", "x11-apps", "xrestop", "imagemagick", "chromium",
-                "libwebkit2gtk-4.1-0", "fonts-dejavu-core", "python3-tk", "python3-venv")
-TIERS = ("none", "process_alive", "window", "ui_rendered")
+                "libwebkit2gtk-4.1-0", "fonts-dejavu-core", "python3-tk", "python3-venv", "xdotool", "xclip")
+TIERS = ("none", "process_alive", "window", "ui_rendered", "action_checked")
 WAIT_MAX_S = 60
 SETTLE_S = 6  # after the first window, so a page that loads after the window shows still renders
 MIN_WIDTH, MIN_HEIGHT = 150, 100  # on-screen size of a window that counts (helper and offscreen ones do not)
@@ -353,10 +356,11 @@ def app_facts(launch: GuiLaunch) -> str:
     return "\n".join(lines).rstrip()
 
 
-def read_shot(box: Box, path: str, shown: GuiLaunch) -> tuple[bytes | None, str | None]:
-    """The screenshot, checked against the size and hash the watcher printed; (None, why) if no read matches."""
-    if not shown.shot_bytes or not shown.shot_sha256 or shown.shot_bytes > SHOT_MAX_BYTES:
-        return None, f"no usable screenshot ({shown.shot_bytes} bytes)"
+def read_evidence(box: Box, path: str, size: int | None, sha256: str | None) -> tuple[bytes | None, str | None]:
+    """A file of pickfit's evidence, as root reads it, checked against the size and hash its maker printed;
+    (None, why) if no read matches."""
+    if not size or not sha256 or size > SHOT_MAX_BYTES:
+        return None, f"no usable screenshot ({size} bytes)"
     got = 0
     for _ in range(SHOT_READS):
         try:
@@ -364,9 +368,14 @@ def read_shot(box: Box, path: str, shown: GuiLaunch) -> tuple[bytes | None, str 
         except Exception as err:  # BoxError: the box or the file is gone
             return None, f"screenshot unreadable: {err}"
         got = len(data)
-        if got == shown.shot_bytes and hashlib.sha256(data).hexdigest() == shown.shot_sha256:
+        if got == size and hashlib.sha256(data).hexdigest() == sha256:
             return data, None
-    return None, f"screenshot copy incomplete after {SHOT_READS} reads ({got} of {shown.shot_bytes} bytes)"
+    return None, f"screenshot copy incomplete after {SHOT_READS} reads ({got} of {size} bytes)"
+
+
+def read_shot(box: Box, path: str, shown: GuiLaunch) -> tuple[bytes | None, str | None]:
+    """The launch's screenshot, checked against the size and hash the watcher printed."""
+    return read_evidence(box, path, shown.shot_bytes, shown.shot_sha256)
 
 
 def stop_box_user(box: Box) -> ExecResult:
@@ -374,9 +383,19 @@ def stop_box_user(box: Box) -> ExecResult:
     return box.harness_exec([PYTHON, "-I", "-S", "-"], 60, stdin=KILL_PY.encode())
 
 
-def launch(box: Box, command: str, tag: str | int, wait_s: int, *, timeout_s: int | None = None
-           ) -> tuple[ExecResult, GuiLaunch, bytes | None]:
-    """Launch on the box's display; (the record to keep, what it showed, the screenshot PNG)."""
+@dataclass
+class Opened:
+    """An app started on the display and watched until its window showed (or the wait ran out); still running."""
+
+    shown: GuiLaunch
+    shot: str  # the watcher's screenshot, in EVIDENCE_DIR
+    seconds: float
+    timed_out: bool
+
+
+def open_app(box: Box, command: str, tag: str | int, wait_s: int, *, timeout_s: int | None = None) -> Opened:
+    """Snapshot the box user's processes, start the app as the box user and watch for its window (steps 1-3).
+    The app keeps running: close_app stops it."""
     wait_s = max(1, min(int(wait_s), WAIT_MAX_S))
     xvfb_pid = getattr(box, "xvfb_pid", None)
     if not box.display or not xvfb_pid:
@@ -401,20 +420,34 @@ def launch(box: Box, command: str, tag: str | int, wait_s: int, *, timeout_s: in
         shown = parse_report(watch.stdout, nonce)
         if watch.exit_code != 0 and not shown.error:
             shown.error = f"the watcher exited {watch.exit_code}: {watch.stderr.strip()[-300:]}"
+    return Opened(shown=shown, shot=shot, seconds=seconds, timed_out=timed_out)
+
+
+def close_app(box: Box, opened: Opened, tag: str | int) -> tuple[bytes | None, bool]:
+    """Root stops every box-user process, copies the window screenshot out and reads the app's log (steps 4-5);
+    (the screenshot PNG, whether something of the box user's survived the stop)."""
+    shown = opened.shown
     stopped = stop_box_user(box)
     survived = "PICKFIT_KILLED" not in stopped.stdout
     if survived:  # something of the box user's outlived the launch: nothing about it counts
         shown.error = "; ".join(filter(None, [shown.error, "box-user processes survived the stop"]))
     png: bytes | None = None
     if shown.tier == "window":
-        png, why = read_shot(box, shot, shown)
+        png, why = read_shot(box, opened.shot, shown)
         if why:
             shown.error = "; ".join(filter(None, [shown.error, why]))
     log = box.exec(f"/usr/bin/tail -c 3000 -- {APP_LOG_DIR}/{tag}.log", 20)
     shown.log_tail = log.stdout if log.exit_code == 0 else ""
-    if survived:
-        png = None
-    code = 0 if shown.tier == "window" and png is not None and not timed_out and not survived else 1
+    return (None if survived else png), survived
+
+
+def launch(box: Box, command: str, tag: str | int, wait_s: int, *, timeout_s: int | None = None
+           ) -> tuple[ExecResult, GuiLaunch, bytes | None]:
+    """Launch on the box's display; (the record to keep, what it showed, the screenshot PNG)."""
+    opened = open_app(box, command, tag, wait_s, timeout_s=timeout_s)
+    png, survived = close_app(box, opened, tag)
+    shown = opened.shown
+    code = 0 if shown.tier == "window" and png is not None and not opened.timed_out and not survived else 1
     result = ExecResult(command=command, exit_code=code, stdout=observation(shown), stderr=app_facts(shown),
-                        seconds=seconds, timed_out=timed_out)
+                        seconds=opened.seconds, timed_out=opened.timed_out)
     return result, shown, png
