@@ -37,8 +37,9 @@ if TYPE_CHECKING:
     from pickfit.verify.verdict import LogVerdict
 
 GAPS: tuple[str, ...] = get_args(FeatureGap.__value__)
-# Checks that show the tool starts, not that a feature works: --version/--help, an MCP handshake alone.
-NOT_FEATURE_KINDS = frozenset({"version", "mcp"})
+# Checks that show the tool starts, not that a feature works: --version/--help, an MCP handshake alone, a GUI
+# launch (its window). A GUI feature is checked by an operation (gui_op) that passed pickfit's own check.
+NOT_FEATURE_KINDS = frozenset({"version", "mcp", "gui"})
 # For an MCP server only a tool call through pickfit's probe exercises a feature (mcp.py).
 MCP_FEATURE_KINDS = frozenset({"mcp_call"})
 _CRASH = re.compile(r"Traceback \(most recent call last\)|panicked at|Segmentation fault|"
@@ -216,7 +217,7 @@ def resolve_features(names: list[str], claims: list[FinishFeature], verdict: Log
                 out.reason = "other"
                 out.problems.append("no cited smoke test that passed exercises it ("
                                     + ("only a tool call through pickfit's probe does)" if mcp else
-                                       "--version/--help and an MCP handshake do not)"))
+                                       "--version/--help, an MCP handshake and a GUI launch do not)"))
                 out.note = _clip(f"its check did not pass in the log; {claim.note or ''}")
         elif claim.status == "test_failed":
             failing = [cid for cid in claim.command_ids if cid in by_id and by_id[cid].tool == "run_command"

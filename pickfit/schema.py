@@ -720,14 +720,41 @@ class Judge(_Model):
 
 # A recorded GUI tier rests on a screenshot the judge read: a launch with no window (or nothing judged) leaves
 # no GUI record. Weaker outcomes (no window, a process with no window) live in the notes and smoke tests.
-type GuiTier = Literal["window", "ui_rendered"]
+type GuiTier = Literal["window", "ui_rendered", "action_checked"]
 type GuiScreen = Literal["main_ui", "first_run", "sign_in_wall", "crash_or_error", "blank_or_loading", "other"]
-GUI_PASSED_TIERS: tuple[str, ...] = ("window", "ui_rendered")
+GUI_PASSED_TIERS: tuple[str, ...] = ("window", "ui_rendered", "action_checked")
 # What the screen judge saw at each tier: ui_rendered is the app's own UI drawn; a window shows anything else.
 GUI_SCREENS_BY_TIER: dict[str, tuple[str, ...]] = {
     "window": ("sign_in_wall", "crash_or_error", "blank_or_loading", "other"),
     "ui_rendered": ("main_ui", "first_run"),
+    "action_checked": ("main_ui", "first_run"),
 }
+type GuiCheckKind = Literal["file", "clipboard", "screen_text"]
+
+
+class GuiOperation(_Model):
+    """One goal pickfit reached through the app's own UI (gui_operate.py), in the fresh box's replay.
+
+    Muse Spark Open chose each click, text and key from pickfit's screenshots; pickfit performed them as
+    the display user (the app never acts for itself), then checked the result itself: a file the app wrote,
+    read by root; the clipboard, read by the display user; or text the screen judge read on pickfit's last
+    screenshot. The goal and the expected text hold {nonce} where pickfit put a fresh word.
+    """
+
+    feature: str | None = Field(default=None, max_length=FEATURE_MAX, description="The listed feature it exercises.")
+    goal: str = Field(min_length=1, max_length=600, description="What the operator was asked to do.")
+    check: GuiCheckKind
+    target: str | None = Field(default=None, max_length=300, description="file: the file, or the folder searched.")
+    expected: list[Annotated[str, StringConstraints(min_length=1, max_length=200)]] = Field(default=[], max_length=4)
+    format: str | None = Field(default=None, max_length=20, description="file: the format it had to have.")
+    passed: bool = Field(description="pickfit's check, never the operator's word.")
+    observed: str = Field(max_length=500, description="pickfit's line about what the check found.")
+    smoke_test: int = Field(ge=0, description="Index into the run's smoke_tests: this operation's check.")
+    actions: int = Field(ge=0, description="Actions pickfit performed.")
+    replay: Literal["actions", "operated"] = Field(
+        description="actions: the recorded actions passed again; operated: the operator ran the goal again.")
+    operator_model: str | None = Field(default=None, max_length=80)
+    screenshots: list[RelPath] = Field(default=[], max_length=25, description="Each step's screen, in order.")
 
 
 class GuiCheck(_Model):
@@ -736,8 +763,9 @@ class GuiCheck(_Model):
     Recorded only for a launch whose checked screenshot the judge read. window: a mapped window whose X
     client is one of the app's processes (per the X server), showing something other than the app's UI
     (`screen`: a sign-in wall, a crash, a blank or loading screen); ui_rendered: the judge saw the app's own
-    interface in a crop of its windows (its main screen or its first-run screen). A GUI launch supports
-    install only; checking controls or that an action changed checkable state is not built.
+    interface in a crop of its windows (its main screen or its first-run screen); action_checked: also, an
+    operation (`operations`) passed pickfit's own check in the replay and the feature judge saw it show a
+    listed feature working. A launch supports install; action_checked supports function.
     """
 
     tier: GuiTier
@@ -745,11 +773,16 @@ class GuiCheck(_Model):
     command: str = Field(min_length=1, max_length=COMMAND_MAX, description="How the app was started.")
     window_title: str | None = Field(default=None, max_length=200, description="Set by the app; data only.")
     display: str = Field(max_length=120, description="e.g. Xvfb 1280x800x24, no window manager, no GPU.")
+    operations: list[GuiOperation] = Field(
+        default=[], max_length=FEATURES_MAX * 2, exclude_if=lambda value: not value,
+        description="Goals pickfit operated the app toward, and what its checks found.")
 
     @model_validator(mode="after")
     def _screen_fits_tier(self) -> GuiCheck:
         if self.screen not in GUI_SCREENS_BY_TIER[self.tier]:
             raise ValueError(f"tier {self.tier!r} cannot rest on screen {self.screen!r}")
+        if self.tier == "action_checked" and not any(op.passed for op in self.operations):
+            raise ValueError("tier action_checked needs an operation that passed pickfit's check")
         return self
 
 
@@ -883,6 +916,23 @@ class VerificationRun(_Model):
         return self
 
     @model_validator(mode="after")
+    def _check_operations(self) -> VerificationRun:
+        """An operation cites its own smoke test; action_checked stands on one whose test passed and checks a
+        listed feature."""
+        if self.gui is None:
+            return self
+        for op in self.gui.operations:
+            if op.smoke_test >= len(self.smoke_tests):
+                raise ValueError("a GUI operation cites a smoke test the run does not have")
+            if op.passed and not self.smoke_tests[op.smoke_test].passed:
+                raise ValueError("a GUI operation passed only when its smoke test passed")
+        if self.gui.tier == "action_checked" and not any(
+                op.passed and any(f.status == "checked" and op.smoke_test in f.smoke_tests for f in self.features)
+                for op in self.gui.operations):
+            raise ValueError("tier action_checked needs a passed operation whose smoke test checks a listed feature")
+        return self
+
+    @model_validator(mode="after")
     def _check_outcome(self) -> VerificationRun:
         _check_reason(self.level, self.unverified_reason)
         if is_passed(self.level):
@@ -898,8 +948,11 @@ class VerificationRun(_Model):
                 raise ValueError(f"a passed run's GUI launch must reach a window, not {self.gui.tier!r}")
             if self.gui and self.gui.screen in ("crash_or_error", "blank_or_loading", "other"):
                 raise ValueError(f"a passed run's GUI launch cannot show {self.gui.screen!r}")
-            if self.gui and self.level != "install":
-                raise ValueError("a GUI launch supports install only")
+            if self.gui and self.level not in ("install", "function"):
+                raise ValueError(f"a GUI app's run is install, or function on a checked operation, not {self.level!r}")
+            if self.gui and self.level == "function" and self.gui.tier != "action_checked":
+                raise ValueError("a GUI launch supports install only; function needs an operation pickfit checked "
+                                 "(tier action_checked)")
             if self.level == "service" and self.mcp is not None and self.mcp.called_tool is None:
                 raise ValueError("an MCP server's service run needs a tool call (mcp.called_tool)")
         if self.level == "failed" and not self.blocking_error:
@@ -1281,11 +1334,13 @@ class SoftwareRecord(_Model):
 
     @model_validator(mode="after")
     def _check_gui_app_levels(self) -> SoftwareRecord:
+        """A desktop app passes at install on its launch, at function only on an operation pickfit checked."""
         if self.kind == "desktop_app":
             for run in self.verification.runs:
-                if run.level in ("function", "service", "inference"):
-                    raise ValueError(f"run {run.id}: a desktop app is not {run.level}: that needs an action shown to "
-                                     "change checkable state, which pickfit does not check yet")
+                checked = run.gui is not None and run.gui.tier == "action_checked"
+                if run.level in ("service", "inference") or (run.level == "function" and not checked):
+                    raise ValueError(f"run {run.id}: a desktop app is not {run.level}: function needs an operation "
+                                     "pickfit checked (gui tier action_checked), and a desktop app is never above it")
         return self
 
     @model_validator(mode="after")
