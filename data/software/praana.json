@@ -64,18 +64,25 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-praana-20261101-123734-ee74",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/amitkumardubey/praana/main/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/amitkumardubey/praana/main/install.sh -o /tmp/praana-install.sh && wc -l /tmp/praana-install.sh && head -n 200 /tmp/praana-install.sh",
+          "purpose": "download install.sh from GitHub"
+        },
+        {
+          "command": "bash /tmp/praana-install.sh 2>&1",
+          "purpose": "run install.sh to install praana binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "./praana --version"
+      "check": {
+        "command": "export PATH=\"$HOME/.local/bin:$PATH\" && praana --version",
+        "expected_signal": "PRAANA v0.16.0"
+      },
+      "first_task": null
     },
     "linux": {
       "basis": "replayed",
@@ -128,7 +135,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:17:31.054255+08:00",
+    "checked_at": "2026-11-01T12:40:47.510730+08:00",
     "runs": [
       {
         "id": "verify-praana-20261031-021639-a568",
@@ -234,6 +241,127 @@
             "reason": "needs_account",
             "failure": null,
             "note": "resume needs prior sessions with a model key"
+          }
+        ]
+      },
+      {
+        "id": "verify-praana-20261101-123734-ee74",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T12:40:47.510730+08:00",
+        "tool_version": "0.16.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/amitkumardubey/praana/main/install.sh -o /tmp/praana-install.sh && wc -l /tmp/praana-install.sh && head -n 200 /tmp/praana-install.sh",
+            "purpose": "download install.sh from GitHub"
+          },
+          {
+            "command": "bash /tmp/praana-install.sh 2>&1",
+            "purpose": "run install.sh to install praana binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && praana --version",
+            "expected_signal": "PRAANA v0.16.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PRAANA v0.16.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && praana --help | grep -E \"/state|working-memory\" && echo \"F2 OK\"",
+            "expected_signal": "/state List all state objects",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ /state List all state objects for this session │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && praana --help | grep -E \"/digest|Cognitive Memory\" && echo \"F3 OK\"",
+            "expected_signal": "/digest Print Cognitive Memory digest",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ /digest Print Cognitive Memory digest │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && praana --help | grep -E \"praana resume\" && echo \"F4 OK\"",
+            "expected_signal": "praana resume [session] Resume last session",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ praana resume [session] Resume last session here, or a specific session │",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "praana doctor checks config + provider keys (implied success)",
+            "actually_needed": "doctor exits 1 when no provider configured, but still reports ✓ native and ✓ search; this is expected without ANTHROPIC_API_KEY",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show praana --help containing /state and /digest entries and praana --version printing PRAANA v0.16.0 with F2 OK and F3 OK markers.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-praana-20261101-123734-ee74/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-praana-20261101-123734-ee74/check-1-cmd13.judged.png",
+            "runs/verify/verify-praana-20261101-123734-ee74/check-2-cmd14.judged.png",
+            "runs/verify/verify-praana-20261101-123734-ee74/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.090099,
+        "features": [
+          {
+            "feature": "run long coding sessions in terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; praana --version shows PRAANA v0.16.0, help shows Start new session and praana run"
+          },
+          {
+            "feature": "curate prompt context every turn",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists /state and /stats help lines, not curating context."
+          },
+          {
+            "feature": "retain learnings across sessions locally",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists Cognitive Memory help lines, not retained learnings."
+          },
+          {
+            "feature": "resume sessions via checkpoint replay",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists resume help line, not an actual resumed session."
           }
         ]
       }
@@ -615,5 +743,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:15+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T12:40:47.514307+08:00"
 }
