@@ -430,7 +430,7 @@ def read(path):
     finally:
         os.close(fd)
 def norm(text):
-    return " ".join(text.split()).casefold()
+    return " ".join(text.split())
 def fmt(data, name):
     head = data[:16]
     text = data.decode("utf-8", "strict") if name in ("text", "json", "html", "svg", "csv", "srt") else None
@@ -459,7 +459,7 @@ def judge(path, data, st):
     found = [norm(c) in text for c in P["contains"]]
     excerpt = ""
     for c in P["contains"]:
-        i = data.decode("utf-8", "replace").casefold().find(c.casefold())
+        i = data.decode("utf-8", "replace").find(c)
         if i >= 0:
             raw = data.decode("utf-8", "replace")
             excerpt = raw[max(0, i - 80): i + len(c) + 80]
@@ -899,7 +899,8 @@ def replay_actions(display: Display, actions: list[dict[str, Any]], nonce: str, 
 
 
 def _norm(text: str) -> str:
-    return " ".join(text.split()).casefold()
+    """Whitespace-normalized, case kept: HELLO is not hello (an app that changes case did something)."""
+    return " ".join(text.split())
 
 
 def _quote(text: str) -> str:

@@ -257,6 +257,14 @@ def test_the_clipboard_is_read_by_the_display_uid_and_screen_text_never_counts_a
     assert operation.passed and operation.cost_usd > 0.004
     assert 'on screen (read by the screen judge, muse-spark-1.3, from pickfit\'s last screenshot): "7006652": yes' \
         in result.stdout
+    # Case counts: typing hello world is not seeing HELLO WORLD, and the app must show the converted case.
+    upper = {"kind": "screen_text", "path": None, "contains": ["HELLO WORLD"], "format": None}
+    for read, passed in ((["HELLO WORLD"], True), (["hello world"], False)):
+        _, operation, _ = op.run_operation(
+            box, operate_args(check=upper, goal="Type hello world and click UPPERCASE."), 6, log=lambda s: None,
+            client=NonceServer(*note_session("hello world")).client(),
+            read_screen=lambda png, expected, read=read: (read, 0.004, "muse-spark-1.3"), sleep=lambda s: None)
+        assert operation.passed is passed
 
 
 def test_no_window_means_nothing_is_operated(tmp_path: Path):
