@@ -37,7 +37,10 @@ export function reporterFrom(header: string | null): Reporter {
 
 /** rec_id handles are `rec_` + 32 hex; anything else is not ours. */
 export const REC_ID = /^rec_[0-9a-f]{32}$/;
+/** installed and first_run reports cite a rec_id from the last 7 days. */
 export const REC_TTL_DAYS = 7;
+/** still_using, replaced and abandoned come weeks later, so their rec_id counts for 120 days. */
+export const REC_TTL_LATER_DAYS = 120;
 
 /**
  * For waitUntil: a failed D1 write never fails the response, but it is logged
@@ -100,12 +103,18 @@ export interface IssuedRec {
 }
 
 /**
- * Did pickfit hand out `slug` under `recId` in the last 7 days? Either a
- * find_* call that recommended it, or a get_install_guide call for it.
+ * Did pickfit hand out `slug` under `recId` in the last `ttlDays` days? Either
+ * a find_* call that recommended it, or a get_install_guide call for it.
  */
-export async function issuedRec(db: D1Database, now: Date, recId: string, slug: string): Promise<IssuedRec | null> {
+export async function issuedRec(
+  db: D1Database,
+  now: Date,
+  recId: string,
+  slug: string,
+  ttlDays = REC_TTL_DAYS,
+): Promise<IssuedRec | null> {
   if (!REC_ID.test(recId)) return null;
-  const since = new Date(now.getTime() - REC_TTL_DAYS * 86_400_000).toISOString();
+  const since = new Date(now.getTime() - ttlDays * 86_400_000).toISOString();
   const { results } = await db
     .prepare(
       `SELECT type, slug, os, arch, results FROM events

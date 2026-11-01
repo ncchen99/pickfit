@@ -1,13 +1,14 @@
 /**
  * report_outcome (architecture E.3): one events row per (rec_id, slug, stage).
  * A report counts toward the score only when it cites a rec_id pickfit issued
- * for that slug in the last 7 days; then the row keeps the rec_id (so
+ * for that slug in the last 7 days (installed, first_run), or 120 days for the
+ * later stages (still_using, replaced, abandoned); then the row keeps the rec_id (so
  * `rec_id IS NOT NULL` means counted), otherwise it is stored once with
  * rec_id null. A failed install or first run with an error excerpt queues a
  * fresh sandbox re-run for that slug and OS. No model call.
  */
 import type { Catalog, OS } from './catalog.ts';
-import { issuedRec, logEvent, newId, type Reporter } from './events.ts';
+import { issuedRec, logEvent, newId, REC_TTL_DAYS, REC_TTL_LATER_DAYS, type Reporter } from './events.ts';
 import { scrubHead, scrubTail } from './scrub.ts';
 
 export const STAGES = [
@@ -31,6 +32,9 @@ export const STORED: Record<Stage, ['installed' | 'first_run' | 'still_using', b
   replaced: ['still_using', false],
   abandoned: ['still_using', false],
 };
+
+/** Stages reported weeks after install; their rec_id counts for REC_TTL_LATER_DAYS. */
+export const LATER_STAGES: readonly Stage[] = ['still_using', 'replaced', 'abandoned'];
 
 const SATISFIED = { satisfied: 1, neutral: 0, dissatisfied: -1, unknown: null } as const;
 
@@ -100,7 +104,8 @@ export async function reportOutcome(input: OutcomeInput, deps: OutcomeDeps): Pro
   const [stage, success] = STORED[input.stage];
   const failed = input.stage === 'install_failed' || input.stage === 'first_run_failed';
 
-  const rec = input.rec_id ? await issuedRec(deps.db, now, input.rec_id, input.slug) : null;
+  const ttl = LATER_STAGES.includes(input.stage) ? REC_TTL_LATER_DAYS : REC_TTL_DAYS;
+  const rec = input.rec_id ? await issuedRec(deps.db, now, input.rec_id, input.slug, ttl) : null;
   const recId = rec ? input.rec_id! : null;
   if (recId) {
     const existing = await deps.db

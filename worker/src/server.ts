@@ -30,7 +30,7 @@ const os = z.enum(['macos', 'linux', 'windows']);
 const arch = z.enum(['arm64', 'x86_64']);
 const slug = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(64);
 const recId = z.string().max(200);
-const REC_ID_OUT = "Identifies this response in pickfit's log; pass it to the next pickfit call. Valid 7 days";
+const REC_ID_OUT = "Identifies this response in pickfit's log; pass it to the next pickfit call. A report citing it counts for 7 days (install, first run) and 120 days (still using, replaced, abandoned)";
 
 const reason = z.object({
   claim: z.string(),
