@@ -38,6 +38,10 @@ export const LATER_STAGES: readonly Stage[] = ['still_using', 'replaced', 'aband
 
 const SATISFIED = { satisfied: 1, neutral: 0, dissatisfied: -1, unknown: null } as const;
 
+/** Roughly when the tool was last used; never an exact time. */
+export const LAST_USED = ['this_week', 'this_month', 'older', 'unknown'] as const;
+export type LastUsed = (typeof LAST_USED)[number];
+
 export const ERROR_EXCERPT_MAX = 500;
 export const NOTE_MAX = 280;
 
@@ -51,6 +55,8 @@ export interface OutcomeInput {
   error_excerpt?: string;
   replaced_by?: string;
   note?: string;
+  /** still_using, replaced and abandoned only; ignored for the earlier stages. */
+  last_used?: LastUsed;
 }
 
 export interface OutcomeOutput {
@@ -104,7 +110,8 @@ export async function reportOutcome(input: OutcomeInput, deps: OutcomeDeps): Pro
   const [stage, success] = STORED[input.stage];
   const failed = input.stage === 'install_failed' || input.stage === 'first_run_failed';
 
-  const ttl = LATER_STAGES.includes(input.stage) ? REC_TTL_LATER_DAYS : REC_TTL_DAYS;
+  const later = LATER_STAGES.includes(input.stage);
+  const ttl = later ? REC_TTL_LATER_DAYS : REC_TTL_DAYS;
   const rec = input.rec_id ? await issuedRec(deps.db, now, input.rec_id, input.slug, ttl) : null;
   const recId = rec ? input.rec_id! : null;
   if (recId) {
@@ -135,6 +142,7 @@ export async function reportOutcome(input: OutcomeInput, deps: OutcomeDeps): Pro
         replaced_by: input.stage === 'replaced' ? scrubHead(input.replaced_by, 100) : null,
         // Untrusted text: stored for people to read, never echoed or fed to a model.
         note: scrubHead(input.note, NOTE_MAX),
+        last_used: later ? (input.last_used ?? null) : null,
         reporter: deps.reporter,
         client: deps.client ?? null,
       },

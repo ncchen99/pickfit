@@ -15,6 +15,8 @@ export interface EventRow {
   error_excerpt?: string | null;
   replaced_by?: string | null;
   note?: string | null;
+  /** Coarse, for still_using / replaced / abandoned only: never an exact time. */
+  last_used?: 'this_week' | 'this_month' | 'older' | 'unknown' | null;
   reporter?: Reporter | null;
   client?: string | null;
   matched_by?: string | null;
@@ -61,9 +63,9 @@ export async function logEvent(db: D1Database, now: Date, row: EventRow, id = ne
     .prepare(
       `INSERT INTO events (id, ts, type, rec_id, slug, os, arch, category, need, results, stage, success,
                            satisfied, error_excerpt, replaced_by, note, reporter, client, matched_by, degraded,
-                           degraded_reason, model_attempts, model_statuses, meta_cost_usd, latency_ms)
+                           degraded_reason, model_attempts, model_statuses, meta_cost_usd, latency_ms, last_used)
        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22,
-               ?23, ?24, ?25)`,
+               ?23, ?24, ?25, ?26)`,
     )
     .bind(
       id,
@@ -91,6 +93,7 @@ export async function logEvent(db: D1Database, now: Date, row: EventRow, id = ne
       row.model_statuses ? JSON.stringify(row.model_statuses) : null,
       row.meta_cost_usd ?? null,
       row.latency_ms ?? null,
+      row.last_used ?? null,
     )
     .run();
   return id;

@@ -140,6 +140,21 @@ test('still_using, replaced and abandoned count with a rec_id up to 120 days old
   );
 });
 
+test('last_used is kept coarse, and only for the later stages', async () => {
+  const h = harness(null, { modelEnabled: false });
+  const rec = await recommend(h);
+  await report(h, { slug: 'fixture-llm-runner', stage: 'installed', rec_id: rec, last_used: 'this_week' });
+  await report(h, { slug: 'fixture-llm-runner', stage: 'still_using', rec_id: rec, last_used: 'this_month' });
+  await report(h, { slug: 'fixture-llm-runner', stage: 'abandoned', rec_id: rec, last_used: 'older' });
+  assert.deepEqual(outcomes(h).map((r) => [r.stage, r.success, r.last_used]), [
+    ['installed', 1, null],
+    ['still_using', 1, 'this_month'],
+    ['still_using', 0, 'older'],
+  ]);
+  // The column takes nothing but the four buckets, so an exact time cannot be stored.
+  assert.throws(() => h.sqlite.prepare("UPDATE events SET last_used = '2026-10-31T09:12:00Z'").run(), /CHECK/);
+});
+
 test('a failed install with an error excerpt queues a re-run; a pending one is not queued twice', async () => {
   const h = harness(null, { modelEnabled: false });
   const rec = await recommend(h);

@@ -6,24 +6,25 @@ import { findAlternatives, findSoftware, type Deps } from './find.ts';
 import { installGuide, PITFALL_KINDS, UnknownSlugError } from './install.ts';
 import { NOT_CHECKED_REASONS } from './features.ts';
 import { logEvent, logFailure } from './events.ts';
-import { ERROR_EXCERPT_MAX, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } from './outcome.ts';
+import { ERROR_EXCERPT_MAX, LAST_USED, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } from './outcome.ts';
 import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './submit.ts';
 
 const ABOUT =
-  'pickfit recommends lesser-known software that it has installed and tested in a sandbox. Scope: dev CLI tools, local AI/LLM tools, MCP servers. ' +
+  'pickfit recommends lesser-known software it installed and tested in a sandbox. Scope: dev CLIs, local AI tools, MCP servers. ' +
   'well_known_option is not verified by pickfit; say so. ';
 const RULES = 'Ask at most 1-2 questions first (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars.';
 
 export const INSTRUCTIONS =
   ABOUT +
-  'Flow: find_software (or find_alternatives when replacing a tool) -> user picks -> get_install_guide -> run steps with the user\'s consent -> report_outcome. ' +
+  'Flow: find_software (or find_alternatives to replace a tool) -> user picks -> get_install_guide -> run steps with consent -> report_outcome; ' +
+  'weeks later, with consent, its check_in. ' +
   RULES +
-  ' submit_software adds a GitHub project.';
+  ' submit_software adds a GitHub repo.';
 
 /** TOOLS=readonly: no mention of the tools that are not registered. */
 export const READONLY_INSTRUCTIONS =
   ABOUT +
-  'Flow: find_software (or find_alternatives when replacing a tool) -> user picks -> get_install_guide -> run steps with the user\'s consent. ' +
+  'Flow: find_software (or find_alternatives to replace a tool) -> user picks -> get_install_guide -> run steps with the user\'s consent. ' +
   RULES;
 
 const os = z.enum(['macos', 'linux', 'windows']);
@@ -286,6 +287,15 @@ const installOutput = z.object({
     })
     .nullable()
     .describe('MCP servers only: how to add it to an MCP client, from the launch command a fresh sandbox started; null for other software'),
+  check_in: z
+    .object({
+      after_days: z.number().int().describe('Not before this many days after the install'),
+      valid_until: z.string().describe('Date (UTC) until which a still-using report citing this rec_id counts'),
+      commands: z.array(z.object({ command: z.string(), shows: z.string() })).describe('Read-only; run only after the user agrees'),
+      how: z.string(),
+    })
+    .nullable()
+    .describe('Later, not now: how to ask whether the user still uses it, with their consent; nothing is installed or left running'),
   warnings: z.array(z.string()),
   sources: z.array(z.string()),
 });
@@ -306,6 +316,10 @@ const outcomeInput = z.object({
     .describe(`Last lines of the error, with user names, paths and tokens removed; pickfit keeps the last ${ERROR_EXCERPT_MAX} characters`),
   replaced_by: z.string().max(100).optional().describe('Only with stage "replaced": the slug or name of what replaced it'),
   note: z.string().max(NOTE_MAX).optional().describe('Optional short feedback, without personal data; read by people only'),
+  last_used: z
+    .enum(LAST_USED)
+    .optional()
+    .describe('With still_using, replaced or abandoned: roughly when it was last used. Never an exact time or anything about other software'),
 });
 
 const outcomeOutput = z.object({
@@ -398,15 +412,19 @@ export function buildServer(deps: Deps): McpServer {
         'For an MCP server, mcp_client_config gives the `claude mcp add` line and the mcpServers JSON for the launch command pickfit started, with placeholders for keys the user must supply. ' +
         'Show each command to the user before running it, and ask before any step that needs sudo or pipes a script into a shell. ' +
         'If applies_to_user_system.match is not "exact", tell the user the steps were checked on a different system.' +
-        (readonly ? '' : ' After the user tries it, call report_outcome with the rec_id.'),
+        (readonly
+          ? ''
+          : ' After the user tries it, call report_outcome with the rec_id. Weeks later, check_in says how to ask (with consent) whether they still use it.'),
       inputSchema: installInput,
       outputSchema: installOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async (args) => {
       try {
-        const out = installGuide(deps.catalog, args);
         const now = deps.now();
+        const out = installGuide(deps.catalog, args, now);
+        // The read-only deployment has no report_outcome to check in with.
+        if (readonly) out.check_in = null;
         deps.waitUntil(
           logEvent(deps.db, now, {
             type: 'install_guide',
@@ -436,6 +454,8 @@ export function buildServer(deps: Deps): McpServer {
       description:
         'Call after the user tried a tool pickfit recommended, once for each stage reached: installed or install_failed, first_run_ok or first_run_failed, and later still_using, replaced or abandoned. ' +
         'Pass the rec_id from find_software, find_alternatives or get_install_guide; without it the report is stored but not counted. ' +
+        'installed and first_run reports count for 7 days after the rec_id was issued; still_using, replaced and abandoned for 120 days. ' +
+        "For those later stages follow get_install_guide's check_in: only with the user's consent, read-only checks, and send last_used, never the command output. " +
         'Remove user names, file paths, tokens and other personal data from error_excerpt and note; pickfit stores no account or IP. ' +
         'A failed install with an error excerpt makes pickfit re-run the install steps in a fresh sandbox. Repeating the same report changes nothing.',
       inputSchema: outcomeInput,
