@@ -38,7 +38,15 @@ import openai
 from pydantic import BaseModel, ValidationError
 
 from pickfit.env import REPO_ROOT, get_env, require_env
-from pickfit.ledger import BudgetExceeded, Ledger, baseten_ledger, default_ledger, taipei_date, taipei_now
+from pickfit.ledger import (
+    BudgetExceeded,
+    Ledger,
+    baseten_ledger,
+    default_ledger,
+    modal_llm_ledger,
+    taipei_date,
+    taipei_now,
+)
 
 Endpoint = Literal["chat", "responses"]
 
@@ -47,11 +55,15 @@ Endpoint = Literal["chat", "responses"]
 class Provider:
     base_url: str
     key_env: str
+    secret_env: str | None = None  # Modal's proxy auth is "<token id>.<token secret>"
 
 
 PROVIDERS: dict[str, Provider] = {
     "meta": Provider("https://api.meta.ai/v1", "MODEL_API_KEY"),
     "baseten": Provider("https://inference.baseten.co/v1", "BASETEN_API_KEY"),
+    # Muse Spark Open on the hackathon's Modal Shared Endpoint (Modal credits), set up by the coordinating session.
+    "modal": Provider("https://ncchen99--ep-pickfit-spark-open-server.us-west.modal.direct/v1",
+                      "MODAL_PROXY_TOKEN_ID", "MODAL_PROXY_TOKEN_SECRET"),
 }
 
 # PICKFIT_MODE (default dev) picks the model when a Meta caller passes none.
@@ -59,8 +71,10 @@ MODE_ALIASES = {"dev": "muse-spark-1.3-contributor", "prod": "muse-spark-1.3"}
 # "open" is Muse Spark Open on Baseten (the hackathon's open-weight model). The model id says which
 # provider serves it, so call_meta routes and bills it to Baseten without the caller passing provider.
 OPEN_MODEL = "meta-models/muse-spark-open-1026"
-OPEN_ALIASES = {"open": OPEN_MODEL}
+MODAL_OPEN_MODEL = "meta-models/Muse-Spark-Open-816B-A42B"  # the same open-weight model, on Modal
+OPEN_ALIASES = {"open": OPEN_MODEL, "open-modal": MODAL_OPEN_MODEL}
 BASETEN_PREFIX = "meta-models/"
+OPEN_PROVIDERS = ("baseten", "modal")
 
 
 @dataclass(frozen=True)
@@ -79,6 +93,7 @@ PRICES: dict[tuple[str, str], Price] = {
     ("meta", "muse-wonder-1.0"): Price(input=4.00, output=20.00),
     ("baseten", "meta-models/muse-spark-open"): Price(input=1.25, output=4.25, cached=0.15),
     ("baseten", "meta-models/muse-spark-open-1026"): Price(input=1.25, output=4.25, cached=0.15),
+    ("modal", MODAL_OPEN_MODEL): Price(input=1.25, output=4.25, cached=0.15),  # the coordinator's quote, 11/1
 }
 WEB_SEARCH_USD = 2.50 / 1000
 
@@ -213,9 +228,9 @@ def resolve_model(model: str | None, provider: str = "meta") -> str:
         raise ValueError(f"unknown provider {provider!r}; expected one of {sorted(PROVIDERS)}")
     if model in OPEN_ALIASES:
         return OPEN_ALIASES[model]
-    if provider == "baseten":
+    if provider in OPEN_PROVIDERS:
         if model is None or model in MODE_ALIASES:
-            raise ModelRefused("baseten calls need an explicit model id, e.g. meta-models/muse-spark-open")
+            raise ModelRefused(f"{provider} calls need an explicit model id, e.g. meta-models/muse-spark-open")
         return model
     if model is None:
         model = get_env("PICKFIT_MODE") or "dev"
@@ -225,13 +240,16 @@ def resolve_model(model: str | None, provider: str = "meta") -> str:
 
 
 def provider_for(model: str) -> str:
-    """The provider that serves a model id: Baseten for its meta-models/ slugs, else Meta."""
+    """The provider that serves a model id: Modal for its endpoint's model, Baseten for its meta-models/ slugs,
+    else Meta."""
+    if model == MODAL_OPEN_MODEL:
+        return "modal"
     return "baseten" if model.startswith(BASETEN_PREFIX) else "meta"
 
 
 def is_open_model(model: str | None) -> bool:
-    """True when `model` (an alias or an id) is served on Baseten rather than by Meta's API."""
-    return model is not None and provider_for(OPEN_ALIASES.get(model, model)) == "baseten"
+    """True when `model` (an alias or an id) is Muse Spark Open (Baseten or Modal) rather than Meta's API."""
+    return model is not None and provider_for(OPEN_ALIASES.get(model, model)) in OPEN_PROVIDERS
 
 
 def price_for(provider: str, model: str) -> Price:
@@ -361,8 +379,8 @@ def _check_policy(provider: str, model: str, public_data_only: bool, effort: str
         raise ValueError(f"{model} does not support reasoning_effort='max'")
     if not isinstance(max_output_tokens, int) or max_output_tokens <= 0:
         raise ValueError("max_output_tokens must be a positive int")
-    if provider == "baseten" and body.get("previous_response_id"):
-        raise ValueError("Baseten /responses is stateless; previous_response_id is not supported")
+    if provider in OPEN_PROVIDERS and body.get("previous_response_id"):
+        raise ValueError(f"{provider} /responses is stateless; previous_response_id is not supported")
 
 
 _clients: dict[str, openai.OpenAI] = {}
@@ -372,7 +390,8 @@ _clients_lock = threading.Lock()
 def make_client(provider: str = "meta", *, http_client: Any = None) -> openai.OpenAI:
     """OpenAI SDK client for a provider, with SDK retries off (call_meta retries itself)."""
     info = PROVIDERS[provider]
-    return openai.OpenAI(api_key=require_env(info.key_env), base_url=info.base_url,
+    key = require_env(info.key_env) + (f".{require_env(info.secret_env)}" if info.secret_env else "")
+    return openai.OpenAI(api_key=key, base_url=info.base_url,
                          max_retries=0, timeout=CLIENT_TIMEOUT_S, http_client=http_client)
 
 
@@ -738,7 +757,7 @@ def call_meta(
                           response_id=raw.get("id"), cache_hit=cache_hit, attempts=attempts,
                           request_hash=key, raw=raw, parsed=parsed, parse_error=parse_error, **read)
 
-    ledger = ledger or (baseten_ledger() if provider == "baseten" else default_ledger())
+    ledger = ledger or {"baseten": baseten_ledger, "modal": modal_llm_ledger}.get(provider, default_ledger)()
     use_cache = _cache_enabled(cache, model)
     if use_cache:
         raw = _cache_read(runs, key)

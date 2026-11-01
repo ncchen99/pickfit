@@ -45,22 +45,22 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-nip4-20261101-174642-1a8e",
+      "run_id": "verify-nip4-20261102-004140-deb3",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo",
-          "purpose": "add flathub remote for user"
+          "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add flathub user remote"
         },
         {
-          "command": "timeout 600 flatpak install --user -y flathub org.libvips.nip4 2>&1",
-          "purpose": "install nip4 via flatpak user from flathub"
+          "command": "flatpak install --user -y flathub org.libvips.nip4",
+          "purpose": "install nip4 flatpak"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "flatpak run org.libvips.nip4 --help 2>&1",
-        "expected_signal": "Usage:"
+        "command": "flatpak run --filesystem=home org.libvips.nip4 --help",
+        "expected_signal": "image processing spreadsheet"
       },
       "first_task": "flatpak run org.libvips.nip4"
     },
@@ -79,40 +79,40 @@
     "url": "https://github.com/libvips/nip4/releases/tag/v9.2.1"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T17:49:26.367943+08:00",
+    "checked_at": "2026-11-02T00:51:59.061769+08:00",
     "runs": [
       {
-        "id": "verify-nip4-20261101-174642-1a8e",
-        "level": "install",
+        "id": "verify-nip4-20261102-004140-deb3",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx-gui:d66116882a17",
-        "checked_at": "2026-11-01T17:49:26.367943+08:00",
-        "tool_version": null,
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T00:51:59.061769+08:00",
+        "tool_version": "9.2.1",
         "install_method": "other",
         "replayed": true,
         "steps": [
           {
-            "command": "flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo",
-            "purpose": "add flathub remote for user"
+            "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add flathub user remote"
           },
           {
-            "command": "timeout 600 flatpak install --user -y flathub org.libvips.nip4 2>&1",
-            "purpose": "install nip4 via flatpak user from flathub"
+            "command": "flatpak install --user -y flathub org.libvips.nip4",
+            "purpose": "install nip4 flatpak"
           }
         ],
         "smoke_tests": [
           {
-            "command": "flatpak run org.libvips.nip4 --help 2>&1",
-            "expected_signal": "Usage:",
+            "command": "flatpak run --filesystem=home org.libvips.nip4 --help",
+            "expected_signal": "image processing spreadsheet",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Usage:",
+            "observed_excerpt": "nip4 [OPTION…] - image processing spreadsheet",
             "setup": [],
             "offline": true
           },
@@ -124,71 +124,105 @@
             "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "flatpak run --filesystem=home org.libvips.nip4",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"56088\": yes",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
             "readme_said": "flatpak install org.libvips.nip4",
-            "actually_needed": "flatpak remote-add --user flathub and flatpak install --user -y flathub org.libvips.nip4 (user install without root)",
+            "actually_needed": "flatpak remote-add --user flathub and flatpak install --user -y flathub org.libvips.nip4",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows nip4 printing Usage and help options including version and vips flags. / The nip4 main workspace is drawn with tool categories on the left and an editable workspace area, plus a welcome banner at the top.",
+          "observed": "Help output shows nip4 as image processing spreadsheet with options listed and exit code 0. / nip4's main workspace window is open showing the tool browser sidebar, a top welcome banner, and an empty tab workspace.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-nip4-20261101-174642-1a8e/report.json",
+          "trace_path": "runs/verify/verify-nip4-20261102-004140-deb3/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-nip4-20261101-174642-1a8e/check-1-cmd5.judged.png",
-            "runs/verify/verify-nip4-20261101-174642-1a8e/replay-6-1.app.judged.png"
+            "runs/verify/verify-nip4-20261102-004140-deb3/check-1-cmd5.judged.png",
+            "runs/verify/verify-nip4-20261102-004140-deb3/replay-4-1.app.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.042815,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.211012,
         "gui": {
-          "tier": "ui_rendered",
+          "tier": "action_checked",
           "screen": "main_ui",
           "command": "flatpak run org.libvips.nip4",
           "window_title": "Main window",
-          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+          "display": "Xvfb 1280x800x24, no window manager, no GPU",
+          "operations": [
+            {
+              "feature": "create formulas linking objects with recalculation",
+              "goal": "Create a new formula cell that evaluates 123*456 and leave the computed value visible. Steps: find the workspace/cell area, add a new row or cell if needed, type the expression 123*456 as a formula, confirm/apply it, and ensure the result is displayed on screen.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "56088"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"56088\": yes",
+              "smoke_test": 2,
+              "actions": 3,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": [
+                "runs/verify/verify-nip4-20261102-004140-deb3/replay-7-2-op-1.png",
+                "runs/verify/verify-nip4-20261102-004140-deb3/replay-7-2-op-2.png",
+                "runs/verify/verify-nip4-20261102-004140-deb3/replay-7-2-op-3.png"
+              ]
+            }
+          ]
         },
         "features": [
           {
             "feature": "create formulas linking objects with recalculation",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_display",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "formula recalculation requires interactive spreadsheet GUI"
+            "note": null
           },
           {
             "feature": "process very large images with little memory",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "other",
             "failure": null,
-            "note": "large image processing verified via GUI workflow, needs display"
+            "note": "no failed check in the log; could not export processed.png via sandboxed UI"
           },
           {
             "feature": "load workspaces from nip2",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "needs_service",
             "failure": null,
-            "note": "loading nip2 workspaces requires GUI and sample .ws files"
+            "note": "no nip2 workspace file in box"
           },
           {
             "feature": "run image workflows in batch mode",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "not_attempted",
             "failure": null,
-            "note": "batch mode needs a workspace file; no sample provided and CLI batch flag not in --help"
+            "note": "no time left after long F2 run"
           }
         ]
       }
@@ -393,5 +427,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:47+08:00",
-  "updated_at": "2026-11-01T23:09:11.575130+08:00"
+  "updated_at": "2026-11-02T00:52:29.546855+08:00"
 }
