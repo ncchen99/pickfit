@@ -50,22 +50,22 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-portfolio-20261101-175155-fcd8",
+      "run_id": "verify-portfolio-20261102-001336-85d6",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
-          "purpose": "add Flathub remote for user flatpak"
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>&1",
+          "purpose": "add flathub remote"
         },
         {
           "command": "flatpak install --user -y flathub dev.tchx84.Portfolio 2>&1",
-          "purpose": "install Portfolio from Flathub"
+          "purpose": "install Portfolio flatpak"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "flatpak run dev.tchx84.Portfolio --help",
-        "expected_signal": "Usage:"
+        "command": "timeout 15 flatpak run dev.tchx84.Portfolio --help",
+        "expected_signal": "Show help options"
       },
       "first_task": "flatpak run dev.tchx84.Portfolio"
     },
@@ -80,40 +80,40 @@
   "processing": null,
   "last_release": null,
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T17:54:42.996532+08:00",
+    "checked_at": "2026-11-02T00:31:35.219982+08:00",
     "runs": [
       {
-        "id": "verify-portfolio-20261101-175155-fcd8",
-        "level": "install",
+        "id": "verify-portfolio-20261102-001336-85d6",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx-gui:d66116882a17",
-        "checked_at": "2026-11-01T17:54:42.996532+08:00",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T00:31:35.219982+08:00",
         "tool_version": "1.0.3",
         "install_method": "other",
         "replayed": true,
         "steps": [
           {
-            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
-            "purpose": "add Flathub remote for user flatpak"
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>&1",
+            "purpose": "add flathub remote"
           },
           {
             "command": "flatpak install --user -y flathub dev.tchx84.Portfolio 2>&1",
-            "purpose": "install Portfolio from Flathub"
+            "purpose": "install Portfolio flatpak"
           }
         ],
         "smoke_tests": [
           {
-            "command": "flatpak run dev.tchx84.Portfolio --help",
-            "expected_signal": "Usage:",
+            "command": "timeout 15 flatpak run dev.tchx84.Portfolio --help",
+            "expected_signal": "Show help options",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Usage:",
+            "observed_excerpt": "-h, --help Show help options",
             "setup": [],
             "offline": true
           },
@@ -125,65 +125,115 @@
             "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "flatpak run dev.tchx84.Portfolio",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"note_alpha.txt\": yes",
+            "setup": [],
+            "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak install flathub dev.tchx84.Portfolio",
+            "actually_needed": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo before install",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Terminal shows Usage header and help options for dev.tchx84.Portfolio. / The Portfolio file manager main window is fully drawn showing Places with Home and Trash entries.",
+          "observed": "Screenshot shows Portfolio usage line and help options including Show help options. / The Portfolio window shows its Places list with Home and Trash entries fully drawn.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-portfolio-20261101-175155-fcd8/report.json",
+          "trace_path": "runs/verify/verify-portfolio-20261102-001336-85d6/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-portfolio-20261101-175155-fcd8/check-1-cmd7.judged.png",
-            "runs/verify/verify-portfolio-20261101-175155-fcd8/replay-8-1.app.judged.png"
+            "runs/verify/verify-portfolio-20261102-001336-85d6/check-1-cmd10.judged.png",
+            "runs/verify/verify-portfolio-20261102-001336-85d6/replay-11-1.app.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.03841,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.438258,
         "gui": {
-          "tier": "ui_rendered",
+          "tier": "action_checked",
           "screen": "main_ui",
           "command": "flatpak run dev.tchx84.Portfolio",
           "window_title": "Portfolio",
-          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+          "display": "Xvfb 1280x800x24, no window manager, no GPU",
+          "operations": [
+            {
+              "feature": "browse files",
+              "goal": "In Portfolio file manager: double-click folders to go inside /home/sbx/pickfit-in and then double-click to go inside browse_folder, so that the file note_alpha.txt is listed. Keep opening folders until note_alpha.txt is visible.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "note_alpha.txt"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"note_alpha.txt\": yes",
+              "smoke_test": 2,
+              "actions": 13,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": [
+                "runs/verify/verify-portfolio-20261102-001336-85d6/replay-14-2-op-1.png",
+                "runs/verify/verify-portfolio-20261102-001336-85d6/replay-14-2-op-2.png",
+                "runs/verify/verify-portfolio-20261102-001336-85d6/replay-14-2-op-3.png",
+                "runs/verify/verify-portfolio-20261102-001336-85d6/replay-14-2-op-4.png",
+                "runs/verify/verify-portfolio-20261102-001336-85d6/replay-14-2-op-5.png",
+                "runs/verify/verify-portfolio-20261102-001336-85d6/replay-14-2-op-6.png",
+                "runs/verify/verify-portfolio-20261102-001336-85d6/replay-14-2-op-7.png",
+                "runs/verify/verify-portfolio-20261102-001336-85d6/replay-14-2-op-8.png",
+                "runs/verify/verify-portfolio-20261102-001336-85d6/replay-14-2-op-9.png",
+                "runs/verify/verify-portfolio-20261102-001336-85d6/replay-14-2-op-10.png",
+                "runs/verify/verify-portfolio-20261102-001336-85d6/replay-14-2-op-11.png",
+                "runs/verify/verify-portfolio-20261102-001336-85d6/replay-14-2-op-12.png",
+                "runs/verify/verify-portfolio-20261102-001336-85d6/replay-14-2-op-13.png"
+              ]
+            }
+          ]
         },
         "features": [
           {
             "feature": "browse files",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_display",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "browse files requires GUI interaction (tap/long-press), not automatable headless"
+            "note": null
           },
           {
             "feature": "open files",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "other",
             "failure": null,
-            "note": "open files requires GUI interaction"
+            "note": "no failed check in the log; double-click shows Could not open, no URI handler in box"
           },
           {
             "feature": "copy, move and delete files",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "other",
             "failure": null,
-            "note": "copy/move/delete requires GUI interaction"
+            "note": "no failed check in the log; operator could not long-press to select/copy in 26 steps"
           },
           {
             "feature": "edit files",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "other",
             "failure": null,
-            "note": "edit files requires GUI interaction"
+            "note": "no failed check in the log; edit attempt hit same Could not open handler error"
           }
         ]
       }
@@ -414,5 +464,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:43+08:00",
-  "updated_at": "2026-11-01T23:10:19.787257+08:00"
+  "updated_at": "2026-11-02T00:40:37.508517+08:00"
 }

@@ -205,8 +205,10 @@ OPERATE_GUI_TOOL = _fn(
                 "items": {"type": "object", "properties": {
                     "path": {"type": "string", "description": "e.g. ~/pickfit-in/notes.md"},
                     "text": {**_NULL_STR, "description": "The file's text ({nonce} allowed), or null."},
-                    "sample": {"type": ["string", "null"], "enum": ["png", "jpeg", None],
-                               "description": "pickfit's own sample image instead of text, or null."}},
+                    "sample": {"type": ["string", "null"], "enum": [*gui_operate.SAMPLES, None],
+                               "description": "pickfit's own sample file instead of text (an image, a 3-frame gif, "
+                                              "a one-page pdf, a 1 s wav tone, a 2 s mp4, a zip of 3 png pages), "
+                                              "or null."}},
                     "required": ["path", "text", "sample"], "additionalProperties": False}},
      "check": {"type": "object", "description": "What pickfit checks after the operation.", "properties": {
          "kind": {"type": "string", "enum": ["file", "clipboard", "screen_text"]},
@@ -416,33 +418,6 @@ fetched; such a run cannot pass. If the tool only works patched, record the fix 
 - After a failed command, hints from pickfit's rule table may follow. They can be wrong.
 """
 
-# How a GUI app's install steps are cited and how its features are operated and checked: the same on Linux
-# (Xvfb) and on a Mac (tart).
-OPERATE_RULES = """\
-Install steps of a GUI app (download, extract, chmod, an install script) are plain commands of their own with \
-nothing chained after them (no ls, head, echo or file listing): a step whose exit code is hidden does not \
-count, and a fresh box runs only the cited steps, so cite the download too. Explore in separate commands.
-After a launch shows a window, exercise each listed feature that the app's own UI can show with a result \
-pickfit can check, one operate_gui per feature: a goal a user would do in the app (the exact text to type, \
-{nonce} where a unique word should go, and where to save), and a check: file (the app saves or exports a file: \
-its path under ~/pickfit-out/, or a folder to search such as ~/ where the app keeps its data, with the text it \
-must hold and/or its format), clipboard (the app copies a result), or screen_text (text the app computes or \
-converts, never the text typed). Put input files the goal needs in inputs (text, or pickfit's sample png/jpeg). \
-Examples: a notes or editor app: type {nonce}, save to ~/pickfit-out/note.md, check that file contains {nonce}; \
-an image tool: open ~/pickfit-in/photo.png (sample png), export ~/pickfit-out/photo.webp, check format webp; \
-a model browser: download the smallest GGUF it lists, check folder ~/ for format gguf; a document search: an \
-input file holding {nonce}, search for {nonce}, check screen_text for the input file's name; a converter: \
-check the converted text, not the text typed. \
-A check must hold the feature's own result: a file it saved or exported, text it converted, computed or \
-generated, a value it copied, or something it created and then lists or stores. Never a heading, a label, a \
-menu or the name of a screen: opening a screen shows nothing about a feature, a screen_text result must not \
-be on the screen before the first action, and pickfit's feature judge refuses such checks. \
-A passing operate_gui is the only way a GUI app reaches level function: cite it as a smoke test with \
-expected_signal `gui check: passed` and in features as checked. A goal that needs an account, a key, a \
-microphone, a camera, a GPU or a model download larger than about 300 MB is not a check: report that feature \
-not_checked with the reason; if no listed feature can show a result here, operate nothing (the launch is \
-install). At most two operate_gui per feature and six per run: one retry with a clearer goal, then move on."""
-
 GUI_RULES = """\
 
 GUI apps: this box has a virtual display. For a desktop (GUI) app, install it as a user would without root \
@@ -453,12 +428,46 @@ expected_signal `gui tier: window` (pickfit's own line; window titles and proces
 not count). A launch stops every process of the box user, so start servers again after it. A launch \
 supports level install at most, whatever the window shows: pickfit's judge reads the screenshot itself. Launch it \
 even if it will ask for an account: the screenshot records the sign-in screen.
-""" + OPERATE_RULES + """\
- This box has no user namespaces, so Chromium and Electron apps usually need --no-sandbox \
+Install steps of a GUI app (download, extract, chmod, an install script) are plain commands of their own with \
+nothing chained after them (no ls, head, echo or file listing): a step whose exit code is hidden does not \
+count, and a fresh box runs only the cited steps, so cite the download too. Explore in separate commands.
+After a launch shows a window, exercise each listed feature that the app's own UI can show with a result \
+pickfit can check, one operate_gui per feature: a goal a user would do in the app (the exact text to type, \
+{nonce} where a unique word should go, and where to save), and a check: file (the app saves or exports a file: \
+its path under ~/pickfit-out/, or a folder to search such as ~/ where the app keeps its data, with the text it \
+must hold and/or its format), clipboard (the app copies a result), or screen_text (text the app computes or \
+converts, never the text typed). Put input files the goal needs in inputs (text, or pickfit's sample png, jpeg, \
+gif, pdf, wav, mp4 or zip). \
+Examples: a notes or editor app: type {nonce}, save to ~/pickfit-out/note.md, check that file contains {nonce}; \
+an image tool: open ~/pickfit-in/photo.png (sample png), export ~/pickfit-out/photo.webp, check format webp; \
+a model browser: download the smallest GGUF it lists, check folder ~/ for format gguf; a document search: an \
+input file holding {nonce}, search for {nonce}, check screen_text for the input file's name; a converter: \
+check the converted text, not the text typed. \
+A check must hold the feature's own result: a file it saved or exported, text it converted, computed or \
+generated, a value it copied, or something it created and then lists or stores. Never a heading, a label, a \
+menu or the name of a screen: opening a screen shows nothing about a feature, a screen_text result must not \
+be on the screen before the first action, and pickfit's feature judge refuses such checks. \
+A passing operate_gui is the only way a GUI app reaches level function: cite it as a smoke test with \
+expected_signal `gui check: passed` and in features as checked. A feature that needs what this box lacks is \
+not a check: report it not_checked with the code that names our box's limit, never other: needs_gpu (a GPU), \
+needs_hardware (a microphone, camera or device), needs_more_resources (a model or download over about 300 MB, \
+or too big or slow here), needs_account (an account or key), needs_service (an outside service or server, \
+game or media data the box does not have). If no listed feature can show a result here, operate nothing (the \
+launch is install).
+A Flatpak app here cannot open a file dialog (the box runs no desktop portal): give it a file on the command line \
+(flatpak run --filesystem=home <app id> ~/pickfit-in/<file>), look for what it keeps itself with a folder search \
+of ~/.var/app/<app id>/, and report a feature that works only through a file dialog, or by opening a file in \
+another app (the box has no handler for that), not_checked with needs_service. At most two operate_gui per feature and six per run: one retry with a clearer goal, then move on. This box has no user namespaces, so Chromium and Electron apps usually need --no-sandbox \
 here: add it only if the app fails without it, and record it as a pitfall of kind sandbox (this box's need, \
 not the app's). A Tkinter \
 app needs /usr/bin/python3 (it has tkinter; python3.12 on PATH does not): make its venv with \
 /usr/bin/python3 -m venv."""
+
+# The install and operate guidance GUI_RULES gives, shared with MAC_GUI_RULES without what is Linux's own (the
+# Flatpak note, user namespaces, Tkinter).
+OPERATE_RULES = GUI_RULES[GUI_RULES.index("Install steps of a GUI app"):GUI_RULES.index(" This box has no user namespaces")]
+OPERATE_RULES = (OPERATE_RULES[:OPERATE_RULES.index("A Flatpak app here")]
+                 + OPERATE_RULES[OPERATE_RULES.index("At most two operate_gui per feature"):])
 
 MAC_GUI_RULES = """\
 
@@ -493,9 +502,8 @@ stays), so start servers again after it. A launch supports level install at most
 pickfit's judge reads the screenshot itself. Launch it even if it will ask for an account: the screenshot records \
 the sign-in screen.
 """ + OPERATE_RULES + """ On this Mac, goals name the Mac's shortcuts (cmd+s to save, cmd+c to copy; not ctrl), \
-~/ is /Users/sbx, and a menu bar app's controls are in the menu of its item at the top right. A feature this box \
-cannot exercise is not_checked with its reason, which says the limit is this box's: needs_hardware (a microphone \
-or camera: this VM has neither), needs_gpu, needs_account, needs_more_resources (a large model download)."""
+~/ is /Users/sbx, a menu bar app's controls are in the menu of its item at the top right, and this VM has no \
+microphone or camera (needs_hardware)."""
 
 # Public models small enough for an inference check, licenses and URLs checked 2026-10-29.
 # stories260K: karpathy/tinyllamas weights (MIT), GGUF by ggml-org. SmolLM2-135M-Instruct:

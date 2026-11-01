@@ -67,6 +67,8 @@ REASONING_EFFORT = "low"
 MAX_OUTPUT_TOKENS = 1_500
 MAX_STEPS = 28  # actions per operation, done and give_up included (a first-run wizard alone can take 8)
 HISTORY_STEPS = 12  # earlier actions the operator is reminded of
+# Going in circles: the same action LOOP_REPEATS times among the last LOOP_WINDOW (clicks within LOOP_RADIUS px).
+LOOP_WINDOW, LOOP_REPEATS, LOOP_RADIUS = 8, 3, 40
 TYPE_MAX = 300
 WAIT_MAX_S = 10
 SETTLE_MAX_S = 6.0  # a screenshot waits this long at most for two equal frames
@@ -81,8 +83,9 @@ SEARCH_SKIP_DIRS = ("node_modules", "squashfs-root", ".npm", ".cargo", ".rustup"
 INPUT_DIR = f"{BOX_HOME}/pickfit-in"
 OUTPUT_DIR = f"{BOX_HOME}/pickfit-out"  # made before the app starts, for goals that save a file
 NONCE_FIELD = "{nonce}"
-FORMATS = ("text", "json", "html", "svg", "csv", "srt", "png", "jpeg", "gif", "webp", "pdf", "zip", "gguf", "wav")
-SAMPLES = ("png", "jpeg")
+FORMATS = ("text", "json", "html", "svg", "csv", "srt", "png", "jpeg", "gif", "webp", "avif", "mp4", "pdf", "zip", "gguf",
+           "wav")
+SAMPLES = ("png", "jpeg", "gif", "pdf", "wav", "mp4", "zip")
 BOX_UID = 1000  # the box user (box.py runs every box command as it)
 # A goal or check may not hold pickfit's own result lines, so nothing the agent writes reads as one.
 _OWN_LINES = re.compile(r"gui\s+(?:check|result|tier|goal|operate)\b", re.I)
@@ -285,7 +288,7 @@ class GuiInput(BaseModel):
 
     path: str = Field(description=f"Where, under {INPUT_DIR}/ (~/pickfit-in/).")
     text: str | None = Field(default=None, max_length=4_000)
-    sample: Literal["png", "jpeg"] | None = None
+    sample: Literal["png", "jpeg", "gif", "pdf", "wav", "mp4", "zip"] | None = None
 
     @field_validator("text", "sample", mode="before")
     @classmethod
@@ -400,19 +403,70 @@ def fill(text: str, nonce: str) -> str:
     return text.replace(NONCE_FIELD, nonce)
 
 
-def sample_image(kind: str) -> bytes:
-    """pickfit's own sample image: shapes and a line of text, the same bytes every time."""
+def _picture(shift: int = 0) -> Any:
     from PIL import Image, ImageDraw
 
     image = Image.new("RGB", (480, 320), (250, 248, 240))
     draw = ImageDraw.Draw(image)
-    draw.rectangle((40, 40, 200, 200), fill=(200, 60, 50))
+    draw.rectangle((40 + shift, 40, 200 + shift, 200), fill=(200, 60, 50))
     draw.ellipse((240, 60, 420, 240), fill=(40, 110, 200))
     draw.polygon([(60, 290), (160, 220), (260, 290)], fill=(60, 160, 80))
     draw.text((280, 270), "pickfit sample", fill=(20, 20, 20))
+    return image
+
+
+def sample_file(kind: str) -> bytes:
+    """pickfit's own sample input of a kind, the same bytes every time: an image (png, jpeg, a 3-frame gif), a
+    one-page pdf of it, a 1 s 440 Hz wav, a 2 s mp4 (ffmpeg on the host), or a zip of 3 png pages (a CBZ)."""
+    import wave
+    import zipfile
+
     out = io.BytesIO()
-    image.save(out, "JPEG" if kind == "jpeg" else "PNG", **({"quality": 90} if kind == "jpeg" else {}))
+    if kind in ("png", "jpeg", "pdf"):
+        _picture().save(out, {"png": "PNG", "jpeg": "JPEG", "pdf": "PDF"}[kind], **({"quality": 90} if kind == "jpeg" else {}))
+    elif kind == "gif":
+        frames = [_picture(shift) for shift in (0, 60, 120)]
+        frames[0].save(out, "GIF", save_all=True, append_images=frames[1:], duration=300, loop=0)
+    elif kind == "wav":
+        import math
+        import struct
+
+        with wave.open(out, "wb") as sound:
+            sound.setnchannels(1), sound.setsampwidth(2), sound.setframerate(16000)
+            sound.writeframes(b"".join(struct.pack("<h", int(8000 * math.sin(2 * math.pi * 440 * i / 16000)))
+                                       for i in range(16000)))
+    elif kind == "zip":
+        with zipfile.ZipFile(out, "w") as book:
+            for page in range(1, 4):
+                image = io.BytesIO()
+                _picture(40 * page).save(image, "PNG")
+                book.writestr(f"page{page:02d}.png", image.getvalue())
+    elif kind == "mp4":
+        return _sample_mp4()
+    else:
+        raise ValueError(f"no sample of kind {kind!r}")
     return out.getvalue()
+
+
+_MP4: list[bytes] = []
+
+
+def _sample_mp4() -> bytes:
+    """A 2 s 320x240 test pattern made by ffmpeg on the host (never in the box); ValueError without ffmpeg."""
+    import shutil
+    import subprocess
+    import tempfile
+
+    if not _MP4:
+        ffmpeg = shutil.which("ffmpeg")
+        if ffmpeg is None:
+            raise ValueError("this host has no ffmpeg to make the mp4 sample")
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample.mp4"
+            subprocess.run([ffmpeg, "-v", "error", "-f", "lavfi", "-i", "testsrc=duration=2:size=320x240:rate=10",
+                            "-pix_fmt", "yuv420p", "-c:v", "libx264", "-y", str(target)], check=True, timeout=60)
+            _MP4.append(target.read_bytes())
+    return _MP4[0]
 
 
 # ---------------------------------------------------------------- root's file check
@@ -472,6 +526,8 @@ def fmt(data, name):
     if name == "jpeg": return head.startswith(b"\xff\xd8\xff")
     if name == "gif": return head[:6] in (b"GIF87a", b"GIF89a")
     if name == "webp": return head[:4] == b"RIFF" and head[8:12] == b"WEBP"
+    if name == "avif": return head[4:12] in (b"ftypavif", b"ftypavis")
+    if name == "mp4": return head[4:8] == b"ftyp" and head[8:12] not in (b"avif", b"avis")
     if name == "wav": return head[:4] == b"RIFF" and head[8:12] == b"WAVE"
     if name == "pdf": return head.startswith(b"%PDF-")
     if name == "zip": return head.startswith(b"PK\x03\x04")
@@ -634,6 +690,8 @@ def normalize_key(name: str, mac: bool = False) -> str | None:
 
     mac: the Mac's Command key stays cmd (cmd+s saves; ctrl is Control there), and super, meta and win mean it too.
     """
+    if name and not name.strip():  # a literal space
+        return "space"
     if mac:
         parts = [p.strip() for p in name.replace("-", "+").split("+")]
         mods = [_MAC_MODIFIERS.get(p.lower()) for p in parts[:-1]]
@@ -883,6 +941,29 @@ def _png_url(data: bytes) -> str:
     return "data:image/png;base64," + base64.b64encode(data).decode()
 
 
+def _same(a: dict[str, Any], b: dict[str, Any]) -> bool:
+    """The same action, give or take where a click lands (a control is wider than one pixel)."""
+    if a["kind"] != b["kind"]:
+        return False
+    if a["kind"] in ("click", "scroll"):
+        return abs(a["x"] - b["x"]) <= LOOP_RADIUS and abs(a["y"] - b["y"]) <= LOOP_RADIUS
+    return a == b
+
+
+def circling(steps: list[Step]) -> str | None:
+    """A note when the operator keeps repeating one action (or two in turn: open a dialog, close it) among its
+    last LOOP_WINDOW actions: that path does not lead to the goal."""
+    recent = [s.action for s in steps if s.action and s.action["kind"] not in ("wait", "done", "give_up")]
+    recent = recent[-LOOP_WINDOW:]
+    for act in recent[-2:]:
+        times = sum(_same(act, other) for other in recent)
+        if times >= LOOP_REPEATS:
+            return (f"You have done {describe(act)} {times} times in your last {len(recent)} actions: you are going "
+                    "in circles. That control does not lead to the goal here: use a different control or path "
+                    "(another button, tab, menu, a keyboard shortcut, or Escape and start over), or give_up.")
+    return None
+
+
 def _operator_turn(goal: str, steps: list[Step], step_no: int, max_steps: int, note: str | None,
                    marked: bool = False) -> str:
     lines = [f"Goal: {goal}", "", f"This is step {step_no} of at most {max_steps}."]
@@ -928,6 +1009,9 @@ def operate(display: Display, goal: str, *, model: str | None = None, max_steps:
         step = Step(screenshot=save(step_no, png), sha256=sha, changed=changed(previous, png), action=None)
         if not step.changed and steps and steps[-1].action and steps[-1].action["kind"] != "wait":
             note = (note + " " if note else "") + "Your last action did not change the screen."
+        loop = circling(steps)
+        if loop:
+            note = (note + " " if note else "") + loop
         last = steps[-1].action if steps else None
         mark = (last["x"], last["y"]) if last and last["kind"] in ("click", "scroll") else None
         shown, view = view_of(png, mark)
@@ -1201,7 +1285,7 @@ def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[
     written: list[str] = []
     for item in args.inputs:
         path = home_path(item.path, home)
-        box.write_file(path, sample_image(item.sample) if item.sample else fill(item.text or "", nonce))
+        box.write_file(path, sample_file(item.sample) if item.sample else fill(item.text or "", nonce))
         written.append(path)
     target = home_path(args.check.path, home) if args.check.kind == "file" and args.check.path else None
     before = file_probe(box, {"mode": "before", "target": target or home + "/"})
