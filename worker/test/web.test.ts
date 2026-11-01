@@ -304,21 +304,19 @@ test('without the script, the form posts and gets the whole page back', async ()
 test('before any search the page shows real catalog runs, never invented ones', async () => {
   const s = site();
   const html = await (await s.send(new Request('http://127.0.0.1:8787/', { headers: { accept: 'text/html' } }))).text();
-  // How Fitz picks: four stages for one real tool, the newest hidden gem whose run found a README problem.
+  // How Fitz picks: four short steps, each with Fitz's own state.
   const how = html.slice(html.indexOf('<section id="how"'), html.indexOf('<section id="recent"'));
-  assert.match(how, /One real tool from the catalog, <a href="\/tool\/fixture-llm-runner">Fixture LLM Runner<\/a>, through the four steps\./);
   assert.equal(how.split('<li class="stage">').length - 1, 4);
-  assert.match(how, /Run on Linux x86_64/);
-  assert.match(how, /Its service answers requests, and on replay/);
-  assert.match(how, /<b>README fix:<\/b> the install script/);
-  assert.match(how, /curl -fsSL https:\/\/example\.invalid\/fixture\/fixture-llm-runner\/install\.sh \| sh/);
-  // The reasons come from rules.ts, citing their fields.
-  assert.match(how, /Use case: run a small language model offline on a laptop<span class="cite">use_cases: “run a small language model offline on a laptop”/);
+  // A README the run corrected: a real pitfall from the index, the newest hidden gem that has one.
+  const fix = html.slice(html.indexOf('<figure class="fix-card">'), html.indexOf('</figure>'));
+  assert.match(fix, /<a href="\/tool\/fixture-llm-runner">Fixture LLM Runner<\/a>/);
+  assert.match(fix, /<b>README said<\/b><span>make install<\/span>/);
+  assert.match(fix, /<b>What worked<\/b><span>the install script/);
   // The newest runs: one row per verified tool (6 fixtures), with where and when, linking to its profile.
   const runs = html.slice(html.indexOf('<ul class="runs-list">'), html.indexOf('</ul></div></section>'));
   assert.equal(runs.split('<li class="run-row">').length - 1, 6);
   assert.match(runs, /<a class="name" href="\/tool\/[a-z0-9-]+">/);
-  assert.match(html, /pickfit lists 6 tools\. 6 were installed and replayed in a fresh sandbox, and 1 is a hidden gem: high quality, little known\. 1 was installed by hand on a real machine\./);
+  assert.match(html, /6 of 6 tools installed and replayed\. Only those are ever suggested\./);
   // The counts in the hero are the catalog's.
   assert.match(html, /<strong>6<\/strong> READMEs read/);
   assert.equal(s.metaCalls.length, 0);
@@ -330,8 +328,8 @@ test('results: claim beside evidence, no rank numerals, and "built-in is enough"
   assert.ok(html.indexOf('You may not need to install anything') < html.indexOf('<article class="pick"'));
   assert.ok(!html.includes('class="rank"') && !html.includes('t-rank'));
   for (const pick of html.split('<article class="pick"').slice(1)) {
-    // The claim, then the stitches, then the run record they rest on.
-    assert.match(pick, /<div class="t-claim">[\s\S]*<div class="seam" aria-hidden="true"><\/div><section class="record" aria-label="Test record">/);
+    // The claim and the verdict, then the stitches, the command that worked, and the record behind one expander.
+    assert.match(pick, /<p class="fit">[\s\S]*<div class="glance t-glance">[\s\S]*<div class="seam" aria-hidden="true"><\/div><div class="t-install">[\s\S]*<details class="t-more">[\s\S]*<section class="record" aria-label="Test record">/);
   }
 });
 

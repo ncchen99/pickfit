@@ -8,17 +8,15 @@
  * on top, then a seam of stitches, then the run record it rests on. A tool
  * pickfit has not verified gets no stitches, no badge, no steps and no link.
  */
-import { toCard } from './cards.ts';
 import { bestGuide, verifiedOn, verifiedOnUserSystem, type Arch, type Catalog, type Entry, type InstallGuide, type OS } from './catalog.ts';
 import type { FindOutput, PickOut } from './find.ts';
 import { fitNote } from './fit.ts';
 import { PIPE_TO_SHELL, type InstallOutput } from './install.ts';
 import { compareTable } from './pages/compare.ts';
-import { templateReasons } from './rules.ts';
 import { day, formOf, guiSentence, howRan, KIND, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system } from './ui/facts.ts';
 import { esc, link, listOf } from './ui/html.ts';
 import { icon } from './ui/icons.ts';
-import { age, badge, command, compareToggle, coverage, fitz, glance, notice, says, SEAM, tape, type FitzName } from './ui/kit.ts';
+import { badge, command, compareToggle, coverage, fitz, glance, notice, says, SEAM, tape, type FitzName } from './ui/kit.ts';
 import { renderShell } from './ui/shell.ts';
 
 export { esc, safeUrl } from './ui/html.ts';
@@ -250,34 +248,38 @@ function matchCoverage(match: NonNullable<PickOut['match']>): string {
 /** find.ts adds this tradeoff for agents when the run was on another system; the test record says it in full. */
 const RAN_ELSEWHERE = /^Verified on \S+(?: \S+)? only; pickfit has not run its /;
 
-/** The at-a-glance strip: the six things people compare first, each from a field or the run. */
-function glanceStrip(pick: PickOut, guide: InstallOutput | undefined, entry: Entry | undefined, form: FormValues, now: Date): string {
+/** The verdict strip: the four things people decide on first, each from a field or the run. */
+function glanceStrip(pick: PickOut, guide: InstallOutput | undefined, form: FormValues): string {
   const v = pick.verification;
   const where = system(v.os, v.arch);
   const cells: string[] = [];
   if (v.verified_on_user_os === true) cells.push(glance('monitor', 'Your system', `Ran on ${esc(where)}`, 'pass'));
   else if (v.verified_on_user_os === false) cells.push(glance('monitor', 'Your system', `Ran on ${esc(where)} only`, 'caution'));
-  else cells.push(glance('monitor', 'Where it ran', v.os ? esc(where) : 'No run', 'plain'));
-  cells.push(glance('badge-check', 'Proof', esc(levelLabel(v.level, { gui: v.gui, mcp: guide?.mcp_client_config ?? null })), passed(v.gui) ? 'pass' : 'caution'));
-  if (guide && guide.steps.length) cells.push(glance('terminal', 'Setup', esc(setupWords(guide.steps.length, guide.manual_steps.length)), 'plain'));
+  else cells.push(glance('monitor', 'Ran on', v.os ? esc(where) : 'No run', 'plain'));
   const off = guide?.verification.works_offline;
-  cells.push(
-    off === true
-      ? glance('wifi-off', 'Offline', 'Works offline', 'pass')
-      : off === false
-        ? glance('wifi-off', 'Offline', 'Needed the network', form.offline ? 'caution' : 'plain')
-        : glance('wifi-off', 'Offline', 'Not checked', 'quiet'),
-  );
+  const offline = off === true ? '<small>Works offline</small>' : off === false && form.offline ? '<small>Needed the network</small>' : '';
+  cells.push(glance('badge-check', 'Proof', esc(levelLabel(v.level, { gui: v.gui, mcp: guide?.mcp_client_config ?? null })) + offline, passed(v.gui) ? 'pass' : 'caution'));
+  if (guide && guide.steps.length) cells.push(glance('terminal', 'Setup', esc(setupWords(guide.steps.length, guide.manual_steps.length)), 'plain'));
   cells.push(glance('tag', 'Price', esc(PRICE[pick.pricing]), pick.pricing === 'unknown' ? 'quiet' : pick.pricing === 'free' ? 'pass' : 'plain'));
-  const released = age(entry?.last_release ?? null, now);
-  cells.push(glance('clock', 'Last release', released ? esc(released) : 'None listed', released ? 'plain' : 'quiet'));
   return `<div class="glance t-glance">${cells.join('')}</div>`;
+}
+
+/** The one action on a ticket: the first command of the run that worked, ready to copy. */
+function quickInstall(guide: InstallOutput | undefined, form: FormValues): string {
+  const first = guide?.steps[0];
+  if (!guide || !first) return '';
+  const v = guide.verification;
+  const elsewhere = guide.applies_to_user_system.match === 'other_os' && form.os;
+  const more = guide.steps.length - 1 + guide.manual_steps.length;
+  return (
+    `<div class="t-install"><p class="t-install-label">${icon('terminal')}Install${elsewhere ? `, as it ran on ${esc(system(v.os, v.arch))}` : ''}` +
+    `${more ? `<span class="quiet"> · step 1 of ${guide.steps.length + guide.manual_steps.length}</span>` : ''}</p>${command(first.command)}</div>`
+  );
 }
 
 function pickHtml(pick: PickOut, index: number, result: SearchResult, form: FormValues, catalog: Catalog): string {
   const { out } = result;
   const entry = catalog.bySlug.get(pick.slug);
-  const now = new Date(catalog.built_at);
   const best = out.best_free?.slug === pick.slug ? out.best_free : null;
   const badges = [
     pick.match ? badge(MATCH_TONE[pick.match.quality], MATCH_LABEL[pick.match.quality], { cls: `match-${pick.match.quality}` }) : '',
@@ -295,25 +297,28 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
   const guide = result.guides[pick.slug];
   const kind = entry ? `${KIND[entry.category] ?? ''} · ${formOf(entry)}` : '';
   const links = [
-    `<a href="/tool/${esc(pick.slug)}">${icon('book-open')}Full profile</a>`,
     link(pick.repo, `${icon('external-link')}Source code`),
     pick.homepage && pick.homepage !== pick.repo ? link(pick.homepage, `${icon('external-link')}Homepage`) : '',
     link(pick.verification.os ? pick.evidence_url : null, `${icon('external-link')}Run record`),
   ].filter(Boolean);
   const gemNote = pick.scores.treasure ? 'little known' : undefined;
+  // At a glance: who it is, why it fits in one sentence, the verdict, and the command. The rest waits behind one expander.
   return (
     `<article class="pick" id="pick-${esc(pick.slug)}" aria-labelledby="name-${esc(pick.slug)}">` +
     `<div class="t-top"><div>` +
-    `<h3 class="t-name" id="name-${esc(pick.slug)}">${link(pick.repo, esc(pick.name)) || esc(pick.name)}</h3>` +
+    `<h3 class="t-name" id="name-${esc(pick.slug)}"><a href="/tool/${esc(pick.slug)}">${esc(pick.name)}</a></h3>` +
     (kind ? `<p class="t-kind">${esc(kind)}</p>` : '') +
     `</div>` +
     (badges ? `<p class="badges">${badges}</p>` : '') +
     `</div>` +
+    `<p class="fit">${esc(pick.fit)}</p>` +
+    glanceStrip(pick, guide, form) +
+    SEAM +
+    quickInstall(guide, form) +
+    `<details class="t-more"><summary>${icon('chevron-down')}Why it fits and how we know</summary><div class="t-more-body">` +
+    `<div class="t-body"><div class="t-claim">` +
     // On the rules path the fit sentence is the summary: say it once.
     (pick.fit === pick.summary ? '' : `<p class="summary">${esc(pick.summary)}</p>`) +
-    `<p class="fit">${esc(pick.fit)}</p>` +
-    glanceStrip(pick, guide, entry, form, now) +
-    `<div class="t-body"><div class="t-claim">` +
     (pick.match ? matchCoverage(pick.match) : '') +
     (why ? `<h4>Why it fits</h4><ul class="why">${why}</ul>` : '') +
     (tradeoffs ? `<h4>Tradeoffs</h4><ul class="tradeoffs">${tradeoffs}</ul>` : '') +
@@ -325,10 +330,11 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
     tape('Popularity', pick.scores.popularity, { pop: 'pop-popularity', tone: 'quiet', note: gemNote }) +
     coverage(pick.features, { pop: 'pop-features' }) +
     `</div></div>` +
-    SEAM +
     record(pick, guide, form) +
     (guide ? installSection(guide, form, index === 0) : '') +
-    `<div class="t-foot">${links.join('')}<span class="grow"></span>${compareToggle(pick.slug, pick.name)}</div>` +
+    (links.length ? `<p class="t-links">${links.join('')}</p>` : '') +
+    `</div></details>` +
+    `<div class="t-foot"><a class="more" href="/tool/${esc(pick.slug)}">Full profile${icon('arrow-right')}</a><span class="grow"></span>${compareToggle(pick.slug, pick.name)}</div>` +
     `</article>`
   );
 }
@@ -422,9 +428,8 @@ export function renderResults(
   if (out.picks.length === 0) {
     said.push(`<p class="match-line">${esc(out.coverage_note ?? 'pickfit covers developer CLI tools, local AI tools and MCP servers today.')}</p>`);
   }
-  // A partial or missing fit is said before the picks, not after them.
+  // A partial or missing fit is said before the picks, not after them, as a caption under Fitz.
   const fitFirst = out.picks.length > 0 && (out.match_quality === 'partial' || out.match_quality === 'none') && out.coverage_note;
-  if (fitFirst) said.push(`<p class="fit-first">${esc(out.coverage_note)}</p>`);
   const slugs = out.picks.map((p) => p.slug);
   const cmpHref = `/compare?tools=${slugs.map(encodeURIComponent).join(',')}${form.os ? `&amp;os=${form.os}` : ''}${form.arch ? `&amp;arch=${form.arch}` : ''}`;
   const tools = out.picks.length
@@ -432,7 +437,9 @@ export function renderResults(
       (out.picks.length > 1 ? `<a class="btn btn-quiet btn-sm" href="${cmpHref}">${icon('scale')}Compare these</a>` : '') +
       `</div>`
     : '';
-  const head = `<div class="res-head">${says(resultsFitz(out), said.join(''), { size: 104 })}${tools}</div>`;
+  const head =
+    `<div class="res-head">${says(resultsFitz(out), said.join(''), { size: 104 })}${tools}</div>` +
+    (fitFirst ? `<p class="fit-first">${icon('triangle-alert')}<span>${esc(out.coverage_note)}</span></p>` : '');
   if (out.clarifying_question) {
     parts.push(
       `<div class="ask-note">${fitz('thinking', 64)}<p><span class="lead-in">To narrow it down:</span> ${esc(out.clarifying_question)} Set it above and search again.</p></div>`,
@@ -503,11 +510,11 @@ export function renderNotice(kind: 'busy' | 'error', title: string, text: string
 // ---------------------------------------------------------------- home page
 
 /** Examples on the page: tasks the catalog covers, written for this page. */
-export const EXAMPLES = [
-  'Turn a folder of interview recordings into subtitles, offline',
-  'Check my MCP server configs for risky permissions before I install one',
-  'An MCP server that gives my coding agent a map of my codebase',
-  'See which process holds port 3000 and stop it',
+export const EXAMPLES: [string, string][] = [
+  ['Subtitles from recordings, offline', 'Turn a folder of interview recordings into subtitles, offline'],
+  ['Audit my MCP configs', 'Check my MCP server configs for risky permissions before I install one'],
+  ['A codebase map for my agent', 'An MCP server that gives my coding agent a map of my codebase'],
+  ['Free up port 3000', 'See which process holds port 3000 and stop it'],
 ];
 
 const OS_CHOICES: [OS | '', string][] = [
@@ -545,72 +552,19 @@ export function searchForm(form: FormValues): string {
   );
 }
 
-/** "How Fitz picks": one real tool through the four stages, each a fragment of its real data. */
-function stagesSection(showcase: Showcase): string {
-  const f = showcase.featured;
-  if (!f) return '';
-  const { entry, guide } = f;
-  const r = guide.run;
-  const profile: [string, string][] = [
-    ['Does', entry.summary],
-    ['Runs on', entry.platforms.length ? listOf(entry.platforms.map((os) => osName(os))) : 'not stated in the README'],
-    ['Price', entry.pricing ?? 'not stated'],
-    ['Runs where', entry.processing ?? 'not stated'],
-    ['Licence', entry.license ?? 'not stated'],
-  ];
-  const issue = readerIssues(guide.pitfalls)[0];
-  const reasons = templateReasons(entry, toCard(entry), r.os).slice(0, 2);
-  const dl = (rows: [string, string][]) =>
-    `<dl>${rows
-      .filter(([, v]) => v)
-      .map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`)
-      .join('')}</dl>`;
-  const stages: { name: string; who: FitzName; text: string; ui: string }[] = [
-    {
-      name: 'Read the README',
-      who: 'thinking',
-      text: 'Meta’s Muse Spark reads each new project’s README and writes a profile: what it does, where it runs, what it costs, whether it works offline.',
-      ui: `<p class="ui-title">${esc(entry.name)}: profile</p>${dl(profile)}`,
-    },
-    {
-      name: 'Try it on, twice',
-      who: 'testing',
-      text: 'A verification agent installs it in a fresh sandbox, fixes what the README got wrong, checks it works, then replays the steps from scratch.',
-      ui:
-        `<p class="ui-title">Run on ${esc(system(r.os, r.arch))}</p>` +
-        guide.steps.slice(0, 2).map((s) => `<pre translate="no"><code>${esc(s.command)}</code></pre>`).join('') +
-        levelLine(`${levelLabel(r.level, { gui: r.gui, mcp: guide.mcp })}${r.replayed ? ', and on replay' : ''}`, passed(r.gui)) +
-        (issue ? `<p class="diff quiet"><b>README fix:</b> ${esc(issue.actually_needed)}</p>` : ''),
-    },
-    {
-      name: 'Match your need',
-      who: 'searching',
-      text: 'Your sentence and every verified profile that meets your conditions go to Muse Spark. Each reason must cite a profile field; code checks it.',
-      ui:
-        `<p class="ui-title">Reasons, each checked</p>` +
-        `<ul class="why">${reasons.map((x) => `<li>${esc(x.claim)}<span class="cite">${esc(x.field)}: “${esc(x.value)}”</span></li>`).join('')}</ul>`,
-    },
-    {
-      name: 'Hand over what worked',
-      who: 'recommending',
-      text: 'You get the exact commands from the run, where they ran, how to check the install, and what you’ll do by hand.',
-      ui:
-        `<p class="ui-title">Install steps</p>` +
-        guide.steps.slice(0, 2).map((s) => command(s.command)).join('') +
-        (guide.check ? `<p class="quiet">Check: <code>${esc(guide.check.command)}</code></p>` : ''),
-    },
+/** "How Fitz picks": the four steps, one line each; Fitz's own state shows what happens. */
+function stagesSection(): string {
+  const stages: { name: string; who: FitzName; text: string }[] = [
+    { name: 'Read', who: 'thinking', text: 'Muse Spark reads the README and writes a profile.' },
+    { name: 'Try it on', who: 'testing', text: 'Installed in a fresh sandbox, then replayed from scratch.' },
+    { name: 'Match', who: 'searching', text: 'Your sentence meets every verified profile. Each reason is checked.' },
+    { name: 'Hand over', who: 'recommending', text: 'You get the commands that worked.' },
   ];
   return (
     `<section id="how" class="sec wrap" aria-labelledby="how-title">` +
-    `<div class="sec-head"><div><h2 id="how-title">How Fitz picks a tool</h2>` +
-    `<p>One real tool from the catalog, <a href="/tool/${esc(entry.slug)}">${esc(entry.name)}</a>, through the four steps.</p></div>` +
-    `<a class="more" href="/how">The whole method${icon('arrow-right')}</a></div>` +
+    `<div class="sec-head"><h2 id="how-title">How Fitz picks a tool</h2><a class="more" href="/how">The whole method${icon('arrow-right')}</a></div>` +
     `<ol class="stages">${stages
-      .map(
-        (s) =>
-          `<li class="stage"><div class="stage-fitz">${fitz(s.who, 130)}</div><h3>${esc(s.name)}</h3><p>${esc(s.text)}</p>` +
-          `<div class="stage-ui">${s.ui}</div></li>`,
-      )
+      .map((s) => `<li class="stage"><div class="stage-fitz">${fitz(s.who, 130)}</div><h3>${esc(s.name)}</h3><p>${esc(s.text)}</p></li>`)
       .join('')}</ol></section>`
   );
 }
@@ -619,18 +573,16 @@ function stagesSection(showcase: Showcase): string {
 function freshSection(showcase: Showcase): string {
   const { stats, recent, fix } = showcase;
   if (!recent.length) return '';
-  const issue = fix ? readerIssues(fix.guide.pitfalls)[0] : null;
+  const issue = fix ?? showcase.featured;
+  const fixIssue = issue ? readerIssues(issue.guide.pitfalls)[0] : null;
   const fixCard =
-    fix && issue
-      ? `<figure class="fix-card"><h3><a href="/tool/${esc(fix.entry.slug)}">${esc(fix.entry.name)}</a>${badge('gem', 'Hidden gem', { icon: 'gem' })}</h3>` +
-        levelLine(levelLabel(fix.guide.run.level, { gui: fix.guide.run.gui, mcp: fix.guide.mcp }), passed(fix.guide.run.gui)) +
-        `<ul class="readme-vs"><li class="was"><b>README said</b><span>${esc(issue.readme_said)}</span></li>` +
-        `<li class="now"><b>What worked</b><span>${esc(issue.actually_needed)}</span></li></ul>` +
-        (fix.guide.steps[0] ? `<pre translate="no"><code>${esc(fix.guide.steps[0].command)}</code></pre>` : '') +
-        `<figcaption>Found while installing it on ${esc(system(fix.guide.run.os, fix.guide.run.arch))}, ${esc(day(fix.guide.run.checked_at))}.</figcaption></figure>`
+    issue && fixIssue
+      ? `<figure class="fix-card"><p class="fix-kicker">${icon('scissors')}A README the run corrected</p>` +
+        `<h3><a href="/tool/${esc(issue.entry.slug)}">${esc(issue.entry.name)}</a></h3>` +
+        `<ul class="readme-vs"><li class="was"><b>README said</b><span>${esc(fixIssue.readme_said)}</span></li>` +
+        `<li class="now"><b>What worked</b><span>${esc(fixIssue.actually_needed)}</span></li></ul>` +
+        `<figcaption>${esc(system(issue.guide.run.os, issue.guide.run.arch))}, ${esc(day(issue.guide.run.checked_at))}</figcaption></figure>`
       : '';
-  const were = (n: number) => `${n} ${n === 1 ? 'was' : 'were'}`;
-  const byHand = stats.byHand ? ` ${were(stats.byHand)} installed by hand on a real machine.` : '';
   const rows = recent
     .map(({ entry, guide }) => {
       const r = guide.run;
@@ -638,17 +590,15 @@ function freshSection(showcase: Showcase): string {
         `<li class="run-row"><a class="name" href="/tool/${esc(entry.slug)}">${esc(entry.name)}</a>` +
         (entry.scores?.treasure ? badge('gem', 'Hidden gem', { icon: 'gem' }) : '<span></span>') +
         `<p class="sum">${esc(entry.summary)}</p>` +
-        `<p class="meta"><span>${esc(KIND[entry.category] ?? entry.category)}</span><span>${icon('monitor')}${esc(system(r.os, r.arch))}, ${esc(day(r.checked_at, SHORT_DAY))}</span>` +
-        `<span>${icon('badge-check')}${esc(levelLabel(r.level, { gui: r.gui, mcp: guide.mcp }))}</span></p></li>`
+        `<p class="meta"><span>${esc(KIND[entry.category] ?? entry.category)}</span><span>${icon('badge-check')}${esc(system(r.os, r.arch))}, ${esc(day(r.checked_at, SHORT_DAY))}</span></p></li>`
       );
     })
     .join('');
   return (
     `<section id="recent" class="sec wrap home-only" aria-labelledby="recent-title">` +
     `<div class="sec-head"><div><h2 id="recent-title">Fresh off the fitting table</h2>` +
-    `<p>pickfit lists ${stats.listed} tools. ${were(stats.replayed)} installed and replayed in a fresh sandbox, and ` +
-    `${stats.gems === 1 ? '1 is a hidden gem' : `${stats.gems} are hidden gems`}: high quality, little known.${byHand} Only verified tools are ever suggested.</p></div>` +
-    `<a class="more" href="/browse">Browse all ${stats.verified} verified tools${icon('arrow-right')}</a></div>` +
+    `<p>${stats.replayed} of ${stats.listed} tools installed and replayed. Only those are ever suggested.</p></div>` +
+    `<a class="more" href="/browse">Browse all ${stats.verified}${icon('arrow-right')}</a></div>` +
     `<div class="fresh"><div>${fixCard}</div><ul class="runs-list">${rows}</ul></div></section>`
   );
 }
@@ -664,7 +614,7 @@ const RULES: [Parameters<typeof icon>[0], string, string][] = [
 export function rulesLabel(): string {
   return (
     `<div class="label-tag"><h3>Fitz’s rules</h3><ul class="rules">` +
-    RULES.map(([ico, title, text]) => `<li>${icon(ico)}<div><b>${esc(title)}</b><span>${esc(text)}</span></div></li>`).join('') +
+    RULES.map(([ico, title]) => `<li>${icon(ico)}<b>${esc(title)}</b></li>`).join('') +
     `</ul></div>`
   );
 }
@@ -687,26 +637,26 @@ export function renderPage(input: PageInput): string {
   const main =
     `<section class="hero mat after-top" aria-labelledby="title"><div class="wrap hero-grid"><div>` +
     `<h1 id="title">Software that <em>fits</em>, tried on first.</h1>` +
-    `<p class="lede">Tell Fitz the job in one sentence. pickfit suggests little-known developer CLI tools, local AI tools and MCP servers that it has already installed in a fresh sandbox, matched to you by Meta’s Muse Spark, with the steps that worked.</p>` +
+    `<p class="lede">Describe the job. Get little-known tools pickfit has already installed and tested, with the commands that worked.</p>` +
     `<div class="hero-form">${searchForm(form)}</div>` +
-    `<div class="tries js-only"><span class="label">Or try</span>${EXAMPLES.map((e) => `<button type="button" class="try" data-need="${esc(e)}">${esc(e)}</button>`).join('')}</div>` +
+    `<div class="tries js-only"><span class="label">Or try</span>${EXAMPLES.map(([label, need]) => `<button type="button" class="try" data-need="${esc(need)}" title="${esc(need)}">${esc(label)}</button>`).join('')}</div>` +
     `<ul class="proof"><li>${icon('book-open')}<span><strong>${stats.listed}</strong> READMEs read</span></li>` +
     `<li>${icon('shield-check')}<span><strong>${stats.replayed}</strong> installed and replayed in a sandbox</span></li>` +
     `<li>${icon('gem')}<span><strong>${stats.gems}</strong> hidden gems</span></li></ul>` +
-    `</div><div class="hero-fitz">${fitz('hello', 320, { eager: true })}<p class="says-note" aria-hidden="true">Hi, I’m Fitz. I try tools on before I suggest them.</p></div></div>` +
+    `</div><div class="hero-fitz">${fitz('hello', 320, { eager: true })}<p class="says-note" aria-hidden="true">I try every tool on first.</p></div></div>` +
     `<div class="ruler" aria-hidden="true"></div></section>` +
     `<p id="status" class="sr" aria-live="polite"></p>` +
     `<section id="results" class="results wrap" tabindex="-1" aria-label="Results">${input.results}</section>` +
     `<div class="home-only">` +
-    stagesSection(showcase) +
+    stagesSection() +
     freshSection(showcase) +
     `<section id="rules" class="sec wrap" aria-labelledby="rules-title"><div class="care"><div>` +
     `<h2 id="rules-title">Fitz works for you, not for the tools.</h2>` +
-    `<p class="quiet">A tailor who takes a cut from the cloth shop picks the cloth for the shop. Fitz takes nothing, so it can tell you a little-known tool fits better, or that you need nothing at all.</p>` +
+    `<p class="quiet">No ads, no paid placement, no cut from anyone.</p>` +
     `<a class="more" href="/how#rules">Why you can trust a pick${icon('arrow-right')}</a></div>${rulesLabel()}</div></section>` +
     `<section id="agents" class="sec wrap" aria-labelledby="agents-title"><div class="agents-band mat"><div>` +
     `<h2 id="agents-title">Same answers, in your agent.</h2>` +
-    `<p>Coding agents get the same data and the same matching through MCP. Any client that speaks streamable HTTP can connect to <code translate="no">${esc(mcp)}</code>; for Claude Code:</p>` +
+    `<p>The same picks over MCP, for Claude Code and any MCP client.</p>` +
     command(`claude mcp add --transport http pickfit ${mcp}`) +
     `</div><a class="btn btn-primary" href="/agents">${icon('bot')}Connect your agent</a></div></section>` +
     `</div>` +
