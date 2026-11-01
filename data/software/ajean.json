@@ -66,20 +66,24 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-ajean-20261031-000446-ea7c",
+      "run_id": "verify-ajean-20261101-160515-f0b6",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -L -o /tmp/ajean https://github.com/nathaninline/ajean/releases/latest/download/ajean-linux && chmod +x /tmp/ajean && mkdir -p ~/.local/bin && mv /tmp/ajean ~/.local/bin/ajean && ls -lh ~/.local/bin/ajean",
-          "purpose": "Download release binary to ~/.local/bin"
+          "command": "curl -L -f -o ajean https://github.com/nathaninline/ajean/releases/latest/download/ajean-linux && chmod +x ajean && ls -lh ajean && file ajean",
+          "purpose": "Download ajean-linux binary from latest release"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && mv ajean ~/.local/bin/ajean && chmod +x ~/.local/bin/ajean && ls -lh ~/.local/bin/ajean && ajean version && ajean where 2>&1",
+          "purpose": "Install to ~/.local/bin and verify on PATH"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "ajean version",
-        "expected_signal": "ajean 0.18.16"
+        "command": "export AJEAN_HOME=$HOME/ajean_data\najean internet status 2>&1\najean agent status 2>&1\najean memory status 2>&1\najean computer status 2>&1",
+        "expected_signal": "Accès internet état: off"
       },
-      "first_task": "ajean version"
+      "first_task": "export AJEAN_HOME=$HOME/ajean_data\najean internet status 2>&1\najean agent status 2>&1\najean memory status 2>&1\najean computer status 2>&1"
     },
     "windows": null
   },
@@ -98,57 +102,61 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:06:26.369564+08:00",
+    "checked_at": "2026-11-01T16:06:47.321236+08:00",
     "runs": [
       {
-        "id": "verify-ajean-20261031-000446-ea7c",
+        "id": "verify-ajean-20261101-160515-f0b6",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:06:26.369564+08:00",
-        "tool_version": "0.18.16",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:06:47.321236+08:00",
+        "tool_version": "0.18.17",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -L -o /tmp/ajean https://github.com/nathaninline/ajean/releases/latest/download/ajean-linux && chmod +x /tmp/ajean && mkdir -p ~/.local/bin && mv /tmp/ajean ~/.local/bin/ajean && ls -lh ~/.local/bin/ajean",
-            "purpose": "Download release binary to ~/.local/bin"
+            "command": "curl -L -f -o ajean https://github.com/nathaninline/ajean/releases/latest/download/ajean-linux && chmod +x ajean && ls -lh ajean && file ajean",
+            "purpose": "Download ajean-linux binary from latest release"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && mv ajean ~/.local/bin/ajean && chmod +x ~/.local/bin/ajean && ls -lh ~/.local/bin/ajean && ajean version && ajean where 2>&1",
+            "purpose": "Install to ~/.local/bin and verify on PATH"
           }
         ],
         "smoke_tests": [
           {
-            "command": "ajean version",
-            "expected_signal": "ajean 0.18.16",
+            "command": "mkdir -p ~/.local/bin && mv ajean ~/.local/bin/ajean && chmod +x ~/.local/bin/ajean && ls -lh ~/.local/bin/ajean && ajean version && ajean where 2>&1",
+            "expected_signal": "ajean 0.18.17",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "mv: cannot stat 'ajean': No such file or directory",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "export AJEAN_HOME=$HOME/ajean_data\najean internet status 2>&1\najean agent status 2>&1\najean memory status 2>&1\najean computer status 2>&1",
+            "expected_signal": "Accès internet état: off",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "ajean 0.18.16",
+            "observed_excerpt": "Accès internet état: off",
             "setup": [],
             "offline": true
           },
           {
-            "command": "ajean where",
-            "expected_signal": "données (AJEAN_HOME)",
+            "command": "curl -si http://127.0.0.1:8090/api/ping 2>&1 | head -c 2000\necho \"---PING2---\"\ncurl -si http://127.0.0.1:8090/api/status 2>&1",
+            "expected_signal": "{\"ok\":true,\"service\":\"ajean\",\"version\":\"0.18.17\"}",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "données (AJEAN_HOME) /etc/ajean",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "curl -s http://127.0.0.1:8099/api/ping",
-            "expected_signal": "\"ok\":true",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "{\"ok\":true,\"service\":\"ajean\",\"version\":\"0.18.16\"}",
+            "observed_excerpt": "{\"ok\":true,\"service\":\"ajean\",\"version\":\"0.18.17\"}",
             "setup": [
               {
-                "command": "AJEAN_HOME=$HOME/ajean-data ajean web 8099",
+                "command": "AJEAN_HOME=$HOME/ajean_data ajean web 8090",
                 "background": true,
-                "port": 8099
+                "port": 8090
               }
             ],
             "offline": true
@@ -156,29 +164,67 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "chmod +x ajean && sudo mv ajean /usr/local/bin/ajean; sudo ajean install (services, permissions, folders)",
-            "actually_needed": "install binary to ~/.local/bin without sudo and run with AJEAN_HOME=$HOME/ajean-data (writable dir); no systemctl/sudo used, `ajean web` still serves the UI and API",
+            "readme_said": "curl -L -o ajean ... && sudo mv ajean /usr/local/bin/ajean && sudo ajean install",
+            "actually_needed": "Set AJEAN_HOME to writable path (e.g. $HOME/ajean_data) - default /etc/ajean requires root and systemctl not available in sandbox",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "ajean llamacpp install builds llama.cpp for the GPU present",
+            "actually_needed": "Needs cmake (not installed) plus GPU toolkit; prebuilt/backend not available without build - inference cannot be tested in this box",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show AJEAN locations listed, API ping returning ok true version 0.18.16, and version command printing ajean 0.18.16.",
+          "observed": "Screenshots show internet status off and API ping returning ok true with version 0.18.17.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-ajean-20261031-000446-ea7c/report.json",
+          "trace_path": "runs/verify/verify-ajean-20261101-160515-f0b6/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-ajean-20261031-000446-ea7c/check-1-cmd3.judged.png",
-            "runs/verify/verify-ajean-20261031-000446-ea7c/check-2-cmd15.judged.png",
-            "runs/verify/verify-ajean-20261031-000446-ea7c/check-3-cmd2.judged.png"
+            "runs/verify/verify-ajean-20261101-160515-f0b6/check-1-cmd6.judged.png",
+            "runs/verify/verify-ajean-20261101-160515-f0b6/check-2-cmd15.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.151533
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.090478,
+        "features": [
+          {
+            "feature": "chat with local AI models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_toolchain",
+            "failure": null,
+            "note": "Chat needs llama.cpp engine via `ajean llamacpp install` which requires cmake and GPU toolkit not present; tiny model downloaded but engine inactive"
+          },
+          {
+            "feature": "remember context with persistent memory",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; Created $AJEAN_HOME/memory/generale/test.md and verified `ajean memory status` reports 1 page"
+          },
+          {
+            "feature": "browse web and control browser",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows internet off and browser missing with no web read or browser control performed."
+          },
+          {
+            "feature": "extend assistant with MCP tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "MCP plugin configured via web UI only, no CLI subcommand; not exercisable headlessly in this box"
+          }
+        ]
       }
     ]
   },
@@ -556,5 +602,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:06:47.322897+08:00"
 }

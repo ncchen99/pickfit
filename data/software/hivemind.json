@@ -67,22 +67,22 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-hivemind-20261031-025639-abf3",
+      "run_id": "verify-hivemind-20261101-164911-da14",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://hivemind.griiken.com/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
-          "purpose": "download install script to read before running"
+          "command": "curl -fsSL https://hivemind.griiken.com/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
+          "purpose": "download install script from hivemind.griiken.com"
         },
         {
           "command": "bash /tmp/install.sh 2>&1",
-          "purpose": "run install script to install app and CLIs"
+          "purpose": "run installer bash /tmp/install.sh to extract AppImage and create launcher"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "hive --version 2>&1",
-        "expected_signal": "2026.10.8"
+        "command": "hive --version",
+        "expected_signal": "2026.11.0"
       },
       "first_task": "hivemind"
     },
@@ -116,44 +116,53 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:58:52.106569+08:00",
+    "checked_at": "2026-11-01T16:52:17.180611+08:00",
     "runs": [
       {
-        "id": "verify-hivemind-20261031-025639-abf3",
+        "id": "verify-hivemind-20261101-164911-da14",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-vm",
-        "image": "pickfit-sbx-vm-gui:d217e76065c9",
-        "checked_at": "2026-10-31T02:58:52.106569+08:00",
-        "tool_version": "2026.10.8",
+        "image": "pickfit-sbx-vm-gui:14dd5b7442cc",
+        "checked_at": "2026-11-01T16:52:17.180611+08:00",
+        "tool_version": "2026.11.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://hivemind.griiken.com/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
-            "purpose": "download install script to read before running"
+            "command": "curl -fsSL https://hivemind.griiken.com/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
+            "purpose": "download install script from hivemind.griiken.com"
           },
           {
             "command": "bash /tmp/install.sh 2>&1",
-            "purpose": "run install script to install app and CLIs"
+            "purpose": "run installer bash /tmp/install.sh to extract AppImage and create launcher"
           }
         ],
         "smoke_tests": [
           {
-            "command": "hive --version 2>&1",
-            "expected_signal": "2026.10.8",
+            "command": "hive --version",
+            "expected_signal": "2026.11.0",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "2026.10.8",
+            "observed_excerpt": "2026.11.0",
             "setup": [],
             "offline": true
           },
           {
-            "command": "hive ctl 2>&1",
-            "expected_signal": "say which: hive ctl <command>; --help lists them",
+            "command": "hive ctl --help",
+            "expected_signal": "Use hive ctl",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Use hive ctl <command> --help for more information about a command.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "hive ctl",
+            "expected_signal": "say which: hive ctl <command>",
             "exit_code": 2,
             "passed": true,
             "observed_excerpt": "error [USAGE] say which: hive ctl <command>; --help lists them",
@@ -170,38 +179,66 @@
             "offline": true
           }
         ],
-        "pitfalls": [
-          {
-            "readme_said": "bash <(curl -fsSL https://hivemind.griiken.com/install.sh)",
-            "actually_needed": "installer fetches prebuilt AppImage (hivemind-linux-x86_64) and hive/hive-net binaries plus API SDK tarballs from GitHub releases, which cannot be read as scripts before running",
-            "kind": "note"
-          }
-        ],
+        "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show hive printing version 2026.10.8 and hive ctl returning a usage error asking for a subcommand. / The Hivemind app shows its main empty workspace with sidebar actions and a central 'Start with an agent' prompt.",
+          "observed": "Screenshots show hive ctl printing usage guidance and hive --version printing 2026.11.0. / Hivemind's main workspace is fully drawn with project sidebar and empty canvas prompting to start with an agent.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-hivemind-20261031-025639-abf3/report.json",
+          "trace_path": "runs/verify/verify-hivemind-20261101-164911-da14/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-hivemind-20261031-025639-abf3/check-1-cmd5.judged.png",
-            "runs/verify/verify-hivemind-20261031-025639-abf3/check-2-cmd7.judged.png",
-            "runs/verify/verify-hivemind-20261031-025639-abf3/replay-8-1.app.judged.png"
+            "runs/verify/verify-hivemind-20261101-164911-da14/check-1-cmd6.judged.png",
+            "runs/verify/verify-hivemind-20261101-164911-da14/check-2-cmd7.judged.png",
+            "runs/verify/verify-hivemind-20261101-164911-da14/replay-8-1.app.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.074698,
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.060356,
         "gui": {
           "tier": "ui_rendered",
           "screen": "main_ui",
           "command": "hivemind",
           "window_title": "hivemind",
           "display": "Xvfb 1280x800x24, no window manager, no GPU"
-        }
+        },
+        "features": [
+          {
+            "feature": "run coding agents side by side",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Requires Claude Code/Codex API accounts to launch agents side-by-side; no agents installed in sandbox"
+          },
+          {
+            "feature": "build workspace views and widgets",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Building views/widgets requires interactive GUI canvas; verified window opens but not widget creation"
+          },
+          {
+            "feature": "steer other agents via hive ctl",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows a usage error asking for a subcommand, not steering any agent."
+          },
+          {
+            "feature": "run agents remotely check from phone",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Remote SSH + phone check requires external machines and phone app not available in box"
+          }
+        ]
       }
     ]
   },
@@ -515,5 +552,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:15+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:52:17.182138+08:00"
 }

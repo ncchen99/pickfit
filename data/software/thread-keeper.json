@@ -71,17 +71,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-thread-keeper-20261101-001614-473b",
+      "run_id": "verify-thread-keeper-20261101-155248-3bd5",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install 'threadkeeper[semantic]' 2>&1",
-          "purpose": "install threadkeeper[semantic] via uv tool"
+          "purpose": "install threadkeeper[semantic] via uv tool install"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "which thread-keeper-setup && which tk-agent-status && tk-agent-status --help 2>&1 | head -n 100; thread-keeper-setup --help 2>&1",
+        "expected_signal": "usage: tk-agent-status"
+      },
+      "first_task": "tk-agent-status 2>&1; echo ---; thread-keeper-setup --dry-run 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -113,30 +116,48 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:17:48.618464+08:00",
+    "checked_at": "2026-11-01T15:54:12.886530+08:00",
     "runs": [
       {
-        "id": "verify-thread-keeper-20261101-001614-473b",
+        "id": "verify-thread-keeper-20261101-155248-3bd5",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:17:48.618464+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T15:54:12.886530+08:00",
         "tool_version": "0.22.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install 'threadkeeper[semantic]' 2>&1",
-            "purpose": "install threadkeeper[semantic] via uv tool"
+            "purpose": "install threadkeeper[semantic] via uv tool install"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 /home/sbx/.pickfit/mcp_probe.py --timeout 120 -- /home/sbx/.local/share/uv/tools/threadkeeper/bin/python -m threadkeeper.server 2>&1",
+            "command": "which thread-keeper-setup && which tk-agent-status && tk-agent-status --help 2>&1 | head -n 100; thread-keeper-setup --help 2>&1",
+            "expected_signal": "usage: tk-agent-status",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: tk-agent-status [-h] [--json] [--settings-catalog] [--refresh-catalog] [--update-cli CLI]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tk-agent-status 2>&1; echo ---; thread-keeper-setup --dry-run 2>&1",
+            "expected_signal": "thread-keeper setup (dry-run)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "thread-keeper setup (dry-run)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- /home/sbx/.local/share/uv/tools/threadkeeper/bin/python -m threadkeeper.server 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -145,39 +166,58 @@
             "offline": true
           },
           {
-            "command": "python3 /home/sbx/.pickfit/mcp_probe.py --timeout 120 --call agent_status --args '{}' -- /home/sbx/.local/share/uv/tools/threadkeeper/bin/python -m threadkeeper.server 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call brief --args '{}' -- /home/sbx/.local/share/uv/tools/threadkeeper/bin/python -m threadkeeper.server 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=agent_status content=text text_chars=4446",
+            "observed_excerpt": "tools/call: ok tool=brief content=text text_chars=409",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call inbox --args '{}' -- /home/sbx/.local/share/uv/tools/threadkeeper/bin/python -m threadkeeper.server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=inbox content=text text_chars=26",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call skill_list --args '{}' -- /home/sbx/.local/share/uv/tools/threadkeeper/bin/python -m threadkeeper.server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=skill_list content=text text_chars=17",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "MCP server launch via pipx/uv install puts hooks in scripts/hooks",
-            "actually_needed": "uv tool install image lacks scripts/hooks dir, thread-keeper-setup reports hooks source missing but setup still completes",
+            "readme_said": "thread-keeper-setup registers MCP server and copies hooks",
+            "actually_needed": "setup reported no CLI detected and hook sources missing for tk-brief.sh etc. when installed via uv tool — server still starts",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both probes show MCP initialize ok, 144 tools listed, handshake ok, and agent_status call returning loop status.",
+          "observed": "Screenshots show tk-agent-status help, agent status plus setup dry-run output, and MCP server initializing with 144 tools and handshake ok.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-thread-keeper-20261101-001614-473b/report.json",
+          "trace_path": "runs/verify/verify-thread-keeper-20261101-155248-3bd5/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-thread-keeper-20261101-001614-473b/check-1-cmd14.judged.png",
-            "runs/verify/verify-thread-keeper-20261101-001614-473b/check-2-cmd15.judged.png"
+            "runs/verify/verify-thread-keeper-20261101-155248-3bd5/check-1-cmd2.judged.png",
+            "runs/verify/verify-thread-keeper-20261101-155248-3bd5/check-2-cmd3.judged.png",
+            "runs/verify/verify-thread-keeper-20261101-155248-3bd5/check-3-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.143781,
+        "cost_usd": 0.099126,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -336,9 +376,35 @@
             "sync_now"
           ],
           "tool_count": 144,
-          "called_tool": "agent_status",
+          "called_tool": "brief",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Share cross-session memory across agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only a tool inventory with transport/version, not threads, notes, or quotes."
+          },
+          {
+            "feature": "Coordinate parallel agents via signaling",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only a tool inventory with transport/version, not inbox messages or spawn signaling."
+          },
+          {
+            "feature": "Improve skill library via autonomous loops",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only a tool inventory with transport/version, not skill entries or loop activity."
+          }
+        ]
       }
     ]
   },
@@ -774,5 +840,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:19+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T15:54:12.890096+08:00"
 }

@@ -61,21 +61,21 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-rei-20261030-234830-eedb",
+      "run_id": "verify-rei-20261101-164523-e4f5",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/lucasaguilar/rei/main/install.sh -o /tmp/install-rei.sh && wc -c /tmp/install-rei.sh && head -c 2000 /tmp/install-rei.sh",
-          "purpose": "Download rei install script"
+          "command": "curl -fsSL https://raw.githubusercontent.com/lucasaguilar/rei/main/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
+          "purpose": "download install.sh from GitHub"
         },
         {
-          "command": "bash /tmp/install-rei.sh",
-          "purpose": "Install rei via script"
+          "command": "bash /tmp/install.sh",
+          "purpose": "run install.sh (clones, npm ci, build, install rei command to ~/.local/bin)"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "rei --help",
+        "command": "rei --help 2>&1",
         "expected_signal": "REI 0.1.0 — a local-first coding agent."
       },
       "first_task": null
@@ -91,36 +91,36 @@
   "processing": "hybrid",
   "last_release": null,
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-30T23:51:57.183174+08:00",
+    "checked_at": "2026-11-01T16:49:07.189148+08:00",
     "runs": [
       {
-        "id": "verify-rei-20261030-234830-eedb",
-        "level": "install",
+        "id": "verify-rei-20261101-164523-e4f5",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-30T23:51:57.183174+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:49:07.189148+08:00",
         "tool_version": "0.1.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/lucasaguilar/rei/main/install.sh -o /tmp/install-rei.sh && wc -c /tmp/install-rei.sh && head -c 2000 /tmp/install-rei.sh",
-            "purpose": "Download rei install script"
+            "command": "curl -fsSL https://raw.githubusercontent.com/lucasaguilar/rei/main/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
+            "purpose": "download install.sh from GitHub"
           },
           {
-            "command": "bash /tmp/install-rei.sh",
-            "purpose": "Install rei via script"
+            "command": "bash /tmp/install.sh",
+            "purpose": "run install.sh (clones, npm ci, build, install rei command to ~/.local/bin)"
           }
         ],
         "smoke_tests": [
           {
-            "command": "rei --help",
+            "command": "rei --help 2>&1",
             "expected_signal": "REI 0.1.0 — a local-first coding agent.",
             "exit_code": 0,
             "passed": true,
@@ -129,57 +129,96 @@
             "offline": true
           },
           {
-            "command": "node $HOME/.rei/bin/rei.js --version",
-            "expected_signal": "rei 0.1.0",
+            "command": "cd /tmp/rei-f1 && npm install typescript --silent 2>&1 | tail -n 5 && npx tsc --noEmit 2>&1; echo \"EXIT:$?\"\necho \"---REI project detection test:\" && node -e \"\nconst {detectProjectType} = require('/home/sbx/.rei/dist/workspace/project-type.js');\nconsole.log(detectProjectType('/tmp/rei-f1'));\n\" 2>&1\nls ~/.rei/*.md 2>&1 | head; find ~/.rei -name \"*auditor*\" 2>&1",
+            "expected_signal": "verifyCommand: 'npx tsc -p tsconfig.json --noEmit",
             "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "rei 0.1.0",
+            "passed": false,
+            "observed_excerpt": "/usr/bin/bash: line 1: cd: /tmp/rei-f1: No such file or directory",
             "setup": [],
-            "offline": true
+            "offline": null
           }
         ],
         "pitfalls": [
           {
             "readme_said": "curl -fsSL https://raw.githubusercontent.com/lucasaguilar/rei/main/install.sh | bash",
-            "actually_needed": "install script used cp fallback automatically (rsync not installed in box) and install succeeded",
-            "kind": "tool_handled"
+            "actually_needed": "download script first with curl -o, read it, then bash it; direct pipe is discouraged per task",
+            "kind": "note"
           },
           {
-            "readme_said": "rei --config",
-            "actually_needed": "rei --config starts an interactive launcher asking for workspace/provider and an API key or local endpoint; with stdin closed it waits for input and had to be killed after 15s, so it cannot complete here without a key/server",
+            "readme_said": "rei --config starts setup wizard",
+            "actually_needed": "rei wrapper launches interactive wizard requiring TTY; non-interactive run times out (exit 137) and shows 'No configuration found — starting setup wizard' plus provider chooser",
             "kind": "note"
+          },
+          {
+            "readme_said": "npx tsc --noEmit as verify command example",
+            "actually_needed": "npx tsc resolves to deprecated tsc@2.0.4 stub; need typescript package installed then npx tsc --noEmit reports TS2322 correctly and detectProjectType returns 'npx tsc -p tsconfig.json --noEmit --pretty false'",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The screenshot shows rei --help printing the REI banner, version tagline, and usage instructions with exit code 0.",
+          "observed": "The screenshot shows rei --help printing the REI banner, the expected version line, and full usage instructions.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-rei-20261030-234830-eedb/report.json",
+          "trace_path": "runs/verify/verify-rei-20261101-164523-e4f5/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-rei-20261030-234830-eedb/check-1-cmd4.judged.png"
+            "runs/verify/verify-rei-20261101-164523-e4f5/check-1-cmd4.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.070329
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.095097,
+        "features": [
+          {
+            "feature": "write code and verify with compiler",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "audit code as reviewer sub-agent",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "auditor role exists at prompts/roles/auditor.md but live review needs LLM provider API key"
+          },
+          {
+            "feature": "handle daily briefings via MCP servers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "mcpServers declared in rei.config-example.json; running daily briefing needs external MCP servers and model"
+          },
+          {
+            "feature": "create custom personas from markdown files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; created .rei/personas/custom.md with frontmatter; personas are markdown files per persona-spec.md"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T16:49:07+08:00",
     "quality": {
-      "total": 61.2,
+      "total": 73.7,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -220,7 +259,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 45.17
+      "value": 54.39
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -489,5 +528,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:11+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:49:07.192954+08:00"
 }

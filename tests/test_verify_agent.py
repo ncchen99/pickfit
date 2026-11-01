@@ -275,6 +275,41 @@ def test_unsupported_finish_goes_back_once_and_a_clean_rerun_counts(task, ledger
     assert "  finish sent back once: 13 commands left to fix it" in lines_agent.lines
 
 
+def test_a_trailing_tail_or_echo_is_dropped_before_the_command_runs(task, ledger, tmp_path):
+    box = FakeBox(EVNX_BOX)
+    version = {"setup_ids": [], "expected_signal": "0.10.18", "expected_exit_code": 0, "observed_excerpt": ""}
+    server = FakeServer(
+        response("r1", run_cmd("pipx install evnx 2>&1 | tail -20")),
+        response("r2", run_cmd('evnx --version; echo "EXIT:$?"')),
+        response("r3", finish(level="install", steps=[1], smoke=[{**version, "command_id": 2}])),
+    )
+    a = agent(task, box, server, ledger, tmp_path)
+    report = a.run()
+    ran = [c for c, _ in box.ran if c.startswith(("pipx", "evnx"))]
+    assert ran == ["pipx install evnx 2>&1", "evnx --version"]
+    cmds = [(c.command, c.unmasked_from) for c in report.commands if c.tool == "run_command"]
+    assert cmds == [("pipx install evnx 2>&1", "pipx install evnx 2>&1 | tail -20"),
+                    ("evnx --version", 'evnx --version; echo "EXIT:$?"')]
+    told = next(item["output"] for item in server.requests[1]["input"] if "output" in item)
+    assert told.startswith("note: pickfit ran this without `| tail -20` and recorded it that way")
+    assert "command_id: 1" in told and "exit_code: 0" in told
+    assert "    ran without `| tail -20` (it hides the exit code)" in a.lines
+    # The cited steps now count: the log supports install, with nothing sent back.
+    assert report.verdict["level"] == "install" and report.verdict["agrees"] and len(server.requests) == 3
+
+
+def test_a_powershell_box_runs_the_command_as_written(task, ledger, tmp_path):
+    class PwshBox(FakeBox):
+        shell = "pwsh"
+
+    box = PwshBox(EVNX_BOX)
+    server = FakeServer(response("r1", run_cmd("pipx install evnx 2>&1 | tail -20")),
+                        response("r2", finish(level="install", steps=[1])))
+    report = agent(task, box, server, ledger, tmp_path).run()
+    assert "pipx install evnx 2>&1 | tail -20" in [c for c, _ in box.ran]
+    assert [c.unmasked_from for c in report.commands if c.tool == "run_command"] == [None]
+
+
 def test_no_send_back_on_the_finish_only_turn(task, ledger, tmp_path):
     server = FakeServer(
         response("r1", run_cmd("pipx install evnx || true")),

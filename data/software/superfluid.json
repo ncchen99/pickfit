@@ -77,20 +77,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-superfluid-20261030-234550-5d0b",
+      "run_id": "verify-superfluid-20261101-160334-b8fe",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install --global @basecompute/superfluid 2>&1",
+          "command": "npm install --global @basecompute/superfluid",
           "purpose": "install superfluid via npm global"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "superfluid --version 2>&1",
+        "command": "superfluid --version",
         "expected_signal": "superfluid 0.1.6"
       },
-      "first_task": "curl -s http://127.0.0.1:8453/v1/models 2>&1"
+      "first_task": "curl -s http://127.0.0.1:8453/v1/models"
     },
     "windows": null
   },
@@ -109,30 +109,30 @@
   "verification": {
     "level": "inference",
     "unverified_reason": null,
-    "checked_at": "2026-10-30T23:46:46.190325+08:00",
+    "checked_at": "2026-11-01T16:04:48.913884+08:00",
     "runs": [
       {
-        "id": "verify-superfluid-20261030-234550-5d0b",
+        "id": "verify-superfluid-20261101-160334-b8fe",
         "level": "inference",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-30T23:46:46.190325+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:04:48.913884+08:00",
         "tool_version": "0.1.6",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install --global @basecompute/superfluid 2>&1",
+            "command": "npm install --global @basecompute/superfluid",
             "purpose": "install superfluid via npm global"
           }
         ],
         "smoke_tests": [
           {
-            "command": "superfluid --version 2>&1",
+            "command": "superfluid --version",
             "expected_signal": "superfluid 0.1.6",
             "exit_code": 0,
             "passed": true,
@@ -141,90 +141,141 @@
             "offline": true
           },
           {
-            "command": "superfluid --help 2>&1",
-            "expected_signal": "Usage: superfluid",
+            "command": "curl -s http://127.0.0.1:8453/v1/models",
+            "expected_signal": "stories260K",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Usage: superfluid <command> [options]",
+            "observed_excerpt": "{\"object\":\"list\",\"data\":[{\"id\":\"stories260K\",\"object\":\"model\",\"created\":1793520278,\"owned_by\":\"superfluid\",\"loaded\":true,\"meta\":{\"n_ctx\":8192},\"architecture\":{\"input_modalities\":[\"text\"]},\"runtime\":{\"id\":\"llamacpp\",\"version\":\"llama.cpp b11981\"},\"capabilities\":{\"descriptor_version\":1,\"runtime\":{\"id\"…",
+            "setup": [
+              {
+                "command": "superfluid runtimes 2>&1\nmkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "superfluid runtime install llamacpp 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "superfluid serve ~/models/stories260K.gguf --port 8453 2>&1",
+                "background": true,
+                "port": 8453
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8453/v1/completions -H 'content-type: application/json' -d '{\"model\":\"stories260K\",\"prompt\":\"Hello world\",\"max_tokens\":16,\"temperature\":0}'",
+            "expected_signal": "completion_tokens",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":\"cmpl-superfluid-1\",\"object\":\"text_completion\",\"created\":1793520278,\"model\":\"stories260K\",\"choices\":[{\"index\":0,\"finish_reason\":\"length\",\"text\":\" was a big, red ball. He was very excit\",\"logprobs\":null}],\"usage\":{\"completion_tokens\":16,\"prompt_tokens\":7,\"total_tokens\":23,\"prompt_tokens_detail…",
+            "setup": [
+              {
+                "command": "superfluid runtimes 2>&1\nmkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "superfluid runtime install llamacpp 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "superfluid serve ~/models/stories260K.gguf --port 8453 2>&1",
+                "background": true,
+                "port": 8453
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "superfluid launch --help",
+            "expected_signal": "Run a coding agent against a local model",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Run a coding agent against a local model.",
             "setup": [],
             "offline": true
           },
           {
-            "command": "curl -s http://127.0.0.1:8453/v1/models 2>&1",
-            "expected_signal": "stories260K",
+            "command": "superfluid node --help; echo \"---\"; superfluid node join --help",
+            "expected_signal": "Serve a model to a fleet head",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "{\"object\":\"list\",\"data\":[{\"id\":\"stories260K\",\"object\":\"model\",\"created\":1793375200,\"owned_by\":\"superfluid\",\"loaded\":true,\"meta\":{\"n_ctx\":8192},\"architecture\":{\"input_modalities\":[\"text\"]},\"runtime\":{\"id\":\"llamacpp\",\"version\":\"llama.cpp b11981\"},\"capabilities\":{\"descriptor_version\":1,\"runtime\":{\"id\"…",
-            "setup": [
-              {
-                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf 2>&1 && ls -lh ~/models/stories260K.gguf",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "superfluid serve ~/models/stories260K.gguf",
-                "background": true,
-                "port": 8453
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "curl -s http://127.0.0.1:8453/v1/completions -H 'content-type: application/json' -d '{\"model\":\"stories260K\",\"prompt\":\"Once upon a time\",\"temperature\":0,\"max_tokens\":16}' 2>&1",
-            "expected_signal": "completion_tokens",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "{\"id\":\"cmpl-superfluid-1\",\"object\":\"text_completion\",\"created\":1793375200,\"model\":\"stories260K\",\"choices\":[{\"index\":0,\"finish_reason\":\"length\",\"text\":\", there was a little girl named Lily. She loved to play\",\"logprobs\":null}],\"usage\":{\"completion_tokens\":16,\"prompt_tokens\":5,\"total_tokens\":21,\"prom…",
-            "setup": [
-              {
-                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf 2>&1 && ls -lh ~/models/stories260K.gguf",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "superfluid serve ~/models/stories260K.gguf",
-                "background": true,
-                "port": 8453
-              }
-            ],
+            "observed_excerpt": "Serve a model to a fleet head from this machine.",
+            "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "superfluid serve unsloth/Qwen3.8-27B-GGUF:UD-Q4_K_M",
-            "actually_needed": "served local ~/models/stories260K.gguf (1.2 MB test model); server registered model id as stories260K",
+            "readme_said": "runtime installed on first use from its own project's releases",
+            "actually_needed": "explicit `superfluid runtime install llamacpp` was run before serve to ensure CPU build present; serve log shows ready runtime",
             "kind": "note"
           },
           {
-            "readme_said": "serve installs runtime and pulls model on first run",
-            "actually_needed": "llamacpp runtime b11981-cpu was auto-installed on first serve from llama.cpp release builds",
-            "kind": "tool_handled"
-          },
-          {
-            "readme_said": "curl http://127.0.0.1:8453/v1/chat/completions with messages",
-            "actually_needed": "used POST /v1/completions because server log says stories260K has no chat template and chat routes will refuse; README chat example targets chat-capable model",
+            "readme_said": "model has chat template for OpenAI/Anthropic/Ollama examples",
+            "actually_needed": "stories260K GGUF has no chat template - chat routes return 'codec has no chat dialect'; used /v1/completions for inference which works, and verified Ollama/Anthropic endpoints exist but require chat-template model",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show version 0.1.6, full usage help, and models list containing stories260K.",
+          "observed": "Screenshots show the stories260K model listed as loaded, a successful 16-token completion, and version 0.1.6 output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-superfluid-20261030-234550-5d0b/report.json",
+          "trace_path": "runs/verify/verify-superfluid-20261101-160334-b8fe/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-superfluid-20261030-234550-5d0b/check-1-cmd2.judged.png",
-            "runs/verify/verify-superfluid-20261030-234550-5d0b/check-2-cmd3.judged.png",
-            "runs/verify/verify-superfluid-20261030-234550-5d0b/check-3-cmd6.judged.png"
+            "runs/verify/verify-superfluid-20261101-160334-b8fe/check-1-cmd9.judged.png",
+            "runs/verify/verify-superfluid-20261101-160334-b8fe/check-2-cmd10.judged.png",
+            "runs/verify/verify-superfluid-20261101-160334-b8fe/check-3-cmd15.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.042836
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.070693,
+        "features": [
+          {
+            "feature": "serve local LLM inference across runtimes",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "serve OpenAI, Anthropic and Ollama clients",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Outputs show only OpenAI /v1 calls with no Anthropic or Ollama request shown."
+          },
+          {
+            "feature": "run coding agents on local models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; superfluid launch --help lists Claude Code etc and shows auto-start of serve"
+          },
+          {
+            "feature": "add machines for distributed serving",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; superfluid node join --help shows fleet token, local network discovery and encrypted link"
+          }
+        ]
       }
     ]
   },
@@ -588,5 +639,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:04:48.915637+08:00"
 }

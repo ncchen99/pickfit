@@ -67,21 +67,21 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-hief-20261101-001230-94c9",
+      "run_id": "verify-hief-20261101-155609-1363",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -L -o /tmp/hief.tar.gz https://github.com/hiranp/hief/releases/download/v0.5.0/hief-linux-x86_64.tar.gz",
-          "purpose": "download prebuilt linux x86_64 binary from GitHub releases v0.5.0"
+          "command": "curl -fsL https://github.com/hiranp/hief/releases/download/v0.5.0/hief-linux-x86_64.tar.gz -o /tmp/hief.tar.gz && tar xzf /tmp/hief.tar.gz -C /tmp && ls -R /tmp | head -n 50\nmkdir -p ~/.local/bin\nfind /tmp -maxdepth 3 -type f -name \"hief*\"",
+          "purpose": "download linux x86_64 release tarball and extract"
         },
         {
-          "command": "tar xzf /tmp/hief.tar.gz -C ~/.local/bin",
-          "purpose": "extract binary to ~/.local/bin"
+          "command": "cp /tmp/hief ~/.local/bin/hief && hief --version && hief --help\n",
+          "purpose": "install binary to ~/.local/bin and verify on PATH"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "hief --version",
+        "command": "cp /tmp/hief ~/.local/bin/hief && hief --version && hief --help\n",
         "expected_signal": "hief 0.5.0"
       },
       "first_task": null
@@ -103,34 +103,34 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:13:56.011154+08:00",
+    "checked_at": "2026-11-01T15:57:29.504166+08:00",
     "runs": [
       {
-        "id": "verify-hief-20261101-001230-94c9",
+        "id": "verify-hief-20261101-155609-1363",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:13:56.011154+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T15:57:29.504166+08:00",
         "tool_version": "0.5.0",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -L -o /tmp/hief.tar.gz https://github.com/hiranp/hief/releases/download/v0.5.0/hief-linux-x86_64.tar.gz",
-            "purpose": "download prebuilt linux x86_64 binary from GitHub releases v0.5.0"
+            "command": "curl -fsL https://github.com/hiranp/hief/releases/download/v0.5.0/hief-linux-x86_64.tar.gz -o /tmp/hief.tar.gz && tar xzf /tmp/hief.tar.gz -C /tmp && ls -R /tmp | head -n 50\nmkdir -p ~/.local/bin\nfind /tmp -maxdepth 3 -type f -name \"hief*\"",
+            "purpose": "download linux x86_64 release tarball and extract"
           },
           {
-            "command": "tar xzf /tmp/hief.tar.gz -C ~/.local/bin",
-            "purpose": "extract binary to ~/.local/bin"
+            "command": "cp /tmp/hief ~/.local/bin/hief && hief --version && hief --help\n",
+            "purpose": "install binary to ~/.local/bin and verify on PATH"
           }
         ],
         "smoke_tests": [
           {
-            "command": "hief --version",
+            "command": "cp /tmp/hief ~/.local/bin/hief && hief --version && hief --help\n",
             "expected_signal": "hief 0.5.0",
             "exit_code": 0,
             "passed": true,
@@ -139,14 +139,19 @@
             "offline": true
           },
           {
-            "command": "cd /tmp/demo && python3 ~/.pickfit/mcp_probe.py -- hief serve 2>&1",
+            "command": "cd /tmp/testproj && python3 ~/.pickfit/mcp_probe.py -- hief serve 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
             "setup": [
               {
-                "command": "mkdir -p /tmp/demo && cd /tmp/demo && git init -q && echo 'fn main() { println!(\"hello\"); }' > main.rs && echo 'print(\"hello\")' > hello.py && hief init 2>&1 && ls -la .hief 2>&1 | head -n 20 && hief index build 2>&1 | tail -n 20",
+                "command": "mkdir -p /tmp/testproj && cd /tmp/testproj && hief init && ls -la .hief 2>&1 | head -n 50\ncat .hief/hief.toml 2>&1 || cat hief.toml 2>&1 | head -n 50\n",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/testproj/src && cat > /tmp/testproj/src/main.rs <<'EOF'\nfn hello() {\n    println!(\"hello\");\n}\nfn main() {\n    hello();\n}\nEOF\ncat > /tmp/testproj/main.py <<'EOF'\ndef greet(name):\n    return f\"hello {name}\"\nEOF\ncd /tmp/testproj && hief index build 2>&1\nhief --version\n",
                 "background": false,
                 "port": null
               }
@@ -154,14 +159,79 @@
             "offline": true
           },
           {
-            "command": "cd /tmp/demo && python3 ~/.pickfit/mcp_probe.py --call index_status --args '{}' -- hief serve 2>&1",
+            "command": "cd /tmp/testproj && python3 ~/.pickfit/mcp_probe.py --call search_code --args '{\"query\":\"hello\"}' -- hief serve 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=index_status content=text text_chars=150",
+            "observed_excerpt": "tools/call: ok tool=search_code content=text text_chars=938",
             "setup": [
               {
-                "command": "mkdir -p /tmp/demo && cd /tmp/demo && git init -q && echo 'fn main() { println!(\"hello\"); }' > main.rs && echo 'print(\"hello\")' > hello.py && hief init 2>&1 && ls -la .hief 2>&1 | head -n 20 && hief index build 2>&1 | tail -n 20",
+                "command": "mkdir -p /tmp/testproj && cd /tmp/testproj && hief init && ls -la .hief 2>&1 | head -n 50\ncat .hief/hief.toml 2>&1 || cat hief.toml 2>&1 | head -n 50\n",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/testproj/src && cat > /tmp/testproj/src/main.rs <<'EOF'\nfn hello() {\n    println!(\"hello\");\n}\nfn main() {\n    hello();\n}\nEOF\ncat > /tmp/testproj/main.py <<'EOF'\ndef greet(name):\n    return f\"hello {name}\"\nEOF\ncd /tmp/testproj && hief index build 2>&1\nhief --version\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/testproj && python3 ~/.pickfit/mcp_probe.py --call create_intent --args '{\"title\":\"Test intent\",\"kind\":\"feature\",\"description\":\"test\"}' -- hief serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=create_intent content=text text_chars=226",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testproj && cd /tmp/testproj && hief init && ls -la .hief 2>&1 | head -n 50\ncat .hief/hief.toml 2>&1 || cat hief.toml 2>&1 | head -n 50\n",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/testproj/src && cat > /tmp/testproj/src/main.rs <<'EOF'\nfn hello() {\n    println!(\"hello\");\n}\nfn main() {\n    hello();\n}\nEOF\ncat > /tmp/testproj/main.py <<'EOF'\ndef greet(name):\n    return f\"hello {name}\"\nEOF\ncd /tmp/testproj && hief index build 2>&1\nhief --version\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/testproj && python3 ~/.pickfit/mcp_probe.py --call check_drift --args '{}' -- hief serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=check_drift content=text text_chars=346",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testproj && cd /tmp/testproj && hief init && ls -la .hief 2>&1 | head -n 50\ncat .hief/hief.toml 2>&1 || cat hief.toml 2>&1 | head -n 50\n",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/testproj/src && cat > /tmp/testproj/src/main.rs <<'EOF'\nfn hello() {\n    println!(\"hello\");\n}\nfn main() {\n    hello();\n}\nEOF\ncat > /tmp/testproj/main.py <<'EOF'\ndef greet(name):\n    return f\"hello {name}\"\nEOF\ncd /tmp/testproj && hief index build 2>&1\nhief --version\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/testproj && python3 ~/.pickfit/mcp_probe.py --call list_patterns --args '{}' -- hief serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list_patterns content=text text_chars=13",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testproj && cd /tmp/testproj && hief init && ls -la .hief 2>&1 | head -n 50\ncat .hief/hief.toml 2>&1 || cat hief.toml 2>&1 | head -n 50\n",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/testproj/src && cat > /tmp/testproj/src/main.rs <<'EOF'\nfn hello() {\n    println!(\"hello\");\n}\nfn main() {\n    hello();\n}\nEOF\ncat > /tmp/testproj/main.py <<'EOF'\ndef greet(name):\n    return f\"hello {name}\"\nEOF\ncd /tmp/testproj && hief index build 2>&1\nhief --version\n",
                 "background": false,
                 "port": null
               }
@@ -171,13 +241,13 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "cargo build --release with Rust 1.85+",
-            "actually_needed": "box has no C linker (cc/gcc); building from source requires a system C toolchain which README does not mention; used prebuilt release tarball hief-linux-x86_64.tar.gz instead",
+            "readme_said": "Install from source via cargo build --release (requires Rust 1.85+/1.88+)",
+            "actually_needed": "Used prebuilt binary hief-linux-x86_64.tar.gz from GitHub releases v0.5.0; cargo build needs Rust toolchain not present in box",
             "kind": "sandbox"
           },
           {
-            "readme_said": "hief serve expects to run from an initialized project",
-            "actually_needed": "must run hief init and hief index build in project directory before MCP probe succeeds",
+            "readme_said": "hief serve starts MCP server (stdio) with no prior setup",
+            "actually_needed": "Server expects project initialized via hief init and indexed via hief index build in the working directory before serve",
             "kind": "note"
           },
           {
@@ -189,21 +259,21 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks show expected signals: MCP handshake with 38 tools, successful index_status tool call, and version 0.5.0.",
+          "observed": "Screenshots show hief 0.5.0 help, MCP handshake with 38 tools, and successful search_code returning hello snippet.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-hief-20261101-001230-94c9/report.json",
+          "trace_path": "runs/verify/verify-hief-20261101-155609-1363/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-hief-20261101-001230-94c9/check-1-cmd11.judged.png",
-            "runs/verify/verify-hief-20261101-001230-94c9/check-2-cmd12.judged.png",
-            "runs/verify/verify-hief-20261101-001230-94c9/check-3-cmd15.judged.png"
+            "runs/verify/verify-hief-20261101-155609-1363/check-1-cmd8.judged.png",
+            "runs/verify/verify-hief-20261101-155609-1363/check-2-cmd9.judged.png",
+            "runs/verify/verify-hief-20261101-155609-1363/check-3-cmd5.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.120628,
+        "cost_usd": 0.078656,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -255,9 +325,47 @@
             "write_context_file"
           ],
           "tool_count": 38,
-          "called_tool": "index_status",
+          "called_tool": "search_code",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "search codebase with AST-aware search",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "coordinate tasks via intent graph",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "evaluate quality with golden sets",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows drift checks, not golden-set evaluation results."
+          },
+          {
+            "feature": "scaffold documentation and sync workflows",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output is empty list with no documentation or sync work shown."
+          }
+        ]
       }
     ]
   },
@@ -304,15 +412,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-01T15:57:29+08:00",
     "quality": {
-      "total": 87.0,
+      "total": 79.5,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -352,8 +460,8 @@
       "packages": []
     },
     "treasure": {
-      "is_treasure": true,
-      "value": 67.6
+      "is_treasure": false,
+      "value": 61.77
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -884,5 +992,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:39:03+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T15:57:29.507280+08:00"
 }
