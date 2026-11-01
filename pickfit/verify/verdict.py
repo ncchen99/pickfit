@@ -592,7 +592,7 @@ _VERSION_ARGS = {"--version", "-V", "-v", "version"}
 
 def _looks(text: str, last: bool) -> bool:
     """Whether a pipeline element only looks around (see _LOOKS; `find` without actions, `tar -t`,
-    `command -v`, a checksum printed but not checked). `prog --version` counts too, except as the last command, where it is the step's own
+    `command -v`, a checksum printed but not checked, `flatpak remotes`/`list`). `prog --version` counts too, except as the last command, where it is the step's own
     check. Anything with a redirect, a heredoc, $(...), a subshell or only assignments is kept."""
     bare = _QUIET.sub("", text).strip()
     if not bare or re.search(r"[<>`]|\$\(", bare) or bare[0] in "({":
@@ -613,6 +613,9 @@ def _looks(text: str, last: bool) -> bool:
         return words[1:2] == ["-v"]
     if name in _SUMS:
         return not {"-c", "--check"} & set(words)  # `sha256sum -c` checks the download: it stays
+    if name == "flatpak":
+        sub = next((w for w in words[1:] if not w.startswith("-")), None)
+        return sub in ("remote-list", "remotes", "remote-ls", "list")
     if len(words) == 2 and words[1] in _VERSION_ARGS:
         return not last
     return name in _LOOKS

@@ -122,6 +122,10 @@ def test_other_masks_are_left_for_the_log_rules(command: str):
     ("curl -fLO u/x.tgz && curl -fLO u/SUMS && cat SUMS && sha256sum x.tgz && tar -xzf x.tgz",
      "curl -fLO u/x.tgz && curl -fLO u/SUMS && tar -xzf x.tgz"),
     ("cd /tmp/d && cat x.tgz.sha256 && sha256sum -c x.tgz.sha256 && tar -tzf x.tgz", "cd /tmp/d && sha256sum -c x.tgz.sha256"),
+    # flatpak's listings look; adding a remote or installing does not.
+    ("flatpak remote-list; flatpak --user remote-list; flatpak remote-add --if-not-exists --user flathub u; "
+     "flatpak remotes", "flatpak remote-add --if-not-exists --user flathub u"),
+    ("flatpak --user install -y flathub org.x.X 2>&1 && flatpak list --app", "flatpak --user install -y flathub org.x.X 2>&1"),
 ])
 def test_an_install_step_loses_its_looking_around(command: str, tidy: str):
     assert install_command(command) == tidy
