@@ -48,7 +48,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 10. 每天結束時，把當日花費寫進狀態紀錄（數字由帳本產生；只記花費，不記 credits 餘額）。
 11. **上限是安全網，不是要省到最後。** Meta 的 Spend Limit 只寄信、不會擋，所以由程式擋：管線 $120＋Windows $5＋Worker 評審期 $15＋評測部署 $10＝$150，最壞情況剛好用完 credits，預估實際花費約 $120（10/31 調整）。各家額度照用途分配，**產品裡每個決定都用 Meta 模型**（評分 25%，第一輪必查；arch D.3、I #19）：
     - **Meta**：用在品質與規模。正式資料用 `muse-spark-1.3`（contributor 只用在開發）；驗證 agent 用 medium；修錯時可用 `web_search`；困難案例用 `muse-wonder-1.0` 重試；驗證目標從 50 筆提高到 100 筆以上。**11/1 檢查**：若預估到交件的 Meta 花費 <$60，就再擴大發現與驗證規模。
-    - **Baseten（Muse Spark Open，開放權重）**：初篩；MCP 擴充的驗證 agent（10/31 比對 20 筆：通過率是 1.3 的 0.92、多通過的 2 筆人工確認屬實；抽取的主要欄位只有 62–71% 一致，沒達 90%，所以抽取、判讀、評分、Worker 仍用 `muse-spark-1.3`）；評測的第三評分者。每筆紀錄記下各段用的模型。帳本上限總額 $80、每日 $25（11/1 念誠先調為 $35 讓功能覆蓋當天跑完，再調為 $45 讓修好 head／tail 後的補跑當天跑）；key 由比賽提供，超出配額不會另外收費（念誠 10/31），照常記帳。
+    - **Baseten（Muse Spark Open，開放權重）**：初篩；MCP 擴充的驗證 agent（10/31 比對 20 筆：通過率是 1.3 的 0.92、多通過的 2 筆人工確認屬實；抽取的主要欄位只有 62–71% 一致，沒達 90%，所以抽取、判讀、評分、Worker 仍用 `muse-spark-1.3`）；評測的第三評分者。每筆紀錄記下各段用的模型。帳本上限總額 $100（11/1 念誠從 $80 調高，給 GUI 操作檢查與新來源）、每日 $25（11/1 念誠先調為 $35 讓功能覆蓋當天跑完，再調為 $45 讓修好 head／tail 後的補跑當天跑；11/2 調為 $35）；key 由比賽提供，超出配額不會另外收費（念誠 10/31），照常記帳。
     - **Modal**：更多沙盒驗證；本地 AI 工具必須用 GPU 時開 GPU 沙盒（T4 約 $0.59／小時），讓更多工具達到「推論驗證」等級。
     - **Anthropic**（11/27 到期）：只用在評測（受測 agent、補充重跑、獨立評分）與開發工具，不放進產品的發現、抽取、驗證、配對流程。
 
@@ -64,7 +64,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | P3 驗證 agent | 10/30 本機 Docker → 10/31 Modal | 照 README 失敗 → 模型讀錯誤 → 自己修好 → 判讀 → 重播 | **G2（10/31 晚上，硬關卡）**：10 筆 demo 候選 ≥5 筆在 Modal 通過並重播 |
 | P4 MCP | 10/28 hello → 10/31 細路徑 → 11/1 補完 | 5 個工具上線，Claude Code 連得到 | 10/31：問「Mac、免費、能離線的 X」回 2–3 筆真資料 |
 | P5 計分、提交、閉環 | 11/1–11/2 | ≥30 筆 verified（目標 50）；提交約 10 分鐘內可被推薦；回報 → 重驗 → git diff | 11/1 晚上 demo 故事定案 |
-| P6 評測 | 11/2 | 對照組 vs 實驗組，含輸的題 | **11/2 晚上功能凍結** |
+| P6 評測 | 11/2 | 對照組 vs 實驗組，含輸的題 | **11/2 晚上功能凍結**（GUI 操作檢查與新來源延到 11/3 12:00，念誠 11/1 同意） |
 | P7 README、影片、交件 | 11/3–11/4 | README、3 分鐘影片、交件 | **台北 11/4 22:00 前送出**（截止是 11/5 10:00） |
 
 ---
@@ -99,6 +99,7 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 - [x] P2.4 開放權重初篩：Spark Open @ Baseten（`meta-models/muse-spark-open-1026`、`reasoning_effort: low`、強制 tool call），低信心、矛盾（`usable_software` 與 kind 對不上）、kind 為 other 或失敗的送 `muse-spark-1.3` 複查（覆蓋初篩），另固定抽 5% 複查比一致率。不給星數。被拒的候選抽取時跳過。Baseten 在帳本裡有自己的預算（總額 $80、每日 $25）。指令 `pickfit prescreen --limit N`。（10/29：957 筆規則通過的全跑完：留 907、拒 50（函式庫 29、研究或 benchmark 10、demo 3、框架 3 等）；複查 83 筆，其中 18 筆被 1.3 改判（都在被標記的案例裡）；**5% 抽樣 34／34 一致**。每筆初篩約 $0.004、1–2 秒。已寫出的 39 筆 profile 沒有被拒的。發現：初篩信心幾乎都 ≥0.9，低信心門檻只觸發 1 次；模型判的類別有 305 筆是 other，和 query 類別不一致，還沒拿來用）
 - [x] P2.5 抽取 v0：`muse-spark-1.3`，Responses、`text.format` strict，每欄附引用。照「1 → 5 → 30」放大。（開發時用 contributor 跑到 36 筆，全過 schema；程式檢查每段引用確實出現在來源，已在 v0 做好。1.3 正式批次在 P2.6，估每筆約 $0.017）
 - [x] P2.6 抽取收尾（10/30 上午，arch H.2）：程式檢查引用真的出現在來源、授權與 release 等事實欄位改用 API 值、重試、批次；晚上背景跑批次抽取，產生 P3 要用的 ≥30 份 profile。（10/29：規則 v2 過 452／496＝91.1%，多擋了釣魚套件、只有 README、只有二進位又沒授權的 repo；`muse-spark-1.3` 抽取 52 筆、平均 $0.014；寫出 39 筆 profile（dev_cli 23、local_ai 16），全部先標未驗證。待補：引用只證明那句話存在，不證明它支持填入的值；local_ai 產量偏低。同日補本地 AI：依類別定義加 13 條 query、抽取前先只用 GitHub 資料排序，多寫 57 筆 profile（local_ai 37、dev_cli 20），共 96 筆）
+- [ ] P2.7 新來源（11/1 起，brief 第 2.1 節）：Flathub、Homebrew Cask 當發現來源，和 GitHub 來的同一款合併成一筆；每個來源先收 10–20 款，走完發現 → 抽取 → 在對應 OS 驗證 → 上線；winget 看時間。凍結 11/3 12:00。
 
 **完成標準**：`pickfit discover` 產生 ≥150 筆候選；漏斗每一格標模型與花費；5 份抽取檔過 schema。推理 token 超過估算 2 倍就降 effort。
 
@@ -113,6 +114,8 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 - [x] P3.7 批次：`pickfit verify --batch N --concurrency 5`，demo 類別優先。（10 筆測試候選：第一輪 7／10，修好 3 個問題後 10／10 通過並重播；每筆中位數 91 秒、Meta 約 $0.08）
 - [x] P3.8 挑 10 筆 demo 候選（Mac 能裝、免費、能離線）。（10/29：見 `docs/demo-candidates.md`。39 筆中 11 筆不能在 Linux 沙盒跑（多是圖形介面 app），其餘 28 筆有 25 筆通過並重播、寫回資料；10 筆候選全部通過並重播。Mac 上的安裝還沒實測（P6.4）；10 筆中原本只有 1 筆本地 AI 工具（localm）；同日補本地 AI 後，第 10 筆改為 cluaiz（斷網時 `/health` 有回應，官方安裝支援 macOS arm64），另列 8 筆本地 AI 備選。schema 補上「斷網是否通過」與測試前的準備指令）
 - [x] P3.9 Show HN 管道（計畫內，10/30 最後做，1.5 h）：沿用 `spikes/ch_comm_hn_showhn.py`；落後就第一個砍（arch H.5 #2）。（10/31 念誠決定要做：找剛發表的冷門工具，符合 pickfit 的宗旨。交給新 session，Meta 上限 $3、Baseten $10）
+- [ ] P3.10 GUI 操作與檢查（Linux Xvfb，brief 第 2.1 節）：Meta 模型看截圖決定點擊與輸入，pickfit 執行，用能檢查的結果確認功能，通過才算 function；先跑現有的桌面 App。凍結 11/3 12:00。
+- [ ] P3.11 macOS GUI（tart，經 VNC）：啟動、截圖、看圖確認，再接 P3.10 的操作檢查；Homebrew Cask 的 App 在這裡驗證。凍結 11/3 12:00。
 
 **10/30 完成標準**：一個「照 README 會失敗」的工具，由 Muse Spark 自己讀錯誤、補步驟、呼叫 `finish`，trace 看得到推理摘要；≥30 份 profile 已 commit。修不好 → 10/31 上午繼續修，細路徑 MCP 延到 11/1；用規則表兜底，只做到「安裝驗證」等級。
 **G2（10/31 晚上，硬關卡）**：10 筆 demo 候選中 ≥5 筆在 Modal 通過並重播成功。沒過 → 停掉所有計畫內與超前項目，11/1 上午只修驗證；Modal 不能用 → 換 E2B（約 2 h）。**10/29 提前達成：10／10。**
@@ -273,3 +276,4 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | 11/1 11:48 | P5 | **11/1 完成標準達成**：實測提交併入 main（merge `954fc8d`，念誠同意），Worker 從 main 重新發布（版本 `1e3ead90`，650 筆）。在 Claude Code 用線上 `submit_software` 提交第三方 repo matchify（`15r10nk/matchify`，念誠挑的），`pickfit watch --publish` 建紀錄、驗證（function、斷網重播通過）、發布，11:40:14 提交，約 11:43:05 `find_software` 第一個推薦它（muse-spark-1.3，120 張候選），**約 2 分 51 秒**。先試的 docvet（`Alberto-Codes/docvet`）記為 unverified：裝好了，但檢查都要在 git repo 裡跑，沙盒 agent 在 `git init` 前就放棄（agent 的問題，不是工具的）。watch 11:42 從還沒合併 Windows 的分支發布，蓋掉了 11:40 的版本；這次從 main 發布後 Windows 6 款的新 run 回到線上（已實際查證）。P3.9 勾選補上（11/1 01:59 已併入）。1000 個 Python 測試通過。花費 Meta $0.126、Baseten $0.01、Modal 約 $0.006 | Meta $0.13 |
 | 11/1 15:20 | P3 | 功能覆蓋第二輪併入 main（merge `a70fb17`，念誠同意保留新 run），Worker 從 main 重新發布（版本 `46ce1522`，650 筆）：165 次 run（agent 用 Spark Open、judge 用 1.3，Modal gVisor），寫回 68 筆；通過且有功能結果的紀錄 237 → 305／419，打勾的功能 232 → 303。升級：dbmcp、plasmate function → service，foq、saige install → function（saige 成為寶藏）。agent-memory-bridge、ai-cortex、graphiti-local、range 由同等級的新 run 取代舊 run，記到較多 README 修正，失去寶藏（念誠決定照「同等級較新的 run 為準」，不依分數挑 run）。works_offline 變動 7 筆。82 次 unverified，其中 56 次被 log 規則擋下，45 次是把引用的步驟接到 `head`／`tail`，蓋掉 exit code；mica、kern、narwhal 需要 GPU，沒跑。沒有等級下降、沒有遺失任何 OS 的通過 run，Windows／macOS run 不變（線上實查 dbmcp、plasmate、foq、saige、agent-memory-bridge 與 aria-code 的 Windows）。1000 個 Python、189 個 Worker 測試通過。花費 Meta $1.93、Baseten $12.94、Modal 約 $0.96 | Meta $1.93 |
 | 11/1 15:34 | P3 | Baseten 每日上限 11/1 從 $35 調為 $45（念誠同意「修好後今天跑」；`baseten_daily_cap`，其他天仍是 $25，總額 $80 不變）：功能覆蓋的 session 先修 agent 把引用步驟接 `head`／`tail`、`; echo` 蓋掉 exit code 的問題，再用 Baseten 補跑通過但沒有功能結果的紀錄（114 筆：第二輪跑過沒寫回 97 筆、沒排進佇列 17 筆），估 Baseten 約 $9。11/1 的 Baseten 已用 $31.95。Mac 實測停在自己的 $32，11/2 00:05 才續跑，不受影響 | — |
+| 11/1 16:11 | P2.7、P3.10、P3.11 | **念誠修訂定位與範圍**（brief 第 2.1 節）：pickfit 是人的軟體顧問，透過人的 agent 交付；GUI App 納入範圍，少量但要做到 function（Meta 模型看截圖操作，pickfit 執行，用能檢查的結果確認功能）；來源整合是核心價值，Flathub 與 Homebrew Cask 當發現來源，winget 看時間；Product Hunt 維持不用，除非先取得書面同意。GUI 操作檢查與新來源的凍結延到 11/3 12:00，其他仍是 11/2 晚上。Baseten 總額 $80 → $100、11/2 每日 $25 → $35（念誠同意）。接著開三個 session：Linux GUI 操作檢查、新來源、macOS GUI（tart）。現況：桌面 App 46 筆（41 筆 unverified、5 筆 install）；GUI 只有 Linux 的啟動、截圖、看圖確認，最高 install | — |
