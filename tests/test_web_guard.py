@@ -191,8 +191,8 @@ def test_robots_disallow_all_blocks_the_site():
     assert not robots_allows(parser, "https://example.com/")
 
 
-@pytest.mark.parametrize("status,ok", [(404, True), (410, True), (401, False), (403, False), (500, False),
-                                       (None, False)])
+@pytest.mark.parametrize("status,ok", [(404, True), (410, True), (401, False), (403, False), (429, False),
+                                       (500, False), (None, False)])
 def test_robots_status_codes(status: int | None, ok: bool):
     assert robots_allows(robots_parser(None, status), "https://example.com/") is ok
 
@@ -242,3 +242,17 @@ def test_summary_counts_third_party_sites_and_ad_networks():
 def test_words_split_camel_case_and_join_neighbours():
     assert {"sign", "up", "signup"} <= words("/api/signUp")
     assert "post" not in words("/api/postprocess")
+
+
+def test_chrome_background_requests_are_refused_and_not_counted():
+    probe = req("POST", "https://accounts.google.com/ListAccounts?gpsia=1&source=ChromiumBrowser&json=standard",
+                {"sec-fetch-mode": "no-cors", "sec-fetch-dest": "empty", "sec-fetch-site": "none"})
+    d = decide(probe, SITE)
+    assert not d.allow and "background" in d.reason
+    flows = [{"host": "accounts.google.com", "site": "google.com", "allowed": False, "noise": True,
+              "url": probe.url, "body": "pickfit kiwi 7f3a"}]
+    assert summarize(flows, "example.com")["refused_count"] == 0
+    assert find_leaks(flows, ["pickfit kiwi 7f3a"]) == []
+    page_signin = req("POST", "https://accounts.google.com/o/oauth2/token", {"sec-fetch-mode": "cors",
+                                                                           "sec-fetch-site": "cross-site"}, "{}")
+    assert "sign-in" in decide(page_signin, SITE).reason, "a page's own sign-in call is still a side effect"

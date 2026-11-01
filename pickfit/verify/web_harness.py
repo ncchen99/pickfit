@@ -16,8 +16,7 @@ Phases (the host decides between them):
 Only standard library and browser-use (pinned in the image) are imported. Evidence goes to EVIDENCE.
 """
 
-from __future__ import annotations
-
+# No `from __future__ import annotations`: browser-use checks action parameters' annotations as real types.
 import asyncio
 import base64
 import hashlib
@@ -27,6 +26,7 @@ import subprocess
 import sys
 import threading
 import time
+import traceback
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
@@ -40,6 +40,8 @@ CHROME = "/usr/bin/chromium"
 CDP_PORT = 9222
 PROXY = "http://127.0.0.1:8080"
 TEXT_LIMIT = 12_000
+VIEWPORT = (1280, 900)
+ELEMENTS_CHARS = 12_000  # browser-use's element list per step (default 40,000): most of each call's tokens
 EXCLUDED_ACTIONS = ["search", "evaluate", "save_as_pdf", "write_file", "replace_file", "read_file"]
 CREDENTIAL_HINTS = ("password", "passwd", "email", "e-mail", "phone", "mobile", "card", "cvv", "cvc", "iban",
                     "username", "user name", "login", "otp", "one-time", "verification code", "ssn")
@@ -317,7 +319,8 @@ def browser_profile(site: str, wait_between_actions: float) -> Any:
         allowed_domains=[site, f"*.{site}"], enable_default_extensions=False, captcha_solver=False,
         demo_mode=False, downloads_path=str(DOWNLOADS), accept_downloads=True, auto_download_pdfs=False,
         wait_between_actions=wait_between_actions, minimum_wait_page_load_time=1.0,
-        wait_for_network_idle_page_load_time=1.5, highlight_elements=False, dom_highlight_elements=False)
+        wait_for_network_idle_page_load_time=1.5, highlight_elements=False, dom_highlight_elements=False,
+        viewport={"width": VIEWPORT[0], "height": VIEWPORT[1]}, device_scale_factor=1.0)
 
 
 def typed_inputs(history: Any) -> tuple[list[str], list[str]]:
@@ -367,7 +370,7 @@ async def run(channel: Channel) -> None:
                       use_vision=True, max_actions_per_step=3, max_failures=3, calculate_cost=False,
                       directly_open_url=False, available_file_paths=start.get("sample_files") or None,
                       generate_gif=False, llm_timeout=180, step_timeout=300, page_extraction_llm=llm,
-                      final_response_after_failure=True)
+                      final_response_after_failure=True, max_clickable_elements_length=ELEMENTS_CHARS)
         history = await agent.run(max_steps=start["max_steps"])
         await settle(2)
         after = await capture(session, "after", inline=True)
@@ -418,6 +421,9 @@ async def run(channel: Channel) -> None:
             replay["downloads"] = downloads(offline_started)
         send({"type": "observe", "phase": "offline", "loaded": loaded, "replay": replay})
         await channel.wait("continue")
+    except Exception as err:
+        report["error"] = f"{type(err).__name__}: {err}"[:1000]
+        log(traceback.format_exc())
     finally:
         report["elapsed_s"] = round(time.time() - began, 1) if "began" in locals() else None
         send(report)

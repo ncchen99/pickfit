@@ -94,6 +94,9 @@ AD_HOSTS = (
     "popads.net", "mgid.com", "revcontent.com", "sharethrough.com", "adform.net", "yieldmo.com",
 )
 
+# Chrome's own background calls that its switches do not turn off (the account probe).
+NOISE_URLS = (re.compile(r"^https://accounts\.google\.com/ListAccounts\?.*source=Chromium"),)
+
 _EMAIL = re.compile(r"[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]{1,63}(?:\.[A-Za-z0-9-]{1,63})*\.[A-Za-z]{2,24}")
 _CAMEL = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
 _WORD_SPLIT = re.compile(r"[^a-z0-9]+")
@@ -150,6 +153,16 @@ def is_private_host(host: str) -> bool:
 
 def is_noise(host: str) -> bool:
     return _under(host, NOISE_HOSTS)
+
+
+def is_browser_background(req: "Request") -> bool:
+    """A request the browser makes on its own: no page started it (Sec-Fetch-Site none, not a navigation)."""
+    return (any(p.match(req.url) for p in NOISE_URLS)
+            or (req.headers.get("sec-fetch-site") == "none" and not req.top_level))
+
+
+def flow_is_noise(flow: dict[str, Any]) -> bool:
+    return bool(flow.get("noise")) or is_noise(flow.get("host", "")) or any(p.match(flow.get("url", "")) for p in NOISE_URLS)
 
 
 def is_ad_host(host: str) -> bool:
@@ -211,9 +224,10 @@ def credential_fields(names: set[str]) -> set[str]:
 
 
 def robots_parser(robots_txt: str | None, status: int | None) -> urllib.robotparser.RobotFileParser:
-    """A parser for a fetched robots.txt; 401/403 and 5xx disallow everything, 404 allows everything."""
+    """A parser for a fetched robots.txt; 401/403, 429 and 5xx (or no answer) disallow everything, other 4xx
+    allow everything."""
     parser = urllib.robotparser.RobotFileParser()
-    if status is None or status >= 500 or status in (401, 403):
+    if status is None or status >= 500 or status in (401, 403, 429):
         parser.disallow_all = True
     elif status >= 400 or robots_txt is None:
         parser.allow_all = True
@@ -320,7 +334,7 @@ def decide(req: Request, policy: Policy) -> Decision:
         return Decision(False, f"scheme {parts.scheme or '?'}")
     if not host:
         return Decision(False, "no host")
-    if is_noise(host):
+    if is_noise(host) or is_browser_background(req):
         return Decision(False, "browser or tool background service")
     if is_private_host(host):
         return Decision(False, "private, loopback or link-local address")
@@ -380,7 +394,7 @@ def find_leaks(flows: list[dict[str, Any]], needles: list[str]) -> list[dict[str
     hits: list[dict[str, Any]] = []
     wanted = [(n, encodings(n)) for n in dict.fromkeys(needles) if len(n.strip()) >= 4]
     for flow in flows:
-        if is_noise(flow.get("host", "")):
+        if flow_is_noise(flow):
             continue
         haystack = f"{flow.get('url', '')}\n{flow.get('body', '')}\n{flow.get('ws', '')}"
         lowered = haystack.lower()
@@ -394,7 +408,7 @@ def find_leaks(flows: list[dict[str, Any]], needles: list[str]) -> list[dict[str
 
 def summarize(flows: list[dict[str, Any]], site: str) -> dict[str, Any]:
     """Counts for the run: hosts and third-party sites contacted, ad networks, refused requests."""
-    real = [f for f in flows if not is_noise(f.get("host", ""))]
+    real = [f for f in flows if not flow_is_noise(f)]
     sent = [f for f in real if f.get("allowed")]
     third = sorted({f["site"] for f in sent if f.get("site") and f["site"] != site})
     ads = sorted({f["site"] for f in sent if is_ad_host(f.get("host", ""))})
@@ -421,6 +435,7 @@ class FlowLog:
     body: str = ""
     ws: str = ""
     size: int = 0
+    noise: bool = False
 
 
 class Guard:
@@ -460,7 +475,7 @@ class Guard:
             return
         log = FlowLog(method=r.method, url=r.url[:2000], host=r.host, site=registrable(r.host), kind=r.kind,
                       allowed=decision.allow, reason=decision.reason, body=body[:BODY_SCAN_BYTES].decode("utf-8", "replace"),
-                      size=len(body))
+                      size=len(body), noise=is_noise(r.host) or is_browser_background(r))
         if not decision.allow:
             flow.response = http.Response.make(
                 403, f"Blocked by pickfit's test guard: {decision.reason}".encode(),
