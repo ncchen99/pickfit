@@ -60,20 +60,16 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-pulsechain-mcp-20261101-003116-47e1",
+      "run_id": "verify-pulsechain-mcp-20261101-155248-11d0",
       "method": "source",
       "steps": [
         {
-          "command": "git clone https://github.com/DavidFeder/pulsechain-mcp.git && ls -la pulsechain-mcp/",
-          "purpose": "clone repo"
+          "command": "git clone https://github.com/DavidFeder/pulsechain-mcp.git && ls pulsechain-mcp && cat pulsechain-mcp/package.json",
+          "purpose": "git clone https://github.com/DavidFeder/pulsechain-mcp.git"
         },
         {
           "command": "cd pulsechain-mcp && npm install",
-          "purpose": "npm install (also builds)"
-        },
-        {
-          "command": "cd pulsechain-mcp && npm install -g . && which pulsechain-mcp && ls -la dist/index.js",
-          "purpose": "npm install -g for PATH"
+          "purpose": "npm install (triggers build via prepare)"
         }
       ],
       "manual_steps": [],
@@ -97,38 +93,34 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:34:44.510800+08:00",
+    "checked_at": "2026-11-01T15:56:06.194674+08:00",
     "runs": [
       {
-        "id": "verify-pulsechain-mcp-20261101-003116-47e1",
+        "id": "verify-pulsechain-mcp-20261101-155248-11d0",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:34:44.510800+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T15:56:06.194674+08:00",
         "tool_version": "1.0.13",
         "install_method": "source",
         "replayed": true,
         "steps": [
           {
-            "command": "git clone https://github.com/DavidFeder/pulsechain-mcp.git && ls -la pulsechain-mcp/",
-            "purpose": "clone repo"
+            "command": "git clone https://github.com/DavidFeder/pulsechain-mcp.git && ls pulsechain-mcp && cat pulsechain-mcp/package.json",
+            "purpose": "git clone https://github.com/DavidFeder/pulsechain-mcp.git"
           },
           {
             "command": "cd pulsechain-mcp && npm install",
-            "purpose": "npm install (also builds)"
-          },
-          {
-            "command": "cd pulsechain-mcp && npm install -g . && which pulsechain-mcp && ls -la dist/index.js",
-            "purpose": "npm install -g for PATH"
+            "purpose": "npm install (triggers build via prepare)"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- pulsechain-mcp",
+            "command": "cd pulsechain-mcp && python3 ~/.pickfit/mcp_probe.py -- node dist/index.js",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -137,11 +129,38 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call pulsechain_health --args '{}' -- pulsechain-mcp",
+            "command": "cd pulsechain-mcp && python3 ~/.pickfit/mcp_probe.py --call pulsechain_health --args '{}' -- node dist/index.js",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "tools/call: ok tool=pulsechain_health content=text text_chars=680",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd pulsechain-mcp && python3 ~/.pickfit/mcp_probe.py --call inspect_tx_intent --args '{\"to\":\"0x0000000000000000000000000000000000000000\",\"data\":\"0x\"}' -- node dist/index.js",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=inspect_tx_intent content=text text_chars=1498",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd pulsechain-mcp && python3 ~/.pickfit/mcp_probe.py --call get_token_price --args '{\"address\":\"0xA1077a294dDE1B09bB078844df40758a5D0f9a27\"}' -- node dist/index.js",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_token_price content=text text_chars=1113",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "cd pulsechain-mcp && python3 ~/.pickfit/mcp_probe.py --call agent_wallet_status --args '{}' -- node dist/index.js",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=agent_wallet_status content=text text_chars=8202",
             "setup": [],
             "offline": true
           }
@@ -150,24 +169,26 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 80 tools listed and successful pulsechain_health tool call returning chain data.",
+          "observed": "Screenshots show MCP server handshake with 80 tools and both pulsechain_health and inspect_tx_intent calls returning ok.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-pulsechain-mcp-20261101-003116-47e1/report.json",
+          "trace_path": "runs/verify/verify-pulsechain-mcp-20261101-155248-11d0/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-pulsechain-mcp-20261101-003116-47e1/check-1-cmd6.judged.png",
-            "runs/verify/verify-pulsechain-mcp-20261101-003116-47e1/check-2-cmd7.judged.png"
+            "runs/verify/verify-pulsechain-mcp-20261101-155248-11d0/check-1-cmd5.judged.png",
+            "runs/verify/verify-pulsechain-mcp-20261101-155248-11d0/check-2-cmd6.judged.png",
+            "runs/verify/verify-pulsechain-mcp-20261101-155248-11d0/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.043618,
+        "cost_usd": 0.063189,
         "mcp": {
           "transport": "stdio",
           "launch": [
-            "pulsechain-mcp"
+            "node",
+            "dist/index.js"
           ],
           "url": null,
           "protocol_version": "2025-11-25",
@@ -258,7 +279,41 @@
           "tool_count": 80,
           "called_tool": "pulsechain_health",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "PulseChain data and market research",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists tool names instead of PulseChain health data."
+          },
+          {
+            "feature": "Smart contract reviews and creation",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists tool names instead of transaction review result."
+          },
+          {
+            "feature": "Swap quotes/prices and executions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists tool names instead of token price quote."
+          },
+          {
+            "feature": "Send PLS and tokens via agent wallets",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists tool names instead of agent wallet status."
+          }
+        ]
       }
     ]
   },
@@ -617,5 +672,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:34+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T15:56:06.196966+08:00"
 }

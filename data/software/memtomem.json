@@ -74,17 +74,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-memtomem-20261101-002434-6815",
+      "run_id": "verify-memtomem-20261101-155101-d91a",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install 'memtomem[all]' 2>&1",
-          "purpose": "install memtomem[all] via uv tool"
+          "purpose": "install memtomem via uv tool install 'memtomem[all]'"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "mm --version 2>&1",
+        "expected_signal": "memtomem 0.7.1"
+      },
+      "first_task": "curl -s http://127.0.0.1:8085/ | head -c 500; echo; curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8085/"
     },
     "windows": null
   },
@@ -103,30 +106,39 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:25:40.851830+08:00",
+    "checked_at": "2026-11-01T15:52:44.416343+08:00",
     "runs": [
       {
-        "id": "verify-memtomem-20261101-002434-6815",
+        "id": "verify-memtomem-20261101-155101-d91a",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:25:40.851830+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T15:52:44.416343+08:00",
         "tool_version": "0.7.1",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install 'memtomem[all]' 2>&1",
-            "purpose": "install memtomem[all] via uv tool"
+            "purpose": "install memtomem via uv tool install 'memtomem[all]'"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- memtomem-server 2>&1",
+            "command": "mm --version 2>&1",
+            "expected_signal": "memtomem 0.7.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "memtomem 0.7.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- memtomem-server 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -135,33 +147,90 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call mem_status --args '{}' -- memtomem-server 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call mem_add --args '{\"content\":\"Deployment checklist uses blue-green rollout\",\"tags\":[\"ops\"]}' -- memtomem-server 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=mem_status content=text text_chars=814",
+            "observed_excerpt": "tools/call: ok tool=mem_add content=text text_chars=150",
             "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call mem_search --args '{\"query\":\"blue-green\"}' -- memtomem-server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=mem_search content=text text_chars=161",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/memtomem_test && cat > /tmp/memtomem_test/sample.md <<'EOF'\n# Deployment Notes\n\nDeployment checklist uses blue-green rollout.\n\n## Code Example\n```python\ndef hello():\n    print(\"hello world\")\n```\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call mem_index --args '{\"path\":\"/tmp/memtomem_test\"}' -- memtomem-server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=mem_index content=text text_chars=204",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/memtomem_test && cat > /tmp/memtomem_test/sample.md <<'EOF'\n# Deployment Notes\n\nDeployment checklist uses blue-green rollout.\n\n## Code Example\n```python\ndef hello():\n    print(\"hello world\")\n```\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8085/ | head -c 500; echo; curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8085/",
+            "expected_signal": "200",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "200",
+            "setup": [
+              {
+                "command": "mm web --port 8085 2>&1",
+                "background": true,
+                "port": 8085
+              }
+            ],
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "mm status shows status",
+            "actually_needed": "MCP server works without mm init, but CLI mm status errors 'memtomem is not configured. Run mm init' until init",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Launch via uvx --isolated --from \"memtomem[all]==0.7.0\" memtomem-server",
+            "actually_needed": "Installed binary memtomem-server works directly; uvx wrapper would refetch and fails offline",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show memtomem-server handshake with 9 tools and successful mem_status call returning status.",
+          "observed": "Screenshots show version 0.7.1, successful MCP handshake listing 9 tools, and successful mem_add memory write.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-memtomem-20261101-002434-6815/report.json",
+          "trace_path": "runs/verify/verify-memtomem-20261101-155101-d91a/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-memtomem-20261101-002434-6815/check-1-cmd3.judged.png",
-            "runs/verify/verify-memtomem-20261101-002434-6815/check-2-cmd4.judged.png"
+            "runs/verify/verify-memtomem-20261101-155101-d91a/check-1-cmd2.judged.png",
+            "runs/verify/verify-memtomem-20261101-155101-d91a/check-2-cmd3.judged.png",
+            "runs/verify/verify-memtomem-20261101-155101-d91a/check-3-cmd6.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.039494,
+        "cost_usd": 0.060083,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -183,9 +252,40 @@
             "mem_do"
           ],
           "tool_count": 9,
-          "called_tool": "mem_status",
+          "called_tool": "mem_add",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Hybrid keyword and semantic search",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Index markdown notes and code",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Visual dashboard for search and sources",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; mm web on 8085 returned 200 with memtomem dashboard HTML"
+          }
+        ]
       }
     ]
   },
@@ -630,5 +730,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:25+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T15:52:44.418126+08:00"
 }

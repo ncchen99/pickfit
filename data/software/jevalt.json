@@ -61,20 +61,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-jevalt-20261031-023118-6d36",
+      "run_id": "verify-jevalt-20261101-163415-6a0e",
       "method": "pip",
       "steps": [
         {
-          "command": "pip install \"jevalt[serve] @ git+https://github.com/mertkayacs/jevalt\"",
-          "purpose": "Install jevalt with serve extras (fell back from serve,gguf which needs compiler)"
+          "command": "pip install \"jevalt[serve] @ git+https://github.com/mertkayacs/jevalt\" 2>&1",
+          "purpose": "install jevalt[serve] from git (gguf extra fails without gcc)"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "jevalt --help",
-        "expected_signal": "Local decision models with the Jev contract."
+        "expected_signal": "usage: jevalt"
       },
-      "first_task": null
+      "first_task": "python3 /tmp/check_f1.py"
     },
     "windows": null
   },
@@ -91,91 +91,156 @@
     "url": "https://github.com/mertkayacs/jevalt/releases/tag/v0.1.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:32:58.544215+08:00",
+    "checked_at": "2026-11-01T16:35:44.437488+08:00",
     "runs": [
       {
-        "id": "verify-jevalt-20261031-023118-6d36",
-        "level": "install",
+        "id": "verify-jevalt-20261101-163415-6a0e",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:32:58.544215+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:35:44.437488+08:00",
         "tool_version": "0.1.0",
         "install_method": "pip",
         "replayed": true,
         "steps": [
           {
-            "command": "pip install \"jevalt[serve] @ git+https://github.com/mertkayacs/jevalt\"",
-            "purpose": "Install jevalt with serve extras (fell back from serve,gguf which needs compiler)"
+            "command": "pip install \"jevalt[serve] @ git+https://github.com/mertkayacs/jevalt\" 2>&1",
+            "purpose": "install jevalt[serve] from git (gguf extra fails without gcc)"
           }
         ],
         "smoke_tests": [
           {
             "command": "jevalt --help",
-            "expected_signal": "Local decision models with the Jev contract.",
+            "expected_signal": "usage: jevalt",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Local decision models with the Jev contract.",
+            "observed_excerpt": "usage: jevalt [-h] {serve,ask} ...",
             "setup": [],
             "offline": true
           },
           {
-            "command": "jevalt serve --help",
-            "expected_signal": "--backend {gguf,hf}",
+            "command": "python3 /tmp/check_f1.py",
+            "expected_signal": "F1_OK probabilities choice",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "usage: jevalt serve [-h] [--backend {gguf,hf}] [--model MODEL] [--file FILE] [--ctx CTX]",
-            "setup": [],
+            "observed_excerpt": "F1_OK probabilities choice",
+            "setup": [
+              {
+                "command": "cat > /tmp/check_f1.py << 'PY'\nfrom jevalt.engine import DecisionEngine\nclass DummyBackend:\n    name=\"dummy\"\n    def count_tokens(self,t): return len(t.split())\n    def field_logits(self,text,compiled): return [[5.0 - i*2 for i,_ in enumerate(f.symbols)] for f in compiled.fields]\n    def continue_reasoning(self,prefix,max_tokens): return \"trace\"\nb=DummyBackend()\ne=DecisionEngine(b, model=\"dummy\")\npayload={\"state\":\"I was charged twice for March. Please refund the duplicate.\",\"questions\":{\"team\":{\"type\":\"choice\",\"instructions\":\"Which team should handle this ticket?\",\"criteria\":{\"billing\":\"payments, refunds\",\"technical\":\"bugs, outages\",\"sales\":\"prices, contracts\"}}}}\nres=e.predict(payload)\nprint(res)\nassert \"probabilities\" in res[\"answers\"][\"team\"] and \"choice\" in res[\"answers\"][\"team\"]\nprint(\"F1_OK probabilities choice\")\nPY",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 /tmp/check_f2.py",
+            "expected_signal": "F2_OK choice score noul",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "F2_OK choice score noul",
+            "setup": [
+              {
+                "command": "cat > /tmp/check_f2.py << 'PY'\nfrom jevalt.engine import DecisionEngine\nclass DummyBackend:\n    name=\"dummy\"\n    def count_tokens(self,t): return len(t.split())\n    def field_logits(self,text,compiled): return [[5.0 - i*2 for i,_ in enumerate(f.symbols)] for f in compiled.fields]\n    def continue_reasoning(self,prefix,max_tokens): return \"trace\"\nb=DummyBackend()\ne=DecisionEngine(b, model=\"dummy\")\nreq={\"state\":\"test\",\"questions\":{\"c\":{\"type\":\"choice\",\"instructions\":\"Pick\",\"criteria\":{\"a\":\"x\",\"b\":\"y\"}},\"s\":{\"type\":\"score\",\"instructions\":\"Rate\",\"criteria\":[\"bad\",\"ok\",\"great\"]},\"n\":{\"type\":\"noul\",\"instructions\":\"Exists?\",\"criteria\":\"yes\"}}}\nres=e.predict(req)\nprint(res)\nassert res[\"answers\"][\"c\"][\"type\"]==\"choice\" and \"probabilities\" in res[\"answers\"][\"c\"]\nassert res[\"answers\"][\"s\"][\"type\"]==\"score\" and \"score\" in res[\"answers\"][\"s\"]\nassert res[\"answers\"][\"n\"][\"type\"]==\"noul\" and \"noul\" in res[\"answers\"][\"n\"]\nprint(\"F2_OK choice score noul\")\nPY",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 /tmp/check_f3.py",
+            "expected_signal": "F3_OK unknown reasoning",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "F3_OK unknown reasoning",
+            "setup": [
+              {
+                "command": "cat > /tmp/check_f3.py << 'PY'\nfrom jevalt.engine import DecisionEngine\nclass DummyBackend:\n    name=\"dummy\"\n    def count_tokens(self,t): return len(t.split())\n    def field_logits(self,text,compiled): return [[5.0 - i*2 for i,_ in enumerate(f.symbols)] for f in compiled.fields]\n    def continue_reasoning(self,prefix,max_tokens): return \"my reasoning trace\"\nb=DummyBackend()\ne=DecisionEngine(b, model=\"dummy\")\nreq={\"state\":\"missing\",\"questions\":{\"room\":{\"type\":\"choice\",\"instructions\":\"Which room?\",\"criteria\":{\"single\":\"1 bed\",\"double\":\"2 beds\"}}},\"abstain\":True,\"reasoning\":\"on\"}\nres=e.predict(req)\nprint(res)\nassert \"unknown\" in res[\"answers\"][\"room\"]\nassert \"reasoning\" in res[\"answers\"][\"room\"]\nassert res[\"reasoning_mode\"]==\"on\"\nprint(\"F3_OK unknown reasoning\")\nPY",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
             "readme_said": "pip install \"jevalt[serve,gguf] @ git+https://github.com/mertkayacs/jevalt\"",
-            "actually_needed": "Install without gguf extra: pip install \"jevalt[serve] @ git+https://github.com/mertkayacs/jevalt\" (fastapi+uvicorn only); gguf extra pulls llama-cpp-python which on PyPI is sdist-only (e.g. 0.3.36, 0.3.8, 0.2.90 all only tar.gz) and its scikit-build-core/CMake build fails here with no gcc/cmake an…",
+            "actually_needed": "pip install \"jevalt[serve] @ git+...\"; llama-cpp-python wheel fails to build: CMake Error Could not find compiler gcc, no binary wheel available for this platform",
             "kind": "sandbox"
-          },
-          {
-            "readme_said": "Q4_K_M GGUF builds run on CPU in about 3 GB RAM; jevalt serve downloads Deem-4B by default",
-            "actually_needed": "Both backends require a decision checkpoint with a single <decision> token (LlamaCppBackend._single('<decision>') and HFBackend check for <decision> token); generic tiny models under 300 MB (stories260K GGUF, SmolLM2-135M-Instruct GGUF/safetensors) lack it so no tiny-model inference check is possib…",
-            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows jevalt --help printing usage and the expected tagline with exit code 0.",
+          "observed": "Screenshots show DecisionEngine returning choice probabilities, choice/score/noul answers, and CLI help listing serve and ask.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-jevalt-20261031-023118-6d36/report.json",
+          "trace_path": "runs/verify/verify-jevalt-20261101-163415-6a0e/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-jevalt-20261031-023118-6d36/check-1-cmd13.judged.png"
+            "runs/verify/verify-jevalt-20261101-163415-6a0e/check-1-cmd12.judged.png",
+            "runs/verify/verify-jevalt-20261101-163415-6a0e/check-2-cmd10.judged.png",
+            "runs/verify/verify-jevalt-20261101-163415-6a0e/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.12405
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.108055,
+        "features": [
+          {
+            "feature": "choose between options and return probabilities",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "return calibrated probabilities for question types",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "return unknown option with reasoning traces",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T16:35:44+08:00",
     "quality": {
-      "total": 69.3,
+      "total": 79.3,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
+          "score": 0.8,
           "weight": 40.0
         },
         "install_docs": {
@@ -216,7 +281,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 52.39
+      "value": 59.95
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -515,5 +580,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:46:57+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:35:44.443822+08:00"
 }

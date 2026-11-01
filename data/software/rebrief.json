@@ -57,20 +57,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-rebrief-20261101-001726-749d",
+      "run_id": "verify-rebrief-20261101-161753-4bbb",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install rebrief",
-          "purpose": "install rebrief via uv tool install rebrief"
+          "command": "uv tool install rebrief 2>&1",
+          "purpose": "install rebrief via uv tool install"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "rebrief --version && rebrief --help",
+        "command": "rebrief --version 2>&1; rebrief --help 2>&1",
         "expected_signal": "rebrief, version 0.3.2"
       },
-      "first_task": "rm -f REBRIEF.md REBRIEF.json\nrebrief scan . -f json && ls -l REBRIEF.json && head -n 50 REBRIEF.json"
+      "first_task": "rebrief badge /tmp/testrepo 2>&1"
     },
     "windows": null
   },
@@ -85,30 +85,30 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:18:10.319246+08:00",
+    "checked_at": "2026-11-01T16:18:48.702530+08:00",
     "runs": [
       {
-        "id": "verify-rebrief-20261101-001726-749d",
+        "id": "verify-rebrief-20261101-161753-4bbb",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:18:10.319246+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:18:48.702530+08:00",
         "tool_version": "0.3.2",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install rebrief",
-            "purpose": "install rebrief via uv tool install rebrief"
+            "command": "uv tool install rebrief 2>&1",
+            "purpose": "install rebrief via uv tool install"
           }
         ],
         "smoke_tests": [
           {
-            "command": "rebrief --version && rebrief --help",
+            "command": "rebrief --version 2>&1; rebrief --help 2>&1",
             "expected_signal": "rebrief, version 0.3.2",
             "exit_code": 0,
             "passed": true,
@@ -117,21 +117,48 @@
             "offline": true
           },
           {
-            "command": "rm -f REBRIEF.md REBRIEF.json\nrebrief scan . -f json && ls -l REBRIEF.json && head -n 50 REBRIEF.json",
-            "expected_signal": "saved to REBRIEF.json",
+            "command": "rebrief badge /tmp/testrepo 2>&1",
+            "expected_signal": "https://img.shields.io/badge/rebrief-1%20critical-red",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "saved to REBRIEF.json (367 tokens)",
-            "setup": [],
+            "observed_excerpt": "[![Rebrief](https://img.shields.io/badge/rebrief-1%20critical-red)](https://github.com/neracu/rebrief)",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cd /tmp/testrepo && git init -q && git config user.email \"test@example.com\" && git config user.name \"Tester\"\ncat > package.json <<'EOF'\n{\"name\":\"testapp\",\"version\":\"1.0.0\",\"dependencies\":{\"react\":\"18.0.0\",\"express\":\"4.18.0\"}}\nEOF\ncat > requirements.txt <<'EOF'\nflask==3.0.0\nfastapi==0.110.0\nEOF\ncat > go.mod <<'EOF'\nmodule example.com/app\ngo 1.21\nrequire github.com/gin-gonic/gin v1.9.1\nEOF\nmkdir -p src\ncat > src/app.py <<'EOF'\n# TODO: refactor this module\nAPI_KEY = \"sk_test_1234567890abcdef1234567890abcdef\"\ndef hello():\n    # FIXME: handle errors\n    pass\nEOF\necho \"# Test Repo\" > README.md\ngit add . && git commit -qm \"Initial commit: add stack manifests\"\necho \"minor change\" >> README.md && git commit -am \"fix typo\" -q\necho \"feature code\" > src/feature.py && git add . && git commit -qm \"feat: add feature module with important logic\"\necho \"done\" && ls -R /tmp/testrepo\n",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           },
           {
-            "command": "rebrief badge .",
-            "expected_signal": "[![Rebrief]",
+            "command": "rebrief scan /tmp/testrepo -o /tmp/REBRIEF.md --no-blame --skip-vulnerability-check 2>&1 && echo \"SCAN_OK\" && ls -lh /tmp/REBRIEF.md && head -n 100 /tmp/REBRIEF.md",
+            "expected_signal": "# REBRIEF REPORT: testrepo",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "[![Rebrief](https://img.shields.io/badge/rebrief-1%20risks-yellow)](https://github.com/neracu/rebrief)",
-            "setup": [],
+            "observed_excerpt": "# REBRIEF REPORT: testrepo",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cd /tmp/testrepo && git init -q && git config user.email \"test@example.com\" && git config user.name \"Tester\"\ncat > package.json <<'EOF'\n{\"name\":\"testapp\",\"version\":\"1.0.0\",\"dependencies\":{\"react\":\"18.0.0\",\"express\":\"4.18.0\"}}\nEOF\ncat > requirements.txt <<'EOF'\nflask==3.0.0\nfastapi==0.110.0\nEOF\ncat > go.mod <<'EOF'\nmodule example.com/app\ngo 1.21\nrequire github.com/gin-gonic/gin v1.9.1\nEOF\nmkdir -p src\ncat > src/app.py <<'EOF'\n# TODO: refactor this module\nAPI_KEY = \"sk_test_1234567890abcdef1234567890abcdef\"\ndef hello():\n    # FIXME: handle errors\n    pass\nEOF\necho \"# Test Repo\" > README.md\ngit add . && git commit -qm \"Initial commit: add stack manifests\"\necho \"minor change\" >> README.md && git commit -am \"fix typo\" -q\necho \"feature code\" > src/feature.py && git add . && git commit -qm \"feat: add feature module with important logic\"\necho \"done\" && ls -R /tmp/testrepo\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "rebrief scan /tmp/testrepo -f json -o /tmp/REBRIEF.json --no-blame --skip-vulnerability-check 2>&1 && echo \"JSON_OK\" && cat /tmp/REBRIEF.json | python3 -c \"import json,sys; d=json.load(open('/tmp/REBRIEF.json')); print('tech_stack:', d.get('tech_stack')); print('timeline len:', len(d.get('timeline',[]))); print('risk_map:', d.get('risk_map'))\"",
+            "expected_signal": "tech_stack: {'languages': ['Go', 'JavaScript/TypeScript', 'Python']",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tech_stack: {'languages': ['Go', 'JavaScript/TypeScript', 'Python'], 'frameworks': ['Express', 'FastAPI', 'Flask', 'Gin', 'React'], 'manifests': ['go.mod', 'package.json', 'requirements.txt'], 'dependencies': ['express', 'fastapi', 'flask', 'github.com/gin-gonic/gin', 'react']}",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cd /tmp/testrepo && git init -q && git config user.email \"test@example.com\" && git config user.name \"Tester\"\ncat > package.json <<'EOF'\n{\"name\":\"testapp\",\"version\":\"1.0.0\",\"dependencies\":{\"react\":\"18.0.0\",\"express\":\"4.18.0\"}}\nEOF\ncat > requirements.txt <<'EOF'\nflask==3.0.0\nfastapi==0.110.0\nEOF\ncat > go.mod <<'EOF'\nmodule example.com/app\ngo 1.21\nrequire github.com/gin-gonic/gin v1.9.1\nEOF\nmkdir -p src\ncat > src/app.py <<'EOF'\n# TODO: refactor this module\nAPI_KEY = \"sk_test_1234567890abcdef1234567890abcdef\"\ndef hello():\n    # FIXME: handle errors\n    pass\nEOF\necho \"# Test Repo\" > README.md\ngit add . && git commit -qm \"Initial commit: add stack manifests\"\necho \"minor change\" >> README.md && git commit -am \"fix typo\" -q\necho \"feature code\" > src/feature.py && git add . && git commit -qm \"feat: add feature module with important logic\"\necho \"done\" && ls -R /tmp/testrepo\n",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
@@ -139,21 +166,63 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show scan writing REBRIEF.json with JSON output, badge command printing Rebrief markdown, and version/help displaying 0.3.2.",
+          "observed": "Screenshots show version 0.3.2 with help, badge generation with 1 critical, and scan producing a risk map and checklist report.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-rebrief-20261101-001726-749d/report.json",
+          "trace_path": "runs/verify/verify-rebrief-20261101-161753-4bbb/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-rebrief-20261101-001726-749d/check-1-cmd4.judged.png",
-            "runs/verify/verify-rebrief-20261101-001726-749d/check-2-cmd5.judged.png",
-            "runs/verify/verify-rebrief-20261101-001726-749d/check-3-cmd2.judged.png"
+            "runs/verify/verify-rebrief-20261101-161753-4bbb/check-1-cmd2.judged.png",
+            "runs/verify/verify-rebrief-20261101-161753-4bbb/check-2-cmd6.judged.png",
+            "runs/verify/verify-rebrief-20261101-161753-4bbb/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.044958
+        "cost_usd": 0.052282,
+        "features": [
+          {
+            "feature": "analyze codebase and generate Markdown summary",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "detect tech stack from manifests",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "surface git history timeline and hotspots",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "map hardcoded secrets and technical debt risks",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -453,5 +522,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:18:35+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T16:18:48.706158+08:00"
 }

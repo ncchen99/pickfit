@@ -63,18 +63,18 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-mnemo-20261101-002540-a96b",
+      "run_id": "verify-mnemo-20261101-160148-6e2c",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install mnemo-mcp 2>&1",
-          "purpose": "install mnemo-mcp via uv tool install (places mnemo-mcp on PATH)"
+          "command": "uv tool install mnemo-mcp --force 2>&1",
+          "purpose": "install mnemo-mcp via uv tool install"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "mnemo-mcp --version 2>&1",
-        "expected_signal": "mnemo 2.21.0"
+        "expected_signal": "2.21.0"
       },
       "first_task": null
     },
@@ -95,31 +95,31 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:26:40.560453+08:00",
+    "checked_at": "2026-11-01T16:03:03.457424+08:00",
     "runs": [
       {
-        "id": "verify-mnemo-20261101-002540-a96b",
+        "id": "verify-mnemo-20261101-160148-6e2c",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:26:40.560453+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:03:03.457424+08:00",
         "tool_version": "2.21.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install mnemo-mcp 2>&1",
-            "purpose": "install mnemo-mcp via uv tool install (places mnemo-mcp on PATH)"
+            "command": "uv tool install mnemo-mcp --force 2>&1",
+            "purpose": "install mnemo-mcp via uv tool install"
           }
         ],
         "smoke_tests": [
           {
             "command": "mnemo-mcp --version 2>&1",
-            "expected_signal": "mnemo 2.21.0",
+            "expected_signal": "2.21.0",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "mnemo 2.21.0",
@@ -127,14 +127,14 @@
             "offline": true
           },
           {
-            "command": "curl -s -i http://127.0.0.1:8000/mcp 2>&1 | head -n 40\npython3 ~/.pickfit/mcp_probe.py --url http://127.0.0.1:8000/mcp --timeout 120 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --url http://127.0.0.1:8000/mcp 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
             "setup": [
               {
-                "command": "mnemo-mcp",
+                "command": "mnemo-mcp 2>&1",
                 "background": true,
                 "port": 8000
               }
@@ -142,14 +142,59 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call memory_stats --args '{}' --url http://127.0.0.1:8000/mcp --timeout 120 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call add_memory --args '{\"content\":\"Mnemo verification memory hybrid search test\",\"category\":\"fact\",\"tags\":[\"test\"]}' --url http://127.0.0.1:8000/mcp 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=memory_stats content=text text_chars=190",
+            "observed_excerpt": "tools/call: ok tool=add_memory content=text text_chars=110",
             "setup": [
               {
-                "command": "mnemo-mcp",
+                "command": "mnemo-mcp 2>&1",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search_memory --args '{\"query\":\"hybrid search verification\",\"limit\":3}' --url http://127.0.0.1:8000/mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search_memory content=text text_chars=937",
+            "setup": [
+              {
+                "command": "mnemo-mcp 2>&1",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call memory --args '{\"action\":\"capture\",\"content\":\"Typed capture dedup test content\",\"category\":\"preference\",\"tags\":[\"typed\"]}' --url http://127.0.0.1:8000/mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=memory content=text text_chars=307",
+            "setup": [
+              {
+                "command": "mnemo-mcp 2>&1",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call memory --args '{\"action\":\"entity_search\",\"query\":\"test\"}' --url http://127.0.0.1:8000/mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=memory content=text text_chars=265",
+            "setup": [
+              {
+                "command": "mnemo-mcp 2>&1",
                 "background": true,
                 "port": 8000
               }
@@ -159,29 +204,29 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "README lists uvx --from mnemo-mcp mnemo-mcp as launch command and says server speaks Streamable HTTP only with no stdio transport",
-            "actually_needed": "Installed via uv tool install mnemo-mcp so launch command is on PATH and works offline; server binds to http://127.0.0.1:8000/mcp and must be probed via --url, not stdio",
-            "kind": "note"
+            "readme_said": "uvx --from mnemo-mcp mnemo-mcp launches the MCP server (implied stdio)",
+            "actually_needed": "server speaks Streamable HTTP only (no stdio); launch with mnemo-mcp and probe via http://127.0.0.1:8000/mcp",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show version 2.21.0, successful MCP handshake with 13 tools, and successful memory_stats tool call.",
+          "observed": "Screenshots show version 2.21.0, successful MCP handshake with 13 tools, and successful add_memory call returning saved status.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-mnemo-20261101-002540-a96b/report.json",
+          "trace_path": "runs/verify/verify-mnemo-20261101-160148-6e2c/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-mnemo-20261101-002540-a96b/check-1-cmd4.judged.png",
-            "runs/verify/verify-mnemo-20261101-002540-a96b/check-2-cmd6.judged.png",
-            "runs/verify/verify-mnemo-20261101-002540-a96b/check-3-cmd7.judged.png"
+            "runs/verify/verify-mnemo-20261101-160148-6e2c/check-1-cmd3.judged.png",
+            "runs/verify/verify-mnemo-20261101-160148-6e2c/check-2-cmd5.judged.png",
+            "runs/verify/verify-mnemo-20261101-160148-6e2c/check-3-cmd6.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.063151,
+        "cost_usd": 0.068861,
         "mcp": {
           "transport": "streamable_http",
           "launch": [
@@ -207,9 +252,47 @@
             "config"
           ],
           "tool_count": 13,
-          "called_tool": "memory_stats",
+          "called_tool": "add_memory",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Persistent AI memory with hybrid search",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Hybrid retrieval with FTS and vectors",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Typed memory capture with dedup",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: memory capture returned Internal error while capturing memory instead of a saved memory."
+          },
+          {
+            "feature": "Automatic entity extraction and relation tracking",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: entity_search returned count 0 with empty results, showing nothing extracted."
+          }
+        ]
       }
     ]
   },
@@ -257,15 +340,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-01T16:03:03+08:00",
     "quality": {
-      "total": 86.3,
+      "total": 78.8,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -308,7 +391,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 42.8
+      "value": 39.08
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -751,5 +834,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:45+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T16:03:03.459899+08:00"
 }

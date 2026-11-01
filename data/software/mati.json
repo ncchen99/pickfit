@@ -69,22 +69,18 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-mati-20261101-002851-58a2",
+      "run_id": "verify-mati-20261101-161004-5db7",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL https://github.com/ioni-dev/mati/releases/download/v0.1.6/mati-x86_64-unknown-linux-musl.tar.gz -o /tmp/mati.tar.gz && tar xzf /tmp/mati.tar.gz -C /tmp",
-          "purpose": "Download and extract mati musl binary from GitHub releases"
-        },
-        {
-          "command": "cp /tmp/mati ~/.local/bin/mati.new && mv ~/.local/bin/mati.new ~/.local/bin/mati && chmod +x ~/.local/bin/mati && mati --version",
-          "purpose": "Install binary to ~/.local/bin"
+          "command": "curl -fsSL https://github.com/ioni-dev/mati/releases/download/v0.1.6/mati-x86_64-unknown-linux-musl.tar.gz -o /tmp/mati.tar.gz && curl -fsSL https://github.com/ioni-dev/mati/releases/download/v0.1.6/checksums.txt -o /tmp/checksums.txt && sha256sum /tmp/mati.tar.gz && grep mati-x86_64 /tmp/checksums.txt && tar -xzf /tmp/mati.tar.gz -C /tmp && ls -l /tmp/mati* && mkdir -p ~/.local/bin && mv /tmp/mati ~/.local/bin/mati && chmod +x ~/.local/bin/mati && ~/.local/bin/mati --version",
+          "purpose": "Download and install mati binary from GitHub releases to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "mati --version",
-        "expected_signal": "mati 0.1.6"
+        "command": "mati --help",
+        "expected_signal": "serve"
       },
       "first_task": null
     },
@@ -105,43 +101,39 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:29:54.238457+08:00",
+    "checked_at": "2026-11-01T16:11:13.793504+08:00",
     "runs": [
       {
-        "id": "verify-mati-20261101-002851-58a2",
+        "id": "verify-mati-20261101-161004-5db7",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:29:54.238457+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:11:13.793504+08:00",
         "tool_version": "0.1.6",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://github.com/ioni-dev/mati/releases/download/v0.1.6/mati-x86_64-unknown-linux-musl.tar.gz -o /tmp/mati.tar.gz && tar xzf /tmp/mati.tar.gz -C /tmp",
-            "purpose": "Download and extract mati musl binary from GitHub releases"
-          },
-          {
-            "command": "cp /tmp/mati ~/.local/bin/mati.new && mv ~/.local/bin/mati.new ~/.local/bin/mati && chmod +x ~/.local/bin/mati && mati --version",
-            "purpose": "Install binary to ~/.local/bin"
+            "command": "curl -fsSL https://github.com/ioni-dev/mati/releases/download/v0.1.6/mati-x86_64-unknown-linux-musl.tar.gz -o /tmp/mati.tar.gz && curl -fsSL https://github.com/ioni-dev/mati/releases/download/v0.1.6/checksums.txt -o /tmp/checksums.txt && sha256sum /tmp/mati.tar.gz && grep mati-x86_64 /tmp/checksums.txt && tar -xzf /tmp/mati.tar.gz -C /tmp && ls -l /tmp/mati* && mkdir -p ~/.local/bin && mv /tmp/mati ~/.local/bin/mati && chmod +x ~/.local/bin/mati && ~/.local/bin/mati --version",
+            "purpose": "Download and install mati binary from GitHub releases to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "mati --version",
-            "expected_signal": "mati 0.1.6",
+            "command": "mati --help",
+            "expected_signal": "serve",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "mati 0.1.6",
+            "observed_excerpt": "serve Run as MCP stdio server (for Claude/Codex agent integration)",
             "setup": [],
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- mati serve",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- mati serve 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -150,40 +142,67 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call mem_query --args '{\"query\":\"test\"}' -- mati serve",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call mem_query --args '{\"query\":\"test\"}' -- mati serve 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "tools/call: ok tool=mem_query content=text text_chars=2",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "cd /tmp/testrepo && mati check",
+            "expected_signal": "All checks passed",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "/usr/bin/bash: line 1: cd: /tmp/testrepo: No such file or directory",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "cd /tmp/testrepo && mati stats",
+            "expected_signal": "Coverage",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "/usr/bin/bash: line 1: cd: /tmp/testrepo: No such file or directory",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "cd /tmp/testrepo && mati verify-chain",
+            "expected_signal": "chain intact",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "/usr/bin/bash: line 1: cd: /tmp/testrepo: No such file or directory",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "cargo install mati (requires Rust toolchain)",
-            "actually_needed": "box has no Rust toolchain; installed prebuilt x86_64 musl binary from GitHub releases",
+            "readme_said": "cargo install mati",
+            "actually_needed": "Installed prebuilt musl binary from GitHub releases (mati-x86_64-unknown-linux-musl.tar.gz) to ~/.local/bin; Rust toolchain not available in box",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 4 tools, successful mem_query call returning [], and version mati 0.1.6.",
+          "observed": "MCP handshake succeeds with 4 tools, mem_query call returns empty result, and help lists the serve subcommand.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-mati-20261101-002851-58a2/report.json",
+          "trace_path": "runs/verify/verify-mati-20261101-161004-5db7/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-mati-20261101-002851-58a2/check-1-cmd14.judged.png",
-            "runs/verify/verify-mati-20261101-002851-58a2/check-2-cmd15.judged.png",
-            "runs/verify/verify-mati-20261101-002851-58a2/check-3-cmd13.judged.png"
+            "runs/verify/verify-mati-20261101-161004-5db7/check-1-cmd6.judged.png",
+            "runs/verify/verify-mati-20261101-161004-5db7/check-2-cmd7.judged.png",
+            "runs/verify/verify-mati-20261101-161004-5db7/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.099207,
+        "cost_usd": 0.066988,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -203,7 +222,41 @@
           "tool_count": 4,
           "called_tool": "mem_query",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Gate AI agent file reads and edits",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; mati check reports All checks passed, hook enforcement active"
+          },
+          {
+            "feature": "Attach team knowledge to files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: mem_query returned empty [] with no knowledge attached to files or access denial shown."
+          },
+          {
+            "feature": "Record enforcement in hash-chained log",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; mati verify-chain reports VALID chain intact"
+          },
+          {
+            "feature": "Report coverage and onboarding score",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; mati stats reports coverage and onboarding score"
+          }
+        ]
       }
     ]
   },
@@ -627,5 +680,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:19:44+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T16:11:13.795454+08:00"
 }
