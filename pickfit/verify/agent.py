@@ -512,7 +512,8 @@ The inference check takes about four commands (download, server, a health or mod
 keep them in reserve, and explore with read_file and list_dir, which are free, rather than --help runs. \
 If the tool has its own pull or download command, use it with one of these (or the smallest model its own \
 catalog lists, under about 300 MB) instead of curl. Download with its own run_command before you start the \
-server, so the server never fetches a model itself. Then send one generation request with temperature 0 \
+server, so the server never fetches a model itself; but a pull that needs its own server running (ollama pull) is \
+a setup, never an install step: list the server's run_background, then the pull, in setup_ids. Then send one generation request with temperature 0 \
 and about 16 max tokens as its own run_command, and cite it as a smoke test whose setup_ids list the \
 download first, then the server's run_background: a fresh box runs setups with the network on and the \
 check with it off. Its expected_signal must not depend on the sampled words (a JSON key such as \
