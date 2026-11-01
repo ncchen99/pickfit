@@ -59,6 +59,7 @@ JUDGE_MAX_TOKENS = 3_000
 OPERATE_CAP_USD = 0.60  # per site, per model provider
 JUDGE_CAP_USD = 0.10
 MAX_STEPS = 12
+OFFLINE_STEPS = 8
 WAIT_BETWEEN_ACTIONS = 1.5
 CRAWL_DELAY_MAX = 10.0
 HARNESS_TIMEOUT_S = 1500
@@ -582,8 +583,9 @@ gives you). Pick the feature that best matches the main use and works without an
 Rules (pickfit's guard enforces them; a refused request shows "Blocked by pickfit's test guard"):
 - Stay on this site. Do not sign up, log in, create accounts, buy, book, subscribe, post, comment, message, \
 email, share or send contact or feedback forms. Never type an email address, password, phone or card number.
-- When you need free text, use short neutral text containing the marker "{nonce}", e.g. "{nonce} hello world". \
-When the tool needs a file, use one of: {', '.join(files)}.
+- Free text you make up (a note, a title, text to convert or format) must contain the marker "{nonce}", e.g. \
+"{nonce} hello world". Where a field needs a real value (a search term, a name to guess, a city, a number), type \
+a real value instead. When the tool needs a file, use one of: {', '.join(files)}.
 - If the core use needs an account or payment, stop and say so (blocked_by: account_required or paywall).
 - Work calmly; at most {max_steps} steps. Do not retry the same failing action more than twice.
 When done, report: the feature; what shows the result (text_on_page, downloaded_file or page_state); an exact \
@@ -591,10 +593,16 @@ short piece of visible text that shows the result (not text that was on the page
 only the text you typed); and what blocked you, if anything."""
 
 
+def offline_task(task: str, feature: str) -> str:
+    return (f"{task}\n\nThe device is OFFLINE now (pickfit cut the network on purpose). Use the same feature as "
+            f"before ({feature}) and get a visible result without the network. If the app cannot work offline, stop "
+            "and say so (blocked_by: site_error).")
+
+
 def _strip_images(message: dict[str, Any]) -> dict[str, Any]:
     def walk(value: Any) -> Any:
         if isinstance(value, dict):
-            return {k: ("<jpeg omitted>" if k == "screenshot_jpeg_b64" else walk(v)) for k, v in value.items()}
+            return {k: ("<jpeg omitted>" if k.endswith("jpeg_b64") else walk(v)) for k, v in value.items()}
         if isinstance(value, list):
             return [walk(v) for v in value]
         return value
@@ -698,10 +706,31 @@ def verify_site(target: WebTarget, *, max_steps: int = MAX_STEPS, revisit: str |
                         seen["install_problem"] = "the terms forbid automated access"
                 return {"type": "continue", "function": go, "task": task}
             if phase == "function":
-                seen["function"] = message.get("result") or {}
+                function = seen["function"] = message.get("result") or {}
+                seen["online_check"] = check_result(function.get("outcome"), function.get("before_text") or "",
+                                                    function.get("after") or {}, function.get("downloads") or [],
+                                                    function.get("typed") or [])
                 return {"type": "continue", "offline": is_pwa(seen.get("install") or {}), "replay": True, "task": task}
             if phase == "offline":
-                seen["offline"] = {"loaded": message.get("loaded") or {}, "replay": message.get("replay") or {}}
+                loaded, replay = message.get("loaded") or {}, message.get("replay") or {}
+                seen["offline"] = {"loaded": loaded, "replay": replay}
+                verdict, cost = judge_page(target.name, loaded, run_id=run_id, scope=scope)
+                judge_cost += cost
+                seen["offline_judge"] = verdict.model_dump() if verdict else None
+                loads = page_problem(loaded) is None and verdict is not None and verdict.screen in PASSED_SCREENS
+                outcome = (seen.get("function") or {}).get("outcome")
+                replayed = bool(replay.get("after")) and check_result(
+                    outcome, loaded.get("text") or "", replay["after"], replay.get("downloads") or [],
+                    (seen.get("function") or {}).get("typed") or [])["passed"]
+                log(f"  offline: {'loads' if loads else 'does not load'}; replay {'passed' if replayed else 'failed'}")
+                if loads and not replayed and (seen.get("online_check") or {}).get("passed") or \
+                        (loads and not replayed and (outcome or {}).get("result_kind") == "page_state"):
+                    feature = (outcome or {}).get("feature") or "the same feature"
+                    return {"type": "continue", "offline_agent": True, "max_steps": OFFLINE_STEPS,
+                            "task": offline_task(task, feature)}
+                return {"type": "continue"}
+            if phase == "offline_agent":
+                seen["offline_agent"] = message.get("result") or {}
                 return {"type": "continue"}
             return None
 
@@ -747,12 +776,12 @@ def evaluate(target: WebTarget, result: dict[str, Any], seen: dict[str, Any], ou
     judge = seen.get("install_judge") or {}
     function = seen.get("function") or {}
     typed = [t for t in function.get("typed") or [] if t]
-    needles = [*typed, result.get("nonce", "")] if function else []
+    # Only what can be traced counts: typed text of 4+ characters, and the run's marker inside a chosen file.
+    needles = [t for t in typed if len(t.strip()) >= 4] + ([result.get("nonce", "")] if function.get("uploaded") else [])
     leaks = guard.find_leaks(flows, needles) if needles else []
     outcome = function.get("outcome") or None
-    network["data_left_device"] = (any(h["sent"] for h in leaks) if function and (typed or function.get("uploaded"))
-                                   else None)
-    network["typed_or_chosen"] = bool(typed or function.get("uploaded"))
+    network["data_left_device"] = any(h["sent"] for h in leaks) if needles else None
+    network["traced"] = needles
     network["leaks"] = leaks[:20]
     network["ads"] = bool(network["ad_networks"]) or bool(install.get("ad_slots")) or bool(judge.get("ads_visible"))
     result["network"] = network
@@ -790,13 +819,31 @@ def evaluate(target: WebTarget, result: dict[str, Any], seen: dict[str, Any], ou
     if offline:
         loaded = offline.get("loaded") or {}
         replay = offline.get("replay") or {}
-        loads = page_problem(loaded) is None and text_overlap(loaded.get("text") or "", install.get("text") or "") >= 0.3
+        offline_judge = seen.get("offline_judge") or {}
+        result["offline_judge"] = offline_judge or None
+        loads = page_problem(loaded) is None and offline_judge.get("screen") in PASSED_SCREENS
         works = False
         if loads and level == "function" and replay.get("after"):
             again = check_result(outcome, loaded.get("text") or "", replay["after"], replay.get("downloads") or [], typed,
-                                 pixels_changed=visual_change(out / "offline.png", out / "offline_after.png"))
+                                 pixels_changed=visual_change(out / "offline.png", out / "offline_replay.png"))
             works = bool(again.get("passed"))
-            result["offline_check"] = again
+            result["offline_check"] = {**again, "by": "replay"}
+        agent = seen.get("offline_agent")
+        if loads and level == "function" and not works and agent:
+            agent_typed = [t for t in agent.get("typed") or [] if t]
+            again = check_result(agent.get("outcome"), agent.get("before_text") or "", agent.get("after") or {},
+                                 agent.get("downloads") or [], agent_typed,
+                                 pixels_changed=visual_change(out / "offline_agent_before.png",
+                                                              out / "offline_agent_after.png"))
+            result["offline_check"] = {**again, "by": "agent offline", "outcome": agent.get("outcome"),
+                                       "steps": agent.get("steps")}
+            if again.get("passed"):
+                verdict, cost = judge_function(target, agent.get("before_jpeg_b64"),
+                                               (agent.get("after") or {}).get("screenshot_jpeg_b64"),
+                                               agent.get("outcome"), again, run_id=run_id, scope=scope)
+                result["costs"]["judge_usd"] = round(result["costs"].get("judge_usd", 0.0) + cost, 5)
+                result["offline_function_judge"] = verdict.model_dump() if verdict else None
+                works = bool(verdict and verdict.feature_shown)
         result["works_offline"] = "works" if works else ("loads" if loads else "no")
     else:
         result["works_offline"] = None
@@ -823,7 +870,7 @@ def reevaluate(run_dir: Path, target: WebTarget, log: Callable[[str], None] = pr
     """Evaluate a saved visit again (new checks, no new visit): states from messages.jsonl, images from the PNGs,
     the install judge's earlier answer kept."""
     old = json.loads((run_dir / "web_result.json").read_text(encoding="utf-8"))
-    seen: dict[str, Any] = {"install_judge": old.get("install_judge")}
+    seen: dict[str, Any] = {"install_judge": old.get("install_judge"), "offline_judge": old.get("offline_judge")}
     for line in (run_dir / "messages.jsonl").read_text(encoding="utf-8").splitlines():
         message = json.loads(line)
         if message.get("type") != "observe":
@@ -837,8 +884,14 @@ def reevaluate(run_dir: Path, target: WebTarget, log: Callable[[str], None] = pr
         elif message["phase"] == "offline":
             replay = message.get("replay") or {}
             if replay.get("after"):
-                replay["after"] = {**replay["after"], "screenshot_jpeg_b64": _jpeg_b64(run_dir / "offline_after.png")}
+                replay["after"] = {**replay["after"], "screenshot_jpeg_b64": _jpeg_b64(run_dir / "offline_replay.png")}
             seen["offline"] = {"loaded": message.get("loaded") or {}, "replay": replay}
+        elif message["phase"] == "offline_agent":
+            result = message["result"]
+            result["before_jpeg_b64"] = _jpeg_b64(run_dir / "offline_agent_before.png")
+            result["after"] = {**result.get("after", {}),
+                               "screenshot_jpeg_b64": _jpeg_b64(run_dir / "offline_agent_after.png")}
+            seen["offline_agent"] = result
     judge = seen.get("install_judge") or {}
     seen["install_problem"] = page_problem(seen.get("install") or {})
     seen["install_ok"] = seen["install_problem"] is None and judge.get("screen") in PASSED_SCREENS

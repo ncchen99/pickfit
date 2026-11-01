@@ -336,6 +336,38 @@ def typed_inputs(history: Any) -> tuple[list[str], list[str]]:
 # ---------------------------------------------------------------- the visit
 
 
+async def operate(session: Any, channel: Channel, task: str, start: dict[str, Any], max_steps: int,
+                  prefix: str) -> tuple[Any, dict[str, Any]]:
+    """browser-use works the page toward `task`; pickfit captures the page before and after itself."""
+    from browser_use import Agent
+
+    before = await capture(session, f"{prefix}before", inline=bool(prefix))
+    llm = bridge_llm(channel)
+    started = time.time()
+    agent = Agent(task=task, llm=llm, browser_session=session, tools=make_tools(),
+                  output_model_schema=outcome_model(), use_judge=False, enable_planning=False,
+                  use_vision=True, max_actions_per_step=3, max_failures=3, calculate_cost=False,
+                  directly_open_url=False, available_file_paths=start.get("sample_files") or None,
+                  generate_gif=False, llm_timeout=180, step_timeout=300, page_extraction_llm=llm,
+                  final_response_after_failure=True, max_clickable_elements_length=ELEMENTS_CHARS)
+    history = await agent.run(max_steps=max_steps)
+    await settle(2)
+    after = await capture(session, f"{prefix}after", inline=True)
+    history.save_to_file(EVIDENCE / f"{prefix}agent_history.json")
+    typed, uploaded = typed_inputs(history)
+    structured = history.structured_output
+    return history, {
+        "before_text": before.get("text", ""), "before_jpeg_b64": before.get("screenshot_jpeg_b64"),
+        "after": after, "downloads": downloads(started), "typed": typed, "uploaded": uploaded,
+        "steps": history.number_of_steps(), "done": history.is_done(), "successful": history.is_successful(),
+        "outcome": structured.model_dump() if structured is not None else None,
+        "final_result": (history.final_result() or "")[:2000],
+        "errors": [e for e in history.errors() if e][-5:],
+        "urls": [u for u in history.urls() if u][-10:],
+        "duration_s": round(time.time() - started, 1),
+    }
+
+
 async def run(channel: Channel) -> None:
     start = await channel.wait("start")
     for d in (EVIDENCE, DOWNLOADS):
@@ -343,6 +375,7 @@ async def run(channel: Channel) -> None:
     chrome = launch_chrome(start["user_agent"])
     from browser_use import Agent, BrowserSession
 
+    history: Any = None
     session = BrowserSession(browser_profile=browser_profile(start["site"], start["wait_between_actions"]))
     await session.start()
     report: dict[str, Any] = {"type": "done"}
@@ -362,31 +395,7 @@ async def run(channel: Channel) -> None:
         go = await channel.wait("continue")
         if not go.get("function"):
             return
-        before = await capture(session, "before")
-        llm = bridge_llm(channel)
-        started = time.time()
-        agent = Agent(task=go["task"], llm=llm, browser_session=session, tools=make_tools(),
-                      output_model_schema=outcome_model(), use_judge=False, enable_planning=False,
-                      use_vision=True, max_actions_per_step=3, max_failures=3, calculate_cost=False,
-                      directly_open_url=False, available_file_paths=start.get("sample_files") or None,
-                      generate_gif=False, llm_timeout=180, step_timeout=300, page_extraction_llm=llm,
-                      final_response_after_failure=True, max_clickable_elements_length=ELEMENTS_CHARS)
-        history = await agent.run(max_steps=start["max_steps"])
-        await settle(2)
-        after = await capture(session, "after", inline=True)
-        history.save_to_file(EVIDENCE / "agent_history.json")
-        typed, uploaded = typed_inputs(history)
-        structured = history.structured_output
-        function = {
-            "before_text": before.get("text", ""), "after": after, "downloads": downloads(started),
-            "typed": typed, "uploaded": uploaded, "steps": history.number_of_steps(),
-            "done": history.is_done(), "successful": history.is_successful(),
-            "outcome": structured.model_dump() if structured is not None else None,
-            "final_result": (history.final_result() or "")[:2000],
-            "errors": [e for e in history.errors() if e][-5:],
-            "urls": [u for u in history.urls() if u][-10:],
-            "duration_s": round(time.time() - started, 1),
-        }
+        history, function = await operate(session, channel, go["task"], start, start["max_steps"], "")
         send({"type": "observe", "phase": "function", "result": function})
         go = await channel.wait("continue")
         if not go.get("offline"):
@@ -417,10 +426,21 @@ async def run(channel: Channel) -> None:
             except Exception as err:
                 replay["error"] = f"{type(err).__name__}: {err}"[:300]
             await settle(2)
-            replay["after"] = await capture(session, "offline_after", inline=True)
+            replay["after"] = await capture(session, "offline_replay", inline=True)
             replay["downloads"] = downloads(offline_started)
         send({"type": "observe", "phase": "offline", "loaded": loaded, "replay": replay})
-        await channel.wait("continue")
+        go = await channel.wait("continue")
+        if go.get("offline_agent"):  # the replay could not match the page: the agent works it offline itself
+            page, _ = await page_session(session)
+            try:
+                await page.goto(start["url"])
+            except Exception as err:
+                report["offline_agent_navigation_error"] = str(err)[:300]
+            await settle(4)
+            _, offline_function = await operate(session, channel, go["task"], start, go.get("max_steps", 8),
+                                                "offline_agent_")
+            send({"type": "observe", "phase": "offline_agent", "result": offline_function})
+            await channel.wait("continue")
     except Exception as err:
         report["error"] = f"{type(err).__name__}: {err}"[:1000]
         log(traceback.format_exc())
