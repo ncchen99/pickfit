@@ -58,14 +58,19 @@ export function says(name: FitzName, body: string, opts: { role?: 'status' | 'al
 
 export type BadgeTone = 'pass' | 'gem' | 'free' | 'caution' | 'quiet' | 'fail' | 'info';
 
-/** A badge; `pop` names a popover that explains it. */
-export function badge(tone: BadgeTone, text: string, opts: { icon?: IconName; pop?: string; title?: string; cls?: string } = {}): string {
-  const cls = `badge badge-${tone}${opts.cls ? ` ${opts.cls}` : ''}`;
-  const inner = `${opts.icon ? icon(opts.icon) : ''}${esc(text)}`;
+/**
+ * A badge; `pop` names a popover that explains it. `marks` replaces the text with
+ * icons (already drawn); the text then shows as a tooltip and is read out instead.
+ */
+export function badge(tone: BadgeTone, text: string, opts: { icon?: IconName; pop?: string; title?: string; cls?: string; marks?: string } = {}): string {
+  const short = opts.marks !== undefined;
+  const cls = `badge badge-${tone}${short ? ' badge-short' : ''}${opts.cls ? ` ${opts.cls}` : ''}`;
+  const tip = short ? ` data-tip="${esc(opts.title ? `${text}: ${opts.title}` : text)}"` : '';
+  const inner = `${opts.icon ? icon(opts.icon) : ''}${short ? `${opts.marks}<span class="sr">${esc(text)}</span>` : esc(text)}`;
   if (opts.pop) {
-    return `<button type="button" class="${cls}" popovertarget="${opts.pop}" aria-label="${esc(text)}: what this means">${inner}</button>`;
+    return `<button type="button" class="${cls}" popovertarget="${opts.pop}" aria-label="${esc(text)}: what this means"${tip}>${inner}</button>`;
   }
-  return `<span class="${cls}"${opts.title ? ` title="${esc(opts.title)}"` : ''}>${inner}</span>`;
+  return `<span class="${cls}"${tip || (opts.title ? ` title="${esc(opts.title)}"` : '')}>${inner}</span>`;
 }
 
 /** A popover (native popover API) and the little "?" that opens it. */

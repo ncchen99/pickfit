@@ -153,6 +153,14 @@ button.badge{cursor:help}
 .badge-info{background:var(--info-soft);color:var(--info)}
 .badge-quiet{background:var(--sunk);color:var(--ink-2)}
 .badges{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+.badge-short{gap:6px;padding:5px 8px}
+.os{width:1.05em;height:1.05em;flex:none;fill:currentColor}
+.sprite{position:absolute;overflow:hidden}
+@media (hover:hover){
+[data-tip]{position:relative}
+[data-tip]:hover::after{content:attr(data-tip)}
+[data-tip]:hover::after,.cat-card .chip-compare:hover::after{position:absolute;left:0;bottom:calc(100% + 6px);z-index:3;padding:6px 9px;border-radius:6px;background:var(--ink);color:var(--paper);font:600 .78rem/1.3 var(--sans);width:max-content;max-width:220px;pointer-events:none}
+}
 
 /* tape meters */
 .meter{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 12px}
@@ -172,10 +180,10 @@ button.badge{cursor:help}
 
 /* at-a-glance cells */
 .glance{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:2px;border-radius:var(--r-ctl);overflow:hidden;background:var(--rule);margin:0}
-.gl{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;column-gap:8px;align-items:center;padding:10px 12px;background:var(--tag)}
-.gl .i{grid-row:1/3;align-self:start;margin-top:2px;width:20px;height:20px;color:var(--ink-2)}
+.gl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 7px;align-content:start;align-items:center;padding:12px;background:var(--tag)}
+.gl .i{width:16px;height:16px;color:var(--ink-2)}
 .gl-label{font:600 .75rem/1.2 var(--display);color:var(--ink-2);text-transform:none}
-.gl-value{font:600 .92rem/1.3 var(--sans);color:var(--ink)}
+.gl-value{grid-column:1/-1;font:600 .92rem/1.3 var(--sans);color:var(--ink)}
 .gl-pass .i,.gl-pass .gl-value{color:var(--pass)}
 .gl-pass .gl-value small{color:var(--ink-2)}
 .gl-caution .i,.gl-caution .gl-value{color:var(--caution)}
@@ -593,7 +601,15 @@ body.has-tray{padding-bottom:72px}
 .cat-card h3 a::after{content:"";position:absolute;inset:0;border-radius:var(--r-card)}
 .cat-card p{margin:0;color:var(--ink-2);font-size:.92rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .cat-card .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:auto;padding-top:8px}
+.cat-card .row .badge{position:relative;z-index:1}
 .cat-card .chip-compare{position:relative;z-index:1;margin-left:auto;min-height:32px;padding:0 12px;font-size:.8rem}
+/* A narrow card keeps its badges and Compare on one line: Compare shows as its icon, named on hover. */
+.cat-card{container-type:inline-size}
+@container (max-width:280px){
+.cat-card .chip-compare{padding:0 10px}
+.cat-card .chip-compare span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media (hover:hover){.cat-card .chip-compare:hover::after{content:"Compare";left:auto;right:0}}
+}
 .cat-card .seam{margin:4px 0 2px;animation:none}
 .cat-card.unverified{background:transparent;box-shadow:none;border:2px dashed var(--rule)}
 .cat-count{color:var(--ink-2);margin:0 0 16px}
@@ -674,8 +690,7 @@ body.is-results .hero-fitz{display:none}
 .pick{padding:22px 18px 18px}
 .t-name{font-size:1.35rem}
 .glance{grid-template-columns:1fr 1fr}
-.gl{padding:10px;column-gap:6px}
-.gl .i{width:18px;height:18px}
+.gl{padding:11px 12px}
 .gl-value{font-size:.88rem}
 .legend div{grid-template-columns:minmax(0,1fr);gap:4px}
 .uses{columns:1}

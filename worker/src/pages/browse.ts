@@ -7,7 +7,7 @@
 import { bestGuide, OSES, verifiedOn, type Catalog, type Entry, type OS } from '../catalog.ts';
 import { formOf, KIND, KIND_PLURAL, levelLabel, OS_NAME, osName, PRICE, kindLine } from '../ui/facts.ts';
 import { esc, listOf } from '../ui/html.ts';
-import { icon } from '../ui/icons.ts';
+import { icon, OS_SPRITE, osMark } from '../ui/icons.ts';
 import { badge, compareToggle, fitz } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 
@@ -67,9 +67,12 @@ function card(entry: Entry, i: number): string {
     (verified ? '<div class="seam" aria-hidden="true"></div>' : '') +
     `<div class="row">` +
     (verified
-      ? badge('pass', listOf(oses.map((os) => osName(os))), { icon: 'check', title: guide ? levelLabel(guide.run.level, { gui: guide.run.gui, mcp: guide.mcp }) : undefined })
+      ? badge('pass', `Verified on ${listOf(oses.map((os) => osName(os)))}`, {
+          marks: oses.map(osMark).join(''),
+          title: guide ? levelLabel(guide.run.level, { gui: guide.run.gui, mcp: guide.mcp }) : undefined,
+        })
       : badge('quiet', 'Not verified', { icon: 'circle-dashed' })) +
-    (entry.scores?.treasure ? badge('gem', 'Hidden gem', { icon: 'gem' }) : '') +
+    (entry.scores?.treasure ? badge('gem', 'Hidden gem', { icon: 'gem', marks: '', pop: 'pop-gem' }) : '') +
     (entry.pricing === 'free' ? badge('free', PRICE.free) : '') +
     (verified ? compareToggle(entry.slug, entry.name) : '') +
     `</div></li>`
@@ -102,7 +105,7 @@ export function renderBrowse(catalog: Catalog, params: URLSearchParams, nonce: s
     `<section class="head mat after-top"><div class="wrap head-row"><div><h1>Browse verified tools</h1>` +
     `<p class="lede">Every tool here was installed by pickfit in a fresh sandbox.</p></div>` +
     `${fitz('idle', 150, { eager: true })}</div><div class="ruler" aria-hidden="true"></div></section>` +
-    `<div class="wrap layout layout-browse"><aside class="side side-left">${filters}</aside><div>` +
+    `${OS_SPRITE}<div class="wrap layout layout-browse"><aside class="side side-left">${filters}</aside><div>` +
     `<p class="cat-count"><span data-shown>${list.length}</span> of ${list.length} ${q.all ? 'tools' : 'verified tools'}${q.kind ? ` · ${esc(KIND_PLURAL[q.kind])}` : ''}${q.os ? ` · verified on ${esc(OS_NAME[q.os])}` : ''}</p>` +
     `<h2 class="sr">Tools</h2>` +
     (list.length
