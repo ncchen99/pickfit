@@ -5,10 +5,10 @@
  * types never reaches a request URL or a log.
  */
 import { bestGuide, OSES, verifiedOn, type Catalog, type Entry, type OS } from '../catalog.ts';
-import { formOf, KIND, KIND_PLURAL, levelLabel, OS_NAME, osName, PRICE, kindLine } from '../ui/facts.ts';
+import { formOf, KIND, KIND_PLURAL, levelLabel, OS_NAME, osName, PRICE } from '../ui/facts.ts';
 import { esc, listOf } from '../ui/html.ts';
-import { icon, OS_SPRITE, osMark } from '../ui/icons.ts';
-import { badge, compareToggle, fitz } from '../ui/kit.ts';
+import { icon, osMark } from '../ui/icons.ts';
+import { badge, compareToggle, fitz, kindIcon, kindTag } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 
 const KINDS = ['dev_cli', 'local_ai', 'mcp_server'] as const;
@@ -48,8 +48,8 @@ function href(q: BrowseQuery, change: Partial<BrowseQuery>): string {
   return `/browse${s ? `?${s.replace(/&/g, '&amp;')}` : ''}`;
 }
 
-const chipLink = (on: boolean, to: string, text: string) =>
-  `<a class="chip${on ? ' on' : ''}" href="${to}"${on ? ' aria-current="true"' : ''}>${on ? icon('check') : ''}${esc(text)}</a>`;
+const chipLink = (on: boolean, to: string, text: string, mark = '') =>
+  `<a class="chip${on ? ' on' : ''}" href="${to}"${on ? ' aria-current="true"' : ''}>${on ? icon('check') : mark}${esc(text)}</a>`;
 
 /** Cards shown before "Show more" (with the script; without it, all of them). */
 const FIRST = 30;
@@ -62,7 +62,7 @@ function card(entry: Entry, i: number): string {
   return (
     `<li class="cat-card${verified ? '' : ' unverified'}${i >= FIRST ? ' later' : ''}" data-text="${esc(text)}">` +
     `<h3><a href="/tool/${esc(entry.slug)}">${esc(entry.name)}</a></h3>` +
-    `<p class="small quiet">${esc(kindLine(entry))}</p>` +
+    `<p class="small quiet">${kindTag(entry)}</p>` +
     `<p>${esc(entry.summary)}</p>` +
     (verified ? '<div class="seam" aria-hidden="true"></div>' : '') +
     `<div class="row">` +
@@ -95,8 +95,8 @@ export function renderBrowse(catalog: Catalog, params: URLSearchParams, nonce: s
   const filters =
     `<form class="filters" method="get" action="/browse" role="search" aria-label="Filter the catalog">` +
     `<label class="find-in">${icon('search')}<span class="sr">Filter these tools</span><input type="search" data-filter placeholder="Filter by name or task" autocomplete="off"></label>` +
-    `<fieldset><legend>Kind</legend><div class="chips">${chipLink(!q.kind, href(q, { kind: '' }), 'All')}${KINDS.map((k) => chipLink(q.kind === k, href(q, { kind: k }), KIND_PLURAL[k])).join('')}</div></fieldset>` +
-    `<fieldset><legend>Verified on</legend><div class="chips">${chipLink(!q.os, href(q, { os: '' }), 'Any OS')}${OSES.map((o) => chipLink(q.os === o, href(q, { os: o }), OS_NAME[o])).join('')}</div></fieldset>` +
+    `<fieldset><legend>Kind</legend><div class="chips">${chipLink(!q.kind, href(q, { kind: '' }), 'All')}${KINDS.map((k) => chipLink(q.kind === k, href(q, { kind: k }), KIND_PLURAL[k], icon(kindIcon(k)))).join('')}</div></fieldset>` +
+    `<fieldset><legend>Verified on</legend><div class="chips">${chipLink(!q.os, href(q, { os: '' }), 'Any OS')}${OSES.map((o) => chipLink(q.os === o, href(q, { os: o }), OS_NAME[o], osMark(o))).join('')}</div></fieldset>` +
     `<details class="more-filters"${q.gem || q.all || q.sort !== 'gems' ? ' open' : ''}><summary>More filters</summary>` +
     `<fieldset><legend>Show</legend><div class="chips">${chipLink(q.gem, href(q, { gem: !q.gem }), 'Hidden gems only')}${chipLink(q.all, href(q, { all: !q.all }), `Include ${unverified} not yet verified`)}</div></fieldset>` +
     `<fieldset><legend>Order</legend><div class="chips">${chipLink(q.sort === 'gems', href(q, { sort: 'gems' }), 'Hidden gems first')}${chipLink(q.sort === 'newest', href(q, { sort: 'newest' }), 'Newest runs')}${chipLink(q.sort === 'name', href(q, { sort: 'name' }), 'A to Z')}</div></fieldset></details>` +
@@ -105,7 +105,7 @@ export function renderBrowse(catalog: Catalog, params: URLSearchParams, nonce: s
     `<section class="head mat after-top"><div class="wrap head-row"><div><h1>Browse verified tools</h1>` +
     `<p class="lede">Every tool here was installed by pickfit in a fresh sandbox.</p></div>` +
     `${fitz('idle', 150, { eager: true })}</div><div class="ruler" aria-hidden="true"></div></section>` +
-    `${OS_SPRITE}<div class="wrap layout layout-browse"><aside class="side side-left">${filters}</aside><div>` +
+    `<div class="wrap layout layout-browse"><aside class="side side-left">${filters}</aside><div>` +
     `<p class="cat-count"><span data-shown>${list.length}</span> of ${list.length} ${q.all ? 'tools' : 'verified tools'}${q.kind ? ` · ${esc(KIND_PLURAL[q.kind])}` : ''}${q.os ? ` · verified on ${esc(OS_NAME[q.os])}` : ''}</p>` +
     `<h2 class="sr">Tools</h2>` +
     (list.length

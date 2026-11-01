@@ -7,10 +7,10 @@
  */
 import { bestGuide, nameKey, OSES, verifiedOn, type Arch, type Catalog, type Entry, type OS } from '../catalog.ts';
 import { featuresOut } from '../features.ts';
-import { day, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, system, kindLine } from '../ui/facts.ts';
+import { day, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, readerIssues, setupWords } from '../ui/facts.ts';
 import { esc, link, listOf, SLUG } from '../ui/html.ts';
 import { icon } from '../ui/icons.ts';
-import { age, badge, coverage, fitz, tape } from '../ui/kit.ts';
+import { age, badge, coverage, fitz, kindTag, levelIcon, osList, sysTag, tape } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 
 export const COMPARE_MAX = 4;
@@ -57,7 +57,7 @@ export function compareTable(entries: Entry[], opts: Opts): string {
         : '';
       return (
         `<th scope="col"><a href="/tool/${esc(e.slug)}">${esc(e.name)}</a>` +
-        `<div class="small quiet">${esc(kindLine(e))}</div>` +
+        `<div class="small quiet">${kindTag(e)}</div>` +
         (e.scores?.treasure ? `<div>${badge('gem', 'Hidden gem', { icon: 'gem' })}</div>` : '') +
         `${remove}</th>`
       );
@@ -77,27 +77,39 @@ export function compareTable(entries: Entry[], opts: Opts): string {
         const oses = verifiedOn(e);
         if (!oses.length) return '<span class="no">Not verified yet</span>';
         const mine = opts.os ? oses.includes(opts.os) : null;
-        const words = esc(listOf(oses.map((os) => osName(os))));
-        return mine === true ? `<span class="yes">${icon('check')} ${words}</span>` : mine === false ? `<span class="no">${words} only</span>` : words;
+        const names = listOf(oses.map((os) => osName(os)));
+        return mine === false
+          ? osList(oses, { tone: 'caution', say: `${names} only, not ${osName(opts.os)}` })
+          : osList(oses, { tone: 'pass', say: mine ? `${names}, including yours` : names });
       }),
     ),
   );
-  rows.push(row('Claims to run on', entries.map((e) => (e.platforms.length ? esc(listOf(e.platforms.map((os) => osName(os)))) : unknown))));
+  rows.push(row('Claims to run on', entries.map((e) => (e.platforms.length ? osList(e.platforms, { tone: 'quiet' }) : unknown))));
   rows.push(
     row(
       'Proof',
       entries.map((e, i) => {
         const g = guides[i];
         if (!g) return '<span class="unknown">no run</span>';
-        const label = levelLabel(g.run.level, { gui: g.run.gui, mcp: g.mcp });
-        return `<span class="${passed(g.run.gui) ? 'yes' : 'no'}">${esc(label)}</span><div class="small quiet">${esc(system(g.run.os, g.run.arch))}, ${esc(day(g.run.checked_at))}${g.run.replayed ? ', replayed' : ''}</div>`;
+        const evidence = { gui: g.run.gui, mcp: g.mcp };
+        const replayed = g.run.replayed ? ` · <span data-tip="Replayed from scratch">${icon('refresh-cw')}<span class="sr">replayed</span></span>` : '';
+        return (
+          `<span class="${passed(g.run.gui) ? 'yes' : 'no'} cmp-level">${icon(levelIcon(g.run.level, evidence))}${esc(levelLabel(g.run.level, evidence))}</span>` +
+          `<div class="small quiet run-line">${sysTag(g.run.os, g.run.arch)} · ${esc(day(g.run.checked_at))}${replayed}</div>`
+        );
       }),
     ),
   );
   rows.push(
     row(
       'Works offline',
-      guides.map((g) => (g?.works_offline === true ? '<span class="yes">Yes, checked</span>' : g?.works_offline === false ? '<span class="no">Needed the network</span>' : '<span class="unknown">not checked</span>')),
+      guides.map((g) =>
+        g?.works_offline === true
+          ? `<span class="yes">${icon('wifi-off')}Yes, checked</span>`
+          : g?.works_offline === false
+            ? `<span class="no">${icon('wifi')}Needed the network</span>`
+            : '<span class="unknown">not checked</span>',
+      ),
     ),
   );
 

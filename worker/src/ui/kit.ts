@@ -4,9 +4,12 @@
  * everywhere. Their CSS is in styles.ts. No helper invents a value: a meter
  * with no score says "not scored".
  */
+import type { Arch, Entry, GuiEvidence, OS } from '../catalog.ts';
+import { operatedText } from '../evidence.ts';
 import type { FeaturesOut } from '../features.ts';
-import { esc } from './html.ts';
-import { icon, type IconName } from './icons.ts';
+import { day, formOf, KIND, osName, system } from './facts.ts';
+import { esc, listOf } from './html.ts';
+import { icon, osMark, type IconName } from './icons.ts';
 
 // ---------------------------------------------------------------- Fitz
 
@@ -71,6 +74,112 @@ export function badge(tone: BadgeTone, text: string, opts: { icon?: IconName; po
     return `<button type="button" class="${cls}" popovertarget="${opts.pop}" aria-label="${esc(text)}: what this means"${tip}>${inner}</button>`;
   }
   return `<span class="${cls}"${tip || (opts.title ? ` title="${esc(opts.title)}"` : '')}>${inner}</span>`;
+}
+
+// ---------------------------------------------------------------- marks for facts every card repeats
+
+/** An icon per kind of tool, shown before its form ("Command-line tool"); the kind's name is the tooltip. */
+const KIND_ICON: Record<string, IconName> = { dev_cli: 'terminal', local_ai: 'cpu', mcp_server: 'plug', other: 'package' };
+export const kindIcon = (category: string): IconName => KIND_ICON[category] ?? 'package';
+
+export function kindTag(entry: Pick<Entry, 'kind' | 'category'>): string {
+  const kind = KIND[entry.category] ?? '';
+  const form = formOf(entry);
+  const named = kind && kind.toLowerCase() !== form.toLowerCase();
+  return (
+    `<span class="kind"${named ? ` data-tip="${esc(kind)}"` : ''}>${icon(kindIcon(entry.category))}` +
+    `${named ? `<span class="sr">${esc(kind)}, </span>` : ''}${esc(form.charAt(0).toUpperCase() + form.slice(1))}</span>`
+  );
+}
+
+/** An icon per verification level, matching levelLabel(): the same evidence always gets the same mark. */
+const LEVEL_ICON: Record<string, IconName> = { install: 'power', function: 'play', service: 'server', inference: 'sparkles' };
+
+export function levelIcon(level: string, evidence: { gui?: GuiEvidence | null; mcp?: unknown } = {}): IconName {
+  if (evidence.gui) return operatedText(evidence.gui) ? 'mouse-pointer-click' : 'app-window';
+  if (evidence.mcp) return 'plug';
+  return LEVEL_ICON[level] ?? 'badge-check';
+}
+
+/** The marks of some OSes, named in a tooltip and for screen readers (`say` replaces the plain list of names). */
+export function osList(oses: OS[], opts: { tone?: 'pass' | 'caution' | 'quiet'; say?: string } = {}): string {
+  const say = opts.say ?? listOf(oses.map((os) => osName(os)));
+  return `<span class="oses${opts.tone ? ` oses-${opts.tone}` : ''}" data-tip="${esc(say)}">${oses.map(osMark).join('')}<span class="sr">${esc(say)}</span></span>`;
+}
+
+/** A system as its OS mark and CPU ("[Tux] x86_64"), the OS named for screen readers and on hover. */
+export const sysTag = (os: OS, arch: Arch | null) =>
+  `<span class="sys" data-tip="${esc(osName(os))}">${osMark(os)}<span class="sr">${esc(osName(os))} </span>${esc(arch ?? '')}</span>`;
+
+export interface RunFacts {
+  os: OS | null;
+  arch: Arch | null;
+  method: string | null;
+  replayed: boolean | null;
+  checked_at: string | null;
+  tool_version?: string | null;
+}
+
+/**
+ * A run in one row of marks: where it ran, how, whether it passed offline, when.
+ * `mine` says whether that is the reader's OS; `askedOffline` shows an offline run that was never checked;
+ * `named`: a heading above already names the system.
+ */
+export function runFacts(run: RunFacts, opts: { offline?: boolean | null; mine?: boolean | null; askedOffline?: boolean; named?: boolean } = {}): string {
+  if (!run.os) return '';
+  const item = (cls: string, mark: string, text: string, tip?: string) =>
+    `<li class="rf${cls ? ` rf-${cls}` : ''}"${tip ? ` data-tip="${esc(tip)}"` : ''}>${mark}${text}</li>`;
+  const items = [
+    opts.named
+      ? ''
+      : item(
+          opts.mine === true ? 'yes' : opts.mine === false ? 'no' : '',
+          osMark(run.os),
+          esc(system(run.os, run.arch)),
+          opts.mine === true ? 'Verified on your OS' : opts.mine === false ? 'Not your OS' : undefined,
+        ),
+    run.method === 'human'
+      ? item('', icon('hand'), 'Installed by hand')
+      : item('', icon('refresh-cw'), run.replayed ? 'Replayed from scratch' : 'Sandbox install'),
+    opts.offline === true
+      ? item('', icon('wifi-off'), 'Works offline', 'Its checks passed again with the network off')
+      : opts.offline === false
+        ? item('no', icon('wifi'), 'Needed the network', 'Its checks failed with the network off')
+        : opts.askedOffline
+          ? item('', icon('wifi'), 'Offline not checked')
+          : '',
+    run.checked_at ? item('', icon('calendar'), `<span class="sr">Checked on </span>${esc(day(run.checked_at))}`) : '',
+    run.tool_version ? item('', icon('package'), `<span class="sr">Version </span>${esc(run.tool_version)}`) : '',
+  ];
+  return `<ul class="run-facts">${items.join('')}</ul>`;
+}
+
+/** What the marks mean, as rows of a dl.legend: shared by the ticket legend and the how-it-works page. */
+export function marksLegend(): string {
+  const row = (dt: string, dd: string) => `<div><dt>${dt}</dt><dd>${dd}</dd></div>`;
+  const lvl = (level: string, evidence = {}) => `<span class="level-i">${icon(levelIcon(level, evidence))}</span>`;
+  return (
+    row(
+      `<span class="mark-sample">${osList(['macos', 'linux', 'windows'], { tone: 'pass' })}</span>Where it ran`,
+      'Green OS marks: pickfit ran the install steps there. Grey ones: the README says it runs there, and pickfit has not tried.',
+    ) +
+    row(
+      `<span class="mark-sample">${lvl('install')}${lvl('function')}${lvl('service')}${lvl('inference')}</span>How far the run got`,
+      'Installs and starts, its main function works, its service answers, it produces model output. A window means a desktop app opened; a plug, an MCP client used it.',
+    ) +
+    row(
+      `<span class="mark-sample rf">${icon('refresh-cw')}${icon('hand')}${icon('wifi-off')}${icon('calendar')}</span>About the run`,
+      'Replayed from scratch in a new sandbox, or installed by hand; passed again with the network off; the day it ran.',
+    ) +
+    row(
+      `<span class="mark-sample rf">${icon('terminal')}${icon('cpu')}${icon('plug')}</span>Kind of tool`,
+      'Developer CLI, local AI tool, MCP server. The words after the mark say its form: command-line tool, desktop app, local server.',
+    ) +
+    row(
+      `<span class="mark-sample rf">${icon('file-text')}</span>Source of a reason`,
+      'Every reason a pick fits rests on one profile field. Open the reason to see the field and the value it relies on.',
+    )
+  );
 }
 
 /** A popover (native popover API) and the little "?" that opens it. */
@@ -156,8 +265,8 @@ export function coverage(features: FeaturesOut, opts: { pop?: string } = {}): st
 }
 
 /** One at-a-glance cell: an icon, a short label and its value; the tone carries meaning only. */
-export function glance(ico: IconName, label: string, value: string, tone: 'pass' | 'caution' | 'fail' | 'quiet' | 'plain' = 'plain'): string {
-  return `<div class="gl gl-${tone}">${icon(ico)}<span class="gl-label">${esc(label)}</span><span class="gl-value">${value}</span></div>`;
+export function glance(ico: IconName | { svg: string }, label: string, value: string, tone: 'pass' | 'caution' | 'fail' | 'quiet' | 'plain' = 'plain'): string {
+  return `<div class="gl gl-${tone}">${typeof ico === 'string' ? icon(ico) : ico.svg}<span class="gl-label">${esc(label)}</span><span class="gl-value">${value}</span></div>`;
 }
 
 /** The checkbox that puts a tool in the compare tray (the tray is script; without it, the link to /compare works). */

@@ -121,15 +121,16 @@ test('a search is find_software plus get_install_guide: reasons, verification, s
   const [first, second] = html.split('<article class="pick"').slice(1);
   assert.match(first, /Fixture LLM Runner/);
   assert.match(first, /Serves a local model offline through an OpenAI-compatible API\./);
-  assert.match(first, /Runs offline on your machine<span class="cite">From its profile: processing is “local”/);
+  assert.match(first, /<summary>Runs offline on your machine<svg[^>]*>.*?<\/svg><\/summary><p class="cite">From its profile: <code>processing<\/code> is “local”/);
   assert.match(first, /Needs 8 GB of RAM/);
   assert.match(first, /Best free option<\/span>/);
   assert.match(first, /Hidden gem/);
   assert.match(first, /Lighter than Ollama/);
   // Verified by hand on macOS arm64: the user's OS, so the steps are the macOS ones.
-  assert.match(first, /pickfit installed it by hand on macOS arm64 on 28 Oct 2026\./);
-  assert.match(first, /class="mine mine-yes">Verified on your OS: it ran on macOS arm64\./);
-  assert.match(first, /<details class="install" open><summary>Install steps that worked on macOS arm64/);
+  assert.match(first, /<li class="rf rf-yes" data-tip="Verified on your OS"><svg class="os os-macos"[^>]*>.*?<\/svg>macOS arm64<\/li><li class="rf">.*?Installed by hand<\/li>/);
+  assert.match(first, /<span class="sr">Checked on <\/span>28 Oct 2026/);
+  assert.ok(!first.includes('mine-yes'), 'a run on your OS is said by its mark, not again in words');
+  assert.match(first, /<details class="install" open><summary><span>Install steps that worked on <span class="sys"><svg class="os os-macos"[^>]*>.*?<\/svg>macOS arm64/);
   assert.match(first, /brew install fixture\/tap\/fixture-llm-runner/);
   assert.match(first, /You do these yourself<\/h4><ul><li>Allow incoming connections/);
   assert.match(first, /The output should contain “fixture-llm-runner 0\.4\.1”/);
@@ -138,7 +139,7 @@ test('a search is find_software plus get_install_guide: reasons, verification, s
   assert.match(second, /Fixture Chat TUI/);
   assert.match(second, /mine-no">.*Not verified on your system: it ran on Linux x86_64, and pickfit hasn’t run it on macOS yet\./);
   assert.match(second, /These steps ran on Linux x86_64\. pickfit hasn’t run them on macOS, so expect differences\./);
-  assert.match(second, /<details class="install"><summary>Install steps that worked on Linux x86_64/);
+  assert.match(second, /<details class="install"><summary><span>Install steps that worked on <span class="sys"><svg class="os os-linux"[^>]*>.*?<\/svg>Linux x86_64/);
   assert.ok(!second.includes('Best free option'));
   // find.ts's agent-facing tradeoff is not repeated next to the record that says it.
   assert.ok(!second.includes('Verified on linux only'));
@@ -157,8 +158,8 @@ test('without an OS the steps shown are the ones pickfit ran, and the badge asks
   const s = site();
   const html = await (await s.search({ need: 'run a language model offline on my laptop' })).text();
   const second = html.split('<article class="pick"')[2];
-  assert.match(second, /mine-unknown">Choose your OS above to see whether it ran on your system\./);
-  assert.match(second, /Install steps that worked on Linux x86_64/);
+  assert.match(second, /<p class="small quiet">Choose your OS above to see whether it ran on your system\./);
+  assert.match(second, /Install steps that worked on <span class="sys"><svg class="os os-linux"[^>]*>.*?<\/svg>Linux x86_64/);
   assert.ok(!second.includes('expect differences'));
 });
 
@@ -445,7 +446,8 @@ test('a best free option outside the picks shows where it ran and whether that i
   const html = await (await s.search(MAC_LLM)).text();
   const aside = html.slice(html.indexOf('<div class="aside best-free">'));
   assert.match(aside, /Best free option:<\/span> <a [^>]*>Fixture Chat TUI<\/a>\. Free and local\./);
-  assert.match(aside, /pickfit installed it in a fresh Linux x86_64 sandbox and replayed the steps from scratch on 28 Oct 2026\./);
+  assert.match(aside, /<li class="rf rf-no" data-tip="Not your OS"><svg class="os os-linux"[^>]*>.*?<\/svg>Linux x86_64<\/li><li class="rf">.*?Replayed from scratch<\/li>/);
+  assert.match(aside, /<span class="sr">Checked on <\/span>28 Oct 2026/);
   assert.match(aside, /mine-no">Not verified on your system: it ran on Linux x86_64, and pickfit hasn’t run it on macOS yet\./);
 });
 
@@ -545,7 +547,7 @@ test('render: a best free option outside the picks, a no-install option and a ca
   const out = { ...output([pick()]), best_free: { slug: 'fixture-json-query', reason: 'Free and local.' }, no_install_option: 'python3 -m json.tool is enough.' };
   const html = renderResults({ out, guides: {} }, EMPTY_FORM, fixtureCatalog(), { cached: true });
   assert.match(html, /Best free option:<\/span> <a href="\/tool\/fixture-json-query">Fixture JSON Query<\/a>\. Free and local\./);
-  assert.match(html, /<div class="aside best-free">[\s\S]*mine-unknown">Choose your OS above/);
+  assert.match(html, /<div class="aside best-free">[\s\S]*?<ul class="run-facts">/);
   assert.match(html, /You may not need to install anything<\/h3><p>python3 -m json\.tool is enough\.<\/p><p class="quiet small">From Muse Spark’s general knowledge; pickfit hasn’t checked it\./);
   assert.match(html, /Shown from the same search/);
 });
@@ -559,9 +561,9 @@ test('render: the offline check is shown when it failed, and said when it was ne
   const guide = (works_offline: boolean | null) => ({ verification: { works_offline }, steps: [], known_issues: [] }) as any;
   const html = (w: boolean | null, offline: boolean) =>
     renderResults({ out, guides: { tool: guide(w) } }, { ...EMPTY_FORM, offline }, fixtureCatalog());
-  assert.match(html(true, false), /Its checks passed again with the network off\./);
-  assert.match(html(false, false), /Its checks failed with the network off: it needed the network in pickfit’s run\./);
-  assert.match(html(null, true), /pickfit hasn’t checked it with the network off\./);
+  assert.match(html(true, false), /<li class="rf" data-tip="Its checks passed again with the network off">.*?Works offline<\/li>/);
+  assert.match(html(false, false), /<li class="rf rf-no" data-tip="Its checks failed with the network off">.*?Needed the network<\/li>/);
+  assert.match(html(null, true), /<li class="rf">.*?Offline not checked<\/li>/);
   assert.ok(!html(null, false).includes('network off'));
 });
 
@@ -608,7 +610,7 @@ test('render: a GUI app\'s launch is described as such, and only a real screen g
   const gui = { tier: 'ui_rendered' as const, screen: 'first_run' as const, display: 'Xvfb 1280x800x24, no window manager, no GPU', launch_offline: true };
   const app = pick({ verification: { ...pick().verification, level: 'install', gui } });
   const html = renderResults({ out: output([app]), guides: {} }, EMPTY_FORM, fixtureCatalog());
-  assert.match(html, /<p class="level"><svg class="check"[^>]*>.*<\/svg>It opens to its first-run screen<\/p>/);
+  assert.match(html, /<p class="level"><span class="level-i"><svg class="i i-app-window"[^>]*>.*?<\/svg><\/span>It opens to its first-run screen<\/p>/);
   assert.ok(html.includes(esc(guiSentence(gui))));
   assert.match(guiSentence(gui), /pickfit did not use any of its features\. The launch passed again with the network off\.$/);
   const offlineGuide = { tool: { verification: { works_offline: true }, steps: [], known_issues: [], mcp_client_config: null } as any };
@@ -617,7 +619,7 @@ test('render: a GUI app\'s launch is described as such, and only a real screen g
   const broken = pick({ verification: { ...pick().verification, level: 'install', gui: { ...gui, screen: 'crash_or_error' } } });
   const bad = renderResults({ out: output([broken]), guides: {} }, EMPTY_FORM, fixtureCatalog());
   assert.match(bad, /<p class="level level-caution"><svg class="i i-triangle-alert"[^>]*>.*?<\/svg>It showed an error on launch<\/p>/);
-  assert.ok(!bad.includes('class="check"'));
+  assert.ok(!bad.includes('class="level-i"') && !bad.includes('class="check"'));
   assert.equal(levelLabel('service', { mcp: { called_tool: null } }), 'An MCP client connects and lists its tools');
   assert.equal(levelLabel('function'), 'Its main function works');
 });
