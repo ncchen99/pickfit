@@ -9,6 +9,10 @@ files at all (README-only), release binaries without their source or a
 license (binary-only), or no install, usage, entry point or binary signal.
 What passes goes on to a model.
 
+A candidate listed by a package store (Flathub, Homebrew Cask; the store row's `listings`)
+has a strong tool signal: the store installs it as an app. Its store text stands in for a
+missing README.
+
 Ported from the research spike's classifier, keeping only signals from the
 GitHub REST API (repo, README, releases, tree, root manifests); the spike's
 third-party package index lookups are gone (its terms forbid scripted access
@@ -23,7 +27,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-RULES_VERSION = "rules.v2"
+RULES_VERSION = "rules.v3"  # v3: a package-store listing is a strong tool signal; Vala and QML are source
 
 INSTALL_HEADING = re.compile(
     r"^#{1,4}\s*.*\b(install|installation|get(ting)? started|quick ?start|setup|download|build(ing)?)\b"
@@ -47,7 +51,7 @@ BINARY_ASSET = re.compile(
     r"\.deb$|\.rpm$|\.appimage$|\.pkg$|\.apk$)", re.I)
 SOURCE_FILE = re.compile(
     r"\.(go|rs|py|ts|tsx|js|jsx|mjs|cjs|vue|svelte|swift|m|mm|c|h|cc|cpp|hpp|zig|java|kt|scala|rb|php|"
-    r"pl|ex|exs|erl|hs|ml|fs|clj|el|jl|nim|cr|v|pas|sh|bash|zsh|fish|ps1|lua|cs|dart|nix)$")
+    r"pl|ex|exs|erl|hs|ml|fs|clj|el|jl|nim|cr|v|pas|sh|bash|zsh|fish|ps1|lua|cs|dart|nix|vala|qml)$")
 LINK_LIST_ITEM = re.compile(r"^\s*[-*] \[.+?\]\(http", re.M)
 # Account farms and credential tools seen in discovery research (channels-hosting).
 ABUSE = re.compile(
@@ -82,7 +86,7 @@ TOOL_TOPICS = frozenset({
     "cli", "command-line", "command-line-tool", "terminal", "tui", "app", "desktop-app",
     "macos-app", "self-hosted", "local-ai", "local-llm", "developer-tools", "devtools",
 })
-STRONG_TOOL = ("entry_point", "release_binaries")
+STRONG_TOOL = ("entry_point", "release_binaries", "listed")
 LIBRARY_REASONS = ("npm_library_no_bin", "python_library_no_scripts", "cargo_lib_only",
                    "go_no_main", "readme_shows_library_usage", "description_says_library")
 LINK_LIST_MIN = 40
@@ -161,14 +165,14 @@ def _lure_kit(files: list[str], repo: dict[str, Any]) -> bool:
     return workflow and not repo.get("license")
 
 
-def _hard_rejects(repo: dict[str, Any], readme: str | None, files: list[str]) -> list[str]:
+def _hard_rejects(repo: dict[str, Any], readme: str | None, files: list[str], listed: bool = False) -> list[str]:
     reasons = [name for name, hit in (
         ("fork", repo.get("fork")),
         ("archived", repo.get("archived")),
         ("disabled", repo.get("disabled")),
         ("github_template", repo.get("is_template")),
     ) if hit]
-    if not (readme or "").strip():
+    if not (readme or "").strip() and not listed:
         reasons.append("no_readme")
     text = " ".join(filter(None, [repo.get("name"), repo.get("description")]))
     if ABUSE.search(text):
@@ -185,17 +189,20 @@ def classify(candidate: dict[str, Any], owner_counts: dict[str, int] | None = No
     files: list[str] = candidate.get("files") or []
     manifests: dict[str, str] = candidate.get("manifests") or {}
     releases: list[dict[str, Any]] = candidate.get("releases") or []
+    stores = sorted({x["source"] for x in candidate.get("listings") or []})
     notes: list[str] = []
     if owner_counts and owner_counts.get(repo.get("owner") or "", 0) >= OWNER_BURST:
         notes.append(f"flag:owner_burst({owner_counts[repo['owner']]})")
 
-    hard = _hard_rejects(repo, readme, files)
+    hard = _hard_rejects(repo, readme, files, listed=bool(stores))
     if hard:
         return RuleResult("rejected", False, [f"reject:{r}" for r in hard] + notes)
 
     readme = readme or ""
     positive: list[tuple[str, int]] = []
     negative: list[tuple[str, int]] = []
+    if stores:
+        positive.append(("listed:" + ",".join(stores), 3))
     if INSTALL_HEADING.search(readme):
         positive.append(("readme_install_section", 2))
     if USAGE_HEADING.search(readme):

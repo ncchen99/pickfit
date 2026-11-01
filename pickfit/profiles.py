@@ -15,7 +15,9 @@ first_seen_at, and its features when the extraction lists none (they came from
 a features-only extraction).
 
 A candidate found through Show HN also lists each post as a source of kind `hn`:
-where pickfit found the tool, not evidence for any field.
+where pickfit found the tool, not evidence for any field. An app a package store lists
+(Flathub, Homebrew Cask) lists the store's page as a `package_registry` source; the
+model read the store's entry, so it can be evidence.
 
 Only tools for end users are written (TOOL_KINDS, not import_only), by default
 only in the listed categories (dev_cli, local_ai, mcp_server). An MCP server also
@@ -303,6 +305,11 @@ def build_record(candidate: dict[str, Any], extraction: dict[str, Any], *, slug:
         source_ids["release"] = rid
         record_sources.append({"id": rid, "kind": "release", "url": rel.get("url"),
                                "fetched_at": details_at})
+    for listing in candidate.get("listings") or []:
+        sid = f"{listing['source']}:{listing['item_id']}"
+        source_ids[sid] = sid
+        record_sources.append({"id": sid, "kind": "package_registry", "url": listing["item_url"],
+                               "fetched_at": listing["last_seen_at"]})
     ev = _Evidence(sources, source_ids, model, extraction["created_at"])
 
     def cited(name: str, value: Any, quote: str | None) -> Any:

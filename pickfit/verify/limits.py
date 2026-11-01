@@ -646,6 +646,13 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
         add(_probe(box, "evidence_dir_closed", f"ls {gui.EVIDENCE_DIR} 2>&1; touch {gui.EVIDENCE_DIR}/x 2>&1; true", 20,
                    "the box user cannot list or write pickfit's evidence directory",
                    lambda r: r.stdout.count("Permission denied") == 2))
+        add(_probe(box, "system_bus_inert",
+                   "for name in org.freedesktop.Flatpak.SystemHelper org.freedesktop.Accounts; do dbus-send --system "
+                   "--print-reply --dest=$name / org.freedesktop.DBus.Peer.Ping 2>&1 | head -1; done; dbus-send "
+                   "--system --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus."
+                   "RequestName string:org.freedesktop.Accounts uint32:0 2>&1 | head -1", 30,
+                   "the box user reaches the system bus but activates no service and owns no name",
+                   lambda r: r.stdout.count("Error.ServiceUnknown") == 2 and "Error.AccessDenied" in r.stdout))
         launched, shown, png = gui.launch(box, "xclock", "limits", 15)
         left = _box_user_processes(box)
         add(ProbeResult("display_window", launched.exit_code == 0 and shown.title == "xclock" and bool(png)
