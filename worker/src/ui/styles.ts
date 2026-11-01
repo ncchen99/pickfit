@@ -606,7 +606,10 @@ body.is-results .home-only{display:none}
 .icon-link:hover{background:color-mix(in srgb,var(--ink) 10%,var(--sunk))}
 .icon-link .i{width:17px;height:17px}
 body.has-tray{padding-bottom:72px}
-.cmp-remove{display:inline-grid;place-items:center;width:28px;height:28px;margin-top:6px;border-radius:50%;color:var(--ink-2)}
+/* Remove sits in the column head's top-right corner (the sticky head anchors it); the name keeps clear of it. */
+.cmp-remove{position:absolute;top:8px;right:8px;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;color:var(--ink-2)}
+.cmp-table th[scope=col]:has(.cmp-remove){padding-right:44px}
+.cmp-remove[data-tip]:hover::after{bottom:auto;top:calc(100% + 4px);left:auto;right:0}
 .cmp-remove:hover{background:var(--sunk);color:var(--ink)}
 .cmp-same{margin-top:20px;padding:18px 22px;border-radius:var(--r-card);background:color-mix(in srgb,var(--sunk) 55%,var(--tag))}
 .cmp-same-title{font:700 .95rem/1.2 var(--display);margin:0 0 8px}
