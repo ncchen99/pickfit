@@ -91,6 +91,14 @@ def test_terms_bans_finds_prohibition_with_automation():
     assert len(bans) == 1 and "robot, spider or scraper" in bans[0]
 
 
+def test_terms_bans_contractions_and_list_leads():
+    assert w.terms_bans("Don't reverse engineer or scrape the service.")
+    text = ("You may not:\nResell the Service\nUse automated means to access the Service beyond the API\n"
+            "Contact: hello@example.com")
+    assert w.terms_bans(text) == ["You may not: Use automated means to access the Service beyond the API"]
+    assert w.terms_bans("Our features:\nAutomated tools for scheduling posts") == []
+
+
 def test_parse_page_text_title_meta_links_manifest():
     html = ("<html lang='en'><head><title> My Tool </title><meta name='description' content='Does x'>"
             "<link rel='manifest' href='/m.json'><script>var x = 1</script></head><body><h1>Hello</h1>"
@@ -167,3 +175,17 @@ def test_store_keeps_checks_on_refresh(tmp_path):
     [got] = db.rows("show_hn")
     assert got["outcome"] == "passed" and got["popularity"] == 4 and got["checks"] == {"a": 1}
     assert db.purge_pages() == 1 and db.rows()[0]["page"] is None
+
+
+def test_recheck_terms_marks_passed_sites_with_a_ban(tmp_path, monkeypatch):
+    db = w.WebSites(tmp_path / "p.db")
+    for i, outcome in enumerate(["selected", "passed", "not_web_app:content"]):
+        db.save({"source": "show_hn", "item_id": str(i), "item_url": "u", "title": "t", "site_url": f"https://s{i}.com",
+                 "site_key": f"web:s{i}.com", "outcome": outcome}, "r")
+        db.save_check("show_hn", str(i), outcome=outcome, checks={"terms": {"url": f"https://s{i}.com/terms"}})
+    pages = {"https://s0.com/terms": "You agree not to scrape the service. " + "x " * 300,
+             "https://s1.com/terms": "Be nice. " + "y " * 300}
+    monkeypatch.setattr(w.Fetcher, "get", lambda self, kind, url: {
+        "status": 200, "url": url, "type": "text/plain", "text": pages.get(url, ""), "error": None})
+    assert w.recheck_terms(db, log=lambda _: None) == {"terms_disallow": 1, "kept": 1}
+    assert [r["outcome"] for r in db.rows()] == ["terms_disallow", "passed", "not_web_app:content"]

@@ -113,6 +113,9 @@ def _webapps(args: argparse.Namespace) -> int:
     if args.action == "purge":
         print(json.dumps({"pages_dropped": db.purge_pages()}))
         return 0
+    if args.action == "recheck-terms":
+        print(json.dumps(webapps.recheck_terms(db, log=log)))
+        return 0
     try:
         gh = GitHub(github_token())
     except GitHubError as err:
@@ -218,9 +221,9 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
 
     wa = sub.add_parser("webapps", help="hosted web apps (P2.8): gather Show HN and GitHub rows under neutral "
                                         "rules ($0), pick and check sites in hash order (Spark Open screen, paid)")
-    wa.add_argument("action", choices=["gather", "pick", "funnel", "purge"],
+    wa.add_argument("action", choices=["gather", "pick", "funnel", "recheck-terms", "purge"],
                     help="gather: rules 1-3; pick: rules 4-8 until each source has its quota; funnel: counts; "
-                         "purge: drop stored page text")
+                         "recheck-terms: rule 7 again for passed sites; purge: drop stored page text")
     wa.add_argument("--source", action="append", choices=webapps.SOURCES, help="one source (default both)")
     wa.add_argument("--days", type=int, default=webapps.DEFAULT_DAYS,
                     help=f"show_hn: posts from the last N days (default {webapps.DEFAULT_DAYS})")

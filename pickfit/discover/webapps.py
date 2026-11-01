@@ -418,8 +418,9 @@ _AUTOMATION = re.compile(r"\b(robots?|spiders?|scrap(e|er|ers|ing)|crawl(s|er|er
                          r"automated (means|access|systems?|process(es)?|tools?|scripts?|software|queries|"
                          r"requests|devices?|methods?|programs?)|data[- ]mining|harvest(ing)?|"
                          r"automatisierte|automatizad[oa]s?|automatisé(e|s)?)\b", re.I)
-_PROHIBIT = re.compile(r"\b(not|no|prohibit(ed|s)?|forbid(den|s)?|refrain|without (our|the|prior|express)|"
-                       r"agree not|may only|must not|shall not|nicht|verboten|prohibid[oa]|interdit)\b", re.I)
+_PROHIBIT = re.compile(r"\b(not|no|never|cannot|prohibit(ed|s)?|forbid(den|s)?|refrain|"
+                       r"without (our|the|prior|express)|agree not|may only|must not|shall not|nicht|verboten|"
+                       r"prohibid[oa]|interdit)\b|n't\b", re.I)
 _TERMS_LINK = re.compile(r"\b(terms|tos|conditions|legal|acceptable[- ]use|nutzungsbedingungen|agb|"
                          r"condiciones|conditions d'utilisation|termini|利用規約|服務條款|使用條款)\b", re.I)
 _PRIVACY_ONLY = re.compile(r"\b(privacy|cookies?|datenschutz|privacidad|confidentialité)\b", re.I)
@@ -548,13 +549,23 @@ def terms_links(links: list[tuple[str, str]], base: str) -> list[str]:
     return list(dict.fromkeys(u for _, u in sorted(ranked)))
 
 
+TERMS_MIN_CHARS = 500  # less is a page drawn by script: its terms were not read
+LIST_LEAD_CHARS = 2_000  # how far a "You may not:" lead reaches over the list items after it
+
+
 def terms_bans(text: str) -> list[str]:
-    """Sentences of a terms page that forbid automated access (each cut to 300 characters)."""
+    """Sentences of a terms page that forbid automated access (each cut to 300 characters): an automation
+    word with a prohibition in the same sentence, or in the list's lead line ("You agree not to:")."""
     found = []
+    lead, lead_at, at = None, -1, 0
     for sentence in _SENTENCE.split(text):
-        if _AUTOMATION.search(sentence) and _PROHIBIT.search(sentence):
-            found.append(" ".join(sentence.split())[:300])
-    return found
+        line = " ".join(sentence.split())
+        if line.endswith(":"):
+            lead, lead_at = (line, at) if _PROHIBIT.search(line) else (None, -1)
+        elif _AUTOMATION.search(line) and (_PROHIBIT.search(line) or (lead and at - lead_at <= LIST_LEAD_CHARS)):
+            found.append((f"{lead} " if lead and not _PROHIBIT.search(line) else "") + line)
+        at += len(sentence) + 1
+    return [f[:300] for f in found]
 
 
 class Fetcher:
@@ -659,7 +670,9 @@ def check_site(row: dict[str, Any], fetch: Fetcher) -> tuple[str, dict[str, Any]
         terms_text = ""
     checks["terms"].update(url=terms_url if terms_text else None, guessed=guessed, status=terms["status"],
                            error=terms["error"])
-    if terms_text:
+    if terms_text and len(terms_text) < TERMS_MIN_CHARS and not guessed:
+        checks["terms"]["unreadable"] = True  # drawn by script: the browser check reads it
+    elif terms_text:
         bans = terms_bans(terms_text[:TERMS_TEXT_MAX])
         checks["terms"].update(bans=bans[:5], chars=len(terms_text))
         if bans:
@@ -991,6 +1004,26 @@ def run_pick(db: WebSites, *, source: str, quota: int, seed: str, hn: HN, gh: Gi
         db.set_outcome(source, r["item_id"], "selected" if n < quota else "passed")
     return {"source": source, "checked_now": checked, "requests": dict(fetch.requests),
             "selected": min(quota, len(passing)), "passed": len(passing), "stopped": budget_stop}
+
+
+def recheck_terms(db: WebSites, *, source: str | None = None, log: Callable[[str], None]) -> dict[str, Any]:
+    """Rule 7 again for sites that passed under an earlier terms_bans: fetch the terms page they read
+    (one GET each, no model call) and mark the ones it now finds a ban in `terms_disallow`."""
+    fetch = Fetcher()
+    out: Counter[str] = Counter()
+    for r in db.rows(source):
+        terms = (r["checks"] or {}).get("terms") or {}
+        if r["outcome"] not in PASSED or not terms.get("url"):
+            continue
+        got = fetch.get("terms", terms["url"])
+        text = parse_page(got["text"] or "").text() if "html" in (got["type"] or "") else (got["text"] or "")
+        bans = terms_bans(text[:TERMS_TEXT_MAX]) if got["status"] == 200 and len(text) >= TERMS_MIN_CHARS else []
+        if bans:
+            checks = {**r["checks"], "terms": {**terms, "bans": bans[:5], "rechecked": True}}
+            db.save_check(r["source"], r["item_id"], outcome="terms_disallow", checks=checks)
+            log(f"  terms_disallow {r['site_key']}: {bans[0][:160]}")
+        out["terms_disallow" if bans else "kept"] += 1
+    return dict(out)
 
 
 def funnel(db: WebSites) -> dict[str, Any]:
