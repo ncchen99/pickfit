@@ -45,6 +45,7 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 from pydantic import BaseModel, Field, field_validator
 
+from pickfit.env import get_env
 from pickfit.ledger import BudgetExceeded
 from pickfit.meta import call_meta, resolve_model
 from pickfit.schema import meta_strict_schema
@@ -54,7 +55,13 @@ from pickfit.verify.box import BOX_HOME, ExecResult
 if TYPE_CHECKING:
     from pickfit.verify.box import Box
 
-OPERATOR_MODEL = "open"  # Muse Spark Open on Baseten: it reads screenshots and points in 0-1000 coordinates
+# Muse Spark Open reads screenshots and points in 0-1000 coordinates: "open" (Baseten) unless PICKFIT_OPERATOR_MODEL
+# names another, e.g. "open-modal" (the same model on Modal's endpoint, paid from Modal credits).
+OPERATOR_MODEL = "open"
+
+
+def operator_model() -> str:
+    return get_env("PICKFIT_OPERATOR_MODEL") or OPERATOR_MODEL
 STAGE = "verify-gui-operator"
 REASONING_EFFORT = "low"
 MAX_OUTPUT_TOKENS = 1_500
@@ -892,13 +899,13 @@ def _operator_turn(goal: str, steps: list[Step], step_no: int, max_steps: int, n
     return "\n".join(lines)
 
 
-def operate(display: Display, goal: str, *, model: str | None = OPERATOR_MODEL, max_steps: int = MAX_STEPS,
+def operate(display: Display, goal: str, *, model: str | None = None, max_steps: int = MAX_STEPS,
             first_png: bytes | None = None, save: Callable[[int, bytes], str | None] = lambda i, d: None,
             run_id: str | None = None, scope: str | None = None, scope_cap_usd: float | None = None,
             log: Log = print, sleep: Callable[[float], None] = time.sleep, **call_kwargs: Any
             ) -> tuple[list[Step], str, float, str | None]:
     """The operating loop: (steps, why it stopped, model cost, error). `goal` already holds the nonce."""
-    model_id = resolve_model(model)
+    model_id = resolve_model(model or operator_model())
     schema = meta_strict_schema(OperatorAction)
     mac = getattr(display, "os", "linux") == "macos"  # a Mac's desktop (gui_mac.VncDisplay)
     tool = None
@@ -1164,7 +1171,7 @@ def check_screen(png: bytes | None, spec: GuiCheckSpec, nonce: str, typed: list[
 
 
 def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[dict[str, Any]] | None = None,
-                  first: Operation | None = None, model: str | None = OPERATOR_MODEL, max_steps: int = MAX_STEPS,
+                  first: Operation | None = None, model: str | None = None, max_steps: int = MAX_STEPS,
                   read_screen: ScreenReader | None = None,
                   evidence_dir: Path | None = None, log: Log = print, timeout_s: int | None = None,
                   run_id: str | None = None, scope: str | None = None, scope_cap_usd: float | None = None,
@@ -1180,7 +1187,7 @@ def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[
     op = Operation(feature=args.feature, goal=args.goal, check=args.check.model_dump(),
                    inputs=[i.model_dump() for i in args.inputs], nonce=nonce,
                    mode="actions" if actions is not None else "operated",
-                   model=None if actions is not None else resolve_model(model), first=first)
+                   model=None if actions is not None else resolve_model(model or operator_model()), first=first)
     mac = box.os == "macos"  # a tart box's desktop (gui_mac, VncDisplay), else pickfit's Xvfb (gui, XvfbDisplay)
     if mac:
         from pickfit.verify import gui_mac
