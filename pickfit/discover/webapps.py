@@ -34,7 +34,9 @@ checked one by one, in that order, until a source has its quota (check_site):
    Content-Signal `ai-input=no`. Training crawlers' blocks (TRAINING_AGENTS) and
    `ai-train=no` are recorded but do not exclude a site: pickfit trains nothing.
    An unreachable robots.txt (5xx, timeout) counts as a full disallow (RFC 9309).
-6. the home page loads: HTTP 200, HTML, on a site (a redirect to a platform is out).
+6. the home page loads: HTTP 200, HTML, on a site (a redirect to a platform is out). A page
+   whose HTML shows almost no text is drawn by script: it is loaded once in headless
+   Chromium as pickfit (render_page), and what it draws is what the next rules read.
 7. the terms page does not forbid automated access (terms_bans: a sentence with a robot,
    spider, scraper, crawler or automated-means word and a prohibition). The terms page is
    the one the home page links, or else `/terms` when it reads as terms; a site with
@@ -42,7 +44,8 @@ checked one by one, in that order, until a source has its quota (check_site):
 8. a model reading the home page (and README) says it is a web app used in the browser
    whose core use needs no account and can be tried free (screen_site, Muse Spark Open).
 
-Fetches per site: robots.txt, the home page, one terms page; a GitHub README through the API.
+Fetches per site: robots.txt, the home page (and, when script draws it, one browser load of
+it), one terms page; a GitHub README through the API.
 The page text is kept in the local runs/ database only until extraction has read it
 (purge_pages); records keep extracted facts and short quotes.
 """
@@ -602,6 +605,38 @@ class Fetcher:
             return {"status": None, "url": url, "type": None, "text": None, "error": f"{type(err).__name__}: {err}"[:300]}
 
 
+RENDER_BELOW = 200
+RENDER_TIMEOUT_MS = 25_000
+
+
+def render_page(url: str) -> dict[str, Any]:
+    """Load a page once in headless Chromium (playwright; run with `uv run --with playwright`) as pickfit,
+    and read the text and links it draws. {text, links, error}."""
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        return {"text": None, "links": [], "error": "playwright not installed"}
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            try:
+                page = browser.new_page(user_agent=USER_AGENT)
+                try:
+                    page.goto(url, wait_until="networkidle", timeout=RENDER_TIMEOUT_MS)
+                except Exception:  # noqa: BLE001 - a page that never goes quiet: read what loaded
+                    page.wait_for_timeout(2_000)
+                text = page.inner_text("body", timeout=5_000)
+                links = page.eval_on_selector_all(
+                    "a[href]", "els => els.map(e => [e.getAttribute('href'), (e.innerText || e.title || '').trim()])")
+            finally:
+                browser.close()
+    except Exception as err:  # noqa: BLE001 - recorded on the check
+        return {"text": None, "links": [], "error": f"{type(err).__name__}: {str(err)[:200]}"}
+    lines = (" ".join(line.split()) for line in (text or "").split("\n"))
+    return {"text": "\n".join(line for line in lines if line)[:PAGE_TEXT_MAX],
+            "links": [(h, (t or "")[:200]) for h, t in links if h][:500], "error": None}
+
+
 def robots_url(url: str) -> str:
     p = urlsplit(url)
     return f"{p.scheme}://{p.netloc}/robots.txt"
@@ -619,8 +654,12 @@ def fetch_robots(fetch: Fetcher, url: str) -> tuple[str | None, dict[str, Any]]:
     return r["text"], info
 
 
-def check_site(row: dict[str, Any], fetch: Fetcher) -> tuple[str, dict[str, Any], str | None]:
-    """Rules 5-7 for one site: (outcome, checks, page text or None). Outcome `checked` passes."""
+def check_site(row: dict[str, Any], fetch: Fetcher, render: Callable[[str], dict[str, Any]] | None = None
+               ) -> tuple[str, dict[str, Any], str | None]:
+    """Rules 5-7 for one site: (outcome, checks, page text or None). Outcome `checked` passes.
+
+    A home page whose plain HTML shows less than RENDER_BELOW characters is drawn by script: `render`
+    (render_page) loads it once as a browser does, and its text and links stand in for the HTML's."""
     url = row["site_url"] if "://" in row["site_url"] else f"https://{row['site_url']}"
     checks: dict[str, Any] = {"url": url, "checked_at": taipei_now().isoformat(timespec="seconds"),
                               "filters": FILTERS_VERSION}
@@ -655,6 +694,13 @@ def check_site(row: dict[str, Any], fetch: Fetcher) -> tuple[str, dict[str, Any]
     checks["page"] = {"title": " ".join(page.title.split())[:300], "meta": page.meta, "lang": page.lang,
                       "manifest": urljoin(home["url"], page.manifest) if page.manifest else None,
                       "text_chars": len(text), "links": len(page.links)}
+    if len(text) < RENDER_BELOW and render is not None:
+        drawn = render(home["url"])
+        checks["page"]["rendered"] = {"chars": len(drawn.get("text") or ""), "links": len(drawn.get("links") or []),
+                                      "error": drawn.get("error")}
+        if drawn.get("text"):
+            text = drawn["text"]
+            page.links = drawn["links"] or page.links
 
     candidates = terms_links(page.links, home["url"])
     checks["terms"] = {"links": candidates[:5], "url": None, "bans": []}
@@ -928,12 +974,13 @@ def alive(row: dict[str, Any], hn: HN, gh: GitHub) -> tuple[str | None, str | No
 
 
 def check_one(row: dict[str, Any], *, hn: HN, gh: GitHub, fetch: Fetcher, run_id: str,
-              screen: bool = True, **screen_kwargs: Any) -> tuple[str, dict[str, Any], str | None, str | None]:
+              screen: bool = True, render: Callable[[str], dict[str, Any]] | None = render_page,
+              **screen_kwargs: Any) -> tuple[str, dict[str, Any], str | None, str | None]:
     """Rules 4-8 for one site: (outcome, checks, page text, README). `passed` means every rule held."""
     failed, readme = alive(row, hn, gh)
     if failed:
         return failed, {"checked_at": taipei_now().isoformat(timespec="seconds")}, None, None
-    outcome, checks, page = check_site(row, fetch)
+    outcome, checks, page = check_site(row, fetch, render)
     if outcome != "checked" or not screen:
         return outcome, checks, page, readme
     decision = screen_site({**row, "checks": checks}, page or "", readme, run_id=run_id, **screen_kwargs)
@@ -997,13 +1044,43 @@ def run_pick(db: WebSites, *, source: str, quota: int, seed: str, hn: HN, gh: Gi
                 if outcome == "passed":
                     passed.append(r)
                     taken.add(r["site_key"])
-    # The first `quota` passing sites in hash order are selected; the rest stay `passed`.
-    order = {r["site_key"]: n for n, r in enumerate(rows)}
+    passing = mark_selected(db, source, quota, seed)
+    return {"source": source, "checked_now": checked, "requests": dict(fetch.requests),
+            "selected": min(quota, passing), "passed": passing, "stopped": budget_stop}
+
+
+def mark_selected(db: WebSites, source: str, quota: int, seed: str) -> int:
+    """The first `quota` passing sites in hash order are `selected`, the rest `passed`; returns how many pass."""
+    order = {r["site_key"]: n for n, r in enumerate(ordered(db, source, seed))}
     passing = sorted((r for r in db.rows(source) if r["outcome"] in PASSED), key=lambda r: order.get(r["site_key"], 1e9))
     for n, r in enumerate(passing):
         db.set_outcome(source, r["item_id"], "selected" if n < quota else "passed")
-    return {"source": source, "checked_now": checked, "requests": dict(fetch.requests),
-            "selected": min(quota, len(passing)), "passed": len(passing), "stopped": budget_stop}
+    return len(passing)
+
+
+def thin(row: dict[str, Any]) -> bool:
+    """Checked before pages were rendered, with less than RENDER_BELOW characters of plain-HTML text."""
+    page = (row["checks"] or {}).get("page") or {}
+    return "text_chars" in page and page["text_chars"] < RENDER_BELOW and "rendered" not in page
+
+
+def recheck_thin(db: WebSites, *, source: str, quota: int, seed: str, hn: HN, gh: GitHub, run_id: str,
+                 log: Callable[[str], None], **screen_kwargs: Any) -> dict[str, Any]:
+    """Rules 4-8 again, rendering the page, for sites checked before rendering whose page showed no text, so
+    every site is judged on the page a browser draws. One at a time."""
+    fetch = Fetcher()
+    out: Counter[str] = Counter()
+    for r in db.rows(source):
+        if not thin(r):
+            continue
+        outcome, checks, page, readme = check_one(r, hn=hn, gh=gh, fetch=fetch, run_id=run_id, **screen_kwargs)
+        checks["rechecked_from"] = r["outcome"]
+        db.save_check(source, r["item_id"], outcome=outcome, checks=checks, page=page, readme=readme)
+        out[f"{r['outcome'] if r['outcome'] not in PASSED else 'passed'} -> {outcome}"] += 1
+        log(f"  {r['outcome']} -> {outcome}  {r['site_key']} ({(checks.get('page') or {}).get('rendered')})")
+    passing = mark_selected(db, source, quota, seed)
+    return {"source": source, "rechecked": dict(out), "requests": dict(fetch.requests), "passed": passing,
+            "selected": min(quota, passing)}
 
 
 def recheck_terms(db: WebSites, *, source: str | None = None, log: Callable[[str], None]) -> dict[str, Any]:

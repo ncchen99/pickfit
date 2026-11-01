@@ -57,10 +57,10 @@
    - 只擋**訓練用爬蟲**（`GPTBot`、`ClaudeBot`、`CCBot`、`Google-Extended`、`meta-externalagent` 等）或寫 `ai-train=no` 的，記下來但**照收**：pickfit 不拿網站內容訓練模型，抽取用 `muse-spark-1.3`（不是 contributor 模型）。
    - robots.txt 回 5xx 或連不上 → 照 RFC 9309 當成全部禁止（`robots_unreachable`）；4xx → 沒有 robots.txt，全部允許。
    - 首頁轉址到別的網域，新網域的 robots.txt 也照上面查一次。
-2. **首頁**：pickfit 自己的 User-Agent（`pickfit/0.1 (+https://github.com/ncchen99/pickfit)`）GET 一次，跟隨轉址，最多 3 MB。不是 200（`site_down`）、不是 HTML（`not_html`）、轉到平台（`redirect_platform`）都不收。
+2. **首頁**：pickfit 自己的 User-Agent（`pickfit/0.1 (+https://github.com/ncchen99/pickfit)`）GET 一次，跟隨轉址，最多 3 MB。不是 200（`site_down`）、不是 HTML（`not_html`）、轉到平台（`redirect_platform`）都不收。HTML 裡的可見文字不到 200 字的（用 script 畫出來的單頁應用，約三分之一），再用無頭 Chromium（playwright 1.64.1，Apache-2.0；`uv run --with playwright`，不加進專案相依）以同一個 User-Agent 打開一次，讀畫出來的文字與連結，和一般人用瀏覽器打開一樣（頁面自己載入的資源也會載入）。
 3. **使用條款**：首頁連到的 terms／ToS／conditions／legal 頁（同網站、terms 優先，只有 privacy 或 cookie 的不算）；首頁沒有連結（多半是用 script 畫出來的單頁應用）就試一次 `/terms`，內容讀起來是條款才算。條款裡有一句同時出現「robot、spider、scraper、crawler、bot、automated means／access／tools…、data mining、harvest」和「不得、禁止、未經同意」之類的字 → 不收（`terms_disallow`），那句話（最多 300 字）存在檢查紀錄裡。寧可多擋：有些只禁止「用自動化工具註冊帳號」的也會被擋。讀不到條款頁照收，並記 `unreadable`。
 
-每個網站只抓這三樣（robots.txt、首頁、一頁條款），每次請求間隔 1 秒；GitHub repo 的 README 走 GitHub API。
+每個網站只抓這三樣（robots.txt、首頁、一頁條款；首頁是 script 畫的再用瀏覽器開一次），每次請求間隔 1 秒；GitHub repo 的 README 走 GitHub API。條款規則改過一次（11/1 抽查已通過的網站，漏了「Don't … scrape」與「You may not:」底下的條列），改完用 `pickfit webapps recheck-terms` 對所有已通過的網站重抓條款頁再判一次；加上瀏覽器打開之前檢查過、首頁沒有文字的網站，用 `recheck-thin` 整個重查（含模型判讀），讓每個網站都照同一套規則。
 
 ### 存什麼
 

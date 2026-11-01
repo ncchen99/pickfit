@@ -127,6 +127,9 @@ def _webapps(args: argparse.Namespace) -> int:
         if args.action == "gather":
             out.append(webapps.run_gather(db, source=source, hn=HN(), gh=gh, now=datetime.now(UTC), days=args.days,
                                           per_query=args.per_query, run_id=run_id, log=log).to_dict())
+        elif args.action == "recheck-thin":
+            out.append(webapps.recheck_thin(db, source=source, quota=args.quota, seed=args.seed, hn=HN(), gh=gh,
+                                            run_id=run_id, log=log, review=not args.no_review))
         else:
             taken = {r["site_key"] for r in db.rows() if r["source"] != source and r["outcome"] in webapps.PASSED}
             out.append(webapps.run_pick(db, source=source, quota=args.quota, seed=args.seed, hn=HN(), gh=gh,
@@ -221,9 +224,11 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
 
     wa = sub.add_parser("webapps", help="hosted web apps (P2.8): gather Show HN and GitHub rows under neutral "
                                         "rules ($0), pick and check sites in hash order (Spark Open screen, paid)")
-    wa.add_argument("action", choices=["gather", "pick", "funnel", "recheck-terms", "purge"],
+    wa.add_argument("action", choices=["gather", "pick", "funnel", "recheck-terms", "recheck-thin", "purge"],
                     help="gather: rules 1-3; pick: rules 4-8 until each source has its quota; funnel: counts; "
-                         "recheck-terms: rule 7 again for passed sites; purge: drop stored page text")
+                         "recheck-terms: rule 7 again for passed sites; recheck-thin: rules 4-8 again, rendered, for "
+                         "sites whose page showed no text before rendering; purge: drop stored page text. "
+                         "Rendering needs `uv run --with playwright`")
     wa.add_argument("--source", action="append", choices=webapps.SOURCES, help="one source (default both)")
     wa.add_argument("--days", type=int, default=webapps.DEFAULT_DAYS,
                     help=f"show_hn: posts from the last N days (default {webapps.DEFAULT_DAYS})")

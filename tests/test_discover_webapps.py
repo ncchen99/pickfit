@@ -189,3 +189,35 @@ def test_recheck_terms_marks_passed_sites_with_a_ban(tmp_path, monkeypatch):
         "status": 200, "url": url, "type": "text/plain", "text": pages.get(url, ""), "error": None})
     assert w.recheck_terms(db, log=lambda _: None) == {"terms_disallow": 1, "kept": 1}
     assert [r["outcome"] for r in db.rows()] == ["terms_disallow", "passed", "not_web_app:content"]
+
+
+class _FakeFetch:
+    def __init__(self, pages):
+        self.pages = pages
+        self.requests = []
+
+    def get(self, kind, url):
+        self.requests.append(url)
+        status, ctype, text = self.pages.get(url, (404, "text/html", "missing"))
+        return {"status": status, "url": url, "type": ctype, "text": text, "error": None}
+
+
+def test_check_site_renders_a_script_drawn_page_and_reads_its_terms_link():
+    fetch = _FakeFetch({
+        "https://app.test/": (200, "text/html", "<html><title>App</title><body><div id=root></div></body></html>"),
+        "https://app.test/legal/terms": (200, "text/html", "<p>Terms. You agree not to use bots to access it.</p>"
+                                         + "".join(f"<p>clause {i}</p>" for i in range(100))),
+    })
+    drawn = {"text": "Paste text here and count words\nTerms", "links": [("/legal/terms", "Terms")], "error": None}
+    outcome, checks, page = w.check_site({"site_url": "https://app.test/"}, fetch, render=lambda url: drawn)
+    assert checks["page"]["rendered"] == {"chars": len(drawn["text"]), "links": 1, "error": None}
+    assert outcome == "terms_disallow" and page is None
+    assert fetch.requests == ["https://app.test/robots.txt", "https://app.test/", "https://app.test/legal/terms"]
+
+
+def test_check_site_keeps_plain_text_pages_unrendered():
+    body = "<p>" + "word " * 100 + "</p>"
+    fetch = _FakeFetch({"https://b.test/": (200, "text/html", f"<title>B</title>{body}")})
+    outcome, checks, page = w.check_site({"site_url": "https://b.test/"}, fetch,
+                                         render=lambda url: pytest.fail("rendered a page with text"))
+    assert outcome == "checked" and "rendered" not in checks["page"] and page.startswith("title: B")
