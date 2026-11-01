@@ -416,16 +416,9 @@ fetched; such a run cannot pass. If the tool only works patched, record the fix 
 - After a failed command, hints from pickfit's rule table may follow. They can be wrong.
 """
 
-GUI_RULES = """\
-
-GUI apps: this box has a virtual display. For a desktop (GUI) app, install it as a user would without root \
-(an AppImage: chmod +x, then run it with --appimage-extract-and-run, or extract it once with --appimage-extract \
-and run squashfs-root/AppRun; a .deb: dpkg-deb -x into ~/apps; npm or pip as usual), then start it with \
-launch_gui, never with run_command or run_background. Cite that launch_gui as a smoke test with \
-expected_signal `gui tier: window` (pickfit's own line; window titles and process names are the app's and do \
-not count). A launch stops every process of the box user, so start servers again after it. A launch \
-supports level install at most, whatever the window shows: pickfit's judge reads the screenshot itself. Launch it \
-even if it will ask for an account: the screenshot records the sign-in screen.
+# How a GUI app's install steps are cited and how its features are operated and checked: the same on Linux
+# (Xvfb) and on a Mac (tart).
+OPERATE_RULES = """\
 Install steps of a GUI app (download, extract, chmod, an install script) are plain commands of their own with \
 nothing chained after them (no ls, head, echo or file listing): a step whose exit code is hidden does not \
 count, and a fresh box runs only the cited steps, so cite the download too. Explore in separate commands.
@@ -448,7 +441,20 @@ A passing operate_gui is the only way a GUI app reaches level function: cite it 
 expected_signal `gui check: passed` and in features as checked. A goal that needs an account, a key, a \
 microphone, a camera, a GPU or a model download larger than about 300 MB is not a check: report that feature \
 not_checked with the reason; if no listed feature can show a result here, operate nothing (the launch is \
-install). At most two operate_gui per feature and six per run: one retry with a clearer goal, then move on. This box has no user namespaces, so Chromium and Electron apps usually need --no-sandbox \
+install). At most two operate_gui per feature and six per run: one retry with a clearer goal, then move on."""
+
+GUI_RULES = """\
+
+GUI apps: this box has a virtual display. For a desktop (GUI) app, install it as a user would without root \
+(an AppImage: chmod +x, then run it with --appimage-extract-and-run, or extract it once with --appimage-extract \
+and run squashfs-root/AppRun; a .deb: dpkg-deb -x into ~/apps; npm or pip as usual), then start it with \
+launch_gui, never with run_command or run_background. Cite that launch_gui as a smoke test with \
+expected_signal `gui tier: window` (pickfit's own line; window titles and process names are the app's and do \
+not count). A launch stops every process of the box user, so start servers again after it. A launch \
+supports level install at most, whatever the window shows: pickfit's judge reads the screenshot itself. Launch it \
+even if it will ask for an account: the screenshot records the sign-in screen.
+""" + OPERATE_RULES + """\
+ This box has no user namespaces, so Chromium and Electron apps usually need --no-sandbox \
 here: add it only if the app fails without it, and record it as a pitfall of kind sandbox (this box's need, \
 not the app's). A Tkinter \
 app needs /usr/bin/python3 (it has tkinter; python3.12 on PATH does not): make its venv with \
@@ -483,9 +489,13 @@ saying the app is not notarized. A download or installer may take up to 30 minut
 timeout_s up to 1800 (a 1 GB file at 1.4 MB/s needs about 13 minutes). \
 Only Homebrew casks and browsers mark downloads with a quarantine: an app you \
 fetched with curl has none, so never cite xattr for it. A launch stops every process you started (servers too; macOS's own desktop \
-stays), so start servers again after it. A GUI launch supports level install at most, whatever the window shows: \
-pickfit's judge reads the screenshot itself, and a GUI app is never function from a launch. Launch it even if \
-it will ask for an account: the screenshot records the sign-in screen."""
+stays), so start servers again after it. A launch supports level install at most, whatever the window shows: \
+pickfit's judge reads the screenshot itself. Launch it even if it will ask for an account: the screenshot records \
+the sign-in screen.
+""" + OPERATE_RULES + """ On this Mac, goals name the Mac's shortcuts (cmd+s to save, cmd+c to copy; not ctrl), \
+~/ is /Users/sbx, and a menu bar app's controls are in the menu of its item at the top right. A feature this box \
+cannot exercise is not_checked with its reason, which says the limit is this box's: needs_hardware (a microphone \
+or camera: this VM has neither), needs_gpu, needs_account, needs_more_resources (a large model download)."""
 
 # Public models small enough for an inference check, licenses and URLs checked 2026-10-29.
 # stories260K: karpathy/tinyllamas weights (MIT), GGUF by ggml-org. SmolLM2-135M-Instruct:
@@ -559,8 +569,9 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
                         "examples can run here; use the smallest model the tool supports.")
     if box.display and ex.kind.value == "desktop_app" and box.os == "macos":
         lines.insert(3, "This is a desktop (GUI) app: install the app itself (its macOS build: a Homebrew cask, "
-                        "or the release .dmg or .zip), then start it with launch_gui and cite that launch. A test "
-                        "suite or a helper tool is not the app.")
+                        "or the release .dmg or .zip), then start it with launch_gui and cite that launch, then "
+                        "exercise its listed features with operate_gui. A test suite or a helper tool is not the "
+                        "app.")
     elif box.display and ex.kind.value == "desktop_app":
         lines.insert(3, "This is a desktop (GUI) app: install the app itself (a release build if there is one for "
                         "Linux; an AppImage runs with --appimage-extract-and-run, no FUSE needed), then start it "
@@ -1109,7 +1120,7 @@ class VerifyAgent:
         if self._elapsed() + OPERATE_RESERVE_S >= self.limits.max_seconds - WRAP_UP_SECONDS:
             self._say(f"  ◈ {_one_line(args.goal, 120)} → refused (time)")
             return "error: too little time is left for an operation (a few minutes). Call finish."
-        problems = spec_problems(args, self.task.readme)
+        problems = spec_problems(args, self.task.readme, home=str(self.box.home))
         done = [c.operate["spec"].get("feature") for c in self.report.commands if c.operate]
         if len(done) >= OPERATE_MAX:
             problems.append(f"this run has used its {OPERATE_MAX} operations")

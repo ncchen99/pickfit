@@ -257,3 +257,71 @@ def test_a_copy_already_running_is_stopped_first_and_said():
     result, shown, png = gui_mac.launch(box, "open ~/Applications/Transcriber.app", 1, 30)
     assert result.exit_code == 0
     assert "pickfit first stopped 2 app process(es) already running" in result.stdout
+
+
+class FakeVncDisplay:
+    os = "macos"
+    width, height = 1280, 800
+
+    def __init__(self) -> None:
+        self.done: list[tuple[str, Any]] = []
+        self.typed = ""
+
+    def screenshot(self) -> bytes:
+        return PNG
+
+    def click(self, x: int, y: int, count: int = 1) -> None:
+        self.done.append(("click", (x, y, count)))
+
+    def type_text(self, text: str) -> None:
+        self.done.append(("type", text))
+        self.typed += text
+
+    def key(self, name: str) -> None:
+        self.done.append(("key", name))
+
+    def clipboard(self) -> bytes | None:
+        return self.typed.encode() if ("key", "cmd+c") in self.done else None
+
+
+def test_an_operation_on_a_mac_uses_its_desktop_its_vnc_display_and_its_home(monkeypatch):
+    from pickfit.verify import gui_operate
+
+    display = FakeVncDisplay()
+    calls: list[str] = []
+    written: dict[str, bytes] = {}
+    box = type("MacOpBox", (), {})()  # only what run_operation reads
+    box.os, box.home, box.display = "macos", "/Users/sbx", "vnc"
+    box.screen = lambda: display
+    box.exec = lambda command, timeout_s, **kw: ExecResult(command, 0, "", "", 0.1, False)
+    box.write_file = lambda path, content: written.__setitem__(path, content)
+    opened = gui_mac.MacOpened(shown=gui_mac.MacGuiLaunch(tier="window", windows=[gui.GuiWindow(**WINDOW)]),
+                               png=PNG, seconds=2.0, timed_out=False, approved=[])
+    monkeypatch.setattr(gui_mac, "stop_box_user", lambda b: (calls.append("stop"), ExecResult(
+        "stop", 0, "PICKFIT_KILLED 0 found 0", "", 0.0, False))[1])
+    monkeypatch.setattr(gui_mac, "open_app", lambda b, *a, **k: (calls.append("open"), opened)[1])
+    monkeypatch.setattr(gui_mac, "close_app", lambda b, o, tag: (calls.append("close"), (PNG, False))[1])
+    monkeypatch.setattr(gui_operate, "file_probe", lambda b, params: {"now": 0.0, "before": None})
+    args = gui_operate.OperateArgs(command="open ~/Applications/CotEditor.app", goal="type {nonce} and copy it",
+                                   inputs=[{"path": "~/pickfit-in/a.txt", "text": "x {nonce}"}],
+                                   check={"kind": "clipboard", "contains": ["{nonce}"]})
+    actions = [{"kind": "type", "text": "{nonce}"}, {"kind": "key", "name": "cmd+a"}, {"kind": "key", "name": "cmd+c"}]
+    result, op, png = gui_operate.run_operation(box, args, 1, actions=actions, log=lambda s: None,
+                                                sleep=lambda s: None)
+    assert calls == ["stop", "open", "close"] and png == PNG
+    assert list(written) == ["/Users/sbx/pickfit-in/a.txt"]
+    assert display.done[1:] == [("key", "cmd+a"), ("key", "cmd+c")] and display.done[0][1] == op.nonce
+    assert op.passed and result.exit_code == 0 and "gui check: passed" in result.stdout
+
+
+def test_the_operator_on_a_mac_keeps_command_apart_from_control():
+    from pickfit.verify import gui_operate
+
+    assert gui_operate.normalize_key("cmd+s", mac=True) == "cmd+s" and gui_operate.normalize_key("cmd+s") == "ctrl+s"
+    assert gui_operate.normalize_key("Command+Shift+G", mac=True) == "cmd+shift+g"
+    assert gui_operate.normalize_key("ctrl+a", mac=True) == "ctrl+a"
+    assert gui_operate.normalize_key("option+Left", mac=True) == "alt+Left"
+    assert gui_operate.normalize_key("hyper+x", mac=True) is None
+    assert "cmd+shift+g" in gui_operate.MAC_OPERATOR_INSTRUCTIONS and "no window manager" not in \
+        gui_operate.MAC_OPERATOR_INSTRUCTIONS
+    assert gui_mac.VncDisplay.os == "macos"

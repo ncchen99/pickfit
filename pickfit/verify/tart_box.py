@@ -371,6 +371,8 @@ class TartBox(Box):
     user_rule = ("You are a standard macOS user, not an admin: no sudo, nothing written outside $HOME, /tmp and "
                  "the Homebrew prefix /opt/homebrew (yours, so brew install needs no sudo).")
     detach = DETACH_CMD
+    user_uid = MAC_UID  # whose files pickfit's checks read (gui_operate.file_probe)
+    harness_python = GUEST_PYTHON  # pickfit's own Python in the guest (root-owned, never the box user's)
 
     def __init__(self, *, base: str | None = None, limits: BoxLimits = BoxLimits(), cpus: int = 4,
                  memory_mb: int = 8192, name: str | None = None, tart: str = TART,

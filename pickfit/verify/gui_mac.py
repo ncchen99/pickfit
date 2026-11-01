@@ -442,17 +442,30 @@ def app_facts(launch: GuiLaunch, approved: list[dict[str, Any]]) -> str:
     return "\n".join(lines).rstrip()
 
 
-def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s: int | None = None,
-           keep_running: bool = False) -> tuple[ExecResult, GuiLaunch, bytes | None]:
-    """Launch on the box's desktop; (the record to keep, what it showed, the screenshot PNG).
+@dataclass
+class MacOpened:
+    """An app started on the desktop and watched until its window showed (or the wait ran out); still running.
+
+    Field for field what gui.Opened is to the Linux loop (gui_operate), plus the screenshot pickfit already took
+    over VNC and what pickfit did for the launch (prompts answered, a menu bar item clicked, copies stopped)."""
+
+    shown: MacGuiLaunch
+    png: bytes | None
+    seconds: float
+    timed_out: bool
+    approved: list[dict[str, Any]]
+    clicked: tuple[int, int] | None = None
+    restarted: int = 0
+
+
+def open_app(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s: int | None = None
+             ) -> MacOpened:
+    """Start the app as sbx on its desktop, watch for a window of its own (a menu bar app: click its new item) and
+    take the screenshot. The app keeps running: close_app stops it.
 
     The screenshot is taken at any tier once the watcher has reported, so a failed launch shows what was on
-    screen (a crash dialog, a Gatekeeper refusal); only a launch at tier window passes (exit 0).
-
-    An app that shows no window of its own but puts an item in the menu bar (a menu bar app) gets one click on
-    that item, as a user would give it; whatever opens counts only if the app's own process owns it. On macOS 26
-    Control Center hosts every app's menu bar item, so the item is told by being new since the launch.
-    keep_running leaves the app up for an operating loop (VncDisplay), which then calls stop() itself.
+    screen (a crash dialog, a Gatekeeper refusal). On macOS 26 Control Center hosts every app's menu bar item, so
+    the item is told by being new since the launch; whatever opens counts only if the app's own process owns it.
     """
     wait_s = max(1, min(int(wait_s), gui.WAIT_MAX_S))
     if not box.display or box.session is None:
@@ -506,20 +519,48 @@ def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s
             factor = _factor(box, report)
             if factor != 1.0:  # a HiDPI mode: bounds are in points
                 _scale(shown.windows + shown.other_windows, factor)
-    survived = False
-    if not keep_running:
-        ok, line = stop(box)
-        survived = not ok
-        if survived:  # something the box user started outlived the launch: nothing about it counts
-            shown.error = "; ".join(filter(None, [shown.error, f"box-user processes survived the stop: {line}"]))
-            png = None
+    return MacOpened(shown=_mac(shown), png=png, seconds=seconds, timed_out=timed_out, approved=approved,
+                     clicked=clicked, restarted=restarted)
+
+
+def close_app(box: TartBox, opened: MacOpened, tag: str | int) -> tuple[bytes | None, bool]:
+    """Stop every sbx process outside its login session and read the app's log; (the launch's screenshot,
+    whether something of the box user's survived the stop). Updates opened.shown in place."""
+    shown = opened.shown
+    ok, line = stop(box)
+    if not ok:  # something the box user started outlived the launch: nothing about it counts
+        shown.error = "; ".join(filter(None, [shown.error, f"box-user processes survived the stop: {line}"]))
     log = box.exec(f"/usr/bin/tail -c 3000 -- {APP_LOG_DIR}/{tag}.log", 20)
     shown.log_tail = log.stdout if log.exit_code == 0 else ""
-    shown = _mac(shown)
-    code = 0 if shown.tier == "window" and png is not None and not timed_out and not survived else 1
+    return (opened.png if ok else None), not ok
+
+
+def stop_box_user(box: TartBox) -> ExecResult:
+    """gui.stop_box_user for a macOS box: everything of sbx's outside its login session (PICKFIT_KILLED if so)."""
+    ok, line = stop(box)
+    return ExecResult(command="stop", exit_code=0 if ok else 1, stdout=line, stderr="", seconds=0.0,
+                      timed_out=False)
+
+
+def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s: int | None = None,
+           keep_running: bool = False) -> tuple[ExecResult, GuiLaunch, bytes | None]:
+    """Launch on the box's desktop; (the record to keep, what it showed, the screenshot PNG).
+
+    open_app, then close_app (unless keep_running: an operating loop drives the app and calls stop() itself).
+    Only a launch at tier window passes (exit 0); a failed one still keeps its screenshot.
+    """
+    opened = open_app(box, command, tag, wait_s, timeout_s=timeout_s)
+    shown, png, survived = opened.shown, opened.png, False
+    if not keep_running:
+        png, survived = close_app(box, opened, tag)
+    else:
+        log = box.exec(f"/usr/bin/tail -c 3000 -- {APP_LOG_DIR}/{tag}.log", 20)
+        shown.log_tail = log.stdout if log.exit_code == 0 else ""
+    code = 0 if shown.tier == "window" and png is not None and not opened.timed_out and not survived else 1
     result = ExecResult(command=command, exit_code=code,
-                        stdout=observation(shown, approved, kept=keep_running, clicked=clicked, restarted=restarted),
-                        stderr=app_facts(shown, approved), seconds=seconds, timed_out=timed_out)
+                        stdout=observation(shown, opened.approved, kept=keep_running, clicked=opened.clicked,
+                                           restarted=opened.restarted),
+                        stderr=app_facts(shown, opened.approved), seconds=opened.seconds, timed_out=opened.timed_out)
     return result, shown, png
 
 
@@ -529,8 +570,11 @@ class VncDisplay:
     screenshot -> PNG bytes once the screen has settled, click(x, y, count), type_text, key, scroll, and with a
     box, clipboard. Coordinates are pixels of the screenshot (1280x800 on the GUI base). Key names are X
     keysyms and `+` combinations (Return, BackSpace, ctrl+slash) with the Mac's own modifiers (cmd+s,
-    option+left); see vnc.parse_key. Nothing runs in the guest for it but the clipboard read.
+    option+left); see vnc.parse_key. Nothing runs in the guest for it but the clipboard read. A VNC failure is
+    the loop's DisplayError.
     """
+
+    os = "macos"  # the operating loop speaks of a Mac's desktop and keeps cmd apart from ctrl
 
     def __init__(self, url: str, box: TartBox | None = None) -> None:
         self._client = VncClient.from_url(url)
@@ -540,6 +584,14 @@ class VncDisplay:
         if self._client.sock is None:
             self._client.connect()
         return self._client
+
+    def _do(self, what: str, fn: Any, *args: Any) -> Any:
+        from pickfit.verify.gui_operate import DisplayError
+
+        try:
+            return fn(*args)
+        except (VncError, OSError, ValueError) as err:
+            raise DisplayError(f"{what} over VNC failed: {err}") from err
 
     @property
     def size(self) -> tuple[int, int]:
@@ -562,6 +614,9 @@ class VncDisplay:
 
     def screenshot(self) -> bytes:
         """The whole screen as PNG once two frames SETTLE_GAP_S apart agree (at most SETTLE_MAX_S)."""
+        return self._do("screenshot", self._settled)
+
+    def _settled(self) -> bytes:
         frame = self._frame()
         deadline = time.monotonic() + SETTLE_MAX_S
         while time.monotonic() < deadline:
@@ -573,19 +628,19 @@ class VncDisplay:
         return frame
 
     def click(self, x: int, y: int, count: int = 1) -> None:
-        self._connected().click(x, y, count=max(1, min(int(count), 3)))
+        self._do("click", lambda: self._connected().click(x, y, count=max(1, min(int(count), 3))))
 
     def double_click(self, x: int, y: int) -> None:
         self.click(x, y, 2)
 
     def type_text(self, text: str) -> None:
-        self._connected().type_text(text)
+        self._do("typing", lambda: self._connected().type_text(text))
 
     def key(self, name: str) -> None:
-        self._connected().key(name)
+        self._do(f"key {name}", lambda: self._connected().key(name))
 
     def scroll(self, x: int, y: int, direction: str) -> None:
-        self._connected().scroll(x, y, direction)
+        self._do("scroll", lambda: self._connected().scroll(x, y, direction))
 
     def clipboard(self) -> bytes | None:
         """The box user's pasteboard as text, read in its desktop session (None when it holds no text)."""
