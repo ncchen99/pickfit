@@ -2,7 +2,9 @@
 
 For each run (runs/verify/<run_id>/verification_run.json, the slug taken from its report.json), the run is written
 with result.write_back only when it passed and was replayed, and against the record's run on the same OS, arch and
-method: its level is not weaker, every feature that run checked is checked again, and a GUI app's tier is not lower.
+method: its level is not weaker, every feature that run checked is checked again, a feature that run set aside for a
+limit of the box (needs_gpu, needs_hardware, needs_more_resources, ...) is not now set aside for another reason (the
+page would stop saying the limit is pickfit's environment), and a GUI app's tier is not lower.
 Every other OS's run stays as it is (write_back replaces only the same OS). Prints one line per run and, with
 --dry-run, writes nothing.
 
@@ -20,6 +22,9 @@ from pickfit.schema import PASSED_LEVELS, SoftwareRecord, VerificationRun, is_pa
 from pickfit.verify.result import DATA_DIR, write_back
 
 GUI_ORDER = ("window", "ui_rendered", "action_checked")
+# Reasons that say the limit is pickfit's box, not the software.
+ENVIRONMENT = ("needs_gpu", "needs_hardware", "needs_display", "needs_more_resources", "needs_account", "needs_service",
+               "needs_container", "needs_root", "needs_toolchain", "other_os")
 
 
 def checked(run: VerificationRun) -> set[str]:
@@ -39,6 +44,11 @@ def why_not(run: VerificationRun, record: SoftwareRecord) -> str | None:
     lost = sorted(checked(same) - checked(run))
     if lost:
         return f"the {same.os} run checked {len(lost)} feature(s) this one does not: {', '.join(lost)[:200]}"
+    reasons = {f.feature: f.reason for f in run.features if f.status == "not_checked"}
+    blamed = sorted(f.feature for f in same.features if f.status == "not_checked" and f.reason in ENVIRONMENT
+                    and f.feature in reasons and reasons[f.feature] not in ENVIRONMENT)
+    if blamed:
+        return f"{', '.join(blamed)[:160]} would lose its reason that the limit is the box"
     if same.gui and (run.gui is None or GUI_ORDER.index(run.gui.tier) < GUI_ORDER.index(same.gui.tier)):
         return f"the GUI tier would drop from {same.gui.tier} to {run.gui.tier if run.gui else 'none'}"
     return None

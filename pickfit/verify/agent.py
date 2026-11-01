@@ -397,7 +397,9 @@ the missing step, run the example again, and record the missing step as a pitfal
 AI tool, start it with run_background, query its health or /v1/models endpoint, and, if it runs language \
 models, send it one tiny generation request with a model under about 300 MB (for a local AI tool the task \
 names public ones and how to cite the download).
-4. Judge exit codes by the README's meaning: a linter or validator that finds problems may correctly exit 1.
+4. Judge exit codes by the README's meaning: a linter or validator that finds problems may correctly exit 1. A \
+check's expected_signal is text every run prints (a heading, a fixed message, a JSON key), never a timing, a \
+measured number or a pick made from measurements: a fresh box reruns the check and gets other numbers.
 5. Call finish once, at the end, alone.
 
 pickfit records every command with its command_id, exit code and output, and decides the result from \

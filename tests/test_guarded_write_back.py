@@ -42,3 +42,12 @@ def test_a_run_on_another_os_never_competes():
     rec = record()
     other = run_like(rec.verification.runs[0], os="macos", arch="arm64")
     assert why_not(other, rec) is None
+
+
+def test_a_feature_set_aside_for_the_box_keeps_that_reason():
+    rec = record()
+    old = rec.verification.runs[0]
+    rec.verification.runs[0] = run_like(old, features=[feature("A", False)])  # needs_gpu
+    vague = {"feature": "A", "status": "not_checked", "smoke_tests": [], "reason": "other"}
+    assert "would lose its reason" in why_not(run_like(old, features=[vague]), rec)
+    assert why_not(run_like(old, features=[feature("A", False)]), rec) is None
