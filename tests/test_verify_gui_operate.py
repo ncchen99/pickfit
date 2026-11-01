@@ -291,6 +291,8 @@ def test_the_replay_operates_again_when_the_recorded_actions_miss(tmp_path: Path
     assert result.passed and result.level == "function" and result.cost_usd > 0
     ran = result.checks[0].run
     assert ran.operate["mode"] == "operated" and ran.operate["first"]["mode"] == "actions"
+    # Offline only the recorded actions ran (free); the operator ran once, online, so it counts as needing the network.
+    assert not result.checks[0].offline and len(server.requests) == 4
     assert "the 2 recorded actions did not pass" in ran.stdout
 
 

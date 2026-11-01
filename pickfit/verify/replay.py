@@ -216,12 +216,18 @@ class Replayer:
         self.cost_usd = 0.0
 
     def _operate(self, cmd: ReplayCommand) -> RanCommand:
-        """The recorded actions with a fresh nonce; if pickfit's check fails that way, the loop on the same goal."""
+        """The recorded actions with a fresh nonce; if pickfit's check fails that way, the loop on the same goal.
+
+        Offline, only the recorded actions run: a goal that needs the network fails there for that reason, and
+        the online retry runs the loop if the actions do not pass again.
+        """
         if not self.box.display or not cmd.operate:
             raise BoxError("an operation needs a box with a display and its recorded spec")
         args = OperateArgs.model_validate(cmd.operate["spec"])
         first = None
-        for actions in (cmd.operate.get("actions") or [], None):
+        attempts = (cmd.operate.get("actions") or [], None) if self.box.network_enabled else \
+            (cmd.operate.get("actions") or [],)
+        for actions in attempts:
             self.launches += 1
             tag = f"replay-{cmd.command_id}-{self.launches}"
             if actions is None:

@@ -1124,7 +1124,7 @@ def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[
     op.seconds = round(time.monotonic() - began, 1)
     code = 0 if op.passed else 1
     result = ExecResult(command=args.command, exit_code=code, stdout=observation_lines(op, shown),
-                        stderr=app_lines(op, shown), seconds=round(opened.seconds + op.seconds, 2),
+                        stderr=app_lines(op, shown), seconds=op.seconds,
                         timed_out=opened.timed_out)
     log(f"    gui check {'passed' if op.passed else 'failed'} · {op.result.get('line', '')[:160]}")
     return result, op, png or first_png
