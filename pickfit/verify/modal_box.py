@@ -107,7 +107,16 @@ GIB_USD_PER_S = 0.00000667
 # plain rate (same note, read 2026-10-28). Only the small cards: a local AI
 # tool's smoke test runs the smallest model it supports.
 GPU_USD_PER_S = {"T4": 0.59 / 3600, "L4": 0.80 / 3600, "A10": 1.10 / 3600}
-GPU_NAME = "/usr/bin/nvidia-smi --query-gpu=name --format=csv,noheader"  # root, at start: the card the run records
+# Root, at start: the card the run records, and its driver (Flathub's NVIDIA GL extension must match it).
+GPU_NAME = "/usr/bin/nvidia-smi --query-gpu=name,driver_version --format=csv,noheader"
+# Display images: VirtualGL (wxWindows Library Licence), so a GPU box's apps can draw with OpenGL on the card. Xvfb's
+# own OpenGL is software (llvmpipe), and NVIDIA's GLX needs NVIDIA's X server; VirtualGL's EGL back end sends an
+# app's GLX calls to the card's headless EGL (measured 2026-11-02: OpenGL 4.6 on the T4 under gVisor; Vulkan fails).
+VGL_DEB = "https://github.com/VirtualGL/virtualgl/releases/download/3.1.5/virtualgl_3.1.5_amd64.deb"
+VGL_SHA256 = "df3f7788ce41b182a47c0d298e5cd6d2d63579522cb41825970b7726e825485e"
+VGL_INSTALL = (f"curl -fsSL -o /tmp/virtualgl.deb {VGL_DEB} && echo '{VGL_SHA256}  /tmp/virtualgl.deb' | sha256sum -c - "
+               "&& apt-get update && apt-get install -y --no-install-recommends /tmp/virtualgl.deb "
+               "&& rm -rf /var/lib/apt/lists/* /tmp/virtualgl.deb && ln -sf /opt/VirtualGL/bin/vglrun /usr/local/bin/vglrun")
 BOX_UID = 1000
 NET_UID = 1002  # gVisor: owns the box user's network namespace and runs its uplink; root only inside that namespace
 UPLINK = "/usr/bin/slirp4netns"
@@ -252,9 +261,29 @@ def image_layers(runtime: str = "gvisor", display: bool = False, audio: bool = F
                 *(FLATPAK_PACKAGES if display else ()), *(AUDIO_PACKAGES if audio else ()))
     if not packages:
         return sandbox_image_tag(), ()
-    digest = hashlib.sha256(SANDBOX_DOCKERFILE.read_bytes() + "\n".join(packages).encode()).hexdigest()[:12]
+    extra = "\n" + VGL_INSTALL if display else ""
+    digest = hashlib.sha256(SANDBOX_DOCKERFILE.read_bytes() + ("\n".join(packages) + extra).encode()).hexdigest()[:12]
     kinds = "-".join(k for k, on in (("vm", runtime == "vm"), ("gui", display), ("audio", audio)) if on)
     return f"pickfit-sbx-{kinds}:{digest}", packages
+
+
+def gl_env(driver: str) -> list[str]:
+    """A GPU display box's environment for OpenGL on the card: flatpak learns the driver from FLATPAK_GL_DRIVERS
+    (gVisor has no /proc/driver/nvidia), so installing an app brings Flathub's matching NVIDIA GL extension, as on a
+    desktop with that driver."""
+    return [f"FLATPAK_GL_DRIVERS=nvidia-{driver.replace('.', '-')}:default"]
+
+
+VGL_HOME = f"{BOX_HOME}/.pickfit-vgl"
+# Root, at start of a GPU display box: VirtualGL's two libraries in the box user's home, and flatpak's global override
+# for the box user, so every Flatpak app sees them and draws through VirtualGL's EGL back end (measured 2026-11-02:
+# Vimix, which refuses software rendering, showed its window on the T4). A native app uses vglrun -d egl.
+VGL_OVERRIDE = (f"[Context]\nfilesystems={VGL_HOME}:ro;\n\n[Environment]\n"
+                f"LD_PRELOAD={VGL_HOME}/libdlfaker.so:{VGL_HOME}/libvglfaker.so\nVGL_DISPLAY=egl\n")
+VGL_SETUP = (f"/usr/bin/install -d -m 0755 -o {BOX_UID} -g {BOX_UID} {VGL_HOME} {BOX_HOME}/.local/share/flatpak/overrides "
+             f"&& /usr/bin/install -m 0644 -o {BOX_UID} -g {BOX_UID} /usr/lib/libdlfaker.so /usr/lib/libvglfaker.so {VGL_HOME}/ "
+             f"&& /usr/bin/install -m 0644 -o {BOX_UID} -g {BOX_UID} /dev/stdin {BOX_HOME}/.local/share/flatpak/overrides/global "
+             f"&& /usr/bin/chown {BOX_UID}:{BOX_UID} {BOX_HOME}/.local {BOX_HOME}/.local/share {BOX_HOME}/.local/share/flatpak")
 
 
 def modal_client() -> Any:
@@ -277,6 +306,8 @@ def publish_image(client: Any, app: Any, *, log: Callable[[str], None] = print, 
                                         ignore=lambda path: True)
     if packages:
         image = image.apt_install(*packages)
+    if display:
+        image = image.run_commands(VGL_INSTALL)
     image.build(app)
     image.publish(name, client=client)
     log(f"Modal image {name} built and published in {time.monotonic() - began:.0f}s")
@@ -424,6 +455,7 @@ class ModalBox(Box):
         self.network_enabled = True
         self.sandbox_id: str | None = None
         self.netns_pid: int | None = None  # gVisor: the holder of the box user's network namespace
+        self.gpu_driver: str | None = None  # GPU boxes: the driver version nvidia-smi printed, e.g. 610.57.04
         self.display_netns_pid: int | None = None  # display and audio boxes: the holder of the harness's namespace
         self.pulse_pid: int | None = None  # audio boxes: pickfit's PulseAudio server
 
@@ -487,7 +519,9 @@ class ModalBox(Box):
         if self.gpu:  # the card Modal attached, as its driver names it; none answering is a failed start
             card = self._exec_raw(["/usr/bin/bash", "-c", GPU_NAME], 60, as_root=True)
             steps.append(("the GPU", card))
-            self.gpu_name = next((line.strip() for line in card.stdout.splitlines() if line.strip()), None)
+            first = next((line.split(",") for line in card.stdout.splitlines() if line.strip()), [""])
+            self.gpu_name = first[0].strip() or None
+            self.gpu_driver = first[1].strip() if len(first) > 1 else None
             self._fail_on(steps, missing=not self.gpu_name)
         if self.display or self.audio:  # the harness's own network namespace, loopback only
             held = self._exec_raw(["/usr/bin/bash", "-c", display_netns_script(self.runtime)], 60, as_root=True)
@@ -517,6 +551,9 @@ class ModalBox(Box):
             pid = next((line.split()[1] for line in pulse.stdout.splitlines() if line.startswith("pulse_pid ")), "")
             self.pulse_pid = int(pid) if pid.isdigit() else None
             self._fail_on(steps, missing=self.pulse_pid is None)
+        if self.display and self.gpu:  # OpenGL on the card for Flatpak apps (VGL_SETUP)
+            steps.append(("VirtualGL for Flatpak apps", self._exec_raw(["/usr/bin/bash", "-c", VGL_SETUP], 30,
+                                                                      as_root=True, stdin=VGL_OVERRIDE.encode())))
         self._fail_on(steps, missing=bool(self.display and self.xvfb_pid is None))
         self.start_s = round(time.monotonic() - began, 2)
 
@@ -557,6 +594,8 @@ class ModalBox(Box):
             env.append(f"FLATPAK_BWRAP={BWRAP_SHIM}")
         if self.audio:
             env.append(f"PULSE_SERVER={PULSE_SERVER}")
+        if self.display and self.gpu and self.gpu_driver:  # OpenGL on the card (gl_env)
+            env += gl_env(self.gpu_driver)
         return [*self.enter(), *_drop_to(BOX_UID), *self.seccomp(), "/usr/bin/env", "-i", *env, "/usr/bin/bash", "-c",
                 guard]
 

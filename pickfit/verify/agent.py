@@ -494,6 +494,15 @@ start recording, wait about 10 seconds, stop, save the transcript to ~/pickfit-o
 tool must hear them. Cite a passing listen as a smoke test with expected_signal `mic check: passed`. A listen \
 reruns in the fresh box offline with new words, so the tool must transcribe locally."""
 
+GPU_GL_RULES = """\
+
+OpenGL on the GPU: the virtual display's own OpenGL is software (Mesa llvmpipe), so an app that needs a GPU says \
+"software rendering" or fails to make an OpenGL context there. Flatpak apps already draw on the GPU in this box \
+(pickfit puts VirtualGL into their sandbox, and installing a Flathub app also installs the NVIDIA GL extension that \
+matches this driver): launch them with plain flatpak run. Start a native OpenGL app with `vglrun -d egl <its \
+command>` (VirtualGL, already installed) and record that as a pitfall of kind sandbox: a desktop with a GPU does \
+not need it."""
+
 # Public models small enough for an inference check, licenses and URLs checked 2026-10-29.
 # stories260K: karpathy/tinyllamas weights (MIT), GGUF by ggml-org. SmolLM2-135M-Instruct:
 # HuggingFaceTB (Apache-2.0), GGUF by bartowski; Ollama's smollm2:135m is the same model.
@@ -757,6 +766,8 @@ class VerifyAgent:
             self.instructions = (self.instructions.replace("needs no account, API key, GPU or GUI",
                                                            "needs no account, API key or GUI (a GPU is here)")
                                  .replace("a microphone, a camera, a GPU or a model", "a microphone, a camera or a model"))
+        if box.gpu and box.display:  # OpenGL on the card
+            self.instructions += GPU_GL_RULES
         if box.audio:  # a microphone too
             self.instructions = self.instructions.replace("a microphone, a camera", "a camera") + MIC_RULES
         self.tools = tools_for(box)

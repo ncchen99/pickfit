@@ -316,3 +316,19 @@ def test_a_result_that_names_most_of_the_list_is_a_list_not_a_transcript(tmp_pat
                                       "check": {"kind": "file", "path": "~/pickfit-out/t.txt"}})
     result, heard = run_listen(DumpFileBox(tmp_path / "home"), args, 10, log=lambda s: None)
     assert not heard.passed and "not a transcript" in result.stdout
+
+
+def test_a_gpu_display_box_draws_opengl_on_the_card_through_virtualgl():
+    assert mb.gl_env("610.57.04") == ["FLATPAK_GL_DRIVERS=nvidia-610-57-04:default"]
+    plain, gui_image = mb.image_layers("gvisor", False)[0], mb.image_layers("gvisor", True)[0]
+    assert plain == mb.sandbox_image_tag() and gui_image.startswith("pickfit-sbx-gui:")
+    box = mb.ModalBox(gpu="T4", display=True, client=object(), log=lambda s: None)
+    box.netns_pid, box.gpu_driver = 4242, "610.57.04"
+    assert "FLATPAK_GL_DRIVERS=nvidia-610-57-04:default" in box.user_argv("true", 10, "/home/sbx/work")
+    no_display = mb.ModalBox(gpu="T4", client=object())
+    no_display.netns_pid, no_display.gpu_driver = 4242, "610.57.04"
+    assert not any(a.startswith("FLATPAK_GL_DRIVERS") for a in no_display.user_argv("true", 10, "/home/sbx/work"))
+    # Every Flatpak app gets VirtualGL through flatpak's own global override, set by root at start.
+    assert "LD_PRELOAD=/home/sbx/.pickfit-vgl/libdlfaker.so:/home/sbx/.pickfit-vgl/libvglfaker.so" in mb.VGL_OVERRIDE
+    assert "VGL_DISPLAY=egl" in mb.VGL_OVERRIDE and "filesystems=/home/sbx/.pickfit-vgl:ro;" in mb.VGL_OVERRIDE
+    assert "overrides/global" in mb.VGL_SETUP and mb.VGL_SHA256 in mb.VGL_INSTALL
