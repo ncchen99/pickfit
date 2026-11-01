@@ -339,3 +339,45 @@ def test_sparkles_update_prompt_is_answered_before_the_launch_and_said():
     assert writes == [["/bin/launchctl", "asuser", "1001", "/usr/bin/sudo", "-n", "-u", "sbx", "/usr/bin/defaults",
                        "write", "com.example.neon", "SUEnableAutomaticChecks", "-bool", "false"]]
     assert "with Don't Check for 1 app bundle(s) that use Sparkle" in result.stdout
+
+
+def test_marks_number_the_text_top_to_bottom_and_drop_odd_entries():
+    from pickfit.verify import marks
+
+    raw = json.dumps([{"text": "Open File", "x": 786, "y": 442, "w": 61, "h": 14, "conf": 1},
+                      {"text": "Add Folder", "x": 672, "y": 443, "w": 72, "h": 12, "conf": 1},
+                      {"text": "Writer", "x": 52, "y": 8, "w": 46, "h": 12, "conf": 1},
+                      {"text": "blurry", "x": 1, "y": 1, "w": 5, "h": 5, "conf": 0.2},
+                      {"text": "", "x": 1, "y": 1, "w": 5, "h": 5}, {"nope": 1}])
+    found = marks.parse(raw)
+    assert [(m.number, m.text) for m in found] == [(1, "Writer"), (2, "Add Folder"), (3, "Open File")]
+    assert found[1].center == (708, 449)
+    assert marks.listing(found).splitlines()[1] == '2: "Add Folder"'
+    assert marks.parse("not json") == []
+
+
+def test_the_operator_clicks_a_marked_text_by_number_on_a_mac():
+    from pickfit.verify import gui_operate, marks
+
+    found = marks.parse(json.dumps([{"text": "Add Folder", "x": 672, "y": 442, "w": 72, "h": 12}]))
+    view = gui_operate.View(0, 0, 1280, 800)
+    answer = gui_operate.MacOperatorAction(observation="a button", action="click", x=556, y=631, clicks=None,
+                                           text=None, key=None, direction=None, seconds=None, why="add a folder",
+                                           element=1)
+    assert gui_operate.to_action(answer, view, True, found) == ({"kind": "click", "x": 708, "y": 448, "count": 1}, None)
+    missing = answer.model_copy(update={"element": 9})
+    assert gui_operate.to_action(missing, view, True, found) == (None, "no marked text numbered 9")
+    aimed = answer.model_copy(update={"element": None})
+    assert gui_operate.to_action(aimed, view, True, found)[0] == {"kind": "click", "x": 712, "y": 505, "count": 1}
+    png = marks.draw(PNG_IMAGE(), found, view)
+    assert png.startswith(b"\x89PNG")
+
+
+def PNG_IMAGE() -> bytes:
+    import io
+
+    from PIL import Image
+
+    out = io.BytesIO()
+    Image.new("RGB", (1280, 800), (240, 240, 240)).save(out, "PNG")
+    return out.getvalue()
