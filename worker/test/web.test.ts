@@ -488,6 +488,7 @@ function output(picks: PickOut[]): FindOutput {
     degraded_reason: null,
     model_attempts: 1,
     model_http_status: null,
+    fallback_model: null,
     considered: 4,
     picks,
     best_free: null,

@@ -152,14 +152,18 @@ const alternativesInput = z.object({
 
 const findOutput = z.object({
   rec_id: z.string().describe(REC_ID_OUT),
-  matched_by: z.string().describe('The Meta model that chose the picks, or "rules"'),
+  matched_by: z.string().describe('The Meta model that chose the picks (muse-spark-1.3, or meta-models/muse-spark-open-1026 when Meta was unavailable), or "rules"'),
   degraded: z.boolean().describe('true = ranked by rules without the model (off, budget or failure)'),
   degraded_reason: z.string().nullable(),
   model_attempts: z
     .number()
     .int()
-    .describe('Requests sent to Meta: 0 = model not used, 2 = retried once after a transient error'),
-  model_http_status: z.number().int().nullable().describe('When degraded_reason is model_http: the HTTP status Meta returned'),
+    .describe('Model requests sent: 0 = model not used, 2 = retried once after a transient error, 3 = Meta answered 404 twice and Muse Spark Open on Baseten was asked'),
+  model_http_status: z.number().int().nullable().describe('When degraded_reason is model_http: the HTTP status the last model API returned'),
+  fallback_model: z
+    .string()
+    .nullable()
+    .describe('Set when Meta answered 404 and the request went to this model (Muse Spark Open, open weights) on Baseten; null otherwise'),
   considered: z.number().int().describe('Verified tools that met the hard conditions'),
   picks: z.array(pick).max(3),
   best_free: z.object({ slug: z.string(), reason: z.string() }).nullable(),

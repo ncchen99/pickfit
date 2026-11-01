@@ -1,8 +1,10 @@
-/** Bindings and settings (wrangler.jsonc vars; MODEL_API_KEY is a secret). */
+/** Bindings and settings (wrangler.jsonc vars; MODEL_API_KEY and BASETEN_API_KEY are secrets). */
 export interface Env {
   DB: D1Database;
   /** Meta Model API key. Missing means find_software ranks by rules. */
   MODEL_API_KEY?: string;
+  /** Baseten key for Muse Spark Open, asked only when Meta still answers 404 after the retry. Missing means no fallback. */
+  BASETEN_API_KEY?: string;
   /** "model" (default) or "off" to rank by rules without calling Meta. */
   MATCH_MODE?: string;
   META_DAILY_CAP_USD?: string;
@@ -27,6 +29,8 @@ export type ToolSet = 'all' | 'readonly';
 export interface Settings {
   modelEnabled: boolean;
   apiKey: string | null;
+  /** Baseten key for the 404 fallback (find.ts); its spend counts against the same caps. */
+  fallbackApiKey: string | null;
   dailyCapUsd: number;
   totalCapUsd: number;
   timeoutMs: number;
@@ -49,6 +53,7 @@ export function settings(env: Env): Settings {
   return {
     modelEnabled: (env.MATCH_MODE ?? 'model').trim().toLowerCase() !== 'off',
     apiKey: env.MODEL_API_KEY?.trim() || null,
+    fallbackApiKey: env.BASETEN_API_KEY?.trim() || null,
     dailyCapUsd: number(env.META_DAILY_CAP_USD, 3),
     totalCapUsd: number(env.META_TOTAL_CAP_USD, 40),
     timeoutMs: number(env.META_TIMEOUT_MS, 25_000),

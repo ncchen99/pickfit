@@ -17,6 +17,7 @@ import { bestGuide, verifiedOnUserSystem, type Arch, type Catalog, type Entry, t
 import type { FindOutput, PickOut } from './find.ts';
 import { fitNote } from './fit.ts';
 import { PIPE_TO_SHELL, type InstallOutput } from './install.ts';
+import { OPEN_MODEL } from './meta.ts';
 import { templateReasons } from './rules.ts';
 
 export interface FormValues {
@@ -435,7 +436,7 @@ function matchLine(out: FindOutput): string {
   if (out.matched_by === 'rules') return `${meet}; these are ranked by rules, without a model.`;
   // When more than the card limit meet them, coverage_note says how many the model compared.
   return (
-    `${meet}; Meta’s ${esc(out.matched_by)} ${n === 0 ? 'found none that fits' : `picked ${n === 1 ? 'one' : n}`}.` +
+    `${meet}; ${out.matched_by === OPEN_MODEL ? 'Meta’s open-weight Muse Spark Open, on Baseten because Meta’s API was unavailable,' : `Meta’s ${esc(out.matched_by)}`} ${n === 0 ? 'found none that fits' : `picked ${n === 1 ? 'one' : n}`}.` +
     (n ? ' Code checked every reason against the tool’s profile.' : '')
   );
 }
@@ -757,7 +758,7 @@ ${stagesSection(showcase)}
 </div>
 <div class="wrap foot-notes">
 <p>pickfit ranks by fit, not stars. No ads, no paid placement, no referral links, and it doesn’t make any of the software it suggests.</p>
-<p>No account and no IP address stored. Your sentence goes to Meta’s Muse Spark with storage turned off; pickfit keeps only the conditions it parsed, such as the task and the OS.</p>
+<p>No account and no IP address stored. Your sentence goes to Meta’s Muse Spark with storage turned off (when Meta’s API is unavailable, once to Meta’s open-weight Muse Spark Open on Baseten instead); pickfit keeps only the conditions it parsed, such as the task and the OS.</p>
 </div>
 <p class="wordmark" aria-hidden="true" translate="no">pickfit</p>
 </footer>

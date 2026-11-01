@@ -20,7 +20,7 @@ export interface EventRow {
   matched_by?: string | null;
   degraded?: boolean | null;
   degraded_reason?: string | null;
-  /** Requests sent to Meta (2 = retried) and their HTTP statuses, null where none came back. */
+  /** Model requests sent (2 = retried, 3 = then Muse Spark Open on Baseten after Meta's 404) and their HTTP statuses, null where none came back. */
   model_attempts?: number | null;
   model_statuses?: (number | null)[] | null;
   meta_cost_usd?: number | null;

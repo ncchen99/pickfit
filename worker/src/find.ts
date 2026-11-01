@@ -6,8 +6,10 @@
  * parses the request and chooses -> guard (code). Without the model (off, no
  * key, over budget, failure after one retry of a transient error, or every
  * pick rejected) it ranks by rules and says so: matched_by "rules", degraded
- * true. find_alternatives sends the current tool and its pain points too,
- * drops the current tool from the candidates, and may advise keeping it.
+ * true. When Meta still answers 404 after the retry, the same match request
+ * goes once to Muse Spark Open on Baseten (matched_by OPEN_MODEL).
+ * find_alternatives sends the current tool and its pain points too, drops
+ * the current tool from the candidates, and may advise keeping it.
  */
 import {
   bestGuide,
@@ -30,7 +32,18 @@ import { englishKeywords, EXPAND_TIMEOUT_MS, type Expansion } from './expand.ts'
 import { fitNote, fitOf, jobOf, type Fit, type MatchQuality } from './fit.ts';
 import { hardFilter, MAX_CARDS, replacesCurrent, type Conditions } from './filter.ts';
 import { clip, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
-import { callMeta, estimateCostUsd, MATCH_MODEL, MetaCallError, requestBody } from './meta.ts';
+import {
+  BASETEN_BASE_URL,
+  callMeta,
+  estimateCostUsd,
+  MATCH_MODEL,
+  MetaCallError,
+  modelLabel,
+  OPEN_MODEL,
+  requestBody,
+  RETRY_MIN_LEFT_MS,
+  type MetaResult,
+} from './meta.ts';
 import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer, type ModelReason } from './prompt.ts';
 import { dropNegated, queryTerms, rulesRelevance, rulesTerms, termsAsSaid } from './relevance.ts';
 import { rankByRules, templateReasons } from './rules.ts';
@@ -103,10 +116,12 @@ export interface FindOutput {
   matched_by: string;
   degraded: boolean;
   degraded_reason: string | null;
-  /** Requests sent to Meta: 0 (model not used), 1, or 2 when a transient error was retried. */
+  /** Model requests sent: 0 (model not used), 1, 2 when a transient error was retried, 3 with the fallback. */
   model_attempts: number;
-  /** When degraded_reason is model_http: the status of Meta's last answer. */
+  /** When degraded_reason is model_http: the status of the last model API's answer. */
   model_http_status: number | null;
+  /** OPEN_MODEL when Meta still answered 404 after the retry and the request went to Baseten; else null. */
+  fallback_model: string | null;
   considered: number;
   picks: PickOut[];
   best_free: { slug: string; reason: string } | null;
@@ -137,7 +152,7 @@ function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, 
   parts.push(
     matchedBy === 'rules'
       ? `Ranked by rules (request keywords, verification on your OS, treasure score) among ${considered} tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.`
-      : `Chosen by ${matchedBy} among ${considered} tools that passed pickfit's hard filters; code checked each reason against the profile.`,
+      : `Chosen by ${modelLabel(matchedBy)} among ${considered} tools that passed pickfit's hard filters; code checked each reason against the profile.`,
   );
   return parts.join(' ');
 }
@@ -150,7 +165,7 @@ function outsideHowWeKnow(matchedBy: string, cond: Conditions): string {
   const last = unchecked.pop()!;
   const list = unchecked.length ? `${unchecked.join(', ')} or ${last}` : last;
   return (
-    `Named by ${matchedBy} from general knowledge, not from pickfit's data. ` +
+    `Named by ${modelLabel(matchedBy)} from general knowledge, not from pickfit's data. ` +
     `pickfit has not installed it, has no install guide for it and has not checked ${list}.`
   );
 }
@@ -338,13 +353,16 @@ function fromRules(
 /** find_alternatives: a profile that names the current tool as what it replaces. */
 const replacing = (current: string): Fit => ({ quality: 'good', covers: [`an alternative to ${current}`], missing: [] });
 
-/** statuses: HTTP status of each request sent to Meta (null where none came back). */
-type Attempt = { cost: number; statuses: (number | null)[] } & (
+/**
+ * statuses: HTTP status of each request sent (null where none came back), Meta's then Baseten's.
+ * fallback: OPEN_MODEL when the request went on to Baseten after Meta's 404.
+ */
+type Attempt = { cost: number; statuses: (number | null)[]; fallback: string | null } & (
   | { answer: ModelAnswer; picks: GuardedPick[] }
   | { failure: string; httpStatus: number | null; rejected?: ModelAnswer }
 );
 
-const notSent = (failure: string): Attempt => ({ failure, httpStatus: null, cost: 0, statuses: [] });
+const notSent = (failure: string): Attempt => ({ failure, httpStatus: null, cost: 0, statuses: [], fallback: null });
 
 async function askModel(
   request: Record<string, unknown>,
@@ -370,34 +388,52 @@ async function askModel(
   } catch {
     return notSent('budget_unavailable'); // cannot count spend, so do not spend
   }
+  const clock = () => deps.now().getTime();
+  const started = clock();
   let cost = 0;
+  let statuses: (number | null)[] = [];
+  let fallback: string | null = null;
   try {
-    // A retry fits in the cap checked above: the failed try was not charged.
-    const result = await callMeta(settings.apiKey, body, {
-      timeoutMs,
-      fetch: deps.fetch,
-      clock: () => deps.now().getTime(),
-      sleep: deps.sleep,
-    });
-    cost = result.costUsd;
-    const { statuses } = result;
+    // A retry (or the fallback) fits in the cap checked above: the failed tries were not charged.
+    let result: MetaResult;
+    try {
+      result = await callMeta(settings.apiKey, body, { timeoutMs, fetch: deps.fetch, clock, sleep: deps.sleep });
+    } catch (err) {
+      const leftMs = timeoutMs - (clock() - started);
+      const missing = err instanceof MetaCallError && err.kind === 'http' && err.status === 404;
+      if (!missing || !settings.fallbackApiKey || leftMs < RETRY_MIN_LEFT_MS) throw err;
+      // Meta still says 404 after the retry (muse-spark-1.3 went missing for minutes on 10/29 and 11/1):
+      // the same request, once, to Muse Spark Open on Baseten. Any other failure degrades as before.
+      cost = err.costUsd;
+      statuses = err.statuses;
+      fallback = OPEN_MODEL;
+      console.log(JSON.stringify({ event: 'meta_fallback', model: OPEN_MODEL, statuses, left_ms: Math.round(leftMs) }));
+      result = await callMeta(
+        settings.fallbackApiKey,
+        { ...body, model: OPEN_MODEL },
+        { timeoutMs: leftMs, baseUrl: BASETEN_BASE_URL, retry: false, fetch: deps.fetch, clock },
+      );
+    }
+    cost += result.costUsd;
+    statuses = [...statuses, ...result.statuses];
     // Token use for tuning; no request text.
     console.log(
-      JSON.stringify({ event: 'meta_call', kind, model: MATCH_MODEL, cards: cards.size, ...result.usage, cost_usd: cost, latency_ms: result.latencyMs, statuses }),
+      JSON.stringify({ event: 'meta_call', kind, model: fallback ?? MATCH_MODEL, cards: cards.size, ...result.usage, cost_usd: cost, latency_ms: result.latencyMs, statuses }),
     );
-    // From here on Meta has answered: a bad or rejected answer is never retried.
+    // From here on a model has answered: a bad or rejected answer is never retried.
     const answer = parseAnswer(result.text);
-    if (!answer) return { failure: 'model_bad_output', httpStatus: null, cost, statuses };
+    if (!answer) return { failure: 'model_bad_output', httpStatus: null, cost, statuses, fallback };
     const guarded = guardPicks(answer, cards, limit);
     if (answer.picks.length > 0 && guarded.picks.length === 0) {
-      return { failure: 'guard_rejected_all', httpStatus: null, cost, statuses, rejected: answer };
+      return { failure: 'guard_rejected_all', httpStatus: null, cost, statuses, fallback, rejected: answer };
     }
-    return { answer, picks: guarded.picks, cost, statuses };
+    return { answer, picks: guarded.picks, cost, statuses, fallback };
   } catch (err) {
     if (err instanceof MetaCallError) {
-      cost = err.costUsd;
+      cost += err.costUsd;
+      statuses = [...statuses, ...err.statuses];
       const httpStatus = err.kind === 'http' ? err.status : null;
-      return { failure: `model_${err.kind}`, httpStatus, cost, statuses: err.statuses };
+      return { failure: `model_${err.kind}`, httpStatus, cost, statuses, fallback };
     }
     throw err;
   } finally {
@@ -460,6 +496,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   let degradedReason: string | null = null;
   let httpStatus: number | null = null;
   let statuses: (number | null)[] = [];
+  let fallback: string | null = null;
   let cost = 0;
   if (candidates.length === 0) {
     choice = NO_CHOICE;
@@ -469,8 +506,9 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     const attempt = await askModel({ ...req.modelRequest, limit }, req.kind, cards, limit, deps, now, timeoutMs);
     cost = attempt.cost;
     statuses = attempt.statuses;
+    fallback = attempt.fallback;
     if ('answer' in attempt) {
-      matchedBy = MATCH_MODEL;
+      matchedBy = fallback ?? MATCH_MODEL;
       const wellKnown = guardWellKnown(attempt.answer, deps.catalog.entries, req.currentTool);
       choice = fromModel(attempt.answer, attempt.picks, entries, req.kind, wellKnown);
     } else {
@@ -523,6 +561,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     degraded_reason: degradedReason,
     model_attempts: statuses.length,
     model_http_status: httpStatus,
+    fallback_model: fallback,
     considered: passed,
     picks: choice.picks.map((chosen) => pickOut(entries.get(chosen.slug)!, chosen, cond.os, cond.arch, matchedBy, passed)),
     best_free: choice.bestFree,
@@ -560,6 +599,8 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
             ? { name: choice.wellKnown.name, dropped: choice.wellKnown.dropped }
             : null,
         ...(choice.matchQuality ? { match_quality: choice.matchQuality } : {}),
+        // After Meta's 404s the request went to Baseten once: the last of model_statuses is its answer.
+        ...(fallback ? { model_fallback: { model: fallback, status: statuses[statuses.length - 1] ?? null } } : {}),
         // How the cards were chosen when not all could be sent; counts and outcomes only.
         shortlist:
           passed > MAX_CARDS ? { by_relevance: byRelevance, keywords: expansion?.outcome ?? null } : null,

@@ -1,6 +1,9 @@
 /**
  * The Worker's model calls: Meta Responses API, muse-spark-1.3 (the match
- * call, and English keywords when the shortlist must cut, expand.ts).
+ * call, and English keywords when the shortlist must cut, expand.ts). When
+ * Meta still answers 404 after the retry, the match call goes once to Muse
+ * Spark Open (Meta's open-weight model) on Baseten's Responses API, which
+ * takes the same request (find.ts).
  *
  * User requests are private, so the model is fixed here: never the
  * -contributor models (their inputs may be used for training), and
@@ -9,7 +12,17 @@
 
 export const META_BASE_URL = 'https://api.meta.ai/v1';
 export const MATCH_MODEL = 'muse-spark-1.3';
-/** USD per 1M tokens for MATCH_MODEL (same table as pickfit/meta.py). */
+/** Muse Spark Open on Baseten: the hackathon key serves only this id. */
+export const BASETEN_BASE_URL = 'https://inference.baseten.co/v1';
+export const OPEN_MODEL = 'meta-models/muse-spark-open-1026';
+
+/** How how_we_know names the model that chose: the id, and for the fallback where it ran and why. */
+export function modelLabel(model: string): string {
+  return model === OPEN_MODEL
+    ? `Muse Spark Open (${OPEN_MODEL}, Meta's open-weight model served by Baseten, asked because Meta's API was unavailable)`
+    : model;
+}
+/** USD per 1M tokens for MATCH_MODEL, and for OPEN_MODEL on Baseten at the same price (same table as pickfit/meta.py). */
 const PRICE = { input: 1.25, cached: 0.15, output: 4.25 };
 export const MAX_OUTPUT_TOKENS = 4000;
 
@@ -63,8 +76,8 @@ export class MetaCallError extends Error {
   }
 }
 
-/** No retry with less than this left of the timeout: a match call takes 6-8 s, and a retry that times out is still charged. */
-const RETRY_MIN_LEFT_MS = 10_000;
+/** No retry (or fallback) with less than this left of the timeout: a match call takes 6-8 s, and a retry that times out is still charged. */
+export const RETRY_MIN_LEFT_MS = 10_000;
 /** Honor Retry-After up to this; asked to wait longer, degrade now. */
 const RETRY_AFTER_MAX_MS = 5_000;
 /** Jittered wait before the retry when Meta gives no Retry-After. */
@@ -151,6 +164,10 @@ export function requestBody(req: StructuredRequest): Record<string, unknown> {
 export interface CallOptions {
   /** META_TIMEOUT_MS: both tries and the wait between them fit in it. */
   timeoutMs: number;
+  /** Defaults to META_BASE_URL; BASETEN_BASE_URL for OPEN_MODEL. */
+  baseUrl?: string;
+  /** false: one request, no retry (the fallback, so it adds no more wait). */
+  retry?: boolean;
   fetch?: typeof fetch;
   /** Milliseconds now, the wait before a retry, and jitter in [0, 1); seams for tests. */
   clock?: () => number;
@@ -173,13 +190,13 @@ export async function callMeta(apiKey: string, body: Record<string, unknown>, op
   let spent = 0;
   for (let attempt = 1; ; attempt++) {
     try {
-      const result = await callOnce(apiKey, body, deadline - clock(), opts.fetch ?? fetch, clock);
+      const result = await callOnce(opts.baseUrl ?? META_BASE_URL, apiKey, body, deadline - clock(), opts.fetch ?? fetch, clock);
       return { ...result, costUsd: spent + result.costUsd, statuses: [...statuses, ...result.statuses] };
     } catch (err) {
       if (!(err instanceof MetaCallError)) throw err;
       statuses.push(err.status);
       spent += err.costUsd;
-      const wait = attempt === 1 ? retryWait(err, opts.random ?? Math.random) : null;
+      const wait = attempt === 1 && opts.retry !== false ? retryWait(err, opts.random ?? Math.random) : null;
       const leftMs = deadline - clock() - (wait ?? 0);
       if (wait === null || leftMs < RETRY_MIN_LEFT_MS) {
         throw new MetaCallError(err.kind, err.message, {
@@ -208,6 +225,7 @@ const outputLimit = (body: Record<string, unknown>) =>
   typeof body.max_output_tokens === 'number' ? body.max_output_tokens : MAX_OUTPUT_TOKENS;
 
 async function callOnce(
+  baseUrl: string,
   apiKey: string,
   body: Record<string, unknown>,
   timeoutMs: number,
@@ -217,7 +235,7 @@ async function callOnce(
   const started = clock();
   let response: Response;
   try {
-    response = await doFetch(`${META_BASE_URL}/responses`, {
+    response = await doFetch(`${baseUrl}/responses`, {
       method: 'POST',
       headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
       body: JSON.stringify(body),
@@ -240,7 +258,7 @@ async function callOnce(
   const status = response.status;
   if (!response.ok) {
     const code = raw?.error?.code ?? raw?.error?.type ?? 'unknown';
-    throw new MetaCallError('http', `Meta API ${status} ${code}`, {
+    throw new MetaCallError('http', `${baseUrl === META_BASE_URL ? 'Meta' : 'Baseten'} API ${status} ${code}`, {
       status,
       transient: isTransient(status, bodyText),
       retryAfterMs: retryAfterMs(response.headers, clock()),

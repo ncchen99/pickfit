@@ -58,6 +58,7 @@ export function makeD1(): { db: D1Database; sqlite: DatabaseSync } {
 export const SETTINGS: Settings = {
   modelEnabled: true,
   apiKey: 'test-key',
+  fallbackApiKey: null,
   dailyCapUsd: 3,
   totalCapUsd: 40,
   timeoutMs: 2000,
