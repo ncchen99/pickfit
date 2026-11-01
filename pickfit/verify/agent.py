@@ -1057,7 +1057,7 @@ class VerifyAgent:
         if self._elapsed() + OPERATE_RESERVE_S >= self.limits.max_seconds - WRAP_UP_SECONDS:
             self._say(f"  ◈ {_one_line(args.goal, 120)} → refused (time)")
             return "error: too little time is left for an operation (a few minutes). Call finish."
-        problems = spec_problems(args)
+        problems = spec_problems(args, self.task.readme)
         done = [c.operate["spec"].get("feature") for c in self.report.commands if c.operate]
         if len(done) >= OPERATE_MAX:
             problems.append(f"this run has used its {OPERATE_MAX} operations")

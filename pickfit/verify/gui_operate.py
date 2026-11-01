@@ -323,10 +323,21 @@ def home_path(path: str) -> str:
     return "/" + "/".join(parts) + ("/" if trailing and parts else "")
 
 
-def spec_problems(args: OperateArgs) -> list[str]:
-    """Why pickfit cannot run this operation as asked; [] when it can."""
+def spec_problems(args: OperateArgs, readme: str = "") -> list[str]:
+    """Why pickfit cannot run this operation as asked; [] when it can.
+
+    readme: a screen_text result the README names (a screen, a button, a heading) is what the app always shows,
+    not a result of this operation's input, unless it holds {nonce}.
+    """
     problems: list[str] = []
     check = args.check
+    named = " ".join(readme.split()).casefold()
+    labels = [c for c in check.contains if check.kind == "screen_text" and NONCE_FIELD not in c
+              and " ".join(c.split()).casefold() in named]
+    if labels:
+        problems.append(f"{labels[0]!r} is in the README: a label or screen name the app always shows, not a result "
+                        "of this operation. Expect text the app makes from the goal's input (put {nonce} in an "
+                        "input file or the text to convert), or check a file it saves")
     texts = [args.goal, *(i.text or "" for i in args.inputs), *check.contains, check.path or ""]
     if any(_OWN_LINES.search(t) for t in texts):
         problems.append("the goal and check may not hold pickfit's own result lines (gui check, gui result...)")
