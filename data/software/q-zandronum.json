@@ -52,18 +52,20 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-q-zandronum-20261101-174642-dfb2",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub com.qzandronum.Q-Zandronum",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>&1; echo rc=$?; flatpak remotes --user 2>&1; flatpak remotes 2>&1",
+          "purpose": "add Flathub user remote for flatpak"
+        },
+        {
+          "command": "flatpak install --user -y flathub com.qzandronum.Q-Zandronum 2>&1\n",
+          "purpose": "install Q-Zandronum flatpak com.qzandronum.Q-Zandronum from Flathub"
         }
       ],
-      "manual_steps": [
-        "obtain commercial game data files if required"
-      ],
+      "manual_steps": [],
       "check": null,
       "first_task": "flatpak run com.qzandronum.Q-Zandronum"
     },
@@ -82,10 +84,96 @@
     "url": "https://github.com/IgeNiaI/Q-Zandronum/releases/tag/1.4.22"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T17:50:26.699746+08:00",
+    "runs": [
+      {
+        "id": "verify-q-zandronum-20261101-174642-dfb2",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:d66116882a17",
+        "checked_at": "2026-11-01T17:50:26.699746+08:00",
+        "tool_version": "1.4.22",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>&1; echo rc=$?; flatpak remotes --user 2>&1; flatpak remotes 2>&1",
+            "purpose": "add Flathub user remote for flatpak"
+          },
+          {
+            "command": "flatpak install --user -y flathub com.qzandronum.Q-Zandronum 2>&1\n",
+            "purpose": "install Q-Zandronum flatpak com.qzandronum.Q-Zandronum from Flathub"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run com.qzandronum.Q-Zandronum",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows Doomseeker's server-browser main window with menus, toolbar, empty server list, and a configuration notice.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-q-zandronum-20261101-174642-dfb2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-q-zandronum-20261101-174642-dfb2/replay-8-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.055783,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "flatpak run com.qzandronum.Q-Zandronum",
+          "window_title": "Doomseeker",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "Quake style movement",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "Quake style movement requires in-game play with IWAD and manual input verification cannot be automated here"
+          },
+          {
+            "feature": "improved netcode for high ping",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "Improved netcode for high ping requires online play with IWAD and network test not feasible offline"
+          },
+          {
+            "feature": "play online with up to 64 players",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "Up to 64 players requires commercial IWAD and multiplayer server/client setup not testable in box"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -294,5 +382,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:42+08:00",
-  "updated_at": "2026-11-01T17:11:04+08:00"
+  "updated_at": "2026-11-01T17:50:26.700783+08:00"
 }

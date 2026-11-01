@@ -75,10 +75,10 @@
   "verification": {
     "level": "unverified",
     "unverified_reason": "suspected_tool_fault",
-    "checked_at": "2026-11-01T17:43:18.863948+08:00",
+    "checked_at": "2026-11-01T17:55:55.535293+08:00",
     "runs": [
       {
-        "id": "verify-datadog-agent-dev-20261101-174027-75f8",
+        "id": "verify-datadog-agent-dev-20261101-175221-ae94",
         "level": "unverified",
         "unverified_reason": "suspected_tool_fault",
         "os": "macos",
@@ -86,26 +86,41 @@
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
-        "checked_at": "2026-11-01T17:43:18.863948+08:00",
+        "checked_at": "2026-11-01T17:55:55.535293+08:00",
         "tool_version": "0.40.0",
         "install_method": "brew",
         "replayed": false,
         "steps": [
           {
-            "command": "brew install --cask dda",
-            "purpose": "brew install --cask dda"
+            "command": "brew install --cask dda 2>&1",
+            "purpose": "brew cask install dda 0.40.0"
           }
         ],
         "smoke_tests": [
           {
-            "command": "dda --help 2>&1\necho \"EC:$?\"\ndda --version 2>&1\necho \"EC2:$?\"\ndda 2>&1 | head -n 50\necho \"EC3:$?\"",
-            "expected_signal": "ModuleNotFoundError: No module named 'dda'",
-            "exit_code": 0,
+            "command": "ls -l ~/.local/bin/ 2>&1\n/opt/homebrew/Caskroom/dda/0.40.0/dda --help 2>&1",
+            "expected_signal": "dda --help should show usage",
+            "exit_code": 1,
             "passed": false,
             "observed_excerpt": "ModuleNotFoundError: No module named 'dda'",
             "setup": [
               {
-                "command": "brew install --cask dda",
+                "command": "brew install --cask dda 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "curl -fsSL https://github.com/DataDog/datadog-agent-dev/releases/download/v0.40.0/dda-aarch64-apple-darwin.tar.gz -o /tmp/dda.tar.gz 2>&1 && tar tzf /tmp/dda.tar.gz 2>&1\necho \"---\"\ndda self --help 2>&1\ndda --help 2>&1",
+            "expected_signal": "dda self --help should show self commands",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "ModuleNotFoundError: No module named 'dda'",
+            "setup": [
+              {
+                "command": "brew install --cask dda 2>&1",
                 "background": false,
                 "port": null
               }
@@ -115,21 +130,21 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "brew install --cask dda installs dda",
-            "actually_needed": "brew cask installs binary but binary immediately fails with ModuleNotFoundError: No module named 'dda' even with clean env (env -i)",
+            "readme_said": "brew install --cask dda installs working tool",
+            "actually_needed": "cask installs binary but binary immediately fails with ModuleNotFoundError: No module named 'dda' on every invocation except 'self' subcommand; likely requires embedded Python environment not provided by cask",
             "kind": "tool_handled"
           }
         ],
-        "blocking_error": "suspected tool fault, not proven: nothing checked further (the log names no failing command); ModuleNotFoundError: No module named 'dda' on any invocation (dda --help, --version, or bare)",
+        "blocking_error": "suspected tool fault, not proven: command 8 exits 1 with ModuleNotFoundError: No module named 'dda'; fresh box: command 8 passed in a fresh box; ModuleNotFoundError: No module named 'dda'",
         "judge": null,
         "evidence": {
-          "trace_path": "runs/verify/verify-datadog-agent-dev-20261101-174027-75f8/report.json",
+          "trace_path": "runs/verify/verify-datadog-agent-dev-20261101-175221-ae94/report.json",
           "log_path": null,
           "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.056676
+        "cost_usd": 0.04606
       }
     ]
   },
@@ -308,5 +323,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:46:44+08:00",
-  "updated_at": "2026-11-01T17:43:18.869354+08:00"
+  "updated_at": "2026-11-01T17:55:55.573131+08:00"
 }

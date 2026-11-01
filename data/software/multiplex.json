@@ -60,17 +60,24 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-multiplex-20261101-175015-e00e",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub com.pojtinger.felicitas.Multiplex",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>&1\nflatpak remote-list --show-details 2>&1\n",
+          "purpose": "add Flathub remote for flatpak"
+        },
+        {
+          "command": "flatpak install --user -y flathub com.pojtinger.felicitas.Multiplex 2>&1",
+          "purpose": "install Multiplex flatpak from Flathub"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "flatpak info com.pojtinger.felicitas.Multiplex 2>&1\nflatpak run com.pojtinger.felicitas.Multiplex --help 2>&1",
+        "expected_signal": "Version: 0.1.13"
+      },
       "first_task": "flatpak run com.pojtinger.felicitas.Multiplex"
     },
     "windows": null
@@ -88,10 +95,106 @@
     "url": "https://github.com/pojntfx/multiplex/releases/tag/v0.1.13"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T17:53:11.845434+08:00",
+    "runs": [
+      {
+        "id": "verify-multiplex-20261101-175015-e00e",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:d66116882a17",
+        "checked_at": "2026-11-01T17:53:11.845434+08:00",
+        "tool_version": "0.1.13",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>&1\nflatpak remote-list --show-details 2>&1\n",
+            "purpose": "add Flathub remote for flatpak"
+          },
+          {
+            "command": "flatpak install --user -y flathub com.pojtinger.felicitas.Multiplex 2>&1",
+            "purpose": "install Multiplex flatpak from Flathub"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak info com.pojtinger.felicitas.Multiplex 2>&1\nflatpak run com.pojtinger.felicitas.Multiplex --help 2>&1",
+            "expected_signal": "Version: 0.1.13",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Version: 0.1.13",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "flatpak run com.pojtinger.felicitas.Multiplex",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows flatpak info reporting Version 0.1.13 and --help printing usage and help options. / The screenshot shows a Welcome onboarding screen with a setup dialog prompting to install or configure mpv.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-multiplex-20261101-175015-e00e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-multiplex-20261101-175015-e00e/check-1-cmd6.judged.png",
+            "runs/verify/verify-multiplex-20261101-175015-e00e/replay-7-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.053031,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "flatpak run com.pojtinger.felicitas.Multiplex",
+          "window_title": "Multiplex",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "stream torrent files directly with mpv",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "requires torrent/magnet and mpv playback, needs external torrent network and media"
+          },
+          {
+            "feature": "host watch parties with synchronized playback",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "requires multiple peers and weron P2P synchronization"
+          },
+          {
+            "feature": "separate torrent gateway and interface via remoting",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "requires separate hTorrent gateway server"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -340,5 +443,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:42+08:00",
-  "updated_at": "2026-11-01T17:11:04+08:00"
+  "updated_at": "2026-11-01T17:53:11.849366+08:00"
 }
