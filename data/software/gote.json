@@ -1,0 +1,499 @@
+{
+  "schema_version": "software.v1",
+  "slug": "gote",
+  "repo_id": "gh:999929712",
+  "name": "gote",
+  "summary": "CLI tool that manages plain Markdown notes with tags, search, and pinning.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "golang",
+    "minimal",
+    "notes"
+  ],
+  "use_cases": [
+    "create or open a note",
+    "search titles and content",
+    "filter notes by tags",
+    "list recent notes",
+    "manage pinned notes"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/banorton/gote",
+    "full_name": "banorton/gote",
+    "created_at": "2025-06-11T02:37:21Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-gote-20261101-001551-85d3",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/gote https://github.com/banorton/gote/releases/latest/download/gote-linux-amd64 && chmod +x /tmp/gote && file /tmp/gote && mkdir -p ~/.local/bin && mv /tmp/gote ~/.local/bin/gote && ls -lh ~/.local/bin/gote",
+          "purpose": "Download gote-linux-amd64 binary from releases and install to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "gote -v 2>&1",
+        "expected_signal": "gote 0.3.1"
+      },
+      "first_task": "gote -v 2>&1"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.3.1",
+    "published_at": "2026-09-07T16:16:55Z",
+    "url": "https://github.com/banorton/gote/releases/tag/v0.3.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:16:47.688041+08:00",
+    "runs": [
+      {
+        "id": "verify-gote-20261101-001551-85d3",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:16:47.688041+08:00",
+        "tool_version": "0.3.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/gote https://github.com/banorton/gote/releases/latest/download/gote-linux-amd64 && chmod +x /tmp/gote && file /tmp/gote && mkdir -p ~/.local/bin && mv /tmp/gote ~/.local/bin/gote && ls -lh ~/.local/bin/gote",
+            "purpose": "Download gote-linux-amd64 binary from releases and install to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "gote -v 2>&1",
+            "expected_signal": "gote 0.3.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gote 0.3.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "gote help 2>&1",
+            "expected_signal": "gote - CLI note-taking tool",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gote - CLI note-taking tool",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "gote t 2>&1",
+            "expected_signal": "work (2)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "work (2)",
+            "setup": [
+              {
+                "command": "mkdir -p ~/gotes && cat > ~/gotes/search_design.md <<'EOF'\n.work.design\nThis note discusses BM25 ranking and search design with stemming.\nEOF\ncat > ~/gotes/standup.md <<'EOF'\n.work.meeting\nStandup notes about BM25 and project updates.\nEOF\ncat > ~/gotes/gopl.md <<'EOF'\n.reading.personal\nNotes on Go programming language book.\nEOF\ncat > ~/gotes/sourdough.md <<'EOF'\n.recipe.personal\nSourdough recipe with starter instructions.\nEOF\nls -l ~/gotes/*.md\ngote index 2>&1\necho INDEX_EXIT:$?\nls -lh ~/.gote/\ncat ~/.gote/index.json | head -n 50\necho ---\ncat ~/.gote/tags.json 2>&1 | head -n 50",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "echo q | gote r 2>&1",
+            "expected_signal": "[a] gopl",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[a] gopl",
+            "setup": [
+              {
+                "command": "mkdir -p ~/gotes && cat > ~/gotes/search_design.md <<'EOF'\n.work.design\nThis note discusses BM25 ranking and search design with stemming.\nEOF\ncat > ~/gotes/standup.md <<'EOF'\n.work.meeting\nStandup notes about BM25 and project updates.\nEOF\ncat > ~/gotes/gopl.md <<'EOF'\n.reading.personal\nNotes on Go programming language book.\nEOF\ncat > ~/gotes/sourdough.md <<'EOF'\n.recipe.personal\nSourdough recipe with starter instructions.\nEOF\nls -l ~/gotes/*.md\ngote index 2>&1\necho INDEX_EXIT:$?\nls -lh ~/.gote/\ncat ~/.gote/index.json | head -n 50\necho ---\ncat ~/.gote/tags.json 2>&1 | head -n 50",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "echo q | gote s bm25 2>&1",
+            "expected_signal": "[a] standup",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[a] standup",
+            "setup": [
+              {
+                "command": "mkdir -p ~/gotes && cat > ~/gotes/search_design.md <<'EOF'\n.work.design\nThis note discusses BM25 ranking and search design with stemming.\nEOF\ncat > ~/gotes/standup.md <<'EOF'\n.work.meeting\nStandup notes about BM25 and project updates.\nEOF\ncat > ~/gotes/gopl.md <<'EOF'\n.reading.personal\nNotes on Go programming language book.\nEOF\ncat > ~/gotes/sourdough.md <<'EOF'\n.recipe.personal\nSourdough recipe with starter instructions.\nEOF\nls -l ~/gotes/*.md\ngote index 2>&1\necho INDEX_EXIT:$?\nls -lh ~/.gote/\ncat ~/.gote/index.json | head -n 50\necho ---\ncat ~/.gote/tags.json 2>&1 | head -n 50",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -L -o gote https://github.com/banorton/gote/releases/latest/download/gote-mac-arm64",
+            "actually_needed": "Use gote-linux-amd64 on Linux x86_64 (ELF binary)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "mv gote /usr/local/bin/",
+            "actually_needed": "Move to ~/.local/bin (already on PATH) without root",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "gote r and gote s bm25 run interactively",
+            "actually_needed": "In non-TTY CI, pipe 'q' to quit the interactive picker: echo q | gote r",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.3.1, full help text, and tag list containing work (2).",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-gote-20261101-001551-85d3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-gote-20261101-001551-85d3/check-1-cmd7.judged.png",
+            "runs/verify/verify-gote-20261101-001551-85d3/check-2-cmd8.judged.png",
+            "runs/verify/verify-gote-20261101-001551-85d3/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.042274
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 85.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.75,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 11.6,
+      "signals": {
+        "stars": 2,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 20,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 507,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 75.23
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "5248867d4d58a5479c13af454774d12594333df33e7fc546e62982729e76d8b5",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A CLI note-taking tool written in Go. Notes are plain Markdown files with tagging, pinning, search, and more."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "It is a single-user tool for people who already live in a terminal."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Nothing to install alongside it."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "curl -L -o gote https://github.com/banorton/gote/releases/latest/download/gote-mac-arm64"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ gote r\n[a] gopl\n[s] standup"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Config at `~/.gote/config.json`:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "## License\n\nMIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/banorton/gote",
+      "fetched_at": "2026-10-31T20:18:08+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/banorton/gote/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:25:27+08:00"
+    },
+    {
+      "id": "release:v0.3.1",
+      "kind": "release",
+      "url": "https://github.com/banorton/gote/releases/tag/v0.3.1",
+      "fetched_at": "2026-10-31T20:25:27+08:00"
+    },
+    {
+      "id": "hn:49600397",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=49600397",
+      "fetched_at": "2026-10-31T20:18:08+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A CLI note-taking tool written in Go.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:45+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "It is a single-user tool for people who already live in a terminal.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:45+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A CLI note-taking tool written in Go.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:45+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A CLI note-taking tool written in Go. Notes are plain Markdown files with tagging, pinning, search, and more.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:45+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# gote",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:45+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:18:08+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:18:08+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:18:08+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:18:08+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.3.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:25:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "gote mynote              # create/open note",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:45+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "gote s meeting           # search titles + content",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:45+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "gote t .work.urgent      # filter by tags",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:45+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "gote r                   # recent notes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:45+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "gote p                   # pinned menu",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:45+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Notes are plain Markdown files with tagging, pinning, search, and more.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:45+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:18:08+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}

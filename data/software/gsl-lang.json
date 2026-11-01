@@ -1,0 +1,588 @@
+{
+  "schema_version": "software.v1",
+  "slug": "gsl-lang",
+  "repo_id": "gh:1169587328",
+  "name": "GSL",
+  "summary": "Text DSL for storing graphs as versioned source of truth and deriving diagrams and reports via queries.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "prototype",
+  "tags": [],
+  "use_cases": [
+    "Keep architecture docs truthful from one canonical model",
+    "Reconstruct an undocumented system with provenance attributes",
+    "Model workflow prerequisites with edges depending on edges",
+    "Model financial, org and other relationship networks"
+  ],
+  "alternatives_to": [
+    "Mermaid",
+    "D2",
+    "Graphviz / DOT",
+    "Graph databases (Neo4j)",
+    "Structurizr / C4 DSL"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/dnnrly/gsl-lang",
+    "full_name": "dnnrly/gsl-lang",
+    "created_at": "2026-02-28T22:49:31Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Go 1.26 or newer"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/dnnrly/gsl-lang/cmd/gsl-query@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "gsl-query \"\" < model.gsl"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-gsl-lang-20261101-001915-7b0c",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p /tmp/gsl_dl2 && curl -fL -o /tmp/gsl_dl2/gsl.tgz https://github.com/dnnrly/gsl-lang/releases/download/v0.7.0/gsl-lang_0.7.0_linux_amd64.tar.gz\n",
+          "purpose": "download prebuilt Linux amd64 binary from GitHub releases v0.7.0"
+        },
+        {
+          "command": "tar xzf /tmp/gsl_dl2/gsl.tgz -C /tmp/gsl_dl2 && mkdir -p ~/.local/bin && cp /tmp/gsl_dl2/gsl-query /tmp/gsl_dl2/gsl-diagram ~/.local/bin/ && chmod +x ~/.local/bin/gsl-query ~/.local/bin/gsl-diagram\n",
+          "purpose": "extract tarball and install gsl-query and gsl-diagram to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "gsl-query version",
+        "expected_signal": "gsl-query version 0.7.0"
+      },
+      "first_task": "gsl-query version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/dnnrly/gsl-lang/cmd/gsl-query@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "gsl-query \"\" < model.gsl"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.7.0",
+    "published_at": "2026-10-18T21:58:34Z",
+    "url": "https://github.com/dnnrly/gsl-lang/releases/tag/v0.7.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:20:16.529099+08:00",
+    "runs": [
+      {
+        "id": "verify-gsl-lang-20261101-001915-7b0c",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:20:16.529099+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p /tmp/gsl_dl2 && curl -fL -o /tmp/gsl_dl2/gsl.tgz https://github.com/dnnrly/gsl-lang/releases/download/v0.7.0/gsl-lang_0.7.0_linux_amd64.tar.gz\n",
+            "purpose": "download prebuilt Linux amd64 binary from GitHub releases v0.7.0"
+          },
+          {
+            "command": "tar xzf /tmp/gsl_dl2/gsl.tgz -C /tmp/gsl_dl2 && mkdir -p ~/.local/bin && cp /tmp/gsl_dl2/gsl-query /tmp/gsl_dl2/gsl-diagram ~/.local/bin/ && chmod +x ~/.local/bin/gsl-query ~/.local/bin/gsl-diagram\n",
+            "purpose": "extract tarball and install gsl-query and gsl-diagram to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "gsl-query version",
+            "expected_signal": "gsl-query version 0.7.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gsl-query version 0.7.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "gsl-query --help",
+            "expected_signal": "Execute queries against GSL",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Execute queries against GSL (Graph Specification Language) graphs and output filtered/transformed results.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cat > /tmp/model.gsl <<'GSL'\nset critical\n\nnode gateway [team=\"gateway\"] @critical\nnode orders [team=\"orders\"] @critical\nnode orders_db [text=\"PostgreSQL\", team=\"platform\"] @critical\nnode payments [team=\"payments\"]\nnode users [team=\"identity\"]\n\ngateway -> orders [protocol=\"http\"]\norders -> payments [protocol=\"grpc\"]\norders -> users [protocol=\"grpc\"]\norders -> orders_db [protocol=\"sql\"]\nGSL\ncat /tmp/model.gsl\ngsl-query \"\" < /tmp/model.gsl\n",
+            "expected_signal": "gateway->orders [protocol=\"http\"]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gateway->orders [protocol=\"http\"]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "gsl-query '(subgraph node.id == \"orders\" traverse in all) as BLAST | from * | (subgraph node in @critical) as CRIT | BLAST & CRIT' < /tmp/model.gsl\n",
+            "expected_signal": "node gateway [team=\"gateway\"] @critical",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "node gateway [team=\"gateway\"] @critical",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "gsl-query 'from *' < /tmp/model.gsl | gsl-diagram -f mermaid -t component",
+            "expected_signal": "graph TB",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "graph TB",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install github.com/dnnrly/gsl-lang/cmd/gsl-query@latest requires Go 1.26",
+            "actually_needed": "Box has no Go toolchain; installed prebuilt binaries gsl-lang_0.7.0_linux_amd64.tar.gz from GitHub releases instead, which README mentions as alternative",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "gsl-query --version implied",
+            "actually_needed": "Tool uses subcommand `gsl-query version` not --version flag (--version returns unknown flag)",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show GSL working: identity query echoed the model, blast-radius query returned gateway and orders, and version printed 0.7.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-gsl-lang-20261101-001915-7b0c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-gsl-lang-20261101-001915-7b0c/check-1-cmd6.judged.png",
+            "runs/verify/verify-gsl-lang-20261101-001915-7b0c/check-2-cmd7.judged.png",
+            "runs/verify/verify-gsl-lang-20261101-001915-7b0c/check-3-cmd12.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.076087
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 82.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 12.5,
+      "signals": {
+        "stars": 1,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 36,
+        "hn_top_score": 1,
+        "registries_count": 0
+      },
+      "age_days": 244,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 72.36
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "9573bf5fb27c5c680a162d383625bcc8abbe39c68a5f66035fceef0926a9002c",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "GSL makes the graph itself the source of truth — a canonical, diffable text format for graph-shaped knowledge"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "**Keep architecture docs truthful**"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "You need **Go 1.26 or newer** to install from source."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "go install github.com/dnnrly/gsl-lang/cmd/gsl-query@latest"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "node gateway [team=\"gateway\"] @critical"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "| **Implementation/source code** — Go sources, CLI tools, LSP server, VS Code extension, build and configuration files | [Apache-2.0](LICENSE) |"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/dnnrly/gsl-lang",
+      "fetched_at": "2026-10-31T20:19:10+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/dnnrly/gsl-lang/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:25:56+08:00"
+    },
+    {
+      "id": "release:v0.7.0",
+      "kind": "release",
+      "url": "https://github.com/dnnrly/gsl-lang/releases/tag/v0.7.0",
+      "fetched_at": "2026-10-31T20:25:56+08:00"
+    },
+    {
+      "id": "hn:49710515",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=49710515",
+      "fetched_at": "2026-10-31T20:19:10+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "`gsl-query` — run GQL pipelines (subgraph, traverse, make, remove, collapse, graph algebra) against a GSL graph; emits canonical GSL.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "go install github.com/dnnrly/gsl-lang/cmd/gsl-query@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "The CLI tools are Unix-composable: GSL in, canonical GSL or a diagram out, via stdin/stdout.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A simple DSL for specifying graphs and querying them",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# GSL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Prebuilt binaries for Linux, macOS and Windows are attached to the [GitHub releases](https://github.com/dnnrly/gsl-lang/releases) page (no Go required).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "You need **Go 1.26 or newer** to install from source.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:19:10+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:19:10+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:19:10+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.7.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:25:56+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "this is an honest experiment, not an established standard.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "**Keep architecture docs truthful**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "**Reconstruct an undocumented system**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "**Model workflow prerequisites**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "**Model relationship networks of any kind**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "**Mermaid**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "**D2**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "**Graphviz / DOT**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "**Graph databases (Neo4j, …)**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/alternatives_to/4",
+      "source_id": "readme",
+      "quote": "**Structurizr / C4 DSL**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/dnnrly/gsl-lang/cmd/gsl-query@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/dnnrly/gsl-lang/cmd/gsl-query@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/dnnrly/gsl-lang/cmd/gsl-query@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Queries are file-in, file-out transformations.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:05+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:19:10+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}

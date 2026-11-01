@@ -1,0 +1,517 @@
+{
+  "schema_version": "software.v1",
+  "slug": "repoguard",
+  "repo_id": "gh:1373741489",
+  "name": "RepoGuard",
+  "summary": "Architecture guardrail generator and auditor that keeps AI-generated code clean",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "architecture",
+    "claude-code",
+    "clean-architecture",
+    "code-quality",
+    "copilot",
+    "cursor",
+    "cursorrules",
+    "devtools",
+    "fastapi"
+  ],
+  "use_cases": [],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://taylormatematica-beep.github.io/repoguard/",
+  "repo": {
+    "url": "https://github.com/taylormatematica-beep/repoguard",
+    "full_name": "taylormatematica-beep/repoguard",
+    "created_at": "2026-09-16T23:54:05Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-repoguard-20261101-002345-3bd6",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g repoguard-rules",
+          "purpose": "npm install -g repoguard-rules"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.7.0",
+    "published_at": "2026-10-15T11:59:26Z",
+    "url": "https://github.com/taylormatematica-beep/repoguard/releases/tag/v1.7.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:25:14.681587+08:00",
+    "runs": [
+      {
+        "id": "verify-repoguard-20261101-002345-3bd6",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:25:14.681587+08:00",
+        "tool_version": "1.7.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g repoguard-rules",
+            "purpose": "npm install -g repoguard-rules"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- repoguard mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call repoguard_get_rules --args '{}' -- repoguard mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=repoguard_get_rules content=text text_chars=3878",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Launch via npx repoguard-rules mcp and global binary repoguard-rules",
+            "actually_needed": "Package bin is repoguard and repoguard-cli, not repoguard-rules; installed MCP server runs as repoguard mcp",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show successful MCP handshake with 4 tools listed and a successful repoguard_get_rules call returning architectural rules.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-repoguard-20261101-002345-3bd6/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-repoguard-20261101-002345-3bd6/check-1-cmd7.judged.png",
+            "runs/verify/verify-repoguard-20261101-002345-3bd6/check-2-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.043108,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "repoguard",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2024-11-05",
+          "server_name": "repoguard-mcp",
+          "server_version": "1.7.0",
+          "tools": [
+            "repoguard_audit",
+            "repoguard_diff",
+            "repoguard_get_rules",
+            "repoguard_fix"
+          ],
+          "tool_count": 4,
+          "called_tool": "repoguard_get_rules",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "npx repoguard-rules mcp",
+    "client_configs": [
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"repoguard\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"repoguard-rules@1.7.0\", \"mcp\"]\n    }\n  }\n}"
+      },
+      {
+        "client": "cursor",
+        "snippet": "{\n  \"mcpServers\": {\n    \"repoguard\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"repoguard-rules@1.7.0\", \"mcp\"]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "repoguard_audit",
+      "repoguard_diff",
+      "repoguard_get_rules",
+      "repoguard_fix"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 86.6,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 49.1,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": 536,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 3,
+        "registries_count": 1
+      },
+      "age_days": 44,
+      "packages": [
+        "npm:repoguard-rules"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 44.08
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "4bf646470237fc8ffe5e8158f880d7e3ada5734b175cd4ca39dfc3a2fa6d1b47",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "The Architecture Guardian for AI-assisted code. Generate strict .cursorrules and audit PRs."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Solo builders & public repos"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Run directly in any repository (zero installation required):"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npx repoguard-rules init"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "`npx repoguard-rules audit` | Evaluates entire codebase and returns an **Architectural Health Score (A+ to F)**."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Add a `.repoguardignore` file to your root directory to skip specific files or directories:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "https://img.shields.io/badge/license-MIT-blue?style=flat-square"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/taylormatematica-beep/repoguard",
+      "fetched_at": "2026-10-31T20:21:26+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/taylormatematica-beep/repoguard/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:26:57+08:00"
+    },
+    {
+      "id": "release:v1.7.0",
+      "kind": "release",
+      "url": "https://github.com/taylormatematica-beep/repoguard/releases/tag/v1.7.0",
+      "fetched_at": "2026-10-31T20:26:57+08:00"
+    },
+    {
+      "id": "hn:49955746",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=49955746",
+      "fetched_at": "2026-10-31T20:21:26+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Launches the Model Context Protocol stdio server for AI agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:49+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Or install globally:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:49+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "RepoGuard ships with a built-in, zero-dependency **MCP Server**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:49+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "The Architecture Guardian for AI-Assisted Codebases.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:49+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# 🛡️ RepoGuard",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:49+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:21:26+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:21:26+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:21:26+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:21:26+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:21:26+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.7.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:26:57+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "RepoGuard is 100% free and open-source for public repositories and local development.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:49+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Launches the Model Context Protocol stdio server for AI agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:49+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "`npx repoguard-rules mcp` | Launches the Model Context Protocol stdio server for AI agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:49+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"repoguard\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"repoguard-rules@1.7.0\", \"mcp\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:49+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"repoguard\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"repoguard-rules@1.7.0\", \"mcp\"]\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:49+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`repoguard_audit`: Full repository audit against 16 architectural guardrails.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:49+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`repoguard_diff`: Real-time audit of uncommitted git changes to catch AI drift before commit.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:49+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`repoguard_get_rules`: Returns all 16 active architectural rules to prevent AI hallucination.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:49+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`repoguard_fix`: Analyzes code snippets and returns actionable refactoring plans.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:49+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:21:26+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}

@@ -1,0 +1,551 @@
+{
+  "schema_version": "software.v1",
+  "slug": "openregistry",
+  "repo_id": "gh:1215039752",
+  "name": "OpenRegistry",
+  "summary": "Live company profiles, officers and filings from official government registries via MCP.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": null,
+  "maturity": "stable",
+  "tags": [
+    "ai-agents",
+    "aml",
+    "claude",
+    "data-journalism",
+    "due-diligence",
+    "entity-resolution",
+    "foia",
+    "fraud-detection",
+    "investigation",
+    "investigative-journalism"
+  ],
+  "use_cases": [
+    "search companies across 80+ national registries",
+    "get company profiles with directors and shareholders",
+    "fetch raw filing documents and financial statements"
+  ],
+  "alternatives_to": [
+    "OpenCorporates",
+    "Bureau van Dijk Orbis",
+    "Companies House API direct"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://openregistry.sophymarine.com",
+  "repo": {
+    "url": "https://github.com/sophymarine/openregistry",
+    "full_name": "sophymarine/openregistry",
+    "created_at": "2026-04-19T11:57:20Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": "freemium",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v3.0.0",
+    "published_at": "2026-10-06T07:51:55Z",
+    "url": "https://github.com/sophymarine/openregistry/releases/tag/v3.0.0"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "needs_account",
+    "checked_at": "2026-11-01T00:27:20.110100+08:00",
+    "runs": [
+      {
+        "id": "verify-openregistry-20261101-002514-c13a",
+        "level": "unverified",
+        "unverified_reason": "needs_account",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:27:20.110100+08:00",
+        "tool_version": "1.0.4",
+        "install_method": "npm",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "npm install -g /tmp/openregistry 2>&1 | tail -20; echo \"EXIT:$?\"",
+            "purpose": "install openregistry stdio bridge via npm install -g from cloned repo"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 15 -- openregistry 2>&1; echo \"EXIT:$?\"",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "EXIT:3",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Free tier with no API key, live access via https://openregistry.sophymarine.com/mcp",
+            "actually_needed": "Hosted /mcp endpoint returns HTTP 401 invalid_token 'Sign in required to use /mcp' with WWW-Authenticate Bearer and OAuth discovery URL; stdio bridge forwards without token and returns non-JSON-RPC error causing probe timeout; requires OAuth 2.1 account creation",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-openregistry-20261101-002514-c13a/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.06742
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "streamable_http"
+    ],
+    "launch_command": null,
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add --transport http openregistry https://openregistry.sophymarine.com/mcp"
+      },
+      {
+        "client": "cursor",
+        "snippet": "{\n  \"mcpServers\": {\n    \"openregistry\": {\n      \"url\": \"https://openregistry.sophymarine.com/mcp\"\n    }\n  }\n}"
+      },
+      {
+        "client": "vscode",
+        "snippet": "{\n  \"servers\": {\n    \"openregistry\": {\n      \"type\": \"http\",\n      \"url\": \"https://openregistry.sophymarine.com/mcp\"\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "search_companies",
+      "get_persons_with_significant_control",
+      "fetch_document",
+      "get_shareholders",
+      "list_jurisdictions"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.5,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.35,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 47.8,
+      "signals": {
+        "stars": 23,
+        "monthly_downloads": null,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 3,
+        "registries_count": 0
+      },
+      "age_days": 195,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 36.02
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "f46d1b4df142861f227d0319c6263692f8fe1163e3cbdc1f0b2912e801bd1b3c",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Real-time direct access to unmodified data and raw filings of about 80+ official government registries via MCP."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Made for AI agents"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Plus / Pro / Business / Enterprise / Education plans only (Free tier doesn't expose Developer Mode)."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "claude mcp add --transport http openregistry https://openregistry.sophymarine.com/mcp"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "Three full request → response examples for the most common tools."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Free tier; paid keys for higher quota and depth."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "When you exceed either limit, the response is HTTP `429`:"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Documentation, skills, and brand assets in this repository are released under [CC-BY-4.0](./LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/sophymarine/openregistry",
+      "fetched_at": "2026-10-31T20:23:04+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/sophymarine/openregistry/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:27:40+08:00"
+    },
+    {
+      "id": "release:v3.0.0",
+      "kind": "release",
+      "url": "https://github.com/sophymarine/openregistry/releases/tag/v3.0.0",
+      "fetched_at": "2026-10-31T20:27:40+08:00"
+    },
+    {
+      "id": "hn:50117510",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=50117510",
+      "fetched_at": "2026-10-31T20:23:04+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Real-time direct access to unmodified data and raw filings of about 80+ official government registries via MCP.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "MCP-native, JSON-RPC over Streamable HTTP",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Real-time direct access to unmodified data and raw filings of about 80+ official government registries via MCP.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# OpenRegistry - the world's first MCP and API for live company filings directly from official government registries worldwide",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Every tool call is a real-time query to the upstream government registry API at the moment you ask.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:23:04+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:23:04+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:23:04+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:23:04+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:23:04+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v3.0.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:27:40+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "| **5. Stable** | Production-grade reliability, running on Cloudflare Workers' global edge + a warm pool of per-jurisdiction workers",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Tools: search companies, get profiles, officers, shareholders, charges, filings, and financial-statement documents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Tools: search companies, get profiles, officers, shareholders, charges, filings, and financial-statement documents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Tools: search companies, get profiles, officers, shareholders, charges, filings, and financial-statement documents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "| Coverage | **80+ national registries** | ~140, mostly aggregated from upstream sources | UK only | ~430M companies, aggregated |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "| Cross-border chain walking | **One MCP prompt, ≤80+ jurisdictions** | Manual ID-stitching across countries | Out of scope (UK only) | Limited to BvD-mastered entities |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "| Coverage | **80+ national registries** | ~140, mostly aggregated from upstream sources | UK only | ~430M companies, aggregated |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Free tier; paid keys for higher quota and depth.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Every tool call is a real-time query to the upstream government registry API at the moment you ask.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Streamable HTTP transport per [MCP spec 2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add --transport http openregistry https://openregistry.sophymarine.com/mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"openregistry\": {\n      \"url\": \"https://openregistry.sophymarine.com/mcp\"\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/2",
+      "source_id": "readme",
+      "quote": "{\n  \"servers\": {\n    \"openregistry\": {\n      \"type\": \"http\",\n      \"url\": \"https://openregistry.sophymarine.com/mcp\"\n    }\n  }\n}",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "### 1. `search_companies` — find a UK company",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "### 2. `get_persons_with_significant_control` — UK PSC for a known company",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "### 3. `fetch_document` — raw iXBRL annual accounts bytes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "We surface both via `get_persons_with_significant_control` and `get_shareholders` respectively",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "Tool capability matrix**: call `list_jurisdictions` or visit [openregistry.sophymarine.com/jurisdictions]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:44+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:23:04+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}

@@ -1,0 +1,580 @@
+{
+  "schema_version": "software.v1",
+  "slug": "renor-engine",
+  "repo_id": "gh:1417968786",
+  "name": "Renor",
+  "summary": "Memory for coding agents storing notes as local Markdown and serving them over MCP.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-memory",
+    "ai-memory",
+    "apache-2",
+    "claude-code",
+    "codex",
+    "llm-memory",
+    "markdown",
+    "mcp",
+    "model-context-protocol",
+    "obsidian"
+  ],
+  "use_cases": [
+    "ask agent to remember something and recall it in a new session"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://renor.cloud",
+  "repo": {
+    "url": "https://github.com/renorai/renor-engine",
+    "full_name": "renorai/renor-engine",
+    "created_at": "2026-10-13T20:48:26Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node 22"
+    ],
+    "system_packages": [
+      "git"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-renor-engine-20261101-002203-1e04",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g renor-engine",
+          "purpose": "install renor-engine globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "renor-engine --version",
+        "expected_signal": "1.3.0"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.3.0",
+    "published_at": "2026-10-29T21:46:45Z",
+    "url": "https://github.com/renorai/renor-engine/releases/tag/v1.3.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:22:49.833865+08:00",
+    "runs": [
+      {
+        "id": "verify-renor-engine-20261101-002203-1e04",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:22:49.833865+08:00",
+        "tool_version": "1.3.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g renor-engine",
+            "purpose": "install renor-engine globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "renor-engine --version",
+            "expected_signal": "1.3.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.3.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "renor-engine --help",
+            "expected_signal": "Start MCP server (stdio transport)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mcp Start MCP server (stdio transport) for agent connectivity",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py --timeout 30 -- renor-engine mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/renor-vault && VAULT_PATH=/tmp/renor-vault renor-engine --help 2>&1 | head -n 20\nls -la /tmp/renor-vault",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py --timeout 30 --call status --args '{}' -- renor-engine mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=status content=text text_chars=59",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/renor-vault && VAULT_PATH=/tmp/renor-vault renor-engine --help 2>&1 | head -n 20\nls -la /tmp/renor-vault",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "MCP handshake lists 8 tools, status tool call returns empty counts, and --version prints 1.3.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-renor-engine-20261101-002203-1e04/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-renor-engine-20261101-002203-1e04/check-1-cmd4.judged.png",
+            "runs/verify/verify-renor-engine-20261101-002203-1e04/check-2-cmd5.judged.png",
+            "runs/verify/verify-renor-engine-20261101-002203-1e04/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.044323,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "renor-engine",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "renor",
+          "server_version": "1.3.0",
+          "tools": [
+            "search",
+            "evidence",
+            "keyword",
+            "entity",
+            "remember_fact",
+            "facts",
+            "status",
+            "note"
+          ],
+          "tool_count": 8,
+          "called_tool": "status",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "npx -y renor-engine mcp",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add --scope user renor-local -- npx -y renor-engine mcp"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "VAULT_PATH",
+        "required": true,
+        "purpose": "path to memory folder"
+      }
+    ],
+    "tools": [
+      "search",
+      "remember_fact",
+      "note"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 96.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 57.2,
+      "signals": {
+        "stars": 25,
+        "monthly_downloads": 603,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 17,
+      "packages": [
+        "npm:renor-engine"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 41.13
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "d56d677f347c64380b83f7cdd2aa3e1b063a9d1a6176afba87b97b73672b6b9b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Renor is memory for coding agents: it keeps what you tell Claude Code, Codex or Cursor in a folder of Markdown files on your machine"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Renor is a single-owner engine: one person's notes, one set of agents."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "You need **Node 22** and git."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "claude mcp add --scope user renor-local -- npx -y renor-engine mcp"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "PASS: self-hosted stdio MCP can remember and retrieve a current fact."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export VAULT_PATH=\"$HOME/renor-notes\"    # absolute path; created if missing"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "`claude mcp remove renor-local` and `codex mcp remove renor-local` undo the two lines above."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Renor's own code is **Apache-2.0** ([LICENSE](LICENSE))"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/renorai/renor-engine",
+      "fetched_at": "2026-10-31T20:23:38+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/renorai/renor-engine/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:27:53+08:00"
+    },
+    {
+      "id": "release:v1.3.0",
+      "kind": "release",
+      "url": "https://github.com/renorai/renor-engine/releases/tag/v1.3.0",
+      "fetched_at": "2026-10-31T20:27:53+08:00"
+    },
+    {
+      "id": "hn:50186146",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=50186146",
+      "fetched_at": "2026-10-31T20:23:38+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "serves it back to any of them over MCP.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "It runs locally, needs no account or API key",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "serves it back to any of them over MCP.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**Renor is memory for coding agents: it keeps what you tell Claude Code, Codex or Cursor in a folder of Markdown files on your machine, and serves it back to any of them over MCP.**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Renor",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "You need **Node 22** and git.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "You need **Node 22** and git.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "sends nothing off your machine unless you configure a model",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:23:38+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:23:38+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:23:38+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:23:38+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:23:38+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.3.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:27:53+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Then ask your agent to remember something, and ask about it in a new session.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "It runs locally, needs no account or API key, and sends nothing off your machine",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Any other MCP client:** the command is `node dist/cli.js mcp` (stdio) with `VAULT_PATH` set.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add --scope user renor-local -- npx -y renor-engine mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add --scope user renor-local -- npx -y renor-engine mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "VAULT_PATH",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "the `renor-local` server above has other names (`search`, `remember_fact`, `note`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "the `renor-local` server above has other names (`search`, `remember_fact`, `note`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "the `renor-local` server above has other names (`search`, `remember_fact`, `note`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:19+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:23:38+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}

@@ -1,0 +1,465 @@
+{
+  "schema_version": "software.v1",
+  "slug": "etiny",
+  "repo_id": "gh:1439441953",
+  "name": "etiny",
+  "summary": "Offline tiny models that scan markdown notes for distilled book advice on goals, careers, and pitches.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "scan a markdown document against advice models",
+    "scan every markdown file in subfolders recursively",
+    "search the rule corpus for a word or phrase",
+    "list source works with their counts",
+    "fetch a model bundle for offline use"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://www.shanedevane.com/etiny/",
+  "repo": {
+    "url": "https://github.com/shanedevane/etiny",
+    "full_name": "shanedevane/etiny",
+    "created_at": "2026-10-30T08:02:17Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-etiny-20261101-001839-b47a",
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install etiny",
+          "purpose": "install etiny via pipx"
+        },
+        {
+          "command": "etiny pull personal-goals",
+          "purpose": "pull personal-goals bundle required for scan"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "etiny --help",
+        "expected_signal": "usage: etiny"
+      },
+      "first_task": "etiny doctor"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.2.0",
+    "published_at": "2026-10-30T13:03:28Z",
+    "url": "https://github.com/shanedevane/etiny/releases/tag/v0.2.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:20:43.018599+08:00",
+    "runs": [
+      {
+        "id": "verify-etiny-20261101-001839-b47a",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:20:43.018599+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "pipx",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pipx install etiny",
+            "purpose": "install etiny via pipx"
+          },
+          {
+            "command": "etiny pull personal-goals",
+            "purpose": "pull personal-goals bundle required for scan"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "etiny --help",
+            "expected_signal": "usage: etiny",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: etiny [-h] [--version]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "etiny --version",
+            "expected_signal": "etiny 0.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "etiny 0.1.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "etiny doctor",
+            "expected_signal": "doctor: healthy",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "doctor: healthy",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "etiny scan checks .md in folder against default model",
+            "actually_needed": "default --model is 'goals' which does not exist; must specify --model personal-goals after pulling bundle (~36 MB)",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "etiny walk walks every .md in every subfolder",
+            "actually_needed": "command 'walk' not present in installed CLI (invalid choice); only scan/elevators/elevations/doctor etc exist",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "etiny scan (bare) scans every .md in current folder",
+            "actually_needed": "scan requires a document argument; bare scan errors 'the following arguments are required: document'; use piped stdin or explicit file path",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show etiny doctor reporting healthy with all checks ok and etiny --help printing usage.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-etiny-20261101-001839-b47a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-etiny-20261101-001839-b47a/check-1-cmd4.judged.png",
+            "runs/verify/verify-etiny-20261101-001839-b47a/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.060106
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 51.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.4913,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.4375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.15,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 54.4,
+      "signals": {
+        "stars": 54,
+        "monthly_downloads": null,
+        "forks": 3,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 2,
+        "registries_count": 0
+      },
+      "age_days": 1,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 23.58
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "14269e8d6e6eb18bc98a93e3be0dcc15895cb08f622e3e9a8f3841af33ef8bd9",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "28,000+ pieces of advice distilled from key books on the topics of personal goals, career advice and startup pitch decks."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Offline tiny ai models for your second brain"
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "pipx install etiny"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "etiny scan"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "pipx upgrade etiny"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "models designed to run entirely in-browser."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/shanedevane/etiny",
+      "fetched_at": "2026-10-31T20:24:46+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/shanedevane/etiny/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:28:20+08:00"
+    },
+    {
+      "id": "release:v0.2.0",
+      "kind": "release",
+      "url": "https://github.com/shanedevane/etiny/releases/tag/v0.2.0",
+      "fetched_at": "2026-10-31T20:28:20+08:00"
+    },
+    {
+      "id": "hn:50304646",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=50304646",
+      "fetched_at": "2026-10-31T20:24:46+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Use cli tools to explore your own .md and .txt files via command",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:03+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "pipx install etiny",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:03+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Offline tiny ai models for your second brain: 28K distilled advice from essential books spanning personal goals, pitch decks and career advice",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:03+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Offline tiny ai models for your second brain: 28K distilled advice from essential books spanning personal goals, pitch decks and career advice",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:03+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# etiny: Explorable tiny models for your second brain",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:03+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:24:46+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:24:46+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:24:46+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:24:46+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.2.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:28:20+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "etiny scan notes.md               # scan a document (regex plus the optional neural pass)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:03+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "etiny walk                        # every .md in every subfolder",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:03+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "etiny elevations \"fear of failure\"  # search the rule corpus, any word or phrase",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:03+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "etiny elevators                   # list the source works with their counts",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:03+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "etiny pull personal-goals         # fetch the personal-goals bundle (~36 MB, sha-verified)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:03+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Web app is private and runs entirely in frontend, no user data or text is sent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:03+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:24:46+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}

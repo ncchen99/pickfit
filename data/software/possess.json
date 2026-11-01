@@ -1,0 +1,469 @@
+{
+  "schema_version": "software.v1",
+  "slug": "possess",
+  "repo_id": "gh:1360427265",
+  "name": "Possess",
+  "summary": "Switch coding agents mid-work by resuming or handing off existing sessions.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "resume a coding session in its original harness",
+    "hand over a session to a different coding agent",
+    "check which harnesses and sessions were detected"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/steven-p-walsh/Possess",
+    "full_name": "steven-p-walsh/Possess",
+    "created_at": "2026-09-07T16:10:50Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Rust 1.92+"
+    ],
+    "system_packages": [
+      "Git"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-possess-20261101-001854-7cb6",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/possess-linux-x64.tar.gz https://github.com/steven-p-walsh/Possess/releases/download/v0.1.1/possess-linux-x64.tar.gz",
+          "purpose": "download prebuilt linux x64 tarball from GitHub releases"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && tar xzf /tmp/possess-linux-x64.tar.gz -C /tmp && mv /tmp/possess ~/.local/bin/possess && chmod +x ~/.local/bin/possess",
+          "purpose": "extract binary to ~/.local/bin and make executable"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "possess --version",
+        "expected_signal": "possess 0.1.1"
+      },
+      "first_task": "possess doctor"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.1.1",
+    "published_at": "2026-09-07T18:17:15Z",
+    "url": "https://github.com/steven-p-walsh/Possess/releases/tag/v0.1.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:19:46.697638+08:00",
+    "runs": [
+      {
+        "id": "verify-possess-20261101-001854-7cb6",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:19:46.697638+08:00",
+        "tool_version": "0.1.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/possess-linux-x64.tar.gz https://github.com/steven-p-walsh/Possess/releases/download/v0.1.1/possess-linux-x64.tar.gz",
+            "purpose": "download prebuilt linux x64 tarball from GitHub releases"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && tar xzf /tmp/possess-linux-x64.tar.gz -C /tmp && mv /tmp/possess ~/.local/bin/possess && chmod +x ~/.local/bin/possess",
+            "purpose": "extract binary to ~/.local/bin and make executable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "possess --version",
+            "expected_signal": "possess 0.1.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "possess 0.1.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "possess --help",
+            "expected_signal": "Repossess coding-agent sessions",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Repossess coding-agent sessions across harnesses",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "possess doctor",
+            "expected_signal": "Codex missing",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "◉ Codex missing binary not found",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "possess list --help",
+            "expected_signal": "List this project's sessions",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "List this project's sessions across all installed harnesses",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install --path . --locked (requires Rust 1.92+)",
+            "actually_needed": "prebuilt binary possess-linux-x64.tar.gz from GitHub releases used because box has no Rust toolchain and toolchain must not be installed",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Doctor reports Codex missing with binary not found and version prints possess 0.1.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-possess-20261101-001854-7cb6/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-possess-20261101-001854-7cb6/check-1-cmd14.judged.png",
+            "runs/verify/verify-possess-20261101-001854-7cb6/check-2-cmd12.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.055831
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 81.5,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 28.2,
+      "signals": {
+        "stars": 6,
+        "monthly_downloads": null,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 7,
+        "hn_top_score": 3,
+        "registries_count": 0
+      },
+      "age_days": 53,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 58.52
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "b4278cdcb87e83daa6f5572d0a66ffb1463a92d4d8e1cee19ed68d1e25c1f2a1",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Switch coding agents without starting the conversation over."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "You'll need macOS or Linux, Git, and Rust 1.92+."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "cargo install --path . --locked"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "possess list"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "need API keys of its own; each harness uses its existing login."
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "To update a source installation, run these in your Possess checkout:"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "You'll need macOS or Linux, Git, and Rust 1.92+."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/steven-p-walsh/Possess",
+      "fetched_at": "2026-10-31T20:18:08+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/steven-p-walsh/Possess/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:25:27+08:00"
+    },
+    {
+      "id": "release:v0.1.1",
+      "kind": "release",
+      "url": "https://github.com/steven-p-walsh/Possess/releases/tag/v0.1.1",
+      "fetched_at": "2026-10-31T20:25:27+08:00"
+    },
+    {
+      "id": "hn:49601208",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=49601208",
+      "fetched_at": "2026-10-31T20:18:08+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "| Arrows or `j` / `k` | Move through sessions |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:41+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "CD to your project repo, run `possess`, pick a session, and resume",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:41+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Switch coding agents without starting the conversation over.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:41+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Switch coding agents without starting the conversation over.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:41+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Possess",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:41+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "You'll need macOS or Linux, Git, and Rust 1.92+.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:41+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "You'll need macOS or Linux, Git, and Rust 1.92+.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:41+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "You'll need macOS or Linux, Git, and Rust 1.92+.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:41+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:18:08+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:18:08+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:18:08+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.1.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:25:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Choose the same harness and it just resumes the original session.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:41+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Choose another and you can pick a model and agent before handing over.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:41+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "run `possess doctor` to check what was detected.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:41+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Possess saves the conversation, tool calls and results, plans, and Git state in",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:41+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:18:08+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}

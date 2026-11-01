@@ -1,0 +1,527 @@
+{
+  "schema_version": "software.v1",
+  "slug": "subnetlens",
+  "repo_id": "gh:1195012145",
+  "name": "SubnetLens",
+  "summary": "Concurrent network scanner that discovers hosts, scans TCP ports, and fingerprints devices.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "arp",
+    "arp-scan",
+    "go",
+    "go-package",
+    "icmp",
+    "mdns",
+    "network",
+    "network-analysis",
+    "network-scan",
+    "network-scan-tool"
+  ],
+  "use_cases": [
+    "discover live hosts via TCP, ICMP, ARP, and mDNS",
+    "scan open TCP ports on discovered hosts",
+    "resolve hostnames via mDNS, NBNS, and reverse DNS",
+    "fingerprint operating systems and device types",
+    "identify device vendors via MAC OUI lookup"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://ostefani.github.io/subnetlens/",
+  "repo": {
+    "url": "https://github.com/ostefani/subnetlens",
+    "full_name": "ostefani/subnetlens",
+    "created_at": "2026-03-29T05:08:13Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Go 1.25+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-subnetlens-20261101-002755-cc89",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/subnetlens.tar.gz https://github.com/ostefani/subnetlens/releases/download/v1.5.12/subnetlens_1.5.12_linux_x86_64.tar.gz",
+          "purpose": "download Linux x86_64 release tarball v1.5.12"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && tar xzf /tmp/subnetlens.tar.gz -C /tmp && cp /tmp/subnetlens ~/.local/bin/subnetlens && chmod +x ~/.local/bin/subnetlens",
+          "purpose": "extract tarball and install binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "which subnetlens",
+        "expected_signal": "/home/sbx/.local/bin/subnetlens"
+      },
+      "first_task": "which subnetlens"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.5.12",
+    "published_at": "2026-10-09T12:44:29Z",
+    "url": "https://github.com/ostefani/subnetlens/releases/tag/v1.5.12"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:29:01.628469+08:00",
+    "runs": [
+      {
+        "id": "verify-subnetlens-20261101-002755-cc89",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:29:01.628469+08:00",
+        "tool_version": "1.5.12",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/subnetlens.tar.gz https://github.com/ostefani/subnetlens/releases/download/v1.5.12/subnetlens_1.5.12_linux_x86_64.tar.gz",
+            "purpose": "download Linux x86_64 release tarball v1.5.12"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && tar xzf /tmp/subnetlens.tar.gz -C /tmp && cp /tmp/subnetlens ~/.local/bin/subnetlens && chmod +x ~/.local/bin/subnetlens",
+            "purpose": "extract tarball and install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "which subnetlens",
+            "expected_signal": "/home/sbx/.local/bin/subnetlens",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/home/sbx/.local/bin/subnetlens",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "subnetlens --help",
+            "expected_signal": "subnetlens discovers live hosts",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "subnetlens discovers live hosts on your local network and scans their open ports.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "subnetlens --version",
+            "expected_signal": "subnetlens version 1.5.12",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "subnetlens version 1.5.12 (commit e037478abf5b9a08d420c443b71db63dcef55685, built 2026-10-09T12:43:19Z)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "subnetlens scan 127.0.0.1 --plain --ports 22,80 --timeout 500",
+            "expected_signal": "Scan complete in",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Scan complete in 2.108s",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Prerequisites Go 1.25+ and go install ./go build/go run . scan",
+            "actually_needed": "Go toolchain not present and must not be installed; used prebuilt Linux x86_64 binary from GitHub Releases (v1.5.12) instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "On macOS and Linux, run with sudo to enable ARP and ICMP",
+            "actually_needed": "Scan without sudo warns ICMP/ARP unavailable but TCP connect scan still completes",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show binary present, scan completing, and help describing live-host discovery.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-subnetlens-20261101-002755-cc89/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-subnetlens-20261101-002755-cc89/check-1-cmd12.judged.png",
+            "runs/verify/verify-subnetlens-20261101-002755-cc89/check-2-cmd15.judged.png",
+            "runs/verify/verify-subnetlens-20261101-002755-cc89/check-3-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.06767
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 84.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 54.9,
+      "signals": {
+        "stars": 32,
+        "monthly_downloads": null,
+        "forks": 6,
+        "dependents": null,
+        "release_downloads": 53,
+        "hn_top_score": 6,
+        "registries_count": 0
+      },
+      "age_days": 216,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 38.2
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "cade2270b4e2a00dcd8d3a91da6a4796e8453a53663d37ce6bd18597df6547e3",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A fast, concurrent open-source network scanner with a TUI and plain-text CLI, built in Go."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Designed for users who need deeper visibility, automation, and continuous monitoring."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- Go 1.25+ (`go version`)"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "go install ."
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "go run . scan 192.168.1.0/24 --plain"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "sudo SLENS_DEBUG=1 ./subnetlens scan <target> --plain"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Pay attention that bynaries attached to the release are not signed, so MacOS and Windows will complain about it."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "MIT © 2026 Olha Stefanishyna"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ostefani/subnetlens",
+      "fetched_at": "2026-10-31T20:18:33+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ostefani/subnetlens/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:25:39+08:00"
+    },
+    {
+      "id": "release:v1.5.12",
+      "kind": "release",
+      "url": "https://github.com/ostefani/subnetlens/releases/tag/v1.5.12",
+      "fetched_at": "2026-10-31T20:25:39+08:00"
+    },
+    {
+      "id": "hn:49640346",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=49640346",
+      "fetched_at": "2026-10-31T20:18:33+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "with a TUI and plain-text CLI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:23+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "subnetlens scan 192.168.1.0/24 --plain",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:23+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "with a TUI and plain-text CLI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:23+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A fast, concurrent open-source network scanner with a TUI and plain-text CLI, built in Go.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:23+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# ✧ SubnetLens ✧",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:23+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "release:v1.5.12",
+      "quote": "Available for Linux, macOS, and Windows.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:23+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Go 1.25+ (`go version`)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:23+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "github_api",
+      "quote": "It discovers live hosts on your network",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:23+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:18:33+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:18:33+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:18:33+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:18:33+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:18:33+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.5.12",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:25:39+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "**Host discovery** (TCP, ICMP, ARP, mDNS)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:23+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "**Port scanning** (TCP connect)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:23+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Hostname resolution via mDNS, NBNS, and reverse DNS (PTR)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:23+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Heuristically detects operating systems and device types.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:23+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Uses OUI databases to identify device vendors",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:23+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "github_api",
+      "quote": "A fast, concurrent open-source network scanner",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:23+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "github_api",
+      "quote": "It discovers live hosts on your network",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:23+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:18:33+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}

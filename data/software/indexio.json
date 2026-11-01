@@ -1,0 +1,706 @@
+{
+  "schema_version": "software.v1",
+  "slug": "indexio",
+  "repo_id": "gh:1370794501",
+  "name": "indexio",
+  "summary": "Local code search engine that indexes repos once for AI agents via MCP.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "claude-code",
+    "code-search",
+    "developer-tools",
+    "impact-analysis",
+    "llm",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "rust"
+  ],
+  "use_cases": [
+    "find where a symbol is defined",
+    "answer semantic questions about code",
+    "find who calls a symbol and impact of change"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": "https://www.ioservices.io/indexio",
+  "repo": {
+    "url": "https://github.com/IOServicesLabs/indexio",
+    "full_name": "IOServicesLabs/indexio",
+    "created_at": "2026-09-15T02:55:14Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "git"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g indexio",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "indexio --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-indexio-20261101-001551-c0a7",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install indexio-cli 2>&1",
+          "purpose": "install indexio via uv tool install indexio-cli"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "indexio --version",
+        "expected_signal": "indexio 0.1.10"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g indexio",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "indexio --version"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.1.10",
+    "published_at": "2026-10-22T13:30:39Z",
+    "url": "https://github.com/IOServicesLabs/indexio/releases/tag/v0.1.10"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T00:16:31.042080+08:00",
+    "runs": [
+      {
+        "id": "verify-indexio-20261101-001551-c0a7",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-11-01T00:16:31.042080+08:00",
+        "tool_version": "0.1.10",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install indexio-cli 2>&1",
+            "purpose": "install indexio via uv tool install indexio-cli"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "indexio --version",
+            "expected_signal": "indexio 0.1.10",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "indexio 0.1.10",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- indexio mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call index_stats --args '{}' -- indexio mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=index_stats content=text text_chars=49",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 13 tools, successful index_stats call, and version 0.1.10 output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-indexio-20261101-001551-c0a7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-indexio-20261101-001551-c0a7/check-1-cmd3.judged.png",
+            "runs/verify/verify-indexio-20261101-001551-c0a7/check-2-cmd4.judged.png",
+            "runs/verify/verify-indexio-20261101-001551-c0a7/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.031966,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "indexio",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2024-11-05",
+          "server_name": "indexio",
+          "server_version": "0.1.0",
+          "tools": [
+            "code_search",
+            "semantic_search",
+            "code_grep",
+            "list_files",
+            "find_symbol",
+            "who_calls",
+            "index_stats",
+            "recall",
+            "refresh_index",
+            "impact_of_symbol",
+            "impact_of_diff",
+            "file_outline",
+            "read_span"
+          ],
+          "tool_count": 13,
+          "called_tool": "index_stats",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "indexio mcp",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add indexio -- /usr/local/bin/indexio mcp --data-dir /var/lib/ciindex"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n    \"mcpServers\": {\n      \"indexio\": {\n        \"command\": \"/usr/local/bin/indexio\",\n        \"args\": [\"mcp\", \"--data-dir\", \"/var/lib/ciindex\"]\n      }\n    }\n  }"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "GITHUB_TOKEN",
+        "required": null,
+        "purpose": "credentials for listing and cloning"
+      },
+      {
+        "name": "AZDO_TOKEN",
+        "required": null,
+        "purpose": "credentials for listing and cloning"
+      }
+    ],
+    "tools": [
+      "code_search",
+      "code_grep",
+      "find_symbol",
+      "who_calls",
+      "file_outline",
+      "read_span",
+      "impact_of_symbol",
+      "impact_of_diff",
+      "recall"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T00:32:32+08:00",
+    "quality": {
+      "total": 100.0,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 1.0,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 54.8,
+      "signals": {
+        "stars": 8,
+        "monthly_downloads": 1742,
+        "forks": 0,
+        "dependents": null,
+        "release_downloads": 438,
+        "hn_top_score": 3,
+        "registries_count": 2
+      },
+      "age_days": 46,
+      "packages": [
+        "npm:indexio",
+        "pypi:indexio-cli"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 45.2
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:32:32.955185+08:00",
+      "sources_sha": "ce0b7ca8af7c637bc00bc0e7890ccd5682e635cc4532ad5a3160f6701d76221e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "indexio is a code search engine for AI coding agents. It indexes all the repositories of an"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "indexio is a code search engine for AI coding agents."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "`git` must be on the PATH. No service, no database and no model download"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "| Linux, macOS | `curl -fsSL https://raw.githubusercontent.com/IOServicesLabs/indexio/main/install.sh | sh` |"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "- indexio --version                  prints a version"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "All data goes into one directory: `--data-dir`, `$INDEXIO_DATA_DIR`, or `~/.indexio`."
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "If `indexio --version` is not found afterwards, add that folder to PATH and open a new shell."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/IOServicesLabs/indexio",
+      "fetched_at": "2026-10-31T20:22:25+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/IOServicesLabs/indexio/blob/main/README.md",
+      "fetched_at": "2026-10-31T20:27:23+08:00"
+    },
+    {
+      "id": "release:v0.1.10",
+      "kind": "release",
+      "url": "https://github.com/IOServicesLabs/indexio/releases/tag/v0.1.10",
+      "fetched_at": "2026-10-31T20:27:23+08:00"
+    },
+    {
+      "id": "hn:50047627",
+      "kind": "hn",
+      "url": "https://news.ycombinator.com/item?id=50047627",
+      "fetched_at": "2026-10-31T20:22:25+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Pick one. Each one gives you the `indexio` command.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Each one gives you the `indexio` command.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "add this server to its MCP configuration and restart the client:\n       command: indexio   args: [\"mcp\"]",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "indexio is a code search engine for AI coding agents. It indexes all the repositories of an\norganization one time.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# indexio",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "| Linux, macOS | `curl -fsSL https://raw.githubusercontent.com/IOServicesLabs/indexio/main/install.sh | sh` |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "`git` must be on PATH.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:25+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:25+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:25+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:25+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:22:25+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.1.10",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-10-31T20:27:23+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Where is `WalkState::new` defined? Which Rust files match `/fn parse_*/`?",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "How do we buffer printer output? Where do we refresh the auth token?",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "It can tell you where a\nsymbol is defined, who calls it, and what breaks if you change it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g indexio",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g indexio",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g indexio",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Nothing is uploaded; the index lives in ~/.indexio.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "indexio mcp                           # MCP over stdio",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "indexio mcp                           # MCP over stdio",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add indexio -- /usr/local/bin/indexio mcp --data-dir /var/lib/ciindex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n    \"mcpServers\": {\n      \"indexio\": {\n        \"command\": \"/usr/local/bin/indexio\",\n        \"args\": [\"mcp\", \"--data-dir\", \"/var/lib/ciindex\"]\n      }\n    }\n  }",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "GITHUB_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "AZDO_TOKEN",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "What the agent gets afterwards: `code_search`, `code_grep`, `find_symbol`, `who_calls`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "What the agent gets afterwards: `code_search`, `code_grep`, `find_symbol`, `who_calls`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "What the agent gets afterwards: `code_search`, `code_grep`, `find_symbol`, `who_calls`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "What the agent gets afterwards: `code_search`, `code_grep`, `find_symbol`, `who_calls`,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`file_outline`, `read_span`, `impact_of_symbol`, `impact_of_diff` and `recall` as tools,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`file_outline`, `read_span`, `impact_of_symbol`, `impact_of_diff` and `recall` as tools,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`file_outline`, `read_span`, `impact_of_symbol`, `impact_of_diff` and `recall` as tools,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`file_outline`, `read_span`, `impact_of_symbol`, `impact_of_diff` and `recall` as tools,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`file_outline`, `read_span`, `impact_of_symbol`, `impact_of_diff` and `recall` as tools,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T00:13:33+08:00"
+    }
+  ],
+  "first_seen_at": "2026-10-31T20:22:25+08:00",
+  "updated_at": "2026-11-01T00:32:32+08:00"
+}
