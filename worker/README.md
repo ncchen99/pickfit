@@ -107,9 +107,11 @@ GUI 桌面 app 的實跑另帶 `verification.gui`（`find_*` 的 pick 與 `get_i
 ### `report_outcome`
 
 - 7 個 stage 存成 `(stage, success)`，對照寫在 `migrations/0001_init.sql` 開頭；`satisfaction` 存成 1／0／-1。
-- **計分**：`rec_id` 必須是 pickfit 7 天內發給這個 slug 的（`find_*` 推薦過它，或 `get_install_guide` 給過它的指南）。合格的回報保留 `rec_id`，不合格的存成 `rec_id = NULL`，所以「`rec_id IS NOT NULL` ＝ 計分」。回 `counted_in_score` 與 `not_counted_reason`。
+- **計分**：`rec_id` 必須是 pickfit 發給這個 slug 的：`installed`、`first_run_*` 要在 7 天內，`still_using`、`replaced`、`abandoned` 是幾週後才回報的，放寬到 120 天（`REC_TTL_LATER_DAYS`）（`find_*` 推薦過它，或 `get_install_guide` 給過它的指南）。合格的回報保留 `rec_id`，不合格的存成 `rec_id = NULL`，所以「`rec_id IS NOT NULL` ＝ 計分」。回 `counted_in_score` 與 `not_counted_reason`。
 - **去重**：同一個 `(rec_id, slug, stage, success)` 只記一次，重送回 `deduplicated: true`、同一個 `report_id`（`0002` 把 `success` 加進唯一索引，否則「先失敗、修好後成功」的第二筆會被當成重複）。
 - **重驗**：`install_failed`／`first_run_failed`＋有效 `rec_id`＋知道 OS（參數或推薦時的 OS）＋有 `error_excerpt` → 寫進 `reverify_queue`；同一 `(slug, os)` 還在排隊就回 `already_queued`，做完（`done_at` 有值）後再失敗會重新排。處理在管線：`pickfit reverify`（或 `pickfit watch --reverify`，P5.3）在全新沙盒重跑。任何拿到 `rec_id` 的人都能回報，所以回報只決定「要重驗」，不決定寫什麼：驗證 agent 只看到結構化欄位（stage、OS、arch）和 pickfit 自己給過的步驟，`error_excerpt` 與 `note` 都不送進模型（`error_excerpt` 留在結果檔給人看）。只有通過、重播成功、而且步驟和紀錄不同（`first_run_failed` 也比 check 與 first task）的 run 才寫回；新步驟裡的套件名稱與網址都要出現在 README、pickfit 先前的步驟或這個 repo 本身，否則標 `held` 不寫、等人看。寫回照 `write_back` 的規則（不寫 `failed`、較強的通過紀錄保留），印出並存下該筆紀錄的 `git diff`、單獨 commit（commit 失敗就把檔案放回），再設 `done_at`。部署由人看過 diff 後自己 `pickfit publish`：`watch --reverify` 不能和 `--publish` 一起用。同一台機器上用 lock 檔認領，`reverify` 和 `watch --reverify` 不會為同一筆回報重複付費。沙盒是 Linux：macOS／Windows 的回報也在 Linux 重跑，結果會註明。
+- **還在用嗎（check-in）**：`get_install_guide` 回 `check_in`（`src/checkin.ts`）。裝好 7 天後到 `valid_until`（120 天）之間，使用者下次跟 agent 談到軟體、或自己問起時，agent **先問使用者同意**，才在本機跑幾個唯讀指令：`command -v`（Windows 用 `Get-Command`，指令名稱取自錄下的 check）；套件管理器只列這一個工具（`brew list --versions`、`npm ls -g --depth=0`，`uv tool list`、`pipx list`、`cargo install --list` 過濾到這個名字，`pip show`）；MCP server 看 `claude mcp get <name>`；macOS 的 app 用 `mdls -name kMDItemLastUsedDate`。指令只從錄下的安裝步驟產生，不經過模型。然後回報 `still_using` 或 `abandoned`（換掉了就 `replaced`），加上粗略的 `last_used`；不送指令輸出、確切時間、路徑或其他軟體。唯讀部署（`TOOLS=readonly`）沒有 `report_outcome`，`check_in` 是 `null`。沒有常駐程式：每次都是 agent 在對話裡、使用者同意後跑一次。
+- **`last_used`**：只有 `still_using`、`replaced`、`abandoned` 會存（其他 stage 一律 `null`）；`0004` 的 CHECK 只收這四個值，確切時間存不進去。
 - **個資**：`error_excerpt` 與 `note` 存之前先過 `src/scrub.ts`（家目錄的使用者名稱、email、`token=`／`Bearer` 之類的值、長串像金鑰的字元），`error_excerpt` 留最後 500 字元、`note` 最多 280 字元。`note` 是不可信的輸入：只給人看，**不出現在任何回應，也不送進模型**。
 
 ### `submit_software`
@@ -225,7 +227,7 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 
 ## D1（`migrations/`）
 
-`0001_init.sql`：`events`、`submissions`、`reverify_queue`、`meta_budget`。`0002_outcome_once_by_result.sql`：回報的去重索引加上 `success`。`0003_model_attempts.sql`：`events` 加 `degraded_reason`、`model_attempts`、`model_statuses`。**一定要先套 `0003` 再部署這版**，否則每一筆事件都寫不進去：
+`0001_init.sql`：`events`、`submissions`、`reverify_queue`、`meta_budget`。`0002_outcome_once_by_result.sql`：回報的去重索引加上 `success`。`0003_model_attempts.sql`：`events` 加 `degraded_reason`、`model_attempts`、`model_statuses`。`0004_last_used.sql`：`events` 加 `last_used`（只收 `this_week`、`this_month`、`older`、`unknown`）。**一定要先套到最新的 migration（現在是 `0004`）再部署這版**，否則每一筆事件都寫不進去：
 
 - `report_outcome` 會整個失敗：它等事件寫完才回應，寫入錯誤會讓每次呼叫都回錯誤。
 - `find_*`、`get_install_guide`、`submit_software` 照常回應，但事件寫入失敗，只在 Workers log 留下 `d1_write_failed`。`rec_id` 不會進 `events`，之後拿這些 `rec_id` 回報也不能計分。
@@ -237,7 +239,7 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 **先決條件**：`data/software/` 有真的 profile 並已 commit（P2.6），而且念誠同意部署。下面的指令都在**主 checkout** 的 `worker/` 下跑（`.env` 在主 checkout 根目錄）。
 
 1. **建 D1**：`npx wrangler d1 create pickfit`，把輸出的 `database_id` 填進 `wrangler.jsonc`（取代全 0 的佔位），commit。
-2. **遠端建表**：`npx wrangler d1 migrations apply pickfit --remote`（`0001`–`0003` 都要套，而且**要在部署這版之前套**；之後 `migrations/` 有新檔，也是先套再部署。**`pickfit publish` 不會幫你跑**；`eval` 等 env 的 D1 也要各自套）。
+2. **遠端建表**：`npx wrangler d1 migrations apply pickfit --remote`（`0001`–`0004` 都要套，而且**要在部署這版之前套**；之後 `migrations/` 有新檔，也是先套再部署。**`pickfit publish` 不會幫你跑**；`eval` 等 env 的 D1 也要各自套）。
 3. **`ALLOWED_HOSTS`**：在 `wrangler.jsonc` 的 `vars` 填 `pickfit-mcp.<workers.dev 子網域>.workers.dev`（子網域就是 P0.5 hello 部署用的那個，dashboard 的 Workers & Pages 也看得到），commit。沒填的話遠端每個請求都是 403，`pickfit publish` 也會拒絕部署。
 4. **先 dry run**：在 repo 根目錄 `uv run pickfit publish --dry-run`。它會驗 `data/software/` 每一筆、確認不是 fixture、資料都已 commit、`wrangler.jsonc` 已填好；任何一項不過就列出問題、exit 1。
 5. **部署**：`uv run pickfit publish`。它用真資料重建 `worker/src/generated/index.json`，再跑 `npx wrangler deploy`。（之後本機要回到假資料：`npm run build:index -- --data test/fixtures/software`。）
