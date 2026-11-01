@@ -31,6 +31,7 @@ import hashlib
 import json
 import secrets
 import shlex
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from pickfit.verify import gui
@@ -51,6 +52,18 @@ SYSTEM_PREFIXES = ("/System/", "/usr/", "/bin/", "/sbin/", "/Library/Apple/", "/
 RESPAWNED_PREFIXES = ("/System/", "/usr/libexec/", "/usr/sbin/")
 QTN_USER_APPROVED = 0x40  # the quarantine flag the first-launch prompt's Open button sets
 MENU_WAIT_S, MENU_SETTLE_S = 8, 2  # after pickfit clicks a menu bar app's item
+DISPLAY_NOTE = "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+
+
+@dataclass
+class MacGuiLaunch(GuiLaunch):
+    """gui.GuiLaunch that names its display, so the run records the macOS desktop and not Xvfb."""
+
+    display: str = DISPLAY_NOTE
+
+
+def _mac(launch: GuiLaunch) -> MacGuiLaunch:
+    return MacGuiLaunch(**{k: getattr(launch, k) for k in GuiLaunch.__dataclass_fields__})
 
 # Root, in the guest (the Command Line Tools' Python 3.9): `<cmd>` with a JSON payload on stdin. Placeholders
 # are pickfit's constants, filled in when the helper is written; nothing in it comes from the app.
@@ -425,7 +438,7 @@ def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s
     clicked: tuple[int, int] | None = None
     if before is None or started.exit_code != 0 or "started" not in started.stdout:
         why = "no process snapshot" if before is None else (started.stderr or started.stdout).strip()[-300:]
-        shown = GuiLaunch(tier="none", error=f"the launch could not start: {why}")
+        shown: GuiLaunch = GuiLaunch(tier="none", error=f"the launch could not start: {why}")
     else:
         cfg = {"before": before, "nonce": secrets.token_hex(12), "mark": gui.MARK, "wait_s": wait_s,
                "settle_s": gui.SETTLE_S, "min_w": gui.MIN_WIDTH, "min_h": gui.MIN_HEIGHT,
@@ -470,6 +483,7 @@ def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s
             png = None
     log = box.exec(f"/usr/bin/tail -c 3000 -- {APP_LOG_DIR}/{tag}.log", 20)
     shown.log_tail = log.stdout if log.exit_code == 0 else ""
+    shown = _mac(shown)
     code = 0 if shown.tier == "window" and png is not None and not timed_out and not survived else 1
     result = ExecResult(command=command, exit_code=code,
                         stdout=observation(shown, approved, kept=keep_running, clicked=clicked),

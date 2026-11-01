@@ -123,6 +123,7 @@ def test_a_window_of_its_own_passes_with_pickfits_screenshot():
     assert cfg["items_before"] == ["11", "12"] and not cfg.get("any_layer")
     assert box.calls[5][1] == {"baseline": SESSION}  # the stop leaves only the login session
     assert box.screen().clicks == []  # a window of its own: pickfit clicks nothing
+    assert shown.to_dict()["display"] == gui_mac.DISPLAY_NOTE and len(gui_mac.DISPLAY_NOTE) <= 120  # not Xvfb
 
 
 def test_a_survivor_makes_the_launch_count_for_nothing():
