@@ -673,10 +673,11 @@ def build_scores(record: SoftwareRecord, snapshot: dict[str, Any] | None, issues
         "responsiveness": responsiveness,
         "usage_outcomes": usage_score(record.outcomes),
     }
-    cap_reason = binding_cap(record.kind, record.repo.archived, record.verification.level)
+    archived = record.repo is not None and record.repo.archived
+    cap_reason = binding_cap(record.kind, archived, record.verification.level)
     quality = compose_quality(components, usage_outcomes_weight(record.outcomes.external.total()), cap_reason)
     signals = popularity_signals(snapshot, registry) if snapshot else dict.fromkeys(POPULARITY_WEIGHTS)
-    created = record.repo.created_at
+    created = record.repo.created_at if record.repo else None
     age_days = max(0, int(_days(as_of, created))) if created else None
     pop = popularity(signals, record.category, age_days)
     return {
@@ -705,7 +706,7 @@ def refresh_scores(data: dict[str, Any], now: datetime) -> str | None:
     components = {name: c["score"] for name, c in scores["quality"]["components"].items()}
     components["sandbox_verification"] = sandbox_score(verification, data["category"])
     components["usage_outcomes"] = usage_score(outcomes)
-    cap_reason = binding_cap(data["kind"], data["repo"]["archived"], verification.level)
+    cap_reason = binding_cap(data["kind"], bool((data.get("repo") or {}).get("archived")), verification.level)
     quality = compose_quality(components, usage_outcomes_weight(outcomes.external.total()), cap_reason)
     if quality == scores["quality"] and version == FORMULA_VERSION:
         return None
@@ -889,6 +890,8 @@ def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: st
 
     record, rubric = load_for_scoring(path)
     row: dict[str, Any] = {"slug": record.slug, "status": None, "cost_usd": 0.0, "rubric": None}
+    if record.repo is None:  # a web app with no repository: no GitHub facts to read
+        gh = registries = None
     if snapshot is None and gh is not None:
         snapshot = live_snapshot(gh, record.repo.full_name, now)
         row["snapshot"] = "live"
