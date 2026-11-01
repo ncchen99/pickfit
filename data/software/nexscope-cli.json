@@ -86,7 +86,7 @@
       "method": "pip",
       "steps": [
         {
-          "command": "python3 --version && python3 -m pip install --index-url https://pypi.org/simple nexscope-cli==0.1.5",
+          "command": "python3 -m pip install --index-url https://pypi.org/simple nexscope-cli==0.1.5",
           "purpose": "Install nexscope-cli 0.1.5 via pip"
         }
       ],
@@ -131,110 +131,6 @@
     "unverified_reason": null,
     "checked_at": "2026-11-01T13:25:32.374812+08:00",
     "runs": [
-      {
-        "id": "verify-nexscope-cli-20261031-032235-c093",
-        "level": "function",
-        "unverified_reason": null,
-        "os": "linux",
-        "arch": "x86_64",
-        "method": "sandbox",
-        "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T03:23:27.331165+08:00",
-        "tool_version": "0.1.5",
-        "install_method": "pip",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "python3 --version && python3 -m pip install --index-url https://pypi.org/simple nexscope-cli==0.1.5",
-            "purpose": "Install nexscope-cli 0.1.5 via pip"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "nexscope --version",
-            "expected_signal": "0.1.5",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "0.1.5",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "nexscope doctor --offline",
-            "expected_signal": "READY_LOCAL",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "\"status\": \"READY_LOCAL\",",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "nexscope demo product-comparison --out release-smoke",
-            "expected_signal": "comparison.html",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "\"report\": \"/home/sbx/work/release-smoke/comparison.html\",",
-            "setup": [],
-            "offline": true
-          }
-        ],
-        "pitfalls": [],
-        "blocking_error": null,
-        "judge": {
-          "verdict": "working",
-          "observed": "Screenshots show doctor reporting READY_LOCAL, demo completing with comparison.html reports, and version printing 0.1.5.",
-          "model": "muse-spark-1.3"
-        },
-        "evidence": {
-          "trace_path": "runs/verify/verify-nexscope-cli-20261031-032235-c093/report.json",
-          "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-nexscope-cli-20261031-032235-c093/check-1-cmd3.judged.png",
-            "runs/verify/verify-nexscope-cli-20261031-032235-c093/check-2-cmd4.judged.png",
-            "runs/verify/verify-nexscope-cli-20261031-032235-c093/check-3-cmd2.judged.png"
-          ],
-          "evidence_url": null
-        },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.047292,
-        "features": [
-          {
-            "feature": "Turn product data into comparison reports",
-            "status": "checked",
-            "smoke_tests": [
-              2
-            ],
-            "reason": null,
-            "failure": null,
-            "note": null
-          },
-          {
-            "feature": "Research products and competitors",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "Retrieving live listing data needs NEXSCOPE_API_KEY or browser-approved account."
-          },
-          {
-            "feature": "Create product images",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "Online image generation needs creative-service access and billing/account."
-          },
-          {
-            "feature": "Create product marketing videos",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "Online video generation needs product references plus service access/billing."
-          }
-        ]
-      },
       {
         "id": "verify-nexscope-cli-20261101-132244-1dff",
         "level": "install",
@@ -320,6 +216,110 @@
             "reason": "other",
             "failure": null,
             "note": "its check did not pass in the log; tools describe nexscope_ai_video_reclone shows video generation schema offline"
+          }
+        ]
+      },
+      {
+        "id": "verify-nexscope-cli-20261031-032235-c093",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T03:23:27.331165+08:00",
+        "tool_version": "0.1.5",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "python3 -m pip install --index-url https://pypi.org/simple nexscope-cli==0.1.5",
+            "purpose": "Install nexscope-cli 0.1.5 via pip"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nexscope --version",
+            "expected_signal": "0.1.5",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.1.5",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nexscope doctor --offline",
+            "expected_signal": "READY_LOCAL",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"status\": \"READY_LOCAL\",",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nexscope demo product-comparison --out release-smoke",
+            "expected_signal": "comparison.html",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"report\": \"/home/sbx/work/release-smoke/comparison.html\",",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show doctor reporting READY_LOCAL, demo completing with comparison.html reports, and version printing 0.1.5.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nexscope-cli-20261031-032235-c093/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nexscope-cli-20261031-032235-c093/check-1-cmd3.judged.png",
+            "runs/verify/verify-nexscope-cli-20261031-032235-c093/check-2-cmd4.judged.png",
+            "runs/verify/verify-nexscope-cli-20261031-032235-c093/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.047292,
+        "features": [
+          {
+            "feature": "Turn product data into comparison reports",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Research products and competitors",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Retrieving live listing data needs NEXSCOPE_API_KEY or browser-approved account."
+          },
+          {
+            "feature": "Create product images",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Online image generation needs creative-service access and billing/account."
+          },
+          {
+            "feature": "Create product marketing videos",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Online video generation needs product references plus service access/billing."
           }
         ]
       }
@@ -701,5 +701,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-11-01T13:25:32.378208+08:00"
+  "updated_at": "2026-11-01T23:02:55.314810+08:00"
 }

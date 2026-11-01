@@ -84,7 +84,7 @@
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/azerozero/grob/main/scripts/install.sh -o /tmp/install-grob.sh && ls -l /tmp/install-grob.sh && wc -c /tmp/install-grob.sh",
+          "command": "curl -fsSL https://raw.githubusercontent.com/azerozero/grob/main/scripts/install.sh -o /tmp/install-grob.sh",
           "purpose": "Download install script"
         },
         {
@@ -118,102 +118,6 @@
     "unverified_reason": null,
     "checked_at": "2026-11-01T13:11:02.476594+08:00",
     "runs": [
-      {
-        "id": "verify-grob-20261031-021724-edb0",
-        "level": "function",
-        "unverified_reason": null,
-        "os": "linux",
-        "arch": "x86_64",
-        "method": "sandbox",
-        "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:18:07.438193+08:00",
-        "tool_version": "0.36.129",
-        "install_method": "script",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "curl -fsSL https://raw.githubusercontent.com/azerozero/grob/main/scripts/install.sh -o /tmp/install-grob.sh && ls -l /tmp/install-grob.sh && wc -c /tmp/install-grob.sh",
-            "purpose": "Download install script"
-          },
-          {
-            "command": "sh /tmp/install-grob.sh",
-            "purpose": "Install grob via script"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "grob --version",
-            "expected_signal": "grob 0.36.129",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "grob 0.36.129",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "grob status",
-            "expected_signal": "Service:",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Service: ❌ stopped",
-            "setup": [],
-            "offline": true
-          }
-        ],
-        "pitfalls": [],
-        "blocking_error": null,
-        "judge": {
-          "verdict": "working",
-          "observed": "Screenshots show grob status reporting Service stopped with config guidance and grob --version printing 0.36.129.",
-          "model": "muse-spark-1.3"
-        },
-        "evidence": {
-          "trace_path": "runs/verify/verify-grob-20261031-021724-edb0/report.json",
-          "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-grob-20261031-021724-edb0/check-1-cmd4.judged.png",
-            "runs/verify/verify-grob-20261031-021724-edb0/check-2-cmd3.judged.png"
-          ],
-          "evidence_url": null
-        },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.043055,
-        "features": [
-          {
-            "feature": "screen requests for secrets",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "needs a configured provider account to screen live requests"
-          },
-          {
-            "feature": "switch providers after a failure",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "needs a configured provider account to test failover"
-          },
-          {
-            "feature": "enforce spending budgets",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "needs a configured provider account to enforce spend"
-          },
-          {
-            "feature": "record signed audit logs",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "needs a configured provider account to generate audit traffic"
-          }
-        ]
-      },
       {
         "id": "verify-grob-20261101-130808-c39b",
         "level": "function",
@@ -309,6 +213,102 @@
             "reason": "needs_account",
             "failure": null,
             "note": "Signed audit logs require running proxy with traffic"
+          }
+        ]
+      },
+      {
+        "id": "verify-grob-20261031-021724-edb0",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:18:07.438193+08:00",
+        "tool_version": "0.36.129",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/azerozero/grob/main/scripts/install.sh -o /tmp/install-grob.sh",
+            "purpose": "Download install script"
+          },
+          {
+            "command": "sh /tmp/install-grob.sh",
+            "purpose": "Install grob via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "grob --version",
+            "expected_signal": "grob 0.36.129",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "grob 0.36.129",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "grob status",
+            "expected_signal": "Service:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Service: ❌ stopped",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show grob status reporting Service stopped with config guidance and grob --version printing 0.36.129.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-grob-20261031-021724-edb0/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-grob-20261031-021724-edb0/check-1-cmd4.judged.png",
+            "runs/verify/verify-grob-20261031-021724-edb0/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.043055,
+        "features": [
+          {
+            "feature": "screen requests for secrets",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs a configured provider account to screen live requests"
+          },
+          {
+            "feature": "switch providers after a failure",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs a configured provider account to test failover"
+          },
+          {
+            "feature": "enforce spending budgets",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs a configured provider account to enforce spend"
+          },
+          {
+            "feature": "record signed audit logs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs a configured provider account to generate audit traffic"
           }
         ]
       }
@@ -656,5 +656,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:54+08:00",
-  "updated_at": "2026-11-01T13:11:02.481477+08:00"
+  "updated_at": "2026-11-01T23:02:54.857574+08:00"
 }
