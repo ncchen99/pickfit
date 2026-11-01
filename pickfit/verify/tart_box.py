@@ -611,6 +611,11 @@ class TartBox(Box):
         if self.display and hardened:
             from pickfit.verify import gui_mac
 
+            quiet = self.harness_exec(["/bin/launchctl", "asuser", str(MAC_UID), "/usr/bin/sudo", "-n", "-u", MAC_USER,
+                                       "/bin/sh", "-c", QUIET_DESKTOP], 60)
+            if quiet.exit_code != 0:
+                raise BoxError(f"could not quiet the desktop: {(quiet.stdout + quiet.stderr).strip()[-200:]}")
+            self._wait_desktop()  # the Dock is back before the session is noted
             self.session = gui_mac.session_procs(self)
 
     def _expire(self) -> None:
@@ -1052,6 +1057,13 @@ for args in "com.apple.dock persistent-apps -array" "com.apple.dock persistent-o
   sudo -u {MAC_USER} defaults write $args
 done
 """
+# Run as sbx in its desktop session once it is up: the Dock hides itself and holds no apps. macOS rebuilds the Dock
+# at the first login (the base's own setting did not survive it), and a Dock in view covered the bottom of Neon
+# Vision Editor's What's New dialog, buttons and all, while the operator clicked its icons (11/2).
+QUIET_DESKTOP = ("defaults write com.apple.dock autohide -bool true && defaults write com.apple.dock "
+                 "autohide-delay -float 0 && defaults write com.apple.dock persistent-apps -array && "
+                 "defaults write com.apple.dock persistent-others -array && defaults write com.apple.dock "
+                 "show-recents -bool false && killall Dock")
 # sbx's desktop is up: it is the console user and its Dock and Finder run.
 DESKTOP_UP = (f'[ "$(stat -f %Su /dev/console)" = {MAC_USER} ] && pgrep -u {MAC_USER} -x Dock >/dev/null && '
               f'pgrep -u {MAC_USER} -x Finder >/dev/null || {{ echo "console: $(stat -f %Su /dev/console)"; exit 1; }}')

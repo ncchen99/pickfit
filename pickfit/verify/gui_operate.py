@@ -758,8 +758,9 @@ def _mac_instructions(text: str) -> str:
          "taskbar or terminal, only the app.",
          "Each turn you see a screenshot of a Mac's screen (macOS), the goal, and the actions taken so far: the "
          "app's windows have title bars, its menus are in the menu bar at the top left, and the Dock is at the "
-         "bottom. Use only the app: not Finder, Terminal or another app. A menu bar app's controls are in the menu "
-         "of its item at the top right."),
+         "bottom (hidden until the pointer reaches the bottom edge). Use only the app: never Spotlight (cmd+space), "
+         "the Dock, Finder, Terminal or another app. A menu bar app's controls are in the menu of its item at the "
+         "top right."),
         ("e.g. Return, Tab, Escape, BackSpace, ctrl+a, ctrl+s, ctrl+c.",
          "e.g. Return, Tab, Escape, BackSpace, cmd+a, cmd+s, cmd+c (a Mac's shortcuts use cmd, the Command key; "
          "alt is Option)."),
