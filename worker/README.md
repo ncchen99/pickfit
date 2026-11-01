@@ -148,6 +148,20 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
   - `events` 多三欄（`0003`）：`degraded_reason`、`model_attempts`、`model_statuses`（每次的狀態碼，例如 `[503, 200]`；沒拿到回應的記 `null`）。
   - Workers log 每次重試記一行 `meta_retry`，內容是 `status`、`wait_ms`、`left_ms`。
 
+### 404 備援（Muse Spark Open @ Baseten）
+
+11/1 01:46–01:49（台北）Meta 又有 5 次對 `muse-spark-1.3` 回 404，重試一次也一樣。現在配對呼叫在**重試後最後一次仍是 `404`**（不論內容）時，把**同一個請求**（prompt、候選卡、schema 都不變，只把 `model` 換成 `meta-models/muse-spark-open-1026`）送一次到 Baseten 的 `https://inference.baseten.co/v1/responses`，用 `BASETEN_API_KEY`（secret）。答案照樣經過 `parseAnswer` 與 `guardPicks`，壞掉或全被擋就退回規則。
+
+- **只有 404**：`429`、`5xx`、`400`、逾時、連線錯誤，以及「404 後重試得到 503」都照原樣退回規則，不走備援，延遲不變。沒設 `BASETEN_API_KEY` 就不備援（和以前一樣）。
+- **不重試、時限照舊**：Baseten 只送一次；它的逾時是 `META_TIMEOUT_MS` 剩下的時間，剩不到 10 秒就不備援。
+- **花費**：Spark Open 在 Baseten 與 1.3 同價（$1.25／$0.15／$4.25 每百萬 token），算進同一個 `meta_budget`（每日、總額上限都是同一組）。呼叫前已用一次呼叫的上限檢查過；Meta 的 404 記 $0，所以備援不會超過那次檢查。
+- **介面**：Baseten 的 `/v1/responses` 接受 Worker 的請求原樣（`developer` 角色、`store: false`、`reasoning.effort`、strict `json_schema`），回應格式相同（`status: completed`、`output_text`、`usage.input_tokens`）。11/1 用真資料（119 張卡、約 2.1 萬 input token）實測一次，答案符合 schema、3 個推薦都通過守門，$0.030。Baseten 接受 json_schema 但**不強制**，壞掉的答案由守門擋下。
+- **紀錄**：
+  - 回應：`matched_by` 是 `meta-models/muse-spark-open-1026`（不是 1.3）；`fallback_model` 是同一個 id（有送 Baseten 就填，成功或失敗都填；其他情況 `null`）；`model_attempts` 是 3（Meta 兩次＋Baseten 一次）。`how_we_know` 寫「Chosen by Muse Spark Open (meta-models/muse-spark-open-1026, Meta's open-weight model served by Baseten, asked because Meta's API was unavailable)」。網頁的結果列與隱私說明也照實寫。
+  - `events`：`matched_by` 同上；`model_statuses` 例如 `[404, 404, 200]`，最後一個是 Baseten 的；`need.model_fallback` 是 `{ "model": "meta-models/muse-spark-open-1026", "status": 200 }`。Baseten 也失敗時 `matched_by` 是 `rules`，`degraded_reason` 是 Baseten 那次的失敗（例如 `model_http`），`model_http_status` 是它的狀態碼。
+  - Workers log 記一行 `meta_fallback`（`statuses`、`left_ms`），`meta_call` 的 `model` 是實際回答的模型。
+- 關鍵字呼叫（`expand.ts`）不走備援：它失敗時候選卡照規則的字詞挑，配對仍可走備援。
+
 本機實測（假資料 4–5 張卡，10/28）：`find_software` 約 $0.009、7 秒；`find_alternatives` 約 $0.009–0.011、6–7 秒。
 
 ## 不快取
@@ -245,6 +259,12 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 
    ```bash
    uv run --project .. python -c "import sys; from pickfit.env import read_env; sys.stdout.write(read_env(['MODEL_API_KEY'])['MODEL_API_KEY'])" | npx wrangler secret put MODEL_API_KEY
+   ```
+
+   404 備援（選用，見上面「404 備援」；不設就沒有備援）：
+
+   ```bash
+   uv run --project .. python -c "import sys; from pickfit.env import read_env; sys.stdout.write(read_env(['BASETEN_API_KEY'])['BASETEN_API_KEY'])" | npx wrangler secret put BASETEN_API_KEY
    ```
 
 7. **確認**：`curl https://<host>/` 的 `entries` 等於 dry run 的筆數（瀏覽器開同一個網址是產品網頁，試搜一次）；`claude mcp add --transport http pickfit https://<host>/mcp`（用 `env -i` 啟動，見上）看得到 5 個工具；問一題，回應的 `matched_by` 是 `muse-spark-1.3`。
