@@ -116,6 +116,22 @@ def _webapps(args: argparse.Namespace) -> int:
     if args.action == "recheck-terms":
         print(json.dumps(webapps.recheck_terms(db, log=log)))
         return 0
+    if args.action == "extract":
+        from pickfit.extract import run_extract
+        from pickfit.webrecords import web_candidate
+
+        sites = [web_candidate(r) for r in db.rows(outcome="selected")]
+        summary = run_extract(limit=args.limit or max(1, len(sites)), model=args.model, reasoning_effort=args.effort,
+                              candidates=sites, force=args.force, concurrency=args.concurrency, log=log)
+        print(json.dumps(summary, ensure_ascii=False, indent=2))
+        return 0 if summary["errors"] == 0 else 1
+    if args.action == "records":
+        from pickfit.meta import resolve_model
+        from pickfit.webrecords import write_web_records
+
+        summary = write_web_records(db, model=resolve_model(args.model), dry_run=args.dry_run, log=log)
+        print(json.dumps(summary.to_dict(), ensure_ascii=False, indent=2))
+        return 0
     try:
         gh = GitHub(github_token())
     except GitHubError as err:
@@ -224,10 +240,12 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
 
     wa = sub.add_parser("webapps", help="hosted web apps (P2.8): gather Show HN and GitHub rows under neutral "
                                         "rules ($0), pick and check sites in hash order (Spark Open screen, paid)")
-    wa.add_argument("action", choices=["gather", "pick", "funnel", "recheck-terms", "recheck-thin", "purge"],
+    wa.add_argument("action", choices=["gather", "pick", "funnel", "recheck-terms", "recheck-thin", "extract",
+                                       "records", "purge"],
                     help="gather: rules 1-3; pick: rules 4-8 until each source has its quota; funnel: counts; "
                          "recheck-terms: rule 7 again for passed sites; recheck-thin: rules 4-8 again, rendered, for "
-                         "sites whose page showed no text before rendering; purge: drop stored page text. "
+                         "sites whose page showed no text before rendering; extract: selected sites with a Meta "
+                         "model (paid); records: write new web_app records ($0); purge: drop stored page text. "
                          "Rendering needs `uv run --with playwright`")
     wa.add_argument("--source", action="append", choices=webapps.SOURCES, help="one source (default both)")
     wa.add_argument("--days", type=int, default=webapps.DEFAULT_DAYS,
@@ -238,6 +256,11 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     wa.add_argument("--concurrency", type=int, default=4, help="pick: sites checked at once (default 4)")
     wa.add_argument("--max-checks", type=int, default=None, help="pick: stop after checking N sites")
     wa.add_argument("--no-review", action="store_true", help="pick: skip muse-spark-1.3 reviews")
+    wa.add_argument("--model", default="prod", help='extract, records: "prod" (muse-spark-1.3, default) or a model id')
+    wa.add_argument("--effort", default="minimal", help="extract: reasoning effort (default minimal)")
+    wa.add_argument("--limit", type=int, default=None, help="extract: at most N sites (default all selected)")
+    wa.add_argument("--force", action="store_true", help="extract: again even if already extracted")
+    wa.add_argument("--dry-run", action="store_true", help="records: build and validate, write nothing")
     wa.set_defaults(func=_webapps)
 
     f = sub.add_parser("funnel", help="counts, models and cost per funnel stage from runs/pipeline.db")
