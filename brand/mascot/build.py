@@ -658,7 +658,6 @@ def icon_16(ink=INK, suffix=""):
     s = (
         f'<defs><clipPath id="{cid}"><ellipse {body_e}/></clipPath></defs>'
         f'<path d="M6.5 7.5 L4.5 10 C 3.4 8.4, 2.2 6, 1.6 4.2 Q 1.2 2.4 2.6 2 Q 4 1.6 4.5 3 C 5.1 4.6, 5.7 6.2, 6.5 7.5 Z" fill="{TAIL}" stroke="{ink}" stroke-width="1" stroke-linejoin="round"/>'
-        f'<path d="M7.6 6 C 7 4.6, 7.6 3.2, 9.2 2.9 C 8.8 3.8, 9.2 4.9, 10 5.8 Z" fill="{CAP}" stroke="{ink}" stroke-width=".8" stroke-linejoin="round"/>'
         f'<ellipse {body_e} fill="{BODY}"/>'
         f'<g clip-path="url(#{cid})"><path d="M0 9.8 C 3 8.2, 6 8, 8.5 9.6 C 11 8, 14 8.2, 17 9.8 L17 0 L0 0 Z" fill="{CAP}"/>'
         f'<path d="M0 14 Q 8.5 16 17 14 L17 16 L0 16 Z" fill="{BELLY}"/></g>'
