@@ -42,7 +42,7 @@ uv run --with pyyaml==6.0.2 --with pytest python -m pytest eval/runner/tests -q
 
 | 項目 | 值 |
 |---|---|
-| Claude Code | 2.1.304（`~/.local/bin/claude`；評測期間 `DISABLE_AUTOUPDATER=1`） |
+| Claude Code | 2.1.304：11/2 起用 `~/.pickfit/eval/claude-2.1.304`（`~/.local/share/claude/versions/2.1.304` 的複本，sha256 `b9ac5374…aab78e6a`，簽章有效），這樣這台 Mac 其他地方的 `claude` 自動更新、換掉 `~/.local/bin/claude` 的連結時，評測用的版本不會跟著變；評測期間 `DISABLE_AUTOUPDATER=1` |
 | 模型 | `claude-opus-5-5`（Claude Code 對 API key 使用者的預設；念誠 2026-10-29 確認）；9.2 C 的對照模型 `claude-haiku-5-5` |
 | 開場 | 第 4 節的原文 |
 | 每次執行上限 | 900 秒、$3 |
