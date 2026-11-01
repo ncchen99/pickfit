@@ -106,16 +106,17 @@ def pipeline_caps() -> Caps:
 
 
 # Baseten's hackathon credits are separate from Meta's, so they get their own budget in the same
-# file. $100 of credits, $80 hard stop of our own: the key is the hackathon's and is not charged past them.
+# file. $100 of credits and a $100 stop: the key is the hackathon's and is not charged past them.
 def baseten_daily_cap(day: date) -> float:
-    """$25 a day; $45 on 11/1 for feature coverage and its rerun after the head/tail fix.
+    """$25 a day; $45 on 11/1 and $35 on 11/2.
 
-    念誠 raised 11/1 to $35, then to $45; the total is unchanged.
+    念誠 raised 11/1 to $35, then to $45, for feature coverage and its rerun after the head/tail fix;
+    on 11/1 he also raised 11/2 to $35 and the total from $80 to $100 for GUI checks and new sources.
     """
-    return 45.0 if day == date(2026, 11, 1) else 25.0
+    return {date(2026, 11, 1): 45.0, date(2026, 11, 2): 35.0}.get(day, 25.0)
 
 
-BASETEN_CAPS = Caps(total_usd=80.0, daily_usd=baseten_daily_cap)
+BASETEN_CAPS = Caps(total_usd=100.0, daily_usd=baseten_daily_cap)
 
 
 def taipei_now(clock: Callable[[], datetime] | None = None) -> datetime:
