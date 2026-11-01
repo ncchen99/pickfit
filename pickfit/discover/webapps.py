@@ -32,12 +32,14 @@ checked one by one, in that order, until a source has its quota (check_site):
    `ai-train=no` are recorded but do not exclude a site: pickfit trains nothing.
    An unreachable robots.txt (5xx, timeout) counts as a full disallow (RFC 9309).
 6. the home page loads: HTTP 200, HTML, on a site (a redirect to a platform is out).
-7. the terms page linked from the home page, if any, does not forbid automated access
-   (TERMS_BAN: a robot, spider, scraper or automated-means clause with a prohibition).
+7. the terms page does not forbid automated access (terms_bans: a sentence with a robot,
+   spider, scraper, crawler or automated-means word and a prohibition). The terms page is
+   the one the home page links, or else `/terms` when it reads as terms; a site with
+   neither has no terms to apply.
 8. a model reading the home page (and README) says it is a web app used in the browser
    whose core use needs no account and can be tried free (screen_site, Muse Spark Open).
 
-Fetches per site: robots.txt, the home page, the terms page (only if linked). Nothing else.
+Fetches per site: robots.txt, the home page, one terms page; a GitHub README through the API.
 The page text is kept in the local runs/ database only until extraction has read it
 (purge_pages); records keep extracted facts and short quotes.
 """
@@ -638,18 +640,25 @@ def check_site(row: dict[str, Any], fetch: Fetcher) -> tuple[str, dict[str, Any]
 
     candidates = terms_links(page.links, home["url"])
     checks["terms"] = {"links": candidates[:5], "url": None, "bans": []}
-    if candidates:
-        terms = fetch.get("terms", candidates[0])
-        checks["terms"].update(url=candidates[0], status=terms["status"], error=terms["error"])
-        if terms["status"] == 200 and terms["text"]:
-            terms_text = parse_page(terms["text"]).text() if "html" in (terms["type"] or "") else terms["text"]
-            bans = terms_bans(terms_text[:TERMS_TEXT_MAX])
-            checks["terms"]["bans"] = bans[:5]
-            checks["terms"]["chars"] = len(terms_text)
-            if bans:
-                return "terms_disallow", checks, None
-        else:
-            checks["terms"]["unreadable"] = True
+    # A page whose links are drawn by script shows none: try the usual address once, and take it only
+    # when it reads as terms (a single-page app answers every path with its home page).
+    guessed = not candidates
+    terms_url = candidates[0] if candidates else urljoin(home["url"], "/terms")
+    terms = fetch.get("terms", terms_url)
+    terms_text = ""
+    if terms["status"] == 200 and terms["text"]:
+        terms_text = parse_page(terms["text"]).text() if "html" in (terms["type"] or "") else terms["text"]
+    if guessed and not re.search(r"\bterms\b|conditions", terms_text[:3000], re.I):
+        terms_text = ""
+    checks["terms"].update(url=terms_url if terms_text else None, guessed=guessed, status=terms["status"],
+                           error=terms["error"])
+    if terms_text:
+        bans = terms_bans(terms_text[:TERMS_TEXT_MAX])
+        checks["terms"].update(bans=bans[:5], chars=len(terms_text))
+        if bans:
+            return "terms_disallow", checks, None
+    elif not guessed:
+        checks["terms"]["unreadable"] = True
     return "checked", checks, page_source_text(page, text)
 
 

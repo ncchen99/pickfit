@@ -96,6 +96,43 @@ def _profiles(args: argparse.Namespace) -> int:
     return 0
 
 
+def _webapps(args: argparse.Namespace) -> int:
+    from datetime import UTC, datetime
+
+    from pickfit.discover import webapps
+    from pickfit.discover.github import GitHub, GitHubError, github_token
+    from pickfit.discover.run import pipeline_db_path
+    from pickfit.discover.showhn import HN
+    from pickfit.ledger import taipei_now
+
+    db = webapps.WebSites(pipeline_db_path())
+    log = lambda line: print(line, file=sys.stderr)  # noqa: E731
+    if args.action == "funnel":
+        print(json.dumps(webapps.funnel(db), ensure_ascii=False, indent=2))
+        return 0
+    if args.action == "purge":
+        print(json.dumps({"pages_dropped": db.purge_pages()}))
+        return 0
+    try:
+        gh = GitHub(github_token())
+    except GitHubError as err:
+        print(f"pickfit webapps: {err}", file=sys.stderr)
+        return 2
+    run_id = f"webapps-{args.action}-" + taipei_now().strftime("%Y%m%d-%H%M%S")
+    out = []
+    for source in args.source or webapps.SOURCES:
+        if args.action == "gather":
+            out.append(webapps.run_gather(db, source=source, hn=HN(), gh=gh, now=datetime.now(UTC), days=args.days,
+                                          per_query=args.per_query, run_id=run_id, log=log).to_dict())
+        else:
+            taken = {r["site_key"] for r in db.rows() if r["source"] != source and r["outcome"] in webapps.PASSED}
+            out.append(webapps.run_pick(db, source=source, quota=args.quota, seed=args.seed, hn=HN(), gh=gh,
+                                        run_id=run_id, concurrency=args.concurrency, max_checks=args.max_checks,
+                                        taken=taken, log=log, review=not args.no_review))
+    print(json.dumps({"run_id": run_id, "results": out}, ensure_ascii=False, indent=2))
+    return 0
+
+
 def _funnel(args: argparse.Namespace) -> int:
     from pickfit.discover.run import pipeline_db_path, prescreen_status
     from pickfit.discover.store import PipelineDB
@@ -176,6 +213,24 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
                    help="only set the advertised features (and their evidence) on existing records")
     p.add_argument("--slug", action="append", help="--features-only: only this record (repeatable)")
     p.set_defaults(func=_profiles)
+
+    from pickfit.discover import webapps
+
+    wa = sub.add_parser("webapps", help="hosted web apps (P2.8): gather Show HN and GitHub rows under neutral "
+                                        "rules ($0), pick and check sites in hash order (Spark Open screen, paid)")
+    wa.add_argument("action", choices=["gather", "pick", "funnel", "purge"],
+                    help="gather: rules 1-3; pick: rules 4-8 until each source has its quota; funnel: counts; "
+                         "purge: drop stored page text")
+    wa.add_argument("--source", action="append", choices=webapps.SOURCES, help="one source (default both)")
+    wa.add_argument("--days", type=int, default=webapps.DEFAULT_DAYS,
+                    help=f"show_hn: posts from the last N days (default {webapps.DEFAULT_DAYS})")
+    wa.add_argument("--per-query", type=int, default=1000, help="github: results per topic query (max 1000)")
+    wa.add_argument("--quota", type=int, default=50, help="pick: sites to select per source (default 50)")
+    wa.add_argument("--seed", default=webapps.DEFAULT_SEED, help=f"pick order seed (default {webapps.DEFAULT_SEED})")
+    wa.add_argument("--concurrency", type=int, default=4, help="pick: sites checked at once (default 4)")
+    wa.add_argument("--max-checks", type=int, default=None, help="pick: stop after checking N sites")
+    wa.add_argument("--no-review", action="store_true", help="pick: skip muse-spark-1.3 reviews")
+    wa.set_defaults(func=_webapps)
 
     f = sub.add_parser("funnel", help="counts, models and cost per funnel stage from runs/pipeline.db")
     f.set_defaults(func=_funnel)
