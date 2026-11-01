@@ -447,7 +447,6 @@ def build_main():
 BIRD_PIVOT = "transform-box:fill-box;transform-origin:50% 100%;"
 PIVOTS = (
     ".tail{transform-box:fill-box;transform-origin:90% 92%}"
-    ".tuft{transform-box:fill-box;transform-origin:40% 100%}"
     ".wing{transform-box:fill-box;transform-origin:50% 5%}"
     ".eye{transform-box:fill-box;transform-origin:50% 50%}"
 )
