@@ -184,11 +184,12 @@ def test_a_click_that_opens_nothing_of_the_apps_stays_process_alive():
     box = FakeMacBox(reports=[_report(windows=[], new_items=[ITEM], seconds_to_window=None),
                               _report(windows=[], seconds_to_window=None)])
     result, shown, png = gui_mac.launch(box, "open ~/Applications/X.app", 1, 30)
-    assert shown.tier == "process_alive" and png is None and result.exit_code == 1
+    assert shown.tier == "process_alive" and png == PNG and result.exit_code == 1
     assert box.screen().keys == ["Escape"] and "opened no window of the app's own" in (shown.error or "")
 
 
 def test_no_new_menu_bar_item_means_no_click():
     box = FakeMacBox(report=_report(windows=[], new_items=[], seconds_to_window=None))
-    _, shown, _ = gui_mac.launch(box, "open ~/Applications/X.app", 1, 30)
+    result, shown, png = gui_mac.launch(box, "open ~/Applications/X.app", 1, 30)
     assert shown.tier == "process_alive" and box.screen().clicks == []
+    assert png == PNG and result.exit_code == 1  # a picture of the failure, which does not pass

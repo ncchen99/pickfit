@@ -423,6 +423,9 @@ def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s
            keep_running: bool = False) -> tuple[ExecResult, GuiLaunch, bytes | None]:
     """Launch on the box's desktop; (the record to keep, what it showed, the screenshot PNG).
 
+    The screenshot is taken at any tier once the watcher has reported, so a failed launch shows what was on
+    screen (a crash dialog, a Gatekeeper refusal); only a launch at tier window passes (exit 0).
+
     An app that shows no window of its own but puts an item in the menu bar (a menu bar app) gets one click on
     that item, as a user would give it; whatever opens counts only if the app's own process owns it. On macOS 26
     Control Center hosts every app's menu bar item, so the item is told by being new since the launch.
@@ -466,7 +469,7 @@ def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s
                 shown.error = "; ".join(filter(None, [shown.error, "clicking its menu bar item opened no window of "
                                                       "the app's own"]))
     png: bytes | None = None
-    if shown.tier == "window":
+    if report:  # whatever the tier: a launch that showed nothing of the app's leaves a picture of what it showed
         try:
             png = box.screen().screenshot()
         except VncError as err:
