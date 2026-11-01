@@ -18,10 +18,12 @@ the app's outcome (`listings.outcome`):
 4. usable without an account: the store's text does not say an account, login or
    subscription is required (only stated requirements; extraction and the sandbox look again).
 5. used but not famous: between the BAND percentiles of the store's popularity measure
-   among the apps that pass 1-4. Flathub's install stats are not licensed for reuse, so
-   for Flathub the measure is the upstream repository's GitHub stars, and an app whose
-   source is not on GitHub has none (`no_popularity_signal`). For a cask it is the
-   365-day install count, with at least one install in the last 30 days.
+   among the apps that pass 1-4, and GitHub stars no higher than the upper percentile of
+   those apps' stars. Flathub's install stats are not licensed for reuse, so for Flathub
+   the measure is the upstream repository's GitHub stars, and an app whose source is not
+   on GitHub has none (`no_popularity_signal`). For a cask it is the 365-day install
+   count, with at least one install in the last 30 days; the star bound keeps out apps
+   famous on GitHub that few install as a cask (`above_star_band`).
 
 Topic plays no part. The batch is a hash-ordered sample of the apps that pass (pick).
 
@@ -174,6 +176,7 @@ class StoreStats:
     apps: int = 0
     by_outcome: Counter[str] = field(default_factory=Counter)
     band: tuple[int, int] | None = None
+    star_max: int | None = None
     eligible: int = 0
     repos_new: int = 0
     repos_known: int = 0
@@ -182,15 +185,17 @@ class StoreStats:
     def to_dict(self) -> dict[str, Any]:
         return {"source": self.source, "apps": self.apps, "by_outcome": dict(self.by_outcome.most_common()),
                 "eligible_before_band": self.eligible, "band": list(self.band) if self.band else None,
+                "star_max": self.star_max,
                 "candidates": self.by_outcome["candidate"], "candidates_by_kind": dict(self.by_kind),
                 "repos_new": self.repos_new, "repos_known": self.repos_known}
 
 
-def describe_query(source: str, catalog: str, band: tuple[int, int] | None) -> str:
+def describe_query(source: str, catalog: str, band: tuple[int, int] | None, star_max: int | None) -> str:
     measure = "GitHub stars of the upstream" if source == "flathub" else "365-day cask installs"
     span = f"{band[0]}..{band[1]}" if band else "none"
     return (f"{catalog}; open source, maintained {MAINTAINED_DAYS} days, no stated account, {measure} "
-            f"between P{int(BAND[0] * 100)} and P{int(BAND[1] * 100)} = {span} ({FILTERS_VERSION})")
+            f"between P{int(BAND[0] * 100)} and P{int(BAND[1] * 100)} = {span}, GitHub stars at most "
+            f"P{int(BAND[1] * 100)} = {star_max} ({FILTERS_VERSION})")
 
 
 def search_store(source: str, listings: list[Listing], gh: GitHub, db: PipelineDB, *, catalog: str,
@@ -224,11 +229,14 @@ def search_store(source: str, listings: list[Listing], gh: GitHub, db: PipelineD
     if eligible:
         values = [popularity(x, repo) for x, repo in eligible]
         stats.band = (int(percentile(values, BAND[0])), int(percentile(values, BAND[1])))
+        stats.star_max = int(percentile([int(repo.get("stargazers_count") or 0) for _, repo in eligible], BAND[1]))
         for x, repo in eligible:
             value = popularity(x, repo)
             outcome[x.item_id] = ("below_band" if value < stats.band[0] else
-                                  "above_band" if value > stats.band[1] else "candidate")
-    log(f"{source}: {stats.eligible} eligible, popularity band {stats.band}")
+                                  "above_band" if value > stats.band[1] else
+                                  "above_star_band" if int(repo.get("stargazers_count") or 0) > stats.star_max
+                                  else "candidate")
+    log(f"{source}: {stats.eligible} eligible, popularity band {stats.band}, stars at most {stats.star_max}")
 
     names = db.names_index()
     known: dict[str, bool] = {}
@@ -255,7 +263,7 @@ def search_store(source: str, listings: list[Listing], gh: GitHub, db: PipelineD
         db.save_listing(source=source, item_id=x.item_id, item_url=x.url, name=x.name, facts=facts,
                         linked_repo=repo["full_name"] if repo else x.github, repo_id=key, outcome=o,
                         known_before=known_before, run_id=run_id)
-    db.log_query(run_id=run_id, query_id=source, category="other", q=describe_query(source, catalog, stats.band),
+    db.log_query(run_id=run_id, query_id=source, category="other", q=describe_query(source, catalog, stats.band, stats.star_max),
                  ran_at=ran_at, total_count=len(listings), returned=stats.by_outcome["candidate"], new=new)
     log(f"{source}: {stats.to_dict()}")
     return stats

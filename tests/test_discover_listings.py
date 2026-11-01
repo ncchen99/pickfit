@@ -245,7 +245,8 @@ def test_search_store_applies_the_rules_in_order_and_merges_known_repos(tmp_path
     assert funnel["discover"]["listings"]["flathub"]["repos_new"] == 3
     assert funnel["discover"]["by_channel"]["flathub"] == 4
     [query] = funnel["discover"]["queries"]
-    assert query["query_id"] == "flathub" and "between P25 and P75 = 20..40" in query["q"]
+    assert query["query_id"] == "flathub" and "between P25 and P75 = 20..40, GitHub stars at most P75 = 40" \
+        in query["q"]
     # A second run keeps whether a repo was known at first sight.
     search_store("flathub", apps, gh.client(tmp_path), db, catalog="catalog", now=NOW, run_id="r2",
                  log=lambda line: None)
@@ -263,14 +264,20 @@ def test_cask_rules_use_github_license_pushes_and_installs(tmp_path: Path) -> No
                           "url": f"https://formulae.brew.sh/cask/{token}", "github": repo,
                           "installs": {"30d": 5, "90d": 20, "365d": 80}, **extra})
 
+    nodes.update({f"me/s{i}": gql_node(10 + i, f"me/s{i}", stars=stars) for i, stars in enumerate((10, 20, 30))})
+    nodes["me/famous"] = gql_node(20, "me/famous", stars=40_000)
     apps = [a("ok", "me/ok"), a("nolicense", "me/nolicense"), a("old", "me/old"), a("closed", None),
             a("ok@beta", "me/ok"), a("idle", "me/ok", installs={"30d": 0, "90d": 0, "365d": 80}),
-            a("gone", "me/ok", deprecated=True)]
-    search_store("homebrew_cask", apps, gh.client(tmp_path), db, catalog="cask.json", now=NOW, run_id="r1",
-                 log=lambda line: None)
+            a("gone", "me/ok", deprecated=True), a("famous", "me/famous"),
+            *(a(f"s{i}", f"me/s{i}") for i in range(3))]
+    stats = search_store("homebrew_cask", apps, gh.client(tmp_path), db, catalog="cask.json", now=NOW,
+                         run_id="r1", log=lambda line: None)
+    # Five eligible casks with the same installs; stars 10, 20, 30, 100 and 40,000: P75 = 100.
+    assert (stats.band, stats.star_max) == ((80, 80), 100)
     assert {x["item_id"]: x["outcome"] for x in db.listings("homebrew_cask")} == {
         "ok": "candidate", "nolicense": "not_open_source", "old": "unmaintained", "closed": "license_unknown",
-        "ok@beta": "variant", "idle": "unused", "gone": "deprecated"}
+        "ok@beta": "variant", "idle": "unused", "gone": "deprecated", "famous": "above_star_band",
+        "s0": "candidate", "s1": "candidate", "s2": "candidate"}
 
 
 def test_pick_is_a_seeded_order_with_one_app_per_repo(tmp_path: Path) -> None:
