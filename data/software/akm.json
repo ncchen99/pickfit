@@ -97,20 +97,20 @@
     },
     "windows": {
       "basis": "replayed",
-      "run_id": "verify-akm-20261031-221817-e9c3",
+      "run_id": "verify-akm-20261101-030928-ebd3",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g akm-cli",
-          "purpose": "Install akm via npm"
+          "command": "node --version && npm --version && npm install -g akm-cli\n",
+          "purpose": "install akm-cli via npm install -g"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "akm --version",
+        "command": "akm --version\n",
         "expected_signal": "0.10.261022"
       },
-      "first_task": "akm setup --yes"
+      "first_task": "akm setup --yes\n"
     }
   },
   "pricing": {
@@ -128,7 +128,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T22:25:13.533540+08:00",
+    "checked_at": "2026-11-01T03:17:51.511132+08:00",
     "runs": [
       {
         "id": "verify-akm-20261031-032510-5356",
@@ -322,7 +322,7 @@
         ]
       },
       {
-        "id": "verify-akm-20261031-221817-e9c3",
+        "id": "verify-akm-20261101-030928-ebd3",
         "level": "function",
         "unverified_reason": null,
         "os": "windows",
@@ -330,19 +330,19 @@
         "method": "sandbox",
         "runner": "vbox",
         "image": "Windows 11 Enterprise LTSC Eval 24H2 (26100.1742), VirtualBox 7.2.22 +pickfit-win11@16ea69df29ff router@583d254c306d",
-        "checked_at": "2026-10-31T22:25:13.533540+08:00",
+        "checked_at": "2026-11-01T03:17:51.511132+08:00",
         "tool_version": "0.10.261022",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g akm-cli",
-            "purpose": "Install akm via npm"
+            "command": "node --version && npm --version && npm install -g akm-cli\n",
+            "purpose": "install akm-cli via npm install -g"
           }
         ],
         "smoke_tests": [
           {
-            "command": "akm --version",
+            "command": "akm --version\n",
             "expected_signal": "0.10.261022",
             "exit_code": 0,
             "passed": true,
@@ -351,17 +351,8 @@
             "offline": true
           },
           {
-            "command": "akm --help",
-            "expected_signal": "Run `akm help <command>` or `akm <command> --help` for details on any command.",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Run `akm help <command>` or `akm <command> --help` for details on any command.",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "akm setup --yes",
-            "expected_signal": "\"ok\": true,",
+            "command": "akm setup --yes\n",
+            "expected_signal": "\"ok\": true",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "\"ok\": true,",
@@ -369,14 +360,14 @@
             "offline": true
           },
           {
-            "command": "akm index",
-            "expected_signal": "\"scanComplete\": true,",
+            "command": "akm index\n",
+            "expected_signal": "Keyword index ready",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "\"scanComplete\": true,",
+            "observed_excerpt": "\"message\": \"Keyword index ready. Semantic search is disabled.\",",
             "setup": [
               {
-                "command": "akm setup --yes",
+                "command": "akm setup --yes\n",
                 "background": false,
                 "port": null
               }
@@ -384,19 +375,78 @@
             "offline": true
           },
           {
-            "command": "akm curate \"deploy a Bun app\"",
-            "expected_signal": "\"query\": \"deploy a Bun app\",",
+            "command": "akm curate \"deploy a Bun app\"\n",
+            "expected_signal": "deploy a Bun app",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "\"query\": \"deploy a Bun app\",",
             "setup": [
               {
-                "command": "akm setup --yes",
+                "command": "akm setup --yes\n",
                 "background": false,
                 "port": null
               },
               {
-                "command": "akm index",
+                "command": "akm index\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "akm show facts/conventions/domains\n",
+            "expected_signal": "Domain vocabulary",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"text\": \"Domain vocabulary\",",
+            "setup": [
+              {
+                "command": "akm setup --yes\n",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "akm index\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "akm hints --detail brief\n",
+            "expected_signal": "akm hints",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "`akm --help` for the command overview or `akm hints --detail full` for the",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "akm bundle list\n",
+            "expected_signal": "\"ok\": true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"ok\": true,",
+            "setup": [
+              {
+                "command": "akm setup --yes\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "akm workflow list\n",
+            "expected_signal": "\"shape\": \"workflow-list\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"shape\": \"workflow-list\",",
+            "setup": [
+              {
+                "command": "akm setup --yes\n",
                 "background": false,
                 "port": null
               }
@@ -414,21 +464,59 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show setup succeeded with ok true, index processed 12 entries and verified keyword index, and version 0.10.261022 printed.",
-          "model": "muse-spark-1.3-contributor"
+          "observed": "Screenshots show setup returning ok true, index completing with Keyword index ready, and version printing 0.10.261022.",
+          "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-akm-20261031-221817-e9c3/report.json",
+          "trace_path": "runs/verify/verify-akm-20261101-030928-ebd3/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-akm-20261031-221817-e9c3/check-1-cmd4.judged.png",
-            "runs/verify/verify-akm-20261031-221817-e9c3/check-2-cmd5.judged.png",
-            "runs/verify/verify-akm-20261031-221817-e9c3/check-3-cmd2.judged.png"
+            "runs/verify/verify-akm-20261101-030928-ebd3/check-1-cmd4.judged.png",
+            "runs/verify/verify-akm-20261101-030928-ebd3/check-2-cmd5.judged.png",
+            "runs/verify/verify-akm-20261101-030928-ebd3/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3-contributor",
-        "cost_usd": 0.006021
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.04254,
+        "features": [
+          {
+            "feature": "manage agent knowledge, memories and skills",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              3,
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "use same library from any coding agent",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output is only generic hints/help text, not use from different coding agents."
+          },
+          {
+            "feature": "install and share capability bundles",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists an existing bundle, not installing or sharing it."
+          },
+          {
+            "feature": "run resumable multi-step workflows",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows empty workflow list with no run, dispatch, or resume."
+          }
+        ]
       }
     ]
   },
@@ -800,5 +888,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:04+08:00",
-  "updated_at": "2026-11-01T01:07:53.228007+08:00"
+  "updated_at": "2026-11-01T11:26:55.572370+08:00"
 }

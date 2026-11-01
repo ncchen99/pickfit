@@ -95,20 +95,20 @@
     },
     "windows": {
       "basis": "replayed",
-      "run_id": "verify-frugon-20261031-214339-536c",
+      "run_id": "verify-frugon-20261101-015321-5745",
       "method": "uv",
       "steps": [
         {
-          "command": "uvx frugon --version",
-          "purpose": "One-shot install and run via uvx (uvx frugon --version)"
+          "command": "uv tool install frugon",
+          "purpose": "install frugon via uv tool install"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "uvx frugon --version",
+        "command": "frugon --version",
         "expected_signal": "frugon 0.2.6"
       },
-      "first_task": "uvx frugon analyze --demo"
+      "first_task": "frugon analyze --demo"
     }
   },
   "pricing": {
@@ -126,7 +126,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T21:51:34.734584+08:00",
+    "checked_at": "2026-11-01T02:01:40.610399+08:00",
     "runs": [
       {
         "id": "verify-frugon-20261031-032243-ca13",
@@ -217,7 +217,7 @@
         ]
       },
       {
-        "id": "verify-frugon-20261031-214339-536c",
+        "id": "verify-frugon-20261101-015321-5745",
         "level": "function",
         "unverified_reason": null,
         "os": "windows",
@@ -225,19 +225,19 @@
         "method": "sandbox",
         "runner": "vbox",
         "image": "Windows 11 Enterprise LTSC Eval 24H2 (26100.1742), VirtualBox 7.2.22 +pickfit-win11@16ea69df29ff router@583d254c306d",
-        "checked_at": "2026-10-31T21:51:34.734584+08:00",
+        "checked_at": "2026-11-01T02:01:40.610399+08:00",
         "tool_version": "0.2.6",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uvx frugon --version",
-            "purpose": "One-shot install and run via uvx (uvx frugon --version)"
+            "command": "uv tool install frugon",
+            "purpose": "install frugon via uv tool install"
           }
         ],
         "smoke_tests": [
           {
-            "command": "uvx frugon --version",
+            "command": "frugon --version",
             "expected_signal": "frugon 0.2.6",
             "exit_code": 0,
             "passed": true,
@@ -246,17 +246,8 @@
             "offline": true
           },
           {
-            "command": "uvx frugon --help",
-            "expected_signal": "Free, local, open-source LLM cost analyzer",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Free, local, open-source LLM cost analyzer.",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "uvx frugon analyze --demo",
-            "expected_signal": "56,100 calls",
+            "command": "frugon analyze --demo",
+            "expected_signal": "Analyzed 56,100 calls",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "│ Analyzed 56,100 calls · baseline gpt-5.5 (your current model) │",
@@ -266,6 +257,11 @@
         ],
         "pitfalls": [
           {
+            "readme_said": "frugon --help interactive display",
+            "actually_needed": "plain frugon --help hangs/timeouts due to rich paging; pipe through Select-Object -First or use frugon --version",
+            "kind": "sandbox"
+          },
+          {
             "readme_said": "(Windows steps)",
             "actually_needed": "pickfit ran these steps in PowerShell 7 (pwsh 7.6.9) as a standard user; the built-in Windows PowerShell 5.1 is not verified and does not run `&&`.",
             "kind": "note"
@@ -274,19 +270,50 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show demo cost analysis reporting 56,100 calls with savings and version output frugon 0.2.6.",
-          "model": "muse-spark-1.3-contributor"
+          "observed": "Demo analysis reports 56,100 calls with savings breakdown and version output is frugon 0.2.6.",
+          "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-frugon-20261031-214339-536c/report.json",
+          "trace_path": "runs/verify/verify-frugon-20261101-015321-5745/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-frugon-20261031-214339-536c/check-1-cmd3.judged.png"
+            "runs/verify/verify-frugon-20261101-015321-5745/check-1-cmd4.judged.png",
+            "runs/verify/verify-frugon-20261101-015321-5745/check-2-cmd3.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3-contributor",
-        "cost_usd": 0.005768
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.062656,
+        "features": [
+          {
+            "feature": "analyze LLM logs for cost",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "recommend cheaper model routing",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "sample candidate models for quality",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "requires OPENAI_API_KEY and --measure to sample candidate models; not exercised per prerequisites"
+          }
+        ]
       }
     ]
   },
@@ -674,5 +701,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:52:01+08:00",
-  "updated_at": "2026-11-01T01:07:52.935179+08:00"
+  "updated_at": "2026-11-01T11:26:55.308157+08:00"
 }
