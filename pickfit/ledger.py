@@ -123,6 +123,9 @@ def baseten_daily_cap(day: date) -> float:
 
 
 BASETEN_CAPS = Caps(total_usd=100.0, daily_usd=baseten_daily_cap)
+# Muse Spark Open on the hackathon's Modal Shared Endpoint, paid from Modal credits: its own budget,
+# $30 in all and $20 a day (the coordinating session, 11/1).
+MODAL_LLM_CAPS = Caps(total_usd=30.0, daily_usd=lambda day: 20.0)
 
 
 def taipei_now(clock: Callable[[], datetime] | None = None) -> datetime:
@@ -335,3 +338,8 @@ def default_ledger() -> Ledger:
 def baseten_ledger() -> Ledger:
     """The Baseten budget in the shared ledger file (prescreen calls on Muse Spark Open)."""
     return Ledger(get_env("PICKFIT_LEDGER") or DEFAULT_PATH, budget="baseten", caps=BASETEN_CAPS)
+
+
+def modal_llm_ledger() -> Ledger:
+    """The modal-llm budget in the shared ledger file (Muse Spark Open on Modal's endpoint)."""
+    return Ledger(get_env("PICKFIT_LEDGER") or DEFAULT_PATH, budget="modal-llm", caps=MODAL_LLM_CAPS)

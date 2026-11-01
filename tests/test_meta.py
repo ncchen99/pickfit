@@ -673,3 +673,18 @@ def test_env_reads_only_requested_names_and_process_env_wins(tmp_path: Path, mon
     values = read_env(["MODEL_API_KEY", "BASETEN_API_KEY", "PICKFIT_MODE", "EMPTY", "MISSING"], dotenv)
     assert values == {"MODEL_API_KEY": "from-file", "BASETEN_API_KEY": "from-process", "PICKFIT_MODE": "prod"}
     assert "MODEL_API_KEY" not in os.environ  # never exported
+
+
+def test_muse_spark_open_on_modal_is_its_own_provider_and_budget(tmp_path, monkeypatch):
+    from pickfit import ledger as ledger_mod
+    from pickfit.meta import MODAL_OPEN_MODEL, is_open_model, make_client, provider_for, resolve_model
+
+    assert resolve_model("open-modal") == MODAL_OPEN_MODEL and provider_for(MODAL_OPEN_MODEL) == "modal"
+    assert is_open_model("open-modal") and provider_for(resolve_model("open")) == "baseten"
+    monkeypatch.setenv("MODAL_PROXY_TOKEN_ID", "wk-id")
+    monkeypatch.setenv("MODAL_PROXY_TOKEN_SECRET", "ws-secret")
+    client = make_client("modal")
+    assert client.api_key == "wk-id.ws-secret" and "modal.direct" in str(client.base_url)
+    monkeypatch.setenv("PICKFIT_LEDGER", str(tmp_path / "l.sqlite"))
+    book = ledger_mod.modal_llm_ledger()
+    assert book.budget == "modal-llm" and book.caps.total_usd == 30.0
