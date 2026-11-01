@@ -395,6 +395,24 @@ not the app's). A Tkinter \
 app needs /usr/bin/python3 (it has tkinter; python3.12 on PATH does not): make its venv with \
 /usr/bin/python3 -m venv."""
 
+MAC_GUI_RULES = """\
+
+GUI apps: this macOS box shows a desktop where you (sbx) are logged in. Install a desktop (GUI) app as a user \
+would without admin rights: a Homebrew cask with `brew install --cask --appdir=$HOME/Applications <cask>` \
+(you cannot write /Applications; a cask that runs a .pkg installer or needs sudo cannot install here: finish \
+unverified with the reason), or the app's own .dmg or .zip: download it, `hdiutil attach -nobrowse -mountpoint \
+$HOME/mnt/<name> <file>.dmg` (or unzip), copy the .app into ~/Applications, then `hdiutil detach`. Start it with \
+launch_gui (`open -a "<App>"` or `open ~/Applications/<App>.app`), never with run_command or run_background: \
+they run outside your desktop session and cannot show windows. Cite that launch_gui as a smoke test with \
+expected_signal `gui tier: window` (pickfit's own line; window titles, app and process names are the app's and \
+do not count). Before each launch pickfit answers macOS's first-launch prompt ("downloaded from the Internet") \
+with Open for apps Gatekeeper accepts as notarized, as a user does. An app Gatekeeper rejects stays blocked: \
+remove its quarantine (xattr -dr com.apple.quarantine) only if the app's own docs tell users to, as a cited \
+step, and record it as a pitfall. A launch stops every process you started outside the desktop session, so \
+start servers again after it. A GUI launch supports level install at most, whatever the window shows: \
+pickfit's judge reads the screenshot itself, and a GUI app is never function from a launch. Launch it even if \
+it will ask for an account: the screenshot records the sign-in screen."""
+
 # Public models small enough for an inference check, licenses and URLs checked 2026-10-29.
 # stories260K: karpathy/tinyllamas weights (MIT), GGUF by ggml-org. SmolLM2-135M-Instruct:
 # HuggingFaceTB (Apache-2.0), GGUF by bartowski; Ollama's smollm2:135m is the same model.
@@ -465,7 +483,11 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
     if box.gpu:
         lines.insert(3, f"GPU: one NVIDIA {box.gpu} (driver and nvidia-smi present, no CUDA toolkit), so GPU "
                         "examples can run here; use the smallest model the tool supports.")
-    if box.display and ex.kind.value == "desktop_app":
+    if box.display and ex.kind.value == "desktop_app" and box.os == "macos":
+        lines.insert(3, "This is a desktop (GUI) app: install the app itself (its macOS build: a Homebrew cask, "
+                        "or the release .dmg or .zip), then start it with launch_gui and cite that launch. A test "
+                        "suite or a helper tool is not the app.")
+    elif box.display and ex.kind.value == "desktop_app":
         lines.insert(3, "This is a desktop (GUI) app: install the app itself (a release build if there is one for "
                         "Linux; an AppImage runs with --appimage-extract-and-run, no FUSE needed), then start it "
                         "with launch_gui and cite that launch. A test suite or a helper tool is not the app.")
@@ -630,7 +652,8 @@ class VerifyAgent:
         self.instructions = INSTRUCTIONS.format(max_commands=limits.max_commands, max_turns=limits.max_turns,
                                                 minutes=round(limits.max_seconds / 60),
                                                 stdout_chars=f"{STDOUT_CHARS:,}", box_kind=box.kind,
-                                                box_rule=box.user_rule) + (GUI_RULES if box.display else "")
+                                                box_rule=box.user_rule) + (
+            (MAC_GUI_RULES if box.os == "macos" else GUI_RULES) if box.display else "")
         self.tools = GUI_TOOLS if box.display else tools_for(box)
         self.commands_used = 0
         self.finish_retries = 0
@@ -973,8 +996,10 @@ class VerifyAgent:
         n = self.commands_used
         wait = max(1, min(args.wait_s, gui.WAIT_MAX_S))
         self._say(f"  ▣ {_one_line(args.command, 200)}   [cmd {n}/{self.limits.max_commands}]")
-        result, shown, png = gui.launch(self.box, args.command, n, wait,
-                                        timeout_s=self._timeout(wait + gui.SETTLE_S + 90))
+        launch = getattr(self.box, "launch_gui", None)  # a box with its own display (TartBox) launches its way
+        timeout = self._timeout(wait + gui.SETTLE_S + 90)
+        result, shown, png = (launch(args.command, n, wait, timeout_s=timeout) if launch
+                              else gui.launch(self.box, args.command, n, wait, timeout_s=timeout))
         shot = None
         if png:
             path = self.runs_dir / "verify" / self.run_id / f"gui-{n}.png"

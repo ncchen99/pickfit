@@ -43,7 +43,8 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--runtime", choices=["gvisor", "vm"], default="gvisor",
                    help="Modal: gVisor (default) or a microVM; a VM also drops DNS while the network is off")
     v.add_argument("--display", action="store_true",
-                   help="Modal: a virtual display (Xvfb) and launch_gui, so GUI apps can be launched and judged")
+                   help="Modal: a virtual display (Xvfb); tart: a desktop seen over VNC (the GUI base). Adds "
+                        "launch_gui, so GUI apps can be launched and judged")
     v.add_argument("--platform", default="linux/amd64", help="Docker platform (Modal runs x86_64)")
     v.add_argument("--keep-box", action="store_true", help="Docker: leave the agent's container running")
     v.add_argument("--write-back", action="store_true",
@@ -65,14 +66,16 @@ def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", 
     """(run_id, role) -> an unstarted box of the chosen runner."""
     from pickfit.verify.box import BoxLimits, DockerBox
 
-    if runner != "modal" and (runtime != "gvisor" or display):
-        raise ValueError("--runtime and --display need --runner modal")
+    if runner != "modal" and runtime != "gvisor":
+        raise ValueError("--runtime needs --runner modal")
+    if display and runner not in ("modal", "tart"):
+        raise ValueError("--display needs --runner modal or tart")
     if runner == "tart":
         if gpu:
             raise ValueError("--gpu needs --runner modal")
         from pickfit.verify.tart_box import TartBox
 
-        return lambda run_id, role: TartBox(limits=BoxLimits(lifetime_s=lifetime_s))
+        return lambda run_id, role: TartBox(limits=BoxLimits(lifetime_s=lifetime_s), display=display)
     if runner == "vbox":
         if gpu:
             raise ValueError("--gpu needs --runner modal")
@@ -111,14 +114,17 @@ def run(args: argparse.Namespace) -> int:
         if args.runner != "tart":
             print("pickfit verify: --prepare-base needs --runner tart or vbox")
             return 2
-        from pickfit.verify.tart_box import prepare_base
+        from pickfit.verify.tart_box import prepare_base, prepare_gui_base
 
-        prepare_base()
+        prepare_gui_base() if args.display else prepare_base()
         return 0
     if args.rejudge_features:
         return _rejudge(args)
-    if (args.runtime != "gvisor" or args.display) and args.runner != "modal":
-        print("pickfit verify: --runtime and --display need --runner modal")
+    if args.runtime != "gvisor" and args.runner != "modal":
+        print("pickfit verify: --runtime needs --runner modal")
+        return 2
+    if args.display and args.runner not in ("modal", "tart"):
+        print("pickfit verify: --display needs --runner modal or tart")
         return 2
     if args.limits_test:
         from pickfit.verify.agent import _runs_dir

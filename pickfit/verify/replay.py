@@ -199,7 +199,9 @@ class Replayer:
                 raise BoxError("a GUI launch needs a box with a display")
             self.launches += 1
             tag = f"replay-{cmd.command_id}-{self.launches}"
-            result, shown, png = gui.launch(self.box, cmd.command, tag, cmd.wait_s or 30)
+            launch = getattr(self.box, "launch_gui", None)  # a box with its own display (TartBox) launches its way
+            result, shown, png = (launch(cmd.command, tag, cmd.wait_s or 30) if launch
+                                  else gui.launch(self.box, cmd.command, tag, cmd.wait_s or 30))
             ran = self._ran(cmd, result)
             ran.gui = shown.to_dict()
             if png and self.evidence_dir is not None:

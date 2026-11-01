@@ -428,7 +428,8 @@ def test_desktop_apps_are_set_aside_only_without_a_display():
     ex = ExtractionResult.model_validate(extraction)
     assert not_in_box(ex) == "GUI app"
     assert not_in_box(ex, display=True) is None
-    assert not_in_box(ex, display=True, os="macos") == "GUI app"
+    assert not_in_box(ex, display=True, os="macos") is None  # tart's GUI base (gui_mac.py)
+    assert not_in_box(ex, display=True, os="windows") == "GUI app"
 
 
 def test_limits_test_on_a_display_box():

@@ -95,7 +95,7 @@ def not_in_box(ex: ExtractionResult, *, gpu: bool = False, os: str = "linux", di
     """Why a box running `os` (with an NVIDIA GPU when `gpu`, a virtual display when `display`) cannot verify
     this at all, or None."""
     kind = ex.kind.value
-    if kind == "desktop_app" and display and os == "linux":
+    if kind == "desktop_app" and display and os in ("linux", "macos"):
         pass
     elif kind in NOT_IN_BOX_KINDS:
         return NOT_IN_BOX_KINDS[kind]
