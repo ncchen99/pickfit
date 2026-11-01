@@ -54,13 +54,17 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-chessx-20261102-004447-0182",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub net.sourceforge.Chessx",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "Add Flathub remote for user"
+        },
+        {
+          "command": "flatpak install --user -y flathub net.sourceforge.Chessx",
+          "purpose": "Install ChessX from Flathub"
         }
       ],
       "manual_steps": [],
@@ -78,10 +82,104 @@
   "processing": null,
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T00:47:39.949068+08:00",
+    "runs": [
+      {
+        "id": "verify-chessx-20261102-004447-0182",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T00:47:39.949068+08:00",
+        "tool_version": null,
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "Add Flathub remote for user"
+          },
+          {
+            "command": "flatpak install --user -y flathub net.sourceforge.Chessx",
+            "purpose": "Install ChessX from Flathub"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run net.sourceforge.Chessx",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "ChessX main window fully drawn with help pane, starting-position chessboard, and database list.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-chessx-20261102-004447-0182/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-chessx-20261102-004447-0182/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.030246,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "flatpak run net.sourceforge.Chessx",
+          "window_title": "♖ • ChessX • Clipboard",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "load and save PGN files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "browse chess games including variations",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "analyze positions using UCI engines",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "search databases for text or positions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -316,5 +414,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:45+08:00",
-  "updated_at": "2026-11-02T00:42:49+08:00"
+  "updated_at": "2026-11-02T00:47:39.950774+08:00"
 }

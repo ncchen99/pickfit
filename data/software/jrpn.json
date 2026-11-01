@@ -45,13 +45,21 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-jrpn-20261102-004532-c4f3",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub com.jovial.jrpn15",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "Add Flathub remote for user"
+        },
+        {
+          "command": "flatpak install --user -y flathub com.jovial.jrpn15",
+          "purpose": "Install JRPN 15C via flatpak"
+        },
+        {
+          "command": "flatpak install --user -y flathub com.jovial.jrpn16",
+          "purpose": "Install JRPN 16C via flatpak"
         }
       ],
       "manual_steps": [],
@@ -73,10 +81,100 @@
     "url": "https://github.com/zathras/jrpn/releases/tag/2.1.20"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T00:48:19.650036+08:00",
+    "runs": [
+      {
+        "id": "verify-jrpn-20261102-004532-c4f3",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T00:48:19.650036+08:00",
+        "tool_version": null,
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "Add Flathub remote for user"
+          },
+          {
+            "command": "flatpak install --user -y flathub com.jovial.jrpn15",
+            "purpose": "Install JRPN 15C via flatpak"
+          },
+          {
+            "command": "flatpak install --user -y flathub com.jovial.jrpn16",
+            "purpose": "Install JRPN 16C via flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run com.jovial.jrpn15",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows JRPN 15C calculator main interface with display reading 0.0000 and full button keypad.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-jrpn-20261102-004532-c4f3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-jrpn-20261102-004532-c4f3/replay-5-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.037079,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "flatpak run com.jovial.jrpn15",
+          "window_title": "jrpn15",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "simulate HP 15C scientific calculator",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "simulate HP 16C programmer calculator",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "simulate seven-segment LCD display",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -291,5 +389,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:42+08:00",
-  "updated_at": "2026-11-02T00:42:49+08:00"
+  "updated_at": "2026-11-02T00:48:19.651224+08:00"
 }

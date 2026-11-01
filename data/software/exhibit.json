@@ -54,13 +54,17 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-exhibit-20261102-004520-7657",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub io.github.nokse22.Exhibit",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "Add Flathub remote user"
+        },
+        {
+          "command": "flatpak install --user -y flathub io.github.nokse22.Exhibit",
+          "purpose": "Install Exhibit from Flathub"
         }
       ],
       "manual_steps": [],
@@ -82,10 +86,104 @@
     "url": "https://github.com/Nokse22/Exhibit/releases/tag/v1.6.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T00:47:59.639848+08:00",
+    "runs": [
+      {
+        "id": "verify-exhibit-20261102-004520-7657",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T00:47:59.639848+08:00",
+        "tool_version": null,
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "Add Flathub remote user"
+          },
+          {
+            "command": "flatpak install --user -y flathub io.github.nokse22.Exhibit",
+            "purpose": "Install Exhibit from Flathub"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run io.github.nokse22.Exhibit",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The Exhibit window shows a welcome view with app icon, tagline Preview your 3D models, and Load button.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-exhibit-20261102-004520-7657/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-exhibit-20261102-004520-7657/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.032847,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "flatpak run io.github.nokse22.Exhibit",
+          "window_title": "Exhibit",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "view 3D models in many file formats",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "export an image of rendered model",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "adjust tone mapping and material settings",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "use HDRI image or custom background",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -318,5 +416,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:44+08:00",
-  "updated_at": "2026-11-02T00:42:49+08:00"
+  "updated_at": "2026-11-02T00:47:59.640892+08:00"
 }
