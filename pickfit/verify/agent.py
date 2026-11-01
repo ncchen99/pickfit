@@ -45,7 +45,7 @@ from pickfit.verify import gui_operate
 from pickfit.verify.box import Box, BoxError, ExecResult
 from pickfit.verify import features as feature_checks
 from pickfit.verify.features import FINISH_FEATURES, FinishFeature, resolve_features
-from pickfit.verify.gui_operate import OperateArgs, run_operation, spec_problems
+from pickfit.verify.gui_operate import OperateArgs, box_home, run_operation, spec_problems
 from pickfit.verify.judge import judge_model_for, read_screen_text
 from pickfit.verify.plan import InstallPlan, plan_for
 from pickfit.verify.rules import RuleHit, error_signature, match_rules
@@ -464,6 +464,48 @@ not the app's). A Tkinter \
 app needs /usr/bin/python3 (it has tkinter; python3.12 on PATH does not): make its venv with \
 /usr/bin/python3 -m venv."""
 
+# The install and operate guidance GUI_RULES gives, shared with MAC_GUI_RULES without what is Linux's own (the
+# Flatpak note, user namespaces, Tkinter).
+OPERATE_RULES = GUI_RULES[GUI_RULES.index("Install steps of a GUI app"):GUI_RULES.index(" This box has no user namespaces")]
+OPERATE_RULES = (OPERATE_RULES[:OPERATE_RULES.index("A Flatpak app here")]
+                 + OPERATE_RULES[OPERATE_RULES.index("At most two operate_gui per feature"):])
+
+MAC_GUI_RULES = """\
+
+GUI apps: this macOS box shows a desktop where you (sbx) are logged in. Install a desktop (GUI) app as a user \
+would without admin rights: a Homebrew cask with `brew install --cask --appdir=$HOME/Applications <cask>` \
+(from a third-party tap, one cited step that also taps and trusts it, as Homebrew now requires: `brew tap \
+<user>/<tap> && brew trust --tap <user>/<tap> && brew install --cask --appdir=$HOME/Applications \
+<user>/<tap>/<cask>`) \
+(you cannot write /Applications; a cask that runs a .pkg installer or needs sudo cannot install here: finish \
+unverified with the reason), or the app's own .dmg or .zip in two cited steps: `curl -fL -o \
+~/Downloads/<file>.dmg <url>`, then `mkdir -p ~/mnt/<name> ~/Applications && hdiutil attach -nobrowse -mountpoint ~/mnt/<name> \
+~/Downloads/<file>.dmg && cp -R ~/mnt/<name>/<App>.app ~/Applications/ && hdiutil detach -force ~/mnt/<name>` \
+(~/Applications does not exist in a new box, and cp -R into a missing folder makes the folder the app; \
+-force: macOS may still be scanning the copied app, and a plain detach says "Resource busy"; a .zip: \
+`unzip -q <file>.zip -d ~/Applications`). The replay runs only your cited steps, in a new VM: never cite a step \
+that resumes a download (curl -C -), tests for (ls) or copies a file an earlier try left behind. Start it with \
+launch_gui by its path, `open ~/Applications/<App>.app` (Launch Services may not know a just-installed app by \
+name yet). Start the app only with launch_gui: do not run its executable or a command-line helper it ships with \
+run_command or run_background first (a copy left running makes macOS refuse the launch, or shows a window \
+pickfit does not count). Cite that launch_gui as a smoke test with \
+expected_signal `gui tier: window` (pickfit's own line; window titles, app and process names are the app's and \
+do not count). Before each launch pickfit answers macOS's first-launch prompt ("downloaded from the Internet") \
+with Open for apps Gatekeeper accepts as notarized, as a user does. An app Gatekeeper rejects (not notarized: \
+"Not Opened") stays blocked: only if the app's own docs tell users to get past that (Open Anyway in System \
+Settings, right-click Open, or xattr), remove its quarantine with `xattr -dr com.apple.quarantine \
+~/Applications/<App>.app` as a cited step (Open Anyway needs an admin, which you are not), and record a pitfall \
+saying the app is not notarized. A download or installer may take up to 30 minutes here: give it run_command \
+timeout_s up to 1800 (a 1 GB file at 1.4 MB/s needs about 13 minutes). \
+Only Homebrew casks and browsers mark downloads with a quarantine: an app you \
+fetched with curl has none, so never cite xattr for it. A launch stops every process you started (servers too; macOS's own desktop \
+stays), so start servers again after it. A launch supports level install at most, whatever the window shows: \
+pickfit's judge reads the screenshot itself. Launch it even if it will ask for an account: the screenshot records \
+the sign-in screen.
+""" + OPERATE_RULES + """ On this Mac, goals name the Mac's shortcuts (cmd+s to save, cmd+c to copy; not ctrl), \
+~/ is /Users/sbx, a menu bar app's controls are in the menu of its item at the top right, and this VM has no \
+microphone or camera (needs_hardware)."""
+
 FLATPAK_RULE = """ A Flatpak app installs per user as two cited steps, \
 `flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo` and then \
 `flatpak install --user -y flathub <app id>`, and launches with `flatpak run <app id>`: a fresh box has no \
@@ -541,7 +583,12 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
     if box.gpu:
         lines.insert(3, f"GPU: one NVIDIA {box.gpu} (driver and nvidia-smi present, no CUDA toolkit), so GPU "
                         "examples can run here; use the smallest model the tool supports.")
-    if box.display and ex.kind.value == "desktop_app":
+    if box.display and ex.kind.value == "desktop_app" and box.os == "macos":
+        lines.insert(3, "This is a desktop (GUI) app: install the app itself (its macOS build: a Homebrew cask, "
+                        "or the release .dmg or .zip), then start it with launch_gui and cite that launch, then "
+                        "exercise its listed features with operate_gui. A test suite or a helper tool is not the "
+                        "app.")
+    elif box.display and ex.kind.value == "desktop_app":
         lines.insert(3, "This is a desktop (GUI) app: install the app itself (a release build if there is one for "
                         "Linux; an AppImage runs with --appimage-extract-and-run, no FUSE needed), then start it "
                         "with launch_gui and cite that launch, then exercise its listed features with operate_gui. "
@@ -710,7 +757,8 @@ class VerifyAgent:
         self.instructions = INSTRUCTIONS.format(max_commands=limits.max_commands, max_turns=limits.max_turns,
                                                 minutes=round(limits.max_seconds / 60),
                                                 stdout_chars=f"{STDOUT_CHARS:,}", box_kind=box.kind,
-                                                box_rule=box.user_rule) + (GUI_RULES if box.display else "")
+                                                box_rule=box.user_rule) + (
+            (MAC_GUI_RULES if box.os == "macos" else GUI_RULES) if box.display else "")
         if box.display and getattr(box, "runtime", None) == "gvisor":  # flatpak's sandbox needs gVisor's userns
             self.instructions += FLATPAK_RULE
         self.tools = GUI_TOOLS if box.display else tools_for(box)
@@ -1071,8 +1119,10 @@ class VerifyAgent:
         n = self.commands_used
         wait = max(1, min(args.wait_s, gui.WAIT_MAX_S))
         self._say(f"  ▣ {_one_line(args.command, 200)}   [cmd {n}/{self.limits.max_commands}]")
-        result, shown, png = gui.launch(self.box, args.command, n, wait,
-                                        timeout_s=self._timeout(wait + gui.SETTLE_S + gui.BLANK_WAIT_S + 90))
+        launch = getattr(self.box, "launch_gui", None)  # a box with its own display (TartBox) launches its way
+        timeout = self._timeout(wait + gui.SETTLE_S + gui.BLANK_WAIT_S + 90)
+        result, shown, png = (launch(args.command, n, wait, timeout_s=timeout) if launch
+                              else gui.launch(self.box, args.command, n, wait, timeout_s=timeout))
         shot = None
         if png:
             path = self.runs_dir / "verify" / self.run_id / f"gui-{n}.png"
@@ -1091,7 +1141,7 @@ class VerifyAgent:
         if self._elapsed() + OPERATE_RESERVE_S >= self.limits.max_seconds - WRAP_UP_SECONDS:
             self._say(f"  ◈ {_one_line(args.goal, 120)} → refused (time)")
             return "error: too little time is left for an operation (a few minutes). Call finish."
-        problems = spec_problems(args, self.task.readme)
+        problems = spec_problems(args, self.task.readme, home=box_home(self.box))
         done = [c.operate["spec"].get("feature") for c in self.report.commands if c.operate]
         if self.limits.max_operations <= 0:
             problems.append("this run checks install only: report the features not_checked")

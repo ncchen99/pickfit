@@ -52,18 +52,25 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-hivemind-20261101-210013-72ab",
       "method": "script",
       "steps": [
         {
-          "command": "bash <(curl -fsSL https://hivemind.griiken.com/install.sh)",
-          "purpose": null
+          "command": "curl -fsSL https://hivemind.griiken.com/install.sh -o /tmp/install.sh && echo \"downloaded\" && wc -l /tmp/install.sh",
+          "purpose": "download install.sh from hivemind.griiken.com"
+        },
+        {
+          "command": "bash /tmp/install.sh 2>&1",
+          "purpose": "run bash /tmp/install.sh to install hivemind.app and hive CLI"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "hive ctl"
+      "check": {
+        "command": "hive --version 2>&1",
+        "expected_signal": "2026.11.0"
+      },
+      "first_task": "open ~/Applications/hivemind.app"
     },
     "linux": {
       "basis": "replayed",
@@ -116,7 +123,7 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T18:52:24.467867+08:00",
+    "checked_at": "2026-11-01T21:08:04.518674+08:00",
     "runs": [
       {
         "id": "verify-hivemind-20261101-183124-a1c7",
@@ -280,6 +287,129 @@
             "reason": "needs_service",
             "failure": null,
             "note": "Requires remote machine over ssh and phone to check agents, not available in box"
+          }
+        ]
+      },
+      {
+        "id": "verify-hivemind-20261101-210013-72ab",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@78f2945fd37d",
+        "checked_at": "2026-11-01T21:08:04.518674+08:00",
+        "tool_version": "2026.11.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://hivemind.griiken.com/install.sh -o /tmp/install.sh && echo \"downloaded\" && wc -l /tmp/install.sh",
+            "purpose": "download install.sh from hivemind.griiken.com"
+          },
+          {
+            "command": "bash /tmp/install.sh 2>&1",
+            "purpose": "run bash /tmp/install.sh to install hivemind.app and hive CLI"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "hive --version 2>&1",
+            "expected_signal": "2026.11.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2026.11.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "hive ctl 2>&1",
+            "expected_signal": "say which: hive ctl <command>",
+            "exit_code": 2,
+            "passed": true,
+            "observed_excerpt": "error [USAGE] say which: hive ctl <command>; --help lists them",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "hive ctl --help 2>&1",
+            "expected_signal": "Use hive ctl <command> --help",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Use hive ctl <command> --help for more information about a command.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/hivemind.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 2026.11.0, usage error for bare hive ctl, and full hive ctl help with usage footer. / The Hivemind workspace main screen is fully drawn with sidebar, toolbar, and central Start with an agent prompt.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hivemind-20261101-210013-72ab/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hivemind-20261101-210013-72ab/check-1-cmd4.judged.png",
+            "runs/verify/verify-hivemind-20261101-210013-72ab/check-2-cmd7.judged.png",
+            "runs/verify/verify-hivemind-20261101-210013-72ab/check-3-cmd6.judged.png",
+            "runs/verify/verify-hivemind-20261101-210013-72ab/replay-8-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.064181,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "open ~/Applications/hivemind.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "run coding agents side by side",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "requires Claude Code/Codex agent CLIs and interactive board - GUI launch confirms app exists but agents not exercised"
+          },
+          {
+            "feature": "build workspace views and widgets",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "building views/widgets requires running agents in GUI board"
+          },
+          {
+            "feature": "steer other agents via hive ctl",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Outputs show only help text and a usage error, not steering another agent."
+          },
+          {
+            "feature": "run agents remotely check from phone",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "remote ssh machines and phone check require outside infrastructure"
           }
         ]
       }
@@ -595,5 +725,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:15+08:00",
-  "updated_at": "2026-11-01T18:52:53.978283+08:00"
+  "updated_at": "2026-11-02T00:55:09.277025+08:00"
 }

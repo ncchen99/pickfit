@@ -56,18 +56,18 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-calendr-20261102-061646-fce9",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask calendr",
-          "purpose": null
+          "command": "brew install --cask --appdir=$HOME/Applications calendr",
+          "purpose": "install Calendr via brew cask"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "open ~/Applications/Calendr.app"
     },
     "linux": null,
     "windows": null
@@ -85,10 +85,152 @@
     "url": "https://github.com/pakerwreah/Calendr/releases/tag/v1.26.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T06:45:53.365068+08:00",
+    "runs": [
+      {
+        "id": "verify-calendr-20261102-061646-fce9",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-02T06:45:53.365068+08:00",
+        "tool_version": "1.26.2",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications calendr",
+            "purpose": "install Calendr via brew cask"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/Calendr.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Calendr.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "gui result: no file under /Users/sbx/Library/ written after the app started has the expected text (21325 entries scanned)",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask calendr",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications calendr (standard user cannot write /Applications)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows the Calendr menu bar calendar panel displaying November 2026 with day grid and toolbar icons.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-calendr-20261102-061646-fce9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-calendr-20261102-061646-fce9/replay-2-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.597097,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "open ~/Applications/Calendr.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+          "operations": [
+            {
+              "feature": "create events with natural-language entry",
+              "goal": "Click the Calendr menu bar date at the top-right to open its popup. Click + to add an event. Type TeamLunch {nonce} tomorrow at noon in the title box and press Enter to save (allow Calendar access if asked).",
+              "check": "file",
+              "target": "~/Library/",
+              "expected": [
+                "{nonce}"
+              ],
+              "format": null,
+              "passed": false,
+              "observed": "no file under /Users/sbx/Library/ written after the app started has the expected text (21325 entries scanned)",
+              "smoke_test": 1,
+              "actions": 24,
+              "replay": "operated",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-1.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-2.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-3.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-4.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-5.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-6.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-7.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-8.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-9.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-10.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-11.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-12.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-13.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-14.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-15.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-16.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-17.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-18.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-19.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-20.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-21.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-22.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-23.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-24.png",
+                "runs/verify/verify-calendr-20261102-061646-fce9/replay-5-4-op-25.png"
+              ]
+            }
+          ]
+        },
+        "features": [
+          {
+            "feature": "create events with natural-language entry",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "display multiple timezones in menu bar",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; operator stuck on menu-bar/Control Center overlay, never reached Settings"
+          },
+          {
+            "feature": "open dates with URL scheme",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; operator saw Feb 2025 popup but screen judge read empty, no February on final screenshot"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -305,5 +447,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:46:43+08:00",
-  "updated_at": "2026-11-01T17:11:04+08:00"
+  "updated_at": "2026-11-02T06:45:53.370050+08:00"
 }

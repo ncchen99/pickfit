@@ -98,6 +98,11 @@ def _display_name(task: VerifyTask) -> str:
     return str(name) if name else task.slug
 
 
+def _summary(task: VerifyTask) -> str | None:
+    summary = task.extraction.summary.value if task.extraction is not None else None
+    return str(summary) if summary else None
+
+
 def _kind(task: VerifyTask) -> str | None:
     return task.extraction.kind.value if task.extraction is not None else None
 
@@ -219,7 +224,8 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
                 parts = [judge_checks(_display_name(task), replay.checks, evidence_dir, **judge_args)]
                 launched = judged_launch(replay.checks)
                 if launched is not None and launched.passed:  # a window without a readable screenshot cannot pass
-                    parts.append(judge_gui(_display_name(task), launched, evidence_dir, **judge_args) or JudgeResult(
+                    parts.append(judge_gui(_display_name(task), launched, evidence_dir, about=_summary(task),
+                                           **judge_args) or JudgeResult(
                         verdict="inconclusive", observed="the GUI launch left no screenshot to judge",
                         error_text=None, matches_expected_signal=False, model=resolve_model(judge_model)))
                 judge = merge([p for p in parts if p is not None])

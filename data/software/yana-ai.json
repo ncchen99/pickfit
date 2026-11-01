@@ -58,20 +58,33 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "pip",
+      "basis": "replayed",
+      "run_id": "verify-yana-ai-20261101-230211-777c",
+      "method": "uv",
       "steps": [
         {
-          "command": "pip install yana-ai",
-          "purpose": null
+          "command": "uv tool install yana-ai 2>&1",
+          "purpose": "Install yana-ai CLI via uv tool (isolated pip install)"
+        },
+        {
+          "command": "curl -fL -o ~/Downloads/Yana-Studio.dmg https://github.com/yanacuti1121/Yana-AI/releases/download/studio-v1.7.0/Yana-Studio-IDE-1.7.0-mac-arm64.dmg 2>&1",
+          "purpose": "Download Yana Studio DMG from GitHub releases"
+        },
+        {
+          "command": "mkdir -p ~/mnt/yana ~/Applications && hdiutil attach -nobrowse -mountpoint ~/mnt/yana ~/Downloads/Yana-Studio.dmg 2>&1 && ls -la ~/mnt/yana 2>&1 && cp -R ~/mnt/yana/*.app ~/Applications/ 2>&1 && ls -la ~/Applications/ 2>&1 && hdiutil detach -force ~/mnt/yana 2>&1",
+          "purpose": "Mount DMG and copy Yana Studio.app to ~/Applications"
+        },
+        {
+          "command": "xattr -l ~/Applications/Yana\\ Studio.app 2>&1; echo \"---xattr check done---\"; xattr -dr com.apple.quarantine ~/Applications/Yana\\ Studio.app 2>&1",
+          "purpose": "Remove Gatekeeper quarantine (ad-hoc signed, not notarized)"
         }
       ],
-      "manual_steps": [
-        "Right-click the app and choose Open to bypass Gatekeeper on first launch"
-      ],
-      "check": null,
-      "first_task": "yana-ai doctor ."
+      "manual_steps": [],
+      "check": {
+        "command": "yana-ai --version 2>&1",
+        "expected_signal": "yana-ai 1.5.0"
+      },
+      "first_task": "open ~/Applications/Yana\\ Studio.app"
     },
     "linux": {
       "basis": "readme_claim",
@@ -119,22 +132,111 @@
     "url": "https://github.com/yanacuti1121/Yana-AI/releases/tag/studio-v1.7.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T23:26:40.735074+08:00",
+    "runs": [
+      {
+        "id": "verify-yana-ai-20261101-230211-777c",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@78f2945fd37d",
+        "checked_at": "2026-11-01T23:26:40.735074+08:00",
+        "tool_version": "1.5.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install yana-ai 2>&1",
+            "purpose": "Install yana-ai CLI via uv tool (isolated pip install)"
+          },
+          {
+            "command": "curl -fL -o ~/Downloads/Yana-Studio.dmg https://github.com/yanacuti1121/Yana-AI/releases/download/studio-v1.7.0/Yana-Studio-IDE-1.7.0-mac-arm64.dmg 2>&1",
+            "purpose": "Download Yana Studio DMG from GitHub releases"
+          },
+          {
+            "command": "mkdir -p ~/mnt/yana ~/Applications && hdiutil attach -nobrowse -mountpoint ~/mnt/yana ~/Downloads/Yana-Studio.dmg 2>&1 && ls -la ~/mnt/yana 2>&1 && cp -R ~/mnt/yana/*.app ~/Applications/ 2>&1 && ls -la ~/Applications/ 2>&1 && hdiutil detach -force ~/mnt/yana 2>&1",
+            "purpose": "Mount DMG and copy Yana Studio.app to ~/Applications"
+          },
+          {
+            "command": "xattr -l ~/Applications/Yana\\ Studio.app 2>&1; echo \"---xattr check done---\"; xattr -dr com.apple.quarantine ~/Applications/Yana\\ Studio.app 2>&1",
+            "purpose": "Remove Gatekeeper quarantine (ad-hoc signed, not notarized)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "yana-ai --version 2>&1",
+            "expected_signal": "yana-ai 1.5.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "yana-ai 1.5.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Yana\\ Studio.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install yana-ai then yana-ai doctor . checks everything is wired",
+            "actually_needed": "yana-ai doctor requires compiled yana-rt binary (cargo install yana-rt); pip wrapper alone reports 'yana-rt: binary not found' and exits 1",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "macOS build is ad-hoc signed and not notarized — Gatekeeper warns on first launch, see docs/MACOS_INSTALL.md for two official ways (right-click Open)",
+            "actually_needed": "Removed quarantine with xattr -dr com.apple.quarantine as allowed alternative; curl-downloaded DMG had no quarantine flag but copy still launched without manual right-click Open",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows the version command outputting yana-ai 1.5.0. / The screenshot shows Yana Studio's fully drawn main interface with sidebar navigation, central user guide, and Ask Yana chat panel.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-yana-ai-20261101-230211-777c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-yana-ai-20261101-230211-777c/check-1-cmd10.judged.png",
+            "runs/verify/verify-yana-ai-20261101-230211-777c/replay-9-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.083792,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "open ~/Applications/Yana\\ Studio.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        }
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-01T23:26:40+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 56.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.357,
           "weight": 40.0
         },
         "install_docs": {
@@ -178,7 +280,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 33.67
+      "value": 27.38
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -469,5 +571,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T23:26:40.740158+08:00"
 }

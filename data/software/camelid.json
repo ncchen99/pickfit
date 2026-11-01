@@ -61,20 +61,34 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-camelid-20261101-220859-70e1",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/timtoole02/Camelid/main/scripts/get-desktop-macos.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL -o /tmp/camelid-desktop-macos-arm64.dmg https://github.com/timtoole02/Camelid/releases/latest/download/camelid-desktop-macos-arm64.dmg",
+          "purpose": "Download DMG from latest release"
+        },
+        {
+          "command": "curl -fsSL -o /tmp/camelid-desktop-macos-arm64.dmg.sha256 https://github.com/timtoole02/Camelid/releases/latest/download/camelid-desktop-macos-arm64.dmg.sha256",
+          "purpose": "Download SHA256 checksum"
+        },
+        {
+          "command": "mkdir -p ~/Applications && mkdir -p /tmp/camelid-mount2 && hdiutil attach -nobrowse -mountpoint /tmp/camelid-mount2 /tmp/camelid-desktop-macos-arm64.dmg -quiet",
+          "purpose": "Mount DMG"
+        },
+        {
+          "command": "cp -R /tmp/camelid-mount2/\"Camelid Desktop.app\" ~/Applications/ && hdiutil detach /tmp/camelid-mount2 -quiet",
+          "purpose": "Copy app to ~/Applications and detach"
+        },
+        {
+          "command": "xattr -cr ~/Applications/\"Camelid Desktop.app\" && codesign --verify --deep --strict ~/Applications/\"Camelid Desktop.app\"",
+          "purpose": "Clear quarantine and verify codesign"
         }
       ],
-      "manual_steps": [
-        "Install a compatible NVIDIA driver for CUDA support"
-      ],
+      "manual_steps": [],
       "check": null,
-      "first_task": "camelid pull"
+      "first_task": "open ~/Applications/\"Camelid Desktop.app\""
     },
     "linux": {
       "basis": "replayed",
@@ -288,6 +302,88 @@
             "note": "needs Code session with certified tool-capable model and desktop/browser UI"
           }
         ]
+      },
+      {
+        "id": "verify-camelid-20261101-220859-70e1",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@78f2945fd37d",
+        "checked_at": "2026-11-01T22:13:31.049021+08:00",
+        "tool_version": "0.8.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/camelid-desktop-macos-arm64.dmg https://github.com/timtoole02/Camelid/releases/latest/download/camelid-desktop-macos-arm64.dmg",
+            "purpose": "Download DMG from latest release"
+          },
+          {
+            "command": "curl -fsSL -o /tmp/camelid-desktop-macos-arm64.dmg.sha256 https://github.com/timtoole02/Camelid/releases/latest/download/camelid-desktop-macos-arm64.dmg.sha256",
+            "purpose": "Download SHA256 checksum"
+          },
+          {
+            "command": "mkdir -p ~/Applications && mkdir -p /tmp/camelid-mount2 && hdiutil attach -nobrowse -mountpoint /tmp/camelid-mount2 /tmp/camelid-desktop-macos-arm64.dmg -quiet",
+            "purpose": "Mount DMG"
+          },
+          {
+            "command": "cp -R /tmp/camelid-mount2/\"Camelid Desktop.app\" ~/Applications/ && hdiutil detach /tmp/camelid-mount2 -quiet",
+            "purpose": "Copy app to ~/Applications and detach"
+          },
+          {
+            "command": "xattr -cr ~/Applications/\"Camelid Desktop.app\" && codesign --verify --deep --strict ~/Applications/\"Camelid Desktop.app\"",
+            "purpose": "Clear quarantine and verify codesign"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/\"Camelid Desktop.app\"",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/timtoole02/Camelid/main/scripts/get-desktop-macos.sh | bash installs to /Applications",
+            "actually_needed": "Standard user cannot write to /Applications; installed to ~/Applications via manual DMG mount (mkdir -p ~/Applications, hdiutil attach, cp -R, xattr -cr, codesign --verify) using same DMG URL the script uses",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "No mention of quarantine handling",
+            "actually_needed": "App is ad-hoc signed not notarized; curl download avoids quarantine but xattr -cr still required to verify and launch cleanly",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The Camelid app shows its main chat interface with sidebar navigation, a model download prompt, greeting, and chat input.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-camelid-20261101-220859-70e1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-camelid-20261101-220859-70e1/replay-13-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.08959,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "open ~/Applications/\"Camelid Desktop.app\"",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        }
       }
     ]
   },
@@ -657,5 +753,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:48:47+08:00",
-  "updated_at": "2026-11-02T00:36:36.098150+08:00"
+  "updated_at": "2026-11-02T07:42:15.994267+08:00"
 }

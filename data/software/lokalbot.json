@@ -66,20 +66,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-lokalbot-20261101-194650-33ca",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask stevyhacker/tap/lokalbot",
-          "purpose": null
+          "command": "brew install --cask --appdir=$HOME/Applications stevyhacker/tap/lokalbot",
+          "purpose": "Install LokalBot cask"
         }
       ],
-      "manual_steps": [
-        "Grant macOS permissions for enabled features"
-      ],
-      "check": null,
-      "first_task": "lokalbot-cli search \"database decision\""
+      "manual_steps": [],
+      "check": {
+        "command": "ls ~/Applications/LokalBot.app/Contents/Helpers/ && ~/Applications/LokalBot.app/Contents/Helpers/lokalbot-cli --help",
+        "expected_signal": "USAGE: lokalbot-cli"
+      },
+      "first_task": "open ~/Applications/LokalBot.app"
     },
     "linux": {
       "basis": "replayed",
@@ -123,7 +124,7 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T18:33:34.075840+08:00",
+    "checked_at": "2026-11-01T19:52:06.855299+08:00",
     "runs": [
       {
         "id": "verify-lokalbot-20261101-183124-a3c6",
@@ -231,20 +232,147 @@
             "note": "dictation requires microphone and global hotkey, not testable in sandbox"
           }
         ]
+      },
+      {
+        "id": "verify-lokalbot-20261101-194650-33ca",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@78f2945fd37d",
+        "checked_at": "2026-11-01T19:52:06.855299+08:00",
+        "tool_version": "0.11.6",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications stevyhacker/tap/lokalbot",
+            "purpose": "Install LokalBot cask"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ls ~/Applications/LokalBot.app/Contents/Helpers/ && ~/Applications/LokalBot.app/Contents/Helpers/lokalbot-cli --help",
+            "expected_signal": "USAGE: lokalbot-cli",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "USAGE: lokalbot-cli <subcommand>",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/LokalBot.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "~/Applications/LokalBot.app/Contents/Helpers/lokalbot-cli get latest --include metadata,summary",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Error: External agent access is off. Enable it in LokalBot → Settings → Privacy → \"Allow external agents to read your meeting library\".",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "~/Applications/LokalBot.app/Contents/Helpers/lokalbot-cli search \"database decision\"",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Error: External agent access is off. Enable it in LokalBot → Settings → Privacy → \"Allow external agents to read your meeting library\".",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "lokalbot-cli search / get examples with access off by default",
+            "actually_needed": "enable Allow external agents in Settings → Privacy and install CLI via Settings → Advanced → Agent CLI before CLI search/get work; CLI not on PATH by default so full path under ~/Applications/LokalBot.app/Contents/Helpers/lokalbot-cli is needed",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows lokalbot-cli helper listed and its --help output with USAGE line and subcommands. / The screenshot shows LokalBot's welcome onboarding dialog titled Choose What to Remember with Step 1 of 4 setup options.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lokalbot-20261101-194650-33ca/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lokalbot-20261101-194650-33ca/check-1-cmd3.judged.png",
+            "runs/verify/verify-lokalbot-20261101-194650-33ca/replay-2-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.07879,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open ~/Applications/LokalBot.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "record meetings with local transcripts and summaries",
+            "status": "test_failed",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "blocked by default-off external agent access requiring GUI enable"
+          },
+          {
+            "feature": "search meeting transcripts and on-screen content",
+            "status": "test_failed",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "blocked by default-off external agent access requiring GUI enable"
+          },
+          {
+            "feature": "autocomplete sentences as you type",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "needs accessibility/input-monitoring permission and typing in another app"
+          },
+          {
+            "feature": "dictate text by voice in any app",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "needs microphone and macOS permission grant"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-02T00:55:09+08:00",
     "quality": {
-      "total": 73.0,
+      "total": 77.0,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
+          "score": 0.6,
           "weight": 40.0
         },
         "install_docs": {
@@ -285,7 +413,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 22.41
+      "value": 23.64
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -624,5 +752,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-11-01T23:06:30.107141+08:00"
+  "updated_at": "2026-11-02T00:55:09.295689+08:00"
 }
