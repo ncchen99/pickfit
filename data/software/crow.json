@@ -63,18 +63,25 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-crow-20261101-173314-b4d5",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fLO https://github.com/nibor1896/Crow/releases/download/v4.3.0/CrowSetup-linux-x64 && chmod +x CrowSetup-linux-x64 && ./CrowSetup-linux-x64",
-          "purpose": null
+          "command": "curl -fLO https://github.com/nibor1896/Crow/releases/download/v4.3.0/CrowSetup-linux-x64",
+          "purpose": "download CrowSetup-linux-x64 release binary v4.3.0"
+        },
+        {
+          "command": "chmod +x CrowSetup-linux-x64",
+          "purpose": "make binary executable"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "./CrowSetup-linux-x64 --help",
+        "expected_signal": "CrowSetup [options]"
+      },
+      "first_task": "./CrowSetup-linux-x64"
     },
     "windows": {
       "basis": "readme_claim",
@@ -104,22 +111,137 @@
     "url": "https://github.com/nibor1896/Crow/releases/tag/v4.3.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T17:35:11.929925+08:00",
+    "runs": [
+      {
+        "id": "verify-crow-20261101-173314-b4d5",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-vm",
+        "image": "pickfit-sbx-vm-gui:57d565a999ec",
+        "checked_at": "2026-11-01T17:35:11.929925+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fLO https://github.com/nibor1896/Crow/releases/download/v4.3.0/CrowSetup-linux-x64",
+            "purpose": "download CrowSetup-linux-x64 release binary v4.3.0"
+          },
+          {
+            "command": "chmod +x CrowSetup-linux-x64",
+            "purpose": "make binary executable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "./CrowSetup-linux-x64 --help",
+            "expected_signal": "CrowSetup [options]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "CrowSetup [options]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "./CrowSetup-linux-x64",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fLO ... && chmod +x ... && ./CrowSetup-linux-x64 installs in one window",
+            "actually_needed": "installer shows Crow Setup window but headless mode blocks with 'Crow needs an NVIDIA RTX 50 series GPU, and nvidia-smi reports none' without GPU",
+            "kind": "note"
+          },
+          {
+            "readme_said": "needs gtk3, webkit2gtk-4.1, python-gobject",
+            "actually_needed": "libwebkit2gtk-4.1-0 and libgtk-3 present, python3-gi missing caused warn but GUI still launched",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows the --help output starting with CrowSetup [options] and listing all options. / Crow Setup screen asking what this machine should run, warning no NVIDIA GPU was found, with install path and Install button.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-crow-20261101-173314-b4d5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-crow-20261101-173314-b4d5/check-1-cmd15.judged.png",
+            "runs/verify/verify-crow-20261101-173314-b4d5/replay-16-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.132727,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "./CrowSetup-linux-x64",
+          "window_title": "Crow Setup",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "generate and edit images",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "image generation with Qwen-Image 2.1 requires GPU and model, blocked by preflight"
+          },
+          {
+            "feature": "use 31 tools via MCP",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "31 tools and MCP require installed Crow, blocked without GPU"
+          },
+          {
+            "feature": "retain memory, skills and goals",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "memory/skills/goals require running instance, needs GPU"
+          },
+          {
+            "feature": "delegate work to subagents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "subagents require GPU-backed engine, blocked by preflight"
+          }
+        ]
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-01T17:57:36+08:00",
     "quality": {
-      "total": 68.8,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 64.4,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.6,
           "weight": 40.0
         },
         "install_docs": {
@@ -160,7 +282,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 39.28
+      "value": 36.77
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -483,5 +605,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:48:25+08:00",
-  "updated_at": "2026-11-01T16:45:25+08:00"
+  "updated_at": "2026-11-01T17:57:36.652871+08:00"
 }

@@ -74,20 +74,25 @@
       "first_task": "opstrellis --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-opstrellis-20261101-173134-65b5",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/mtr1920/opstrellis/main/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/mtr1920/opstrellis/main/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
+          "purpose": "download installer script"
+        },
+        {
+          "command": "bash /tmp/install.sh 2>&1",
+          "purpose": "run install.sh to install AppImage and launcher"
         }
       ],
-      "manual_steps": [
-        "Allow microphone and Accessibility permissions on macOS to paste into other apps"
-      ],
-      "check": null,
-      "first_task": "opstrellis --version"
+      "manual_steps": [],
+      "check": {
+        "command": "APPIMAGE_EXTRACT_AND_RUN=1 ~/.local/bin/opstrellis --version",
+        "expected_signal": "opstrellis 0.3.2"
+      },
+      "first_task": "APPIMAGE_EXTRACT_AND_RUN=1 ~/.local/bin/opstrellis"
     },
     "windows": null
   },
@@ -104,22 +109,137 @@
     "url": "https://github.com/mtr1920/opstrellis/releases/tag/v0.3.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T17:32:46.055619+08:00",
+    "runs": [
+      {
+        "id": "verify-opstrellis-20261101-173134-65b5",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-vm",
+        "image": "pickfit-sbx-vm-gui:57d565a999ec",
+        "checked_at": "2026-11-01T17:32:46.055619+08:00",
+        "tool_version": "0.3.2",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/mtr1920/opstrellis/main/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
+            "purpose": "download installer script"
+          },
+          {
+            "command": "bash /tmp/install.sh 2>&1",
+            "purpose": "run install.sh to install AppImage and launcher"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "APPIMAGE_EXTRACT_AND_RUN=1 ~/.local/bin/opstrellis --version",
+            "expected_signal": "opstrellis 0.3.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "opstrellis 0.3.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "APPIMAGE_EXTRACT_AND_RUN=1 ~/.local/bin/opstrellis",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "opstrellis --version works after install",
+            "actually_needed": "need APPIMAGE_EXTRACT_AND_RUN=1 in container where /dev/fuse not accessible; launcher does not set it so bare opstrellis --version fails without env var",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "curl -fsSL ... | bash pipe",
+            "actually_needed": "download script first to read before executing (verification policy)",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows --version outputting 'opstrellis 0.3.2'. / The app shows its Home dashboard dimmed behind a central Welcome onboarding dialog with setup steps and a Continue button.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-opstrellis-20261101-173134-65b5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-opstrellis-20261101-173134-65b5/check-1-cmd6.judged.png",
+            "runs/verify/verify-opstrellis-20261101-173134-65b5/replay-5-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.070479,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "APPIMAGE_EXTRACT_AND_RUN=1 ~/.local/bin/opstrellis",
+          "window_title": "OpsTrellis",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "dictate by holding a key in any app",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "hold-key dictation needs microphone and system-wide key grab/paste"
+          },
+          {
+            "feature": "transcribe speech offline on computer",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "offline transcription needs microphone input"
+          },
+          {
+            "feature": "polish transcripts with optional AI cleanup",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "AI polish operates on dictation output, needs microphone"
+          },
+          {
+            "feature": "edit selected text with voice commands",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "select-text voice commands need microphone and accessibility paste"
+          }
+        ]
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-01T17:57:36+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 78.0,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.6,
           "weight": 40.0
         },
         "install_docs": {
@@ -160,7 +280,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 49.27
+      "value": 55.69
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -459,5 +579,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:05+08:00",
-  "updated_at": "2026-11-01T16:45:25+08:00"
+  "updated_at": "2026-11-01T17:57:36.649429+08:00"
 }

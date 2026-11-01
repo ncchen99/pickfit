@@ -78,18 +78,22 @@
       "first_task": "oxi"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-oxi-20261101-173126-3663",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://maziluiosif.github.io/oxi/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://maziluiosif.github.io/oxi/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
+          "purpose": "download install script from maziluiosif.github.io/oxi/install.sh"
+        },
+        {
+          "command": "OXI_VERSION=v1.26.0 sh /tmp/install.sh",
+          "purpose": "install compatible release v1.26.0 OXI_VERSION=v1.26.0 sh /tmp/install.sh"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "oxi"
+      "first_task": "~/.local/bin/oxi"
     },
     "windows": {
       "basis": "readme_claim",
@@ -119,22 +123,132 @@
     "url": "https://github.com/maziluiosif/oxi/releases/tag/v1.33.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T17:34:30.792298+08:00",
+    "runs": [
+      {
+        "id": "verify-oxi-20261101-173126-3663",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-vm",
+        "image": "pickfit-sbx-vm-gui:57d565a999ec",
+        "checked_at": "2026-11-01T17:34:30.792298+08:00",
+        "tool_version": "1.26.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://maziluiosif.github.io/oxi/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
+            "purpose": "download install script from maziluiosif.github.io/oxi/install.sh"
+          },
+          {
+            "command": "OXI_VERSION=v1.26.0 sh /tmp/install.sh",
+            "purpose": "install compatible release v1.26.0 OXI_VERSION=v1.26.0 sh /tmp/install.sh"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "~/.local/bin/oxi",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://maziluiosif.github.io/oxi/install.sh | sh installs latest release",
+            "actually_needed": "latest v1.33.0 requires GLIBC_2.43 but box Debian Trixie has GLIBC 2.41; need OXI_VERSION=v1.26.0 (last version building on older glibc)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "oxi launches from menu or oxi command",
+            "actually_needed": "oxi auto-updates on first GUI launch (log: installed oxi v1.33.0 at /home/sbx/.local/bin/oxi) overwriting binary to incompatible version; must reinstall v1.26.0 before next launch",
+            "kind": "note"
+          },
+          {
+            "readme_said": "oxi --help shows help",
+            "actually_needed": "without DISPLAY it exits with WinitEventLoop DISPLAY not set error; with DISPLAY=:99 GUI starts (llvmpipe software rasterizer)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows oxi's main chat workspace with prompt, suggestion cards, and message input fully drawn.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-oxi-20261101-173126-3663/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-oxi-20261101-173126-3663/replay-17-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.141145,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "~/.local/bin/oxi",
+          "window_title": "oxi",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "switch agents mid-chat with context",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "switch agents mid-chat requires Claude/Codex/Cursor subscriptions via ACP"
+          },
+          {
+            "feature": "run open models on own machine",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "run open models needs GGUF download + llama-server runtime >300MB"
+          },
+          {
+            "feature": "read, search and edit code",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "read/search/edit via agent requires provider/model; bare editor not agent feature"
+          },
+          {
+            "feature": "review changes in diff editor",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "diff review requires agent-generated changes"
+          }
+        ]
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-01T17:57:36+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 73.9,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.6,
           "weight": 40.0
         },
         "install_docs": {
@@ -175,7 +289,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 37.12
+      "value": 39.76
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -490,5 +604,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-11-01T16:45:25+08:00"
+  "updated_at": "2026-11-01T17:57:36.651246+08:00"
 }
