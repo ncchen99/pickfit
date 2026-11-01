@@ -109,7 +109,9 @@ test('cards: only a web app carries the browser facts, and the model may cite th
   const other = toCard(catalog.bySlug.get('fixture-json-query')!, 'macos');
   assert.ok(WEB_FIELDS.every((f) => !(f in other)), 'other cards stay as small as before');
   assert.ok(WEB_FIELDS.every((f) => (CARD_FIELDS as readonly string[]).includes(f)));
-  assert.match(MATCH_INSTRUCTIONS, /put a web app \(no_install true\) before a tool to install, unless the job runs long or in the background/);
+  assert.match(MATCH_INSTRUCTIONS, /Among tools that fit about equally, put a web app \(no_install true\) first, unless the job runs long or in the background/);
+  assert.equal(card.network, 'optional', 'a PWA checked offline needs the network only to load');
+  assert.equal(toCard(withCheck({ offline: 'not_tested' }).bySlug.get(SLUG)!).network, 'required');
   assert.match(MATCH_INSTRUCTIONS, /works offline only if works_offline is "verified", and keeps typed data on the device only if data_sent is "none"/);
 });
 

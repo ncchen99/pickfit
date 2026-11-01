@@ -118,7 +118,8 @@ export function toCard(entry: Entry, os?: OS, arch?: Arch): Card {
     license: entry.license,
     processing: entry.processing,
     gpu: pre.gpu,
-    network: pre.network,
+    // A web app needs the network to load; a PWA pickfit reloaded offline needs it only for that first load.
+    network: web && webCheck(entry) ? (webCheck(entry)!.offline === 'verified' ? 'optional' : 'required') : pre.network,
     api_keys: pre.api_keys,
     apple_silicon_only: pre.apple_silicon_only,
     min_ram_gb: pre.min_ram_gb,
