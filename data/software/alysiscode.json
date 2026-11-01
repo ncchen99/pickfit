@@ -104,12 +104,12 @@
     },
     "windows": {
       "basis": "replayed",
-      "run_id": "verify-alysiscode-20261031-224540-1927",
+      "run_id": "verify-alysiscode-20261101-025630-605a",
       "method": "pipx",
       "steps": [
         {
           "command": "pipx install alysis-code",
-          "purpose": "Install alysis-code via pipx as README instructs"
+          "purpose": "pipx install alysis-code"
         }
       ],
       "manual_steps": [],
@@ -117,7 +117,7 @@
         "command": "$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'); alysis --version",
         "expected_signal": "0.15.2"
       },
-      "first_task": "$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'); alysis sandbox doctor --smoke"
+      "first_task": "alysis sandbox doctor --smoke"
     }
   },
   "pricing": {
@@ -135,7 +135,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T22:53:09.792183+08:00",
+    "checked_at": "2026-11-01T03:04:51.397774+08:00",
     "runs": [
       {
         "id": "verify-alysiscode-20261031-032026-a05f",
@@ -264,7 +264,7 @@
         ]
       },
       {
-        "id": "verify-alysiscode-20261031-224540-1927",
+        "id": "verify-alysiscode-20261101-025630-605a",
         "level": "function",
         "unverified_reason": null,
         "os": "windows",
@@ -272,14 +272,14 @@
         "method": "sandbox",
         "runner": "vbox",
         "image": "Windows 11 Enterprise LTSC Eval 24H2 (26100.1742), VirtualBox 7.2.22 +pickfit-win11@16ea69df29ff router@583d254c306d",
-        "checked_at": "2026-10-31T22:53:09.792183+08:00",
+        "checked_at": "2026-11-01T03:04:51.397774+08:00",
         "tool_version": "0.15.2",
         "install_method": "pipx",
         "replayed": true,
         "steps": [
           {
             "command": "pipx install alysis-code",
-            "purpose": "Install alysis-code via pipx as README instructs"
+            "purpose": "pipx install alysis-code"
           }
         ],
         "smoke_tests": [
@@ -293,29 +293,47 @@
             "offline": true
           },
           {
-            "command": "$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'); alysis --help",
-            "expected_signal": "Sandbox setup and diagnostics.",
-            "exit_code": 0,
+            "command": "alysis sandbox doctor --smoke",
+            "expected_signal": "sandbox",
+            "exit_code": 1,
             "passed": true,
-            "observed_excerpt": "│ sandbox Sandbox setup and diagnostics. │",
+            "observed_excerpt": "alysis sandbox",
             "setup": [],
             "offline": true
           },
           {
-            "command": "$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'); alysis sandbox doctor --smoke",
-            "expected_signal": "Status: not ready",
-            "exit_code": 1,
+            "command": "alysis capabilities",
+            "expected_signal": "alysis.capabilities",
+            "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Status: not ready",
+            "observed_excerpt": "{\"contract\": \"alysis.capabilities\", \"contract_version\": 1, \"features\": {\"auth.models-json\": true, \"auth.select-model\": true, \"browser-start-host-v1\": true, \"computer-discovery-v1\": true, \"computer-use-host-v1\": true, \"embedded-browser-host-v1\": true, \"forge.contract-v2\": true, \"forge.host-authorita…",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "alysis profile presets",
+            "expected_signal": "Ollama (local)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ ollama │ Ollama (local) - │ compatibility │ openai_compat │ http://localhost:… │ auto │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "alysis forge workspace-check --json",
+            "expected_signal": "workspace_root",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"action\": \"forge_plan\", \"can_override\": false, \"candidates\": [], \"git_root\": null, \"message\": \"\", \"ok\": true, \"requested_path\": \"C:\\\\Users\\\\sbx\\\\work\", \"risk_level\": \"healthy\", \"risk_reasons\": [], \"workspace_root\": \"C:\\\\Users\\\\sbx\\\\work\"}",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "Sandboxed by default with a native sandbox on Windows x64; check with `alysis sandbox doctor --smoke`.",
-            "actually_needed": "On this Windows box without Docker, 'alysis sandbox doctor --smoke' prints the diagnostics table and exits 1 with 'Status: not ready' asking to 'Install Docker Desktop, open it, then run `alysis sandbox pull`', despite README describing a native sandbox on Windows x64.",
-            "kind": "note"
+            "readme_said": "alysis sandbox doctor --smoke checks sandbox",
+            "actually_needed": "exits 1 with 'Status: not ready' when Docker Desktop not installed; needs Docker to provide backend",
+            "kind": "sandbox"
           },
           {
             "readme_said": "(Windows steps)",
@@ -331,20 +349,55 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Sandbox doctor reports not ready with no backend, and --version output shows 0.15.2.",
-          "model": "muse-spark-1.3-contributor"
+          "observed": "Sandbox doctor shows no usable backend and not ready status while capabilities and version commands were executed with matching exit codes.",
+          "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-alysiscode-20261031-224540-1927/report.json",
+          "trace_path": "runs/verify/verify-alysiscode-20261101-025630-605a/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-alysiscode-20261031-224540-1927/check-1-cmd4.judged.png",
-            "runs/verify/verify-alysiscode-20261031-224540-1927/check-2-cmd2.judged.png"
+            "runs/verify/verify-alysiscode-20261101-025630-605a/check-1-cmd4.judged.png",
+            "runs/verify/verify-alysiscode-20261101-025630-605a/check-2-cmd6.judged.png",
+            "runs/verify/verify-alysiscode-20261101-025630-605a/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3-contributor",
-        "cost_usd": 0.005977
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.059724,
+        "features": [
+          {
+            "feature": "run coding, research and everyday workflows",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists capability flags like run.instruction-stdin, not an executed workflow."
+          },
+          {
+            "feature": "use multiple model providers and local models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists provider presets like Ollama and LM Studio, not use of a provider."
+          },
+          {
+            "feature": "execute commands in sandboxed isolation",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output reports no usable sandbox backend and status not ready with exit 1."
+          },
+          {
+            "feature": "turn plans into verified changes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output is only a healthy workspace-check, not a plan turned into verified changes."
+          }
+        ]
       }
     ]
   },
@@ -772,5 +825,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-01T01:07:53.440325+08:00"
+  "updated_at": "2026-11-01T11:26:55.747981+08:00"
 }

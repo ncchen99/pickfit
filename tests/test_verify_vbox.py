@@ -646,6 +646,29 @@ def test_an_old_ready_line_never_counts_for_a_new_boot(fake, monkeypatch) -> Non
         fake.box().start()
 
 
+def test_a_router_timeout_names_no_host_folder(fake, monkeypatch) -> None:
+    # The error becomes the run's blocking_error: the serial log by ~/... or name, never the host's own path.
+    monkeypatch.setenv("FAKE_ROUTER_SILENT", "1")
+    monkeypatch.setattr(vb, "ROUTER_WAIT_S", 0.5)
+    with pytest.raises(BoxError, match="did not report ready") as err:
+        fake.box().start()
+    message = str(err.value)
+    assert "pickfit-router-serial.log" in message
+    assert str(fake.dir) not in message
+    assert str(Path.home()).lower() not in message.lower()
+
+
+def test_host_paths_in_messages(tmp_path, monkeypatch) -> None:
+    home = tmp_path / "home" / "someone"
+    monkeypatch.setattr(vb.Path, "home", classmethod(lambda cls: home))
+    assert vb.host_path(home / ".pickfit" / "vbox" / "logs" / "x.log") == "~/.pickfit/vbox/logs/x.log"
+    assert vb.host_path(tmp_path / "elsewhere" / "y.iso") == "y.iso"
+    text = f"failed: {home}\\VirtualBox VMs\\a.vbox and {str(home).replace(chr(92), '/')}/b; {home}x stays"
+    scrubbed = vb.scrub_host(text)
+    assert scrubbed.startswith("failed: ~\\VirtualBox VMs\\a.vbox and ~/b; ")
+    assert f"{home}x stays" in scrubbed
+
+
 def test_a_ready_line_rewritten_in_place_is_still_seen(fake, monkeypatch) -> None:
     box = fake.box()
     box.start()

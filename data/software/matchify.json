@@ -1,0 +1,559 @@
+{
+  "schema_version": "software.v1",
+  "slug": "matchify",
+  "repo_id": "gh:1316106130",
+  "name": "Matchify",
+  "summary": "Converts eligible Python if/elif/else chains into match statements.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "linter",
+    "pattern-matching",
+    "python"
+  ],
+  "use_cases": [
+    "convert if elif else chains to match statements",
+    "preview conversions as diffs without writing"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "convert if elif else chains to match",
+    "preserve formatting using LibCST",
+    "process large codebases in parallel",
+    "safely transform only when semantics preserved"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/15r10nk/matchify",
+    "full_name": "15r10nk/matchify",
+    "created_at": "2026-07-29T12:26:34Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-matchify-20261101-114042-aecd",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install matchify",
+          "purpose": "install matchify via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "matchify --help",
+        "expected_signal": "Convert if/elif/else chains to Python 3.10+ match statements"
+      },
+      "first_task": "matchify example_simple.py --check"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.3.0",
+    "published_at": "2026-09-23T06:33:29Z",
+    "url": "https://github.com/15r10nk/matchify/releases/tag/v0.3.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T11:42:01.636003+08:00",
+    "runs": [
+      {
+        "id": "verify-matchify-20261101-114042-aecd",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T11:42:01.636003+08:00",
+        "tool_version": "0.3.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install matchify",
+            "purpose": "install matchify via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "matchify --help",
+            "expected_signal": "Convert if/elif/else chains to Python 3.10+ match statements",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Convert if/elif/else chains to Python 3.10+ match statements",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "matchify example_simple.py --check",
+            "expected_signal": "match x:",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "2 +match x:",
+            "setup": [
+              {
+                "command": "mkdir -p proj && cat > example_simple.py <<'PY'\nx = 2\nif x == 1:\n    print(\"one\")\nelif x == 2:\n    print(\"two\")\nelse:\n    print(\"other\")\nPY\ncat > example_format.py <<'PY'\n# leading comment preserved?\nx = 1  # inline comment\nif x == 1:  # branch comment\n    print(\"one\")  # action comment\nelif x == 2:\n    print(\"two\")\nelse:\n    print(\"other\")  # else comment\nPY\ncat > example_safe.py <<'PY'\nx = 1\ny = 2\nif x == 1:\n    print(\"x is one\")\nelif y == 2:\n    print(\"y is two\")\nelse:\n    print(\"other\")\nPY\ncat proj/a.py <<'PY'\nx = 1\nif x == 1:\n    print(\"one\")\nelif x == 2:\n    print(\"two\")\nelse:\n    print(\"other\")\nPY\ncat proj/b.py <<'PY'\ny = \"a\"\nif y == \"a\":\n    print(\"a\")\nelif y == \"b\":\n    print(\"b\")\nelse:\n    print(\"other\")\nPY\nls -R",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > proj/a.py <<'PY'\nx = 1\nif x == 1:\n    print(\"one\")\nelif x == 2:\n    print(\"two\")\nelse:\n    print(\"other\")\nPY\ncat > proj/b.py <<'PY'\ny = \"a\"\nif y == \"a\":\n    print(\"a\")\nelif y == \"b\":\n    print(\"b\")\nelse:\n    print(\"other\")\nPY\nls -R && cat example_simple.py && cat example_safe.py",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "matchify example_format.py --check",
+            "expected_signal": "# branch comment",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "3 -if x == 1: # branch comment",
+            "setup": [
+              {
+                "command": "mkdir -p proj && cat > example_simple.py <<'PY'\nx = 2\nif x == 1:\n    print(\"one\")\nelif x == 2:\n    print(\"two\")\nelse:\n    print(\"other\")\nPY\ncat > example_format.py <<'PY'\n# leading comment preserved?\nx = 1  # inline comment\nif x == 1:  # branch comment\n    print(\"one\")  # action comment\nelif x == 2:\n    print(\"two\")\nelse:\n    print(\"other\")  # else comment\nPY\ncat > example_safe.py <<'PY'\nx = 1\ny = 2\nif x == 1:\n    print(\"x is one\")\nelif y == 2:\n    print(\"y is two\")\nelse:\n    print(\"other\")\nPY\ncat proj/a.py <<'PY'\nx = 1\nif x == 1:\n    print(\"one\")\nelif x == 2:\n    print(\"two\")\nelse:\n    print(\"other\")\nPY\ncat proj/b.py <<'PY'\ny = \"a\"\nif y == \"a\":\n    print(\"a\")\nelif y == \"b\":\n    print(\"b\")\nelse:\n    print(\"other\")\nPY\nls -R",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > proj/a.py <<'PY'\nx = 1\nif x == 1:\n    print(\"one\")\nelif x == 2:\n    print(\"two\")\nelse:\n    print(\"other\")\nPY\ncat > proj/b.py <<'PY'\ny = \"a\"\nif y == \"a\":\n    print(\"a\")\nelif y == \"b\":\n    print(\"b\")\nelse:\n    print(\"other\")\nPY\nls -R && cat example_simple.py && cat example_safe.py",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "matchify proj/ --check -j 8",
+            "expected_signal": "2 would convert",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "Summary: 2 would convert, 0 unchanged, 0 errors",
+            "setup": [
+              {
+                "command": "mkdir -p proj && cat > example_simple.py <<'PY'\nx = 2\nif x == 1:\n    print(\"one\")\nelif x == 2:\n    print(\"two\")\nelse:\n    print(\"other\")\nPY\ncat > example_format.py <<'PY'\n# leading comment preserved?\nx = 1  # inline comment\nif x == 1:  # branch comment\n    print(\"one\")  # action comment\nelif x == 2:\n    print(\"two\")\nelse:\n    print(\"other\")  # else comment\nPY\ncat > example_safe.py <<'PY'\nx = 1\ny = 2\nif x == 1:\n    print(\"x is one\")\nelif y == 2:\n    print(\"y is two\")\nelse:\n    print(\"other\")\nPY\ncat proj/a.py <<'PY'\nx = 1\nif x == 1:\n    print(\"one\")\nelif x == 2:\n    print(\"two\")\nelse:\n    print(\"other\")\nPY\ncat proj/b.py <<'PY'\ny = \"a\"\nif y == \"a\":\n    print(\"a\")\nelif y == \"b\":\n    print(\"b\")\nelse:\n    print(\"other\")\nPY\nls -R",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > proj/a.py <<'PY'\nx = 1\nif x == 1:\n    print(\"one\")\nelif x == 2:\n    print(\"two\")\nelse:\n    print(\"other\")\nPY\ncat > proj/b.py <<'PY'\ny = \"a\"\nif y == \"a\":\n    print(\"a\")\nelif y == \"b\":\n    print(\"b\")\nelse:\n    print(\"other\")\nPY\nls -R && cat example_simple.py && cat example_safe.py",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "matchify example_safe.py --check -v",
+            "expected_signal": "0 would convert, 1 unchanged",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Summary: 0 would convert, 1 unchanged, 0 errors",
+            "setup": [
+              {
+                "command": "mkdir -p proj && cat > example_simple.py <<'PY'\nx = 2\nif x == 1:\n    print(\"one\")\nelif x == 2:\n    print(\"two\")\nelse:\n    print(\"other\")\nPY\ncat > example_format.py <<'PY'\n# leading comment preserved?\nx = 1  # inline comment\nif x == 1:  # branch comment\n    print(\"one\")  # action comment\nelif x == 2:\n    print(\"two\")\nelse:\n    print(\"other\")  # else comment\nPY\ncat > example_safe.py <<'PY'\nx = 1\ny = 2\nif x == 1:\n    print(\"x is one\")\nelif y == 2:\n    print(\"y is two\")\nelse:\n    print(\"other\")\nPY\ncat proj/a.py <<'PY'\nx = 1\nif x == 1:\n    print(\"one\")\nelif x == 2:\n    print(\"two\")\nelse:\n    print(\"other\")\nPY\ncat proj/b.py <<'PY'\ny = \"a\"\nif y == \"a\":\n    print(\"a\")\nelif y == \"b\":\n    print(\"b\")\nelse:\n    print(\"other\")\nPY\nls -R",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > proj/a.py <<'PY'\nx = 1\nif x == 1:\n    print(\"one\")\nelif x == 2:\n    print(\"two\")\nelse:\n    print(\"other\")\nPY\ncat > proj/b.py <<'PY'\ny = \"a\"\nif y == \"a\":\n    print(\"a\")\nelif y == \"b\":\n    print(\"b\")\nelse:\n    print(\"other\")\nPY\nls -R && cat example_simple.py && cat example_safe.py",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "--check only reports them as diffs",
+            "actually_needed": "--check exits 1 when conversions are available (per README), so exit 1 is success for conversion checks",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show matchify diffs converting if/elif/else to match/case with comments preserved, plus help describing the conversion.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-matchify-20261101-114042-aecd/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-matchify-20261101-114042-aecd/check-1-cmd6.judged.png",
+            "runs/verify/verify-matchify-20261101-114042-aecd/check-2-cmd7.judged.png",
+            "runs/verify/verify-matchify-20261101-114042-aecd/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.058013,
+        "features": [
+          {
+            "feature": "convert if elif else chains to match",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "preserve formatting using LibCST",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "process large codebases in parallel",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows two files converted but gives no evidence of parallel execution."
+          },
+          {
+            "feature": "safely transform only when semantics preserved",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; different subjects left unchanged"
+          }
+        ]
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T11:42:01+08:00",
+    "quality": {
+      "total": 83.9,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 68.4,
+      "signals": {
+        "stars": 57,
+        "monthly_downloads": 501,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 94,
+      "packages": [
+        "pypi:matchify"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 26.51
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:42:01.642126+08:00",
+      "sources_sha": "e88d5b018b556c72eeaf829d1f87b05b51a41752a24416d465c6b47dd9856c9f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Matchify automatically converts eligible `if`/`elif`/`else` chains into"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "uv tool install matchify"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "matchify --write path/to/file.py"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "matchify path/to/project/ --write --safe"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Distributed under the terms of the [MIT](http://opensource.org/licenses/MIT) license"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/15r10nk/matchify",
+      "fetched_at": "2026-11-01T11:40:28+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/15r10nk/matchify/blob/main/README.md",
+      "fetched_at": "2026-11-01T11:40:27+08:00"
+    },
+    {
+      "id": "release:v0.3.0",
+      "kind": "release",
+      "url": "https://github.com/15r10nk/matchify/releases/tag/v0.3.0",
+      "fetched_at": "2026-11-01T11:40:27+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Install \"matchify\" as a command-line tool",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:40:34+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Install \"matchify\" as a command-line tool",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:40:34+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Install \"matchify\" as a command-line tool",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:40:34+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "converts if-else code to match statements",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:40:34+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Matchify",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:40:34+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T11:40:28+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T11:40:28+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-01T11:40:28+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T11:40:28+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.3.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T11:40:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Automatic conversion** of if/elif/else chains to Python 3.10+ match statements",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:40:34+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Review diffs without writing changes",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:40:34+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Automatic conversion** of if/elif/else chains to Python 3.10+ match statements",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:40:34+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Preserves formatting** and code structure using LibCST",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:40:34+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Parallel processing** for fast conversion of large codebases",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:40:34+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Safe transformations** - only converts when semantics are preserved",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:40:34+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "\"matchify\" is free and open source software.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:40:34+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-01T11:40:26+08:00",
+  "updated_at": "2026-11-01T11:42:01+08:00"
+}

@@ -14,6 +14,7 @@ import pytest
 import pickfit.env
 from pickfit.env import REPO_ROOT
 from pickfit.ledger import (
+    BASETEN_CAPS,
     PIPELINE_CAPS,
     BudgetExceeded,
     Caps,
@@ -65,6 +66,13 @@ def test_total_cap_setting_can_only_lower_it(monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr("pickfit.ledger.get_env", lambda name, default=None, path=None, v=bad: v)
         with pytest.raises(ValueError):
             pipeline_caps()
+
+
+def test_baseten_daily_cap_is_raised_on_11_1_only():
+    assert BASETEN_CAPS.total_usd == 80.0
+    assert BASETEN_CAPS.daily_usd(date(2026, 10, 31)) == 25.0
+    assert BASETEN_CAPS.daily_usd(date(2026, 11, 1)) == 35.0
+    assert BASETEN_CAPS.daily_usd(date(2026, 11, 2)) == 25.0
 
 
 def test_taipei_date_crosses_midnight_at_utc_16():

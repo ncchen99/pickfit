@@ -1,0 +1,541 @@
+{
+  "schema_version": "software.v1",
+  "slug": "docvet",
+  "repo_id": "gh:1152499473",
+  "name": "docvet",
+  "summary": "CLI that vets Python docstring presence, completeness, staleness, and rendering.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agent",
+    "ai-coding",
+    "ai-tools",
+    "code-quality",
+    "developer-tools",
+    "docstring-checker",
+    "docstring-linter",
+    "docstrings",
+    "documentation",
+    "docvet"
+  ],
+  "use_cases": [
+    "check for missing docstrings with coverage metrics",
+    "check for missing docstring sections",
+    "flag potentially stale docstrings via git",
+    "find files invisible to mkdocs",
+    "scaffold missing docstring sections"
+  ],
+  "alternatives_to": [
+    "ruff",
+    "interrogate",
+    "pydoclint"
+  ],
+  "features": [
+    "check missing docstrings with coverage metrics",
+    "check missing docstring sections",
+    "flag potentially stale docstrings via git",
+    "check mkdocs rendering compatibility"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://alberto-codes.github.io/docvet/",
+  "repo": {
+    "url": "https://github.com/Alberto-Codes/docvet",
+    "full_name": "Alberto-Codes/docvet",
+    "created_at": "2026-02-08T00:47:04Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v3.0.1",
+    "published_at": "2026-10-22T13:53:46Z",
+    "url": "https://github.com/Alberto-Codes/docvet/releases/tag/v3.0.1"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "suspected_tool_fault",
+    "checked_at": "2026-11-01T11:37:29.706655+08:00",
+    "runs": [
+      {
+        "id": "verify-docvet-20261101-113644-be56",
+        "level": "unverified",
+        "unverified_reason": "suspected_tool_fault",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T11:37:29.706655+08:00",
+        "tool_version": "3.0.1",
+        "install_method": "uv",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "uv tool install 'docvet[griffe]' 2>&1",
+            "purpose": "Install docvet[griffe] via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "docvet --version 2>&1",
+            "expected_signal": "docvet 3.0.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "docvet 3.0.1",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "docvet presence 2>&1",
+            "expected_signal": "missing-docstring",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Analysis incomplete: 1 files attempted, 0 analyzed, 1 failed; 0 findings in the analyzed subset. (0.0s)",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/demo_pkg && cat > /home/sbx/work/demo_pkg/mymodule.py <<'PY'\ndef parse_config(path):\n    \"\"\"Parse config.\"\"\"\n    raise ValueError(\"bad config\")\nPY\ncat /home/sbx/work/demo_pkg/mymodule.py && ls -R /home/sbx/work/demo_pkg",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "docvet enrichment 2>&1",
+            "expected_signal": "missing-raises",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Analysis incomplete: 1 files attempted, 0 analyzed, 1 failed; 0 findings in the analyzed subset. (0.0s)",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/demo_pkg && cat > /home/sbx/work/demo_pkg/mymodule.py <<'PY'\ndef parse_config(path):\n    \"\"\"Parse config.\"\"\"\n    raise ValueError(\"bad config\")\nPY\ncat /home/sbx/work/demo_pkg/mymodule.py && ls -R /home/sbx/work/demo_pkg",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "docvet freshness 2>&1",
+            "expected_signal": "stale",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Analysis incomplete; requested scope was not fully analyzed.",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/demo_pkg && cat > /home/sbx/work/demo_pkg/mymodule.py <<'PY'\ndef parse_config(path):\n    \"\"\"Parse config.\"\"\"\n    raise ValueError(\"bad config\")\nPY\ncat /home/sbx/work/demo_pkg/mymodule.py && ls -R /home/sbx/work/demo_pkg",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "docvet griffe 2>&1",
+            "expected_signal": "griffe",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Analysis incomplete: 1 files attempted, 0 analyzed, 1 failed; 0 findings in the analyzed subset. (0.0s)",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/demo_pkg && cat > /home/sbx/work/demo_pkg/mymodule.py <<'PY'\ndef parse_config(path):\n    \"\"\"Parse config.\"\"\"\n    raise ValueError(\"bad config\")\nPY\ncat /home/sbx/work/demo_pkg/mymodule.py && ls -R /home/sbx/work/demo_pkg",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": "suspected tool fault, not proven: command 4 exits 1 (command 4 shows no error of the tool's own code); it failed again in a fresh box; git file discovery failed; check repository context / Analysis incomplete; requested scope was not fully analyzed",
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-docvet-20261101-113644-be56/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.037621
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-01T11:37:29+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.4,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 45.8,
+      "signals": {
+        "stars": 10,
+        "monthly_downloads": 14540,
+        "forks": 1,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 266,
+      "packages": [
+        "pypi:docvet"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 37.4
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:37:29.754753+08:00",
+      "sources_sha": "4c0f2cac0ccf9e1ee53e49fdbaac7440e91ba22d5a61015c1545718be05884d3",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "docvet combines docstring presence metrics, structural checks, history-based staleness signals, and renderer diagnostics in one CLI"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "These checks help reviewers find documentation gaps"
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install docvet && docvet check --all"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "src/mypackage/helpers.py:1: missing-docstring Module has no docstring [required]"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Configure via `[tool.docvet]` in your `pyproject.toml`."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "To get back to green, fix the griffe findings or remove `griffe` from `fail-on`."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "MIT -- see [LICENSE](https://github.com/Alberto-Codes/docvet/blob/main/LICENSE) for details."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Alberto-Codes/docvet",
+      "fetched_at": "2026-11-01T11:36:30+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Alberto-Codes/docvet/blob/main/README.md",
+      "fetched_at": "2026-11-01T11:36:28+08:00"
+    },
+    {
+      "id": "release:v3.0.1",
+      "kind": "release",
+      "url": "https://github.com/Alberto-Codes/docvet/releases/tag/v3.0.1",
+      "fetched_at": "2026-11-01T11:36:28+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "in one CLI, with editor and agent interfaces.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "pip install docvet && docvet check --all",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "in one CLI, with editor and agent interfaces.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Comprehensive docstring quality vetting for Python projects",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# docvet",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T11:36:30+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T11:36:30+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-01T11:36:30+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T11:36:30+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T11:36:30+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v3.0.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T11:36:28+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Check for missing docstrings with coverage metrics",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Check for missing docstring sections",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Flag potentially stale docstrings via git",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Find files invisible to mkdocs",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Scaffold missing docstring sections",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "| Layer | Check | ruff | interrogate | pydoclint | **docvet** |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "| Layer | Check | ruff | interrogate | pydoclint | **docvet** |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "| Layer | Check | ruff | interrogate | pydoclint | **docvet** |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Check for missing docstrings with coverage metrics",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Check for missing docstring sections",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Flag potentially stale docstrings via git",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Check mkdocs rendering compatibility",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "MIT -- see [LICENSE](https://github.com/Alberto-Codes/docvet/blob/main/LICENSE) for details.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T11:36:40+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-01T11:36:28+08:00",
+  "updated_at": "2026-11-01T11:37:29+08:00"
+}
