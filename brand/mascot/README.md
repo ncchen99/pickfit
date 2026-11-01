@@ -46,9 +46,9 @@ Line weight on the 200-unit canvas: 4.5 for the outer outline, 3 for inner lines
 
 - **Body**: one egg, a little narrower at the top (126 × 124 on the 200 canvas). Head and body are the same shape; no neck.
 - **Tuft**: a small soft rufous curl on top.
-- **Face**: lots of empty space. Two small dot eyes, 56 apart (about 45% of the body width), a little above the middle.
+- **Face**: lots of empty space. Two eyes, dark ovals 13.6 × 16.6 with a white highlight (the v1 size), 56 apart (about 45% of the body width), a little above the middle.
 - **Beak, front**: a tiny diamond (13 × 13) centred between the eyes and just below them; upper half darker. It is the mouth.
-- **Beak, turned**: a small side triangle on the face near the front edge, under the far eye. Its tip is where Fitz holds the tape end or the leaf.
+- **Beak, turned**: a small side triangle on the face, between the near eye and the narrower far eye and a little below them, pointing right. It stays well inside the outline, and the cap's forehead point sits right above its base. Its tip is where Fitz holds the tape end or the leaf; the beak is drawn over the tape or leaf so it reads as gripping.
 - **Cap**: rufous over the crown, with a point coming down the forehead toward the beak.
 - **Tail**: grows from behind the body and sweeps up and back past the left shoulder. Never a stalk on the crown.
 - **Wings**: small side flaps, not much bigger than the eye-to-cheek area.
@@ -93,7 +93,8 @@ All animations are short loops (1.8–3.4 s) using CSS keyframes inside each SVG
 
 - v1: three-quarter view, long needle beak on the side of the head, tail straight up from the crown, tape as a band. Read as a ball with a stem.
 - v2: front face with a large beak between the eyes, tail from behind, big wings, tape draped as two strips. Read as a bird, but the beak and wings were too big and the tape too busy.
-- v3 (current): egg body, tuft, small dot eyes, tiny diamond beak, v1-style tape band, small wings, and a turned pose for holding things.
+- v3: egg body, tuft, small dot eyes, tiny diamond beak, v1-style tape band, small wings, and a turned pose for holding things. The dot eyes felt less cute, and the turned face was crowded at its right edge.
+- v4 (current): v3 with the bigger v1 eyes back, and the turned face re-spaced: the beak moved onto the face, the cap point follows it, and the tape end and leaf moved with the beak tip.
 
 ## Provenance
 
