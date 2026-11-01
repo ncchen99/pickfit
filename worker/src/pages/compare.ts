@@ -5,9 +5,9 @@
  * features checked, highest quality score, newest release. Nothing else is
  * ranked.
  */
-import { bestGuide, nameKey, OSES, verifiedOn, type Arch, type Catalog, type Entry, type OS } from '../catalog.ts';
+import { bestGuide, isWebApp, nameKey, OSES, verifiedOn, webCheck, type Arch, type Catalog, type Entry, type OS } from '../catalog.ts';
 import { featuresOut } from '../features.ts';
-import { day, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, system, kindLine } from '../ui/facts.ts';
+import { day, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, system, kindLine, webLevelLabel } from '../ui/facts.ts';
 import { esc, link, listOf, SLUG } from '../ui/html.ts';
 import { icon } from '../ui/icons.ts';
 import { age, badge, coverage, fitz, tape } from '../ui/kit.ts';
@@ -74,6 +74,8 @@ export function compareTable(entries: Entry[], opts: Opts): string {
     row(
       'Verified on',
       entries.map((e) => {
+        const web = webCheck(e);
+        if (web) return `<span class="yes">${icon('check')} In a browser, any OS</span>`;
         const oses = verifiedOn(e);
         if (!oses.length) return '<span class="no">Not verified yet</span>';
         const mine = opts.os ? oses.includes(opts.os) : null;
@@ -88,6 +90,8 @@ export function compareTable(entries: Entry[], opts: Opts): string {
       'Proof',
       entries.map((e, i) => {
         const g = guides[i];
+        const web = webCheck(e);
+        if (web) return `<span class="yes">${esc(webLevelLabel(web))}</span><div class="small quiet">In a browser, ${esc(day(web.checked_at))}</div>`;
         if (!g) return '<span class="unknown">no run</span>';
         const label = levelLabel(g.run.level, { gui: g.run.gui, mcp: g.mcp });
         return `<span class="${passed(g.run.gui) ? 'yes' : 'no'}">${esc(label)}</span><div class="small quiet">${esc(system(g.run.os, g.run.arch))}, ${esc(day(g.run.checked_at))}${g.run.replayed ? ', replayed' : ''}</div>`;
@@ -97,13 +101,20 @@ export function compareTable(entries: Entry[], opts: Opts): string {
   rows.push(
     row(
       'Works offline',
-      guides.map((g) => (g?.works_offline === true ? '<span class="yes">Yes, checked</span>' : g?.works_offline === false ? '<span class="no">Needed the network</span>' : '<span class="unknown">not checked</span>')),
+      guides.map((g, i) => {
+        const offline = g?.works_offline ?? { verified: true, not_offline: false, not_tested: null }[webCheck(entries[i])?.offline ?? 'not_tested'];
+        return offline === true ? '<span class="yes">Yes, checked</span>' : offline === false ? '<span class="no">Needed the network</span>' : '<span class="unknown">not checked</span>';
+      }),
     ),
   );
 
   rows.push(group('Setup'));
   const stepCounts = guides.map((g) => (g && g.steps.length ? g.steps.length : null));
-  rows.push(row('Install', guides.map((g) => (g && g.steps.length ? `${esc(setupWords(g.steps.length, g.manual_steps.length))}<div class="small quiet">${esc(g.method)}</div>` : '<span class="unknown">no recorded steps</span>')), bestOf(stepCounts, true)));
+  const install = guides.map((g, i) => {
+    if (isWebApp(entries[i])) return '<span class="yes">Nothing to install, just open it</span>';
+    return g && g.steps.length ? `${esc(setupWords(g.steps.length, g.manual_steps.length))}<div class="small quiet">${esc(g.method)}</div>` : '<span class="unknown">no recorded steps</span>';
+  });
+  rows.push(row('Install', install, bestOf(stepCounts, true)));
   rows.push(
     row(
       'Needs first',
@@ -122,7 +133,7 @@ export function compareTable(entries: Entry[], opts: Opts): string {
       }),
     ),
   );
-  rows.push(row('README fixes', guides.map((g) => (g ? String(readerIssues(g.pitfalls).length) : '<span class="unknown">no run</span>'))));
+  rows.push(row('README fixes', guides.map((g, i) => (g ? String(readerIssues(g.pitfalls).length) : isWebApp(entries[i]) ? '<span class="quiet">no README to follow</span>' : '<span class="unknown">no run</span>'))));
 
   rows.push(group('Measures'));
   rows.push(row('Quality', entries.map((e) => tape('Quality', e.scores?.quality ?? null)), bestOf(entries.map((e) => e.scores?.quality ?? null))));
@@ -135,7 +146,21 @@ export function compareTable(entries: Entry[], opts: Opts): string {
   rows.push(row('Licence', entries.map((e) => (e.license ? `<code>${esc(e.license)}</code>` : unknown) + (e.open_source === true ? ' <span class="small quiet">open source</span>' : ''))));
   const releases = entries.map((e) => (e.last_release ? new Date(e.last_release).getTime() : null)).map((t) => (t !== null && Number.isNaN(t) ? null : t));
   rows.push(row('Last release', entries.map((e) => (e.last_release ? `${esc(day(e.last_release))}<div class="small quiet">${esc(age(e.last_release, opts.now) ?? '')}</div>` : unknown)), bestOf(releases)));
-  rows.push(row('Links', entries.map((e) => [link(e.repo_url, 'Source'), e.homepage && e.homepage !== e.repo_url ? link(e.homepage, 'Homepage') : '', `<a href="/tool/${esc(e.slug)}">Profile</a>`].filter(Boolean).join(' · '))));
+  rows.push(
+    row(
+      'Links',
+      entries.map((e) =>
+        [
+          e.web ? link(e.web.url, 'Open it') : '',
+          link(e.repo_url, 'Source'),
+          e.homepage && e.homepage !== e.repo_url && e.homepage !== e.web?.url ? link(e.homepage, 'Homepage') : '',
+          `<a href="/tool/${esc(e.slug)}">Profile</a>`,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+      ),
+    ),
+  );
 
   // A group heading with no rows left under it goes too.
   const body = rows.filter(Boolean).filter((r, i, all) => !(r.startsWith('<tr class="grp">') && (i === all.length - 1 || all[i + 1].startsWith('<tr class="grp">'))));

@@ -8,16 +8,17 @@
  * on top, then a seam of stitches, then the run record it rests on. A tool
  * pickfit has not verified gets no stitches, no badge, no steps and no link.
  */
-import { bestGuide, verifiedOn, verifiedOnUserSystem, type Arch, type Catalog, type Entry, type InstallGuide, type OS } from './catalog.ts';
+import { bestGuide, isVerified, isWebApp, verifiedOn, verifiedOnUserSystem, webCheck, type Arch, type Catalog, type Entry, type InstallGuide, type OS } from './catalog.ts';
 import type { FindOutput, PickOut } from './find.ts';
 import { fitNote } from './fit.ts';
 import { PIPE_TO_SHELL, type InstallOutput } from './install.ts';
 import { compareTable } from './pages/compare.ts';
-import { day, guiSentence, howRan, KIND, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system, kindLine } from './ui/facts.ts';
+import { day, guiSentence, howRan, KIND, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system, kindLine, webLevelLabel } from './ui/facts.ts';
 import { esc, link, listOf } from './ui/html.ts';
 import { icon } from './ui/icons.ts';
 import { badge, command, compareToggle, coverage, fitz, glance, notice, says, SEAM, tape, type FitzName } from './ui/kit.ts';
 import { renderShell } from './ui/shell.ts';
+import { NO_INSTALL_LABEL, webFacts, webRanSentence } from './webapp.ts';
 
 export { esc, safeUrl } from './ui/html.ts';
 export { guiSentence, LEVEL_LABEL, levelLabel, osName } from './ui/facts.ts';
@@ -28,9 +29,11 @@ export interface FormValues {
   arch: Arch | '';
   free_only: boolean;
   offline: boolean;
+  /** What the person types must not leave their machine. */
+  private: boolean;
 }
 
-export const EMPTY_FORM: FormValues = { need: '', os: '', arch: '', free_only: false, offline: false };
+export const EMPTY_FORM: FormValues = { need: '', os: '', arch: '', free_only: false, offline: false, private: false };
 
 /** Why the web page did not ask the model: its daily share, the total cap, or no way to count spend. */
 export type BudgetStop = 'web_daily' | 'total' | 'unavailable';
@@ -47,6 +50,8 @@ export interface CatalogStats {
   replayed: number;
   byHand: number;
   gems: number;
+  /** Web apps a sandboxed browser run passed on (they have no install steps to replay). */
+  web: number;
 }
 
 const runsOf = (entry: Entry) => Object.values(entry.install).map((guide) => guide!.run);
@@ -54,10 +59,11 @@ const runsOf = (entry: Entry) => Object.values(entry.install).map((guide) => gui
 export function catalogStats(catalog: Catalog): CatalogStats {
   return {
     listed: catalog.count,
-    verified: catalog.entries.filter((e) => runsOf(e).length > 0).length,
+    verified: catalog.entries.filter(isVerified).length,
     replayed: catalog.entries.filter((e) => runsOf(e).some((r) => r.method === 'sandbox' && r.replayed)).length,
     byHand: catalog.entries.filter((e) => runsOf(e).some((r) => r.method === 'human')).length,
     gems: catalog.entries.filter((e) => e.scores?.treasure).length,
+    web: catalog.entries.filter((e) => isWebApp(e) && webCheck(e) !== null).length,
   };
 }
 
@@ -127,9 +133,11 @@ function facts(pick: PickOut): string {
   const items: string[] = [];
   if (pick.open_source === true) items.push(pick.license ? `Open source (${esc(pick.license)})` : 'Open source');
   if (pick.open_source === false) items.push('Not open source');
-  const where = PROCESSING[pick.processing];
+  // A web app's own facts (where data goes, which OS) are in its test record.
+  const where = pick.web_app ? '' : PROCESSING[pick.processing];
   if (where) items.push(where);
-  if (pick.platforms.length) items.push(`For ${listOf(pick.platforms.map((os) => osName(os)))}`);
+  if (pick.web_app) items.push('In any modern browser');
+  else if (pick.platforms.length) items.push(`For ${listOf(pick.platforms.map((os) => osName(os)))}`);
   return items.length ? `<p class="small quiet facts">${items.join(' · ')}</p>` : '';
 }
 
@@ -288,11 +296,65 @@ function quickInstall(guide: InstallOutput | undefined, form: FormValues): strin
   );
 }
 
+// ---------------------------------------------------------------- a web app's ticket
+
+/** A web app's facts as a short list, each with its tone; the same words on the ticket and the profile. */
+export function webFactList(entry: Entry): string {
+  const check = webCheck(entry);
+  if (!check) return '';
+  const tone = { pass: 'yes', caution: 'no', plain: '' } as const;
+  return `<ul class="web-facts">${webFacts(check)
+    .map((f) => `<li${tone[f.tone] ? ` class="${tone[f.tone]}"` : ''}>${f.tone === 'pass' ? icon('check') : f.tone === 'caution' ? icon('triangle-alert') : icon('info')}${esc(f.text)}</li>`)
+    .join('')}</ul>`;
+}
+
+/** The run record of a web app: what pickfit's browser saw, under the seam. */
+function webRecord(pick: PickOut, entry: Entry | undefined): string {
+  const check = entry ? webCheck(entry) : null;
+  if (!check || !entry) return '';
+  return (
+    `<section class="record" aria-label="Test record">` +
+    `<p class="record-title">${icon('badge-check')}Test record</p>` +
+    levelLine(webLevelLabel(check), true) +
+    `<p>${esc(webRanSentence(check))}</p>` +
+    webFactList(entry) +
+    `<p class="mine mine-yes">${esc('Nothing to install: it opens in a browser on any OS.')}</p>` +
+    `<details class="how"><summary>How we know</summary><p>${esc(pick.how_we_know)}</p></details>` +
+    `</section>`
+  );
+}
+
+/** A web app's verdict strip: where it runs, the proof, the setup (none) and the price. */
+function webGlance(pick: PickOut, entry: Entry | undefined): string {
+  const check = entry ? webCheck(entry) : null;
+  const web = pick.web_app!;
+  const offline = web.works_offline === 'verified' ? '<small>Works offline</small>' : '';
+  return (
+    `<div class="glance t-glance">` +
+    glance('globe', 'Runs in', 'Any browser', 'pass') +
+    glance('badge-check', 'Proof', (check ? esc(webLevelLabel(check)) : 'No run') + offline, check ? 'pass' : 'caution') +
+    glance('terminal', 'Setup', 'Nothing to install', 'plain') +
+    glance('tag', 'Price', esc(PRICE[pick.pricing]), pick.pricing === 'unknown' ? 'quiet' : 'plain') +
+    `</div>`
+  );
+}
+
+/** The one action on a web app's ticket: open it. */
+function webOpen(pick: PickOut): string {
+  const web = pick.web_app!;
+  const open = link(web.url, `${icon('external-link')}Open ${esc(pick.name)}`, 'btn btn-primary btn-sm');
+  return open
+    ? `<div class="t-install"><p class="t-install-label">${icon('globe')}${esc(NO_INSTALL_LABEL)}</p><p class="t-open">${open}<span class="quiet small" translate="no">${esc(web.url)}</span></p></div>`
+    : '';
+}
+
 function pickHtml(pick: PickOut, index: number, result: SearchResult, form: FormValues, catalog: Catalog): string {
   const { out } = result;
   const entry = catalog.bySlug.get(pick.slug);
   const best = out.best_free?.slug === pick.slug ? out.best_free : null;
+  const web = pick.web_app;
   const badges = [
+    web ? badge('info', NO_INSTALL_LABEL, { icon: 'globe' }) : '',
     pick.match ? badge(MATCH_TONE[pick.match.quality], MATCH_LABEL[pick.match.quality], { cls: `match-${pick.match.quality}` }) : '',
     best ? badge('free', 'Best free option', { icon: 'leaf' }) : '',
     pick.scores.treasure ? badge('gem', 'Hidden gem', { icon: 'gem', pop: 'pop-gem' }) : '',
@@ -308,9 +370,10 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
   const guide = result.guides[pick.slug];
   const kind = entry ? kindLine(entry) : '';
   const links = [
+    web ? link(web.url, `${icon('external-link')}Open it`) : '',
     link(pick.repo, `${icon('external-link')}Source code`),
-    pick.homepage && pick.homepage !== pick.repo ? link(pick.homepage, `${icon('external-link')}Homepage`) : '',
-    link(pick.verification.os ? pick.evidence_url : null, `${icon('external-link')}Run record`),
+    pick.homepage && pick.homepage !== pick.repo && pick.homepage !== web?.url ? link(pick.homepage, `${icon('external-link')}Homepage`) : '',
+    link(pick.verification.os || web?.checked_at ? pick.evidence_url : null, `${icon('external-link')}Run record`),
   ].filter(Boolean);
   const gemNote = pick.scores.treasure ? 'little known' : undefined;
   // At a glance: who it is, why it fits in one sentence, the verdict, and the command. The rest waits behind one expander.
@@ -323,9 +386,9 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
     (badges ? `<p class="badges">${badges}</p>` : '') +
     `</div>` +
     `<p class="fit">${esc(pick.fit)}</p>` +
-    glanceStrip(pick, guide, form) +
+    (web ? webGlance(pick, entry) : glanceStrip(pick, guide, form)) +
     SEAM +
-    quickInstall(guide, form) +
+    (web ? webOpen(pick) : quickInstall(guide, form)) +
     `<details class="t-more"><summary>${icon('chevron-down')}Why it fits and how we know</summary><div class="t-more-body">` +
     `<div class="t-body"><div class="t-claim">` +
     // On the rules path the fit sentence is the summary: say it once.
@@ -341,8 +404,8 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
     tape('Popularity', pick.scores.popularity, { pop: 'pop-popularity', tone: 'quiet', note: gemNote }) +
     coverage(pick.features, { pop: 'pop-features' }) +
     `</div></div>` +
-    record(pick, guide, form) +
-    (guide ? installSection(guide, form, index === 0) : '') +
+    (web ? webRecord(pick, entry) : record(pick, guide, form)) +
+    (guide && !web ? installSection(guide, form, index === 0) : '') +
     (links.length ? `<p class="t-links">${links.join('')}</p>` : '') +
     `</div></details>` +
     `<div class="t-foot"><a class="more" href="/tool/${esc(pick.slug)}">Full profile${icon('arrow-right')}</a><span class="grow"></span>${compareToggle(pick.slug, pick.name)}</div>` +
@@ -485,7 +548,15 @@ export function renderResults(
     }
   }
   const free = out.best_free && !out.picks.some((p) => p.slug === out.best_free!.slug) ? catalog.bySlug.get(out.best_free.slug) : undefined;
-  if (free && out.best_free) {
+  const freeWeb = free ? webCheck(free) : null;
+  if (free && out.best_free && isWebApp(free)) {
+    parts.push(
+      `<div class="aside best-free"><p><span class="lead-in">Best free option:</span> ` +
+        `<a href="/tool/${esc(free.slug)}">${esc(free.name)}</a>. ${esc(out.best_free.reason)}</p>` +
+        (freeWeb ? `<p class="quiet">${esc(webRanSentence(freeWeb))}</p>` : '') +
+        `<p class="mine mine-yes">${esc(NO_INSTALL_LABEL)}: it opens in a browser.</p></div>`,
+    );
+  } else if (free && out.best_free) {
     const guide = bestGuide(free, form.os || undefined);
     const v: PickOut['verification'] = {
       level: guide?.run.level ?? free.verification.level,
@@ -565,7 +636,8 @@ export function searchForm(form: FormValues): string {
     `<div class="seg" role="radiogroup" aria-labelledby="os-label">${os}</div>` +
     `<select class="select" name="arch" aria-label="CPU architecture">${arch}</select>` +
     `<label class="chip"><input type="checkbox" name="free_only" value="1"${form.free_only ? ' checked' : ''}>${tick}Free only</label>` +
-    `<label class="chip"><input type="checkbox" name="offline" value="1"${form.offline ? ' checked' : ''}>${tick}Works offline</label></div>` +
+    `<label class="chip"><input type="checkbox" name="offline" value="1"${form.offline ? ' checked' : ''}>${tick}Works offline</label>` +
+    `<label class="chip"><input type="checkbox" name="private" value="1"${form.private ? ' checked' : ''}>${tick}Data stays on my device</label></div>` +
     `<div class="ask-go"><span class="counter" data-counter aria-live="polite"></span>` +
     `<button type="submit" class="btn btn-primary go"><span class="btn-label">Find my fit</span>${icon('arrow-right')}</button></div>` +
     `</div></form>`
@@ -617,7 +689,7 @@ function freshSection(showcase: Showcase): string {
   return (
     `<section id="recent" class="sec wrap home-only" aria-labelledby="recent-title">` +
     `<div class="sec-head"><div><h2 id="recent-title">Fresh off the fitting table</h2>` +
-    `<p>${stats.replayed} of ${stats.listed} tools installed and replayed. Only those are ever suggested.</p></div>` +
+    `<p>${stats.replayed} of ${stats.listed} tools installed and replayed${stats.web ? `, and ${stats.web} web ${stats.web === 1 ? 'app' : 'apps'} used in a browser` : ''}. Only those are ever suggested.</p></div>` +
     `<a class="more" href="/browse">Browse all ${stats.verified}${icon('arrow-right')}</a></div>` +
     `<div class="fresh"><div>${fixCard}</div><ul class="runs-list">${rows}</ul></div></section>`
   );
@@ -662,6 +734,7 @@ export function renderPage(input: PageInput): string {
     `<div class="tries js-only"><span class="label">Or try</span>${EXAMPLES.map(([label, need]) => `<button type="button" class="try" data-need="${esc(need)}" title="${esc(need)}">${esc(label)}</button>`).join('')}</div>` +
     `<ul class="proof"><li>${icon('book-open')}<span><strong>${stats.listed}</strong> READMEs read</span></li>` +
     `<li>${icon('shield-check')}<span><strong>${stats.replayed}</strong> installed and replayed in a sandbox</span></li>` +
+    (stats.web ? `<li>${icon('globe')}<span><strong>${stats.web}</strong> web ${stats.web === 1 ? 'app' : 'apps'} used in a browser</span></li>` : '') +
     `<li>${icon('gem')}<span><strong>${stats.gems}</strong> hidden gems</span></li></ul>` +
     `</div><div class="hero-fitz">${fitz('hello', 320, { eager: true })}</div></div>` +
     `<div class="ruler" aria-hidden="true"></div></section>` +
@@ -684,7 +757,7 @@ export function renderPage(input: PageInput): string {
     says(
       'searching',
       `<h2>Measuring your request against ${stats.verified} verified tools…</h2>` +
-        `<ol><li>Keep the tools that meet your OS, price and offline conditions</li><li>Muse Spark reads every remaining profile and picks the best fits</li><li>Code checks each reason against the profile</li></ol>` +
+        `<ol><li>Keep the tools that meet your OS, price, offline and privacy conditions</li><li>Muse Spark reads every remaining profile and picks the best fits</li><li>Code checks each reason against the profile</li></ol>` +
         `<p class="quiet small">Usually 5 to 15 seconds.</p><div class="unroll" aria-hidden="true"></div>`,
       { size: 104 },
     ) +
@@ -703,6 +776,7 @@ export function renderPage(input: PageInput): string {
 
 /** Used by the browse and tool pages: verified OSes as a short phrase. */
 export const verifiedOnWords = (entry: Entry) => {
+  if (isWebApp(entry)) return webCheck(entry) ? 'Checked in a browser, any OS' : 'Not verified yet';
   const oses = verifiedOn(entry);
   return oses.length ? `Verified on ${listOf(oses.map((os) => osName(os)))}` : 'Not verified yet';
 };

@@ -318,9 +318,9 @@ test('before any search the page shows real catalog runs, never invented ones', 
   const runs = html.slice(html.indexOf('<ul class="runs-list">'), html.indexOf('</ul></div></section>'));
   assert.equal(runs.split('<li class="run-row">').length - 1, 3);
   assert.match(runs, /<a class="name" href="\/tool\/[a-z0-9-]+">/);
-  assert.match(html, /6 of 6 tools installed and replayed\. Only those are ever suggested\./);
+  assert.match(html, /6 of 7 tools installed and replayed, and 1 web app used in a browser\. Only those are ever suggested\./);
   // The counts in the hero are the catalog's.
-  assert.match(html, /<strong>6<\/strong> READMEs read/);
+  assert.match(html, /<strong>7<\/strong> READMEs read/);
   assert.equal(s.metaCalls.length, 0);
 });
 
@@ -480,6 +480,7 @@ function pick(overrides: Partial<PickOut> = {}): PickOut {
     scores: { quality: 80, popularity: 10, treasure: false },
     repo: 'https://github.com/a/tool',
     homepage: null,
+    web_app: null,
     ...overrides,
   };
 }
@@ -551,7 +552,7 @@ test('render: a best free option outside the picks, a no-install option and a ca
 });
 
 test('catalog stats come from the index', () => {
-  assert.deepEqual(catalogStats(fixtureCatalog()), { listed: 6, verified: 6, replayed: 6, byHand: 1, gems: 1 });
+  assert.deepEqual(catalogStats(fixtureCatalog()), { listed: 7, verified: 7, replayed: 6, byHand: 1, gems: 1, web: 1 });
 });
 
 test('render: the offline check is shown when it failed, and said when it was never run but asked for', () => {

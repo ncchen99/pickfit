@@ -163,7 +163,6 @@ def test_no_commit_writes_the_record_only(env: dict[str, Any]) -> None:
 
 
 @pytest.mark.parametrize("url, reason", [
-    ("https://gitlab.com/someone/tinyq", "only GitHub repository URLs"),
     ("https://github.com/topics/cli", "only GitHub repository URLs"),
     ("https://github.com/fixture/tinyq", "Test fixtures"),
     ("https://github.com/someone/fixture-json-query", "Test fixtures"),
@@ -176,6 +175,13 @@ def test_refused_before_any_model_call(env: dict[str, Any], url: str, reason: st
     row = submission(env["d1"], "sub_1")
     assert row["status"] == "rejected" and reason in row["reason"] and job.result == "rejected"
     assert pipeline.calls == []
+
+
+def test_a_website_submission_waits_for_the_web_pipeline(env: dict[str, Any]) -> None:
+    submit(env["d1"], "sub_1", "https://sketch.someone.example.com/")
+    pipeline = Pipeline(env["tmp"])
+    assert run_once(env, pipeline) == []
+    assert submission(env["d1"], "sub_1")["status"] == "queued" and pipeline.calls == []
 
 
 def test_private_famous_and_rule_rejected_repositories(env: dict[str, Any]) -> None:

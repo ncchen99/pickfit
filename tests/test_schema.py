@@ -574,7 +574,7 @@ def test_a_failed_feature_test_says_whom_it_points_at(example):
 
 # --- Hosted web apps (kind web_app) --------------------------------------------
 
-WEB_FIXTURE = Path(__file__).parent / "fixtures" / "record_web_app.json"
+WEB_FIXTURE = ROOT / "worker" / "test" / "fixtures" / "software" / "fixture-web-sketch.json"
 WEB_RUN = ("verification", "runs", 0)
 
 

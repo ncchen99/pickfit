@@ -72,6 +72,7 @@ export function formFrom(params: URLSearchParams): FormValues {
     arch: ARCH_VALUES.has(arch) ? (arch as FormValues['arch']) : '',
     free_only: yes(params.get('free_only')),
     offline: yes(params.get('offline')),
+    private: yes(params.get('private')),
   };
 }
 
@@ -82,7 +83,7 @@ export function toFindArgs(form: FormValues): Record<string, unknown> {
     ...(form.os ? { os: form.os } : {}),
     ...(form.arch ? { arch: form.arch } : {}),
     ...(form.free_only ? { budget: 'free_only' } : {}),
-    ...(form.offline ? { must_run_locally: true } : {}),
+    ...(form.offline && form.private ? { must_run_locally: true } : form.offline ? { offline: true } : form.private ? { data_stays_local: true } : {}),
   };
 }
 

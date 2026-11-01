@@ -92,6 +92,25 @@ function listCommand(manager: Manager, name: string, os: OS): string {
   }
 }
 
+const validUntilFrom = (now: Date) => new Date(now.getTime() + REC_TTL_LATER_DAYS * 86_400_000).toISOString().slice(0, 10);
+
+/** A web app's check-in: ask the user, and only ask. Nothing on the machine says whether a website is still used. */
+export function webCheckIn(entry: Entry, url: string, now: Date): CheckIn {
+  const validUntil = validUntilFrom(now);
+  return {
+    after_days: CHECK_IN_AFTER_DAYS,
+    valid_until: validUntil,
+    commands: [],
+    how:
+      `Not now. Keep this rec_id and the slug (with the user's OK, in your memory or notes). ` +
+      `From ${CHECK_IN_AFTER_DAYS} days after they first opened it until ${validUntil}, the next time the user talks with you about software, or when they ask, ` +
+      `ask whether they still use ${entry.name} (${url}): this week, this month, or longer ago? Only ask: never read their browser history, ` +
+      `bookmarks, cookies, open tabs or anything else on the machine. ` +
+      `Then report_outcome with this rec_id: still_using if they still use it; abandoned if they stopped; replaced, with replaced_by, if they switched to something else. ` +
+      `Pass last_used: this_week, this_month, older or unknown. Send only that. If the user says no, report nothing.`,
+  };
+}
+
 export function checkIn(entry: Entry, guide: InstallGuide | null, os: OS, now: Date): CheckIn {
   const commands: CheckIn['commands'] = [];
   const mcp = entry.category === 'mcp_server' || entry.kind === 'mcp_server_or_agent_plugin';
@@ -119,7 +138,7 @@ export function checkIn(entry: Entry, guide: InstallGuide | null, os: OS, now: D
       shows: 'When macOS last saw the app opened ((null) if never, or if the app is not there); turn it into last_used, never send the date',
     });
   }
-  const validUntil = new Date(now.getTime() + REC_TTL_LATER_DAYS * 86_400_000).toISOString().slice(0, 10);
+  const validUntil = validUntilFrom(now);
   return {
     after_days: CHECK_IN_AFTER_DAYS,
     valid_until: validUntil,
