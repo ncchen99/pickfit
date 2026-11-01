@@ -81,7 +81,8 @@ Every component is a string helper in `worker/src/ui/kit.ts` with its CSS in `wo
 | Request field | `.ask` | empty (placeholder shows a real example), focus (ink outline thickens, tape underline), invalid (fail tint and message) |
 | Chip / toggle | `.chip` (checkbox or radio inside) | off, on (ink fill), hover, focus, disabled |
 | Segmented control | `.seg` | the OS and CPU choice; radio inputs, keyboard arrows native |
-| Badge | `.badge` + `-pass` / `-gem` / `-free` / `-caution` / `-quiet` | static |
+| Badge | `.badge` + `-pass` / `-gem` / `-free` / `-caution` / `-quiet`; `marks` makes it icons only, named in a tooltip | static |
+| Marks | `kindTag()`, `levelIcon()`, `osList()`, `sysTag()`, `runFacts()` | facts every card repeats (kind, how far the run got, OSes, where and when it ran) as one mark each, named on hover and for screen readers; `marksLegend()` explains them in the ticket legend and on /how |
 | Tape meter | `tape()` | value, empty (not scored: hatched track and "not scored") |
 | Coverage bar | `coverage()` | checked / not checked / failed segments with counts |
 | Fitting ticket | `.pick` | resting, hover (lift-2), `:target` (stitch ring), entering (stitch draws on). At a glance it shows only the name, one fit sentence, a 4-cell verdict (your system, proof, setup, price), the seam, the first install command with Copy and one README-fix line. Reasons with citations, meters, the test record and every step sit behind one "Why it fits and how we know" expander. |
@@ -131,6 +132,8 @@ Rule from the mascot README: Fitz is happy or proud only next to something that 
 ## 8. Iconography and imagery
 
 - Icons: Lucide (ISC), 24-unit grid, 1.75 stroke, round caps, `currentColor`. Only drawn icons; no emoji standing in for icons.
+- OS marks: Tux and Apple from Simple Icons (CC0), a four-pane window for Windows, filled in `currentColor`, kept once per page as a sprite. Green: pickfit ran it there; grey: the README claims it.
+- An icon replaces words only for a fact with a few fixed values that every card repeats. Evidence (README fixes, steps, match labels, the fit sentence) stays in words.
 - Illustration: Fitz and its props (package, leaf, tape) only. No stock photos, no 3D blobs, no gradients.
 - Texture: the cutting-mat grid on mat fields only. Paper stays flat.
 
