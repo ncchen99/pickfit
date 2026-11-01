@@ -76,7 +76,27 @@
       "check": null,
       "first_task": "camelid pull"
     },
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-camelid-20261101-235254-5890",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/apps/camelid && curl -fL -o /tmp/camelid-linux.tar.gz https://github.com/timtoole02/Camelid/releases/download/v0.8.0/camelid-linux-x86_64.tar.gz",
+          "purpose": "Download Linux engine archive"
+        },
+        {
+          "command": "tar -xzf /tmp/camelid-linux.tar.gz -C /tmp && mkdir -p ~/.local/bin && cp /tmp/camelid-linux-x86_64/camelid ~/.local/bin/camelid && chmod +x ~/.local/bin/camelid && ~/.local/bin/camelid --version",
+          "purpose": "Install camelid engine to PATH"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "camelid pull",
+        "expected_signal": "Download one with:"
+      },
+      "first_task": "camelid pull"
+    },
     "windows": {
       "basis": "readme_claim",
       "run_id": null,
@@ -107,22 +127,181 @@
     "url": "https://github.com/timtoole02/Camelid/releases/tag/v0.8.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T23:55:28.019133+08:00",
+    "runs": [
+      {
+        "id": "verify-camelid-20261101-235254-5890",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-vm",
+        "image": "pickfit-sbx-vm-gui:8bd8bc44d7d6",
+        "checked_at": "2026-11-01T23:55:28.019133+08:00",
+        "tool_version": "camelid v0.8.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/apps/camelid && curl -fL -o /tmp/camelid-linux.tar.gz https://github.com/timtoole02/Camelid/releases/download/v0.8.0/camelid-linux-x86_64.tar.gz",
+            "purpose": "Download Linux engine archive"
+          },
+          {
+            "command": "tar -xzf /tmp/camelid-linux.tar.gz -C /tmp && mkdir -p ~/.local/bin && cp /tmp/camelid-linux-x86_64/camelid ~/.local/bin/camelid && chmod +x ~/.local/bin/camelid && ~/.local/bin/camelid --version",
+            "purpose": "Install camelid engine to PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "tar -xzf /tmp/camelid-linux.tar.gz -C /tmp && mkdir -p ~/.local/bin && cp /tmp/camelid-linux-x86_64/camelid ~/.local/bin/camelid && chmod +x ~/.local/bin/camelid && ~/.local/bin/camelid --version",
+            "expected_signal": "camelid v0.8.0",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "cp: cannot create regular file '/home/sbx/.local/bin/camelid': Text file busy",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "camelid pull",
+            "expected_signal": "Download one with:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Download one with: camelid pull <id> (e.g. camelid pull 3b_instruct_q8)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://127.0.0.1:8181/v1/health",
+            "expected_signal": "generation_ready",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"ok\":true,\"engine\":\"camelid\",\"api_surface\":\"full\",\"version\":\"0.8.0\",\"build\":\"v0.8.0\",\"loaded_now\":true,\"generation_ready\":false,\"generation_readiness_reason\":\"The model is warming up. Chat will become available when initialization finishes.\",\"model_load_progress\":[],\"active_context_length\":32768,\"…",
+            "setup": [
+              {
+                "command": "camelid pull gemma3_270m_it_q8_0",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "camelid serve --model models/gemma-3-270m-it-Q8_0.gguf --no-open --addr 127.0.0.1:8181",
+                "background": true,
+                "port": 8181
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8181/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\": \"Gemma-3-270M-It\", \"messages\": [{\"role\": \"user\", \"content\": \"Say hello in five words.\"}], \"max_tokens\": 16, \"temperature\": 0}'",
+            "expected_signal": "completion_tokens",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":\"chatcmpl-runnable\",\"object\":\"chat.completion\",\"created\":1793548513,\"model\":\"Gemma-3-270M-It\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello! \"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":15,\"completion_tokens\":3,\"total_tokens\":18},\"camelid\":{\"generated_token_ids\"…",
+            "setup": [
+              {
+                "command": "camelid pull gemma3_270m_it_q8_0",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "camelid serve --model models/gemma-3-270m-it-Q8_0.gguf --no-open --addr 127.0.0.1:8181",
+                "background": true,
+                "port": 8181
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Download desktop app for Windows/macOS/Linux platforms",
+            "actually_needed": "Linux asset camelid-linux-x86_64.tar.gz contains only headless camelid engine + CUDA libs; no desktop window app for Linux (desktop bundles are Windows zip/exe and macOS DMG only)",
+            "kind": "note"
+          },
+          {
+            "readme_said": "camelid serve --model models/Llama-3.2-3B-Instruct-Q8_0.gguf and chat model Llama 3.2 3B Instruct",
+            "actually_needed": "used catalog tiny model gemma3_270m_it_q8_0 (278 MB, models/gemma-3-270m-it-Q8_0.gguf) and model id Gemma-3-270M-It from /v1/health",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Read loaded model ID from GET /v1/models",
+            "actually_needed": "GET /v1/models returned empty list while /v1/health reported active_model_id Gemma-3-270M-It and generation_ready true",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "camelid lists models with pull hint, health endpoint returns ok JSON, and chat endpoint returns Hello with token usage.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-camelid-20261101-235254-5890/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-camelid-20261101-235254-5890/check-1-cmd6.judged.png",
+            "runs/verify/verify-camelid-20261101-235254-5890/check-2-cmd11.judged.png",
+            "runs/verify/verify-camelid-20261101-235254-5890/check-3-cmd12.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.113319,
+        "features": [
+          {
+            "feature": "Chat with supported GGUF models locally",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Use OpenAI-compatible API",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Browse and preview generated files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "needs desktop/browser file preview UI; no Linux desktop bundle, engine-only verification"
+          },
+          {
+            "feature": "Code in chat with reviewed edits",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "needs Code session with certified tool-capable model and desktop/browser UI"
+          }
+        ]
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-02T00:36:36+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 67.7,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.51,
           "weight": 40.0
         },
         "install_docs": {
@@ -163,7 +342,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 12.21
+      "value": 11.98
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -478,5 +657,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:48:47+08:00",
-  "updated_at": "2026-11-01T16:45:25+08:00"
+  "updated_at": "2026-11-02T00:36:36.098150+08:00"
 }

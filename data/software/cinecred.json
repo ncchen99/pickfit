@@ -52,20 +52,21 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-cinecred-20261101-174824-1ca8",
+      "run_id": "verify-cinecred-20261101-235250-e528",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo\nflatpak install --user -y flathub com.cinecred.cinecred 2>&1",
-          "purpose": "install Cinecred via flatpak --user from Flathub (adds remote and installs com.cinecred.cinecred)"
+          "command": "flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>&1",
+          "purpose": "add flathub user remote"
+        },
+        {
+          "command": "flatpak --user install -y flathub com.cinecred.cinecred 2>&1",
+          "purpose": "install cinecred via flatpak user"
         }
       ],
       "manual_steps": [],
-      "check": {
-        "command": "flatpak --version",
-        "expected_signal": "Flatpak 1.16.6"
-      },
-      "first_task": "env DISPLAY=:99 flatpak run com.cinecred.cinecred"
+      "check": null,
+      "first_task": "flatpak run com.cinecred.cinecred"
     },
     "windows": null
   },
@@ -80,39 +81,34 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T17:51:40.607616+08:00",
+    "checked_at": "2026-11-02T00:01:12.544805+08:00",
     "runs": [
       {
-        "id": "verify-cinecred-20261101-174824-1ca8",
+        "id": "verify-cinecred-20261101-235250-e528",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx-gui:d66116882a17",
-        "checked_at": "2026-11-01T17:51:40.607616+08:00",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T00:01:12.544805+08:00",
         "tool_version": "1.9.1",
         "install_method": "other",
         "replayed": true,
         "steps": [
           {
-            "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo\nflatpak install --user -y flathub com.cinecred.cinecred 2>&1",
-            "purpose": "install Cinecred via flatpak --user from Flathub (adds remote and installs com.cinecred.cinecred)"
+            "command": "flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>&1",
+            "purpose": "add flathub user remote"
+          },
+          {
+            "command": "flatpak --user install -y flathub com.cinecred.cinecred 2>&1",
+            "purpose": "install cinecred via flatpak user"
           }
         ],
         "smoke_tests": [
           {
-            "command": "flatpak --version",
-            "expected_signal": "Flatpak 1.16.6",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Flatpak 1.16.6",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "env DISPLAY=:99 flatpak run com.cinecred.cinecred",
+            "command": "flatpak run com.cinecred.cinecred",
             "expected_signal": "gui tier: window",
             "exit_code": 0,
             "passed": true,
@@ -124,31 +120,35 @@
         "pitfalls": [
           {
             "readme_said": "flatpak install flathub com.cinecred.cinecred",
-            "actually_needed": "flatpak remote-add --user --if-not-exists flathub and flatpak install --user -y flathub com.cinecred.cinecred (user install without root)",
+            "actually_needed": "flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo then flatpak --user install -y flathub com.cinecred.cinecred",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "flatpak run com.cinecred.cinecred",
+            "actually_needed": "must run under virtual display via launch_gui; plain run_command with --help fails with HeadlessException No X11 DISPLAY",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows flatpak --version command outputting Flatpak 1.16.6. / The app shows its Welcome window with program-wide preferences and a Finish initial setup button.",
+          "observed": "The screenshot shows Cinecred's welcome window asking to choose program-wide preferences with a Finish initial setup button.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-cinecred-20261101-174824-1ca8/report.json",
+          "trace_path": "runs/verify/verify-cinecred-20261101-235250-e528/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-cinecred-20261101-174824-1ca8/check-1-cmd10.judged.png",
-            "runs/verify/verify-cinecred-20261101-174824-1ca8/replay-8-1.app.judged.png"
+            "runs/verify/verify-cinecred-20261101-235250-e528/replay-11-1.app.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.056599,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.28623,
         "gui": {
           "tier": "ui_rendered",
           "screen": "first_run",
-          "command": "env DISPLAY=:99 flatpak run com.cinecred.cinecred",
+          "command": "flatpak run com.cinecred.cinecred",
           "window_title": "Welcome to Cinecred",
           "display": "Xvfb 1280x800x24, no window manager, no GPU"
         },
@@ -157,33 +157,33 @@
             "feature": "arrange and style film credits interactively",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "other",
             "failure": null,
-            "note": "requires interactive GUI to arrange/style credits"
+            "note": "no failed check in the log; operate hit step_cap and black screen, no file written"
           },
           {
             "feature": "insert logos, pictures, or videos",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "not_attempted",
             "failure": null,
-            "note": "requires GUI to insert logos/pictures/videos"
+            "note": "no commands left to try"
           },
           {
             "feature": "preview credit scroll in integrated player",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "not_attempted",
             "failure": null,
-            "note": "requires GUI preview player"
+            "note": "no commands left to try"
           },
           {
             "feature": "export credits as video and image sequences",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "not_attempted",
             "failure": null,
-            "note": "requires GUI export workflow"
+            "note": "no commands left to try"
           }
         ]
       }
@@ -414,5 +414,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:41+08:00",
-  "updated_at": "2026-11-01T17:51:40.610298+08:00"
+  "updated_at": "2026-11-02T00:36:36.103557+08:00"
 }

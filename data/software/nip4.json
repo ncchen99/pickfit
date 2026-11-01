@@ -45,21 +45,21 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-nip4-20261101-174642-1a8e",
+      "run_id": "verify-nip4-20261101-235250-e8f0",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo",
-          "purpose": "add flathub remote for user"
+          "command": "flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add flathub remote for user install"
         },
         {
-          "command": "timeout 600 flatpak install --user -y flathub org.libvips.nip4 2>&1",
-          "purpose": "install nip4 via flatpak user from flathub"
+          "command": "flatpak install --user -y flathub org.libvips.nip4",
+          "purpose": "install nip4 from flathub as user"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "flatpak run org.libvips.nip4 --help 2>&1",
+        "command": "flatpak run --user org.libvips.nip4 --help",
         "expected_signal": "Usage:"
       },
       "first_task": "flatpak run org.libvips.nip4"
@@ -81,34 +81,34 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T17:49:26.367943+08:00",
+    "checked_at": "2026-11-02T00:05:38.139478+08:00",
     "runs": [
       {
-        "id": "verify-nip4-20261101-174642-1a8e",
+        "id": "verify-nip4-20261101-235250-e8f0",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx-gui:d66116882a17",
-        "checked_at": "2026-11-01T17:49:26.367943+08:00",
-        "tool_version": null,
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T00:05:38.139478+08:00",
+        "tool_version": "9.2.1",
         "install_method": "other",
         "replayed": true,
         "steps": [
           {
-            "command": "flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo",
-            "purpose": "add flathub remote for user"
+            "command": "flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add flathub remote for user install"
           },
           {
-            "command": "timeout 600 flatpak install --user -y flathub org.libvips.nip4 2>&1",
-            "purpose": "install nip4 via flatpak user from flathub"
+            "command": "flatpak install --user -y flathub org.libvips.nip4",
+            "purpose": "install nip4 from flathub as user"
           }
         ],
         "smoke_tests": [
           {
-            "command": "flatpak run org.libvips.nip4 --help 2>&1",
+            "command": "flatpak run --user org.libvips.nip4 --help",
             "expected_signal": "Usage:",
             "exit_code": 0,
             "passed": true,
@@ -129,27 +129,27 @@
         "pitfalls": [
           {
             "readme_said": "flatpak install org.libvips.nip4",
-            "actually_needed": "flatpak remote-add --user flathub and flatpak install --user -y flathub org.libvips.nip4 (user install without root)",
+            "actually_needed": "flatpak remote-add --user flathub https://flathub.org/repo/flathub.flatpakrepo and flatpak install --user -y flathub org.libvips.nip4",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows nip4 printing Usage and help options including version and vips flags. / The nip4 main workspace is drawn with tool categories on the left and an editable workspace area, plus a welcome banner at the top.",
+          "observed": "Screenshot shows nip4 help output with Usage and option list. / nip4 main workspace is fully drawn with tool categories on the left and a welcome banner at the top.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-nip4-20261101-174642-1a8e/report.json",
+          "trace_path": "runs/verify/verify-nip4-20261101-235250-e8f0/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-nip4-20261101-174642-1a8e/check-1-cmd5.judged.png",
-            "runs/verify/verify-nip4-20261101-174642-1a8e/replay-6-1.app.judged.png"
+            "runs/verify/verify-nip4-20261101-235250-e8f0/check-1-cmd5.judged.png",
+            "runs/verify/verify-nip4-20261101-235250-e8f0/replay-6-1.app.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.042815,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.3688,
         "gui": {
           "tier": "ui_rendered",
           "screen": "main_ui",
@@ -162,33 +162,33 @@
             "feature": "create formulas linking objects with recalculation",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "other",
             "failure": null,
-            "note": "formula recalculation requires interactive spreadsheet GUI"
+            "note": "no failed check in the log; widget with unique word was created but File Save automation failed; typed-text screen check is invalid by design"
           },
           {
             "feature": "process very large images with little memory",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "other",
             "failure": null,
-            "note": "large image processing verified via GUI workflow, needs display"
+            "note": "no failed check in the log; File Open menu did not open for automation; no output file created"
           },
           {
             "feature": "load workspaces from nip2",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "not_attempted",
             "failure": null,
-            "note": "loading nip2 workspaces requires GUI and sample .ws files"
+            "note": "no commands left to try loading a nip2 workspace"
           },
           {
             "feature": "run image workflows in batch mode",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "not_attempted",
             "failure": null,
-            "note": "batch mode needs a workspace file; no sample provided and CLI batch flag not in --help"
+            "note": "batch flag unknown (-b/--batch rejected); no commands left to investigate"
           }
         ]
       }
@@ -393,5 +393,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:47+08:00",
-  "updated_at": "2026-11-01T23:09:11.575130+08:00"
+  "updated_at": "2026-11-02T00:36:36.105036+08:00"
 }
