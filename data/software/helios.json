@@ -49,7 +49,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-helios-20261102-004437-d32b",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone https://github.com/sidmanale643/helios.git /tmp/helios-src",
+          "purpose": "Clone Helios source"
+        },
+        {
+          "command": "cd /tmp/helios-src && uv sync",
+          "purpose": "Install dependencies with uv sync"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cd /tmp/helios-src && ls -l .venv/bin/helios && .venv/bin/python -c \"import importlib.metadata, torch; print('helios', importlib.metadata.version('helios')); print('torch', torch.__version__); print('cuda', torch.cuda.is_available())\"",
+        "expected_signal": "helios 0.1.0"
+      },
+      "first_task": "cd /tmp/helios-src && ls -l .venv/bin/helios && .venv/bin/python -c \"import importlib.metadata, torch; print('helios', importlib.metadata.version('helios')); print('torch', torch.__version__); print('cuda', torch.cuda.is_available())\""
+    },
     "windows": null
   },
   "pricing": {
@@ -61,96 +81,134 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_gpu",
-    "checked_at": "2026-10-31T00:21:47.885850+08:00",
+    "level": "inference",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T00:56:50.335864+08:00",
     "runs": [
       {
-        "id": "verify-helios-20261031-001912-695a",
-        "level": "unverified",
-        "unverified_reason": "needs_gpu",
+        "id": "verify-helios-20261102-004437-d32b",
+        "level": "inference",
+        "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:21:47.885850+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-02T00:56:50.335864+08:00",
         "tool_version": "0.1.0",
         "install_method": "source",
-        "replayed": false,
+        "replayed": true,
         "steps": [
           {
-            "command": "git clone https://github.com/sidmanale643/helios.git helios 2>&1 && ls -la helios 2>&1 && cat helios/pyproject.toml 2>&1",
-            "purpose": "Clone Helios repository"
+            "command": "git clone https://github.com/sidmanale643/helios.git /tmp/helios-src",
+            "purpose": "Clone Helios source"
           },
           {
-            "command": "cd helios && uv sync 2>&1",
+            "command": "cd /tmp/helios-src && uv sync",
             "purpose": "Install dependencies with uv sync"
           }
         ],
         "smoke_tests": [
           {
-            "command": "cd helios && ls .venv/bin/helios && uv run python -c \"import torch, helios; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))\"",
-            "expected_signal": "2.13.0+cu130",
+            "command": "cd /tmp/helios-src && ls -l .venv/bin/helios && .venv/bin/python -c \"import importlib.metadata, torch; print('helios', importlib.metadata.version('helios')); print('torch', torch.__version__); print('cuda', torch.cuda.is_available())\"",
+            "expected_signal": "helios 0.1.0",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "2.13.0+cu130",
+            "observed_excerpt": "helios 0.1.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8000/health",
+            "expected_signal": "\"status\":\"ok\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"ok\",\"model\":\"Qwen/Qwen3-4B\",\"model_revision\":\"1cfa9a7208912126459214e8b04321603b3df60c\",\"warmup_batch_sizes\":[1,2,3,4,5,6,7,8],\"memory\":{\"gpu\":\"NVIDIA A10\",\"total_bytes\":23684186112,\"max_gpu_utilization\":0.9,\"max_gpu_bytes\":21315767500,\"free_before_load_bytes\":23436525568,\"weight_bytes\":…",
             "setup": [
               {
-                "command": "git clone https://github.com/sidmanale643/helios.git helios 2>&1 && ls -la helios 2>&1 && cat helios/pyproject.toml 2>&1",
+                "command": "cd /tmp/helios-src && uv run python -c \"from huggingface_hub import snapshot_download; p=snapshot_download(repo_id='Qwen/Qwen3-4B', allow_patterns=['tokenizer.json','model.safetensors.index.json','model*.safetensors']); print(p)\"",
                 "background": false,
                 "port": null
               },
               {
-                "command": "cd helios && uv sync 2>&1",
-                "background": false,
-                "port": null
+                "command": "cd /tmp/helios-src && uv run helios",
+                "background": true,
+                "port": 8000
               }
             ],
-            "offline": null
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8000/v1/chat/completions --header 'content-type: application/json' --data '{\"model\":\"Qwen/Qwen3-4B\",\"messages\":[{\"role\":\"user\",\"content\":\"Why does a KV cache speed up decoding?\"}],\"temperature\":0,\"max_tokens\":16,\"stream\":false}'",
+            "expected_signal": "\"completion_tokens\":16",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":\"chatcmpl-c960123bf2624075b27d6864c8f70aa8\",\"object\":\"chat.completion\",\"created\":1793552203,\"model\":\"Qwen/Qwen3-4B\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"A **KV cache** (Key-Value cache) is a crucial component in\"},\"finish_reason\":\"length\"}],\"usage\":{\"prompt_tokens\":2…",
+            "setup": [
+              {
+                "command": "cd /tmp/helios-src && uv run python -c \"from huggingface_hub import snapshot_download; p=snapshot_download(repo_id='Qwen/Qwen3-4B', allow_patterns=['tokenizer.json','model.safetensors.index.json','model*.safetensors']); print(p)\"",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/helios-src && uv run helios",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "An Ampere or newer NVIDIA GPU (SM80+) with FP16 or BF16 support",
-            "actually_needed": "Box has Tesla T4 compute capability 7.5; src/helios/runtime/generate.py raises 'Paged attention requires an SM80+ GPU and FP16 or BF16' when capability major < 8, so server cannot start here",
-            "kind": "note"
+            "readme_said": "uv sync",
+            "actually_needed": "Clone the repo first (git clone https://github.com/sidmanale643/helios.git) then run uv sync inside the clone; the work dir ships only README.md",
+            "kind": "readme_wrong"
           },
           {
-            "readme_said": "HELIOS_MODEL_ID defaults to Qwen/Qwen3-4B; model field must match loaded model",
-            "actually_needed": "Only Qwen/Qwen3-4B architecture is implemented; tiny GGUF/SmolLM2 models under 300 MB cannot be substituted for an inference check, and full weights (~8 GB) exceed this box's 2 GB host RAM and 20-minute budget",
-            "kind": "note"
+            "readme_said": "Standard --version/--help CLI flags",
+            "actually_needed": "helios entrypoint is a server with no --version/--help flags; version confirmed via importlib.metadata (helios 0.1.0) and /health reports model and warmup_batch_sizes",
+            "kind": "readme_wrong"
           },
           {
-            "readme_said": "uv run helios starts the server",
-            "actually_needed": "helios entry point (helios.main:main) takes no arguments and starts the server; there is no --version or --help flag to confirm install",
+            "readme_said": "First start downloads tokenizer and model weights",
+            "actually_needed": "Pre-download Qwen/Qwen3-4B snapshot (tokenizer.json + safetensors) with huggingface_hub snapshot_download before starting the server so the server reuses cache and never fetches during the check",
             "kind": "note"
           }
         ],
         "blocking_error": null,
-        "judge": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show Helios 0.1.0 with CUDA available, health endpoint returning status ok, and chat completion returning 16 completion tokens.",
+          "model": "muse-spark-1.3"
+        },
         "evidence": {
-          "trace_path": "runs/verify/verify-helios-20261031-001912-695a/report.json",
+          "trace_path": "runs/verify/verify-helios-20261102-004437-d32b/report.json",
           "log_path": null,
-          "screenshot_paths": [],
+          "screenshot_paths": [
+            "runs/verify/verify-helios-20261102-004437-d32b/check-1-cmd4.judged.png",
+            "runs/verify/verify-helios-20261102-004437-d32b/check-2-cmd7.judged.png",
+            "runs/verify/verify-helios-20261102-004437-d32b/check-3-cmd8.judged.png"
+          ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.084784
+        "cost_usd": 0.146909,
+        "gpu": "NVIDIA A10"
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-02T00:57:05+08:00",
     "quality": {
-      "total": 67.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 69.6,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -191,7 +249,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 43.48
+      "value": 45.17
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -428,5 +486,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:43+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-02T00:57:05.972343+08:00"
 }
