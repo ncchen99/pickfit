@@ -22,6 +22,14 @@ class FakeScreen:
 
     def __init__(self) -> None:
         self.shots = 0
+        self.clicks: list[tuple[int, int]] = []
+        self.keys: list[str] = []
+
+    def click(self, x: int, y: int) -> None:
+        self.clicks.append((x, y))
+
+    def key(self, name: str) -> None:
+        self.keys.append(name)
 
     def screenshot(self) -> bytes:
         self.shots += 1
@@ -34,9 +42,10 @@ class FakeMacBox:
     os, display = "macos", "vnc"
 
     def __init__(self, *, report: dict[str, Any] | None = None, stop_out: str = "PICKFIT_KILLED 1\n",
-                 approve: list[dict[str, Any]] | None = None, started: str = "started\n") -> None:
+                 approve: list[dict[str, Any]] | None = None, started: str = "started\n",
+                 reports: list[dict[str, Any]] | None = None) -> None:
         self.session = SESSION
-        self.report = report
+        self.reports = reports if reports is not None else ([report] if report is not None else [])
         self.stop_out = stop_out
         self.approve = approve or []
         self.started = started
@@ -55,9 +64,11 @@ class FakeMacBox:
             out = json.dumps(SESSION)
         elif argv[-1] == "approve":
             out = json.dumps(self.approve)
+        elif argv[-1] == "items":
+            out = json.dumps(["11", "12"])
         elif argv[-1] == "watch":
-            if self.report is not None:
-                out = f"{gui.MARK}{payload['nonce']} {json.dumps(self.report)}\n"
+            if self.reports:
+                out = f"{gui.MARK}{payload['nonce']} {json.dumps(self.reports.pop(0))}\n"
         elif argv[-1] == "stop":
             out = self.stop_out
         elif "/bin/bash" in argv:
@@ -103,12 +114,15 @@ def test_a_window_of_its_own_passes_with_pickfits_screenshot():
     assert "first-launch prompt with Open for 1 app bundle(s)" in result.stdout
     assert "CotEditor" not in result.stdout  # the app's names are data, not pickfit's lines
     assert "window 1 owner: 'CotEditor'" in result.stderr and "CotEditor.app" in result.stderr
-    names = [argv[-1] if argv[-1] in ("procs", "approve", "watch", "stop") else "start" for argv, _ in box.calls]
-    assert names == ["approve", "procs", "start", "watch", "stop"]  # approve, snapshot, start, watch, then stop
-    watch_argv, cfg = box.calls[3]
+    names = [argv[-1] if argv[-1] in ("procs", "approve", "items", "watch", "stop") else "start"
+             for argv, _ in box.calls]
+    assert names == ["approve", "procs", "items", "start", "watch", "stop"]  # snapshots before the start
+    watch_argv, cfg = box.calls[4]
     assert watch_argv[:3] == ["/bin/launchctl", "asuser", "1001"]  # the watcher sits in the desktop session
     assert cfg["before"] == SESSION and cfg["user"] == "sbx" and cfg["min_w"] == gui.MIN_WIDTH
-    assert box.calls[4][1] == {"baseline": SESSION}  # the stop leaves only the login session
+    assert cfg["items_before"] == ["11", "12"] and not cfg.get("any_layer")
+    assert box.calls[5][1] == {"baseline": SESSION}  # the stop leaves only the login session
+    assert box.screen().clicks == []  # a window of its own: pickfit clicks nothing
 
 
 def test_a_survivor_makes_the_launch_count_for_nothing():
@@ -147,3 +161,33 @@ def test_keep_running_leaves_the_app_up_for_an_operating_loop():
     assert result.stdout.rstrip().endswith("left the app running, to operate it.")
     assert gui_mac.stop(box) == (True, "PICKFIT_KILLED 1")
     assert box.calls[-1][1] == {"baseline": SESSION}
+
+
+MENU = {"id": "80", "title": "", "width": 267, "height": 246, "x": 1007, "y": 31, "pid": 1796,
+        "client": "Meeting Transcriber"}
+ITEM = {"id": "13", "x": 1027, "y": 0, "width": 34, "height": 30}
+
+
+def test_a_menu_bar_app_gets_one_click_on_its_new_item_and_its_own_menu_counts():
+    box = FakeMacBox(reports=[_report(windows=[], new_items=[ITEM], seconds_to_window=None),
+                              _report(windows=[MENU])])
+    result, shown, png = gui_mac.launch(box, "open ~/Applications/MeetingTranscriber.app", 1, 30)
+    assert box.screen().clicks == [(1044, 15)] and shown.tier == "window" and png == PNG
+    assert result.exit_code == 0
+    assert "pickfit clicked it at 1044,15" in result.stdout and "window 1: 267x246 at 1007,31" in result.stdout
+    watches = [cfg for argv, cfg in box.calls if argv[-1] == "watch"]
+    assert [w.get("any_layer", False) for w in watches] == [False, True]  # the menu is a layer-101 window
+
+
+def test_a_click_that_opens_nothing_of_the_apps_stays_process_alive():
+    box = FakeMacBox(reports=[_report(windows=[], new_items=[ITEM], seconds_to_window=None),
+                              _report(windows=[], seconds_to_window=None)])
+    result, shown, png = gui_mac.launch(box, "open ~/Applications/X.app", 1, 30)
+    assert shown.tier == "process_alive" and png is None and result.exit_code == 1
+    assert box.screen().keys == ["Escape"] and "opened no window of the app's own" in (shown.error or "")
+
+
+def test_no_new_menu_bar_item_means_no_click():
+    box = FakeMacBox(report=_report(windows=[], new_items=[], seconds_to_window=None))
+    _, shown, _ = gui_mac.launch(box, "open ~/Applications/X.app", 1, 30)
+    assert shown.tier == "process_alive" and box.screen().clicks == []

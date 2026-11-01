@@ -50,6 +50,7 @@ SYSTEM_PREFIXES = ("/System/", "/usr/", "/bin/", "/sbin/", "/Library/Apple/", "/
 # Apple's agents launchd restarts on demand: they may be running again after the stop without surviving it.
 RESPAWNED_PREFIXES = ("/System/", "/usr/libexec/", "/usr/sbin/")
 QTN_USER_APPROVED = 0x40  # the quarantine flag the first-launch prompt's Open button sets
+MENU_WAIT_S, MENU_SETTLE_S = 8, 2  # after pickfit clicks a menu bar app's item
 
 # Root, in the guest (the Command Line Tools' Python 3.9): `<cmd>` with a JSON payload on stdin. Placeholders
 # are pickfit's constants, filled in when the helper is written; nothing in it comes from the app.
@@ -103,16 +104,30 @@ def windows():
     except Exception:
         return None, []
 
-def look(before, min_w, min_h):
+STATUS, MENU_BAR = 25, 24  # window layers: menu bar items (hosted by Control Center on macOS 26), the bar
+
+def items(found):
+    # Menu bar items: on macOS 26 Control Center hosts every app's, so only their window number is the app's tell.
+    out = []
+    for w in found:
+        b = w.get("kCGWindowBounds") or {}
+        if w.get("kCGWindowLayer") == STATUS:
+            out.append({"id": str(w.get("kCGWindowNumber", "")), "x": int(b.get("X", 0)), "y": int(b.get("Y", 0)),
+                        "width": int(b.get("Width", 0)), "height": int(b.get("Height", 0))})
+    return out
+
+def look(before, min_w, min_h, any_layer=False):
+    # any_layer: after pickfit clicked the app's menu bar item, its menu or popover (layer 101 and the like) counts.
     now = procs()
     mine = {p: v for p, v in now.items() if before.get(p, [None])[0] != v[0] and not apple(v[1])}
     screen, found = windows()
     own, other = [], []
     if screen is None:
-        return mine, own, other, screen
+        return mine, own, other, screen, []
     sw, sh = screen
     for w in found:
-        if w.get("kCGWindowLayer") != 0:
+        layer = w.get("kCGWindowLayer")
+        if (layer in (STATUS, MENU_BAR)) if any_layer else layer != 0:
             continue
         b = w.get("kCGWindowBounds") or {}
         try:
@@ -127,30 +142,36 @@ def look(before, min_w, min_h):
                 "client": str(w.get("kCGWindowOwnerName") or "")[:80]}
         mine_now = str(pid) in mine
         (own if mine_now and alpha > 0 and vw >= min_w and vh >= min_h else other).append(info)
-    return mine, own, other, screen
+    return mine, own, other, screen, items(found)
 
 def console():
     return subprocess.run(["/usr/bin/stat", "-f", "%Su", "/dev/console"], capture_output=True, text=True,
                           env=ENV).stdout.strip()
 
 def watch(cfg):
-    before, wait_s, settle_s = cfg["before"], cfg["wait_s"], cfg["settle_s"]
+    before, wait_s, settle_s, any_layer = cfg["before"], cfg["wait_s"], cfg["settle_s"], cfg.get("any_layer", False)
+    items_before = set(cfg.get("items_before") or [])
     problems = [] if console() == cfg["user"] else ["the box user's desktop session was not on screen"]
-    began, first = time.time(), None
+    began, first, first_item = time.time(), None, None
     while not problems:
-        mine, own, other, screen = look(before, cfg["min_w"], cfg["min_h"])
+        mine, own, other, screen, bar = look(before, cfg["min_w"], cfg["min_h"], any_layer)
         if screen is None:
             problems.append("pickfit could not list the windows on screen")
             break
-        if own and first is None:
-            first = time.time() - began
         elapsed = time.time() - began
+        if own and first is None:
+            first = elapsed
+        if first_item is None and mine and any(i["id"] not in items_before for i in bar):
+            first_item = elapsed
         if first is not None and elapsed >= first + settle_s:
             break
+        if first is None and first_item is not None and elapsed >= first_item + settle_s:
+            break  # a menu bar item and no window: pickfit clicks it next
         if (not mine and elapsed >= cfg["early_exit_s"]) or elapsed >= wait_s + (settle_s if first is not None else 0):
             break
         time.sleep(1)
-    mine, own, other, screen = look(before, cfg["min_w"], cfg["min_h"]) if not problems else ({}, [], [], None)
+    mine, own, other, screen, bar = (look(before, cfg["min_w"], cfg["min_h"], any_layer) if not problems
+                                     else ({}, [], [], None, []))
     if not problems and console() != cfg["user"]:
         problems.append("the box user's desktop session was gone when the watch ended")
         own = []
@@ -158,7 +179,12 @@ def watch(cfg):
         "seconds_to_window": None if first is None else round(first, 1), "alive": len(mine),
         "processes": sorted({os.path.basename(v[1]) for v in mine.values()})[:12], "windows": own,
         "other_windows": other[:5], "shot_bytes": None, "shot_sha256": None, "problems": problems,
-        "screen": screen, "watched_s": round(time.time() - began, 1)}))
+        "screen": screen, "new_items": [i for i in bar if i["id"] not in items_before] if mine else [],
+        "watched_s": round(time.time() - began, 1)}))
+
+def bar_items():
+    screen, found = windows()
+    print(json.dumps(None if screen is None else [i["id"] for i in items(found)]))
 
 def quarantine(path):
     buf = ctypes.create_string_buffer(1024)
@@ -237,6 +263,8 @@ if __name__ == "__main__":
         print(json.dumps(procs()))
     elif cmd == "watch":
         watch(cfg)
+    elif cmd == "items":
+        bar_items()
     elif cmd == "approve":
         approve(cfg)
     elif cmd == "stop":
@@ -291,17 +319,30 @@ def start_argv(command: str, tag: str | int) -> list[str]:
             "-i", *env, "/bin/bash", "-c", script]
 
 
-def _screen_points(stdout: str, nonce: str) -> tuple[int, int] | None:
-    """The watcher's screen size in points (window bounds are in points; the framebuffer is in pixels)."""
+def _report(stdout: str, nonce: str) -> dict[str, Any]:
+    """The watcher's whole report line (parse_report keeps only what gui.GuiLaunch holds)."""
     tag = f"{gui.MARK}{nonce} "
-    for line in stdout.splitlines():
-        if line.startswith(tag):
-            try:
-                w, h = json.loads(line[len(tag):]).get("screen") or (0, 0)
-                return (int(w), int(h)) if w and h else None
-            except (ValueError, TypeError, AttributeError):
-                return None
-    return None
+    lines = [line[len(tag):] for line in stdout.splitlines() if line.startswith(tag)]
+    try:
+        data = json.loads(lines[0]) if len(lines) == 1 else {}
+    except json.JSONDecodeError:
+        data = {}
+    return data if isinstance(data, dict) else {}
+
+
+def _watch(box: TartBox, cfg: dict[str, Any], timeout_s: int) -> tuple[GuiLaunch, dict[str, Any], ExecResult]:
+    watch = _helper(box, "watch", cfg, timeout_s, session=True)
+    shown = gui.parse_report(watch.stdout, cfg["nonce"])
+    if watch.exit_code != 0 and not shown.error:
+        shown.error = f"the watcher exited {watch.exit_code}: {watch.stderr.strip()[-300:]}"
+    return shown, _report(watch.stdout, cfg["nonce"]), watch
+
+
+def _factor(box: TartBox, report: dict[str, Any]) -> float:
+    """Framebuffer pixels per point: window bounds are in points, VNC in pixels (1 on the GUI base)."""
+    points = report.get("screen") or [0, 0]
+    width = box.screen().size[0]
+    return width / points[0] if points and points[0] and width else 1.0
 
 
 def _scale(windows: list[GuiWindow], factor: float) -> None:
@@ -309,12 +350,16 @@ def _scale(windows: list[GuiWindow], factor: float) -> None:
         w.x, w.y, w.width, w.height = (round(v * factor) for v in (w.x, w.y, w.width, w.height))
 
 
-def observation(launch: GuiLaunch, approved: list[dict[str, Any]], *, kept: bool = False) -> str:
+def observation(launch: GuiLaunch, approved: list[dict[str, Any]], *, kept: bool = False,
+                clicked: tuple[int, int] | None = None) -> str:
     """pickfit's own lines (stdout): what the agent cites and the replay checks. Nothing the app chooses."""
     meaning = {"window": "a window of the app's own process is shown",
                "process_alive": "the app is still running but showed no window of its own",
                "none": "the app showed no window and is not running"}[launch.tier]
     lines = [f"gui tier: {launch.tier} ({meaning})"]
+    if clicked:
+        lines.append(f"the app showed no window but a menu bar item: pickfit clicked it at {clicked[0]},{clicked[1]}, "
+                     "as a user opens a menu bar app; windows below are what opened, and only the app's count")
     for i, w in enumerate(launch.windows, start=1):
         lines.append(f"window {i}: {w.width}x{w.height} at {w.x},{w.y} (pid {w.pid})")
     if launch.other_windows:
@@ -363,29 +408,48 @@ def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s
            keep_running: bool = False) -> tuple[ExecResult, GuiLaunch, bytes | None]:
     """Launch on the box's desktop; (the record to keep, what it showed, the screenshot PNG).
 
+    An app that shows no window of its own but puts an item in the menu bar (a menu bar app) gets one click on
+    that item, as a user would give it; whatever opens counts only if the app's own process owns it. On macOS 26
+    Control Center hosts every app's menu bar item, so the item is told by being new since the launch.
     keep_running leaves the app up for an operating loop (VncDisplay), which then calls stop() itself.
     """
     wait_s = max(1, min(int(wait_s), gui.WAIT_MAX_S))
     if not box.display or box.session is None:
         raise ValueError("a macOS GUI launch needs a TartBox made with display=True")
-    nonce = secrets.token_hex(12)
     approved = approve_first_launch(box)
     before = procs(box)
+    items_before = _json_line(_helper(box, "items", timeout_s=30, session=True))
     started = box.harness_exec(start_argv(command, tag), 30)
     seconds, timed_out = started.seconds, started.timed_out
-    points: tuple[int, int] | None = None
+    report: dict[str, Any] = {}
+    clicked: tuple[int, int] | None = None
     if before is None or started.exit_code != 0 or "started" not in started.stdout:
         why = "no process snapshot" if before is None else (started.stderr or started.stdout).strip()[-300:]
         shown = GuiLaunch(tier="none", error=f"the launch could not start: {why}")
     else:
-        cfg = {"before": before, "nonce": nonce, "mark": gui.MARK, "wait_s": wait_s, "settle_s": gui.SETTLE_S,
-               "min_w": gui.MIN_WIDTH, "min_h": gui.MIN_HEIGHT, "early_exit_s": EARLY_EXIT_S, "user": MAC_USER}
-        watch = _helper(box, "watch", cfg, timeout_s or wait_s + gui.SETTLE_S + 90, session=True)
+        cfg = {"before": before, "nonce": secrets.token_hex(12), "mark": gui.MARK, "wait_s": wait_s,
+               "settle_s": gui.SETTLE_S, "min_w": gui.MIN_WIDTH, "min_h": gui.MIN_HEIGHT,
+               "early_exit_s": EARLY_EXIT_S, "user": MAC_USER, "items_before": items_before or []}
+        shown, report, watch = _watch(box, cfg, timeout_s or wait_s + gui.SETTLE_S + 90)
         seconds, timed_out = round(seconds + watch.seconds, 2), watch.timed_out
-        shown = gui.parse_report(watch.stdout, nonce)
-        if watch.exit_code != 0 and not shown.error:
-            shown.error = f"the watcher exited {watch.exit_code}: {watch.stderr.strip()[-300:]}"
-        points = _screen_points(watch.stdout, nonce)
+        items = report.get("new_items") or []
+        if shown.tier == "process_alive" and items and not shown.error and isinstance(items_before, list):
+            factor = _factor(box, report)
+            for item in items[:2]:
+                clicked = (round((item["x"] + item["width"] / 2) * factor), round((item["y"] + item["height"] / 2)
+                                                                                   * factor))
+                box.screen().click(*clicked)
+                menu_cfg = {**cfg, "nonce": secrets.token_hex(12), "wait_s": MENU_WAIT_S, "settle_s": MENU_SETTLE_S,
+                            "any_layer": True}
+                opened, menu_report, menu_watch = _watch(box, menu_cfg, MENU_WAIT_S + 60)
+                seconds, timed_out = round(seconds + menu_watch.seconds, 2), timed_out or menu_watch.timed_out
+                if opened.tier == "window":
+                    shown, report = opened, menu_report
+                    break
+                box.screen().key("Escape")  # close whatever opened that was not the app's
+            else:
+                shown.error = "; ".join(filter(None, [shown.error, "clicking its menu bar item opened no window of "
+                                                      "the app's own"]))
     png: bytes | None = None
     if shown.tier == "window":
         try:
@@ -394,9 +458,9 @@ def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s
             shown.error = "; ".join(filter(None, [shown.error, f"the VNC screenshot failed: {err}"]))
         if png is not None:
             shown.shot_bytes, shown.shot_sha256 = len(png), hashlib.sha256(png).hexdigest()
-            width = box.screen().size[0]
-            if points and width and points[0] != width:  # a HiDPI mode: bounds are in points
-                _scale(shown.windows + shown.other_windows, width / points[0])
+            factor = _factor(box, report)
+            if factor != 1.0:  # a HiDPI mode: bounds are in points
+                _scale(shown.windows + shown.other_windows, factor)
     survived = False
     if not keep_running:
         ok, line = stop(box)
@@ -407,7 +471,8 @@ def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s
     log = box.exec(f"/usr/bin/tail -c 3000 -- {APP_LOG_DIR}/{tag}.log", 20)
     shown.log_tail = log.stdout if log.exit_code == 0 else ""
     code = 0 if shown.tier == "window" and png is not None and not timed_out and not survived else 1
-    result = ExecResult(command=command, exit_code=code, stdout=observation(shown, approved, kept=keep_running),
+    result = ExecResult(command=command, exit_code=code,
+                        stdout=observation(shown, approved, kept=keep_running, clicked=clicked),
                         stderr=app_facts(shown, approved), seconds=seconds, timed_out=timed_out)
     return result, shown, png
 
