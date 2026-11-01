@@ -92,6 +92,12 @@ def runs_dir() -> Path:
     return Path(get_env("PICKFIT_RUNS_DIR") or REPO_ROOT / "runs") / "web"
 
 
+def latest_visit(slug: str) -> Path | None:
+    """The newest saved visit of a target (run ids sort by time)."""
+    saved = sorted((runs_dir() / slug).glob("web-*/web_result.json"))
+    return saved[-1].parent if saved else None
+
+
 def new_run_id(slug: str) -> str:
     stem = re.sub(r"[^a-z0-9]+", "-", slug.lower()).strip("-")[:40].strip("-") or "site"
     return f"web-{stem}-{taipei_now().strftime('%Y%m%d-%H%M%S')}-{secrets.token_hex(2)}"
@@ -962,7 +968,10 @@ def main(argv: list[str] | None = None) -> int:
     import argparse
 
     parser = argparse.ArgumentParser(description="Verify hosted web apps (one visit per site).")
-    parser.add_argument("--targets", required=True, help="JSON list of {slug, name, url, use_case, features}")
+    parser.add_argument("--targets", help="JSON list of {slug, name, url, use_case, features}")
+    parser.add_argument("--records", nargs="*", help="web_app records in data/software to verify (no slugs: every "
+                                                      "web_app record without a browser run)")
+    parser.add_argument("--write-back", action="store_true", help="write each passed visit to its record")
     parser.add_argument("--only", nargs="*", help="slugs to run (default: all)")
     parser.add_argument("--max-steps", type=int, default=MAX_STEPS)
     parser.add_argument("--revisit", help="reason to visit a site again (recorded with the visit)")
@@ -973,14 +982,20 @@ def main(argv: list[str] | None = None) -> int:
     if args.spend:
         print(json.dumps(web_spend(), indent=1))
         return 0
-    targets = [WebTarget(**t) for t in json.loads(Path(args.targets).read_text(encoding="utf-8"))]
+    from pickfit.verify import web_record
+
+    targets = [WebTarget(**t) for t in json.loads(Path(args.targets).read_text(encoding="utf-8"))] if args.targets else []
+    if args.records is not None:
+        targets += web_record.record_targets(args.records)
     if args.only:
         targets = [t for t in targets if t.slug in args.only]
     if args.reevaluate:
         for target in targets:
-            saved = sorted((runs_dir() / target.slug).glob("web-*/web_result.json"))
+            saved = latest_visit(target.slug)
             if saved:
-                reevaluate(saved[-1].parent, target)
+                reevaluate(saved, target)
+                if args.write_back:
+                    print(f"[{target.slug}] {web_record.write_back_saved(target.slug, saved)[1]}")
         return 0
     todo = [t for t in targets if args.revisit or not past_visit(site_of(t.url))]
     stop = budget_stop(len(todo), web_spend())
@@ -991,8 +1006,14 @@ def main(argv: list[str] | None = None) -> int:
 
     def one(target: WebTarget) -> dict[str, Any]:
         try:
-            return verify_site(target, max_steps=args.max_steps, revisit=args.revisit,
-                               log=lambda m, s=target.slug: print(f"[{s}] {m}", flush=True))
+            result = verify_site(target, max_steps=args.max_steps, revisit=args.revisit,
+                                 log=lambda m, s=target.slug: print(f"[{s}] {m}", flush=True))
+            if args.write_back and result.get("level") in ("install", "function"):
+                with _visits_lock:  # one record file write at a time
+                    note = web_record.write_back_saved(target.slug, runs_dir() / target.slug / result["run_id"])[1]
+                result["write_back"] = note
+                print(f"[{target.slug}] {note}", flush=True)
+            return result
         except Exception as err:  # one site's failure never stops the batch
             print(f"[{target.slug}] failed: {type(err).__name__}: {err}", flush=True)
             return {"slug": target.slug, "level": "error", "reason": str(err)[:200]}
