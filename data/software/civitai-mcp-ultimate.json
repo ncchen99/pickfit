@@ -30,6 +30,12 @@
     "analyze trends"
   ],
   "alternatives_to": [],
+  "features": [
+    "search models",
+    "browse top images with prompts",
+    "download LoRAs and Checkpoints",
+    "analyze trends"
+  ],
   "why_worth_it": null,
   "homepage": "https://pypi.org/project/civitai-mcp-ultimate/",
   "repo": {
@@ -54,7 +60,7 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-civitai-mcp-ultimate-20261101-003645-88d1",
+      "run_id": "verify-civitai-mcp-ultimate-20261101-030132-cd2a",
       "method": "uv",
       "steps": [
         {
@@ -79,18 +85,18 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:39:09.369787+08:00",
+    "checked_at": "2026-11-01T03:03:21.629639+08:00",
     "runs": [
       {
-        "id": "verify-civitai-mcp-ultimate-20261101-003645-88d1",
+        "id": "verify-civitai-mcp-ultimate-20261101-030132-cd2a",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:39:09.369787+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T03:03:21.629639+08:00",
         "tool_version": "0.2.0",
         "install_method": "uv",
         "replayed": true,
@@ -111,39 +117,67 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call get_tags --args '{\"query\": \"anime\", \"limit\": 2}' -- civitai-mcp-ultimate 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search_models --args '{\"query\":\"landscape\",\"limit\":2}' -- civitai-mcp-ultimate 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=get_tags content=text text_chars=42",
+            "observed_excerpt": "tools/call: ok tool=search_models content=text text_chars=584",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call get_top_images --args '{\"limit\":2}' -- civitai-mcp-ultimate 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_top_images content=text text_chars=1040",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call get_download_info --args '{\"model_id\":5041}' -- civitai-mcp-ultimate 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_download_info content=text text_chars=971",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call get_top_loras --args '{\"limit\":2}' -- civitai-mcp-ultimate 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_top_loras content=text text_chars=304",
             "setup": [],
             "offline": false
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "civitai-mcp-ultimate supports --help/--version",
-            "actually_needed": "binary is a stdio MCP server; --help/--version start the server and wait for MCP JSON-RPC on stdin (timeout), use MCP probe instead",
+            "readme_said": "pip install civitai-mcp-ultimate / civitai-mcp-ultimate starts server",
+            "actually_needed": "civitai-mcp-ultimate --help hangs awaiting stdio (MCP server), use MCP probe to verify; installed via uv tool install for isolated PATH",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show successful MCP handshake with 14 tools listed and a successful get_tags call returning anime results.",
+          "observed": "Screenshots show successful MCP handshake with 14 tools and successful search_models and get_top_images calls returning Civitai data.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-civitai-mcp-ultimate-20261101-003645-88d1/report.json",
+          "trace_path": "runs/verify/verify-civitai-mcp-ultimate-20261101-030132-cd2a/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-civitai-mcp-ultimate-20261101-003645-88d1/check-1-cmd4.judged.png",
-            "runs/verify/verify-civitai-mcp-ultimate-20261101-003645-88d1/check-2-cmd5.judged.png"
+            "runs/verify/verify-civitai-mcp-ultimate-20261101-030132-cd2a/check-1-cmd4.judged.png",
+            "runs/verify/verify-civitai-mcp-ultimate-20261101-030132-cd2a/check-2-cmd5.judged.png",
+            "runs/verify/verify-civitai-mcp-ultimate-20261101-030132-cd2a/check-3-cmd6.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.04519,
+        "cost_usd": 0.066318,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -170,9 +204,51 @@
             "get_download_info"
           ],
           "tool_count": 14,
-          "called_tool": "get_tags",
+          "called_tool": "search_models",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "search models",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "browse top images with prompts",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "download LoRAs and Checkpoints",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "analyze trends",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -685,8 +761,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T00:05:07+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "search models",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:27+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "browse images with prompts",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:27+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "github_api",
+      "quote": "download LoRAs/Checkpoints",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:27+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "github_api",
+      "quote": "analyze trends.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:27+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-11-01T00:45:12+08:00"
+  "updated_at": "2026-11-01T03:03:21.632203+08:00"
 }

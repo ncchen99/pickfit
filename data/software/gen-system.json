@@ -27,6 +27,11 @@
     "list routines that touch database, files or network"
   ],
   "alternatives_to": [],
+  "features": [
+    "review code changes with parser facts",
+    "show what changed code touches",
+    "visualize call graphs and control flow"
+  ],
   "why_worth_it": null,
   "homepage": "https://gen-system.500kv.co",
   "repo": {
@@ -68,12 +73,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-gen-system-20261101-002043-14e2",
+      "run_id": "verify-gen-system-20261101-114646-4ce6",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g gen-understand 2>&1",
-          "purpose": "install gen-understand via npm (npm install -g gen-understand)"
+          "command": "npm install -g gen-understand",
+          "purpose": "install gen-understand via npm"
         }
       ],
       "manual_steps": [],
@@ -112,82 +117,120 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:21:35.601294+08:00",
+    "checked_at": "2026-11-01T11:57:52.391795+08:00",
     "runs": [
       {
-        "id": "verify-gen-system-20261101-002043-14e2",
+        "id": "verify-gen-system-20261101-114646-4ce6",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:21:35.601294+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T11:57:52.391795+08:00",
         "tool_version": "0.2.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g gen-understand 2>&1",
-            "purpose": "install gen-understand via npm (npm install -g gen-understand)"
+            "command": "npm install -g gen-understand",
+            "purpose": "install gen-understand via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- gen-understand --root . 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- gen-understand --root /tmp/sample 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
-            "setup": [],
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sample && cat > /tmp/sample/main.go <<'GO'\npackage main\n\nimport \"fmt\"\nimport \"os\"\n\nfunc Save(name string) error {\n    f, err := os.Create(name)\n    if err != nil { return err }\n    defer f.Close()\n    _, err = f.WriteString(\"hello\")\n    return err\n}\n\nfunc Fresh() {\n    fmt.Println(\"fresh\")\n    Save(\"out.txt\")\n}\n\nfunc Helper(x int) int {\n    if x > 0 {\n        if x > 10 {\n            return x*2\n        }\n        return x+1\n    }\n    return 0\n}\n\nfunc main() {\n    Save(\"test.txt\")\n    Fresh()\n}\nGO\ncat > /tmp/sample/go.mod <<'GO'\nmodule example.com/sample\ngo 1.21\nGO\nls -R /tmp/sample",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": false
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call architecture --args '{}' -- gen-understand --root . 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call effects --args '{}' -- gen-understand --root /tmp/sample 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=architecture content=text text_chars=313",
-            "setup": [],
+            "observed_excerpt": "tools/call: ok tool=effects content=text text_chars=743",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sample && cat > /tmp/sample/main.go <<'GO'\npackage main\n\nimport \"fmt\"\nimport \"os\"\n\nfunc Save(name string) error {\n    f, err := os.Create(name)\n    if err != nil { return err }\n    defer f.Close()\n    _, err = f.WriteString(\"hello\")\n    return err\n}\n\nfunc Fresh() {\n    fmt.Println(\"fresh\")\n    Save(\"out.txt\")\n}\n\nfunc Helper(x int) int {\n    if x > 0 {\n        if x > 10 {\n            return x*2\n        }\n        return x+1\n    }\n    return 0\n}\n\nfunc main() {\n    Save(\"test.txt\")\n    Fresh()\n}\nGO\ncat > /tmp/sample/go.mod <<'GO'\nmodule example.com/sample\ngo 1.21\nGO\nls -R /tmp/sample",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call call_graph --args '{\"symbol\":\"/tmp/sample/main.go#func:Save\"}' -- gen-understand --root /tmp/sample 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=call_graph content=text text_chars=630",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sample && cat > /tmp/sample/main.go <<'GO'\npackage main\n\nimport \"fmt\"\nimport \"os\"\n\nfunc Save(name string) error {\n    f, err := os.Create(name)\n    if err != nil { return err }\n    defer f.Close()\n    _, err = f.WriteString(\"hello\")\n    return err\n}\n\nfunc Fresh() {\n    fmt.Println(\"fresh\")\n    Save(\"out.txt\")\n}\n\nfunc Helper(x int) int {\n    if x > 0 {\n        if x > 10 {\n            return x*2\n        }\n        return x+1\n    }\n    return 0\n}\n\nfunc main() {\n    Save(\"test.txt\")\n    Fresh()\n}\nGO\ncat > /tmp/sample/go.mod <<'GO'\nmodule example.com/sample\ngo 1.21\nGO\nls -R /tmp/sample",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call control_flow --args '{\"symbol\":\"/tmp/sample/main.go#func:Helper\"}' -- gen-understand --root /tmp/sample 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=control_flow content=text text_chars=1075",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sample && cat > /tmp/sample/main.go <<'GO'\npackage main\n\nimport \"fmt\"\nimport \"os\"\n\nfunc Save(name string) error {\n    f, err := os.Create(name)\n    if err != nil { return err }\n    defer f.Close()\n    _, err = f.WriteString(\"hello\")\n    return err\n}\n\nfunc Fresh() {\n    fmt.Println(\"fresh\")\n    Save(\"out.txt\")\n}\n\nfunc Helper(x int) int {\n    if x > 0 {\n        if x > 10 {\n            return x*2\n        }\n        return x+1\n    }\n    return 0\n}\n\nfunc main() {\n    Save(\"test.txt\")\n    Fresh()\n}\nGO\ncat > /tmp/sample/go.mod <<'GO'\nmodule example.com/sample\ngo 1.21\nGO\nls -R /tmp/sample",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": false
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "npx -y gen-understand --root <your repo> and MCP tools include review_diff",
-            "actually_needed": "npm install -g gen-understand caches understand-mcp binary on first run (downloading understand-mcp-linux-amd64 0.2.0); review_diff tool is not yet in npm release (docs note: review_diff reaches npx gen-understand with next release, until then build from source), only 8 tools advertised",
+            "readme_said": "MCP tool review_diff available via npx gen-understand",
+            "actually_needed": "version 0.2.0 from npm exposes only 8 tools; review_diff not yet included — README notes it arrives with next release and requires building understand-mcp from source until then",
             "kind": "note"
-          },
-          {
-            "readme_said": "understand-mcp / understand-review commands",
-            "actually_needed": "npm package installs as gen-understand which wraps understand-mcp-linux-amd64 binary; understand-mcp name not separately on PATH",
-            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show gen-understand MCP server initializing, listing 8 tools, completing handshake, and returning architecture data on tool call.",
+          "observed": "Screenshots show gen-understand MCP handshake and successful effects and call_graph tool calls.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-gen-system-20261101-002043-14e2/report.json",
+          "trace_path": "runs/verify/verify-gen-system-20261101-114646-4ce6/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-gen-system-20261101-002043-14e2/check-1-cmd4.judged.png",
-            "runs/verify/verify-gen-system-20261101-002043-14e2/check-2-cmd5.judged.png"
+            "runs/verify/verify-gen-system-20261101-114646-4ce6/check-1-cmd5.judged.png",
+            "runs/verify/verify-gen-system-20261101-114646-4ce6/check-2-cmd6.judged.png",
+            "runs/verify/verify-gen-system-20261101-114646-4ce6/check-3-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.039137,
+        "cost_usd": 0.06586,
         "mcp": {
           "transport": "stdio",
           "launch": [
             "gen-understand",
             "--root",
-            "."
+            "/tmp/sample"
           ],
           "url": null,
           "protocol_version": "2025-11-25",
@@ -204,9 +247,40 @@
             "beliefs"
           ],
           "tool_count": 8,
-          "called_tool": "architecture",
+          "called_tool": "effects",
           "offline": false
-        }
+        },
+        "features": [
+          {
+            "feature": "review code changes with parser facts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "review_diff tool not in npm 0.2.0; README says next release"
+          },
+          {
+            "feature": "show what changed code touches",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "visualize call graphs and control flow",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -693,8 +767,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T00:13:53+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Review code changes with facts from a parser, not guesses from a model.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T02:00:17+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**what it now touches**: the database, files or the network;",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T02:00:17+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "opens the Studio: call graphs and control flow graphs.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T02:00:17+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T20:22:27+08:00",
-  "updated_at": "2026-11-01T00:32:32+08:00"
+  "updated_at": "2026-11-01T11:57:52.396397+08:00"
 }

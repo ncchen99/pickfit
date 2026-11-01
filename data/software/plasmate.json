@@ -34,6 +34,12 @@
     "Lightpanda",
     "Chrome"
   ],
+  "features": [
+    "compile HTML into Semantic Object Model",
+    "fetch pages as structured SOM JSON",
+    "expose browser via MCP tools",
+    "serve CDP-compatible Puppeteer endpoint"
+  ],
   "why_worth_it": null,
   "homepage": "https://docs.plasmate.app",
   "repo": {
@@ -74,24 +80,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-plasmate-20261101-001529-37ff",
+      "run_id": "verify-plasmate-20261101-025447-7544",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://plasmate.app/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -n 200 /tmp/install.sh",
-          "purpose": "download install script from plasmate.app"
+          "command": "curl -fsSL https://plasmate.app/install.sh -o /tmp/plasmate-install.sh && wc -c /tmp/plasmate-install.sh && head -n 200 /tmp/plasmate-install.sh",
+          "purpose": "download install script to /tmp/plasmate-install.sh"
         },
         {
-          "command": "sh /tmp/install.sh",
-          "purpose": "run install script to fetch plasmate-x86_64-linux binary to ~/.local/bin"
+          "command": "PLASMATE_VERSION=v0.5.1 sh /tmp/plasmate-install.sh",
+          "purpose": "install plasmate v0.5.1 with PLASMATE_VERSION=v0.5.1 sh /tmp/plasmate-install.sh"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "plasmate --version && plasmate --help",
-        "expected_signal": "plasmate 0.1.0"
+        "command": "plasmate serve --protocol cdp --host 127.0.0.1 --port 9222",
+        "expected_signal": "CDP server listening on 127.0.0.1:9222"
       },
-      "first_task": null
+      "first_task": "plasmate serve --protocol cdp --host 127.0.0.1 --port 9222"
     },
     "windows": null
   },
@@ -108,43 +114,34 @@
     "url": "https://github.com/plasmate-labs/plasmate/releases/tag/v0.5.1"
   },
   "verification": {
-    "level": "function",
+    "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:16:13.914080+08:00",
+    "checked_at": "2026-11-01T02:55:58.746474+08:00",
     "runs": [
       {
-        "id": "verify-plasmate-20261101-001529-37ff",
-        "level": "function",
+        "id": "verify-plasmate-20261101-025447-7544",
+        "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:16:13.914080+08:00",
-        "tool_version": "0.1.0",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:55:58.746474+08:00",
+        "tool_version": "0.5.1",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://plasmate.app/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -n 200 /tmp/install.sh",
-            "purpose": "download install script from plasmate.app"
+            "command": "curl -fsSL https://plasmate.app/install.sh -o /tmp/plasmate-install.sh && wc -c /tmp/plasmate-install.sh && head -n 200 /tmp/plasmate-install.sh",
+            "purpose": "download install script to /tmp/plasmate-install.sh"
           },
           {
-            "command": "sh /tmp/install.sh",
-            "purpose": "run install script to fetch plasmate-x86_64-linux binary to ~/.local/bin"
+            "command": "PLASMATE_VERSION=v0.5.1 sh /tmp/plasmate-install.sh",
+            "purpose": "install plasmate v0.5.1 with PLASMATE_VERSION=v0.5.1 sh /tmp/plasmate-install.sh"
           }
         ],
         "smoke_tests": [
-          {
-            "command": "plasmate --version && plasmate --help",
-            "expected_signal": "plasmate 0.1.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "plasmate 0.1.0",
-            "setup": [],
-            "offline": true
-          },
           {
             "command": "python3 ~/.pickfit/mcp_probe.py -- plasmate mcp",
             "expected_signal": "handshake: ok",
@@ -153,32 +150,56 @@
             "observed_excerpt": "handshake: ok",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call fetch_page --args '{\"url\":\"https://example.com\"}' -- plasmate mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=fetch_page content=text text_chars=575",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "plasmate serve --protocol cdp --host 127.0.0.1 --port 9222",
+            "expected_signal": "CDP server listening on 127.0.0.1:9222",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[2m2026-10-31T18:55:48.402127Z\u001b[0m \u001b[32m INFO\u001b[0m \u001b[2mplasmate::cdp::server\u001b[0m\u001b[2m:\u001b[0m CDP server listening on 127.0.0.1:9222",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -fsSL https://plasmate.app/install.sh | sh installs Plasmate",
-            "actually_needed": "must download script first and inspect; install.sh installs tag v0.1.1 but binary reports 0.1.0 (probe reports 0.1.1)",
-            "kind": "note"
+            "readme_said": "curl -fsSL https://plasmate.app/install.sh | sh installs latest",
+            "actually_needed": "install.sh defaults to TAG v0.1.1; must set PLASMATE_VERSION=v0.5.1 to get latest release (v0.5.1 assets)",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "plasmate compile takes file as positional arg",
+            "actually_needed": "plasmate compile requires --file <FILE> flag; positional /tmp/sample.html errors",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show MCP handshake ok with 6 tools and CLI version 0.1.0 with help output.",
+          "observed": "Screenshots show MCP handshake with 14 tools, successful fetch_page of example.com, and CDP server listening on 127.0.0.1:9222.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-plasmate-20261101-001529-37ff/report.json",
+          "trace_path": "runs/verify/verify-plasmate-20261101-025447-7544/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-plasmate-20261101-001529-37ff/check-1-cmd5.judged.png",
-            "runs/verify/verify-plasmate-20261101-001529-37ff/check-2-cmd3.judged.png"
+            "runs/verify/verify-plasmate-20261101-025447-7544/check-1-cmd10.judged.png",
+            "runs/verify/verify-plasmate-20261101-025447-7544/check-2-cmd13.judged.png",
+            "runs/verify/verify-plasmate-20261101-025447-7544/check-3-cmd15.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.050338,
+        "cost_usd": 0.084151,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -188,19 +209,63 @@
           "url": null,
           "protocol_version": "2024-11-05",
           "server_name": "plasmate",
-          "server_version": "0.1.1",
+          "server_version": "0.5.1",
           "tools": [
             "fetch_page",
             "extract_text",
+            "extract_links",
+            "screenshot_page",
             "open_page",
             "evaluate",
             "click",
-            "close_page"
+            "close_page",
+            "navigate_to",
+            "type_text",
+            "select_option",
+            "scroll",
+            "toggle",
+            "clear"
           ],
-          "tool_count": 6,
-          "called_tool": null,
+          "tool_count": 14,
+          "called_tool": "fetch_page",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "compile HTML into Semantic Object Model",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; plasmate compile --file /tmp/sample.html produced SOM with Hello Plasmate heading"
+          },
+          {
+            "feature": "fetch pages as structured SOM JSON",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; plasmate fetch https://example.com returned SOM JSON with title Example Domain"
+          },
+          {
+            "feature": "expose browser via MCP tools",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "serve CDP-compatible Puppeteer endpoint",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; plasmate serve --protocol cdp listening on 127.0.0.1:9222 port open"
+          }
+        ]
       }
     ]
   },
@@ -248,15 +313,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-01T02:55:58+08:00",
     "quality": {
-      "total": 78.5,
+      "total": 74.6,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.8,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -299,7 +364,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 34.38
+      "value": 32.67
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -787,8 +852,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T00:02:33+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Plasmate compiles HTML into a **Semantic Object Model (SOM)**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:32+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Fetch a page and get structured output",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:32+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "This exposes Plasmate over stdio as MCP tools:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:32+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Start a CDP server (Puppeteer compatible)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:32+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T13:37:59+08:00",
-  "updated_at": "2026-11-01T00:45:12+08:00"
+  "updated_at": "2026-11-01T02:55:58.751164+08:00"
 }

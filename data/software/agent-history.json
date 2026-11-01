@@ -79,18 +79,18 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-agent-history-20261030-235452-d71c",
+      "run_id": "verify-agent-history-20261101-020603-bc2e",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install git+https://github.com/d3layd/agent-history 2>&1",
-          "purpose": "Install agent-history via uv tool from git"
+          "purpose": "install via uv tool install git+https://github.com/d3layd/agent-history"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "agent-history --version 2>&1",
-        "expected_signal": "agent-history 0.16.0"
+        "command": "agent-history inject --help 2>&1\nagent-history inject status 2>&1; echo ---; agent-history inject off 2>&1; agent-history inject on 2>&1",
+        "expected_signal": "inject: on"
       },
       "first_task": null
     },
@@ -127,82 +127,8 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T22:09:51.263343+08:00",
+    "checked_at": "2026-11-01T02:07:28.036054+08:00",
     "runs": [
-      {
-        "id": "verify-agent-history-20261030-235452-d71c",
-        "level": "function",
-        "unverified_reason": null,
-        "os": "linux",
-        "arch": "x86_64",
-        "method": "sandbox",
-        "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-30T23:56:38.998384+08:00",
-        "tool_version": "0.16.0",
-        "install_method": "uv",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "uv tool install git+https://github.com/d3layd/agent-history 2>&1",
-            "purpose": "Install agent-history via uv tool from git"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "agent-history --version 2>&1",
-            "expected_signal": "agent-history 0.16.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "agent-history 0.16.0",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "agent-history --help 2>&1",
-            "expected_signal": "Local semantic search over AI coding agent transcripts",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Local semantic search over AI coding agent transcripts.",
-            "setup": [],
-            "offline": true
-          }
-        ],
-        "pitfalls": [
-          {
-            "readme_said": "Ollama reachable with embedding model pulled, --mode text needs no Ollama",
-            "actually_needed": "index requires a reachable Ollama at http://localhost:11434; box had none so a tiny stdlib stub returning 8-dim embeddings and /api/tags with nomic-embed-text:latest was started on 127.0.0.1:11434 to let `agent-history index` succeed, after which `--mode text` search works with no server",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "`agent-history doctor` diagnoses the installation",
-            "actually_needed": "`agent-history doctor` exits 1 when Ollama is down / index not built, while still printing full diagnostics including `sqlite-vec: loadable`",
-            "kind": "note"
-          },
-          {
-            "readme_said": "`agent-history sources` prints directories that will be scanned",
-            "actually_needed": "`agent-history sources` prints nothing (exit 0) when no adapters detected, as on empty box",
-            "kind": "note"
-          }
-        ],
-        "blocking_error": null,
-        "judge": {
-          "verdict": "working",
-          "observed": "Screenshots show version 0.16.0 printed and help text describing local semantic search with subcommands.",
-          "model": "muse-spark-1.3"
-        },
-        "evidence": {
-          "trace_path": "runs/verify/verify-agent-history-20261030-235452-d71c/report.json",
-          "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-agent-history-20261030-235452-d71c/check-1-cmd2.judged.png",
-            "runs/verify/verify-agent-history-20261030-235452-d71c/check-2-cmd3.judged.png"
-          ],
-          "evidence_url": null
-        },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.158276
-      },
       {
         "id": "verify-agent-history-20261031-220211-df28",
         "level": "function",
@@ -306,6 +232,99 @@
         },
         "actor_model": "muse-spark-1.3-contributor",
         "cost_usd": 0.025383
+      },
+      {
+        "id": "verify-agent-history-20261101-020603-bc2e",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:07:28.036054+08:00",
+        "tool_version": "0.16.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install git+https://github.com/d3layd/agent-history 2>&1",
+            "purpose": "install via uv tool install git+https://github.com/d3layd/agent-history"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "agent-history inject --help 2>&1\nagent-history inject status 2>&1; echo ---; agent-history inject off 2>&1; agent-history inject on 2>&1",
+            "expected_signal": "inject: on",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "inject: on (on by default)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "agent-history index embeds everything; search --mode text needs no Ollama",
+            "actually_needed": "index always requires an Ollama embedding endpoint (/api/embeddings and /api/tags); in this sandbox a fake Ollama server returning deterministic 16-dim embeddings was started on 127.0.0.1:11434 to allow indexing, after which --mode text search works without vectors",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "uv tool install git+https://github.com/d3layd/agent-history",
+            "actually_needed": "prerequisites python>=3.10 and sqlite-vec loadable extension verified; doctor reported sqlite-vec: loadable on this Python 3.12",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows inject help, status reporting inject on by default, and off/on toggles succeeding.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-agent-history-20261101-020603-bc2e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-agent-history-20261101-020603-bc2e/check-1-cmd14.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.072318,
+        "features": [
+          {
+            "feature": "search past agent transcripts by meaning",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; search 'why did we split the auth middleware' returned doc chunk with score 0.0333"
+          },
+          {
+            "feature": "hybrid vector and full-text search",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; search --mode text 'os error 11001' returned text-match hit"
+          },
+          {
+            "feature": "view conversation around search hits",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; show doc:runbook.md printed conversation with timestamp"
+          },
+          {
+            "feature": "inject relevant past sessions into prompts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only help text and on/off status, not relevant past-session chunks injected as context."
+          }
+        ]
       }
     ]
   },
@@ -683,5 +702,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-01T01:07:53.076335+08:00"
+  "updated_at": "2026-11-01T02:07:28.037857+08:00"
 }

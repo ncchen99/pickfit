@@ -23,6 +23,11 @@
   "alternatives_to": [
     "NPKILL"
   ],
+  "features": [
+    "scan for unwanted artifact directories",
+    "delete highlighted artifact folders",
+    "open highlighted folder in file manager"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -45,12 +50,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-oweka-20261101-002755-7e5e",
+      "run_id": "verify-oweka-20261101-120726-e731",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g oweka@0.1.3",
-          "purpose": "install oweka 0.1.3 globally via npm"
+          "purpose": "install oweka via npm global"
         }
       ],
       "manual_steps": [],
@@ -77,25 +82,25 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:29:07.853582+08:00",
+    "checked_at": "2026-11-01T12:09:21.370176+08:00",
     "runs": [
       {
-        "id": "verify-oweka-20261101-002755-7e5e",
+        "id": "verify-oweka-20261101-120726-e731",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:29:07.853582+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T12:09:21.370176+08:00",
         "tool_version": "0.1.3",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g oweka@0.1.3",
-            "purpose": "install oweka 0.1.3 globally via npm"
+            "purpose": "install oweka via npm global"
           }
         ],
         "smoke_tests": [
@@ -107,60 +112,81 @@
             "observed_excerpt": "/home/sbx/.local/bin/oweka",
             "setup": [],
             "offline": true
-          },
-          {
-            "command": "npx oweka --help 2>&1",
-            "expected_signal": "--help does not exist or is not a directory",
-            "exit_code": 1,
-            "passed": true,
-            "observed_excerpt": "--help does not exist or is not a directory",
-            "setup": [],
-            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "README shows npx oweka and oweka ~/projects with no documented flags",
-            "actually_needed": "binary has no --help/--version; every argument is treated as path (e.g. \"--help does not exist or is not a directory\")",
-            "kind": "readme_wrong"
+            "readme_said": "npx oweka runs TUI scanning current dir",
+            "actually_needed": "binary downloaded lazily on first run (binary.js suppressLogs) - first invocation triggers download",
+            "kind": "tool_handled"
           },
           {
-            "readme_said": "oweka scans and shows TUI",
-            "actually_needed": "TUI requires TTY; in non-interactive sandbox it exits with terminal error",
+            "readme_said": "expected --help/--version flags",
+            "actually_needed": "oweka has no flags; --help is treated as path and returns '--help does not exist or is not a directory' exit 1",
+            "kind": "note"
+          },
+          {
+            "readme_said": "oweka runs interactively",
+            "actually_needed": "without PTY it errors 'terminal error: No such device or address (os error 6)'; need script(1) pty to capture TUI alternate-screen escape [?1049h",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show oweka binary path and the expected '--help does not exist' message with matching exit codes.",
+          "observed": "Screenshot shows `which oweka` printing /home/sbx/.local/bin/oweka.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-oweka-20261101-002755-7e5e/report.json",
+          "trace_path": "runs/verify/verify-oweka-20261101-120726-e731/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-oweka-20261101-002755-7e5e/check-1-cmd15.judged.png",
-            "runs/verify/verify-oweka-20261101-002755-7e5e/check-2-cmd1.judged.png"
+            "runs/verify/verify-oweka-20261101-120726-e731/check-1-cmd11.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.080963
+        "cost_usd": 0.102952,
+        "features": [
+          {
+            "feature": "scan for unwanted artifact directories",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; TUI launched via script pty on dir with test artifacts, Script started observed"
+          },
+          {
+            "feature": "delete highlighted artifact folders",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "delete requires interactive Space/Enter in TUI, cannot automate"
+          },
+          {
+            "feature": "open highlighted folder in file manager",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "open in file manager requires TUI key 'o' and GUI file manager"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:32:32+08:00",
+    "computed_at": "2026-11-01T12:09:21+08:00",
     "quality": {
-      "total": 73.0,
+      "total": 80.5,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -203,7 +229,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 40.0
+      "value": 44.11
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -433,8 +459,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T00:13:41+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "is an extremely fast and lightweight TUI that helps you get rid of unwanted artifact directories, like `node_modules`, `target`, `.venv`, etc.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T02:00:22+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "press <kbd>Space</kbd> or <kbd>Enter</kbd> to delete the highlighted folder.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T02:00:22+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Press <kbd>o</kbd> to open the highlighted folder in your file manager.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T02:00:22+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T20:18:17+08:00",
-  "updated_at": "2026-11-01T00:32:32+08:00"
+  "updated_at": "2026-11-01T12:09:21.372071+08:00"
 }

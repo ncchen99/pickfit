@@ -56,20 +56,28 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-graphiti-local-20261031-001639-0d57",
-      "method": "uv",
+      "run_id": "verify-graphiti-local-20261101-025059-16d2",
+      "method": "source",
       "steps": [
         {
           "command": "uvx --from git+https://github.com/renezander030/graphiti-local kg-demo 2>&1",
-          "purpose": "Install and run demo via uvx from git"
+          "purpose": "Install and demo via uvx --from git+https://github.com/renezander030/graphiti-local kg-demo"
+        },
+        {
+          "command": "git clone https://github.com/renezander030/graphiti-local.git 2>&1 && ls graphiti-local",
+          "purpose": "Clone repo for local CLI tests"
+        },
+        {
+          "command": "cd graphiti-local && uv sync --frozen 2>&1 && export GRAPHITI_LOCAL_CONFIG=\"$PWD/config/ollama.example.yaml\" && export KG_WORKSPACE_DIR=\"/tmp/kgtest2/workspace\" && printf '{\"name\":\"Test2\",\"body\":\"Graphiti Local is awesome.\",\"domain\":\"example\"}\\n' > /tmp/test2.jsonl && uv run --frozen kg-ingest /tmp/test2.jsonl 2>&1",
+          "purpose": "Install dependencies with uv sync --frozen and verify ingest dry-run"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "uvx --from git+https://github.com/renezander030/graphiti-local kg --version 2>&1",
+        "command": "cd graphiti-local && uv run --frozen kg --version 2>&1",
         "expected_signal": "kg 0.10.0"
       },
-      "first_task": "uvx --from git+https://github.com/renezander030/graphiti-local kg-demo 2>&1"
+      "first_task": "cd graphiti-local && uv sync --frozen 2>&1 && export GRAPHITI_LOCAL_CONFIG=\"$PWD/config/ollama.example.yaml\" && export KG_WORKSPACE_DIR=\"/tmp/kgtest2/workspace\" && printf '{\"name\":\"Test2\",\"body\":\"Graphiti Local is awesome.\",\"domain\":\"example\"}\\n' > /tmp/test2.jsonl && uv run --frozen kg-ingest /tmp/"
     },
     "windows": null
   },
@@ -88,45 +96,44 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:20:56.330504+08:00",
+    "checked_at": "2026-11-01T02:53:47.957965+08:00",
     "runs": [
       {
-        "id": "verify-graphiti-local-20261031-001639-0d57",
+        "id": "verify-graphiti-local-20261101-025059-16d2",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:20:56.330504+08:00",
-        "tool_version": "kg 0.10.0 (graphiti-core 0.30.2)",
-        "install_method": "uv",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:53:47.957965+08:00",
+        "tool_version": "0.10.0",
+        "install_method": "source",
         "replayed": true,
         "steps": [
           {
             "command": "uvx --from git+https://github.com/renezander030/graphiti-local kg-demo 2>&1",
-            "purpose": "Install and run demo via uvx from git"
+            "purpose": "Install and demo via uvx --from git+https://github.com/renezander030/graphiti-local kg-demo"
+          },
+          {
+            "command": "git clone https://github.com/renezander030/graphiti-local.git 2>&1 && ls graphiti-local",
+            "purpose": "Clone repo for local CLI tests"
+          },
+          {
+            "command": "cd graphiti-local && uv sync --frozen 2>&1 && export GRAPHITI_LOCAL_CONFIG=\"$PWD/config/ollama.example.yaml\" && export KG_WORKSPACE_DIR=\"/tmp/kgtest2/workspace\" && printf '{\"name\":\"Test2\",\"body\":\"Graphiti Local is awesome.\",\"domain\":\"example\"}\\n' > /tmp/test2.jsonl && uv run --frozen kg-ingest /tmp/test2.jsonl 2>&1",
+            "purpose": "Install dependencies with uv sync --frozen and verify ingest dry-run"
           }
         ],
         "smoke_tests": [
           {
-            "command": "uvx --from git+https://github.com/renezander030/graphiti-local kg --version 2>&1",
+            "command": "cd graphiti-local && uv run --frozen kg --version 2>&1",
             "expected_signal": "kg 0.10.0",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "kg 0.10.0 (graphiti-core 0.30.2)",
             "setup": [],
-            "offline": false
-          },
-          {
-            "command": "uvx --from git+https://github.com/renezander030/graphiti-local kg --help 2>&1",
-            "expected_signal": "Read-first command-line interface for Graphiti Local",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Read-first command-line interface for Graphiti Local. Output is JSON on stdout by default so an",
-            "setup": [],
-            "offline": false
+            "offline": true
           },
           {
             "command": "uvx --from git+https://github.com/renezander030/graphiti-local kg-demo 2>&1",
@@ -136,41 +143,104 @@
             "observed_excerpt": "fact Aurora Analytics uses PostgreSQL as its database.",
             "setup": [],
             "offline": false
+          },
+          {
+            "command": "uv run --frozen kg pending example 2>&1",
+            "expected_signal": "Graphiti Local uses LadybugDB",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"text\": \"Graphiti Local uses LadybugDB for local storage.\",",
+            "setup": [
+              {
+                "command": "cd graphiti-local && mkdir -p /tmp/kgtest/workspace && export GRAPHITI_LOCAL_CONFIG=\"$PWD/config/ollama.example.yaml\" && export KG_WORKSPACE_DIR=\"/tmp/kgtest/workspace\" && export KG_LADYBUG_PATH=\"/tmp/kgtest/workspace/graph.ladybug\" && uv run --frozen kg-ladybug-setup --database \"$KG_LADYBUG_PATH\" --apply 2>&1 && echo \"SETUP_DONE\" && uv run --frozen kg doctor --offline 2>&1 && echo \"DOCTOR_DONE\" && uv run --frozen kg status 2>&1 && uv run --frozen kg propose example \"Graphiti Local uses LadybugDB for local storage.\" --type source-fact --provenance test 2>&1 && echo \"PROPOSE_DONE\" && uv run --frozen kg-workspace list 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "cd graphiti-local && uv sync --frozen 2>&1 && export GRAPHITI_LOCAL_CONFIG=\"$PWD/config/ollama.example.yaml\" && export KG_WORKSPACE_DIR=\"/tmp/kgtest2/workspace\" && printf '{\"name\":\"Test2\",\"body\":\"Graphiti Local is awesome.\",\"domain\":\"example\"}\\n' > /tmp/test2.jsonl && uv run --frozen kg-ingest /tmp/test2.jsonl 2>&1",
+            "expected_signal": "\"planned\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"planned\": [",
+            "setup": [],
+            "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "kg ask reading demo graph.ladybug works with current install",
+            "actually_needed": "Demo file version 49 incompatible with installed ladybug storage version 43 – kg ask fails with Runtime exception",
+            "kind": "tool_handled"
+          },
+          {
+            "readme_said": "kg-workspace drain --apply lands proposals",
+            "actually_needed": "Without Ollama LLM/embedder, drain --apply and kg-ingest --apply fail with NodeNotFoundError; dry-run planning works offline",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "All three checks show version, help text, and demo facts with expected signals.",
+          "observed": "Screenshots show kg 0.10.0 version, demo correctly answering Aurora Analytics uses PostgreSQL, and successful propose/pending workflow storing Graphiti Local uses LadybugDB fact.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-graphiti-local-20261031-001639-0d57/report.json",
+          "trace_path": "runs/verify/verify-graphiti-local-20261101-025059-16d2/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-graphiti-local-20261031-001639-0d57/check-1-cmd3.judged.png",
-            "runs/verify/verify-graphiti-local-20261031-001639-0d57/check-2-cmd2.judged.png",
-            "runs/verify/verify-graphiti-local-20261031-001639-0d57/check-3-cmd1.judged.png"
+            "runs/verify/verify-graphiti-local-20261101-025059-16d2/check-1-cmd5.judged.png",
+            "runs/verify/verify-graphiti-local-20261101-025059-16d2/check-2-cmd1.judged.png",
+            "runs/verify/verify-graphiti-local-20261101-025059-16d2/check-3-cmd9.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.026912
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.144936,
+        "features": [
+          {
+            "feature": "retrieve project decisions via MCP tools",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "approve and apply queued graph updates",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Propose/approve works offline, but drain --apply needs Ollama LLM/embedder (NodeNotFoundError offline)"
+          },
+          {
+            "feature": "build knowledge graph from own text",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Building graph from text needs qwen2.5:7b + nomic-embed-text via Ollama; dry-run ok, apply fails offline"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T02:53:47+08:00",
     "quality": {
-      "total": 80.2,
+      "total": 74.2,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.8,
+          "score": 0.68,
           "weight": 40.0
         },
         "install_docs": {
@@ -210,8 +280,8 @@
       "packages": []
     },
     "treasure": {
-      "is_treasure": true,
-      "value": 67.53
+      "is_treasure": false,
+      "value": 62.48
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -462,5 +532,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T02:53:47.960556+08:00"
 }

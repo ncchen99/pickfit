@@ -27,6 +27,12 @@
     "preview Markdown from stdin"
   ],
   "alternatives_to": [],
+  "features": [
+    "preview Markdown without leaving the terminal",
+    "browse interactive preview with search and outline",
+    "check docs for publishing issues",
+    "render local images inline in terminal"
+  ],
   "why_worth_it": null,
   "homepage": "https://youtu.be/0RvUFqgH8io",
   "repo": {
@@ -68,18 +74,18 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-shine-20261101-001726-d82a",
+      "run_id": "verify-shine-20261101-114646-ff10",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g @nk02/shine@0.1.2",
-          "purpose": "install via npm global"
+          "purpose": "install shine via npm"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "shine version",
-        "expected_signal": "0.1.2 (4e8a3ec5f85095ea96200a0c74b0ee61c7c8f851"
+        "expected_signal": "0.1.2"
       },
       "first_task": "shine version"
     },
@@ -100,43 +106,34 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:18:03.380149+08:00",
+    "checked_at": "2026-11-01T11:57:43.687147+08:00",
     "runs": [
       {
-        "id": "verify-shine-20261101-001726-d82a",
+        "id": "verify-shine-20261101-114646-ff10",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:18:03.380149+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T11:57:43.687147+08:00",
         "tool_version": "0.1.2",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g @nk02/shine@0.1.2",
-            "purpose": "install via npm global"
+            "purpose": "install shine via npm"
           }
         ],
         "smoke_tests": [
           {
             "command": "shine version",
-            "expected_signal": "0.1.2 (4e8a3ec5f85095ea96200a0c74b0ee61c7c8f851",
+            "expected_signal": "0.1.2",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "0.1.2 (4e8a3ec5f85095ea96200a0c74b0ee61c7c8f851, 2026-07-10T19:57:56Z)",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "shine --help",
-            "expected_signal": "Preview Markdown beautifully inside the terminal",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Preview Markdown beautifully inside the terminal",
             "setup": [],
             "offline": true
           },
@@ -157,27 +154,97 @@
             "observed_excerpt": "# shine",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "shine --check README.md",
+            "expected_signal": "markdown warning(s):",
+            "exit_code": 2,
+            "passed": true,
+            "observed_excerpt": "6 markdown warning(s):",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "shine --plain /tmp/testimg/doc.md",
+            "expected_signal": "Local image: alt",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Local image: alt↗ text↗ Remote image: remote↗ Missing: missing↗",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testimg && printf '\\x89PNG\\r\\n\\x1a\\n\\x00\\x00\\x00\\rIHDR\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x01\\x08\\x06\\x00\\x00\\x00\\x1f\\x15\\xc4\\x89\\x00\\x00\\x00\\nIDATx\\x9cc\\x00\\x01\\x00\\x00\\x05\\x00\\x01\\r\\n-\\xb4\\x00\\x00\\x00\\x00IEND\\xaeB`\\x82' > /tmp/testimg/img.png\ncat > /tmp/testimg/doc.md <<'MD'\n# Hello\nLocal image: ![alt text](img.png)\nRemote image: ![remote](https://example.com/a.png)\nMissing: ![missing](missing.png)\nMD\ncat /tmp/testimg/doc.md\nls -l /tmp/testimg/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "shine --check README.md returns docs warnings",
+            "actually_needed": "exit code 2 when warnings found (not 0) – expected behavior per --help",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show plain README preview with tagline, outline starting with # shine, and version 0.1.2 with expected commit hash.",
+          "observed": "All three screenshots show shine rendering README plain text, listing outline headings, and printing version 0.1.2.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-shine-20261101-001726-d82a/report.json",
+          "trace_path": "runs/verify/verify-shine-20261101-114646-ff10/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-shine-20261101-001726-d82a/check-1-cmd5.judged.png",
-            "runs/verify/verify-shine-20261101-001726-d82a/check-2-cmd6.judged.png",
-            "runs/verify/verify-shine-20261101-001726-d82a/check-3-cmd2.judged.png"
+            "runs/verify/verify-shine-20261101-114646-ff10/check-1-cmd3.judged.png",
+            "runs/verify/verify-shine-20261101-114646-ff10/check-2-cmd4.judged.png",
+            "runs/verify/verify-shine-20261101-114646-ff10/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.023029
+        "cost_usd": 0.038425,
+        "features": [
+          {
+            "feature": "preview Markdown without leaving the terminal",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "browse interactive preview with search and outline",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "check docs for publishing issues",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "render local images inline in terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only alt-text placeholders with no inline image rendering."
+          }
+        ]
       }
     ]
   },
@@ -520,8 +587,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T00:13:12+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Preview Markdown without leaving the terminal",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T02:00:15+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "TUI preview with keyboard and mouse scrolling, search, outline, help, themes, responsive page gutters, and optimized redraws",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T02:00:15+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Docs checks for headings, duplicate titles, image alt text, links, images, and table readability",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T02:00:15+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Local image previews in Kitty/Ghostty-compatible terminals",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T02:00:15+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T20:18:41+08:00",
-  "updated_at": "2026-11-01T00:32:32+08:00"
+  "updated_at": "2026-11-01T11:57:43.700285+08:00"
 }

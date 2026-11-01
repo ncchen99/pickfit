@@ -77,24 +77,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-modeljars-20261031-002132-ef7c",
+      "run_id": "verify-modeljars-20261101-025701-0ead",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL -o /tmp/install.sh https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh && wc -c /tmp/install.sh && echo OK",
-          "purpose": "download install.sh for reading before running"
+          "command": "curl -fsSL https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
+          "purpose": "download install.sh from GitHub as README instructs (read before executing)"
         },
         {
-          "command": "MODELJARS_CLI_VERSION=0.1.57 sh /tmp/install.sh",
-          "purpose": "install modeljars 0.1.57 via script"
+          "command": "MODELJARS_CLI_VERSION=0.1.72 sh /tmp/install.sh",
+          "purpose": "install ModelJars CLI 0.1.72 via script; latest has no assets (404)"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "modeljars version",
-        "expected_signal": "0.1.57"
+        "command": "modeljars --version 2>&1; echo ---; modeljars version 2>&1",
+        "expected_signal": "0.1.72"
       },
-      "first_task": "modeljars version"
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -126,65 +126,38 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:22:57.348602+08:00",
+    "checked_at": "2026-11-01T02:58:17.738486+08:00",
     "runs": [
       {
-        "id": "verify-modeljars-20261031-002132-ef7c",
+        "id": "verify-modeljars-20261101-025701-0ead",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:22:57.348602+08:00",
-        "tool_version": "0.1.57",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:58:17.738486+08:00",
+        "tool_version": "0.1.72",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL -o /tmp/install.sh https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh && wc -c /tmp/install.sh && echo OK",
-            "purpose": "download install.sh for reading before running"
+            "command": "curl -fsSL https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
+            "purpose": "download install.sh from GitHub as README instructs (read before executing)"
           },
           {
-            "command": "MODELJARS_CLI_VERSION=0.1.57 sh /tmp/install.sh",
-            "purpose": "install modeljars 0.1.57 via script"
+            "command": "MODELJARS_CLI_VERSION=0.1.72 sh /tmp/install.sh",
+            "purpose": "install ModelJars CLI 0.1.72 via script; latest has no assets (404)"
           }
         ],
         "smoke_tests": [
           {
-            "command": "modeljars version",
-            "expected_signal": "0.1.57",
+            "command": "modeljars --version 2>&1; echo ---; modeljars version 2>&1",
+            "expected_signal": "0.1.72",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "0.1.57",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "modeljars help",
-            "expected_signal": "Search and filter the qualified model catalog",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "search, available, models Search and filter the qualified model catalog.",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "modeljars search gemma",
-            "expected_signal": "12 qualified models",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "12 qualified models",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "modeljars info",
-            "expected_signal": "Qualified models",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Qualified models 117",
+            "observed_excerpt": "0.1.72",
             "setup": [],
             "offline": true
           }
@@ -192,28 +165,60 @@
         "pitfalls": [
           {
             "readme_said": "curl -fsSL https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh | sh installs latest",
-            "actually_needed": "pin an older release with binaries, e.g. MODELJARS_CLI_VERSION=0.1.57 sh /tmp/install.sh (v0.1.57 is the newest release whose assets include modeljars-linux-x86_64; v0.1.58 through v0.1.70 publish zero assets so the default latest URL 404s)",
+            "actually_needed": "MODELJARS_CLI_VERSION=0.1.72 sh /tmp/install.sh needed because v0.1.73 (latest) has 0 assets and returns 404 for modeljars-linux-x86_64",
             "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show search listing 12 gemma models, info listing 117 qualified models, and version printing 0.1.57.",
+          "observed": "Both version commands printed 0.1.72 separated by ---.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-modeljars-20261031-002132-ef7c/report.json",
+          "trace_path": "runs/verify/verify-modeljars-20261101-025701-0ead/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-modeljars-20261031-002132-ef7c/check-1-cmd11.judged.png",
-            "runs/verify/verify-modeljars-20261031-002132-ef7c/check-2-cmd12.judged.png",
-            "runs/verify/verify-modeljars-20261031-002132-ef7c/check-3-cmd8.judged.png"
+            "runs/verify/verify-modeljars-20261101-025701-0ead/check-1-cmd11.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.069229
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.076609,
+        "features": [
+          {
+            "feature": "search and filter qualified model catalog",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; search gemma returned 12 models, search --capability embedding returned 31 models with sizes"
+          },
+          {
+            "feature": "prefetch model weights",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "command budget exhausted before pull test; requires network download"
+          },
+          {
+            "feature": "check machine runtime compatibility",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; modeljars info reported CPU/SIMD/memory, backends (GGUF/CPU ready), catalog 119 models, cache 0"
+          },
+          {
+            "feature": "generate editable demo Java programs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "command budget exhausted before modeljars demo test"
+          }
+        ]
       }
     ]
   },
@@ -599,5 +604,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:11+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T02:58:17.741291+08:00"
 }

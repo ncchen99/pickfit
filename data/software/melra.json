@@ -25,6 +25,12 @@
   ],
   "use_cases": [],
   "alternatives_to": [],
+  "features": [
+    "check AI-agent tool calls",
+    "gate risky actions on approval",
+    "verify tool call results",
+    "avoid blind retries after timeouts"
+  ],
   "why_worth_it": null,
   "homepage": "https://xagilab.com",
   "repo": {
@@ -50,20 +56,17 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-melra-20261101-001748-7643",
+      "run_id": "verify-melra-20261101-021158-c9e2",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g @melra/cli@alpha",
-          "purpose": "install @melra/cli@alpha globally via npm"
+          "command": "npm install -g @melra/cli@alpha\n",
+          "purpose": "Install MELRA CLI globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": {
-        "command": "melra version",
-        "expected_signal": "0.4.0-alpha.2"
-      },
-      "first_task": "melra version"
+      "check": null,
+      "first_task": null
     },
     "windows": null
   },
@@ -78,39 +81,30 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:18:55.881407+08:00",
+    "checked_at": "2026-11-01T02:13:38.470137+08:00",
     "runs": [
       {
-        "id": "verify-melra-20261101-001748-7643",
+        "id": "verify-melra-20261101-021158-c9e2",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:18:55.881407+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:13:38.470137+08:00",
         "tool_version": "0.4.0-alpha.2",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g @melra/cli@alpha",
-            "purpose": "install @melra/cli@alpha globally via npm"
+            "command": "npm install -g @melra/cli@alpha\n",
+            "purpose": "Install MELRA CLI globally via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "melra version",
-            "expected_signal": "0.4.0-alpha.2",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "0.4.0-alpha.2",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- melra serve",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- melra serve 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -119,34 +113,70 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call melra_capabilities --args '{}' -- melra serve",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call melra_capabilities --args '{}' -- melra serve 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "tools/call: ok tool=melra_capabilities content=text text_chars=2510",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call melra_plan --args '{\"goal\":\"check tool call\",\"operation\":{\"kind\":\"system\",\"action\":\"info\"}}' -- melra serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=melra_plan content=text text_chars=1652",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call melra_plan --args '{\"goal\":\"write risky file\",\"operation\":{\"kind\":\"file\",\"action\":\"write\",\"path\":\"test.txt\",\"content\":\"hello\"},\"requiredEvidence\":[{\"type\":\"file_exists\",\"path\":\"test.txt\"}]}' -- melra serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=melra_plan content=text text_chars=2857",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call melra_plan --args '{\"goal\":\"verify result\",\"operation\":{\"kind\":\"terminal\",\"action\":\"run\",\"command\":\"echo\",\"args\":[\"hello\"]},\"requiredEvidence\":[{\"type\":\"exit_code\",\"value\":0}]}' -- melra serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=melra_plan content=text text_chars=2822",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call melra_task_status --args '{\"taskId\":\"42a885d5-1f54-4693-be7f-1a2cab9c018e\"}' -- melra serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"melra_task_status\", \"count\": 12, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"melra\", \"serve\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"melra\", \"tools\": [\"melra_capabilities\", \"melra_plan\", \"melra_execute\", \"melra_task_status\", …",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake ok with 12 tools, successful melra_capabilities call, and version 0.4.0-alpha.2 output.",
+          "observed": "Screenshots show MELRA MCP server initializing as v0.4.0-alpha.2, listing 12 tools, and successfully completing melra_capabilities and melra_plan tool calls.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-melra-20261101-001748-7643/report.json",
+          "trace_path": "runs/verify/verify-melra-20261101-021158-c9e2/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-melra-20261101-001748-7643/check-1-cmd7.judged.png",
-            "runs/verify/verify-melra-20261101-001748-7643/check-2-cmd8.judged.png",
-            "runs/verify/verify-melra-20261101-001748-7643/check-3-cmd9.judged.png"
+            "runs/verify/verify-melra-20261101-021158-c9e2/check-1-cmd6.judged.png",
+            "runs/verify/verify-melra-20261101-021158-c9e2/check-2-cmd7.judged.png",
+            "runs/verify/verify-melra-20261101-021158-c9e2/check-3-cmd8.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.053689,
+        "cost_usd": 0.08427,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -174,7 +204,41 @@
           "tool_count": 12,
           "called_tool": "melra_capabilities",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "check AI-agent tool calls",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows melra_plan returned an ID but no check verdict or blocking decision."
+          },
+          {
+            "feature": "gate risky actions on approval",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows risky file plan was accepted but no approval gate or blocked execution."
+          },
+          {
+            "feature": "verify tool call results",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows verify plan was accepted but no execution result or evidence verification."
+          },
+          {
+            "feature": "avoid blind retries after timeouts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          }
+        ]
       }
     ]
   },
@@ -532,8 +596,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T00:03:28+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "checks AI-agent tool calls",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:54+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "github_api",
+      "quote": "gates risky actions on approval",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:54+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "github_api",
+      "quote": "verifies results",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:54+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "github_api",
+      "quote": "avoids blind retries after timeouts",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:54+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T13:37:45+08:00",
-  "updated_at": "2026-11-01T00:45:12+08:00"
+  "updated_at": "2026-11-01T02:13:38.476811+08:00"
 }

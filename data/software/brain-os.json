@@ -31,6 +31,12 @@
     "save session state changes at end of session"
   ],
   "alternatives_to": [],
+  "features": [
+    "track projects with status and blockers",
+    "log decisions with rejected alternatives",
+    "check proposals against active decisions",
+    "get prioritized recommendations on work"
+  ],
   "why_worth_it": null,
   "homepage": "https://brainos-hq.com",
   "repo": {
@@ -57,12 +63,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-brain-os-20261101-003002-45b7",
+      "run_id": "verify-brain-os-20261101-020603-0456",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g brain-os 2>&1",
-          "purpose": "install brain-os globally via npm"
+          "purpose": "Install brain-os globally via npm"
         }
       ],
       "manual_steps": [],
@@ -86,25 +92,25 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:31:22.790962+08:00",
+    "checked_at": "2026-11-01T02:07:26.736957+08:00",
     "runs": [
       {
-        "id": "verify-brain-os-20261101-003002-45b7",
+        "id": "verify-brain-os-20261101-020603-0456",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:31:22.790962+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:07:26.736957+08:00",
         "tool_version": "0.11.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g brain-os 2>&1",
-            "purpose": "install brain-os globally via npm"
+            "purpose": "Install brain-os globally via npm"
           }
         ],
         "smoke_tests": [
@@ -118,33 +124,85 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call operational_state_check --args '{\"root_path\": \"/home/sbx/work\"}' -- brain-os serve 2>&1",
+            "command": "cd /tmp/brain-test && python3 ~/.pickfit/mcp_probe.py --call entity_update --args '{\"entity_id\":\"proj-alpha\",\"updates\":{\"status\":\"active\",\"blockers\":[\"waiting on API\"],\"next_moves\":[\"ship v1\"]}}' -- brain-os serve 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=operational_state_check content=text text_chars=3338",
-            "setup": [],
+            "observed_excerpt": "tools/call: ok tool=entity_update content=text text_chars=540",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/brain-test && cd /tmp/brain-test && brain-os init . 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
+          },
+          {
+            "command": "cd /tmp/brain-test && python3 ~/.pickfit/mcp_probe.py --call decision_check --args '{\"proposed_action\":\"switch to Postgres for new service\",\"entity_id\":\"proj-alpha\"}' -- brain-os serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=decision_check content=text text_chars=132",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/brain-test && cd /tmp/brain-test && brain-os init . 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/brain-test && python3 ~/.pickfit/mcp_probe.py --call focus_get --args '{}' -- brain-os serve 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=focus_get content=text text_chars=485",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/brain-test && cd /tmp/brain-test && brain-os init . 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/brain-test && python3 ~/.pickfit/mcp_probe.py --call decision_log --args '{\"entity_id\":\"proj-alpha\",\"decision\":\"Use SQLite for local storage\",\"why\":\"low ops burden\",\"alternatives\":[\"Postgres\"],\"proof_action\":\"none\"}' -- brain-os serve 2>&1",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"decision_log\", \"count\": 24, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"brain-os\", \"serve\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"brain-os\", \"tools\": [\"entity_read\", \"context_resolve\", \"entity_update\", \"decision_log\", \"decis…",
+            "setup": [],
+            "offline": null
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "npm install brain-os openai for semantic search",
+            "actually_needed": "global install npm install -g brain-os required for probe; npx launcher would fetch on each run and fail offline",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show brain-os serve initializing as v0.11.0, listing 24 tools, and completing handshake and operational_state_check call successfully.",
+          "observed": "Screenshots show brain-os MCP server initializing with 24 tools and successfully completing entity_update and decision_check calls.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-brain-os-20261101-003002-45b7/report.json",
+          "trace_path": "runs/verify/verify-brain-os-20261101-020603-0456/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-brain-os-20261101-003002-45b7/check-1-cmd3.judged.png",
-            "runs/verify/verify-brain-os-20261101-003002-45b7/check-2-cmd4.judged.png"
+            "runs/verify/verify-brain-os-20261101-020603-0456/check-1-cmd5.judged.png",
+            "runs/verify/verify-brain-os-20261101-020603-0456/check-2-cmd7.judged.png",
+            "runs/verify/verify-brain-os-20261101-020603-0456/check-3-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.054761,
+        "cost_usd": 0.079465,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -182,9 +240,51 @@
             "brain_setup"
           ],
           "tool_count": 24,
-          "called_tool": "operational_state_check",
+          "called_tool": "entity_update",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "track projects with status and blockers",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "log decisions with rejected alternatives",
+            "status": "test_failed",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "decision_log rejected args: alternatives expects object and review_date required, budget exhausted before correct shape found"
+          },
+          {
+            "feature": "check proposals against active decisions",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "get prioritized recommendations on work",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -710,8 +810,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T00:04:35+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**Entities** — track projects, deals, initiatives with status, momentum, blockers, and next moves",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:23+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Decisions** — log what was decided, why, what alternatives were rejected, and when to revisit",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:23+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Check a proposed action against active decisions — returns clear/caution/conflict",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:23+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Get prioritized recommendations on what to work on",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:23+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T13:38:28+08:00",
-  "updated_at": "2026-11-01T00:45:12+08:00"
+  "updated_at": "2026-11-01T02:07:26.740659+08:00"
 }

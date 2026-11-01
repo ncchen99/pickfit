@@ -73,24 +73,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-xmatrix-20261029-012319-cc58",
+      "run_id": "verify-xmatrix-20261101-022427-00f3",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://xmatrix.sh/install.sh -o /tmp/xmatrix-install.sh && wc -c /tmp/xmatrix-install.sh && head -c 6000 /tmp/xmatrix-install.sh",
-          "purpose": "download install script for inspection"
+          "command": "curl -fsSL https://xmatrix.sh/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 100 /tmp/install.sh",
+          "purpose": "download install script from xmatrix.sh"
         },
         {
-          "command": "bash /tmp/xmatrix-install.sh --binary-only",
-          "purpose": "install xmatrix binary-only"
+          "command": "bash /tmp/install.sh --binary-only",
+          "purpose": "install binary-only to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "xmatrix --version",
-        "expected_signal": "xmatrix 1.12.0"
+        "expected_signal": "xmatrix 2.3.0"
       },
-      "first_task": "xmatrix harness list --local"
+      "first_task": "xmatrix harness list"
     },
     "windows": {
       "basis": "readme_claim",
@@ -122,108 +122,151 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-29T01:24:34.138640+08:00",
+    "checked_at": "2026-11-01T02:25:30.110127+08:00",
     "runs": [
       {
-        "id": "verify-xmatrix-20261029-012319-cc58",
+        "id": "verify-xmatrix-20261101-022427-00f3",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-29T01:24:34.138640+08:00",
-        "tool_version": "1.12.0",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:25:30.110127+08:00",
+        "tool_version": "2.3.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://xmatrix.sh/install.sh -o /tmp/xmatrix-install.sh && wc -c /tmp/xmatrix-install.sh && head -c 6000 /tmp/xmatrix-install.sh",
-            "purpose": "download install script for inspection"
+            "command": "curl -fsSL https://xmatrix.sh/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 100 /tmp/install.sh",
+            "purpose": "download install script from xmatrix.sh"
           },
           {
-            "command": "bash /tmp/xmatrix-install.sh --binary-only",
-            "purpose": "install xmatrix binary-only"
+            "command": "bash /tmp/install.sh --binary-only",
+            "purpose": "install binary-only to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
             "command": "xmatrix --version",
-            "expected_signal": "xmatrix 1.12.0",
+            "expected_signal": "xmatrix 2.3.0",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "xmatrix 1.12.0",
+            "observed_excerpt": "xmatrix 2.3.0",
             "setup": [],
             "offline": true
           },
           {
-            "command": "xmatrix --help",
-            "expected_signal": "Usage: xmatrix [OPTIONS] [COMMAND]",
+            "command": "xmatrix star --help",
+            "expected_signal": "Star xMatrix on GitHub",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Usage: xmatrix [OPTIONS] [COMMAND]",
+            "observed_excerpt": "Star xMatrix on GitHub; only a person at a terminal can, never an Agent run",
             "setup": [],
             "offline": true
           },
           {
-            "command": "xmatrix harness list --local",
-            "expected_signal": "HARNESS",
+            "command": "xmatrix harness list",
+            "expected_signal": "Not logged in. Run: xmatrix login",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "error: Not logged in. Run: xmatrix login",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "xmatrix harness --help; echo ---; xmatrix page --help; echo ---; xmatrix agent --help",
+            "expected_signal": "Pages: the Space's living documents",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "HARNESS INSTALLED VERSION LATEST AUTO PROBE",
+            "observed_excerpt": "Pages: the Space's living documents (read, edit content, link to this conversation)",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -fsSL https://xmatrix.sh/install.sh | bash",
-            "actually_needed": "download the script first and run `bash /tmp/xmatrix-install.sh --binary-only` to skip interactive browser login and daemon autostart (requires systemctl) in a headless sandbox",
-            "kind": null
+            "readme_said": "xmatrix harness list shows which agents are installed on a machine",
+            "actually_needed": "command requires authentication - exits 1 with 'Not logged in. Run: xmatrix login'",
+            "kind": "readme_wrong"
           },
           {
-            "readme_said": "`xmatrix harness list` shows installed harnesses (exits 1 with `Not logged in. Run: xmatrix login` when not logged in)",
-            "actually_needed": "`xmatrix harness list --local` for a login-free local probe",
-            "kind": null
+            "readme_said": "curl -fsSL https://xmatrix.sh/install.sh | bash installs CLI and daemon",
+            "actually_needed": "used --binary-only to skip daemon autostart and login which require interactive browser auth and systemctl",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "`xmatrix star` stars the repo from the terminal",
-            "actually_needed": "run at an interactive terminal; with stdin closed it exits 1 with `xmatrix star needs a person at an interactive terminal`",
-            "kind": null
+            "readme_said": "xmatrix star stars on GitHub",
+            "actually_needed": "requires interactive terminal, fails in non-interactive sandbox with hint to star at https://github.com/LambdaLabsHQ/xmatrix",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show successful outputs: harness list prints a HARNESS table and --version prints xmatrix 1.12.0.",
+          "observed": "Screenshots show the expected not-logged-in error and the version string xmatrix 2.3.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-xmatrix-20261029-012319-cc58/report.json",
+          "trace_path": "runs/verify/verify-xmatrix-20261101-022427-00f3/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-xmatrix-20261029-012319-cc58/check-1-cmd9.judged.png",
-            "runs/verify/verify-xmatrix-20261029-012319-cc58/check-2-cmd3.judged.png"
+            "runs/verify/verify-xmatrix-20261101-022427-00f3/check-1-cmd5.judged.png",
+            "runs/verify/verify-xmatrix-20261101-022427-00f3/check-2-cmd3.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.069909
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.066932,
+        "features": [
+          {
+            "feature": "Mention coding agents in group chat",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Mention @claude etc requires logged-in Space and channel; harness list fails with Not logged in"
+          },
+          {
+            "feature": "Run agents locally with own subscription",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Run agents locally requires xmatrix login and agent add with space-id"
+          },
+          {
+            "feature": "Maintain living documents updated by agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Living documents (xmatrix page *) require Hub auth and Space"
+          },
+          {
+            "feature": "Launch parallel agents in isolated worktrees",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Isolated worktrees via @auto requires daemon and Space routing"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T02:25:30+08:00",
     "quality": {
-      "total": 87.0,
+      "total": 79.5,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -264,7 +307,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 46.81
+      "value": 42.77
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -547,5 +590,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T02:25:30.111788+08:00"
 }

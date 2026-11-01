@@ -29,6 +29,12 @@
     "review a storyboard of one still per shot"
   ],
   "alternatives_to": [],
+  "features": [
+    "Make videos with a coding agent",
+    "Apply a video style from examples",
+    "Give feedback by clicking video frames",
+    "Review video from any tool"
+  ],
   "why_worth_it": null,
   "homepage": "https://www.framejam.ai",
   "repo": {
@@ -55,7 +61,7 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-framejam-20261101-003324-c9cd",
+      "run_id": "verify-framejam-20261101-025845-c19d",
       "method": "npm",
       "steps": [
         {
@@ -66,7 +72,7 @@
       "manual_steps": [],
       "check": {
         "command": "framejam --help",
-        "expected_signal": "framejam — review videos"
+        "expected_signal": "Usage:"
       },
       "first_task": null
     },
@@ -83,19 +89,19 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:34:47.136051+08:00",
+    "checked_at": "2026-11-01T03:00:39.228179+08:00",
     "runs": [
       {
-        "id": "verify-framejam-20261101-003324-c9cd",
+        "id": "verify-framejam-20261101-025845-c19d",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:34:47.136051+08:00",
-        "tool_version": "0.6.0",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T03:00:39.228179+08:00",
+        "tool_version": "0.1.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
@@ -107,15 +113,15 @@
         "smoke_tests": [
           {
             "command": "framejam --help",
-            "expected_signal": "framejam — review videos",
+            "expected_signal": "Usage:",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "framejam — review videos and storyboards from your coding agent, and pick style presets, over MCP",
+            "observed_excerpt": "Usage:",
             "setup": [],
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- framejam --stdio",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- framejam --stdio",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -124,45 +130,67 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call list_reviews --args '{}' -- framejam --stdio",
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 --call list_presets --args '{}' -- framejam --stdio",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=list_reviews content=text text_chars=33",
+            "observed_excerpt": "tools/call: ok tool=list_presets content=text text_chars=12367",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 --call list_playbooks --args '{}' -- framejam --stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list_playbooks content=text text_chars=11747",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 --call get_feedback --args '{\"reviewId\":\"rev_80384296c5\"}' -- framejam --stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"get_feedback\", \"count\": 14, \"era\": \"legacy\", \"exit\": -15, \"flags\": {}, \"launch\": [\"framejam\", \"--stdio\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"framejam\", \"tools\": [\"open_review\", \"wait_for_feedback\", \"get_feedback\", \"list_reviews\", \"…",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "mkdir -p /tmp/fj && touch /tmp/fj/dummy.mp4 && python3 ~/.pickfit/mcp_probe.py --timeout 30 --call open_review --args '{\"title\":\"test\",\"videoPath\":\"/tmp/fj/dummy.mp4\"}' -- framejam --stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=open_review content=text text_chars=407",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "framejam --version shows version",
-            "actually_needed": "framejam --version not supported; version via npm list (0.6.0) and MCP server field (0.1.0)",
-            "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "Prerequisites: Node 22+ and ffmpeg",
-            "actually_needed": "ffmpeg missing in box but MCP stdio server starts and tools work without it",
+            "readme_said": "npx -y framejam install cursor / npx -y framejam --stdio",
+            "actually_needed": "npm install -g framejam provides framejam --stdio on PATH; use framejam --stdio for offline replay instead of npx -y launcher",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 14 tools, successful list_reviews call returning empty list, and help text for reviewing videos over MCP.",
+          "observed": "Screenshots show MCP handshake with 14 tools, successful list_presets call returning 30 presets, and help output with Usage.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-framejam-20261101-003324-c9cd/report.json",
+          "trace_path": "runs/verify/verify-framejam-20261101-025845-c19d/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-framejam-20261101-003324-c9cd/check-1-cmd10.judged.png",
-            "runs/verify/verify-framejam-20261101-003324-c9cd/check-2-cmd11.judged.png",
-            "runs/verify/verify-framejam-20261101-003324-c9cd/check-3-cmd9.judged.png"
+            "runs/verify/verify-framejam-20261101-025845-c19d/check-1-cmd4.judged.png",
+            "runs/verify/verify-framejam-20261101-025845-c19d/check-2-cmd5.judged.png",
+            "runs/verify/verify-framejam-20261101-025845-c19d/check-3-cmd11.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.056709,
+        "cost_usd": 0.07908,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -190,9 +218,45 @@
             "wait_for_pick"
           ],
           "tool_count": 14,
-          "called_tool": "list_reviews",
+          "called_tool": "list_presets",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Make videos with a coding agent",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only a list of 15 playbooks, not a video being made."
+          },
+          {
+            "feature": "Apply a video style from examples",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only a list of 30 presets, not a style being applied."
+          },
+          {
+            "feature": "Give feedback by clicking video frames",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "Review video from any tool",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -236,15 +300,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-01T03:00:39+08:00",
     "quality": {
-      "total": 75.0,
+      "total": 82.5,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -287,7 +351,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 22.35
+      "value": 24.58
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -625,8 +689,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T00:02:43+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "Make videos with your coding agent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:35+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Pick a style instead of describing one.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:35+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "then click the frame that's wrong and say why.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:35+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Works with any video tool.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:35+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-11-01T00:45:12+08:00"
+  "updated_at": "2026-11-01T03:00:39.231421+08:00"
 }

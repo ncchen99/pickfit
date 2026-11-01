@@ -63,24 +63,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-llama-buddy-20261031-023118-3656",
+      "run_id": "verify-llama-buddy-20261101-030913-68e8",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install llama-buddy && llb --help",
-          "purpose": "Install llama-buddy via uv tool install"
-        },
-        {
-          "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/",
-          "purpose": "Download tiny stories260K GGUF test model"
+          "command": "uv tool install llama-buddy 2>&1",
+          "purpose": "uv tool install llama-buddy"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "llb --version",
-        "expected_signal": "llb 0.1.16"
+        "command": "llb status 2>&1",
+        "expected_signal": "llama-server is not running."
       },
-      "first_task": "llb status"
+      "first_task": "llb status 2>&1"
     },
     "windows": null
   },
@@ -95,43 +91,30 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:33:06.552419+08:00",
+    "checked_at": "2026-11-01T03:10:08.127399+08:00",
     "runs": [
       {
-        "id": "verify-llama-buddy-20261031-023118-3656",
+        "id": "verify-llama-buddy-20261101-030913-68e8",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:33:06.552419+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T03:10:08.127399+08:00",
         "tool_version": "0.1.16",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install llama-buddy && llb --help",
-            "purpose": "Install llama-buddy via uv tool install"
-          },
-          {
-            "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/",
-            "purpose": "Download tiny stories260K GGUF test model"
+            "command": "uv tool install llama-buddy 2>&1",
+            "purpose": "uv tool install llama-buddy"
           }
         ],
         "smoke_tests": [
           {
-            "command": "llb --version",
-            "expected_signal": "llb 0.1.16",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "llb 0.1.16",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "llb status",
+            "command": "llb status 2>&1",
             "expected_signal": "llama-server is not running.",
             "exit_code": 0,
             "passed": true,
@@ -140,40 +123,99 @@
             "offline": true
           },
           {
-            "command": "llb info ~/models/stories260K.gguf",
-            "expected_signal": "Architecture",
+            "command": "llb download --help 2>&1",
+            "expected_signal": "usage: llb download",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "│ Architecture llama │",
+            "observed_excerpt": "usage: llb download [-h] [--alias ALIAS] [model]",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "llb chat --help 2>&1",
+            "expected_signal": "usage: llb chat",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: llb chat [-h] [model]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "llb start 2>&1; echo \"START_EXIT:$?\"",
+            "expected_signal": "",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "START_EXIT:1",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "llb models lists all models",
-            "actually_needed": "llb status works without a server but llb models exits 1 with 'Could not connect to llama-server. Is it running?' when no server is running; a running llama-server (llama.cpp binary plus its *.so libs copied to ~/.local/bin) is required for models/props/chat.",
+            "readme_said": "Prerequisite: llama.cpp installed and llama-server on PATH",
+            "actually_needed": "install succeeds without llama-server, but llb start fails with 'llama-server not found. Please install llama.cpp.'; wrapper works but serve/chat need binary",
+            "kind": "note"
+          },
+          {
+            "readme_said": "llb models shows table of models",
+            "actually_needed": "without running server exits 1 with 'Could not connect to llama-server. Is it running?' rather than empty table",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show llb status reporting server not running, llb info displaying Architecture details, and llb --version printing 0.1.16.",
+          "observed": "Screenshots show llb status reporting the server is not running and correct usage help for download and chat.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-llama-buddy-20261031-023118-3656/report.json",
+          "trace_path": "runs/verify/verify-llama-buddy-20261101-030913-68e8/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-llama-buddy-20261031-023118-3656/check-1-cmd11.judged.png",
-            "runs/verify/verify-llama-buddy-20261031-023118-3656/check-2-cmd15.judged.png",
-            "runs/verify/verify-llama-buddy-20261031-023118-3656/check-3-cmd10.judged.png"
+            "runs/verify/verify-llama-buddy-20261101-030913-68e8/check-1-cmd4.judged.png",
+            "runs/verify/verify-llama-buddy-20261101-030913-68e8/check-2-cmd8.judged.png",
+            "runs/verify/verify-llama-buddy-20261101-030913-68e8/check-3-cmd9.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.186009
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.044873,
+        "features": [
+          {
+            "feature": "manage, download, and serve local LLMs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only states server is not running with no download or serving shown."
+          },
+          {
+            "feature": "run llama-server as background daemon",
+            "status": "test_failed",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "llb start exits 1: llama-server not found. Needs llama.cpp binary (build toolchain)"
+          },
+          {
+            "feature": "search HuggingFace and download models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only download help usage text, not a search or download."
+          },
+          {
+            "feature": "chat interactively with a model",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only chat help usage text, not an interactive chat."
+          }
+        ]
       }
     ]
   },
@@ -507,5 +549,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:47:04+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T03:10:08.129789+08:00"
 }

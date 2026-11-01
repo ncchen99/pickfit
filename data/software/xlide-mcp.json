@@ -28,6 +28,12 @@
     "analyze VBA in a workbook for errors and warnings"
   ],
   "alternatives_to": [],
+  "features": [
+    "read and write VBA code",
+    "analyze VBA for errors",
+    "run VBA tests",
+    "read and write worksheet cells"
+  ],
   "why_worth_it": null,
   "homepage": "https://pypi.org/project/xlide-mcp/",
   "repo": {
@@ -71,16 +77,19 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-xlide-mcp-20261101-001726-9216",
+      "run_id": "verify-xlide-mcp-20261101-020743-e5d9",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install xlide-mcp 2>&1",
-          "purpose": "install xlide-mcp via uv tool install"
+          "purpose": "install xlide-mcp via uv tool"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "xlide-mcp --version 2>&1",
+        "expected_signal": "xlide-mcp 1.2.4"
+      },
       "first_task": null
     },
     "windows": {
@@ -115,28 +124,37 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:18:14.671241+08:00",
+    "checked_at": "2026-11-01T02:09:04.208558+08:00",
     "runs": [
       {
-        "id": "verify-xlide-mcp-20261101-001726-9216",
+        "id": "verify-xlide-mcp-20261101-020743-e5d9",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:18:14.671241+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:09:04.208558+08:00",
         "tool_version": "1.2.4",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install xlide-mcp 2>&1",
-            "purpose": "install xlide-mcp via uv tool install"
+            "purpose": "install xlide-mcp via uv tool"
           }
         ],
         "smoke_tests": [
+          {
+            "command": "xlide-mcp --version 2>&1",
+            "expected_signal": "xlide-mcp 1.2.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "xlide-mcp 1.2.4",
+            "setup": [],
+            "offline": true
+          },
           {
             "command": "python3 ~/.pickfit/mcp_probe.py -- xlide-mcp --root /home/sbx/work 2>&1",
             "expected_signal": "handshake: ok",
@@ -156,24 +174,31 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "pip install xlide-mcp",
+            "actually_needed": "uv tool install xlide-mcp avoids PEP 668 and provides isolated binary on PATH",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show MCP initialize ok with 65 tools, handshake ok, and xlide_doctor call returning server version details.",
+          "observed": "Screenshots show version 1.2.4, MCP handshake with 65 tools listed, and successful xlide_doctor tool call.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-xlide-mcp-20261101-001726-9216/report.json",
+          "trace_path": "runs/verify/verify-xlide-mcp-20261101-020743-e5d9/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-xlide-mcp-20261101-001726-9216/check-1-cmd4.judged.png",
-            "runs/verify/verify-xlide-mcp-20261101-001726-9216/check-2-cmd5.judged.png"
+            "runs/verify/verify-xlide-mcp-20261101-020743-e5d9/check-1-cmd3.judged.png",
+            "runs/verify/verify-xlide-mcp-20261101-020743-e5d9/check-2-cmd4.judged.png",
+            "runs/verify/verify-xlide-mcp-20261101-020743-e5d9/check-3-cmd8.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.047302,
+        "cost_usd": 0.072475,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -255,7 +280,41 @@
           "tool_count": 65,
           "called_tool": "xlide_doctor",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "read and write VBA code",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; xlide_write_module created TestMod and xlide_read_module returned it with content_token"
+          },
+          {
+            "feature": "analyze VBA for errors",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; xlide_analyze on sample.xlsm returned counts error:0 warning:1"
+          },
+          {
+            "feature": "run VBA tests",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other_os",
+            "failure": null,
+            "note": "xlide_run_tests needs Windows with desktop Office per README; Linux returns error, needs other OS"
+          },
+          {
+            "feature": "read and write worksheet cells",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; xlide_list_sheets listed Sheet1 and xlide_read_cells returned Hello,42 values"
+          }
+        ]
       }
     ]
   },
@@ -729,8 +788,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "Read, write, analyze and test the VBA inside Excel, Word, PowerPoint and Access files, and edit the document around it.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:50+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "xlide_analyze        Budget.xlsm   -> 0 errors, 2 warnings",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:50+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "xlide_run_tests      Budget.xlsm   -> 12 passed",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:50+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "`xlide_list_sheets`, `xlide_read_cells`, `xlide_write_cells`, `xlide_evaluate_formula`, `xlide_check_cells`, `xlide_format_cells`, `xlide_sort_rows`, `xlide_remove_duplicates`, `xlide_copy_cells`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:50+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:50:13+08:00",
-  "updated_at": "2026-11-01T00:45:12+08:00"
+  "updated_at": "2026-11-01T02:09:04.210330+08:00"
 }

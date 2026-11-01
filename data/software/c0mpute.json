@@ -77,16 +77,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-c0mpute-20261031-001957-eaee",
+      "run_id": "verify-c0mpute-20261101-021938-1c64",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://c0mpute.com/install.sh -o /tmp/c0mpute-install.sh && wc -c /tmp/c0mpute-install.sh && head -c 2000 /tmp/c0mpute-install.sh",
-          "purpose": "Download installer script"
+          "command": "curl -fsSL https://c0mpute.com/install.sh -o /tmp/install.sh && ls -lh /tmp/install.sh && wc -l /tmp/install.sh",
+          "purpose": "download install.sh from c0mpute.com"
         },
         {
-          "command": "sh /tmp/c0mpute-install.sh --no-exec 2>&1",
-          "purpose": "Run installer script"
+          "command": "bash /tmp/install.sh --no-exec --minimal",
+          "purpose": "install c0mpute minimal without exec"
         }
       ],
       "manual_steps": [],
@@ -94,7 +94,7 @@
         "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute --version",
         "expected_signal": "c0mpute 0.2.36"
       },
-      "first_task": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute worker status"
+      "first_task": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\"\nc0mpute worker status 2>&1"
     },
     "windows": null
   },
@@ -113,29 +113,29 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:22:09.110835+08:00",
+    "checked_at": "2026-11-01T02:21:06.021731+08:00",
     "runs": [
       {
-        "id": "verify-c0mpute-20261031-001957-eaee",
+        "id": "verify-c0mpute-20261101-021938-1c64",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:22:09.110835+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:21:06.021731+08:00",
         "tool_version": "0.2.36",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://c0mpute.com/install.sh -o /tmp/c0mpute-install.sh && wc -c /tmp/c0mpute-install.sh && head -c 2000 /tmp/c0mpute-install.sh",
-            "purpose": "Download installer script"
+            "command": "curl -fsSL https://c0mpute.com/install.sh -o /tmp/install.sh && ls -lh /tmp/install.sh && wc -l /tmp/install.sh",
+            "purpose": "download install.sh from c0mpute.com"
           },
           {
-            "command": "sh /tmp/c0mpute-install.sh --no-exec 2>&1",
-            "purpose": "Run installer script"
+            "command": "bash /tmp/install.sh --no-exec --minimal",
+            "purpose": "install c0mpute minimal without exec"
           }
         ],
         "smoke_tests": [
@@ -149,82 +149,109 @@
             "offline": true
           },
           {
-            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute --help",
-            "expected_signal": "Usage: c0mpute [OPTIONS] [COMMAND]",
+            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\"\nc0mpute worker status 2>&1",
+            "expected_signal": "worker: not running",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Usage: c0mpute [OPTIONS] [COMMAND]",
+            "observed_excerpt": "worker: not running (stale pid 182)",
             "setup": [],
             "offline": true
           },
           {
-            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute worker status",
-            "expected_signal": "version: c0mpute 0.2.36",
+            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\"\nc0mpute doctor 2>&1",
+            "expected_signal": "OK disk — Ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "version: c0mpute 0.2.36",
+            "observed_excerpt": "OK disk — Ok",
             "setup": [],
             "offline": true
           },
           {
-            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute doctor",
-            "expected_signal": "OK c0mpute — Ok (this binary)",
+            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\"\nc0mpute bench 2>&1",
+            "expected_signal": "c0mpute bench · score 1592",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "the worker advertises score 3162 on its next start",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\"\nc0mpute transcode preset list 2>&1\nc0mpute storage status 2>&1\nc0mpute storage tiers 2>&1",
+            "expected_signal": "video-720p",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "OK c0mpute — Ok (this binary)",
+            "observed_excerpt": "video-720p",
             "setup": [],
             "offline": true
           },
           {
-            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\" && c0mpute bench",
-            "expected_signal": "saved /home/sbx/.local/share/c0mpute/bench.json",
+            "command": "export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\"\necho \"hello c0mpute storage\" > /tmp/test.txt\nc0mpute storage put /tmp/test.txt 2>&1",
+            "expected_signal": "blake3:67b21a28aa4ed74ac469b164bffab48c80ec5df24e4c64d46b962f734c5d6f48",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "saved /home/sbx/.local/share/c0mpute/bench.json",
+            "observed_excerpt": "blake3:67b21a28aa4ed74ac469b164bffab48c80ec5df24e4c64d46b962f734c5d6f48",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -fsSL https://c0mpute.com/install.sh | sh puts c0mpute on PATH",
-            "actually_needed": "In this non-interactive box `c0mpute: not found` right after install; needed export PATH=\"$HOME/.c0mpute/bin:$HOME/.local/bin:$PATH\". System symlink + /etc/profile.d hook fail without root (Permission denied).",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "installer installs transcode system deps (ffmpeg)",
-            "actually_needed": "transcode step warns `ffmpeg missing and no sudo available` and continues; `c0mpute doctor` then reports FAIL ffmpeg. Transcode jobs unavailable without root/ffmpeg.",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "installer starts the worker for you",
-            "actually_needed": "installer reported `worker started (background daemon)` but `c0mpute worker status` later reported `worker: not running (stale pid 515)`; worker does not stay up in the box",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "installer fetches mise, bun, release binaries and plugin installers at runtime",
-            "actually_needed": "main install.sh plus coinpay/infernet/transcode wrappers were downloaded and read before running; runtime-fetched mise.run, bun.sh/install, upstream coinpay/infernet installers and the prebuilt release tarball (binary) were not pre-read",
+            "readme_said": "curl -fsSL https://c0mpute.com/install.sh | sh installs c0mpute, coinpay, infernet",
+            "actually_needed": "used --minimal and --no-exec to avoid extra plugin downloads and shell replacement; PATH must include $HOME/.c0mpute/bin",
             "kind": "note"
+          },
+          {
+            "readme_said": "distributed inference auto-builds llama.cpp toolchain",
+            "actually_needed": "first-run build needs sudo for cmake/compiler via system package manager, unavailable in sandbox",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show worker status reporting version 0.2.36 running, doctor reporting OK for c0mpute binary, and --version printing c0mpute 0.2.36.",
+          "observed": "Screenshots show worker status reporting not running, doctor reporting disk OK, and --version printing c0mpute 0.2.36.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-c0mpute-20261031-001957-eaee/report.json",
+          "trace_path": "runs/verify/verify-c0mpute-20261101-021938-1c64/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-c0mpute-20261031-001957-eaee/check-1-cmd7.judged.png",
-            "runs/verify/verify-c0mpute-20261031-001957-eaee/check-2-cmd8.judged.png",
-            "runs/verify/verify-c0mpute-20261031-001957-eaee/check-3-cmd5.judged.png"
+            "runs/verify/verify-c0mpute-20261101-021938-1c64/check-1-cmd5.judged.png",
+            "runs/verify/verify-c0mpute-20261101-021938-1c64/check-2-cmd6.judged.png",
+            "runs/verify/verify-c0mpute-20261101-021938-1c64/check-3-cmd15.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.107303
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.105384,
+        "features": [
+          {
+            "feature": "serve AI inference",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "infernet plugin not in minimal install; distributed inference requires sudo to install llama.cpp toolchain"
+          },
+          {
+            "feature": "transcode media with FFmpeg",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists presets and tiers, with no media transcoded."
+          },
+          {
+            "feature": "handle storage jobs",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -586,5 +613,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T02:21:06.024494+08:00"
 }
