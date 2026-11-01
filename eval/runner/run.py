@@ -336,7 +336,9 @@ def run_once(config: dict[str, Any], question: dict[str, Any], group: str, rnd: 
         home.mkdir()
         work.mkdir()
         mcp_path = scratch / "mcp.json"
-        mcp_path.write_text(json.dumps({"mcpServers": config["groups"][group]["mcp"]}), encoding="utf-8")
+        mcp_json = json.dumps({"mcpServers": config["groups"][group]["mcp"]})
+        mcp_path.write_text(mcp_json, encoding="utf-8")
+        (folder / "mcp.json").write_text(mcp_json, encoding="utf-8")  # the scratch copy is deleted below
         prompt = build_prompt(config, question)
         cmd = build_cmd(config, group, mcp_path, prompt)
         execution = execute(cmd, isolated_env(home, api_key), work, folder / "stream.jsonl",
@@ -368,6 +370,10 @@ def run_once(config: dict[str, Any], question: dict[str, Any], group: str, rnd: 
         # Only an attempt that counts can show a misconfigured group; an invalid one is retried (B2).
         "config_problems": config_problems(parsed, group, config) if valid else [],
         "usage": parsed.usage,
+        # Which MCP server this attempt was given (the argv path is a deleted scratch file), and any tool
+        # call Claude Code refused: the same flags should leave none in any group.
+        "mcp_config": config["groups"][group]["mcp"],
+        "permission_denials": (parsed.result or {}).get("permission_denials"),
         "argv": [a if a != prompt else "<prompt>" for a in cmd],
         "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
     }

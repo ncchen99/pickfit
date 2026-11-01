@@ -508,3 +508,15 @@ def test_evidence_roots_come_from_the_main_checkout_in_a_worktree(tmp_path: Path
     main = run.main_checkout()
     assert tmp_path.resolve() in roots
     assert all(str(r).startswith(str(main.resolve())) or r == tmp_path.resolve() for r in roots)
+
+
+def test_each_attempt_keeps_the_mcp_server_it_was_given(tmp_path: Path) -> None:
+    config = config_for(make_fake(tmp_path))
+    base = tmp_path / "runs"
+    run.cmd_run1(None, config, QUESTIONS[:1], "k", base, quiet)
+    for group, url in (("control", None), ("experimental", "pickfit-mcp-eval."), ("rules_only", "pickfit-mcp-eval-rules.")):
+        folder = base / "run1" / "q01" / group / "attempt-1"
+        meta = json.loads((folder / "meta.json").read_text())
+        saved = json.loads((folder / "mcp.json").read_text())["mcpServers"]
+        assert saved == meta["mcp_config"] == config["groups"][group]["mcp"]
+        assert (url is None and saved == {}) or url in saved["pickfit"]["url"]
