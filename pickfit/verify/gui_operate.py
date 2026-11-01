@@ -70,7 +70,7 @@ CLIPBOARD_MAX_BYTES = 64_000
 SEARCH_MAX_FILES = 50_000  # entries a folder search visits
 # Toolchains and package trees an install leaves in the home: never where an app keeps what a user made.
 SEARCH_SKIP_DIRS = ("node_modules", "squashfs-root", ".npm", ".cargo", ".rustup", "go", "site-packages",
-                    "__pycache__", ".git", ".venv", "pickfit-in", ".pickfit-bg", ".pickfit-gui")
+                    "__pycache__", ".git", ".venv", ".pickfit-bg", ".pickfit-gui")
 INPUT_DIR = f"{BOX_HOME}/pickfit-in"
 OUTPUT_DIR = f"{BOX_HOME}/pickfit-out"  # made before the app starts, for goals that save a file
 NONCE_FIELD = "{nonce}"
