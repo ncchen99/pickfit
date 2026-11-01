@@ -489,12 +489,14 @@ def page_problem(state: dict[str, Any]) -> str | None:
 
 
 def check_result(outcome: dict[str, Any] | None, before_text: str, after: dict[str, Any],
-                 files: list[dict[str, Any]], typed: list[str], *, pixels_changed: float | None = None) -> dict[str, Any]:
+                 files: list[dict[str, Any]], typed: list[str], *, pixels_changed: float | None = None,
+                 before_static: str | None = None) -> dict[str, Any]:
     """pickfit's check of the agent's claimed result against what pickfit captured itself.
 
-    A page_state result (a drawing, a moved piece) may have no text: then pickfit's own before and after
-    screenshots must differ in at least VISUAL_CHANGE of the viewport, and the function judge decides what
-    the change is.
+    Text the agent typed counts only once the app rendered it as page content outside every input and
+    editor (`static_text`: a card, a list item), and only for page_state. A page_state result (a drawing, a
+    moved piece) may have no text: then pickfit's own before and after screenshots must differ in at least
+    VISUAL_CHANGE of the viewport. The function judge decides what either change is.
     """
     if not outcome:
         return {"passed": False, "why": "the agent reported no result"}
@@ -519,6 +521,10 @@ def check_result(outcome: dict[str, Any] | None, before_text: str, after: dict[s
             why = "the claimed text is only what the agent typed"
         if why is None:
             return {"passed": True, "kind": kind, "text": claimed[:200]}
+        static = after.get("static_text")
+        if (kind == "page_state" and why == "the claimed text is only what the agent typed" and static is not None
+                and target in _norm(static) and target not in _norm(before_static or "")):
+            return {"passed": True, "kind": kind, "text": claimed[:200], "rendered_from_input": True}
         if kind == "page_state" and pixels_changed is not None and pixels_changed >= VISUAL_CHANGE:
             return {"passed": True, "kind": kind, "visual": round(pixels_changed, 4), "text_check": why}
         return {"passed": False, "kind": kind, "why": why,
@@ -720,8 +726,12 @@ def verify_site(target: WebTarget, *, max_steps: int = MAX_STEPS, revisit: str |
                 function = seen["function"] = message.get("result") or {}
                 seen["online_check"] = check_result(function.get("outcome"), function.get("before_text") or "",
                                                     function.get("after") or {}, function.get("downloads") or [],
-                                                    function.get("typed") or [])
-                return {"type": "continue", "offline": is_pwa(seen.get("install") or {}), "replay": True, "task": task}
+                                                    function.get("typed") or [], pixels_changed=1.0,
+                                                    before_static=function.get("before_static"))
+                # Offline is only tested on a feature that worked online (the screenshots are compared later;
+                # pixels_changed=1.0 lets a page_state claim through this first look).
+                offline = is_pwa(seen.get("install") or {}) and seen["online_check"]["passed"]
+                return {"type": "continue", "offline": offline, "replay": True, "task": task}
             if phase == "offline":
                 loaded, replay = message.get("loaded") or {}, message.get("replay") or {}
                 seen["offline"] = {"loaded": loaded, "replay": replay}
@@ -734,8 +744,7 @@ def verify_site(target: WebTarget, *, max_steps: int = MAX_STEPS, revisit: str |
                     outcome, loaded.get("text") or "", replay["after"], replay.get("downloads") or [],
                     (seen.get("function") or {}).get("typed") or [])["passed"]
                 log(f"  offline: {'loads' if loads else 'does not load'}; replay {'passed' if replayed else 'failed'}")
-                if loads and not replayed and (seen.get("online_check") or {}).get("passed") or \
-                        (loads and not replayed and (outcome or {}).get("result_kind") == "page_state"):
+                if loads and not replayed:
                     feature = (outcome or {}).get("feature") or "the same feature"
                     return {"type": "continue", "offline_agent": True, "max_steps": OFFLINE_STEPS,
                             "task": offline_task(task, feature)}
@@ -811,7 +820,8 @@ def evaluate(target: WebTarget, result: dict[str, Any], seen: dict[str, Any], ou
     after = function.get("after") or {}
     changed = visual_change(out / "before.png", out / "after.png")
     check = check_result(outcome, function.get("before_text") or install.get("text") or "", after,
-                         function.get("downloads") or [], typed, pixels_changed=changed)
+                         function.get("downloads") or [], typed, pixels_changed=changed,
+                         before_static=function.get("before_static"))
     result["function"] = {k: function.get(k) for k in ("steps", "done", "successful", "outcome", "errors",
                                                         "duration_s", "typed", "uploaded", "downloads")}
     result["function"] = {**result["function"], "check": check} if function else None

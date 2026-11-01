@@ -226,3 +226,16 @@ def test_a_batch_stops_before_the_pipeline_or_task_caps():
     assert wv.budget_stop(10, spend) is None
     assert "158" in wv.budget_stop(10, {**spend, "pipeline_total": 157.9})
     assert "modal" in wv.budget_stop(60, {**spend, "modal": 14.0})
+
+
+def test_typed_text_counts_only_when_the_app_rendered_it_outside_inputs():
+    claim = outcome("page_state", "pickfitab12 hello world")
+    typed = ["pickfitab12 hello world"]
+    card = {"text": "Backlog\npickfitab12 hello world", "static_text": "Backlog\npickfitab12 hello world"}
+    ok = wv.check_result(claim, "Backlog", card, [], typed, before_static="Backlog")
+    assert ok["passed"] and ok["rendered_from_input"]
+    still_in_the_box = {"text": "Backlog", "static_text": "Backlog"}
+    assert not wv.check_result(claim, "Backlog", still_in_the_box, [], typed, before_static="Backlog")["passed"]
+    as_text_claim = wv.check_result(outcome("text_on_page", "pickfitab12 hello world"), "Backlog", card, [], typed,
+                                    before_static="Backlog")
+    assert not as_text_claim["passed"], "a text result must be more than the typed text"

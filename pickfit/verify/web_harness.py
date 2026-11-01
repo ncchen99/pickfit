@@ -186,12 +186,23 @@ CAPTURE_JS = r"""(async () => {
   const vis = (el) => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el);
     return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none'; };
   const q = (s) => Array.from(document.querySelectorAll(s));
+  const editable = 'input,textarea,select,[contenteditable=""],[contenteditable="true"],[contenteditable="plaintext-only"]';
+  const rendered = [];
+  let size = 0;
+  const walker = document.createTreeWalker(document.body || document.documentElement, NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n && size < %d; n = walker.nextNode()) {
+    const el = n.parentElement;
+    const t = (n.textContent || '').trim();
+    if (!el || !t || el.closest(editable) || el.closest('script,style,noscript') || !vis(el)) continue;
+    rendered.push(t); size += t.length + 1;
+  }
   let sw = [];
   try { if (navigator.serviceWorker) sw = (await navigator.serviceWorker.getRegistrations())
           .map(r => ({scope: r.scope, active: !!r.active})); } catch (e) {}
   return JSON.stringify({
     url: location.href, title: document.title, lang: document.documentElement.lang || '',
     text: (document.body ? document.body.innerText : '').slice(0, %d),
+    static_text: rendered.join('\n').slice(0, %d),
     inputs: q('input:not([type=hidden]),textarea,select,[contenteditable=true]').filter(vis).length,
     passwords: q('input[type=password]').filter(vis).length,
     buttons: q('button,[role=button],input[type=submit],input[type=button]').filter(vis).length,
@@ -206,7 +217,7 @@ CAPTURE_JS = r"""(async () => {
     links: q('a[href]').map(a => ({text: (a.innerText || a.getAttribute('aria-label') || '').trim().slice(0, 80),
                                   href: a.href})).slice(0, 300),
   });
-})()""" % TEXT_LIMIT
+})()""" % (TEXT_LIMIT, TEXT_LIMIT, TEXT_LIMIT)
 
 
 async def page_session(session: Any) -> tuple[Any, str]:
@@ -371,7 +382,8 @@ async def operate(session: Any, channel: Channel, task: str, start: dict[str, An
     typed, uploaded = typed_inputs(history)
     structured = history.structured_output
     return history, {
-        "before_text": before.get("text", ""), "before_jpeg_b64": before.get("screenshot_jpeg_b64"),
+        "before_text": before.get("text", ""), "before_static": before.get("static_text", ""),
+        "before_jpeg_b64": before.get("screenshot_jpeg_b64"),
         "after": after, "downloads": downloads(started), "typed": typed, "uploaded": uploaded,
         "steps": history.number_of_steps(), "done": history.is_done(), "successful": history.is_successful(),
         "outcome": structured.model_dump() if structured is not None else None,
