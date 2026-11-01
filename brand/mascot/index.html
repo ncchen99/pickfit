@@ -56,10 +56,10 @@
   <div>
     <h2>Character</h2>
     <div class="grid">
-      <figure><img src="fitz.svg" alt="Fitz, three-quarter view"><figcaption><b>fitz.svg</b>main, three-quarter</figcaption></figure>
-      <figure><img src="fitz-front.svg" alt="Fitz, front view"><figcaption><b>fitz-front.svg</b>front view</figcaption></figure>
+      <figure><img src="fitz.svg" alt="Fitz, front view"><figcaption><b>fitz.svg</b>main, front</figcaption></figure>
+      <figure><img src="fitz-turn.svg" alt="Fitz, face turned slightly right"><figcaption><b>fitz-turn.svg</b>face turned toward the right</figcaption></figure>
       <figure><img class="mono" src="fitz-mono.svg" alt="Fitz, one colour"><figcaption><b>fitz-mono.svg</b>one colour (currentColor)</figcaption></figure>
-      <figure class="silhouette"><img src="fitz.svg" alt="Fitz silhouette"><figcaption><b>silhouette test</b>round bird, tail up, beak</figcaption></figure>
+      <figure class="silhouette"><img src="fitz.svg" alt="Fitz silhouette"><figcaption><b>silhouette test</b>round body, tail up behind, wings</figcaption></figure>
     </div>
   </div>
 </section>
@@ -118,18 +118,22 @@
   }
   const exprHTML = expressions.map(([n, d]) => fig(`expressions/fitz-${n}.svg`, n, d)).join("");
   const statesHTML = states.map(([n, d]) => fig(`states/fitz-${n}.svg`, n, d)).join("");
-  const iconsHTML = [
-    ["icons/fitz-16.svg", 16, "16 px"],
-    ["icons/fitz-32.svg", 32, "32 px"],
-    ["icons/fitz-64.svg", 64, "64 px"],
-    ["icons/fitz-mono-32.svg", 32, "mono 32 px", "mono"],
-  ].map(([s, w, l, c]) => `<figure><img ${c ? `class="${c}"` : ""} src="${s}" width="${w}" height="${w}" alt="Fitz icon ${l}"><figcaption>${l}</figcaption></figure>`).join("")
-    + `<figure><div class="tab"><img src="icons/fitz-16.svg" width="16" height="16" alt="">PickFit</div><figcaption>as a favicon</figcaption></figure>`
-    + `<figure class="zoom"><div class="row"><img src="icons/fitz-16.svg" style="width:64px;height:64px" alt=""><img src="icons/fitz-32.svg" style="width:64px;height:64px" alt=""></div><figcaption>16 and 32 at 4× and 2×</figcaption></figure>`;
+  // On dark backgrounds the page uses the cream-outline "-dark" icons.
+  function iconsHTML(dark) {
+    const v = dark ? "-dark" : "";
+    return [
+      [`icons/fitz-16${v}.svg`, 16, `16 px${v}`],
+      [`icons/fitz-32${v}.svg`, 32, `32 px${v}`],
+      [`icons/fitz-64${v}.svg`, 64, `64 px${v}`],
+      ["icons/fitz-mono-32.svg", 32, "mono 32 px", "mono"],
+    ].map(([s, w, l, c]) => `<figure><img ${c ? `class="${c}"` : ""} src="${s}" width="${w}" height="${w}" alt="Fitz icon ${l}"><figcaption>${l}</figcaption></figure>`).join("")
+      + `<figure><div class="tab"><img src="icons/fitz-16${v}.svg" width="16" height="16" alt="">PickFit</div><figcaption>as a favicon</figcaption></figure>`
+      + `<figure class="zoom"><div class="row"><img src="icons/fitz-16${v}.svg" style="width:64px;height:64px" alt=""><img src="icons/fitz-32${v}.svg" style="width:64px;height:64px" alt=""></div><figcaption>16 and 32 at 4× and 2×</figcaption></figure>`;
+  }
   for (const t of ["light", "dark"]) {
     document.getElementById(`expr-${t}`).innerHTML = exprHTML;
     document.getElementById(`states-${t}`).innerHTML = statesHTML;
-    document.getElementById(`icons-${t}`).innerHTML = iconsHTML;
+    document.getElementById(`icons-${t}`).innerHTML = iconsHTML(t === "dark");
   }
 </script>
 </body>
