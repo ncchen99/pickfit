@@ -93,4 +93,4 @@
 
 兩個來源選入的網站沒有重複；49 個有開源 repo（GitHub 45、Show HN 4）；42 個首頁是 script 畫的（用瀏覽器打開讀）；42 個有 web app manifest（可能是 PWA，離線要由驗證確認）。選入的 100 個裡，模型判斷核心功能不用帳號 90、看不出來 10；免費 100。條款頁讀到 17 個、條款頁是 script 畫的讀不到 3 個（交給瀏覽器驗證時再看）；robots.txt 擋訓練用爬蟲的 5 個（照收，見上）。
 
-花費（帳本，`webapps-` 開頭的 run）：Muse Spark Open（Baseten）$0.70、muse-spark-1.3 複查 $0.08。
+花費（帳本，`webapps-` 開頭的 run，含重查）：Muse Spark Open（Baseten）299 次 $0.80、muse-spark-1.3 複查 24 次 $0.12。
