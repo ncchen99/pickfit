@@ -662,7 +662,7 @@ def icon_16(ink=INK, suffix=""):
         f'<g clip-path="url(#{cid})"><path d="M0 9.8 C 3 8.2, 6 8, 8.5 9.6 C 11 8, 14 8.2, 17 9.8 L17 0 L0 0 Z" fill="{CAP}"/>'
         f'<path d="M0 14 Q 8.5 16 17 14 L17 16 L0 16 Z" fill="{BELLY}"/></g>'
         f'<ellipse {body_e} fill="none" stroke="{ink}" stroke-width="1"/>'
-        f'<rect x="5.4" y="10" width="1.3" height="1.6" rx=".4" fill="{INK}"/><rect x="10.3" y="10" width="1.3" height="1.6" rx=".4" fill="{INK}"/>'
+        f'<rect x="5" y="10" width="1" height="2" fill="{INK}"/><rect x="11" y="10" width="1" height="2" fill="{INK}"/>'
         f'<path d="M7.4 11.6 L8.5 10.5 L9.6 11.6 L8.5 12.9 Z" fill="{BEAK}"/>'
     )
     write(f"icons/fitz-16{suffix}.svg", doc("0 0 16 16", s, "Fitz icon", "Fitz the tailorbird, 16 px icon."))
