@@ -49,13 +49,17 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-usdx-20261102-020128-a251",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub eu.usdx.UltraStarDeluxe",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add flathub remote user"
+        },
+        {
+          "command": "flatpak install --user -y flathub eu.usdx.UltraStarDeluxe",
+          "purpose": "install UltraStar Deluxe flatpak"
         }
       ],
       "manual_steps": [],
@@ -77,10 +81,184 @@
     "url": "https://github.com/UltraStar-Deluxe/USDX/releases/tag/v2026.10.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T02:23:39.649736+08:00",
+    "runs": [
+      {
+        "id": "verify-usdx-20261102-020128-a251",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui-audio:5c7d9880874a",
+        "checked_at": "2026-11-02T02:23:39.649736+08:00",
+        "tool_version": "2026.10.0",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add flathub remote user"
+          },
+          {
+            "command": "flatpak install --user -y flathub eu.usdx.UltraStarDeluxe",
+            "purpose": "install UltraStar Deluxe flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run eu.usdx.UltraStarDeluxe",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "flatpak run eu.usdx.UltraStarDeluxe",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"PickfitTestSong\": yes",
+            "setup": [
+              {
+                "command": "python3 -c \"import wave,math,struct,os; p=os.path.expanduser('~/.var/app/eu.usdx.UltraStarDeluxe/.ultrastardx/songs/PickfitTestArtist - PickfitTestSong/audio.wav'); os.makedirs(os.path.dirname(p),exist_ok=True); fr=44100; dur=5; freq=440.0; w=wave.open(p,'w'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(fr); w.writeframes(b''.join(struct.pack('<h',int(16000*math.sin(2*math.pi*freq*i/fr))) for i in range(fr*dur))); w.close(); print('wav done')\" && printf '#TITLE:PickfitTestSong\\n#ARTIST:PickfitTestArtist\\n#MP3:audio.wav\\n#BPM:300\\n#GAP:0\\n: 0 4 0 Hello\\n: 5 4 0 world\\n- 10\\nE\\n' > \"$HOME/.var/app/eu.usdx.UltraStarDeluxe/.ultrastardx/songs/PickfitTestArtist - PickfitTestSong/PickfitTestSong.txt\" && ls \"$HOME/.var/app/eu.usdx.UltraStarDeluxe/.ultrastardx/songs/PickfitTestArtist - PickfitTestSong/\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "flatpak run eu.usdx.UltraStarDeluxe",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"PickfitTestSong\": yes",
+            "setup": [
+              {
+                "command": "python3 -c \"import wave,math,struct,os; p=os.path.expanduser('~/.var/app/eu.usdx.UltraStarDeluxe/.ultrastardx/songs/PickfitTestArtist - PickfitTestSong/audio.wav'); os.makedirs(os.path.dirname(p),exist_ok=True); fr=44100; dur=5; freq=440.0; w=wave.open(p,'w'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(fr); w.writeframes(b''.join(struct.pack('<h',int(16000*math.sin(2*math.pi*freq*i/fr))) for i in range(fr*dur))); w.close(); print('wav done')\" && printf '#TITLE:PickfitTestSong\\n#ARTIST:PickfitTestArtist\\n#MP3:audio.wav\\n#BPM:300\\n#GAP:0\\n: 0 4 0 Hello\\n: 5 4 0 world\\n- 10\\nE\\n' > \"$HOME/.var/app/eu.usdx.UltraStarDeluxe/.ultrastardx/songs/PickfitTestArtist - PickfitTestSong/PickfitTestSong.txt\" && ls \"$HOME/.var/app/eu.usdx.UltraStarDeluxe/.ultrastardx/songs/PickfitTestArtist - PickfitTestSong/\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "README says users can add own songs but gives no song file format",
+            "actually_needed": "Create UltraStar song folder with #TITLE/#ARTIST/#MP3/#BPM/#GAP headers plus audio.wav (generated with Python wave) to list a custom song",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows UltraStar Deluxe main menu with Sing, Party, Jukebox, Tools, About and Quit buttons fully drawn.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-usdx-20261102-020128-a251/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-usdx-20261102-020128-a251/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.326167,
+        "gui": {
+          "tier": "action_checked",
+          "screen": "main_ui",
+          "command": "flatpak run eu.usdx.UltraStarDeluxe",
+          "window_title": "UltraStar Deluxe - www.usdx.eu - v2026.10.0",
+          "display": "Xvfb 1280x800x24, no window manager, GPU Tesla T4",
+          "operations": [
+            {
+              "feature": "add own custom songs",
+              "goal": "In the main menu click Sing, then on the player setup screen click the Continue button at the bottom right (or press Enter) to go to the song selection list. Once the song list with cover art is visible, use arrow keys or mouse to find the entry PickfitTestSong and leave it highlighted on screen.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "PickfitTestSong"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"PickfitTestSong\": yes",
+              "smoke_test": 1,
+              "actions": 2,
+              "replay": "actions",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-usdx-20261102-020128-a251/replay-18-2-op-1.png",
+                "runs/verify/verify-usdx-20261102-020128-a251/replay-18-2-op-2.png"
+              ]
+            },
+            {
+              "feature": "play party mode with themes",
+              "goal": "From the main menu click Party to open party mode. Continue through team/player setup screens (click Continue or press Enter) until the song selection list for the party is visible. Browse until the song PickfitTestSong is visible and highlighted.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "PickfitTestSong"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"PickfitTestSong\": yes",
+              "smoke_test": 2,
+              "actions": 6,
+              "replay": "actions",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-usdx-20261102-020128-a251/replay-19-3-op-1.png",
+                "runs/verify/verify-usdx-20261102-020128-a251/replay-19-3-op-2.png",
+                "runs/verify/verify-usdx-20261102-020128-a251/replay-19-3-op-3.png",
+                "runs/verify/verify-usdx-20261102-020128-a251/replay-19-3-op-4.png",
+                "runs/verify/verify-usdx-20261102-020128-a251/replay-19-3-op-5.png",
+                "runs/verify/verify-usdx-20261102-020128-a251/replay-19-3-op-6.png"
+              ]
+            }
+          ]
+        },
+        "gpu": "Tesla T4",
+        "microphone": "simulated: a PulseAudio source playing fresh random words pickfit spoke with flite for each check",
+        "features": [
+          {
+            "feature": "sing along with music to score points",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; Singing UI with score and pitch lines was reached but lyric Hello was not read before step cap"
+          },
+          {
+            "feature": "add own custom songs",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "play party mode with themes",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -289,5 +467,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:43+08:00",
-  "updated_at": "2026-11-01T17:11:04+08:00"
+  "updated_at": "2026-11-02T02:24:24.759558+08:00"
 }
