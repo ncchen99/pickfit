@@ -186,10 +186,13 @@ button.badge{cursor:help}
 .says{display:flex;align-items:flex-end;gap:12px}
 .says .fitz{flex:none}
 .bubble{position:relative;background:var(--tag);color:var(--ink);border:2px solid var(--fitz-ink);border-radius:18px 18px 18px 6px;padding:14px 18px;box-shadow:var(--lift-1);margin-bottom:18px;max-width:62ch}
-.bubble::before{content:"";position:absolute;left:-11px;bottom:10px;width:16px;height:16px;background:var(--tag);border-left:2px solid var(--fitz-ink);border-bottom:2px solid var(--fitz-ink);transform:skewY(-35deg) rotate(10deg);border-bottom-left-radius:4px}
+/* The tail: an outline triangle, and a fill triangle inset 2px from its outer edges that also covers the bubble's border where they meet */
+.bubble::before,.bubble::after{content:"";position:absolute;left:-18px;bottom:4px;width:20px;height:20px}
+.bubble::before{background:var(--fitz-ink);clip-path:polygon(18px 2.2px,18px 15.6px,0 20px)}
+.bubble::after{background:var(--tag);clip-path:polygon(20px 3px,20px 12.9px,6.1px 16.2px)}
 .bubble p:last-child{margin-bottom:0}
 .bubble h2,.bubble h3{margin-bottom:4px}
-@media (prefers-color-scheme:dark){.bubble{border-color:var(--on-mat-2)}.bubble::before{border-color:var(--on-mat-2)}}
+@media (prefers-color-scheme:dark){.bubble{border-color:var(--on-mat-2)}.bubble::before{background:var(--on-mat-2)}}
 
 /* seam: stitching on verified evidence */
 .seam{height:2px;margin:20px 0;background:linear-gradient(90deg,var(--stitch) 0 7px,transparent 7px 12px) repeat-x 0 0/12px 2px}
@@ -677,7 +680,7 @@ body.is-results .hero-fitz{display:none}
 .legend div{grid-template-columns:minmax(0,1fr);gap:4px}
 .uses{columns:1}
 .says{flex-direction:column;align-items:flex-start}
-.bubble::before{display:none}
+.bubble::before,.bubble::after{display:none}
 .notice{flex-direction:column;align-items:flex-start}
 .tray-list{display:none}
 .tray-note{flex:1}
