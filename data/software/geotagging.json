@@ -48,18 +48,22 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-geotagging-20261102-001940-8f07",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub com.github.jmlich.geotagging",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add flathub remote"
+        },
+        {
+          "command": "flatpak install --user -y flathub com.github.jmlich.geotagging",
+          "purpose": "install geotagging flatpak"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "flatpak run com.github.jmlich.geotagging"
+      "first_task": "dbus-run-session -- flatpak run --env=QTWEBENGINE_CHROMIUM_FLAGS=--no-sandbox --env=QTWEBENGINE_DISABLE_SANDBOX=1 com.github.jmlich.geotagging"
     },
     "windows": null
   },
@@ -76,10 +80,102 @@
     "url": "https://github.com/jmlich/geotagging/releases/tag/0.7.7"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T00:24:05.012121+08:00",
+    "runs": [
+      {
+        "id": "verify-geotagging-20261102-001940-8f07",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T00:24:05.012121+08:00",
+        "tool_version": "0.7.8",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add flathub remote"
+          },
+          {
+            "command": "flatpak install --user -y flathub com.github.jmlich.geotagging",
+            "purpose": "install geotagging flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "dbus-run-session -- flatpak run --env=QTWEBENGINE_CHROMIUM_FLAGS=--no-sandbox --env=QTWEBENGINE_DISABLE_SANDBOX=1 com.github.jmlich.geotagging",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak run com.github.jmlich.geotagging",
+            "actually_needed": "launch with dbus-run-session and env QTWEBENGINE_CHROMIUM_FLAGS=--no-sandbox QTWEBENGINE_DISABLE_SANDBOX=1 because box has no D-Bus session and no user namespaces (bwrap/chromium sandbox fails)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows Geotagging's main window with menus, an empty file pane, and a map pane with provider selector, tools, and attribution.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-geotagging-20261102-001940-8f07/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-geotagging-20261102-001940-8f07/replay-8-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.046536,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "dbus-run-session -- flatpak run --env=QTWEBENGINE_CHROMIUM_FLAGS=--no-sandbox --env=QTWEBENGINE_DISABLE_SANDBOX=1 com.github.jmlich.geotagging",
+          "window_title": "Geotagging",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "sync photos with GPS track logs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "embed GPS coordinates into photo EXIF",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "correct camera time discrepancies",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -272,5 +368,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:41+08:00",
-  "updated_at": "2026-11-02T00:17:10+08:00"
+  "updated_at": "2026-11-02T00:24:05.013512+08:00"
 }

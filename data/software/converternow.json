@@ -60,13 +60,17 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "docker",
+      "basis": "replayed",
+      "run_id": "verify-converternow-20261102-001940-be18",
+      "method": "other",
       "steps": [
         {
-          "command": "docker run -d -p 8080:80 ghcr.io/ferraridamiano/converternow:latest",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "Add Flathub remote for user"
+        },
+        {
+          "command": "flatpak install --user -y flathub io.github.ferraridamiano.ConverterNOW",
+          "purpose": "Install ConverterNOW via flatpak"
         }
       ],
       "manual_steps": [],
@@ -101,10 +105,104 @@
     "url": "https://github.com/ferraridamiano/ConverterNOW/releases/tag/v4.6.3"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T00:22:05.550464+08:00",
+    "runs": [
+      {
+        "id": "verify-converternow-20261102-001940-be18",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T00:22:05.550464+08:00",
+        "tool_version": null,
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "Add Flathub remote for user"
+          },
+          {
+            "command": "flatpak install --user -y flathub io.github.ferraridamiano.ConverterNOW",
+            "purpose": "Install ConverterNOW via flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run io.github.ferraridamiano.ConverterNOW",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Converter NOW shows its main Length conversion screen with sidebar categories and unit input fields fully drawn.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-converternow-20261102-001940-be18/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-converternow-20261102-001940-be18/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.041494,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "flatpak run io.github.ferraridamiano.ConverterNOW",
+          "window_title": "Converter NOW",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "convert units in real time while typing",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "reorganize units by priority",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "calculate in every conversion page",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "convert currencies with daily rates",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -377,5 +475,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:43+08:00",
-  "updated_at": "2026-11-02T00:17:10+08:00"
+  "updated_at": "2026-11-02T00:22:05.555985+08:00"
 }
