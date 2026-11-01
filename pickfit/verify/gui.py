@@ -67,6 +67,7 @@ GUI_PACKAGES = ("xvfb", "x11-utils", "x11-apps", "xrestop", "imagemagick", "chro
 TIERS = ("none", "process_alive", "window", "ui_rendered", "action_checked")
 WAIT_MAX_S = 60
 SETTLE_S = 6  # after the first window, so a page that loads after the window shows still renders
+BLANK_WAIT_S = 20  # then, while the app's largest window is one flat color (not painted yet), at most this long
 MIN_WIDTH, MIN_HEIGHT = 150, 100  # on-screen size of a window that counts (helper and offscreen ones do not)
 SHOT_MAX_BYTES = 4_000_000
 SHOT_READS = 3  # a long read can come back short when the box's output stream is slow (2026-10-31)
@@ -146,7 +147,7 @@ else:
 _WATCH = r"""
 ENV = {"PATH": "/usr/bin:/bin", "DISPLAY": "@DISPLAY@", "LANG": "C.UTF-8"}
 BEFORE, XVFB, NONCE, SHOT = @BEFORE@, @XVFB@, "@NONCE@", "@SHOT@"
-WAIT_S, SETTLE_S, MIN_W, MIN_H, SW, SH = @WAIT@, @SETTLE@, @MIN_W@, @MIN_H@, @SW@, @SH@
+WAIT_S, SETTLE_S, MIN_W, MIN_H, SW, SH, BLANK_S = @WAIT@, @SETTLE@, @MIN_W@, @MIN_H@, @SW@, @SH@, @BLANK@
 def run(argv):
     try:
         return subprocess.run(argv, capture_output=True, text=True, timeout=20, env=ENV).stdout
@@ -208,6 +209,21 @@ def look():
         (own if c and c["pid"] in mine and w.pop("visible") else other).append(w)
         w.pop("visible", None)
     return mine, own, other
+def blank(own):
+    # The largest own window drawn in one flat color (a Tauri or Electron window before it paints): keep waiting.
+    if not own:
+        return False
+    w = max(own, key=lambda w: w["width"] * w["height"])
+    x, y = max(0, w["x"]), max(0, w["y"])
+    cw, ch = min(w["width"], SW - x), min(w["height"], SH - y)
+    try:
+        frame = subprocess.run(["/usr/bin/xwd", "-root", "-silent"], capture_output=True, timeout=30, env=ENV).stdout
+        stat = subprocess.run(["/usr/bin/convert", "xwd:-", "-crop", f"{cw}x{ch}+{x}+{y}", "-format",
+                               "%[fx:standard_deviation]", "info:"], input=frame, capture_output=True, timeout=30,
+                              env=ENV).stdout.decode().strip()
+        return float(stat) < 0.004
+    except Exception:
+        return False
 def main():
     problems = [] if our_server() else ["pickfit's X server was not running when the watch began"]
     began, first = time.time(), None
@@ -216,7 +232,8 @@ def main():
         if own and first is None:
             first = time.time() - began
         if first is not None and time.time() - began >= first + SETTLE_S:
-            break
+            if time.time() - began >= first + SETTLE_S + BLANK_S or not blank(own):
+                break
         if not mine or time.time() - began >= WAIT_S + (SETTLE_S if first is not None else 0):
             break
         time.sleep(1)
@@ -249,7 +266,8 @@ def watcher_source(*, before: dict[str, Any], xvfb_pid: int, nonce: str, shot: s
                    settle_s: int = SETTLE_S) -> str:
     fill = {"@DISPLAY@": DISPLAY, "@BEFORE@": json.dumps(before), "@XVFB@": str(int(xvfb_pid)), "@NONCE@": nonce,
             "@SHOT@": shot, "@WAIT@": str(int(wait_s)), "@SETTLE@": str(int(settle_s)), "@MIN_W@": str(MIN_WIDTH),
-            "@MIN_H@": str(MIN_HEIGHT), "@SW@": str(SCREEN_W), "@SH@": str(SCREEN_H), "@UID@": str(DISPLAY_UID)}
+            "@MIN_H@": str(MIN_HEIGHT), "@SW@": str(SCREEN_W), "@SH@": str(SCREEN_H), "@UID@": str(DISPLAY_UID),
+            "@BLANK@": str(BLANK_WAIT_S)}
     body = _WATCH
     for key, value in fill.items():
         body = body.replace(key, value)
@@ -414,7 +432,7 @@ def open_app(box: Box, command: str, tag: str | int, wait_s: int, *, timeout_s: 
                           (started.stderr.strip()[-300:] if before is not None else "no process snapshot"))
     else:
         source = watcher_source(before=before, xvfb_pid=xvfb_pid, nonce=nonce, shot=shot, wait_s=wait_s)
-        watch = box.harness_exec([PYTHON, "-I", "-S", "-"], timeout_s or wait_s + SETTLE_S + 90,
+        watch = box.harness_exec([PYTHON, "-I", "-S", "-"], timeout_s or wait_s + SETTLE_S + BLANK_WAIT_S + 90,
                                  as_uid=DISPLAY_UID, stdin=source.encode())
         seconds, timed_out = round(seconds + watch.seconds, 2), watch.timed_out
         shown = parse_report(watch.stdout, nonce)

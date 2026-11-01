@@ -426,6 +426,9 @@ expected_signal `gui tier: window` (pickfit's own line; window titles and proces
 not count). A launch stops every process of the box user, so start servers again after it. A launch \
 supports level install at most, whatever the window shows: pickfit's judge reads the screenshot itself. Launch it \
 even if it will ask for an account: the screenshot records the sign-in screen.
+Install steps of a GUI app (download, extract, chmod, an install script) are plain commands of their own with \
+nothing chained after them (no ls, head, echo or file listing): a step whose exit code is hidden does not \
+count, and a fresh box runs only the cited steps, so cite the download too. Explore in separate commands.
 After a launch shows a window, exercise each listed feature that the app's own UI can show with a result \
 pickfit can check, one operate_gui per feature: a goal a user would do in the app (the exact text to type, \
 {nonce} where a unique word should go, and where to save), and a check: file (the app saves or exports a file: \
@@ -1035,7 +1038,7 @@ class VerifyAgent:
         wait = max(1, min(args.wait_s, gui.WAIT_MAX_S))
         self._say(f"  ▣ {_one_line(args.command, 200)}   [cmd {n}/{self.limits.max_commands}]")
         result, shown, png = gui.launch(self.box, args.command, n, wait,
-                                        timeout_s=self._timeout(wait + gui.SETTLE_S + 90))
+                                        timeout_s=self._timeout(wait + gui.SETTLE_S + gui.BLANK_WAIT_S + 90))
         shot = None
         if png:
             path = self.runs_dir / "verify" / self.run_id / f"gui-{n}.png"
@@ -1072,7 +1075,7 @@ class VerifyAgent:
         name = _cited(self.task.extraction.name) or self.task.slug
         reader = read_screen_text(name, model=judge_model_for(self.model), log=self._say, **scope, **self.call_kwargs)
         result, op, png = run_operation(self.box, args, n, read_screen=reader, evidence_dir=evidence, log=self._say,
-                                        timeout_s=self._timeout(args.wait_s + gui.SETTLE_S + 90),
+                                        timeout_s=self._timeout(args.wait_s + gui.SETTLE_S + gui.BLANK_WAIT_S + 90),
                                         **scope, **self.call_kwargs)
         self.report.operator_cost_usd = round(self.report.operator_cost_usd + op.cost_usd, 6)
         shot = None
