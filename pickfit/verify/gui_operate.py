@@ -138,6 +138,8 @@ def frame():
     if done.returncode != 0 or not done.stdout:
         raise RuntimeError("xwd exited %d" % done.returncode)
     return done.stdout
+def same(a, b):  # equal but for a few bytes: a blinking text cursor never lets two frames match exactly
+    return len(a) == len(b) and sum(x != y for x, y in zip(a[::7], b[::7])) <= 40
 out = {"ok": False}
 try:
     if not our_server():
@@ -154,12 +156,12 @@ try:
             4 if ACT["direction"] == "up" else 5)
     elif kind == "shot":
         time.sleep(0.5)
-        began, last, previous = time.time(), frame(), None
-        while hashlib.sha256(last).digest() != previous and time.time() - began < SETTLE_MAX:
-            previous = hashlib.sha256(last).digest()
+        began, last, settled = time.time(), frame(), False
+        while not settled and time.time() - began < SETTLE_MAX:
             time.sleep(0.4)
-            last = frame()
-        out["settled"] = hashlib.sha256(last).digest() == previous
+            following = frame()
+            settled, last = same(last, following), following
+        out["settled"] = settled
         conv = run(["/usr/bin/convert", "xwd:-", "png:" + ACT["path"]], 60, last)
         if conv.returncode != 0:
             raise RuntimeError("convert exited %d: %s" % (conv.returncode, conv.stderr.decode("utf-8", "replace")[-200:]))
@@ -583,7 +585,9 @@ def normalize_key(name: str) -> str | None:
         return None
     out = []
     for i, part in enumerate(parts):
-        token = _KEY_ALIASES.get(part.lower(), part)
+        bare = re.sub(r"_[lr]$", "", part.lower())  # Alt_L, Control_R: the modifier itself
+        token = _KEY_ALIASES.get(part.lower(), bare if bare in _MODIFIERS or bare in _KEY_ALIASES else part)
+        token = _KEY_ALIASES.get(token.lower(), token) if token.lower() not in _MODIFIERS else token
         last = i == len(parts) - 1
         if not last and token.lower() in _MODIFIERS:
             out.append(token.lower())
@@ -710,6 +714,24 @@ class Operation:
         return data
 
 
+def changed(before: bytes | None, after: bytes) -> bool:
+    """Whether a screen differs from the one before by more than a blinking cursor (a thin sliver of pixels)."""
+    if before is None:
+        return True
+    if before == after:
+        return False
+    from PIL import Image, ImageChops
+
+    a, b = (Image.open(io.BytesIO(png)).convert("L") for png in (before, after))
+    if a.size != b.size:
+        return True
+    diff = ImageChops.difference(a, b).point(lambda v: 255 if v > 24 else 0)
+    box = diff.getbbox()
+    if box is None:
+        return False
+    return diff.histogram()[255] > 60 or min(box[2] - box[0], box[3] - box[1]) > 4
+
+
 def _png_url(data: bytes) -> str:
     return "data:image/png;base64," + base64.b64encode(data).decode()
 
@@ -738,7 +760,7 @@ def operate(display: Display, goal: str, *, model: str | None = OPERATOR_MODEL, 
     steps: list[Step] = []
     cost = 0.0
     png = first_png
-    previous_sha: str | None = None
+    previous: bytes | None = None
     note: str | None = None
     for step_no in range(1, max_steps + 1):
         try:
@@ -746,10 +768,8 @@ def operate(display: Display, goal: str, *, model: str | None = OPERATOR_MODEL, 
         except DisplayError as err:
             return steps, "error", cost, str(err)
         sha = hashlib.sha256(png).hexdigest()
-        step = Step(screenshot=save(step_no, png), sha256=sha, changed=previous_sha is None or sha != previous_sha,
-                    action=None)
-        if previous_sha is not None and not step.changed and steps and steps[-1].action \
-                and steps[-1].action["kind"] != "wait":
+        step = Step(screenshot=save(step_no, png), sha256=sha, changed=changed(previous, png), action=None)
+        if not step.changed and steps and steps[-1].action and steps[-1].action["kind"] != "wait":
             note = (note + " " if note else "") + "Your last action did not change the screen."
         content = [{"type": "input_text", "text": _operator_turn(goal, steps, step_no, max_steps, note)},
                    {"type": "input_image", "image_url": _png_url(png)}]
@@ -773,7 +793,7 @@ def operate(display: Display, goal: str, *, model: str | None = OPERATOR_MODEL, 
             step.refused = f"unreadable answer: {result.parse_error}"[:200]
             steps.append(step)
             note = "Your last answer was not valid JSON for the schema."
-            png, previous_sha = None, sha
+            png, previous = None, png
             continue
         step.observation, step.why = answer.observation[:300], answer.why[:300]
         act, why = to_action(answer, display.width, display.height)
@@ -781,7 +801,7 @@ def operate(display: Display, goal: str, *, model: str | None = OPERATOR_MODEL, 
             step.refused = why
             steps.append(step)
             note = f"Your last answer could not be performed: {why}."
-            png, previous_sha = png, sha  # the screen did not move
+            previous = png  # nothing was done: the same screen is shown again
             log(f"    op {step_no} · refused: {why}")
             continue
         step.action = act
@@ -793,7 +813,7 @@ def operate(display: Display, goal: str, *, model: str | None = OPERATOR_MODEL, 
             perform(display, act, sleep)
         except DisplayError as err:
             return steps, "error", cost, str(err)
-        png, previous_sha = None, sha
+        png, previous = None, png
     return steps, "step_cap", cost, None
 
 
@@ -802,7 +822,7 @@ def replay_actions(display: Display, actions: list[dict[str, Any]], nonce: str, 
                    sleep: Callable[[float], None] = time.sleep) -> tuple[list[Step], str, str | None]:
     """Recorded actions, each after a screenshot of the settled screen; (steps, stop, error)."""
     steps: list[Step] = []
-    previous: str | None = None
+    previous: bytes | None = None
     for i, recorded in enumerate(actions, start=1):
         act = dict(recorded)
         if act["kind"] == "type":
@@ -811,10 +831,9 @@ def replay_actions(display: Display, actions: list[dict[str, Any]], nonce: str, 
             png = display.screenshot()
         except DisplayError as err:
             return steps, "error", str(err)
-        sha = hashlib.sha256(png).hexdigest()
-        steps.append(Step(screenshot=save(i, png), sha256=sha, changed=previous is None or sha != previous,
-                          action=act))
-        previous = sha
+        steps.append(Step(screenshot=save(i, png), sha256=hashlib.sha256(png).hexdigest(),
+                          changed=changed(previous, png), action=act))
+        previous = png
         try:
             perform(display, act, sleep)
         except DisplayError as err:
