@@ -29,6 +29,12 @@
     "store and recall typed project memories like decisions and gotchas"
   ],
   "alternatives_to": [],
+  "features": [
+    "index a git repo",
+    "rank relevant files for a task",
+    "search prior agent sessions",
+    "store typed project memories"
+  ],
   "why_worth_it": null,
   "homepage": "https://ai-creed.dev/projects/ai-cortex/",
   "repo": {
@@ -53,12 +59,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-ai-cortex-20261101-000737-9ba5",
+      "run_id": "verify-ai-cortex-20261101-025059-48f3",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g ai-cortex",
-          "purpose": "Install ai-cortex globally via npm"
+          "purpose": "install ai-cortex via npm"
         }
       ],
       "manual_steps": [],
@@ -81,25 +87,25 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:08:51.776374+08:00",
+    "checked_at": "2026-11-01T02:53:25.873375+08:00",
     "runs": [
       {
-        "id": "verify-ai-cortex-20261101-000737-9ba5",
+        "id": "verify-ai-cortex-20261101-025059-48f3",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:08:51.776374+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:53:25.873375+08:00",
         "tool_version": "0.18.1",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g ai-cortex",
-            "purpose": "Install ai-cortex globally via npm"
+            "purpose": "install ai-cortex via npm"
           }
         ],
         "smoke_tests": [
@@ -122,34 +128,75 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call library_list_sources --args '{}' -- ai-cortex mcp",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search_history --args '{\"query\":\"hello\",\"path\":\"/tmp/testrepo\"}' -- ai-cortex mcp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=library_list_sources content=text text_chars=21",
-            "setup": [],
+            "observed_excerpt": "tools/call: ok tool=search_history content=text text_chars=259",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cd /tmp/testrepo && git init -q && git config user.email \"test@test.com\" && git config user.name \"test\" && cat > app.js <<'EOF'\nfunction hello(name) { return \"hello \" + name; }\nfunction goodbye(name) { return \"bye \" + name; }\nmodule.exports = { hello, goodbye };\nEOF\ncat > README.md <<'EOF'\n# testrepo\nhello world\nEOF\ngit add . && git commit -qm \"init\" && pwd && ls -la\n",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call record_memory --args '{\"worktreePath\":\"/tmp/testrepo\",\"type\":\"decision\",\"title\":\"test decision\",\"body\":\"we chose app.js for hello\"}' -- ai-cortex mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=record_memory content=text text_chars=36",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cd /tmp/testrepo && git init -q && git config user.email \"test@test.com\" && git config user.name \"test\" && cat > app.js <<'EOF'\nfunction hello(name) { return \"hello \" + name; }\nfunction goodbye(name) { return \"bye \" + name; }\nmodule.exports = { hello, goodbye };\nEOF\ncat > README.md <<'EOF'\n# testrepo\nhello world\nEOF\ngit add . && git commit -qm \"init\" && pwd && ls -la\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call suggest_files --args '{\"worktreePath\":\"/tmp/testrepo\",\"query\":\"hello function\"}' -- ai-cortex mcp",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"suggest_files\", \"count\": 39, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"ai-cortex\", \"mcp\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"ai-cortex\", \"tools\": [\"rehydrate_project\", \"suggest_files\", \"suggest_files_deep\", \"suggest_fil…",
+            "setup": [],
+            "offline": null
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "MCP tools listed as recall_memory(worktreePath), record_memory(worktreePath), index_project etc",
+            "actually_needed": "actual MCP schemas use `path` for index_project and `task` for suggest_files (probe truncated names); calling with worktreePath/query gives Invalid arguments",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "ai-cortex index /path/to/repo",
+            "actually_needed": "CLI index works; MCP index_project also requires `path` not `worktreePath` and is sensitive to cwd",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake ok with 39 tools, library_list_sources call ok returning no sources, and version 0.18.1.",
+          "observed": "Screenshots show MCP handshake with 39 tools, successful search_history tool call, and version 0.18.1 output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-ai-cortex-20261101-000737-9ba5/report.json",
+          "trace_path": "runs/verify/verify-ai-cortex-20261101-025059-48f3/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-ai-cortex-20261101-000737-9ba5/check-1-cmd4.judged.png",
-            "runs/verify/verify-ai-cortex-20261101-000737-9ba5/check-2-cmd5.judged.png",
-            "runs/verify/verify-ai-cortex-20261101-000737-9ba5/check-3-cmd2.judged.png"
+            "runs/verify/verify-ai-cortex-20261101-025059-48f3/check-1-cmd3.judged.png",
+            "runs/verify/verify-ai-cortex-20261101-025059-48f3/check-2-cmd7.judged.png",
+            "runs/verify/verify-ai-cortex-20261101-025059-48f3/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.038708,
+        "cost_usd": 0.085552,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -202,9 +249,47 @@
             "library_reindex"
           ],
           "tool_count": 39,
-          "called_tool": "library_list_sources",
+          "called_tool": "search_history",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "index a git repo",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; CLI index indexed testrepo 2 files, db under ~/.cache/ai-cortex"
+          },
+          {
+            "feature": "rank relevant files for a task",
+            "status": "test_failed",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "called suggest_files with worktreePath/query instead of task/path; server returned Invalid arguments, no passing call within budget"
+          },
+          {
+            "feature": "search prior agent sessions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows 'could not detect current session' instead of prior decisions."
+          },
+          {
+            "feature": "store typed project memories",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -232,15 +317,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-01T02:53:25+08:00",
     "quality": {
-      "total": 80.2,
+      "total": 72.7,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -282,8 +367,8 @@
       ]
     },
     "treasure": {
-      "is_treasure": true,
-      "value": 49.72
+      "is_treasure": false,
+      "value": 45.07
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -565,8 +650,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T00:04:26+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "index a git repo",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:23+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "rank relevant files for a task",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:23+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "capture compacted agent sessions so future agents can search prior decisions, corrections, file paths, and discussion.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:23+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "store typed project memories such as `decision`, `gotcha`, `pattern`, and `how-to`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:23+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T13:38:28+08:00",
-  "updated_at": "2026-11-01T00:45:12+08:00"
+  "updated_at": "2026-11-01T02:53:25.876550+08:00"
 }

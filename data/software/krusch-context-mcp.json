@@ -31,6 +31,12 @@
     "report memory health and TTL decay review"
   ],
   "alternatives_to": [],
+  "features": [
+    "store, retrieve, and retire project decisions",
+    "capture architectural decisions and lessons",
+    "audit diffs against active invariants",
+    "supersede obsolete facts with lineage tracking"
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -55,12 +61,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-krusch-context-mcp-20261101-001315-8d78",
+      "run_id": "verify-krusch-context-mcp-20261101-021158-2755",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g krusch-context-mcp",
-          "purpose": "install MCP package globally via npm"
+          "command": "node --version && npm --version && npm install -g krusch-context-mcp",
+          "purpose": "install krusch-context-mcp globally via npm"
         }
       ],
       "manual_steps": [],
@@ -84,30 +90,30 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:14:46.958682+08:00",
+    "checked_at": "2026-11-01T02:13:56.190870+08:00",
     "runs": [
       {
-        "id": "verify-krusch-context-mcp-20261101-001315-8d78",
+        "id": "verify-krusch-context-mcp-20261101-021158-2755",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:14:46.958682+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:13:56.190870+08:00",
         "tool_version": "1.8.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g krusch-context-mcp",
-            "purpose": "install MCP package globally via npm"
+            "command": "node --version && npm --version && npm install -g krusch-context-mcp",
+            "purpose": "install krusch-context-mcp globally via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- krusch-context-mcp 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- krusch-context-mcp",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -116,44 +122,59 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call krusch_context_health --args '{}' -- krusch-context-mcp 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call krusch_context_health --args '{}' -- krusch-context-mcp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "tools/call: ok tool=krusch_context_health content=text text_chars=383",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call krusch_context_retrieve --args '{\"query\": \"*\"}' -- krusch-context-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=krusch_context_retrieve content=text text_chars=103",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "npx krusch-context-mcp init as quickstart",
-            "actually_needed": "npm install -g krusch-context-mcp provides krusch-context-mcp on PATH for offline replay; init still works via that binary",
-            "kind": "note"
+            "readme_said": "Zero-GPU default runs 100% offline using deterministic keyword extraction if neither Ollama nor API key is present",
+            "actually_needed": "krusch_context_remember fails with \"MCP error -32603: Failed to generate embedding\" unless OLLAMA_URL/OPENROUTER_API_KEY or EMBEDDING_URL is reachable; verified via direct MCP call after init and after switching .env to EMBEDDING_PROVIDER=auto",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "npx krusch-context-mcp init creates .env with sensible defaults for offline use",
+            "actually_needed": "init writes OLLAMA_BASE_URL=http://localhost:11434 EMBEDDING_PROVIDER=ollama which makes remember fail without a running Ollama instance",
+            "kind": "readme_wrong"
           },
           {
             "readme_said": "krusch-context-mcp --help / --version",
-            "actually_needed": "binary runs as MCP stdio server with no args and hangs waiting for JSON-RPC; --help/--version not supported interactively (times out)",
+            "actually_needed": "binary has no --help/--version flag; running without args starts MCP stdio server (ExperimentalWarning: SQLite)",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show successful MCP initialize, tools/list with 5 tools, handshake ok, and a successful krusch_context_health tool call returning storage status.",
+          "observed": "Screenshots show MCP server initializing v1.8.0, listing 5 tools, and successfully executing health and retrieve calls.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-krusch-context-mcp-20261101-001315-8d78/report.json",
+          "trace_path": "runs/verify/verify-krusch-context-mcp-20261101-021158-2755/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-krusch-context-mcp-20261101-001315-8d78/check-1-cmd5.judged.png",
-            "runs/verify/verify-krusch-context-mcp-20261101-001315-8d78/check-2-cmd6.judged.png"
+            "runs/verify/verify-krusch-context-mcp-20261101-021158-2755/check-1-cmd4.judged.png",
+            "runs/verify/verify-krusch-context-mcp-20261101-021158-2755/check-2-cmd6.judged.png",
+            "runs/verify/verify-krusch-context-mcp-20261101-021158-2755/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.05095,
+        "cost_usd": 0.130179,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -173,7 +194,41 @@
           "tool_count": 5,
           "called_tool": "krusch_context_health",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "store, retrieve, and retire project decisions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; retrieve works but store (krusch_context_remember) returns Failed to generate embedding"
+          },
+          {
+            "feature": "capture architectural decisions and lessons",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; remember with category decision/lesson/invariant fails same embedding error"
+          },
+          {
+            "feature": "audit diffs against active invariants",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; krusch_context_nudge audit returned NO_NUDGES_REQUIRED"
+          },
+          {
+            "feature": "supersede obsolete facts with lineage tracking",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; revise supersede requires remember embedding; cannot create base memory to supersede"
+          }
+        ]
       }
     ]
   },
@@ -226,15 +281,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-01T02:13:56+08:00",
     "quality": {
-      "total": 92.2,
+      "total": 78.3,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.7225,
           "weight": 40.0
         },
         "install_docs": {
@@ -275,7 +330,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 35.22
+      "value": 29.91
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -635,8 +690,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T00:03:17+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "five tools to store, retrieve, and retire project decisions.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:53+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "It captures architectural decisions, invariants, lessons, and bug diagnoses",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:53+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "and audits diffs against active constraints.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:53+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "maintains temporal lineage when facts are superseded or invalidated",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:53+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T13:37:31+08:00",
-  "updated_at": "2026-11-01T00:45:12+08:00"
+  "updated_at": "2026-11-01T02:13:56.192132+08:00"
 }

@@ -63,17 +63,17 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-infrawise-20261031-021141-fe29",
+      "run_id": "verify-infrawise-20261101-021626-7ae6",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g infrawise && infrawise --version && infrawise --help",
-          "purpose": "Install infrawise globally via npm"
+          "command": "npm install -g infrawise",
+          "purpose": "install infrawise globally via npm"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "infrawise --version",
+        "command": "infrawise --version; infrawise --help",
         "expected_signal": "1.0.0"
       },
       "first_task": null
@@ -95,30 +95,30 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:13:25.896084+08:00",
+    "checked_at": "2026-11-01T02:18:44.573726+08:00",
     "runs": [
       {
-        "id": "verify-infrawise-20261031-021141-fe29",
+        "id": "verify-infrawise-20261101-021626-7ae6",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:13:25.896084+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:18:44.573726+08:00",
         "tool_version": "1.0.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g infrawise && infrawise --version && infrawise --help",
-            "purpose": "Install infrawise globally via npm"
+            "command": "npm install -g infrawise",
+            "purpose": "install infrawise globally via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "infrawise --version",
+            "command": "infrawise --version; infrawise --help",
             "expected_signal": "1.0.0",
             "exit_code": 0,
             "passed": true,
@@ -127,14 +127,14 @@
             "offline": true
           },
           {
-            "command": "cd /tmp/iw-test && python3 ~/.pickfit/mcp_probe.py --timeout 120 -- infrawise serve --stdio --config /tmp/iw-test/infrawise.yaml",
+            "command": "python3 /home/sbx/.pickfit/mcp_probe.py --timeout 30 -- infrawise serve --stdio --config /tmp/minimal.yaml",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
             "setup": [
               {
-                "command": "mkdir -p /tmp/iw-test && cat > /tmp/iw-test/infrawise.yaml <<'EOF'\nproject: iw-test\nEOF\ncat /tmp/iw-test/infrawise.yaml\necho \"console.log('hello');\" > /tmp/iw-test/app.js\nls -la /tmp/iw-test/",
+                "command": "cat > /tmp/minimal.yaml <<'YAML'\nproject: test\naws:\n  region: us-east-1\ndynamodb:\n  enabled: false\npostgres:\n  enabled: false\nmysql:\n  enabled: false\nmongodb:\n  enabled: false\nsqs:\n  enabled: false\nsns:\n  enabled: false\nssm:\n  enabled: false\nsecretsManager:\n  enabled: false\nlambda:\n  enabled: false\neventbridge:\n  enabled: false\nrds:\n  enabled: false\ns3:\n  enabled: false\napiGateway:\n  enabled: false\ncognito:\n  enabled: false\nkinesis:\n  enabled: false\nmsk:\n  enabled: false\nelasticache:\n  enabled: false\ncloudfront:\n  enabled: false\nruntimeSignals:\n  enabled: false\ncloudwatchLogs:\n  enabled: false\nYAML\ncat /tmp/minimal.yaml",
                 "background": false,
                 "port": null
               }
@@ -142,14 +142,59 @@
             "offline": true
           },
           {
-            "command": "cd /tmp/iw-test && python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_infra_overview --args '{}' -- infrawise serve --stdio --config /tmp/iw-test/infrawise.yaml",
+            "command": "python3 /home/sbx/.pickfit/mcp_probe.py --call get_infra_overview --args '{}' --timeout 60 -- infrawise serve --stdio --config /tmp/minimal2.yaml",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=get_infra_overview content=text text_chars=3805",
+            "observed_excerpt": "tools/call: ok tool=get_infra_overview content=text text_chars=3798",
             "setup": [
               {
-                "command": "mkdir -p /tmp/iw-test && cat > /tmp/iw-test/infrawise.yaml <<'EOF'\nproject: iw-test\nEOF\ncat /tmp/iw-test/infrawise.yaml\necho \"console.log('hello');\" > /tmp/iw-test/app.js\nls -la /tmp/iw-test/",
+                "command": "mkdir -p /tmp/sample && cat > /tmp/sample/app.ts <<'TS'\nimport { DynamoDBClient } from \"@aws-sdk/client-dynamodb\";\nimport { DynamoDBDocumentClient, ScanCommand } from \"@aws-sdk/lib-dynamodb\";\nconst client = new DynamoDBClient({});\nconst doc = DynamoDBDocumentClient.from(client);\nexport async function listAllOrders() {\n  // should trigger full table scan detection\n  return await doc.send(new ScanCommand({ TableName: \"Orders\" }));\n}\nTS\ncat > /tmp/minimal2.yaml <<'YAML'\nproject: test\naws:\n  region: us-east-1\ndynamodb:\n  enabled: false\npostgres:\n  enabled: false\nmysql:\n  enabled: false\nmongodb:\n  enabled: false\nsqs:\n  enabled: false\nsns:\n  enabled: false\nssm:\n  enabled: false\nsecretsManager:\n  enabled: false\nlambda:\n  enabled: false\neventbridge:\n  enabled: false\nrds:\n  enabled: false\ns3:\n  enabled: false\napiGateway:\n  enabled: false\ncognito:\n  enabled: false\nkinesis:\n  enabled: false\nmsk:\n  enabled: false\nelasticache:\n  enabled: false\ncloudfront:\n  enabled: false\nruntimeSignals:\n  enabled: false\ncloudwatchLogs:\n  enabled: false\nYAML\necho \"created\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 /home/sbx/.pickfit/mcp_probe.py --call get_graph_summary --args '{}' --timeout 60 -- infrawise serve --stdio --config /tmp/minimal2.yaml",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_graph_summary content=text text_chars=3475",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sample && cat > /tmp/sample/app.ts <<'TS'\nimport { DynamoDBClient } from \"@aws-sdk/client-dynamodb\";\nimport { DynamoDBDocumentClient, ScanCommand } from \"@aws-sdk/lib-dynamodb\";\nconst client = new DynamoDBClient({});\nconst doc = DynamoDBDocumentClient.from(client);\nexport async function listAllOrders() {\n  // should trigger full table scan detection\n  return await doc.send(new ScanCommand({ TableName: \"Orders\" }));\n}\nTS\ncat > /tmp/minimal2.yaml <<'YAML'\nproject: test\naws:\n  region: us-east-1\ndynamodb:\n  enabled: false\npostgres:\n  enabled: false\nmysql:\n  enabled: false\nmongodb:\n  enabled: false\nsqs:\n  enabled: false\nsns:\n  enabled: false\nssm:\n  enabled: false\nsecretsManager:\n  enabled: false\nlambda:\n  enabled: false\neventbridge:\n  enabled: false\nrds:\n  enabled: false\ns3:\n  enabled: false\napiGateway:\n  enabled: false\ncognito:\n  enabled: false\nkinesis:\n  enabled: false\nmsk:\n  enabled: false\nelasticache:\n  enabled: false\ncloudfront:\n  enabled: false\nruntimeSignals:\n  enabled: false\ncloudwatchLogs:\n  enabled: false\nYAML\necho \"created\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 /home/sbx/.pickfit/mcp_probe.py --call suggest_gsi --args '{\"table\":\"Orders\",\"attribute\":\"status\"}' --timeout 60 -- infrawise serve --stdio --config /tmp/minimal2.yaml",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=suggest_gsi content=text text_chars=1569",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sample && cat > /tmp/sample/app.ts <<'TS'\nimport { DynamoDBClient } from \"@aws-sdk/client-dynamodb\";\nimport { DynamoDBDocumentClient, ScanCommand } from \"@aws-sdk/lib-dynamodb\";\nconst client = new DynamoDBClient({});\nconst doc = DynamoDBDocumentClient.from(client);\nexport async function listAllOrders() {\n  // should trigger full table scan detection\n  return await doc.send(new ScanCommand({ TableName: \"Orders\" }));\n}\nTS\ncat > /tmp/minimal2.yaml <<'YAML'\nproject: test\naws:\n  region: us-east-1\ndynamodb:\n  enabled: false\npostgres:\n  enabled: false\nmysql:\n  enabled: false\nmongodb:\n  enabled: false\nsqs:\n  enabled: false\nsns:\n  enabled: false\nssm:\n  enabled: false\nsecretsManager:\n  enabled: false\nlambda:\n  enabled: false\neventbridge:\n  enabled: false\nrds:\n  enabled: false\ns3:\n  enabled: false\napiGateway:\n  enabled: false\ncognito:\n  enabled: false\nkinesis:\n  enabled: false\nmsk:\n  enabled: false\nelasticache:\n  enabled: false\ncloudfront:\n  enabled: false\nruntimeSignals:\n  enabled: false\ncloudwatchLogs:\n  enabled: false\nYAML\necho \"created\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 /home/sbx/.pickfit/mcp_probe.py --call get_stack_outputs --args '{}' --timeout 60 -- infrawise serve --stdio --config /tmp/minimal2.yaml",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_stack_outputs content=text text_chars=1046",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sample && cat > /tmp/sample/app.ts <<'TS'\nimport { DynamoDBClient } from \"@aws-sdk/client-dynamodb\";\nimport { DynamoDBDocumentClient, ScanCommand } from \"@aws-sdk/lib-dynamodb\";\nconst client = new DynamoDBClient({});\nconst doc = DynamoDBDocumentClient.from(client);\nexport async function listAllOrders() {\n  // should trigger full table scan detection\n  return await doc.send(new ScanCommand({ TableName: \"Orders\" }));\n}\nTS\ncat > /tmp/minimal2.yaml <<'YAML'\nproject: test\naws:\n  region: us-east-1\ndynamodb:\n  enabled: false\npostgres:\n  enabled: false\nmysql:\n  enabled: false\nmongodb:\n  enabled: false\nsqs:\n  enabled: false\nsns:\n  enabled: false\nssm:\n  enabled: false\nsecretsManager:\n  enabled: false\nlambda:\n  enabled: false\neventbridge:\n  enabled: false\nrds:\n  enabled: false\ns3:\n  enabled: false\napiGateway:\n  enabled: false\ncognito:\n  enabled: false\nkinesis:\n  enabled: false\nmsk:\n  enabled: false\nelasticache:\n  enabled: false\ncloudfront:\n  enabled: false\nruntimeSignals:\n  enabled: false\ncloudwatchLogs:\n  enabled: false\nYAML\necho \"created\"",
                 "background": false,
                 "port": null
               }
@@ -157,31 +202,25 @@
             "offline": true
           }
         ],
-        "pitfalls": [
-          {
-            "readme_said": "The sandbox run's launch command points at files it created in /tmp for the test.",
-            "actually_needed": "Point the MCP client's launch command at the user's own files in a permanent directory; /tmp is cleared on reboot.",
-            "kind": "note"
-          }
-        ],
+        "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 22 tools, successful get_infra_overview call, and version 1.0.0 output.",
+          "observed": "Screenshots show Infrawise server handshake with 22 tools, successful get_infra_overview tool call, and CLI version 1.0.0 with help.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-infrawise-20261031-021141-fe29/report.json",
+          "trace_path": "runs/verify/verify-infrawise-20261101-021626-7ae6/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-infrawise-20261031-021141-fe29/check-1-cmd6.judged.png",
-            "runs/verify/verify-infrawise-20261031-021141-fe29/check-2-cmd7.judged.png",
-            "runs/verify/verify-infrawise-20261031-021141-fe29/check-3-cmd8.judged.png"
+            "runs/verify/verify-infrawise-20261101-021626-7ae6/check-1-cmd6.judged.png",
+            "runs/verify/verify-infrawise-20261101-021626-7ae6/check-2-cmd8.judged.png",
+            "runs/verify/verify-infrawise-20261101-021626-7ae6/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.063718,
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.083433,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -189,7 +228,7 @@
             "serve",
             "--stdio",
             "--config",
-            "/tmp/iw-test/infrawise.yaml"
+            "/tmp/minimal2.yaml"
           ],
           "url": null,
           "protocol_version": "2025-11-25",
@@ -222,7 +261,41 @@
           "tool_count": 22,
           "called_tool": "get_infra_overview",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Analyze codebase and cloud infrastructure statically",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only tool-call ok with truncated dataHealth metadata, not the static analysis content."
+          },
+          {
+            "feature": "Detect infrastructure and query anti-patterns",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only graph summary call ok with truncated metadata, no anti-patterns shown."
+          },
+          {
+            "feature": "Suggest GSI and index configurations",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows suggest_gsi call ok but result truncated, no GSI config visible."
+          },
+          {
+            "feature": "Detect IaC drift vs deployed state",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only stack outputs call ok with truncated metadata, no drift comparison shown."
+          }
+        ]
       }
     ]
   },
@@ -808,5 +881,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:42+08:00",
-  "updated_at": "2026-11-01T01:32:55+08:00"
+  "updated_at": "2026-11-01T02:18:44.576978+08:00"
 }

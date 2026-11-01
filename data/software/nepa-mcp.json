@@ -30,6 +30,11 @@
     "find upcoming, completed or past-target permitting milestones"
   ],
   "alternatives_to": [],
+  "features": [
+    "access federal environmental data for NEPA screening",
+    "compose interactive maps and GeoJSON exports",
+    "search permitting projects and review timetables"
+  ],
   "why_worth_it": null,
   "homepage": "https://pnnl.github.io/nepa-mcp/",
   "repo": {
@@ -58,20 +63,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-nepa-mcp-20261101-003625-9631",
+      "run_id": "verify-nepa-mcp-20261101-020925-6bce",
       "method": "pipx",
       "steps": [
         {
-          "command": "pipx install nepa-mcp 2>&1",
-          "purpose": "install nepa-mcp via pipx"
+          "command": "pipx install nepa-mcp",
+          "purpose": "install nepa-mcp via pipx (candidate 1)"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "nepa-mcp --help 2>&1; echo \"---\"; nepa-mcp --version 2>&1; echo \"---\"; nepa-mcp doctor 2>&1",
-        "expected_signal": "nepa-mcp version: 0.1.6"
+        "command": "nepa-mcp --help\n",
+        "expected_signal": "usage: nepa-mcp"
       },
-      "first_task": "nepa-mcp list-servers 2>&1"
+      "first_task": "nepa-mcp doctor"
     },
     "windows": null
   },
@@ -90,48 +95,57 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:38:38.755699+08:00",
+    "checked_at": "2026-11-01T02:11:06.477282+08:00",
     "runs": [
       {
-        "id": "verify-nepa-mcp-20261101-003625-9631",
+        "id": "verify-nepa-mcp-20261101-020925-6bce",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:38:38.755699+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:11:06.477282+08:00",
         "tool_version": "0.1.6",
         "install_method": "pipx",
         "replayed": true,
         "steps": [
           {
-            "command": "pipx install nepa-mcp 2>&1",
-            "purpose": "install nepa-mcp via pipx"
+            "command": "pipx install nepa-mcp",
+            "purpose": "install nepa-mcp via pipx (candidate 1)"
           }
         ],
         "smoke_tests": [
           {
-            "command": "nepa-mcp --help 2>&1; echo \"---\"; nepa-mcp --version 2>&1; echo \"---\"; nepa-mcp doctor 2>&1",
-            "expected_signal": "nepa-mcp version: 0.1.6",
+            "command": "nepa-mcp --help\n",
+            "expected_signal": "usage: nepa-mcp",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "nepa-mcp version: 0.1.6",
+            "observed_excerpt": "usage: nepa-mcp [-h] [--version] {server,list-servers,doctor,configure} ...",
             "setup": [],
             "offline": true
           },
           {
-            "command": "nepa-mcp list-servers 2>&1",
-            "expected_signal": "cfr",
+            "command": "nepa-mcp doctor",
+            "expected_signal": "Installed servers: 23",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "cfr none CFR, Federal Register, and executive-order lookup",
+            "observed_excerpt": "Installed servers: 23",
             "setup": [],
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- nepa-mcp server cfr 2>&1",
+            "command": "nepa-mcp list-servers",
+            "expected_signal": "permitting_dashboard",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "permitting_dashboard none Federal permitting projects, review timetables, and milestones",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- nepa-mcp server cfr",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -140,63 +154,102 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- nepa-mcp server gis 2>&1",
-            "expected_signal": "handshake: ok",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "handshake: ok",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --call calculate_roi_area --args '{\"latitude\": 38.8951, \"longitude\": -77.0364, \"buffer_miles\": 1}' -- nepa-mcp server gis 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call cfr_browse_structure --args '{\"title\":40}' -- nepa-mcp server cfr",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=calculate_roi_area content=text text_chars=155",
+            "observed_excerpt": "tools/call: ok tool=cfr_browse_structure content=text text_chars=395",
             "setup": [],
-            "offline": false
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call list_available_layers --args '{}' -- nepa-mcp server map_composer",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list_available_layers content=text text_chars=7597",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search_permitting_projects --args '{\"query\":\"solar\",\"max_results\":1}' -- nepa-mcp server permitting_dashboard",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search_permitting_projects content=text text_chars=2943",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show help/version/doctor reporting version 0.1.6, server list containing cfr, and successful MCP handshake for cfr-server with 7 tools.",
+          "observed": "Screenshots show doctor reporting 23 installed servers, list-servers including permitting_dashboard, and help displaying usage for nepa-mcp.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-nepa-mcp-20261101-003625-9631/report.json",
+          "trace_path": "runs/verify/verify-nepa-mcp-20261101-020925-6bce/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-nepa-mcp-20261101-003625-9631/check-1-cmd2.judged.png",
-            "runs/verify/verify-nepa-mcp-20261101-003625-9631/check-2-cmd3.judged.png",
-            "runs/verify/verify-nepa-mcp-20261101-003625-9631/check-3-cmd6.judged.png"
+            "runs/verify/verify-nepa-mcp-20261101-020925-6bce/check-1-cmd3.judged.png",
+            "runs/verify/verify-nepa-mcp-20261101-020925-6bce/check-2-cmd4.judged.png",
+            "runs/verify/verify-nepa-mcp-20261101-020925-6bce/check-3-cmd2.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.04949,
+        "cost_usd": 0.056621,
         "mcp": {
           "transport": "stdio",
           "launch": [
             "nepa-mcp",
             "server",
-            "gis"
+            "cfr"
           ],
           "url": null,
           "protocol_version": "2025-11-25",
-          "server_name": "gis-server",
+          "server_name": "cfr-server",
           "server_version": "3.4.4",
           "tools": [
-            "summarize_roi_buffer",
-            "get_roi_geojson",
-            "calculate_roi_area"
+            "cfr_resolve_citation",
+            "cfr_browse_structure",
+            "cfr_history",
+            "cfr_compare_versions",
+            "cfr_rulemaking",
+            "cfr_resolve_fr_citation",
+            "cfr_resolve_executive_order"
           ],
-          "tool_count": 3,
-          "called_tool": "calculate_roi_area",
+          "tool_count": 7,
+          "called_tool": "cfr_browse_structure",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "access federal environmental data for NEPA screening",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output returns a CFRAPIError with max retries exceeded instead of Title 40 structure data."
+          },
+          {
+            "feature": "compose interactive maps and GeoJSON exports",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists 32 available layers/profiles instead of composing an HTML map or GeoJSON export."
+          },
+          {
+            "feature": "search permitting projects and review timetables",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output returns status unavailable instead of solar project search results or timetables."
+          }
+        ]
       }
     ]
   },
@@ -608,8 +661,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T00:05:10+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "It gives AI agents structured access to federal environmental,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:28+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "`map_composer` turns project-area data into an interactive HTML map or a",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:28+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "The Permitting Dashboard server adds project search, tracked review timetables,",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:28+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-11-01T00:45:12+08:00"
+  "updated_at": "2026-11-01T02:11:06.480377+08:00"
 }

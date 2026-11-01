@@ -67,20 +67,23 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-precis-mcp-20261031-015059-68bf",
+      "run_id": "verify-precis-mcp-20261101-023328-59c3",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install 'precis-mcp==8.35.1' 2>&1",
-          "purpose": "Install precis-mcp core via uv tool"
+          "command": "uv tool install --force --python 3.13 'precis-mcp==8.35.1'",
+          "purpose": "Install pinned precis-mcp 8.35.1 via uv tool"
         },
         {
-          "command": "ls /home/sbx/.local/share/uv/tools/precis-mcp/bin/python* && /home/sbx/.local/share/uv/tools/precis-mcp/bin/python --version && uv pip install --python /home/sbx/.local/share/uv/tools/precis-mcp/bin/python 'mcp<2' 2>&1",
-          "purpose": "Pin mcp<2 in tool env to fix FastMCP import"
+          "command": "uv pip install --python /home/sbx/.local/share/uv/tools/precis-mcp/bin/python 'mcp<2'",
+          "purpose": "Downgrade mcp to <2 to fix ModuleNotFoundError for mcp.server.fastmcp"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "precis --help",
+        "expected_signal": "serve"
+      },
       "first_task": null
     },
     "windows": null
@@ -100,34 +103,43 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:53:03.850824+08:00",
+    "checked_at": "2026-11-01T02:35:48.640759+08:00",
     "runs": [
       {
-        "id": "verify-precis-mcp-20261031-015059-68bf",
+        "id": "verify-precis-mcp-20261101-023328-59c3",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:53:03.850824+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:35:48.640759+08:00",
         "tool_version": "8.35.1",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install 'precis-mcp==8.35.1' 2>&1",
-            "purpose": "Install precis-mcp core via uv tool"
+            "command": "uv tool install --force --python 3.13 'precis-mcp==8.35.1'",
+            "purpose": "Install pinned precis-mcp 8.35.1 via uv tool"
           },
           {
-            "command": "ls /home/sbx/.local/share/uv/tools/precis-mcp/bin/python* && /home/sbx/.local/share/uv/tools/precis-mcp/bin/python --version && uv pip install --python /home/sbx/.local/share/uv/tools/precis-mcp/bin/python 'mcp<2' 2>&1",
-            "purpose": "Pin mcp<2 in tool env to fix FastMCP import"
+            "command": "uv pip install --python /home/sbx/.local/share/uv/tools/precis-mcp/bin/python 'mcp<2'",
+            "purpose": "Downgrade mcp to <2 to fix ModuleNotFoundError for mcp.server.fastmcp"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- precis serve",
+            "command": "precis --help",
+            "expected_signal": "serve",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{serve,serve-embeddings,anki-sync,migrate,schema-doc,secret,nanopub,pcb,settings,users,db,maintenance,enrich-openalex,fetch-openalex,fix-metadata,migrate-refs,reconcile-duplicates,markup-backfill,retire-draft-equations,convert-draft-lists,resolve-metadata,backfill-dois,podcast,gripes,add,ingest,_wa…",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "PRECIS_SCHEMA_GATE=off PRECIS_EMBEDDER=mock python3 ~/.pickfit/mcp_probe.py --timeout 30 -- precis serve 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -136,49 +148,45 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get --args '{\"kind\":\"calc\",\"q\":\"2+3*4\"}' -- precis serve",
+            "command": "PRECIS_SCHEMA_GATE=off PRECIS_EMBEDDER=mock python3 ~/.pickfit/mcp_probe.py --timeout 30 --call get --args '{\"kind\":\"calc\",\"q\":\"2+2\"}' -- precis serve 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=get content=text text_chars=76",
+            "observed_excerpt": "tools/call: ok tool=get content=text text_chars=73",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "uv tool install --python 3.13 'precis-mcp[all]'",
-            "actually_needed": "installed core only as `uv tool install 'precis-mcp==8.35.1'` with default Python 3.12; the README's `[all]` extra (~1.6 GB plus CUDA torch and GBs of models) was unnecessary for the MCP handshake and calc tool",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "pip/uv install of precis-mcp==8.35.1 resolves working dependencies",
-            "actually_needed": "downgraded the tool env with `uv pip install --python /home/sbx/.local/share/uv/tools/precis-mcp/bin/python 'mcp<2'` (got mcp==1.30.0); stock install pulled mcp==2.3.0 and `precis serve` crashed with ModuleNotFoundError: No module named 'mcp.server.fastmcp'",
+            "readme_said": "uv tool install --python 3.13 'precis-mcp[all]' works",
+            "actually_needed": "Current PyPI pulls mcp 2.3.0 which renames FastMCP; server crashes with ModuleNotFoundError: No module named 'mcp.server.fastmcp'; need to pin mcp<2 via uv pip install 'mcp<2' in tool env",
             "kind": "readme_wrong"
           },
           {
-            "readme_said": "PRECIS_DATABASE_URL required and `precis serve` speaks MCP over stdio",
-            "actually_needed": "server boots with no PRECIS_DATABASE_URL and only kind `calc` live; DB-backed kinds (e.g. skill) return NotFound without a store",
-            "kind": "note"
+            "readme_said": "precis serve requires PRECIS_DATABASE_URL and Postgres with pgvector",
+            "actually_needed": "For smoke test without DB set PRECIS_SCHEMA_GATE=off and PRECIS_EMBEDDER=mock to allow server to boot with only calc kind live",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake succeeding with 8 tools listed and calc get query returning 2+3*4 = 14.",
+          "observed": "Screenshots show MCP handshake with 8 tools, calc get returning 2+2=4, and precis --help listing serve.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-precis-mcp-20261031-015059-68bf/report.json",
+          "trace_path": "runs/verify/verify-precis-mcp-20261101-023328-59c3/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-precis-mcp-20261031-015059-68bf/check-1-cmd8.judged.png",
-            "runs/verify/verify-precis-mcp-20261031-015059-68bf/check-2-cmd13.judged.png"
+            "runs/verify/verify-precis-mcp-20261101-023328-59c3/check-1-cmd11.judged.png",
+            "runs/verify/verify-precis-mcp-20261101-023328-59c3/check-2-cmd12.judged.png",
+            "runs/verify/verify-precis-mcp-20261101-023328-59c3/check-3-cmd15.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.126878,
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.115135,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -202,7 +210,41 @@
           "tool_count": 8,
           "called_tool": "get",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "read papers and patents with citations",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Requires PostgreSQL pgvector, paper ingest and external APIs; no DB in box"
+          },
+          {
+            "feature": "write paper and report drafts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Draft export needs PostgreSQL and file roots"
+          },
+          {
+            "feature": "design and simulate proposed designs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "CAD/structure simulation needs PostgreSQL store"
+          },
+          {
+            "feature": "manage todos, quests and memory",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Todos/quests/memory kinds require PostgreSQL; only calc live without DB"
+          }
+        ]
       }
     ]
   },
@@ -743,5 +785,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T02:35:48.642444+08:00"
 }

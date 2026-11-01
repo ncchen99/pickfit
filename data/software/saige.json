@@ -81,24 +81,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-saige-20261030-234830-2625",
+      "run_id": "verify-saige-20261101-030913-c522",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/urmzd/saige/main/install.sh -o /tmp/saige-install.sh && ls -l /tmp/saige-install.sh && wc -l /tmp/saige-install.sh",
-          "purpose": "Download install script for review"
+          "command": "curl -fsSL https://raw.githubusercontent.com/urmzd/saige/main/install.sh -o /tmp/install.sh && ls -lh /tmp/install.sh && head -n 200 /tmp/install.sh",
+          "purpose": "download install.sh without piping to shell"
         },
         {
-          "command": "bash /tmp/saige-install.sh",
-          "purpose": "Install saige binary via script"
+          "command": "bash /tmp/install.sh",
+          "purpose": "install saige binary via install.sh"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "saige --help",
-        "expected_signal": "Available Commands:"
+        "command": "saige update --check",
+        "expected_signal": "already up to date"
       },
-      "first_task": null
+      "first_task": "saige update --check"
     },
     "windows": null
   },
@@ -115,93 +115,146 @@
     "url": "https://github.com/urmzd/saige/releases/tag/v0.41.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-30T23:49:41.434427+08:00",
+    "checked_at": "2026-11-01T03:10:02.145784+08:00",
     "runs": [
       {
-        "id": "verify-saige-20261030-234830-2625",
-        "level": "install",
+        "id": "verify-saige-20261101-030913-c522",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-30T23:49:41.434427+08:00",
-        "tool_version": "0.42.0",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T03:10:02.145784+08:00",
+        "tool_version": "0.44.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/urmzd/saige/main/install.sh -o /tmp/saige-install.sh && ls -l /tmp/saige-install.sh && wc -l /tmp/saige-install.sh",
-            "purpose": "Download install script for review"
+            "command": "curl -fsSL https://raw.githubusercontent.com/urmzd/saige/main/install.sh -o /tmp/install.sh && ls -lh /tmp/install.sh && head -n 200 /tmp/install.sh",
+            "purpose": "download install.sh without piping to shell"
           },
           {
-            "command": "bash /tmp/saige-install.sh",
-            "purpose": "Install saige binary via script"
+            "command": "bash /tmp/install.sh",
+            "purpose": "install saige binary via install.sh"
           }
         ],
         "smoke_tests": [
           {
-            "command": "saige --version",
-            "expected_signal": "saige version 0.42.0",
-            "exit_code": 0,
-            "passed": false,
-            "observed_excerpt": "saige version 0.43.0",
-            "setup": [],
-            "offline": null
-          },
-          {
-            "command": "saige --help",
-            "expected_signal": "Available Commands:",
+            "command": "saige update --check",
+            "expected_signal": "already up to date",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Available Commands:",
+            "observed_excerpt": "already up to date",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "saige agent --help",
+            "expected_signal": "An agent definition is a Markdown file",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "An agent definition is a Markdown file with YAML frontmatter: *.agent.md, or",
             "setup": [],
             "offline": true
           },
           {
-            "command": "saige update --check",
-            "expected_signal": "update available",
+            "command": "saige catalog --help",
+            "expected_signal": "The catalog declares model capabilities",
             "exit_code": 0,
-            "passed": false,
-            "observed_excerpt": "already up to date",
+            "passed": true,
+            "observed_excerpt": "The catalog declares model capabilities and named presets: ordered provider",
             "setup": [],
-            "offline": null
+            "offline": true
+          },
+          {
+            "command": "saige knowledge --help",
+            "expected_signal": "Ingest, retrieve and inspect knowledge",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Ingest, retrieve and inspect knowledge",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "saige evals --help",
+            "expected_signal": "Run live eval corpora",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Run live eval corpora against an OpenAI-compatible API or a saige provider",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows saige --help output listing Available Commands and Flags with exit code 0.",
+          "observed": "Both checks show expected outputs: update says already up to date and agent help describes Markdown agent definitions.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-saige-20261030-234830-2625/report.json",
+          "trace_path": "runs/verify/verify-saige-20261101-030913-c522/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-saige-20261030-234830-2625/check-1-cmd4.judged.png"
+            "runs/verify/verify-saige-20261101-030913-c522/check-1-cmd4.judged.png",
+            "runs/verify/verify-saige-20261101-030913-c522/check-2-cmd5.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.035616
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.041685,
+        "features": [
+          {
+            "feature": "build streaming agents with tool calls",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; saige agent --help shows streaming agents docs"
+          },
+          {
+            "feature": "route models across multiple providers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; saige catalog --help shows model routing"
+          },
+          {
+            "feature": "provide context with retrieval and memory",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; saige knowledge --help shows retrieval/memory"
+          },
+          {
+            "feature": "evaluate agents with composable scorers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; saige evals --help and scorers list composable scorers"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T03:10:02+08:00",
     "quality": {
-      "total": 68.3,
+      "total": 88.3,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -241,8 +294,8 @@
       "packages": []
     },
     "treasure": {
-      "is_treasure": false,
-      "value": 56.01
+      "is_treasure": true,
+      "value": 72.41
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -557,5 +610,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T03:10:02.147263+08:00"
 }

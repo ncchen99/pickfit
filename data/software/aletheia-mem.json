@@ -37,6 +37,11 @@
     "Supermemory",
     "Basic Memory"
   ],
+  "features": [
+    "share persistent memory across coding tools",
+    "access one store over MCP, REST, CLI",
+    "sync rules to tool instruction files"
+  ],
   "why_worth_it": null,
   "homepage": "https://mohamed-ashraf-elsaed.github.io/aletheia-mem/",
   "repo": {
@@ -78,28 +83,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-aletheia-mem-20261101-001446-6e91",
-      "method": "npm",
+      "run_id": "verify-aletheia-mem-20261101-023002-a984",
+      "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://bun.sh/install -o /tmp/bun-install.sh && head -n 50 /tmp/bun-install.sh && wc -l /tmp/bun-install.sh",
-          "purpose": "download Bun install script"
+          "command": "curl -fsSL https://bun.sh/install | bash 2>&1 | tail -20; ls ~/.bun/bin/bun; ~/.bun/bin/bun --version",
+          "purpose": "install Bun 1.4.4 runtime"
         },
         {
-          "command": "bash /tmp/bun-install.sh 2>&1 && ~/.bun/bin/bun --version && echo \"bun installed\"",
-          "purpose": "install Bun >=1.1 required by README"
-        },
-        {
-          "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && npm install -g aletheia-mem",
+          "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\"\nnpm install -g aletheia-mem",
           "purpose": "npm install -g aletheia-mem"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && timeout 10 aletheia install --list",
-        "expected_signal": "tool capability"
+        "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\"; aletheia --version 2>&1",
+        "expected_signal": "0.1.11"
       },
-      "first_task": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && timeout 10 aletheia install --list"
+      "first_task": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\"\ntimeout 5 aletheia install --list"
     },
     "windows": {
       "basis": "readme_claim",
@@ -131,47 +132,52 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:16:23.546452+08:00",
+    "checked_at": "2026-11-01T02:32:16.616364+08:00",
     "runs": [
       {
-        "id": "verify-aletheia-mem-20261101-001446-6e91",
+        "id": "verify-aletheia-mem-20261101-023002-a984",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:16:23.546452+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:32:16.616364+08:00",
         "tool_version": "0.1.11",
-        "install_method": "npm",
+        "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://bun.sh/install -o /tmp/bun-install.sh && head -n 50 /tmp/bun-install.sh && wc -l /tmp/bun-install.sh",
-            "purpose": "download Bun install script"
+            "command": "curl -fsSL https://bun.sh/install | bash 2>&1 | tail -20; ls ~/.bun/bin/bun; ~/.bun/bin/bun --version",
+            "purpose": "install Bun 1.4.4 runtime"
           },
           {
-            "command": "bash /tmp/bun-install.sh 2>&1 && ~/.bun/bin/bun --version && echo \"bun installed\"",
-            "purpose": "install Bun >=1.1 required by README"
-          },
-          {
-            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && npm install -g aletheia-mem",
+            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\"\nnpm install -g aletheia-mem",
             "purpose": "npm install -g aletheia-mem"
           }
         ],
         "smoke_tests": [
           {
-            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && timeout 10 aletheia install --list",
-            "expected_signal": "tool capability",
+            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\"; aletheia --version 2>&1",
+            "expected_signal": "0.1.11",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tool capability verification detected events",
+            "observed_excerpt": "0.1.11",
             "setup": [],
             "offline": true
           },
           {
-            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && python3 ~/.pickfit/mcp_probe.py -- aletheia-mcp 2>&1",
+            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\"\ntimeout 5 aletheia install --list",
+            "expected_signal": "claude-code full",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "claude-code full mcp-verified no SessionStart, UserPromptSubmit, PostToolUse, Stop, SessionEnd",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\"; python3 ~/.pickfit/mcp_probe.py -- aletheia-mcp 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -180,45 +186,68 @@
             "offline": true
           },
           {
-            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && python3 ~/.pickfit/mcp_probe.py --call list_rules --args '{}' -- aletheia-mcp 2>&1",
+            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\"; python3 ~/.pickfit/mcp_probe.py --call search --args '{\"query\":\"test\"}' -- aletheia-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search content=text text_chars=42",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\"; python3 ~/.pickfit/mcp_probe.py --call list_rules --args '{}' -- aletheia-mcp 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "tools/call: ok tool=list_rules content=text text_chars=13",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\"; python3 ~/.pickfit/mcp_probe.py --call save_memory --args '{\"text\":\"pickfit test memory\"}' -- aletheia-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=save_memory content=text text_chars=20",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "Bun >=1.1 required",
-            "actually_needed": "Bun must be installed manually; box had no bun, installed via curl https://bun.sh/install to ~/.bun/bin",
+            "readme_said": "Bun >=1.1 required, then npm install -g aletheia-mem",
+            "actually_needed": "Bun must be installed manually first via bun.sh/install script",
             "kind": "sandbox"
           },
           {
-            "readme_said": "npm install -g aletheia-mem then aletheia-server / bun bin/mcp.mjs",
-            "actually_needed": "npm package installs launchers aletheia-mcp (bin/mcp.mjs) and aletheia-server; MCP probe works with aletheia-mcp on PATH, requires Bun on PATH via shebang",
+            "readme_said": "MCP launch command bun bin/mcp.mjs",
+            "actually_needed": "installed package provides aletheia-mcp binary (bun wrapper) for on-PATH stdio server",
+            "kind": "note"
+          },
+          {
+            "readme_said": "install step 1 runs https://bun.sh/install straight from the network",
+            "actually_needed": "nothing to change; a note: the box ran it without saving or reading it first, so pickfit did not inspect it",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show aletheia install list with tools, MCP handshake listing 13 tools, and successful list_rules call returning No rules yet.",
+          "observed": "Screenshots show version 0.1.11, install list with claude-code full, and MCP handshake ok with 13 tools.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-aletheia-mem-20261101-001446-6e91/report.json",
+          "trace_path": "runs/verify/verify-aletheia-mem-20261101-023002-a984/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-aletheia-mem-20261101-001446-6e91/check-1-cmd12.judged.png",
-            "runs/verify/verify-aletheia-mem-20261101-001446-6e91/check-2-cmd8.judged.png",
-            "runs/verify/verify-aletheia-mem-20261101-001446-6e91/check-3-cmd9.judged.png"
+            "runs/verify/verify-aletheia-mem-20261101-023002-a984/check-1-cmd11.judged.png",
+            "runs/verify/verify-aletheia-mem-20261101-023002-a984/check-2-cmd13.judged.png",
+            "runs/verify/verify-aletheia-mem-20261101-023002-a984/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.084972,
+        "cost_usd": 0.079966,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -244,9 +273,38 @@
             "work_state_read"
           ],
           "tool_count": 13,
-          "called_tool": "list_rules",
+          "called_tool": "search",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "share persistent memory across coding tools",
+            "status": "checked",
+            "smoke_tests": [
+              3,
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "access one store over MCP, REST, CLI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only MCP save_memory with no REST or CLI access demonstrated."
+          },
+          {
+            "feature": "sync rules to tool instruction files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: list_rules returned No rules yet with no instruction file writes shown."
+          }
+        ]
       }
     ]
   },
@@ -302,15 +360,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-01T02:32:16+08:00",
     "quality": {
-      "total": 85.7,
+      "total": 93.2,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -353,7 +411,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 46.11
+      "value": 50.14
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -857,8 +915,32 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T00:03:56+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Persistent memory for Claude Code, Codex CLI, Cursor, Gemini CLI, Windsurf and OpenCode",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:57+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "One store on your machine. Any tool reads it over MCP, REST or the CLI.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:57+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "your rules are written into each tool's own instruction file",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:55:57+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T13:37:45+08:00",
-  "updated_at": "2026-11-01T00:45:12+08:00"
+  "updated_at": "2026-11-01T02:32:16.619625+08:00"
 }

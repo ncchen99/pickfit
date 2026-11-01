@@ -25,6 +25,12 @@
   ],
   "use_cases": [],
   "alternatives_to": [],
+  "features": [
+    "publish HTML and Markdown pages",
+    "host multi-file static sites",
+    "store and retrieve JSON documents",
+    "upload files with inline preview"
+  ],
   "why_worth_it": null,
   "homepage": "https://brewpage.app",
   "repo": {
@@ -47,7 +53,7 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-brewpage-openapi-20261101-003253-fda3",
+      "run_id": "verify-brewpage-openapi-20261101-021400-0ea6",
       "method": "npm",
       "steps": [
         {
@@ -76,18 +82,18 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:33:56.531435+08:00",
+    "checked_at": "2026-11-01T02:15:07.720974+08:00",
     "runs": [
       {
-        "id": "verify-brewpage-openapi-20261101-003253-fda3",
+        "id": "verify-brewpage-openapi-20261101-021400-0ea6",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:33:56.531435+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:15:07.720974+08:00",
         "tool_version": "1.16.5",
         "install_method": "npm",
         "replayed": true,
@@ -99,20 +105,11 @@
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- brewpage-mcp",
-            "expected_signal": "handshake: ok",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "handshake: ok",
-            "setup": [],
-            "offline": true
-          },
-          {
             "command": "python3 ~/.pickfit/mcp_probe.py --call get_stats --args '{}' -- brewpage-mcp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=get_stats content=text text_chars=2416",
+            "observed_excerpt": "tools/call: ok tool=get_stats content=text text_chars=2417",
             "setup": [],
             "offline": false
           }
@@ -121,20 +118,19 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show brewpage-mcp initializing, listing 20 tools, completing handshake, and get_stats returning platform statistics.",
+          "observed": "Screenshot shows get_stats tool call succeeded and returned BrewPage platform statistics.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-brewpage-openapi-20261101-003253-fda3/report.json",
+          "trace_path": "runs/verify/verify-brewpage-openapi-20261101-021400-0ea6/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-brewpage-openapi-20261101-003253-fda3/check-1-cmd4.judged.png",
-            "runs/verify/verify-brewpage-openapi-20261101-003253-fda3/check-2-cmd5.judged.png"
+            "runs/verify/verify-brewpage-openapi-20261101-021400-0ea6/check-1-cmd5.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.027684,
+        "cost_usd": 0.045823,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -168,8 +164,42 @@
           ],
           "tool_count": 20,
           "called_tool": "get_stats",
-          "offline": true
-        }
+          "offline": false
+        },
+        "features": [
+          {
+            "feature": "publish HTML and Markdown pages",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "publish_html requires outside service brewpage.app to host content; not tested locally"
+          },
+          {
+            "feature": "host multi-file static sites",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "publish_site requires outside service brewpage.app to host ZIP/sites"
+          },
+          {
+            "feature": "store and retrieve JSON documents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "publish_json/get_json require outside service brewpage.app"
+          },
+          {
+            "feature": "upload files with inline preview",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "publish_file requires outside service brewpage.app and external URL"
+          }
+        ]
       }
     ]
   },
@@ -549,8 +579,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T00:04:17+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**HTML and Markdown pages** -- publish raw HTML or Markdown rendered to styled HTML, up to 5 MiB, with instant short URLs.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:20+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Multi-file sites** -- upload a ZIP archive or individual files",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:20+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**JSON documents** -- store and retrieve arbitrary JSON, up to 1 MiB per document, 10,000 documents per namespace.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:20+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**File hosting** -- upload any safe file type (images, PDFs, video, audio, archives, code), up to 5 MiB (video 20 MiB), with inline preview.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:20+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:50:14+08:00",
-  "updated_at": "2026-11-01T00:45:12+08:00"
+  "updated_at": "2026-11-01T02:15:07.723067+08:00"
 }

@@ -24,6 +24,12 @@
     "Draft and tailor application letters and content"
   ],
   "alternatives_to": [],
+  "features": [
+    "Search remote and visa-sponsored jobs worldwide",
+    "Score job matches against experience and preferences",
+    "Draft tailored application letters and content",
+    "Send applications and follow up on replies"
+  ],
   "why_worth_it": null,
   "homepage": "https://worldrole.work",
   "repo": {
@@ -46,16 +52,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-worldrole-mcp-20261101-003444-f104",
+      "run_id": "verify-worldrole-mcp-20261101-023939-74fb",
       "method": "pip",
       "steps": [
         {
-          "command": "rm -rf worldrole-mcp && git clone https://github.com/zzn199216/worldrole-mcp --depth 1",
-          "purpose": "clone repository https://github.com/zzn199216/worldrole-mcp"
-        },
-        {
-          "command": "pip install ./worldrole-mcp",
-          "purpose": "install Python package worldrole-free-sources 0.2.0 via pip"
+          "command": "rm -rf /tmp/worldrole-mcp2 && git clone --depth 1 https://github.com/zzn199216/worldrole-mcp.git /tmp/worldrole-mcp2 && pip install /tmp/worldrole-mcp2",
+          "purpose": "git clone worldrole-mcp and pip install to provide worldrole-free-sources MCP server"
         }
       ],
       "manual_steps": [],
@@ -79,34 +81,30 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:36:13.927443+08:00",
+    "checked_at": "2026-11-01T02:42:24.347093+08:00",
     "runs": [
       {
-        "id": "verify-worldrole-mcp-20261101-003444-f104",
+        "id": "verify-worldrole-mcp-20261101-023939-74fb",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:36:13.927443+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:42:24.347093+08:00",
         "tool_version": "0.2.0",
         "install_method": "pip",
         "replayed": true,
         "steps": [
           {
-            "command": "rm -rf worldrole-mcp && git clone https://github.com/zzn199216/worldrole-mcp --depth 1",
-            "purpose": "clone repository https://github.com/zzn199216/worldrole-mcp"
-          },
-          {
-            "command": "pip install ./worldrole-mcp",
-            "purpose": "install Python package worldrole-free-sources 0.2.0 via pip"
+            "command": "rm -rf /tmp/worldrole-mcp2 && git clone --depth 1 https://github.com/zzn199216/worldrole-mcp.git /tmp/worldrole-mcp2 && pip install /tmp/worldrole-mcp2",
+            "purpose": "git clone worldrole-mcp and pip install to provide worldrole-free-sources MCP server"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 -- worldrole-free-sources",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- worldrole-free-sources 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -115,7 +113,25 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 --call get_application_capabilities --args '{}' -- worldrole-free-sources",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search_free_jobs --args '{\"query\":\"remote python\",\"limit\":1}' -- worldrole-free-sources 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search_free_jobs content=text text_chars=508",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call prepare_application --args '{\"job_url\":\"https://example.com/jobs/123\",\"recipient\":\"hiring@example.com\",\"subject\":\"Application for Python Developer\",\"body\":\"Dear Hiring Manager, I am applying...\"}' -- worldrole-free-sources 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=prepare_application content=text text_chars=541",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call get_application_capabilities --args '{}' -- worldrole-free-sources 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
@@ -127,27 +143,33 @@
         "pitfalls": [
           {
             "readme_said": "/plugin install worldrole --marketplace zzn199216/worldrole-mcp",
-            "actually_needed": "MCP server is Python package worldrole-free-sources in repo; install via git clone and pip install . (documented in INSTALL_FREE_SOURCES.md), launch command is worldrole-free-sources on PATH",
+            "actually_needed": "Install companion via git clone and pip install providing worldrole-free-sources stdio server; README plugin requires Claude Code hosted marketplace",
             "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "worldrole-free-sources --help",
+            "actually_needed": "Server is stdio-only MCP with no help/version flag; blocks waiting for initialize - use pip show for version",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 9 tools listed and successful get_application_capabilities tool call.",
+          "observed": "Screenshots show MCP handshake with 9 tools listed and successful search_free_jobs and prepare_application tool calls.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-worldrole-mcp-20261101-003444-f104/report.json",
+          "trace_path": "runs/verify/verify-worldrole-mcp-20261101-023939-74fb/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-worldrole-mcp-20261101-003444-f104/check-1-cmd9.judged.png",
-            "runs/verify/verify-worldrole-mcp-20261101-003444-f104/check-2-cmd10.judged.png"
+            "runs/verify/verify-worldrole-mcp-20261101-023939-74fb/check-1-cmd6.judged.png",
+            "runs/verify/verify-worldrole-mcp-20261101-023939-74fb/check-2-cmd8.judged.png",
+            "runs/verify/verify-worldrole-mcp-20261101-023939-74fb/check-3-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.067389,
+        "cost_usd": 0.09262,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -169,9 +191,45 @@
             "sync_application_replies"
           ],
           "tool_count": 9,
-          "called_tool": "get_application_capabilities",
+          "called_tool": "search_free_jobs",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Search remote and visa-sponsored jobs worldwide",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output returned empty jobs list with source unavailable error."
+          },
+          {
+            "feature": "Score job matches against experience and preferences",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Scoring lives on remote https://mcp.worldrole.work/mcp not in free-sources companion"
+          },
+          {
+            "feature": "Draft tailored application letters and content",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Send applications and follow up on replies",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists capabilities with smtp/imap false, no send done."
+          }
+        ]
       }
     ]
   },
@@ -467,8 +525,40 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T00:04:39+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Find remote jobs worldwide or overseas roles offering visa sponsorship",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:23+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Evaluate matches against your experience, skills and preferences, with reasons, gaps and conditions to verify",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:23+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Reuse known experience and materials to draft and tailor letters and application content",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:23+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Use a connected mailbox or available tools for authorized sending, application records, follow-ups and routine replies",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T01:56:23+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:50:14+08:00",
-  "updated_at": "2026-11-01T00:45:12+08:00"
+  "updated_at": "2026-11-01T02:42:24.349901+08:00"
 }

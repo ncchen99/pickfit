@@ -76,20 +76,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-airdrop-llm-20261030-235452-4e4f",
+      "run_id": "verify-airdrop-llm-20261101-030913-7fa7",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g airdrop-llm@latest",
-          "purpose": "Install airdrop-llm globally via npm"
+          "purpose": "npm install -g airdrop-llm@latest"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "airdrop --version",
-        "expected_signal": "airdrop-llm v0.1.6"
+        "command": "node ~/.local/lib/node_modules/airdrop-llm/bin/airdrop-daemon --mode master --ui-port 3000 --ws-port 3001 2>&1",
+        "expected_signal": "OpenAI-compatible reverse proxy listening at http://localhost:9995/v1"
       },
-      "first_task": null
+      "first_task": "node ~/.local/lib/node_modules/airdrop-llm/bin/airdrop-daemon --mode master --ui-port 3000 --ws-port 3001 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -121,75 +121,114 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-10-30T23:56:31.193228+08:00",
+    "checked_at": "2026-11-01T03:10:56.694267+08:00",
     "runs": [
       {
-        "id": "verify-airdrop-llm-20261030-235452-4e4f",
+        "id": "verify-airdrop-llm-20261101-030913-7fa7",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-30T23:56:31.193228+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T03:10:56.694267+08:00",
         "tool_version": "0.1.6",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
             "command": "npm install -g airdrop-llm@latest",
-            "purpose": "Install airdrop-llm globally via npm"
+            "purpose": "npm install -g airdrop-llm@latest"
           }
         ],
         "smoke_tests": [
           {
-            "command": "airdrop --version",
-            "expected_signal": "airdrop-llm v0.1.6",
+            "command": "node ~/.local/lib/node_modules/airdrop-llm/bin/airdrop-daemon --mode master --ui-port 3000 --ws-port 3001 2>&1",
+            "expected_signal": "OpenAI-compatible reverse proxy listening at http://localhost:9995/v1",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "airdrop-llm v0.1.6",
+            "observed_excerpt": "[airdrop-daemon] OpenAI-compatible reverse proxy listening at http://localhost:9995/v1",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "airdrop start",
-            "actually_needed": "pass --no-browser when starting headless (airdrop start --no-browser) so it does not try xdg-open",
-            "kind": "sandbox"
+            "readme_said": "airdrop start spawns model and daemon directly",
+            "actually_needed": "CLI wrapper `airdrop start` tries to spawn `ollama serve` and crashes with ENOENT if ollama not installed; running daemon directly via `node bin/airdrop-daemon --mode master` bypasses that and still exposes gateway on :9995",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "npm install downloads Rust binary via postinstall",
+            "actually_needed": "postinstall attempts GitHub binary download; on this Linux x64 box binary was a 57K Node.js shim not Rust binary, fallback to Node daemon works without Rust toolchain",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows `airdrop --version` printing `airdrop-llm v0.1.6`.",
+          "observed": "Screenshot shows the daemon starting successfully with the reverse proxy listening at the expected URL.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-airdrop-llm-20261030-235452-4e4f/report.json",
+          "trace_path": "runs/verify/verify-airdrop-llm-20261101-030913-7fa7/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-airdrop-llm-20261030-235452-4e4f/check-1-cmd7.judged.png"
+            "runs/verify/verify-airdrop-llm-20261101-030913-7fa7/check-1-cmd14.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.254595
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.155935,
+        "features": [
+          {
+            "feature": "Pool laptops into distributed GPU cluster",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "Requires 2+ laptops on same Wi-Fi for P2P pooling; single box cannot verify"
+          },
+          {
+            "feature": "Run 32B and 70B models offline",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "Requires 20-50GB model download and 24-64GB pooled RAM/GPU; not feasible in box"
+          },
+          {
+            "feature": "Serve OpenAI-compatible chat completions API",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows the proxy listening log and open port, with no actual /v1/models or /v1/chat/completions response."
+          },
+          {
+            "feature": "Discover peer laptops via Wi-Fi",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "Requires second peer broadcasting on UDP :9998; single box cannot verify discovery"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T03:10:56+08:00",
     "quality": {
-      "total": 68.1,
+      "total": 63.6,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
+          "score": 0.51,
           "weight": 40.0
         },
         "install_docs": {
@@ -232,7 +271,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 37.25
+      "value": 34.79
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -555,5 +594,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:59+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T03:10:56.697071+08:00"
 }

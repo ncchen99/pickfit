@@ -74,16 +74,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-croft-20261031-000838-1799",
+      "run_id": "verify-croft-20261101-114502-f239",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL -o /tmp/croft.tar.gz https://github.com/vitali87/croft/releases/download/v0.2.82/croft-x86_64-unknown-linux-musl.tar.gz && ls -lh /tmp/croft.tar.gz && tar tzf /tmp/croft.tar.gz",
-          "purpose": "Download Linux x86_64 release archive"
-        },
-        {
-          "command": "tar xzf /tmp/croft.tar.gz -C /tmp && install -m755 /tmp/croft-x86_64-unknown-linux-musl/croft ~/.local/bin/croft && ~/.local/bin/croft --version",
-          "purpose": "Extract archive and install binary to ~/.local/bin"
+          "command": "curl -fsSL https://github.com/vitali87/croft/releases/download/v0.2.82/croft-x86_64-unknown-linux-musl.tar.gz | tar xz -C /tmp && ls /tmp/croft-x86_64-unknown-linux-musl/croft && mkdir -p ~/.local/bin && mv /tmp/croft-x86_64-unknown-linux-musl/croft ~/.local/bin/croft && chmod +x ~/.local/bin/croft",
+          "purpose": "Download x86_64 musl release tarball and install binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -110,29 +106,25 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:09:29.613861+08:00",
+    "checked_at": "2026-11-01T11:45:56.286650+08:00",
     "runs": [
       {
-        "id": "verify-croft-20261031-000838-1799",
+        "id": "verify-croft-20261101-114502-f239",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:09:29.613861+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T11:45:56.286650+08:00",
         "tool_version": "0.2.82",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL -o /tmp/croft.tar.gz https://github.com/vitali87/croft/releases/download/v0.2.82/croft-x86_64-unknown-linux-musl.tar.gz && ls -lh /tmp/croft.tar.gz && tar tzf /tmp/croft.tar.gz",
-            "purpose": "Download Linux x86_64 release archive"
-          },
-          {
-            "command": "tar xzf /tmp/croft.tar.gz -C /tmp && install -m755 /tmp/croft-x86_64-unknown-linux-musl/croft ~/.local/bin/croft && ~/.local/bin/croft --version",
-            "purpose": "Extract archive and install binary to ~/.local/bin"
+            "command": "curl -fsSL https://github.com/vitali87/croft/releases/download/v0.2.82/croft-x86_64-unknown-linux-musl.tar.gz | tar xz -C /tmp && ls /tmp/croft-x86_64-unknown-linux-musl/croft && mkdir -p ~/.local/bin && mv /tmp/croft-x86_64-unknown-linux-musl/croft ~/.local/bin/croft && chmod +x ~/.local/bin/croft",
+            "purpose": "Download x86_64 musl release tarball and install binary to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -144,40 +136,70 @@
             "observed_excerpt": "croft 0.2.82",
             "setup": [],
             "offline": true
-          },
-          {
-            "command": "croft --help",
-            "expected_signal": "Workspace folder to open",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Workspace folder to open (defaults to current directory). A file works too: the workspace roots at its parent and the file opens in the editor",
-            "setup": [],
-            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "cargo binstall croft-software / cargo install croft-software --locked / brew install vitali87/croft/croft",
-            "actually_needed": "Downloaded croft-x86_64-unknown-linux-musl.tar.gz from GitHub releases and installed the contained 'croft' binary to ~/.local/bin with install -m755",
+            "readme_said": "cargo binstall croft-software / cargo install croft-software --locked",
+            "actually_needed": "Rust toolchain not available in box; used curl | tar of release archive https://github.com/vitali87/croft/releases/download/v0.2.82/croft-x86_64-unknown-linux-musl.tar.gz to ~/.local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "brew install vitali87/croft/croft",
+            "actually_needed": "Homebrew not installed on Linux box; binary tarball used instead",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows `croft --version` printing `croft 0.2.82`.",
+          "observed": "Screenshot shows croft --version printing croft 0.2.82.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-croft-20261031-000838-1799/report.json",
+          "trace_path": "runs/verify/verify-croft-20261101-114502-f239/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-croft-20261031-000838-1799/check-1-cmd5.judged.png"
+            "runs/verify/verify-croft-20261101-114502-f239/check-1-cmd6.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.02843
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.048471,
+        "features": [
+          {
+            "feature": "use VS Code-style three-pane workspace in terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Three-pane TUI workspace requires interactive terminal UI, cannot be exercised headlessly"
+          },
+          {
+            "feature": "edit code with LSP completion and navigation",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "LSP editing requires interactive editor session"
+          },
+          {
+            "feature": "use integrated terminal with splits and history",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Integrated terminal with splits requires interactive TUI"
+          },
+          {
+            "feature": "debug Python, JavaScript, Rust, C and C++",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "DAP debugging requires interactive debug session with language runtimes"
+          }
+        ]
       }
     ]
   },
@@ -509,5 +531,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T11:45:56.289242+08:00"
 }
