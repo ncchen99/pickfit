@@ -91,7 +91,7 @@ test('the page never echoes a query string: request URLs reach Workers logs', as
   const s = site();
   const html = await (await s.send(new Request('http://127.0.0.1:8787/?need=secret-words&os=linux', { headers: { accept: 'text/html' } }))).text();
   assert.ok(!html.includes('secret-words'));
-  assert.ok(html.includes('<option value="" selected>Any OS</option>'));
+  assert.ok(html.includes('<input type="radio" name="os" value="" checked>Any OS'));
   assert.equal(s.metaCalls.length, 0);
 });
 
@@ -189,7 +189,7 @@ test('nothing fits: the coverage note, no picks', async () => {
 test('a model failure says the results are ranked by rules', async () => {
   const s = site({}, () => Response.json({ error: 'bad request' }, { status: 400 }));
   const html = await (await s.search(MAC_LLM)).text();
-  assert.match(html, /<div class="notice busy" role="status"><h2>Ranked without the model this time<\/h2>/);
+  assert.match(html, /<div class="notice busy" role="status"><img class="fitz fitz-resting"[^>]*><div><h2>Ranked without the model this time<\/h2>/);
   assert.match(html, /\d+ verified tools meet your conditions; these are ranked by rules, without a model\./);
   assert.ok(html.includes('<article class="pick"'));
 });
@@ -294,8 +294,9 @@ test('without the script, the form posts and gets the whole page back', async ()
   const html = await res.text();
   assert.match(html, /^<!doctype html>/);
   assert.ok(html.includes('offline &lt;for &quot;me&quot;&gt;</textarea>'));
-  assert.ok(html.includes('<option value="macos" selected>'));
-  assert.match(html, /<section id="results"[^>]*><h2 class="results-title">2 tools fit your need<\/h2><p class="match-line">/);
+  assert.ok(html.includes('<input type="radio" name="os" value="macos" checked>'));
+  assert.match(html, /<body class="is-results" data-served="1">/);
+  assert.match(html, /<section id="results"[^>]*><div class="res-head"><div class="says"><img [^>]*><div class="bubble"><h2 class="results-title">2 tools fit your need<\/h2><p class="match-line">/);
   const nonce = /script-src 'nonce-([0-9a-f]+)'/.exec(res.headers.get('content-security-policy')!)![1];
   assert.ok(html.includes(`<script nonce="${nonce}">`));
 });
@@ -303,21 +304,23 @@ test('without the script, the form posts and gets the whole page back', async ()
 test('before any search the page shows real catalog runs, never invented ones', async () => {
   const s = site();
   const html = await (await s.send(new Request('http://127.0.0.1:8787/', { headers: { accept: 'text/html' } }))).text();
-  // The hero's frame: the newest hidden gem whose run found a README problem, from the index.
-  const frame = html.slice(html.indexOf('<figure class="frame">'), html.indexOf('</figure>'));
-  assert.match(frame, /Fixture LLM Runner/);
-  assert.match(frame, /Its service answers requests/);
-  assert.match(frame, /Installed in a fresh Linux x86_64 sandbox, replayed from scratch, 28 Oct 2026\./);
-  assert.match(frame, /README:<\/span> make install<br><span class="quiet">What worked:<\/span> the install script/);
-  assert.match(frame, /curl -fsSL https:\/\/example\.invalid\/fixture\/fixture-llm-runner\/install\.sh \| sh/);
-  // The newest runs: one row per verified tool (5 fixtures), with where and when.
-  const table = html.slice(html.indexOf('<table class="runs" data-ui>'), html.indexOf('</table>'));
-  assert.equal(table.split('<tr><td class="kind">').length - 1, 6); // all 6 fixtures; the page shows up to 6
+  // How Fitz picks: four stages for one real tool, the newest hidden gem whose run found a README problem.
+  const how = html.slice(html.indexOf('<section id="how"'), html.indexOf('<section id="recent"'));
+  assert.match(how, /One real tool from the catalog, <a href="\/tool\/fixture-llm-runner">Fixture LLM Runner<\/a>, through the four steps\./);
+  assert.equal(how.split('<li class="stage">').length - 1, 4);
+  assert.match(how, /Run on Linux x86_64/);
+  assert.match(how, /Its service answers requests, and on replay/);
+  assert.match(how, /<b>README fix:<\/b> the install script/);
+  assert.match(how, /curl -fsSL https:\/\/example\.invalid\/fixture\/fixture-llm-runner\/install\.sh \| sh/);
+  // The reasons come from rules.ts, citing their fields.
+  assert.match(how, /Use case: run a small language model offline on a laptop<span class="cite">use_cases: “run a small language model offline on a laptop”/);
+  // The newest runs: one row per verified tool (6 fixtures), with where and when, linking to its profile.
+  const runs = html.slice(html.indexOf('<ul class="runs-list">'), html.indexOf('</ul></div></section>'));
+  assert.equal(runs.split('<li class="run-row">').length - 1, 6);
+  assert.match(runs, /<a class="name" href="\/tool\/[a-z0-9-]+">/);
   assert.match(html, /pickfit lists 6 tools\. 6 were installed and replayed in a fresh sandbox, and 1 is a hidden gem: high quality, little known\. 1 was installed by hand on a real machine\./);
-  // How it works: four stages for the same tool; the reasons come from rules.ts, citing their fields.
-  assert.equal(html.split('<li class="stage" data-stage=').length - 1, 4);
-  assert.match(html, /<input type="range" id="stage" min="0" max="3"/);
-  assert.match(html, /Runs on your machine without a cloud service<span class="cite">From its profile: processing is “local”/);
+  // The counts in the hero are the catalog's.
+  assert.match(html, /<strong>6<\/strong> READMEs read/);
   assert.equal(s.metaCalls.length, 0);
 });
 
@@ -325,9 +328,10 @@ test('results: claim beside evidence, no rank numerals, and "built-in is enough"
   const s = site({}, () => metaResponse(answer({ no_install_option: 'Your OS already ships a tool that does this.' })));
   const html = await (await s.search(MAC_LLM)).text();
   assert.ok(html.indexOf('You may not need to install anything') < html.indexOf('<article class="pick"'));
-  assert.ok(!html.includes('class="rank"'));
+  assert.ok(!html.includes('class="rank"') && !html.includes('t-rank'));
   for (const pick of html.split('<article class="pick"').slice(1)) {
-    assert.match(pick, /<div class="claim">[\s\S]*<\/div><div class="evidence"><section class="record" aria-label="Test record" data-ui>/);
+    // The claim, then the stitches, then the run record they rest on.
+    assert.match(pick, /<div class="t-claim">[\s\S]*<div class="seam" aria-hidden="true"><\/div><section class="record" aria-label="Test record">/);
   }
 });
 
@@ -449,8 +453,8 @@ test('the unverified option says so in a filled line and uses plain text type, a
   const s = site({}, () => metaResponse(answer({ well_known_name: 'Ollama', well_known_why: 'Ollama is free and runs models offline on macOS.' })));
   const html = await (await s.search({ ...MAC_LLM, free_only: '1' }, { 'x-pickfit-fragment': '' })).text();
   assert.match(html, /<p class="unchecked">pickfit has not installed or tested it\. There is no run record and no install guide\.<\/p>/);
-  assert.match(html, /\.outside h3\{font:600 var\(--t-lead\)\/1\.35 var\(--sans\)/);
-  assert.match(html, /<form id="search" class="search" method="post" action="\/search#results">/);
+  assert.match(html, /\.outside h3\{font:600 1\.1rem\/1\.35 var\(--sans\)/);
+  assert.match(html, /<form id="search" class="ask-card" method="post" action="\/search#results">/);
 });
 
 // Rendering helpers, on crafted outputs.
@@ -507,7 +511,8 @@ test('render: data and model text are escaped; only http(s) links are links', ()
     why: [{ claim: '<b>bold</b>', field: 'tags', value: '<i>' }],
   });
   const html = renderResults({ out: output([evil]), guides: {} }, EMPTY_FORM, fixtureCatalog());
-  assert.ok(!html.includes('<img') && !html.includes('<script') && !html.includes('<b>') && !html.includes('<i>'));
+  assert.ok(!html.includes('<img src=x') && !html.includes('<script') && !html.includes('<b>') && !html.includes('<i>'));
+  assert.ok(html.split('<img ').slice(1).every((tag) => tag.startsWith('class="fitz ')), 'the only images are Fitz');
   assert.ok(html.includes('&lt;img src=x onerror=alert(1)&gt;'));
   assert.ok(!html.includes('javascript:'));
   assert.ok(html.includes('href="https://example.com/?q=%22x%22"'));
@@ -539,14 +544,14 @@ test('render: the your-system line covers yes, another OS, another CPU and no OS
 test('render: a best free option outside the picks, a no-install option and a cached note', () => {
   const out = { ...output([pick()]), best_free: { slug: 'fixture-json-query', reason: 'Free and local.' }, no_install_option: 'python3 -m json.tool is enough.' };
   const html = renderResults({ out, guides: {} }, EMPTY_FORM, fixtureCatalog(), { cached: true });
-  assert.match(html, /Best free option:<\/span> <a href="https:\/\/example\.invalid\/fixture\/fixture-json-query"[^>]*>Fixture JSON Query<\/a>\. Free and local\./);
+  assert.match(html, /Best free option:<\/span> <a href="\/tool\/fixture-json-query">Fixture JSON Query<\/a>\. Free and local\./);
   assert.match(html, /<div class="aside best-free">[\s\S]*mine-unknown">Choose your OS above/);
-  assert.match(html, /You may not need to install anything<\/h3><p>python3 -m json\.tool is enough\.<\/p><p class="quiet">From Muse Spark’s general knowledge; pickfit hasn’t checked it\./);
+  assert.match(html, /You may not need to install anything<\/h3><p>python3 -m json\.tool is enough\.<\/p><p class="quiet small">From Muse Spark’s general knowledge; pickfit hasn’t checked it\./);
   assert.match(html, /Shown from the same search/);
 });
 
 test('catalog stats come from the index', () => {
-  assert.deepEqual(catalogStats(fixtureCatalog()), { listed: 6, replayed: 6, byHand: 1, gems: 1 });
+  assert.deepEqual(catalogStats(fixtureCatalog()), { listed: 6, verified: 6, replayed: 6, byHand: 1, gems: 1 });
 });
 
 test('render: the offline check is shown when it failed, and said when it was never run but asked for', () => {
@@ -592,7 +597,7 @@ test('the rules path shows each pick\'s fit label and its words once, and the he
   const picks = html.split('<article class="pick"').slice(1);
   assert.ok(picks.length > 0);
   for (const pick of picks) {
-    assert.match(pick, /<span class="badge match-(good|partial|weak)">(Good|Partial|Weak) match<\/span>/);
+    assert.match(pick, /<span class="badge badge-(pass|caution) match-(good|partial|weak)">(Good|Partial|Weak) match<\/span>/);
     assert.match(pick, /<p class="coverage">/);
     // The same words are not repeated as a tradeoff.
     assert.ok(!/<li>(Covers part of the request|Weak match):/.test(pick));
@@ -611,7 +616,8 @@ test('render: a GUI app\'s launch is described as such, and only a real screen g
   assert.equal(once.split('network off').length - 1, 1, 'the offline result is said once for a GUI app');
   const broken = pick({ verification: { ...pick().verification, level: 'install', gui: { ...gui, screen: 'crash_or_error' } } });
   const bad = renderResults({ out: output([broken]), guides: {} }, EMPTY_FORM, fixtureCatalog());
-  assert.match(bad, /<p class="level level-caution">It showed an error on launch<\/p>/);
+  assert.match(bad, /<p class="level level-caution"><svg class="i i-triangle-alert"[^>]*>.*?<\/svg>It showed an error on launch<\/p>/);
+  assert.ok(!bad.includes('class="check"'));
   assert.equal(levelLabel('service', { mcp: { called_tool: null } }), 'An MCP client connects and lists its tools');
   assert.equal(levelLabel('function'), 'Its main function works');
 });
