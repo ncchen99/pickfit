@@ -275,3 +275,12 @@ def test_an_audio_box_starts_pickfits_server_and_points_the_box_user_at_it(monke
     assert "/usr/bin/nsenter --target=4343" in pulse and "--reuid=1001" in pulse  # the harness's namespace and uid
     assert f"PULSE_SERVER={audio.PULSE_SERVER}" in box.user_argv("true", 10, "/home/sbx/work")
     assert "simulated microphone" in box.describe()
+
+
+def test_a_box_sized_for_weights_tells_the_agent_how_large_a_model_fits():
+    from pickfit.verify.agent import big_box
+    from pickfit.verify.box import BoxLimits
+
+    assert big_box(mb.ModalBox(client=object())) == ""
+    line = big_box(mb.ModalBox(gpu="L4", client=object(), limits=BoxLimits(memory_mb=24576, home_mb=10240)))
+    assert "24 GiB of memory" in line and "about 8 GB fits" in line

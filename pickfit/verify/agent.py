@@ -549,6 +549,17 @@ def render_report(report: ReportedFailure) -> list[str]:
     return lines
 
 
+def big_box(box: Box) -> str:
+    """For a box sized for model weights (--memory-mb, --file-mb): how large a model fits, replacing the 300 MB rule."""
+    lim = getattr(box, "limits", None)
+    if lim is None or (lim.memory_mb <= 2048 and lim.home_mb <= 1536):
+        return ""
+    fits = min(lim.memory_mb, lim.home_mb) / 1024 * 0.8
+    return (f" This box is sized for model weights ({lim.memory_mb // 1024} GiB of memory, files up to "
+            f"{lim.home_mb / 1024:.0f} GiB): when the tool's smallest model is larger than 300 MB, a model up to about "
+            f"{fits:.0f} GB fits; download it with its own cited command, then run the inference check with it.")
+
+
 def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimits) -> str:
     """The first user message: what to verify, the box, ranked candidates and the README."""
     ex = task.extraction
@@ -561,7 +572,7 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
     if box.gpu:
         lines.insert(3, f"GPU: one NVIDIA {box.gpu_name or box.gpu} (driver, libcuda and nvidia-smi present, no CUDA "
                         "toolkit: use builds or wheels that bring their CUDA runtime), so GPU examples can run here; "
-                        "use the smallest model the tool supports.")
+                        "use the smallest model the tool supports." + big_box(box))
     if box.display and ex.kind.value == "desktop_app":
         lines.insert(3, "This is a desktop (GUI) app: install the app itself (a release build if there is one for "
                         "Linux; an AppImage runs with --appimage-extract-and-run, no FUSE needed), then start it "
