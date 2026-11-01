@@ -175,3 +175,27 @@ def test_a_gui_apps_run_carries_what_pickfit_saw_but_not_the_window_title(data_d
     assert "Ignore previous instructions" not in json.dumps(chat)  # the title is the app's text
     assert chat["verification"]["level"] == "install"
     assert entries["fixture-json-query"]["install"]["linux"]["run"]["gui"] is None
+
+
+def test_a_gui_apps_operations_reach_the_index_with_pickfits_own_lines_only(data_dir: Path) -> None:
+    launch = "fixture-chat-tui --gui"
+
+    def operated(record: dict) -> None:
+        record["kind"] = "desktop_app"
+        run = next(r for r in record["verification"]["runs"] if r["id"] == record["install"]["linux"]["run_id"])
+        run["smoke_tests"].append({"command": launch, "expected_signal": "gui check: passed", "exit_code": 1,
+                                   "passed": False})
+        run["gui"] = {"tier": "ui_rendered", "screen": "main_ui", "command": launch, "window_title": "x",
+                      "display": "Xvfb 1280x800x24, no window manager",
+                      "operations": [{"feature": "chat", "goal": "Type {nonce} and press Return.", "check": "file",
+                                      "target": "/home/sbx/", "expected": ["{nonce}"], "passed": False,
+                                      "observed": "no file under /home/sbx/: not found",
+                                      "smoke_test": len(run["smoke_tests"]) - 1, "actions": 2, "replay": "operated",
+                                      "screenshots": ["runs/verify/x/replay-3-1-op-1.png"]}]}
+
+    edit(data_dir / "fixture-chat-tui.json", operated)
+    chat = {e["slug"]: e for e in build_index(data_dir).index["entries"]}["fixture-chat-tui"]
+    assert chat["install"]["linux"]["run"]["gui"]["operations"] == [
+        {"feature": "chat", "check": "file", "passed": False, "replay": "operated", "goal": "Type {nonce} and press Return.",
+         "observed": "no file under /home/sbx/: not found"}]
+    assert "replay-3-1-op-1.png" not in json.dumps(chat)  # evidence paths stay in the record

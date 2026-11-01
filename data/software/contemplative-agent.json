@@ -61,20 +61,25 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "other",
+      "basis": "replayed",
+      "run_id": "verify-contemplative-agent-20261101-130439-a830",
+      "method": "source",
       "steps": [
         {
-          "command": "ollama pull gemma4:e4b",
-          "purpose": null
+          "command": "git clone https://github.com/shimo4228/contemplative-agent.git /tmp/ca-verify",
+          "purpose": "git clone contemplative-agent repo"
+        },
+        {
+          "command": "cd /tmp/ca-verify && uv venv .venv && uv pip install -e .",
+          "purpose": "uv pip install -e . editable install"
         }
       ],
-      "manual_steps": [
-        "Open claim link, verify email address and post verification message from an X account"
-      ],
-      "check": null,
-      "first_task": "contemplative-agent doctor"
+      "manual_steps": [],
+      "check": {
+        "command": "/tmp/ca-verify/.venv/bin/contemplative-agent --version",
+        "expected_signal": "contemplative-agent 2.14.0"
+      },
+      "first_task": "MOLTBOOK_HOME=/tmp/ca-test-verify /tmp/ca-verify/.venv/bin/contemplative-agent init"
     },
     "linux": {
       "basis": "replayed",
@@ -114,7 +119,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T04:09:44.238067+08:00",
+    "checked_at": "2026-11-01T13:08:07.119188+08:00",
     "runs": [
       {
         "id": "verify-contemplative-agent-20261031-040805-c1f2",
@@ -228,20 +233,108 @@
             "note": "distill needs Ollama generation+embeddings models"
           }
         ]
+      },
+      {
+        "id": "verify-contemplative-agent-20261101-130439-a830",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T13:08:07.119188+08:00",
+        "tool_version": "2.14.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/shimo4228/contemplative-agent.git /tmp/ca-verify",
+            "purpose": "git clone contemplative-agent repo"
+          },
+          {
+            "command": "cd /tmp/ca-verify && uv venv .venv && uv pip install -e .",
+            "purpose": "uv pip install -e . editable install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "/tmp/ca-verify/.venv/bin/contemplative-agent --version",
+            "expected_signal": "contemplative-agent 2.14.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "contemplative-agent 2.14.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "MOLTBOOK_HOME=/tmp/ca-test-verify /tmp/ca-verify/.venv/bin/contemplative-agent init",
+            "expected_signal": "Created identity file:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Created identity file: /tmp/ca-test-verify/identity.md (from contemplative)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show init creating identity and knowledge files and --version reporting 2.14.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-contemplative-agent-20261101-130439-a830/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-contemplative-agent-20261101-130439-a830/check-1-cmd15.judged.png",
+            "runs/verify/verify-contemplative-agent-20261101-130439-a830/check-2-cmd14.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.102342,
+        "features": [
+          {
+            "feature": "post autonomously on Moltbook with local LLM",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Posting on Moltbook needs API key, claim link, email/X verification and Ollama gemma4:e4b + nomic-embed-text (~10GB)"
+          },
+          {
+            "feature": "propose changes to constitution, identity, skills",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Proposing constitution/identity/skills via insight/amend-constitution/distill-identity needs Ollama LLM"
+          },
+          {
+            "feature": "distill episode log into patterns",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Distill into patterns needs episode logs and Ollama embeddings"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T13:08:07+08:00",
     "quality": {
-      "total": 81.8,
+      "total": 87.2,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.68,
+          "score": 0.8,
           "weight": 40.0
         },
         "install_docs": {
@@ -282,7 +375,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 58.9
+      "value": 62.78
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -589,5 +682,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:46:57+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T13:08:07.124046+08:00"
 }

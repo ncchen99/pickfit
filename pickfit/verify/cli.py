@@ -8,6 +8,8 @@ import json
 LIFETIME_MARGIN_S = 120  # the box outlives the agent's time limit, so the last turn still has it
 MAC_GUI_AGENT_S = 45 * 60  # tart + display: room for a desktop app's long download (tart_box.GUI_COMMAND_S)
 TART_MAX_VMS = 2  # Apple's limit on macOS VMs running at once on one Mac
+# Display boxes: room for operate_gui (one per listed feature) after the install and the launch.
+GUI_LIMITS = {"max_turns": 32, "max_commands": 20, "max_seconds": 35 * 60, "scope_cap_usd": 0.80}
 VBOX_MAX_VMS = 1  # one Windows base, reset from its snapshot for every box
 
 
@@ -45,7 +47,8 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
                    help="Modal: gVisor (default) or a microVM; a VM also drops DNS while the network is off")
     v.add_argument("--display", action="store_true",
                    help="Modal: a virtual display (Xvfb); tart: a desktop seen over VNC (the GUI base). Adds "
-                        "launch_gui, so GUI apps can be launched and judged")
+                        "launch_gui and operate_gui, so GUI apps can be launched, operated and checked (with more "
+                        "time and commands per app)")
     v.add_argument("--platform", default="linux/amd64", help="Docker platform (Modal runs x86_64)")
     v.add_argument("--keep-box", action="store_true", help="Docker: leave the agent's container running")
     v.add_argument("--write-back", action="store_true",
@@ -139,6 +142,8 @@ def run(args: argparse.Namespace) -> int:
         print("pickfit verify: give --fixture or --batch N")
         return 2
     limits = AgentLimits()
+    if args.display:  # a GUI app also gets one operation per listed feature, each a few minutes of model turns
+        limits = replace(limits, **GUI_LIMITS)
     if args.max_turns:
         limits = replace(limits, max_turns=args.max_turns)
     if args.gpu and args.runner != "modal":

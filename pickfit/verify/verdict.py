@@ -13,8 +13,9 @@ the log and decides from what actually ran:
   install needs a passing check, function a README example (not only
   --version/--help), service a background server, inference a generation
   request against it. A GUI launch (launch_gui: a window of the app's own)
-  supports install only: a GUI app is not function until an action is shown
-  to change checkable state, which pickfit does not check yet;
+  supports install only; operating the app (operate_gui, gui_operate.py)
+  supports function when pickfit's own check of the result passed (its line
+  `gui check: passed`, exit 0), whatever signal the agent cited;
 - for an MCP server (mcp.py), only pickfit's probe counts: function needs its
   completed handshake, service a tool call; nothing else passes, and a check
   or step that sets a credential variable never counts.
@@ -64,7 +65,14 @@ def _top_level(command: str) -> list[tuple[str, str]]:
     Quotes, $(...), backticks, (...) subshells, comments and heredoc bodies are
     skipped, so only operators that bash itself sees at the top split the text.
     """
-    parts: list[tuple[str, str]] = []
+    parts = [(op, command[start:end]) for op, start, end, _ in _scan(command)]
+    return [(o, t) for o, t in parts if t.strip() or o]
+
+
+def _scan(command: str) -> list[tuple[str, int, int, int]]:
+    """_top_level's parts as (operator before, start, end, body end): command[start:end] is the text,
+    and command[start:body end] adds the heredoc bodies that follow it (body end = end without any)."""
+    parts: list[tuple[str, int, int, int]] = []
     op, start, depth, i, n = "", 0, 0, 0, len(command)
     heredocs: list[tuple[str, bool]] = []
     while i < n:
@@ -114,17 +122,18 @@ def _top_level(command: str) -> list[tuple[str, str]]:
             elif ch == "\n":
                 found = "\n"
             if found:
-                parts.append((op, command[start:i]))
-                op = found
+                end = i
+                op_before, op = op, found
                 i += len(found)
                 if found == "\n" and heredocs:
                     i = _skip_heredocs(command, i, heredocs)
                     heredocs = []
+                parts.append((op_before, start, end, i if i > end + len(found) else end))
                 start = i
                 continue
         i += 1
-    parts.append((op, command[start:]))
-    return [(o, t) for o, t in parts if t.strip() or o]
+    parts.append((op, start, n, n))
+    return parts
 
 
 def _skip_heredocs(command: str, i: int, heredocs: list[tuple[str, bool]]) -> int:
@@ -571,6 +580,102 @@ def unmasked(command: str) -> tuple[str, str] | None:
     return clean, command.rstrip()[len(clean):].strip()
 
 
+# Commands that only look around: they list, read, print or locate, and write nothing.
+_LOOKS = {"ls", "pwd", "tree", "file", "stat", "du", "df", "wc", "which", "whereis", "type", "whoami", "id",
+          "uname", "echo", "printf", "cat", "head", "tail", "less", "more", "grep", "egrep", "fgrep", "rg", "sort",
+          "uniq", "cut", "tr", "column", "nl", "realpath", "readlink", "basename", "dirname", "date", "true", ":"}
+_SUMS = {"md5sum", "sha1sum", "sha256sum", "sha512sum"}  # printing a sum looks; `-c` checks one
+_FIND_ACTS = re.compile(r"\s-(?:exec|execdir|ok|okdir|delete|fprint\w*|fls)\b")
+_QUIET = re.compile(r"\s*(?:\d?>\s*/dev/null|&>\s*/dev/null|2>&1|>&2)")
+_VERSION_ARGS = {"--version", "-V", "-v", "version"}
+
+
+def _looks(text: str, last: bool) -> bool:
+    """Whether a pipeline element only looks around (see _LOOKS; `find` without actions, `tar -t`,
+    `command -v`, a checksum printed but not checked, `flatpak remotes`/`list`). `prog --version` counts too, except as the last command, where it is the step's own
+    check. Anything with a redirect, a heredoc, $(...), a subshell or only assignments is kept."""
+    bare = _QUIET.sub("", text).strip()
+    if not bare or re.search(r"[<>`]|\$\(", bare) or bare[0] in "({":
+        return False
+    words = bare.split()
+    while words and _ASSIGNMENT.match(words[0]):
+        words = words[1:]
+    if not words:
+        return False  # `VERSION=1.2` sets what later commands use
+    name = words[0].rsplit("/", 1)[-1]
+    if name == "find":
+        return not _FIND_ACTS.search(" " + bare)
+    if name == "tar":
+        return len(words) > 1 and (words[1] == "--list" or bool(re.fullmatch(r"-?[vzjJfa]*t[vzjJfa]*", words[1])))
+    if name == "unzip":
+        return words[1:2] in (["-l"], ["-Z"], ["-Z1"])
+    if name == "command":
+        return words[1:2] == ["-v"]
+    if name in _SUMS:
+        return not {"-c", "--check"} & set(words)  # `sha256sum -c` checks the download: it stays
+    if name == "flatpak":
+        sub = next((w for w in words[1:] if not w.startswith("-")), None)
+        return sub in ("remote-list", "remotes", "remote-ls", "list")
+    if len(words) == 2 and words[1] in _VERSION_ARGS:
+        return not last
+    return name in _LOOKS
+
+
+def install_command(command: str) -> str:
+    """An install step without the looking around: what a fresh box replays and the guide shows.
+
+    At the top level it drops pipelines that only look (_looks: ls, find, pwd, cat, head, tail, wc,
+    echo or printf without a redirect, `tar -t`, `unzip -l`, a `prog --version` before the end) and the
+    `| head`/`| tail` cut off any pipeline (not a head an endless feed needs, as in unmasked). What
+    installs stays as written: cd, export, assignments, mkdir, downloads, extraction, heredocs. Where a
+    dropped command sat between two others, the weaker joint is kept (`a && ls; b` -> `a; b`), so what
+    ran unconditionally still does. Unchanged when the command has `||` or a background `&`, when only
+    looking is left, or when a heredoc would end up joined by anything but a newline.
+    """
+    units = [(op, command[s:e], command[s:b], b > e) for op, s, e, b in _scan(command)]
+    units = [u for u in units if u[1].strip() or u[2].strip()]
+    if not units or any(op in ("||", "&") for op, *_ in units):
+        return command
+    pipelines: list[list[tuple[str, str, str, bool]]] = []
+    for unit in units:
+        if unit[0] == "|" and pipelines:
+            pipelines[-1].append(unit)
+        else:
+            pipelines.append([unit])
+    changed = False
+    for pipeline in pipelines:
+        while len(pipeline) > 1:
+            words = pipeline[-1][1].split()
+            if not (words[:1] in (["head"], ["tail"]) and all(_CUT_ARG.match(w) for w in words[1:])
+                    and not pipeline[-1][3]):
+                break
+            if words[0] == "head" and _ENDLESS.search(pipeline[-2][1]):
+                break
+            pipeline.pop()
+            changed = True
+    kept: list[tuple[str, list[tuple[str, str, str, bool]]]] = []  # (joint before, pipeline)
+    joints: list[str] = []
+    for k, pipeline in enumerate(pipelines):
+        joints.append(pipeline[0][0])
+        if all(_looks(u[1], k == len(pipelines) - 1) and not u[3] for u in pipeline):
+            changed = True
+            continue
+        joint = "\n" if "\n" in joints else ";" if ";" in joints else "&&"
+        kept.append((joint if kept else "", pipeline))
+        joints = []
+    if not changed or not kept:
+        return command
+    out = ""
+    for k, (joint, pipeline) in enumerate(kept):
+        text = " | ".join(u[2].strip() for u in pipeline)
+        if k and kept[k - 1][1][-1][3] and joint != "\n":
+            return command  # a heredoc's terminator line must end its line
+        out += text if not k else ("\n" if joint == "\n" else f" {joint} " if joint == "&&" else "; ") + text
+    if masked_exit(out) and not masked_exit(command):
+        return command  # `curl … | cat && sha256sum x`: without the last command, `| cat` would decide
+    return out
+
+
 def last_command(command: str) -> str:
     parts = [text for _, text in _top_level(command) if text.strip()]
     return parts[-1] if parts else command
@@ -615,13 +720,17 @@ def _excerpt(record: CommandRecord, signal: str) -> str:
 
 
 MCP_KINDS = ("mcp", "mcp_call")
+GUI_KINDS = ("gui", "gui_op")  # a launch, an operation: each stops every box-user process, so they run last
+GUI_PASSED_LINE = "gui check: passed"
 
 
 def check_kind(command: str, tool: str = "run_command") -> str:
-    """gui (a launch_gui), mcp or mcp_call (pickfit's MCP probe), version (--version/--help only), generation
-    (asks a model for text), or example."""
+    """gui (a launch_gui), gui_op (an operate_gui), mcp or mcp_call (pickfit's MCP probe), version
+    (--version/--help only), generation (asks a model for text), or example."""
     if tool == "launch_gui":
         return "gui"
+    if tool == "operate_gui":
+        return "gui_op"
     probe = probe_kind(last_command(command))
     if probe:
         return probe
@@ -696,6 +805,13 @@ def evaluate_check(record: CommandRecord, expected_exit_code: int, expected_sign
     return not problems, problems
 
 
+def gui_op_problems(exit_code: int | None, stdout: str) -> list[str]:
+    """An operation passes only on pickfit's own check line and exit 0, whatever the agent cited."""
+    if exit_code == 0 and GUI_PASSED_LINE in stdout.splitlines():
+        return []
+    return ["pickfit's check of the operation did not pass (no `gui check: passed` with exit 0)"]
+
+
 def mcp_problems(kind: str, stdout: str) -> list[str]:
     """Why a probe check's output does not show what its kind claims; [] when it does."""
     summary = parse_summary(stdout)
@@ -726,7 +842,7 @@ def supported_level(steps_ok: bool, checks: list[ResolvedCheck], has_service: bo
         return "service" if "mcp_call" in kinds else "function" if "mcp" in kinds else None
     if any(c.kind == "generation" for c in passing) and has_service:
         return "inference"
-    if has_service and any(c.kind not in ("version", "gui") for c in passing):
+    if has_service and any(c.kind not in ("version", *GUI_KINDS) for c in passing):
         return "service"
     if any(c.kind not in ("version", "gui") for c in passing):
         return "function"
@@ -824,9 +940,11 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord], *, mcp: bool 
             setup_ok = False
             check.problems.append(missing)
         ok, why = evaluate_check(record, check.expected_exit_code, check.expected_signal,
-                                 trusted_only=check.kind == "gui")
+                                 trusted_only=check.kind in GUI_KINDS)
         if check.kind in MCP_KINDS:
             why += mcp_problems(check.kind, record.stdout)
+        if check.kind == "gui_op":
+            why += gui_op_problems(record.exit_code, record.stdout)
         if mcp:
             fake = sorted({name for cid in (test.command_id, *test.setup_ids) if cid in by_id
                            for name in credentials(by_id[cid].command)})

@@ -84,28 +84,28 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-lokalbot-20261101-164911-fdc1",
+      "run_id": "verify-lokalbot-20261101-183124-a3c6",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fL -o /tmp/lokalbot.tar.gz https://github.com/stevyhacker/LokalBot/releases/download/v0.11.6/LokalBot-0.11.6-linux-x86_64.tar.gz && tar -tzf /tmp/lokalbot.tar.gz",
-          "purpose": "Download Linux tarball from latest release"
+          "command": "curl -fL -o /tmp/lokalbot.tar.gz https://github.com/stevyhacker/LokalBot/releases/download/v0.11.6/LokalBot-0.11.6-linux-x86_64.tar.gz",
+          "purpose": "download Linux tarball from GitHub releases"
         },
         {
-          "command": "mkdir -p /tmp/extract && tar -xzf /tmp/lokalbot.tar.gz -C /tmp/extract && ls -la /tmp/extract/LokalBot-0.11.6-linux-x86_64/",
-          "purpose": "Extract tarball to /tmp/extract"
+          "command": "mkdir -p ~/apps/lokalbot && tar -xzf /tmp/lokalbot.tar.gz -C ~/apps/lokalbot",
+          "purpose": "extract tarball to ~/apps/lokalbot"
         },
         {
-          "command": "/tmp/extract/LokalBot-0.11.6-linux-x86_64/install.sh",
-          "purpose": "Run install.sh to install lokalbot and lokalbot-cli to ~/.local/bin"
+          "command": "~/apps/lokalbot/LokalBot-0.11.6-linux-x86_64/install.sh",
+          "purpose": "run install.sh to install to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "~/.local/bin/lokalbot-cli --version",
+        "command": "lokalbot-cli --version",
         "expected_signal": "lokalbot-cli 0.11.6"
       },
-      "first_task": "~/.local/bin/lokalbot"
+      "first_task": "/home/sbx/.local/bin/lokalbot"
     },
     "windows": null
   },
@@ -127,35 +127,35 @@
     "checked_at": "2026-11-01T19:52:06.855299+08:00",
     "runs": [
       {
-        "id": "verify-lokalbot-20261101-164911-fdc1",
+        "id": "verify-lokalbot-20261101-183124-a3c6",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-vm",
-        "image": "pickfit-sbx-vm-gui:14dd5b7442cc",
-        "checked_at": "2026-11-01T16:51:17.407714+08:00",
+        "image": "pickfit-sbx-vm-gui:57d565a999ec",
+        "checked_at": "2026-11-01T18:33:34.075840+08:00",
         "tool_version": "0.11.6",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fL -o /tmp/lokalbot.tar.gz https://github.com/stevyhacker/LokalBot/releases/download/v0.11.6/LokalBot-0.11.6-linux-x86_64.tar.gz && tar -tzf /tmp/lokalbot.tar.gz",
-            "purpose": "Download Linux tarball from latest release"
+            "command": "curl -fL -o /tmp/lokalbot.tar.gz https://github.com/stevyhacker/LokalBot/releases/download/v0.11.6/LokalBot-0.11.6-linux-x86_64.tar.gz",
+            "purpose": "download Linux tarball from GitHub releases"
           },
           {
-            "command": "mkdir -p /tmp/extract && tar -xzf /tmp/lokalbot.tar.gz -C /tmp/extract && ls -la /tmp/extract/LokalBot-0.11.6-linux-x86_64/",
-            "purpose": "Extract tarball to /tmp/extract"
+            "command": "mkdir -p ~/apps/lokalbot && tar -xzf /tmp/lokalbot.tar.gz -C ~/apps/lokalbot",
+            "purpose": "extract tarball to ~/apps/lokalbot"
           },
           {
-            "command": "/tmp/extract/LokalBot-0.11.6-linux-x86_64/install.sh",
-            "purpose": "Run install.sh to install lokalbot and lokalbot-cli to ~/.local/bin"
+            "command": "~/apps/lokalbot/LokalBot-0.11.6-linux-x86_64/install.sh",
+            "purpose": "run install.sh to install to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "~/.local/bin/lokalbot-cli --version",
+            "command": "lokalbot-cli --version",
             "expected_signal": "lokalbot-cli 0.11.6",
             "exit_code": 0,
             "passed": true,
@@ -164,16 +164,7 @@
             "offline": true
           },
           {
-            "command": "~/.local/bin/lokalbot-cli --help",
-            "expected_signal": "Read-only access to your local LokalBot meeting library.",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Read-only access to your local LokalBot meeting library.",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "~/.local/bin/lokalbot",
+            "command": "/home/sbx/.local/bin/lokalbot",
             "expected_signal": "gui tier: window",
             "exit_code": 0,
             "passed": true,
@@ -182,39 +173,28 @@
             "offline": true
           }
         ],
-        "pitfalls": [
-          {
-            "readme_said": "linguistic ./install.sh directly in work dir",
-            "actually_needed": "Downloaded Linux tarball from GitHub releases, extracted it, then ran the bundled install.sh which installs to ~/.local/bin",
-            "kind": "note"
-          },
-          {
-            "readme_said": "lokalbot-cli search/get work out of the box",
-            "actually_needed": "CLI returns 'External agent access is off. Enable it in Settings → Privacy & Data' until enabled via GUI",
-            "kind": "note"
-          }
-        ],
+        "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows --version command outputting lokalbot-cli 0.11.6. / The app shows its main Today interface behind a Welcome to LokalBot onboarding dialog asking to Choose What to Remember at Step 1 of 4.",
+          "observed": "The terminal shows the version command outputting lokalbot-cli 0.11.6. / The app shows a 'Welcome to LokalBot' onboarding wizard on Step 1 'Choose What to Remember' overlaid on the main UI.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-lokalbot-20261101-164911-fdc1/report.json",
+          "trace_path": "runs/verify/verify-lokalbot-20261101-183124-a3c6/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-lokalbot-20261101-164911-fdc1/check-1-cmd7.judged.png",
-            "runs/verify/verify-lokalbot-20261101-164911-fdc1/replay-13-1.app.judged.png"
+            "runs/verify/verify-lokalbot-20261101-183124-a3c6/check-1-cmd7.judged.png",
+            "runs/verify/verify-lokalbot-20261101-183124-a3c6/replay-8-1.app.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.074946,
+        "cost_usd": 0.080458,
         "gui": {
           "tier": "ui_rendered",
           "screen": "first_run",
-          "command": "~/.local/bin/lokalbot",
+          "command": "/home/sbx/.local/bin/lokalbot",
           "window_title": "LokalBot",
           "display": "Xvfb 1280x800x24, no window manager, no GPU"
         },
@@ -225,7 +205,7 @@
             "smoke_tests": [],
             "reason": "needs_hardware",
             "failure": null,
-            "note": "Requires microphone and system-audio capture with user consent; cannot test headlessly"
+            "note": "recording microphone/meeting audio requires mic and permissions; also needs macOS permissions note"
           },
           {
             "feature": "search meeting transcripts and on-screen content",
@@ -233,15 +213,15 @@
             "smoke_tests": [],
             "reason": "needs_hardware",
             "failure": null,
-            "note": "Requires opt-in screen text capture and desktop session permissions"
+            "note": "search across transcripts/on-screen content requires populated library and screen capture permissions; CLI search gated by Privacy toggle"
           },
           {
             "feature": "autocomplete sentences as you type",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_hardware",
+            "reason": "needs_display",
             "failure": null,
-            "note": "Requires typing in other apps and accessibility permissions to show inline autocomplete"
+            "note": "autocomplete injects gray text in other apps, requires display injection/accessibility permissions"
           },
           {
             "feature": "dictate text by voice in any app",
@@ -249,7 +229,7 @@
             "smoke_tests": [],
             "reason": "needs_hardware",
             "failure": null,
-            "note": "Requires microphone, global shortcut and ability to insert at cursor in any app"
+            "note": "dictation requires microphone and global hotkey, not testable in sandbox"
           }
         ]
       },
@@ -384,7 +364,7 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T20:02:29+08:00",
+    "computed_at": "2026-11-02T00:55:09+08:00",
     "quality": {
       "total": 77.0,
       "confidence": 0.9,
@@ -772,5 +752,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-11-01T20:02:29.295188+08:00"
+  "updated_at": "2026-11-02T00:55:09.295689+08:00"
 }

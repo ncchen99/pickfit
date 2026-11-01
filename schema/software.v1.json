@@ -345,7 +345,7 @@
     },
     "GuiCheck": {
       "additionalProperties": false,
-      "description": "How far a GUI app got on the box's virtual display (Linux, Xvfb, no window manager).\n\nRecorded only for a launch whose checked screenshot the judge read. window: a mapped window whose X\nclient is one of the app's processes (per the X server), showing something other than the app's UI\n(`screen`: a sign-in wall, a crash, a blank or loading screen); ui_rendered: the judge saw the app's own\ninterface in a crop of its windows (its main screen or its first-run screen). A GUI launch supports\ninstall only; checking controls or that an action changed checkable state is not built.",
+      "description": "How far a GUI app got on the box's virtual display (Linux, Xvfb, no window manager).\n\nRecorded only for a launch whose checked screenshot the judge read. window: a mapped window whose X\nclient is one of the app's processes (per the X server), showing something other than the app's UI\n(`screen`: a sign-in wall, a crash, a blank or loading screen); ui_rendered: the judge saw the app's own\ninterface in a crop of its windows (its main screen or its first-run screen); action_checked: also, an\noperation (`operations`) passed pickfit's own check in the replay and the feature judge saw it show a\nlisted feature working. A launch supports install; action_checked supports function.",
       "properties": {
         "command": {
           "description": "How the app was started.",
@@ -357,6 +357,15 @@
           "description": "e.g. Xvfb 1280x800x24, no window manager, no GPU.",
           "maxLength": 120,
           "type": "string"
+        },
+        "operations": {
+          "default": [],
+          "description": "Goals pickfit operated the app toward, and what its checks found.",
+          "items": {
+            "$ref": "#/$defs/GuiOperation"
+          },
+          "maxItems": 8,
+          "type": "array"
         },
         "screen": {
           "$ref": "#/$defs/GuiScreen",
@@ -388,6 +397,137 @@
       "title": "GuiCheck",
       "type": "object"
     },
+    "GuiCheckKind": {
+      "enum": [
+        "file",
+        "clipboard",
+        "screen_text"
+      ],
+      "type": "string"
+    },
+    "GuiOperation": {
+      "additionalProperties": false,
+      "description": "One goal pickfit reached through the app's own UI (gui_operate.py), in the fresh box's replay.\n\nMuse Spark Open chose each click, text and key from pickfit's screenshots; pickfit performed them as\nthe display user (the app never acts for itself), then checked the result itself: a file the app wrote,\nread by root; the clipboard, read by the display user; or text the screen judge read on pickfit's last\nscreenshot. The goal and the expected text hold {nonce} where pickfit put a fresh word.",
+      "properties": {
+        "actions": {
+          "description": "Actions pickfit performed.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "check": {
+          "$ref": "#/$defs/GuiCheckKind"
+        },
+        "expected": {
+          "default": [],
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4,
+          "type": "array"
+        },
+        "feature": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The listed feature it exercises."
+        },
+        "format": {
+          "anyOf": [
+            {
+              "maxLength": 20,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "file: the format it had to have."
+        },
+        "goal": {
+          "description": "What the operator was asked to do.",
+          "maxLength": 600,
+          "minLength": 1,
+          "type": "string"
+        },
+        "observed": {
+          "description": "pickfit's line about what the check found.",
+          "maxLength": 500,
+          "type": "string"
+        },
+        "operator_model": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "passed": {
+          "description": "pickfit's check, never the operator's word.",
+          "type": "boolean"
+        },
+        "replay": {
+          "description": "actions: the recorded actions passed again; operated: the operator ran the goal again.",
+          "enum": [
+            "actions",
+            "operated"
+          ],
+          "type": "string"
+        },
+        "screenshots": {
+          "default": [],
+          "description": "Each step's screen, in order.",
+          "items": {
+            "$ref": "#/$defs/RelPath"
+          },
+          "maxItems": 25,
+          "type": "array"
+        },
+        "smoke_test": {
+          "description": "Index into the run's smoke_tests: this operation's check.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "file: the file, or the folder searched."
+        }
+      },
+      "required": [
+        "goal",
+        "check",
+        "passed",
+        "observed",
+        "smoke_test",
+        "actions",
+        "replay"
+      ],
+      "title": "GuiOperation",
+      "type": "object"
+    },
     "GuiScreen": {
       "enum": [
         "main_ui",
@@ -402,7 +542,8 @@
     "GuiTier": {
       "enum": [
         "window",
-        "ui_rendered"
+        "ui_rendered",
+        "action_checked"
       ],
       "type": "string"
     },

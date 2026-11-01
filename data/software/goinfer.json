@@ -64,18 +64,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "go",
+      "basis": "replayed",
+      "run_id": "verify-goinfer-20261101-115925-0163",
+      "method": "binary",
       "steps": [
         {
-          "command": "go get github.com/townsendmerino/goinfer/decoder@latest github.com/townsendmerino/goinfer/tokenizer@latest",
-          "purpose": null
+          "command": "curl -fsSL -o goinfer-serve https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-serve-darwin-arm64 && chmod +x goinfer-serve && ls -lh goinfer-serve && ./goinfer-serve --version",
+          "purpose": "download goinfer-serve darwin-arm64 binary and make executable"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "goinfer-chat models"
+      "check": {
+        "command": "curl -fsSL -o goinfer-serve https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-serve-darwin-arm64 && chmod +x goinfer-serve && ls -lh goinfer-serve && ./goinfer-serve --version",
+        "expected_signal": "goinfer-serve v0.23.0"
+      },
+      "first_task": null
     },
     "linux": {
       "basis": "replayed",
@@ -83,7 +86,7 @@
       "method": "binary",
       "steps": [
         {
-          "command": "mkdir -p ~/.local/bin ~/models && curl -fL -o ~/.local/bin/goinfer-serve https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-serve-linux-amd64 && curl -fL -o ~/.local/bin/goinfer-chat https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-chat-linux-amd64 && chmod +x ~/.local/bin/goinfer-serve ~/.local/bin/goinfer-chat && ls -lh ~/.local/bin/goinfer-*",
+          "command": "mkdir -p ~/.local/bin ~/models && curl -fL -o ~/.local/bin/goinfer-serve https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-serve-linux-amd64 && curl -fL -o ~/.local/bin/goinfer-chat https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-chat-linux-amd64 && chmod +x ~/.local/bin/goinfer-serve ~/.local/bin/goinfer-chat",
           "purpose": "Download linux-amd64 serve and chat binaries to ~/.local/bin"
         }
       ],
@@ -124,8 +127,103 @@
   "verification": {
     "level": "inference",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:46:58.496704+08:00",
+    "checked_at": "2026-11-01T12:03:48.303010+08:00",
     "runs": [
+      {
+        "id": "verify-goinfer-20261101-115925-0163",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T12:03:48.303010+08:00",
+        "tool_version": "v0.23.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o goinfer-serve https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-serve-darwin-arm64 && chmod +x goinfer-serve && ls -lh goinfer-serve && ./goinfer-serve --version",
+            "purpose": "download goinfer-serve darwin-arm64 binary and make executable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "curl -fsSL -o goinfer-serve https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-serve-darwin-arm64 && chmod +x goinfer-serve && ls -lh goinfer-serve && ./goinfer-serve --version",
+            "expected_signal": "goinfer-serve v0.23.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "goinfer-serve v0.23.0 (2c42c6a34300)",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL -o goinfer-serve https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-serve-darwin-arm64",
+            "actually_needed": "also chmod +x goinfer-serve before ./goinfer-serve --version",
+            "kind": "note"
+          },
+          {
+            "readme_said": "flag examples use goinfer-serve -model and -web (single dash)",
+            "actually_needed": "both -model/--model work but listen addr is -addr / --addr default 127.0.0.1:8080 not --listen",
+            "kind": "note"
+          },
+          {
+            "readme_said": "goinfer-chat models lists checkpoints",
+            "actually_needed": "goinfer-serve binary does not have 'models' subcommand; only pull, check, connect and --version",
+            "kind": "note"
+          },
+          {
+            "readme_said": "install step 1 runs goinfer-serve",
+            "actually_needed": "nothing to change; a note: the box ran goinfer-serve, downloaded, without reading it first, so pickfit did not inspect it",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows the downloaded goinfer-serve binary reporting version v0.23.0 with backends and Go info.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-goinfer-20261101-115925-0163/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-goinfer-20261101-115925-0163/check-1-cmd1.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.096307,
+        "features": [
+          {
+            "feature": "constrain generation to Go struct or JSON Schema",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "budget exhausted before testing json_schema constrained generation; server log advertises structured output capability"
+          },
+          {
+            "feature": "serve models via OpenAI and Anthropic APIs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; OpenAI /v1/models and /v1/chat/completions and Anthropic /v1/messages answered on localhost:8080"
+          },
+          {
+            "feature": "fetch and run GGUF models from HuggingFace",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; fetched GGUF via curl (tool also documents 'pull' subcommand, shown in help) and ran stories260K.gguf successfully via goinfer-serve"
+          }
+        ]
+      },
       {
         "id": "verify-goinfer-20261031-014518-37a3",
         "level": "inference",
@@ -141,7 +239,7 @@
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p ~/.local/bin ~/models && curl -fL -o ~/.local/bin/goinfer-serve https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-serve-linux-amd64 && curl -fL -o ~/.local/bin/goinfer-chat https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-chat-linux-amd64 && chmod +x ~/.local/bin/goinfer-serve ~/.local/bin/goinfer-chat && ls -lh ~/.local/bin/goinfer-*",
+            "command": "mkdir -p ~/.local/bin ~/models && curl -fL -o ~/.local/bin/goinfer-serve https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-serve-linux-amd64 && curl -fL -o ~/.local/bin/goinfer-chat https://github.com/townsendmerino/goinfer/releases/latest/download/goinfer-chat-linux-amd64 && chmod +x ~/.local/bin/goinfer-serve ~/.local/bin/goinfer-chat",
             "purpose": "Download linux-amd64 serve and chat binaries to ~/.local/bin"
           }
         ],
@@ -646,5 +744,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T23:02:54.808033+08:00"
 }

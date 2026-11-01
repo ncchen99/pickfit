@@ -64,18 +64,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "pip",
+      "basis": "replayed",
+      "run_id": "verify-babelscribe-20261101-115823-a0f0",
+      "method": "uv",
       "steps": [
         {
-          "command": "pip install babelscribe",
-          "purpose": null
+          "command": "uv tool install babelscribe",
+          "purpose": "install babelscribe via uv tool install"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "babelscribe interview.mp4"
+      "check": {
+        "command": "babelscribe --help",
+        "expected_signal": "babelscribe — transcribe any audio/video"
+      },
+      "first_task": null
     },
     "linux": {
       "basis": "replayed",
@@ -124,7 +127,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:45:18.636290+08:00",
+    "checked_at": "2026-11-01T12:02:42.122674+08:00",
     "runs": [
       {
         "id": "verify-babelscribe-20261031-014309-34f6",
@@ -265,6 +268,105 @@
             "reason": "other",
             "failure": null,
             "note": "no failed check in the log; installed 0.3.2 has no --translate flag; errors unrecognized arguments"
+          }
+        ]
+      },
+      {
+        "id": "verify-babelscribe-20261101-115823-a0f0",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T12:02:42.122674+08:00",
+        "tool_version": "0.3.2",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install babelscribe",
+            "purpose": "install babelscribe via uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "babelscribe --help",
+            "expected_signal": "babelscribe — transcribe any audio/video",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "babelscribe — transcribe any audio/video, in any language Whisper knows, on any GPU (AMD / NVIDIA / Intel via",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "babelscribe --version",
+            "expected_signal": "0.3.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.3.2",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install babelscribe",
+            "actually_needed": "use uv tool install babelscribe to avoid PEP 668 isolated install",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "babelscribe devices / models lists GPUs and models",
+            "actually_needed": "first run triggers download of whisper-cli and large-v3-turbo model (1.6GB); timed out after 30s",
+            "kind": "note"
+          },
+          {
+            "readme_said": "babelscribe interview.mp4 auto-picks large-v3-turbo",
+            "actually_needed": "tested with -m tiny (75 MB) to avoid large download; transcription of silence.wav succeeded",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows babelscribe --help printing usage, tagline, examples, and options with exit code 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-babelscribe-20261101-115823-a0f0/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-babelscribe-20261101-115823-a0f0/check-1-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.091578,
+        "features": [
+          {
+            "feature": "turn audio or video into subtitles",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; transcribed silence.wav with -m tiny -> silence.srt in 0.9s"
+          },
+          {
+            "feature": "transcribe files from AI apps via MCP",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "MCP server requires additional command budget"
+          },
+          {
+            "feature": "translate transcripts to English",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "translate flag needs speech audio and model download, not tested within budget"
           }
         ]
       }
@@ -662,5 +764,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:11+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T12:02:42.128050+08:00"
 }

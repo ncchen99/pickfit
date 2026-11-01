@@ -64,20 +64,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-voxagent-20261101-125026-32b8",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g voxagent",
-          "purpose": null
+          "command": "node --version && npm --version && npm install -g voxagent",
+          "purpose": "install voxagent via npm install -g voxagent"
         }
       ],
-      "manual_steps": [
-        "Connect a microphone for voice input"
-      ],
-      "check": null,
-      "first_task": "voxagent --help"
+      "manual_steps": [],
+      "check": {
+        "command": "voxagent --help",
+        "expected_signal": "Usage: voxagent [options]"
+      },
+      "first_task": "voxagent --list-devices"
     },
     "linux": {
       "basis": "replayed",
@@ -128,7 +129,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:16:41.607747+08:00",
+    "checked_at": "2026-11-01T12:53:26.592258+08:00",
     "runs": [
       {
         "id": "verify-voxagent-20261031-001540-cadc",
@@ -202,6 +203,149 @@
         },
         "actor_model": "muse-spark-1.3",
         "cost_usd": 0.032405
+      },
+      {
+        "id": "verify-voxagent-20261101-125026-32b8",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T12:53:26.592258+08:00",
+        "tool_version": "0.3.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "node --version && npm --version && npm install -g voxagent",
+            "purpose": "install voxagent via npm install -g voxagent"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "voxagent --help",
+            "expected_signal": "Usage: voxagent [options]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: voxagent [options]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "voxagent --list-devices",
+            "expected_signal": "No input devices found.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No input devices found.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "voxagent --file /tmp/test.wav",
+            "expected_signal": "No speech detected.",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "No speech detected.",
+            "setup": [
+              {
+                "command": "python3 -c \"\nimport wave, struct\nimport os\n# create 1s silence WAV 16kHz mono 16-bit\nwith wave.open('/tmp/test.wav','w') as w:\n    w.setnchannels(1)\n    w.setsampwidth(2)\n    w.setframerate(16000)\n    frames = struct.pack('<' + 'h'*16000, *([0]*16000))\n    w.writeframes(frames)\nprint('created test.wav')\n# also create invalid empty file\nopen('/tmp/empty.wav','w').write('')\nprint('created empty')\n\" && ls -lh /tmp/test.wav /tmp/empty.wav\nfile /tmp/test.wav 2>&1 || echo nofile\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "voxagent --file /tmp/nonexistent.wav",
+            "expected_signal": "Error: Cannot read '/tmp/nonexistent.wav'",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "\u001b[31mError: Cannot read '/tmp/nonexistent.wav': No such file or directory (os error 2)\u001b[0m",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "voxagent --memory --context 5 --file /tmp/test.wav",
+            "expected_signal": "Error: Options '--file' and '--memory' cannot be combined.",
+            "exit_code": 2,
+            "passed": true,
+            "observed_excerpt": "\u001b[31mError: Options '--file' and '--memory' cannot be combined.\u001b[0m",
+            "setup": [
+              {
+                "command": "python3 -c \"\nimport wave, struct\nimport os\n# create 1s silence WAV 16kHz mono 16-bit\nwith wave.open('/tmp/test.wav','w') as w:\n    w.setnchannels(1)\n    w.setsampwidth(2)\n    w.setframerate(16000)\n    frames = struct.pack('<' + 'h'*16000, *([0]*16000))\n    w.writeframes(frames)\nprint('created test.wav')\n# also create invalid empty file\nopen('/tmp/empty.wav','w').write('')\nprint('created empty')\n\" && ls -lh /tmp/test.wav /tmp/empty.wav\nfile /tmp/test.wav 2>&1 || echo nofile\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "README lists Linux prerequisites libvulkan1 libgomp1 libasound2t64 and Windows VC++ redistributable",
+            "actually_needed": "On macOS 14+ Apple Silicon no extra system libraries needed; npm install succeeded with Node 26.13.0",
+            "kind": "note"
+          },
+          {
+            "readme_said": "voxagent --file described as loading Ollama and whisper model before transcribing",
+            "actually_needed": "voxagent reads file and checks for speech first, before contacting Ollama or loading whisper; verified with silence file returning 'No speech detected' without Ollama running",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show list-devices reporting no devices, file mode reporting no speech detected, and help showing usage instructions.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-voxagent-20261101-125026-32b8/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-voxagent-20261101-125026-32b8/check-1-cmd11.judged.png",
+            "runs/verify/verify-voxagent-20261101-125026-32b8/check-2-cmd12.judged.png",
+            "runs/verify/verify-voxagent-20261101-125026-32b8/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.061014,
+        "features": [
+          {
+            "feature": "Ask spoken questions in terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "Speak commands requires microphone; box has no audio input and is headless"
+          },
+          {
+            "feature": "Transcribe speech locally on machine",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows 'No speech detected' and a file error, not any transcribed speech text."
+          },
+          {
+            "feature": "Get answers from local model",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Get answers from local model requires Ollama server at 127.0.0.1:11434 and llama3.2 model"
+          },
+          {
+            "feature": "Keep conversation for follow-up questions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "--memory keeps conversation for follow-up; requires interactive terminal and Ollama, also --file cannot be combined with --memory as verified"
+          }
+        ]
       }
     ]
   },
@@ -581,5 +725,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T12:53:26.596270+08:00"
 }

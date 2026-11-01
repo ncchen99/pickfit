@@ -61,18 +61,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-nlm-memory-20261101-131916-549b",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g nlm-memory",
-          "purpose": null
+          "purpose": "install nlm-memory via npm global"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "nlm recall \"why did we change the database?\""
+      "check": {
+        "command": "nlm --version",
+        "expected_signal": "0.21.20"
+      },
+      "first_task": "cd /tmp/nlm-memory && npm run demo:memory 2>&1"
     },
     "linux": {
       "basis": "replayed",
@@ -124,7 +127,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T22:18:11.637159+08:00",
+    "checked_at": "2026-11-01T13:24:48.072776+08:00",
     "runs": [
       {
         "id": "verify-nlm-memory-20261031-033913-198b",
@@ -302,6 +305,184 @@
         },
         "actor_model": "muse-spark-1.3-contributor",
         "cost_usd": 0.003353
+      },
+      {
+        "id": "verify-nlm-memory-20261101-131916-549b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T13:24:48.072776+08:00",
+        "tool_version": "0.21.20",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g nlm-memory",
+            "purpose": "install nlm-memory via npm global"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nlm --version",
+            "expected_signal": "0.21.20",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.21.20",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/nlm-memory && npm run demo:memory 2>&1",
+            "expected_signal": "Recover: Atlas API port = 4000",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1. Recover: Atlas API port = 4000 (codex/1.0).",
+            "setup": [
+              {
+                "command": "git clone https://github.com/pbmagnet4/nlm-memory.git /tmp/nlm-memory 2>&1 | tail -n 20",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/nlm-memory && npm ci 2>&1 | tail -n 20",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/nlm-memory && npm run demo:memory 2>&1",
+            "expected_signal": "Source: \"Atlas API now uses port 4000.\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Source: \"Atlas API now uses port 4000.\"",
+            "setup": [
+              {
+                "command": "git clone https://github.com/pbmagnet4/nlm-memory.git /tmp/nlm-memory 2>&1 | tail -n 20",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/nlm-memory && npm ci 2>&1 | tail -n 20",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/nlm-memory && npm run demo:memory 2>&1",
+            "expected_signal": "is superseded by atlas-current",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2. Inspect history: atlas-earlier is superseded by atlas-current.",
+            "setup": [
+              {
+                "command": "git clone https://github.com/pbmagnet4/nlm-memory.git /tmp/nlm-memory 2>&1 | tail -n 20",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/nlm-memory && npm ci 2>&1 | tail -n 20",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/nlm-memory && npm run demo:memory 2>&1",
+            "expected_signal": "Correct ownership: health-path /health -> atlas",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "4. Correct ownership: health-path /health -> atlas (operator).",
+            "setup": [
+              {
+                "command": "git clone https://github.com/pbmagnet4/nlm-memory.git /tmp/nlm-memory 2>&1 | tail -n 20",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/nlm-memory && npm ci 2>&1 | tail -n 20",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm install -g nlm-memory",
+            "actually_needed": "npm install emits warnings about deprecated boolean@3.2.0 and install-scripts needing allowScripts for onnxruntime-node, sharp, protobufjs, but install still succeeds",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show expected demo output and version 0.21.20 with zero exit codes.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nlm-memory-20261101-131916-549b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nlm-memory-20261101-131916-549b/check-1-cmd7.judged.png",
+            "runs/verify/verify-nlm-memory-20261101-131916-549b/check-2-cmd7.judged.png",
+            "runs/verify/verify-nlm-memory-20261101-131916-549b/check-3-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.050595,
+        "features": [
+          {
+            "feature": "Recover earlier decisions across sessions",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Inspect source conversation evidence",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Mark outdated reasoning as superseded",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Recall structured facts with provenance",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -681,5 +862,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:47:37+08:00",
-  "updated_at": "2026-11-01T01:07:53.149485+08:00"
+  "updated_at": "2026-11-01T13:24:48.077073+08:00"
 }

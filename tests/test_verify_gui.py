@@ -453,6 +453,9 @@ def test_limits_test_on_a_display_box():
         "io_uring": (0, "io_uring refused errno 1\n", ""),
         "readlink /proc/self/ns/net": (0, "net:[9]\n", ""),
         "font path": (0, "font path tcp/127.0.0.1.nip.io:7100 error 2\nfont path reset accepted\n", ""),
+        "org.freedesktop.Flatpak.SystemHelper": (0, "Error org.freedesktop.DBus.Error.ServiceUnknown: x\n"
+                                                    "Error org.freedesktop.DBus.Error.ServiceUnknown: y\n"
+                                                    "Error org.freedesktop.DBus.Error.AccessDenied: z\n", ""),
     }
 
     class Box(GuiBox):
@@ -469,7 +472,8 @@ def test_limits_test_on_a_display_box():
     results = {r.name: r for r in run_limits_test(box, log=lambda s: None)}
     assert {"no_userns", "no_io_uring", "vsock_closed", "display_server_uid", "display_server_held", "evidence_dir_closed",
             "display_window", "display_report_unforgeable", "internet_ip", "offline_internet_ip", "ipv6_blocked",
-            "multicast_no_answer", "gateway_ports_closed", "display_no_tcp", "display_no_network"} <= set(results)
+            "multicast_no_answer", "gateway_ports_closed", "display_no_tcp", "display_no_network",
+            "system_bus_inert"} <= set(results)
     assert "root sees 172.20.0.1 172.21.0.1" in results["gateway_ports_closed"].detail
     assert [name for name, r in results.items() if not r.ok] == ["offline_dns"]  # a resolver that answers fails
     assert results["display_report_unforgeable"].detail.startswith("tier process_alive; child running True")
@@ -523,7 +527,8 @@ def test_the_watcher_reads_window_facts_by_label_not_from_titles():
 def test_vm_and_display_boxes_pick_their_image_and_runtime():
     assert mb.image_layers() == (mb.sandbox_image_tag(), ())
     name, packages = mb.image_layers("vm", True)
-    assert name.startswith("pickfit-sbx-vm-gui:") and packages == (*mb.VM_PACKAGES, *gui.GUI_PACKAGES)
+    assert name.startswith("pickfit-sbx-vm-gui:") and packages == (*mb.VM_PACKAGES, *gui.GUI_PACKAGES,
+                                                                   *mb.FLATPAK_PACKAGES)
     box = mb.ModalBox(runtime="vm", display=True, client=object(), log=lambda s: None)
     assert box.runner == "modal-vm" and box.display == ":99" and box.image == name
     assert box.create_kwargs()["runtime"] == "vm"
@@ -601,13 +606,14 @@ def test_a_vm_display_box_hardens_the_kernel_then_starts_xvfb_as_the_display_uid
     from test_verify_modal import FakeSandbox
 
     sandbox = FakeSandbox([(0, [b""], []), (0, [b""], []), (0, [b""], []), (0, [b"netns_pid 4343\n"], []),
-                           (0, [b"xvfb_pid 785\n"], [])])
+                           (0, [b"xvfb_pid 785\n"], []), (0, [b"system_bus_up\n"], [])])
     monkeypatch.setattr(modal.App, "lookup", lambda name, **kw: "app")
     monkeypatch.setattr(modal.Sandbox, "create", lambda *a, **kw: sandbox)
     monkeypatch.setattr(modal.Image, "from_name", lambda name: f"image:{name}")
     box = mb.ModalBox(runtime="vm", display=True, client="client", log=lambda s: None)
     box.start()
-    harden, _, _, held, xvfb = (argv for argv, _ in sandbox.calls)
+    harden, _, _, held, xvfb, bus = (argv for argv, _ in sandbox.calls)  # a VM has no bubblewrap shim
+    assert bus[-1] == mb.SYSTEM_BUS
     assert held[-1] == mb.display_netns_script("vm") and box.display_netns_pid == 4343
     assert "/usr/bin/nsenter --target=4343 --net -- /usr/bin/setpriv" in xvfb[-1]  # Xvfb has no network
     assert harden[0] == "/usr/bin/bash" and "user.max_user_namespaces=0" in harden[-1]

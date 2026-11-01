@@ -18,6 +18,11 @@ A passed run also records which advertised features its smoke tests exercised
 (features.coverage): checked only when one of the replay's passing checks covers
 it, a failed feature check only when it failed again in the fresh box.
 
+A GUI app's run carries its launch tier (GuiCheck) and the operations the replay ran:
+it is install on a launch, and function only when an operation passed pickfit's own
+check in the replay and the feature judge saw it show a listed feature working
+(tier action_checked).
+
 An MCP server's run also carries the handshake the replay's probe check saw (tool
 names, server name, whether it ran offline) and the probe's notes; a passed MCP
 run without one is unverified, never install.
@@ -48,7 +53,9 @@ from pickfit.schema import (
     PASSED_LEVELS,
     SETUP_MAX,
     Check,
+    FeatureCheck,
     GuiCheck,
+    GuiOperation,
     InstallGuide,
     InstallStep,
     Judge,
@@ -161,8 +168,8 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     """The VerificationRun for one verification, plus notes on why the level was lowered.
 
     checked_at is when its last box ran; it defaults to now, right after the boxes ran. A GUI app
-    (gui_app) stays at install whatever else passed: function needs an action that changed checkable
-    state, which nothing checks yet.
+    (gui_app) is function only on an operation the replay checked and the feature judge confirmed
+    (tier action_checked); whatever else passed, it is install.
     mcp: the software is an MCP server; its run needs the handshake from the replay.
     """
     notes: list[str] = []
@@ -258,10 +265,12 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
                 continue
             command, before = fitted
             smoke_index[c.command_id] = len(smoke)
+            excerpt = _gui_result(c.run.stdout) if c.kind == "gui_op" else \
+                _excerpt(c.run.stdout, c.run.stderr, c.expected_signal)
             smoke.append(SmokeTest(
                 command=command, expected_signal=_clip(c.expected_signal, 300) or "",
                 exit_code=c.run.exit_code, passed=c.passed,
-                observed_excerpt=_clip(_excerpt(c.run.stdout, c.run.stderr, c.expected_signal), 300),
+                observed_excerpt=_clip(excerpt, 300),
                 setup=setup + before, offline=c.offline if c.passed else None))
     else:
         for c in verdict.get("checks") or []:
@@ -287,10 +296,6 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         reason = "other" if mcp else reason
         notes.append("no passing smoke test fits the record")
     gui = gui_check(report, replay, judge)
-    if is_passed(level) and level != "install" and (gui_app or gui):
-        notes.append(f"a GUI app's {level} needs an action shown to change checkable state, which pickfit does "
-                     "not check yet; recorded as install")
-        level = "install"
     if is_passed(level) and gui and gui.tier not in GUI_PASSED_TIERS:
         notes.append(f"the GUI launch reached only {gui.tier}")
         level, reason = "unverified", "other"
@@ -314,6 +319,19 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         features, feature_notes = coverage(report.features, smoke_index, smoke, replay.failed, _record_check,
                                            feature_verdicts)
         notes += feature_notes
+    if gui is not None and replay is not None:
+        gui = gui.model_copy(update={"operations": gui_operations(report, replay, smoke_index)})
+        if gui.tier == "ui_rendered" and operated_feature(gui.operations, features):
+            gui = gui.model_copy(update={"tier": "action_checked"})
+    if is_passed(level) and level != "install" and (gui_app or gui):
+        if gui is not None and gui.tier == "action_checked":
+            level = weaker(level, "function")
+        else:
+            why = ("no operation passed pickfit's check in the replay" if not any(
+                o.passed for o in (gui.operations if gui else [])) else
+                "the feature judge did not see an operation show a listed feature working")
+            notes.append(f"a GUI app's {level} needs an operation pickfit checked ({why}); recorded as install")
+            level = "install"
     pitfalls = [Pitfall(readme_said=_clip(p["readme_said"], 300) or "-",
                         actually_needed=_clip(p["actually_needed"], 300) or "-", kind=_pitfall_kind(p))
                 for p in finish.get("pitfalls") or []]
@@ -380,6 +398,38 @@ def gui_check(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     fitted = _clip(command, COMMAND_MAX)
     return GuiCheck(tier=tier, screen=screen, command=fitted or "-", window_title=_clip(title, 200),
                     display=launch.get("display") or GUI_DISPLAY)  # gui_mac's launches name their own display
+
+
+def _gui_result(stdout: str) -> str:
+    """An operation's own result line (pickfit's), for the smoke test's excerpt."""
+    return next((line for line in stdout.splitlines() if line.startswith("gui result: ")), "")
+
+
+def gui_operations(report: VerifyReport, replay: ReplayResult, smoke_index: dict[int, int]) -> list[GuiOperation]:
+    """The replay's operations as the record keeps them, each tied to its smoke test."""
+    labels = {f["number"]: f["feature"] for f in report.features if "number" in f}
+    out: list[GuiOperation] = []
+    for c in replay.checks:
+        op = c.run.operate if c.kind == "gui_op" and c.run is not None else None
+        if not op or c.command_id not in smoke_index:
+            continue
+        spec, check = op["check"], op.get("result") or {}
+        shots = [p for p in (_rel(s.get("screenshot")) for s in op.get("steps") or []) if p][:25]
+        observed = _gui_result(c.run.stdout).removeprefix("gui result: ") or check.get("why") or "not checked"
+        out.append(GuiOperation(
+            feature=_clip(labels.get(op.get("feature")), 80), goal=_clip(op["goal"], 600) or "-", check=spec["kind"],
+            target=_clip(spec.get("path"), 300), expected=[e for e in (_clip(t, 200) for t in spec["contains"]) if e],
+            format=spec.get("format"), passed=c.passed, observed=_clip(observed, 500) or "-",
+            smoke_test=smoke_index[c.command_id], actions=len(op.get("actions") or []),
+            replay="actions" if op.get("mode") == "actions" else "operated",
+            operator_model=(op.get("model") or (op.get("first") or {}).get("model")), screenshots=shots))
+    return out[:8]
+
+
+def operated_feature(operations: list[GuiOperation], features: list[FeatureCheck]) -> bool:
+    """A passed operation whose smoke test checks a listed feature (the feature judge confirmed it)."""
+    return any(op.passed and any(f.status == "checked" and op.smoke_test in f.smoke_tests for f in features)
+               for op in operations)
 
 
 def _mcp_handshake(replay: ReplayResult | None) -> tuple[McpHandshake | None, list[Pitfall]]:

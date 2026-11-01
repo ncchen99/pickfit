@@ -59,18 +59,29 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-flash-20261101-183436-f01c",
+      "method": "source",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/Natuworkguy/Flash/main/install.sh | bash",
-          "purpose": null
+          "command": "git clone https://github.com/Natuworkguy/Flash /tmp/flash-repo && ls /tmp/flash-repo && cat /tmp/flash-repo/requirements.txt",
+          "purpose": "git clone Flash repo to get requirements.txt"
+        },
+        {
+          "command": "pip3 install --break-system-packages -r /tmp/flash-repo/requirements.txt && pip3 show ollama 2>&1",
+          "purpose": "pip3 install --break-system-packages -r requirements.txt"
+        },
+        {
+          "command": "pip3 install --break-system-packages -e /tmp/flash-repo && flash --help; echo HELP_EXIT:$?\nflash --version",
+          "purpose": "pip3 install --break-system-packages -e . to install flash package"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "flash"
+      "check": {
+        "command": "flash --version",
+        "expected_signal": "Flash CLI v0.5.12"
+      },
+      "first_task": "printf \"/bye\\n\" | flash"
     },
     "linux": {
       "basis": "replayed",
@@ -78,7 +89,7 @@
       "method": "source",
       "steps": [
         {
-          "command": "git clone https://github.com/Natuworkguy/Flash flash-src && ls flash-src && cat flash-src/requirements.txt",
+          "command": "git clone https://github.com/Natuworkguy/Flash flash-src",
           "purpose": "Clone repo for pip install"
         },
         {
@@ -86,7 +97,7 @@
           "purpose": "Install deps via pip candidate 1"
         },
         {
-          "command": "python3 -m pip install ./flash-src && command -v flash && flash --version",
+          "command": "python3 -m pip install ./flash-src && flash --version",
           "purpose": "Install flash package so flash is on PATH"
         }
       ],
@@ -114,8 +125,138 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:41:14.157417+08:00",
+    "checked_at": "2026-11-01T19:31:57.298790+08:00",
     "runs": [
+      {
+        "id": "verify-flash-20261101-183436-f01c",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T19:31:57.298790+08:00",
+        "tool_version": "0.5.12",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/Natuworkguy/Flash /tmp/flash-repo && ls /tmp/flash-repo && cat /tmp/flash-repo/requirements.txt",
+            "purpose": "git clone Flash repo to get requirements.txt"
+          },
+          {
+            "command": "pip3 install --break-system-packages -r /tmp/flash-repo/requirements.txt && pip3 show ollama 2>&1",
+            "purpose": "pip3 install --break-system-packages -r requirements.txt"
+          },
+          {
+            "command": "pip3 install --break-system-packages -e /tmp/flash-repo && flash --help; echo HELP_EXIT:$?\nflash --version",
+            "purpose": "pip3 install --break-system-packages -e . to install flash package"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flash --version",
+            "expected_signal": "Flash CLI v0.5.12",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Flash CLI v0.5.12",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "printf \"/bye\\n\" | flash",
+            "expected_signal": "Flash CLI v0.5.12",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ Flash CLI v0.5.12 │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 /tmp/flash-repo/run.py --help",
+            "expected_signal": "FLASH (Fast Local Agent SHell) CLI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "FLASH (Fast Local Agent SHell) CLI",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 -c \"\nimport pathlib\nfor pat in ['make_3d_model','VOICE','\\\"shell\\\"']:\n    import subprocess, sys\n    txt = subprocess.check_output(['grep','-r',pat,'/tmp/flash-repo/flash','--include=*.py'], text=True)\n    print(pat, 'FOUND')\n    print(txt.splitlines()[0][:200])\n\"",
+            "expected_signal": "make_3d_model FOUND",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "make_3d_model FOUND",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install -r requirements.txt",
+            "actually_needed": "pip3 install --break-system-packages -r requirements.txt (Homebrew Python is externally-managed, PEP 668)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "pip install -r requirements.txt installs Flash",
+            "actually_needed": "requirements.txt only installs dependencies; need pip install -e . to provide `flash` entry point",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the CLI banner with v0.5.12, the grep finding make_3d_model, and --version printing v0.5.12.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-flash-20261101-183436-f01c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-flash-20261101-183436-f01c/check-1-cmd13.judged.png",
+            "runs/verify/verify-flash-20261101-183436-f01c/check-2-cmd10.judged.png",
+            "runs/verify/verify-flash-20261101-183436-f01c/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.086693,
+        "features": [
+          {
+            "feature": "chat with local models in terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Requires Ollama server and model (no server running, no API key, needs large model download)"
+          },
+          {
+            "feature": "execute shell commands via AI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Shell tool is invoked by AI model via Ollama; no model available to test tool execution"
+          },
+          {
+            "feature": "build 3D models from prompts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "make_3d_model tool requires vision/model via Ollama to generate GLB"
+          },
+          {
+            "feature": "talk to Flash by voice",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "Voice mode needs microphone, audio output and Vosk/Piper models; headless VM has no audio hardware"
+          }
+        ]
+      },
       {
         "id": "verify-flash-20261031-033844-f2ab",
         "level": "function",
@@ -131,7 +272,7 @@
         "replayed": true,
         "steps": [
           {
-            "command": "git clone https://github.com/Natuworkguy/Flash flash-src && ls flash-src && cat flash-src/requirements.txt",
+            "command": "git clone https://github.com/Natuworkguy/Flash flash-src",
             "purpose": "Clone repo for pip install"
           },
           {
@@ -139,7 +280,7 @@
             "purpose": "Install deps via pip candidate 1"
           },
           {
-            "command": "python3 -m pip install ./flash-src && command -v flash && flash --version",
+            "command": "python3 -m pip install ./flash-src && flash --version",
             "purpose": "Install flash package so flash is on PATH"
           }
         ],
@@ -593,5 +734,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T23:02:54.657629+08:00"
 }

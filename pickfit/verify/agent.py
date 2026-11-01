@@ -41,9 +41,12 @@ from pickfit.ledger import BudgetExceeded, taipei_now
 from pickfit.meta import MetaResult, ToolCall, call_meta, resolve_model
 from pickfit.schema import InstallMethod, PitfallKind, UnverifiedReason, VerificationLevel, is_passed
 from pickfit.verify import gui
+from pickfit.verify import gui_operate
 from pickfit.verify.box import Box, BoxError, ExecResult
 from pickfit.verify import features as feature_checks
 from pickfit.verify.features import FINISH_FEATURES, FinishFeature, resolve_features
+from pickfit.verify.gui_operate import OperateArgs, run_operation, spec_problems
+from pickfit.verify.judge import judge_model_for, read_screen_text
 from pickfit.verify.plan import InstallPlan, plan_for
 from pickfit.verify.rules import RuleHit, error_signature, match_rules
 from pickfit.verify.mcp import GUIDE as MCP_GUIDE
@@ -68,6 +71,8 @@ BACKGROUND_WAIT_S = 90
 MAX_NUDGES = 2
 MAX_FINISH_RETRIES = 1  # a finish the log does not support goes back to the model once
 WRAP_UP_SECONDS = 90  # leave this much of the time limit for the finish-only turn
+OPERATE_RESERVE_S = 300  # operate_gui: the operator's turns take minutes; none starts without them
+OPERATE_MAX, OPERATE_PER_FEATURE = 6, 2  # operate_gui calls per run, and per listed feature
 
 _ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b[@-Z\\-_]")
 
@@ -183,7 +188,39 @@ LAUNCH_GUI_TOOL = _fn(
     {"command": {"type": "string", "description": "The command that starts the app, as a user would run it."},
      "wait_s": {"type": "integer", "description": f"Seconds to wait for a window (max {gui.WAIT_MAX_S})."}},
     ["command", "wait_s"])
-GUI_TOOLS: list[dict[str, Any]] = [*TOOLS[:-1], LAUNCH_GUI_TOOL, FINISH_TOOL]
+_NULL_STR = {"type": ["string", "null"]}
+OPERATE_GUI_TOOL = _fn(
+    "operate_gui", "Start a GUI app as launch_gui does, then have it operated: Muse Spark sees pickfit's screenshots "
+    "and picks clicks, typing and keys toward the goal, pickfit performs them on the virtual display, and then "
+    "pickfit checks the result itself (a file the app wrote, the clipboard, or text on the screen). Every process "
+    "of the box user is stopped before and after. Returns its command_id and pickfit's own lines, ending with "
+    "`gui check: passed` or `gui check: failed (why)`. Uses one unit of the command budget.",
+    {"command": {"type": "string", "description": "The command that starts the app, as with launch_gui."},
+     "wait_s": {"type": "integer", "description": f"Seconds to wait for a window (max {gui.WAIT_MAX_S})."},
+     "feature": {"type": ["integer", "null"], "description": "The listed feature this exercises: 1 for F1."},
+     "goal": {"type": "string", "description": (
+         "What to do in the app's own UI, step by step as a user would, with the exact text to type and where "
+         "to save. Write {nonce} where a unique word should go: pickfit puts a fresh one there each time.")},
+     "inputs": {"type": "array", "description": "Files pickfit writes under ~/pickfit-in/ before the app starts.",
+                "items": {"type": "object", "properties": {
+                    "path": {"type": "string", "description": "e.g. ~/pickfit-in/notes.md"},
+                    "text": {**_NULL_STR, "description": "The file's text ({nonce} allowed), or null."},
+                    "sample": {"type": ["string", "null"], "enum": ["png", "jpeg", None],
+                               "description": "pickfit's own sample image instead of text, or null."}},
+                    "required": ["path", "text", "sample"], "additionalProperties": False}},
+     "check": {"type": "object", "description": "What pickfit checks after the operation.", "properties": {
+         "kind": {"type": "string", "enum": ["file", "clipboard", "screen_text"]},
+         "path": {**_NULL_STR, "description": (
+             "file: the file the app saves or exports (under ~/pickfit-out/ when the goal chooses where), or a "
+             "folder to search ending in / (e.g. ~/ for wherever the app keeps its data); else null.")},
+         "contains": {"type": "array", "items": {"type": "string"}, "description": (
+             "Text the result must hold ({nonce} allowed). For screen_text, a result the app computes or "
+             "converts, never the text typed.")},
+         "format": {"type": ["string", "null"], "enum": [*gui_operate.FORMATS, None],
+                    "description": "file: the format the file must have, or null."}},
+         "required": ["kind", "path", "contains", "format"], "additionalProperties": False}},
+    ["command", "wait_s", "feature", "goal", "inputs", "check"])
+GUI_TOOLS: list[dict[str, Any]] = [*TOOLS[:-1], LAUNCH_GUI_TOOL, OPERATE_GUI_TOOL, FINISH_TOOL]
 
 
 def tools_for(box: Box) -> list[dict[str, Any]]:
@@ -386,10 +423,32 @@ GUI apps: this box has a virtual display. For a desktop (GUI) app, install it as
 and run squashfs-root/AppRun; a .deb: dpkg-deb -x into ~/apps; npm or pip as usual), then start it with \
 launch_gui, never with run_command or run_background. Cite that launch_gui as a smoke test with \
 expected_signal `gui tier: window` (pickfit's own line; window titles and process names are the app's and do \
-not count). A launch stops every process of the box user, so start servers again after it. A GUI launch \
-supports level install at most, whatever the window shows: pickfit's judge reads the screenshot itself, and a \
-GUI app is never function from a launch. Launch it even if it will ask for an account: the screenshot records \
-the sign-in screen. This box has no user namespaces, so Chromium and Electron apps usually need --no-sandbox \
+not count). A launch stops every process of the box user, so start servers again after it. A launch \
+supports level install at most, whatever the window shows: pickfit's judge reads the screenshot itself. Launch it \
+even if it will ask for an account: the screenshot records the sign-in screen.
+Install steps of a GUI app (download, extract, chmod, an install script) are plain commands of their own with \
+nothing chained after them (no ls, head, echo or file listing): a step whose exit code is hidden does not \
+count, and a fresh box runs only the cited steps, so cite the download too. Explore in separate commands.
+After a launch shows a window, exercise each listed feature that the app's own UI can show with a result \
+pickfit can check, one operate_gui per feature: a goal a user would do in the app (the exact text to type, \
+{nonce} where a unique word should go, and where to save), and a check: file (the app saves or exports a file: \
+its path under ~/pickfit-out/, or a folder to search such as ~/ where the app keeps its data, with the text it \
+must hold and/or its format), clipboard (the app copies a result), or screen_text (text the app computes or \
+converts, never the text typed). Put input files the goal needs in inputs (text, or pickfit's sample png/jpeg). \
+Examples: a notes or editor app: type {nonce}, save to ~/pickfit-out/note.md, check that file contains {nonce}; \
+an image tool: open ~/pickfit-in/photo.png (sample png), export ~/pickfit-out/photo.webp, check format webp; \
+a model browser: download the smallest GGUF it lists, check folder ~/ for format gguf; a document search: an \
+input file holding {nonce}, search for {nonce}, check screen_text for the input file's name; a converter: \
+check the converted text, not the text typed. \
+A check must hold the feature's own result: a file it saved or exported, text it converted, computed or \
+generated, a value it copied, or something it created and then lists or stores. Never a heading, a label, a \
+menu or the name of a screen: opening a screen shows nothing about a feature, a screen_text result must not \
+be on the screen before the first action, and pickfit's feature judge refuses such checks. \
+A passing operate_gui is the only way a GUI app reaches level function: cite it as a smoke test with \
+expected_signal `gui check: passed` and in features as checked. A goal that needs an account, a key, a \
+microphone, a camera, a GPU or a model download larger than about 300 MB is not a check: report that feature \
+not_checked with the reason; if no listed feature can show a result here, operate nothing (the launch is \
+install). At most two operate_gui per feature and six per run: one retry with a clearer goal, then move on. This box has no user namespaces, so Chromium and Electron apps usually need --no-sandbox \
 here: add it only if the app fails without it, and record it as a pitfall of kind sandbox (this box's need, \
 not the app's). A Tkinter \
 app needs /usr/bin/python3 (it has tkinter; python3.12 on PATH does not): make its venv with \
@@ -505,7 +564,8 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
     elif box.display and ex.kind.value == "desktop_app":
         lines.insert(3, "This is a desktop (GUI) app: install the app itself (a release build if there is one for "
                         "Linux; an AppImage runs with --appimage-extract-and-run, no FUSE needed), then start it "
-                        "with launch_gui and cite that launch. A test suite or a helper tool is not the app.")
+                        "with launch_gui and cite that launch, then exercise its listed features with operate_gui. "
+                        "A test suite or a helper tool is not the app.")
     if task.files:
         names = ", ".join(sorted(task.files))
         lines.append(f"The work dir is also a sample project to try the tool on, with these files: {names}. "
@@ -579,8 +639,9 @@ class CommandRecord:
     command_id: int | None = None  # n-th budgeted command, as the model sees it; None for free tools
     port: int | None = None  # run_background: the port it waited for
     wait_s: int | None = None  # run_background, launch_gui: how long it waited
-    screenshot: str | None = None  # launch_gui: the PNG of the display
-    gui: dict[str, Any] | None = None  # launch_gui: what the launch showed (gui.GuiLaunch)
+    screenshot: str | None = None  # launch_gui, operate_gui: the PNG of the app's first window
+    gui: dict[str, Any] | None = None  # launch_gui, operate_gui: what the launch showed (gui.GuiLaunch)
+    operate: dict[str, Any] | None = None  # operate_gui: the spec and how it went (gui_operate.Operation)
     unmasked_from: str | None = None  # run_command: the model's command, when pickfit ran it without its mask
 
 
@@ -619,7 +680,8 @@ class VerifyReport:
     features: list[dict[str, Any]] = field(default_factory=list)  # ResolvedFeature: what the log supports
     stop_reason: str = ""
     error: str | None = None
-    cost_usd: float = 0.0
+    cost_usd: float = 0.0  # the agent's turns and the GUI operator's calls
+    operator_cost_usd: float = 0.0  # operate_gui: the operator's and the screen reader's calls
     report_path: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -705,7 +767,7 @@ class VerifyAgent:
         except BoxError as err:
             self.report.stop_reason, self.report.error = "box_error", str(err)
         self.report.seconds = round(self._elapsed(), 1)
-        self.report.cost_usd = round(sum(t.cost_usd for t in self.report.turns), 6)
+        self.report.cost_usd = round(sum(t.cost_usd for t in self.report.turns) + self.report.operator_cost_usd, 6)
         self._say(self._summary_line())
         self._save()
         return self.report
@@ -930,6 +992,8 @@ class VerifyAgent:
                 return self._run_background(_RunBackgroundArgs.model_validate(raw), turn)
             if call.name == "launch_gui" and self.box.display:
                 return self._launch_gui(_LaunchGuiArgs.model_validate(raw), turn)
+            if call.name == "operate_gui" and self.box.display:
+                return self._operate_gui(OperateArgs.model_validate(raw), turn)
         except (ValueError, ValidationError) as err:
             self._say(f"  {call.name}: bad arguments")
             return f"error: invalid arguments for {call.name}: {_one_line(str(err), 600)}"
@@ -1024,7 +1088,7 @@ class VerifyAgent:
         wait = max(1, min(args.wait_s, gui.WAIT_MAX_S))
         self._say(f"  ▣ {_one_line(args.command, 200)}   [cmd {n}/{self.limits.max_commands}]")
         launch = getattr(self.box, "launch_gui", None)  # a box with its own display (TartBox) launches its way
-        timeout = self._timeout(wait + gui.SETTLE_S + 90)
+        timeout = self._timeout(wait + gui.SETTLE_S + gui.BLANK_WAIT_S + 90)
         result, shown, png = (launch(args.command, n, wait, timeout_s=timeout) if launch
                               else gui.launch(self.box, args.command, n, wait, timeout_s=timeout))
         shot = None
@@ -1037,17 +1101,57 @@ class VerifyAgent:
         self._say(f"    gui tier {shown.tier}{' · ' + repr(shown.title) if shown.windows else ''}")
         return self._format_exec(n, result, [], wait)
 
+    def _operate_gui(self, args: OperateArgs, turn: int) -> str:
+        refused = self._budget_left()
+        if refused:
+            self._say(f"  ◈ {_one_line(args.goal, 200)} → refused (budget)")
+            return refused
+        if self._elapsed() + OPERATE_RESERVE_S >= self.limits.max_seconds - WRAP_UP_SECONDS:
+            self._say(f"  ◈ {_one_line(args.goal, 120)} → refused (time)")
+            return "error: too little time is left for an operation (a few minutes). Call finish."
+        problems = spec_problems(args, self.task.readme)
+        done = [c.operate["spec"].get("feature") for c in self.report.commands if c.operate]
+        if len(done) >= OPERATE_MAX:
+            problems.append(f"this run has used its {OPERATE_MAX} operations")
+        elif args.feature is not None and done.count(args.feature) >= OPERATE_PER_FEATURE:
+            problems.append(f"feature F{args.feature} has had its {OPERATE_PER_FEATURE} operations; report it")
+        if problems:  # nothing ran: not budgeted
+            self._say(f"  ◈ {_one_line(args.goal, 120)} → refused ({_one_line(problems[0], 120)})")
+            return "error: pickfit cannot run this operation as asked:\n" + "\n".join(f"- {p}" for p in problems)
+        self.commands_used += 1
+        n = self.commands_used
+        args = args.model_copy(update={"wait_s": max(1, min(args.wait_s, gui.WAIT_MAX_S))})
+        self._say(f"  ◈ F{args.feature or '?'} · {_one_line(args.goal, 200)}   [cmd {n}/{self.limits.max_commands}]")
+        evidence = self.runs_dir / "verify" / self.run_id
+        scope = dict(run_id=self.run_id, scope=f"verify:{self.task.slug}", scope_cap_usd=self.limits.scope_cap_usd)
+        name = _cited(self.task.extraction.name) or self.task.slug
+        reader = read_screen_text(name, model=judge_model_for(self.model), log=self._say, **scope, **self.call_kwargs)
+        result, op, png = run_operation(self.box, args, n, read_screen=reader, evidence_dir=evidence, log=self._say,
+                                        timeout_s=self._timeout(args.wait_s + gui.SETTLE_S + gui.BLANK_WAIT_S + 90),
+                                        **scope, **self.call_kwargs)
+        self.report.operator_cost_usd = round(self.report.operator_cost_usd + op.cost_usd, 6)
+        shot = None
+        if png:
+            path = evidence / f"gui-{n}.png"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(png)
+            shot = str(path)
+        self._record(turn, "operate_gui", args.command, result, wait_s=args.wait_s, screenshot=shot, gui=op.launch,
+                     operate={"spec": args.model_dump(), **op.to_dict()})
+        return self._format_exec(n, result, [], args.wait_s)
+
     def _record(self, turn: int, tool: str, command: str, result: ExecResult,
                 hints: list[RuleHit] | None = None, purpose: str | None = None,
                 port: int | None = None, wait_s: int | None = None, screenshot: str | None = None,
-                gui: dict[str, Any] | None = None, unmasked_from: str | None = None) -> None:
-        budgeted = tool in ("run_command", "run_background", "launch_gui")
+                gui: dict[str, Any] | None = None, operate: dict[str, Any] | None = None,
+                unmasked_from: str | None = None) -> None:
+        budgeted = tool in ("run_command", "run_background", "launch_gui", "operate_gui")
         self.report.commands.append(CommandRecord(
             turn=turn, tool=tool, command=command, exit_code=result.exit_code, seconds=result.seconds,
             timed_out=result.timed_out, stdout=result.stdout, stderr=result.stderr,
             hints=[asdict(h) for h in hints or []], purpose=purpose,
             command_id=self.commands_used if budgeted else None, port=port, wait_s=wait_s,
-            screenshot=screenshot, gui=gui, unmasked_from=unmasked_from))
+            screenshot=screenshot, gui=gui, operate=operate, unmasked_from=unmasked_from))
         if not budgeted:
             return
         status = "timed out" if result.timed_out else f"exit {result.exit_code}"

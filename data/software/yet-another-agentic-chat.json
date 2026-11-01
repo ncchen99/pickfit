@@ -61,17 +61,20 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-yet-another-agentic-chat-20261101-124246-8d78",
       "method": "uv",
       "steps": [
         {
-          "command": "uvx --from \"yet-another-agentic-chat[chat]\" yaac-chat",
-          "purpose": null
+          "command": "uv tool install yet-another-agentic-chat && yet-another-agentic-chat --help; echo EXIT:$?\n# also check yaac-chat exists\nwhich yet-another-agentic-chat; which yaac-chat; uv tool list",
+          "purpose": "install yet-another-agentic-chat via uv tool install so launch command is on PATH"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "yet-another-agentic-chat --help",
+        "expected_signal": "A radio for agentic sessions"
+      },
       "first_task": null
     },
     "linux": {
@@ -121,7 +124,7 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:04:32.350890+08:00",
+    "checked_at": "2026-11-01T12:45:42.830403+08:00",
     "runs": [
       {
         "id": "verify-yet-another-agentic-chat-20261031-030252-ba4c",
@@ -274,6 +277,142 @@
             "reason": "other",
             "failure": null,
             "note": "no failed check in the log; single probe call holds no membership so send returns not_connected; needs join+send in one MCP session"
+          }
+        ]
+      },
+      {
+        "id": "verify-yet-another-agentic-chat-20261101-124246-8d78",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T12:45:42.830403+08:00",
+        "tool_version": "0.6.5",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install yet-another-agentic-chat && yet-another-agentic-chat --help; echo EXIT:$?\n# also check yaac-chat exists\nwhich yet-another-agentic-chat; which yaac-chat; uv tool list",
+            "purpose": "install yet-another-agentic-chat via uv tool install so launch command is on PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- yet-another-agentic-chat",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call list_channels --args '{}' -- yet-another-agentic-chat",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list_channels content=text text_chars=136",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call join_channel --args '{\"channel\":\"test-channel-123\",\"name\":\"alice\"}' -- yet-another-agentic-chat\n",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=join_channel content=text text_chars=1376",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call send --args '{\"body\":\"hello broadcast\"}' -- yet-another-agentic-chat",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=send content=text text_chars=244",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "yet-another-agentic-chat --help",
+            "expected_signal": "A radio for agentic sessions",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "A radio for agentic sessions. Run as an MCP server over stdio.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 7 tools, successful list_channels call reporting nobody on the air, and help text describing a radio for agentic sessions.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-yet-another-agentic-chat-20261101-124246-8d78/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-yet-another-agentic-chat-20261101-124246-8d78/check-1-cmd2.judged.png",
+            "runs/verify/verify-yet-another-agentic-chat-20261101-124246-8d78/check-2-cmd4.judged.png",
+            "runs/verify/verify-yet-another-agentic-chat-20261101-124246-8d78/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.061743,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "yet-another-agentic-chat"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "yaac",
+          "server_version": null,
+          "tools": [
+            "list_channels",
+            "join_channel",
+            "send",
+            "check_inbox",
+            "peers",
+            "leave_channel",
+            "dev_connections"
+          ],
+          "tool_count": 7,
+          "called_tool": "list_channels",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "Message concurrent AI coding sessions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows empty channels with 'nobody on the air', not messaging between sessions."
+          },
+          {
+            "feature": "Join channels under a chosen name",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Send direct messages and channel broadcasts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows not_connected error, not a delivered broadcast or DM."
           }
         ]
       }
@@ -737,5 +876,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T12:45:42.835577+08:00"
 }

@@ -57,18 +57,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-quantpicker-20261101-164055-7851",
+      "method": "uv",
       "steps": [
         {
-          "command": "cargo install quantpicker",
-          "purpose": null
+          "command": "uv tool install quantpicker 2>&1",
+          "purpose": "install quantpicker via uv tool install"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "quantpicker search qwen3 8b"
+      "check": {
+        "command": "quantpicker search qwen3 8b 2>&1",
+        "expected_signal": "Qwen/Qwen3-8B-GGUF"
+      },
+      "first_task": "quantpicker search qwen3 8b 2>&1"
     },
     "linux": {
       "basis": "replayed",
@@ -117,7 +120,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:11:51.526332+08:00",
+    "checked_at": "2026-11-01T16:44:58.234190+08:00",
     "runs": [
       {
         "id": "verify-quantpicker-20261031-020903-796e",
@@ -216,6 +219,94 @@
             "status": "checked",
             "smoke_tests": [
               2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      },
+      {
+        "id": "verify-quantpicker-20261101-164055-7851",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T16:44:58.234190+08:00",
+        "tool_version": "0.1.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install quantpicker 2>&1",
+            "purpose": "install quantpicker via uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "quantpicker search qwen3 8b 2>&1",
+            "expected_signal": "Qwen/Qwen3-8B-GGUF",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ Qwen/Qwen3-8B-GGUF ┆ 733K ┆ 364 │",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "quantpicker list unsloth/Qwen3-8B-GGUF 2>&1",
+            "expected_signal": "unsloth/Qwen3-8B-GGUF on Apple GPU",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "unsloth/Qwen3-8B-GGUF on Apple GPU (unified memory) with 6.0 GiB free (keeping 1.5 GiB for context):",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show search results topped by Qwen/Qwen3-8B-GGUF and a quant size/fits table for unsloth/Qwen3-8B-GGUF on Apple GPU.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-quantpicker-20261101-164055-7851/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-quantpicker-20261101-164055-7851/check-1-cmd3.judged.png",
+            "runs/verify/verify-quantpicker-20261101-164055-7851/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.047536,
+        "features": [
+          {
+            "feature": "measure GGUF quants and pick fastest",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "Measures quants with llama-bench on GPU, needs GPU and multi-GB downloads; not attempted in VM"
+          },
+          {
+            "feature": "search Hugging Face for GGUF repos",
+            "status": "checked",
+            "smoke_tests": [
+              0
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "list quants and GPU fit",
+            "status": "checked",
+            "smoke_tests": [
+              1
             ],
             "reason": null,
             "failure": null,
@@ -586,5 +677,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:44:58.246130+08:00"
 }

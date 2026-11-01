@@ -57,18 +57,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-aptu-coder-20261101-125659-9097",
       "method": "brew",
       "steps": [
         {
           "command": "brew install clouatre-labs/tap/aptu-coder",
-          "purpose": null
+          "purpose": "brew install clouatre-labs/tap/aptu-coder"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "aptu-coder --port 49200"
+      "check": {
+        "command": "aptu-coder --version",
+        "expected_signal": "aptu-coder 0.41.1"
+      },
+      "first_task": null
     },
     "linux": {
       "basis": "replayed",
@@ -104,7 +107,7 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:49:34.081404+08:00",
+    "checked_at": "2026-11-01T13:00:04.404137+08:00",
     "runs": [
       {
         "id": "verify-aptu-coder-20261031-024743-4793",
@@ -275,6 +278,171 @@
             "note": null
           }
         ]
+      },
+      {
+        "id": "verify-aptu-coder-20261101-125659-9097",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T13:00:04.404137+08:00",
+        "tool_version": "0.41.1",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install clouatre-labs/tap/aptu-coder",
+            "purpose": "brew install clouatre-labs/tap/aptu-coder"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "aptu-coder --version",
+            "expected_signal": "aptu-coder 0.41.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "aptu-coder 0.41.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- aptu-coder",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call analyze_directory --args '{\"path\": \"mcp_test_proj\"}' -- aptu-coder",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=analyze_directory content=text text_chars=170",
+            "setup": [
+              {
+                "command": "mkdir -p mcp_test_proj && cat > mcp_test_proj/sample.py <<'PY'\ndef foo(x):\n    return x + 1\n\ndef bar(y):\n    return foo(y) * 2\n\nclass Baz:\n    def method(self, z):\n        return bar(z)\n\nimport os\nPY\nls -R mcp_test_proj\npwd",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call analyze_file --args '{\"path\": \"mcp_test_proj/sample.py\"}' -- aptu-coder",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=analyze_file content=text text_chars=112",
+            "setup": [
+              {
+                "command": "mkdir -p mcp_test_proj && cat > mcp_test_proj/sample.py <<'PY'\ndef foo(x):\n    return x + 1\n\ndef bar(y):\n    return foo(y) * 2\n\nclass Baz:\n    def method(self, z):\n        return bar(z)\n\nimport os\nPY\nls -R mcp_test_proj\npwd",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call analyze_symbol --args '{\"path\": \"mcp_test_proj\", \"symbol\": \"foo\"}' -- aptu-coder",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=analyze_symbol content=text text_chars=174",
+            "setup": [
+              {
+                "command": "mkdir -p mcp_test_proj && cat > mcp_test_proj/sample.py <<'PY'\ndef foo(x):\n    return x + 1\n\ndef bar(y):\n    return foo(y) * 2\n\nclass Baz:\n    def method(self, z):\n        return bar(z)\n\nimport os\nPY\nls -R mcp_test_proj\npwd",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "README shows tools take a `path` without mentioning sandboxing",
+            "actually_needed": "path must be inside the server's working directory; passing /tmp/mcp_test_proj returns 'path is outside the working directory' and suggests providing a path within the current working directory",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 8 tools, successful analyze_directory call returning file stats, and version 0.41.1 output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-aptu-coder-20261101-125659-9097/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-aptu-coder-20261101-125659-9097/check-1-cmd2.judged.png",
+            "runs/verify/verify-aptu-coder-20261101-125659-9097/check-2-cmd12.judged.png",
+            "runs/verify/verify-aptu-coder-20261101-125659-9097/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.10736,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "aptu-coder"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "aptu-coder",
+          "server_version": "0.41.1",
+          "tools": [
+            "analyze_directory",
+            "analyze_file",
+            "analyze_module",
+            "analyze_symbol",
+            "edit_overwrite",
+            "edit_replace",
+            "exec_command",
+            "verify_anchors"
+          ],
+          "tool_count": 8,
+          "called_tool": "analyze_directory",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "Map directory trees with symbol counts",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Extract functions, classes and imports",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Trace call graphs for named symbols",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -343,15 +511,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T13:00:04+08:00",
     "quality": {
-      "total": 86.6,
+      "total": 94.1,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -392,7 +560,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 61.49
+      "value": 66.81
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -811,5 +979,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T13:00:04.410470+08:00"
 }

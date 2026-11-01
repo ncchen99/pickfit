@@ -1,0 +1,396 @@
+{
+  "schema_version": "software.v1",
+  "slug": "trayscale",
+  "repo_id": "gh:474844085",
+  "name": "Trayscale",
+  "summary": "Unofficial GUI for managing the Tailscale daemon on Linux.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "other",
+  "kind": "desktop_app",
+  "audience": "end_user",
+  "maturity": "beta",
+  "tags": [
+    "golang",
+    "gtk4",
+    "hacktoberfest",
+    "libadwaita",
+    "linux",
+    "tailscale"
+  ],
+  "use_cases": [],
+  "alternatives_to": [],
+  "features": [
+    "enable and choose exit nodes",
+    "switch profiles from tray menu",
+    "manage advertised routes"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/DeedleFake/trayscale",
+    "full_name": "DeedleFake/trayscale",
+    "created_at": "2022-03-28T04:24:33Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-trayscale-20261101-174132-a138",
+      "method": "other",
+      "steps": [
+        {
+          "command": "flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo 2>&1",
+          "purpose": "Add Flathub remote for user"
+        },
+        {
+          "command": "flatpak install --user -y flathub dev.deedles.Trayscale 2>&1",
+          "purpose": "Install Trayscale flatpak from Flathub"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "flatpak info dev.deedles.Trayscale 2>&1 | head -20; echo EXIT:$?\nflatpak --version 2>&1",
+        "expected_signal": "Version: v0.21.0"
+      },
+      "first_task": "flatpak run dev.deedles.Trayscale"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.21.0",
+    "published_at": "2026-10-15T18:58:37Z",
+    "url": "https://github.com/DeedleFake/trayscale/releases/tag/v0.21.0"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T17:44:10.256954+08:00",
+    "runs": [
+      {
+        "id": "verify-trayscale-20261101-174132-a138",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:d66116882a17",
+        "checked_at": "2026-11-01T17:44:10.256954+08:00",
+        "tool_version": "v0.21.0",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo 2>&1",
+            "purpose": "Add Flathub remote for user"
+          },
+          {
+            "command": "flatpak install --user -y flathub dev.deedles.Trayscale 2>&1",
+            "purpose": "Install Trayscale flatpak from Flathub"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak info dev.deedles.Trayscale 2>&1 | head -20; echo EXIT:$?\nflatpak --version 2>&1",
+            "expected_signal": "Version: v0.21.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Version: v0.21.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "flatpak run dev.deedles.Trayscale",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows flatpak info for Trayscale listing Version v0.21.0 with EXIT:0. / The Trayscale window is fully drawn showing its main interface with a Not Connected status indicating Tailscale is not connected.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-trayscale-20261101-174132-a138/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-trayscale-20261101-174132-a138/check-1-cmd8.judged.png",
+            "runs/verify/verify-trayscale-20261101-174132-a138/replay-7-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.049143,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "flatpak run dev.deedles.Trayscale",
+          "window_title": "Trayscale",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "enable and choose exit nodes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Requires running tailscaled daemon and operator configuration"
+          },
+          {
+            "feature": "switch profiles from tray menu",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Requires running tailscaled and profiles"
+          },
+          {
+            "feature": "manage advertised routes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Requires running tailscaled and advertised routes"
+          }
+        ]
+      }
+    ]
+  },
+  "scores": null,
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/DeedleFake/trayscale",
+      "fetched_at": "2026-11-01T16:51:53+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/DeedleFake/trayscale/blob/master/README.md",
+      "fetched_at": "2026-11-01T16:52:15+08:00"
+    },
+    {
+      "id": "release:v0.21.0",
+      "kind": "release",
+      "url": "https://github.com/DeedleFake/trayscale/releases/tag/v0.21.0",
+      "fetched_at": "2026-11-01T16:52:15+08:00"
+    },
+    {
+      "id": "flathub:dev.deedles.Trayscale",
+      "kind": "package_registry",
+      "url": "https://flathub.org/apps/dev.deedles.Trayscale",
+      "fetched_at": "2026-11-01T16:51:53+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Trayscale is an unofficial GUI interface for the Tailscale daemon",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:09:23+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "First, make sure that you have dependencies installed:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:09:23+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Trayscale is an unofficial GUI interface for the Tailscale daemon",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:09:23+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "An unofficial GUI wrapper around the Tailscale CLI client.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:09:23+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Trayscale",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:09:23+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "particularly for use on Linux",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:09:23+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T16:51:53+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T16:51:53+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-01T16:51:53+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T16:51:53+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.21.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-01T16:52:15+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "This project is in a beta state.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:09:23+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**Exit node selection** chooses what happens when **Use Exit Node** turns on",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:09:23+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "flathub:dev.deedles.Trayscale",
+      "quote": "Add a profile switching submenu to the tray menu.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:09:23+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "flathub:dev.deedles.Trayscale",
+      "quote": "Keep advertised routes when toggling the exit node.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:09:23+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "go install deedles.dev/trayscale/cmd/trayscale@latest",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:09:23+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Trayscale interfaces with the Tailscale daemon, `tailscaled`, to perform many of its operations.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-01T17:09:23+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-01T16:42:42+08:00",
+  "updated_at": "2026-11-01T23:09:36.171294+08:00"
+}

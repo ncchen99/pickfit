@@ -64,18 +64,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-agent-history-20261101-175353-cccf",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install git+https://github.com/d3layd/agent-history",
-          "purpose": null
+          "command": "uv tool install git+https://github.com/d3layd/agent-history 2>&1",
+          "purpose": "install via uv tool install git+https://github.com/d3layd/agent-history"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "agent-history search \"query\""
+      "check": {
+        "command": "agent-history --version 2>&1; echo ---; agent-history --help 2>&1",
+        "expected_signal": "agent-history 0.16.0"
+      },
+      "first_task": "agent-history inject status 2>&1; echo \"---TOGGLE---\"; agent-history inject toggle 2>&1; agent-history inject status 2>&1; agent-history inject toggle 2>&1"
     },
     "linux": {
       "basis": "replayed",
@@ -127,7 +130,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T02:07:28.036054+08:00",
+    "checked_at": "2026-11-01T19:31:14.226453+08:00",
     "runs": [
       {
         "id": "verify-agent-history-20261031-220211-df28",
@@ -323,6 +326,149 @@
             "reason": "not_shown",
             "failure": null,
             "note": "its check passed, but the output does not show it: Output shows only help text and on/off status, not relevant past-session chunks injected as context."
+          }
+        ]
+      },
+      {
+        "id": "verify-agent-history-20261101-175353-cccf",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T19:31:14.226453+08:00",
+        "tool_version": "0.16.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install git+https://github.com/d3layd/agent-history 2>&1",
+            "purpose": "install via uv tool install git+https://github.com/d3layd/agent-history"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "agent-history --version 2>&1; echo ---; agent-history --help 2>&1",
+            "expected_signal": "agent-history 0.16.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "agent-history 0.16.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "agent-history search \"why did we split the auth middleware\" --mode text --full 2>&1\necho \"---TEXT SEARCH 2---\"\nagent-history search \"os error 11001\" --mode text --full 2>&1\necho \"---HYBRID---\"\nagent-history search \"auth middleware\" --full 2>&1\necho \"---VECTOR---\"\nagent-history search \"caching\" --mode vector --full 2>&1",
+            "expected_signal": "score=0.0333",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "error: no index at /Users/sbx/.local/share/agent-history/index.db. Run: agent-history index",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/test-docs && cat > /tmp/test-docs/runbook.md <<'EOF'\n# Gateway Restart Runbook\nThe reason to split the auth middleware is that session refresh needs to run before authentication.\nWe decided to use caching with Redis for performance.\nos error 11001 is a specific network error we encountered.\nEOF\ncat /tmp/test-docs/runbook.md\nagent-history docs add /tmp/test-docs 2>&1\nagent-history docs list 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 -c '\nimport http.server, json, hashlib, struct, urllib.parse\nclass H(http.server.BaseHTTPRequestHandler):\n    def do_GET(self):\n        if self.path.startswith(\"/api/tags\"):\n            self.send_response(200)\n            self.send_header(\"Content-Type\",\"application/json\")\n            self.end_headers()\n            self.wfile.write(json.dumps({\"models\":[{\"name\":\"nomic-embed-text:latest\"}]}).encode())\n        else:\n            self.send_response(404);self.end_headers()\n    def do_POST(self):\n        if self.path.startswith(\"/api/embeddings\"):\n            length=int(self.headers.get(\"Content-Length\",0))\n            body=json.loads(self.rfile.read(length).decode())\n            prompt=body.get(\"prompt\",\"\")\n            # deterministic 768-dim vector from hash\n            import random\n            h=int(hashlib.sha256(prompt.encode()).hexdigest()[:8],16)\n            random.seed(h)\n            vec=[random.uniform(-1,1) for _ in range(768)]\n            # optionally make similar prompts produce closer vectors via keyword\n            self.send_response(200)\n            self.send_header(\"Content-Type\",\"application/json\")\n            self.end_headers()\n            self.wfile.write(json.dumps({\"embedding\": vec}).encode())\n        else:\n            self.send_response(404);self.end_headers()\n    def log_message(self,*a): pass\nhttp.server.HTTPServer((\"127.0.0.1\",11434), H).serve_forever()\n'",
+                "background": true,
+                "port": 11434
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "agent-history show /private/tmp/test-docs/runbook.md 2>&1\necho \"---SHOW JSON---\"\nagent-history show /private/tmp/test-docs/runbook.md --json 2>&1",
+            "expected_signal": "The reason to split the auth middleware",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "error: no index at /Users/sbx/.local/share/agent-history/index.db. Run: agent-history index",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/test-docs && cat > /tmp/test-docs/runbook.md <<'EOF'\n# Gateway Restart Runbook\nThe reason to split the auth middleware is that session refresh needs to run before authentication.\nWe decided to use caching with Redis for performance.\nos error 11001 is a specific network error we encountered.\nEOF\ncat /tmp/test-docs/runbook.md\nagent-history docs add /tmp/test-docs 2>&1\nagent-history docs list 2>&1",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 -c '\nimport http.server, json, hashlib, struct, urllib.parse\nclass H(http.server.BaseHTTPRequestHandler):\n    def do_GET(self):\n        if self.path.startswith(\"/api/tags\"):\n            self.send_response(200)\n            self.send_header(\"Content-Type\",\"application/json\")\n            self.end_headers()\n            self.wfile.write(json.dumps({\"models\":[{\"name\":\"nomic-embed-text:latest\"}]}).encode())\n        else:\n            self.send_response(404);self.end_headers()\n    def do_POST(self):\n        if self.path.startswith(\"/api/embeddings\"):\n            length=int(self.headers.get(\"Content-Length\",0))\n            body=json.loads(self.rfile.read(length).decode())\n            prompt=body.get(\"prompt\",\"\")\n            # deterministic 768-dim vector from hash\n            import random\n            h=int(hashlib.sha256(prompt.encode()).hexdigest()[:8],16)\n            random.seed(h)\n            vec=[random.uniform(-1,1) for _ in range(768)]\n            # optionally make similar prompts produce closer vectors via keyword\n            self.send_response(200)\n            self.send_header(\"Content-Type\",\"application/json\")\n            self.end_headers()\n            self.wfile.write(json.dumps({\"embedding\": vec}).encode())\n        else:\n            self.send_response(404);self.end_headers()\n    def log_message(self,*a): pass\nhttp.server.HTTPServer((\"127.0.0.1\",11434), H).serve_forever()\n'",
+                "background": true,
+                "port": 11434
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "agent-history inject status 2>&1; echo \"---TOGGLE---\"; agent-history inject toggle 2>&1; agent-history inject status 2>&1; agent-history inject toggle 2>&1",
+            "expected_signal": "inject: on",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "inject: on (on by default)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "agent-history index works with Ollama HTTP endpoint, --mode text needs no Ollama",
+            "actually_needed": "index requires Ollama even for docs text-only content; needed a fake Ollama server on 11434 returning dummy 768-dim embeddings to build index before any search/show worked",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "prerequisites python>=3.10",
+            "actually_needed": "Homebrew python 3.15.2 worked (sqlite extension loadable) so no need to pin to 3.10",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.16.0 with full help text and inject status toggling from on to off and back to on.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-agent-history-20261101-175353-cccf/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-agent-history-20261101-175353-cccf/check-1-cmd3.judged.png",
+            "runs/verify/verify-agent-history-20261101-175353-cccf/check-2-cmd15.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.098278,
+        "features": [
+          {
+            "feature": "search past agent transcripts by meaning",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "hybrid vector and full-text search",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "view conversation around search hits",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "inject relevant past sessions into prompts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows inject on/off status and config, not relevant past-session chunks injected into a prompt."
           }
         ]
       }
@@ -702,5 +848,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-01T02:07:28.037857+08:00"
+  "updated_at": "2026-11-01T19:31:14.233393+08:00"
 }

@@ -74,16 +74,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-hivemind-20261101-164911-da14",
+      "run_id": "verify-hivemind-20261101-183124-a1c7",
       "method": "script",
       "steps": [
         {
           "command": "curl -fsSL https://hivemind.griiken.com/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
-          "purpose": "download install script from hivemind.griiken.com"
+          "purpose": "download install.sh from https://hivemind.griiken.com/install.sh"
         },
         {
-          "command": "bash /tmp/install.sh 2>&1",
-          "purpose": "run installer bash /tmp/install.sh to extract AppImage and create launcher"
+          "command": "bash /tmp/install.sh",
+          "purpose": "run install.sh, install v2026.11.0 desktop AppImage"
         }
       ],
       "manual_steps": [],
@@ -126,26 +126,26 @@
     "checked_at": "2026-11-01T21:08:04.518674+08:00",
     "runs": [
       {
-        "id": "verify-hivemind-20261101-164911-da14",
+        "id": "verify-hivemind-20261101-183124-a1c7",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-vm",
-        "image": "pickfit-sbx-vm-gui:14dd5b7442cc",
-        "checked_at": "2026-11-01T16:52:17.180611+08:00",
-        "tool_version": "2026.11.0",
+        "image": "pickfit-sbx-vm-gui:57d565a999ec",
+        "checked_at": "2026-11-01T18:52:24.467867+08:00",
+        "tool_version": "v2026.11.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
             "command": "curl -fsSL https://hivemind.griiken.com/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
-            "purpose": "download install script from hivemind.griiken.com"
+            "purpose": "download install.sh from https://hivemind.griiken.com/install.sh"
           },
           {
-            "command": "bash /tmp/install.sh 2>&1",
-            "purpose": "run installer bash /tmp/install.sh to extract AppImage and create launcher"
+            "command": "bash /tmp/install.sh",
+            "purpose": "run install.sh, install v2026.11.0 desktop AppImage"
           }
         ],
         "smoke_tests": [
@@ -160,19 +160,10 @@
           },
           {
             "command": "hive ctl --help",
-            "expected_signal": "Use hive ctl",
+            "expected_signal": "Use hive ctl <command> --help for more information",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "Use hive ctl <command> --help for more information about a command.",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "hive ctl",
-            "expected_signal": "say which: hive ctl <command>",
-            "exit_code": 2,
-            "passed": true,
-            "observed_excerpt": "error [USAGE] say which: hive ctl <command>; --help lists them",
             "setup": [],
             "offline": true
           },
@@ -184,58 +175,110 @@
             "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "hivemind --no-sandbox",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /home/sbx/pickfit-out/widget.txt: 14 bytes, written after the app started; format text: yes; contains \"pickfite29cfe\": yes (typed by the operator)",
+            "setup": [],
+            "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "bash <(curl -fsSL https://hivemind.griiken.com/install.sh)",
+            "actually_needed": "download script first then run bash /tmp/install.sh; script extracts AppImage and creates wrapper with --no-sandbox (required without libfuse2/SUID sandbox)",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show hive ctl printing usage guidance and hive --version printing 2026.11.0. / Hivemind's main workspace is fully drawn with project sidebar and empty canvas prompting to start with an agent.",
+          "observed": "Screenshot shows hive --version printing 2026.11.0. / Hivemind's dark main workspace is fully drawn with sidebar, canvas toolbar, and a central prompt to start with an agent.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-hivemind-20261101-164911-da14/report.json",
+          "trace_path": "runs/verify/verify-hivemind-20261101-183124-a1c7/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-hivemind-20261101-164911-da14/check-1-cmd6.judged.png",
-            "runs/verify/verify-hivemind-20261101-164911-da14/check-2-cmd7.judged.png",
-            "runs/verify/verify-hivemind-20261101-164911-da14/replay-8-1.app.judged.png"
+            "runs/verify/verify-hivemind-20261101-183124-a1c7/check-1-cmd10.judged.png",
+            "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-13-1.app.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.060356,
+        "cost_usd": 0.295109,
         "gui": {
           "tier": "ui_rendered",
           "screen": "main_ui",
           "command": "hivemind",
           "window_title": "hivemind",
-          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+          "display": "Xvfb 1280x800x24, no window manager, no GPU",
+          "operations": [
+            {
+              "feature": "build workspace views and widgets",
+              "goal": "Open a terminal inside the app (click Open terminal). In the terminal type echo {nonce} > ~/pickfit-out/widget.txt and press Enter. Then close the app.",
+              "check": "file",
+              "target": "~/pickfit-out/widget.txt",
+              "expected": [
+                "{nonce}"
+              ],
+              "format": "text",
+              "passed": true,
+              "observed": "file /home/sbx/pickfit-out/widget.txt: 14 bytes, written after the app started; format text: yes; contains \"pickfite29cfe\": yes (typed by the operator)",
+              "smoke_test": 3,
+              "actions": 18,
+              "replay": "actions",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-1.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-2.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-3.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-4.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-5.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-6.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-7.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-8.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-9.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-10.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-11.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-12.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-13.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-14.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-15.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-16.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-17.png",
+                "runs/verify/verify-hivemind-20261101-183124-a1c7/replay-6-2-op-18.png"
+              ]
+            }
+          ]
         },
         "features": [
           {
             "feature": "run coding agents side by side",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_account",
+            "reason": "other",
             "failure": null,
-            "note": "Requires Claude Code/Codex API accounts to launch agents side-by-side; no agents installed in sandbox"
+            "note": "no failed check in the log; App shows side-by-side terminal tiles but operator failed to create second tile before file test; single terminal works (see F2)"
           },
           {
             "feature": "build workspace views and widgets",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "not_shown",
             "failure": null,
-            "note": "Building views/widgets requires interactive GUI canvas; verified window opens but not widget creation"
+            "note": "its check passed, but the output does not show it: Output shows only an operator-typed echo file for F2, not a built view or widget."
           },
           {
             "feature": "steer other agents via hive ctl",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_shown",
+            "reason": "other",
             "failure": null,
-            "note": "its check passed, but the output does not show it: Output only shows a usage error asking for a subcommand, not steering any agent."
+            "note": "its check did not pass in the log; hive ctl --help lists steer commands and exit codes"
           },
           {
             "feature": "run agents remotely check from phone",
@@ -243,7 +286,7 @@
             "smoke_tests": [],
             "reason": "needs_service",
             "failure": null,
-            "note": "Remote SSH + phone check requires external machines and phone app not available in box"
+            "note": "Requires remote machine over ssh and phone to check agents, not available in box"
           }
         ]
       },
@@ -682,5 +725,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:15+08:00",
-  "updated_at": "2026-11-01T21:08:04.521469+08:00"
+  "updated_at": "2026-11-02T00:55:09.277025+08:00"
 }

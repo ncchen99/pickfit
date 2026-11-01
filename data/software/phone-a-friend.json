@@ -61,18 +61,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-phone-a-friend-20261101-133123-774c",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g @freibergergarcia/phone-a-friend",
-          "purpose": null
+          "purpose": "Install phone-a-friend globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "phone-a-friend doctor"
+      "check": {
+        "command": "phone-a-friend --version",
+        "expected_signal": "phone-a-friend 4.14.1"
+      },
+      "first_task": null
     },
     "linux": {
       "basis": "replayed",
@@ -108,7 +111,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:19:32.529236+08:00",
+    "checked_at": "2026-11-01T13:35:04.730117+08:00",
     "runs": [
       {
         "id": "verify-phone-a-friend-20261031-031816-13a5",
@@ -255,6 +258,88 @@
             "reason": "not_shown",
             "failure": null,
             "note": "its check passed, but the output does not show it: Output reports \"No changes found\" and shows no review content."
+          }
+        ]
+      },
+      {
+        "id": "verify-phone-a-friend-20261101-133123-774c",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T13:35:04.730117+08:00",
+        "tool_version": "4.14.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @freibergergarcia/phone-a-friend",
+            "purpose": "Install phone-a-friend globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "phone-a-friend --version",
+            "expected_signal": "phone-a-friend 4.14.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "phone-a-friend 4.14.1",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows phone-a-friend --version outputting phone-a-friend 4.14.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-phone-a-friend-20261101-133123-774c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-phone-a-friend-20261101-133123-774c/check-1-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.077698,
+        "features": [
+          {
+            "feature": "relay tasks to AI backends",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Relay requires backend CLIs and auth not present"
+          },
+          {
+            "feature": "run multi-model team refinement",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Team refinement needs multiple backends"
+          },
+          {
+            "feature": "run persistent multi-agent sessions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Agentic mode requires Claude Code"
+          },
+          {
+            "feature": "perform context-aware code reviews",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Code review needs backend"
           }
         ]
       }
@@ -596,5 +681,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T13:35:04.734843+08:00"
 }

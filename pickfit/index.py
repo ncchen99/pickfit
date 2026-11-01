@@ -90,12 +90,17 @@ def _iso(value: datetime | None) -> str | None:
 
 
 def _gui(run: VerificationRun) -> dict[str, Any] | None:
-    """A GUI app's launch as pickfit saw it; never the window title, which the app chooses."""
+    """A GUI app's launch as pickfit saw it, and the goals it operated the app toward; never the window title or
+    anything else the app chooses (an operation's observed line is pickfit's own)."""
     if run.gui is None:
         return None
     launch = next((t for t in run.smoke_tests if t.command == run.gui.command and t.passed), None)
-    return {"tier": run.gui.tier, "screen": run.gui.screen, "display": run.gui.display,
-            "launch_offline": launch.offline if launch else None}
+    out = {"tier": run.gui.tier, "screen": run.gui.screen, "display": run.gui.display,
+           "launch_offline": launch.offline if launch else None}
+    if run.gui.operations:
+        out["operations"] = [{"feature": o.feature, "check": o.check, "passed": o.passed, "replay": o.replay,
+                              "goal": o.goal, "observed": o.observed} for o in run.gui.operations]
+    return out
 
 
 def _run_summary(run: VerificationRun) -> dict[str, Any]:
