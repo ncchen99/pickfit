@@ -517,7 +517,7 @@ def _stage_name(row: dict[str, Any]) -> str:
     return "still_using" if ok else "replaced" if row.get("replaced_by") else "abandoned"
 
 
-def outcomes_from_events(rows: list[dict[str, Any]], synced_at: datetime) -> dict[str, Outcomes]:
+def outcomes_from_events(rows: list[dict[str, Any]], synced_at: datetime | None = None) -> dict[str, Outcomes]:
     """Outcomes per slug from D1 outcome rows. Only counted rows (rec_id set) are used, and each
     recommendation counts once per stage, by its latest report: an install that failed and then
     worked is installed; still_using in week 2 then abandoned in month 3 is abandoned."""
