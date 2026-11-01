@@ -144,3 +144,14 @@ def test_hidden_records_are_neither_visited_nor_written(data_dir: Path, tmp_path
     assert record_targets([], data_dir) == [] and record_targets(["fixture-web-sketch"], data_dir) == []
     written, why = web_write_back(web_run(visit(), FEATURES, tmp_path), "fixture-web-sketch", data_dir)
     assert not written and "hidden" in why
+
+
+def test_a_rejudged_visit_replaces_its_own_earlier_run(data_dir: Path, tmp_path: Path):
+    assert web_write_back(web_run(visit(), FEATURES, tmp_path), "fixture-web-sketch", data_dir)[0]
+    rejudged = web_run(visit(function_judge={"feature_shown": False, "observed": "Only a page opened."}),
+                       FEATURES, tmp_path)
+    assert rejudged.level == "install"
+    written, why = web_write_back(rejudged, "fixture-web-sketch", data_dir)
+    assert written, why
+    record = SoftwareRecord.model_validate_json((data_dir / "fixture-web-sketch.json").read_text())
+    assert record.verification.level == "install" and len(record.verification.runs) == 1

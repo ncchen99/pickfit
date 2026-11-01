@@ -249,7 +249,7 @@ def web_write_back(run: VerificationRun, slug: str, data_dir: Path = DATA_DIR) -
         return False, f"not written: the run opened {run.web.url}, the record's URL is {record.web.url}"
     same = next((r for r in record.verification.runs if (r.os, r.arch, r.method) == (run.os, run.arch, run.method)
                  and is_passed(r.level)), None)
-    if same and PASSED_LEVELS.index(run.level) > PASSED_LEVELS.index(same.level):
+    if same and same.id != run.id and PASSED_LEVELS.index(run.level) > PASSED_LEVELS.index(same.level):  # same id: re-judged
         return False, f"not written: {run.level} would replace the stronger {same.level} run {same.id}"
     runs = [r for r in record.verification.runs if (r.os, r.arch, r.method) != (run.os, run.arch, run.method)]
     runs.append(run)
