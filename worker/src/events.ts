@@ -106,8 +106,10 @@ export interface IssuedRec {
 }
 
 /**
- * Did pickfit hand out `slug` under `recId` in the last `ttlDays` days? Either
- * a find_* call that recommended it, or a get_install_guide call for it.
+ * Did pickfit hand out `slug` under `recId`, with the rec_id first issued in the
+ * last `ttlDays` days? Either a find_* call that recommended it, or a
+ * get_install_guide call for it. The window runs from the first row: fetching
+ * the guide again under the same rec_id does not restart it.
  */
 export async function issuedRec(
   db: D1Database,
@@ -120,12 +122,13 @@ export async function issuedRec(
   const since = new Date(now.getTime() - ttlDays * 86_400_000).toISOString();
   const { results } = await db
     .prepare(
-      `SELECT type, slug, os, arch, results FROM events
-        WHERE rec_id = ?1 AND type IN ('find', 'alternatives', 'install_guide') AND ts >= ?2
+      `SELECT type, slug, os, arch, results, ts FROM events
+        WHERE rec_id = ?1 AND type IN ('find', 'alternatives', 'install_guide')
         ORDER BY ts DESC`,
     )
-    .bind(recId, since)
-    .all<{ type: IssuedRec['type']; slug: string | null; os: string | null; arch: string | null; results: string | null }>();
+    .bind(recId)
+    .all<{ type: IssuedRec['type']; slug: string | null; os: string | null; arch: string | null; results: string | null; ts: string }>();
+  if (results.length === 0 || results[results.length - 1].ts < since) return null;
   // Prefer the install guide row: its OS is the one the user installed on.
   const rows = [...results].sort((a, b) => Number(b.type === 'install_guide') - Number(a.type === 'install_guide'));
   for (const row of rows) {
