@@ -51,20 +51,41 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-oneasr-20261101-213449-caba",
+      "method": "binary",
       "steps": [
         {
-          "command": "bash \"/Volumes/OneAsr 1.3.0/安装 OneAsr.command\"",
-          "purpose": null
+          "command": "curl -fL -o ~/Downloads/OneAsr_1.3.0_macos.dmg https://github.com/eclipse005/OneAsr/releases/download/v1.3.0/OneAsr_1.3.0_macos.dmg",
+          "purpose": "download macOS dmg from GitHub releases"
+        },
+        {
+          "command": "mkdir -p ~/mnt/oneasr2 && hdiutil attach -nobrowse -mountpoint ~/mnt/oneasr2 ~/Downloads/OneAsr_1.3.0_macos.dmg",
+          "purpose": "mount dmg to ~/mnt/oneasr2"
+        },
+        {
+          "command": "mkdir -p ~/Applications && cp -R ~/mnt/oneasr2/OneAsr.app ~/Applications/",
+          "purpose": "copy OneAsr.app to ~/Applications"
+        },
+        {
+          "command": "xattr -cr ~/Applications/OneAsr.app",
+          "purpose": "clear quarantine mark with xattr -cr"
+        },
+        {
+          "command": "codesign --force --deep --sign - ~/Applications/OneAsr.app",
+          "purpose": "ad-hoc codesign the app"
+        },
+        {
+          "command": "hdiutil detach ~/mnt/oneasr2",
+          "purpose": "eject dmg"
         }
       ],
-      "manual_steps": [
-        "the first install needs the system's quarantine mark cleared once"
-      ],
-      "check": null,
-      "first_task": "oneasr-cli.exe transcribe --input \"video.mp4\" --language zh --backend auto --output \"out.srt\""
+      "manual_steps": [],
+      "check": {
+        "command": "~/Applications/OneAsr.app/Contents/MacOS/oneasr-cli --help",
+        "expected_signal": "oneasr-cli"
+      },
+      "first_task": "open ~/Applications/OneAsr.app"
     },
     "linux": {
       "basis": "readme_claim",
@@ -97,22 +118,119 @@
     "url": "https://github.com/eclipse005/OneAsr/releases/tag/v1.3.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T21:40:34.501113+08:00",
+    "runs": [
+      {
+        "id": "verify-oneasr-20261101-213449-caba",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@78f2945fd37d",
+        "checked_at": "2026-11-01T21:40:34.501113+08:00",
+        "tool_version": "1.3.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fL -o ~/Downloads/OneAsr_1.3.0_macos.dmg https://github.com/eclipse005/OneAsr/releases/download/v1.3.0/OneAsr_1.3.0_macos.dmg",
+            "purpose": "download macOS dmg from GitHub releases"
+          },
+          {
+            "command": "mkdir -p ~/mnt/oneasr2 && hdiutil attach -nobrowse -mountpoint ~/mnt/oneasr2 ~/Downloads/OneAsr_1.3.0_macos.dmg",
+            "purpose": "mount dmg to ~/mnt/oneasr2"
+          },
+          {
+            "command": "mkdir -p ~/Applications && cp -R ~/mnt/oneasr2/OneAsr.app ~/Applications/",
+            "purpose": "copy OneAsr.app to ~/Applications"
+          },
+          {
+            "command": "xattr -cr ~/Applications/OneAsr.app",
+            "purpose": "clear quarantine mark with xattr -cr"
+          },
+          {
+            "command": "codesign --force --deep --sign - ~/Applications/OneAsr.app",
+            "purpose": "ad-hoc codesign the app"
+          },
+          {
+            "command": "hdiutil detach ~/mnt/oneasr2",
+            "purpose": "eject dmg"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "~/Applications/OneAsr.app/Contents/MacOS/oneasr-cli --help",
+            "expected_signal": "oneasr-cli",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "oneasr-cli — 免界面的 Qwen ASR + ForcedAligner 流水线",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/OneAsr.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Run bash \"/Volumes/OneAsr 1.3.0/安装 OneAsr.command\" which copies to /Applications requiring admin password",
+            "actually_needed": "Copied to ~/Applications (user-writable) and ran xattr -cr and codesign without sudo; /Applications requires admin which sbx does not have",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Double-click OneAsr after install",
+            "actually_needed": "macOS build is unsigned: must clear quarantine with xattr -cr and ad-hoc codesign before first launch or Gatekeeper shows 'damaged' error",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows oneasr-cli help output with usage, subcommands, options, and examples. / The app shows its main window with a 'Welcome to OneAsr' onboarding dialog explaining the first-steps setup.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-oneasr-20261101-213449-caba/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-oneasr-20261101-213449-caba/check-1-cmd13.judged.png",
+            "runs/verify/verify-oneasr-20261101-213449-caba/replay-14-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.091838,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open ~/Applications/OneAsr.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        }
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-01T21:40:34+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 63.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.42,
           "weight": 40.0
         },
         "install_docs": {
@@ -153,7 +271,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 25.32
+      "value": 23.23
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -412,5 +530,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:18+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T21:40:34.502585+08:00"
 }

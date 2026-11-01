@@ -120,9 +120,74 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_more_resources",
+    "checked_at": "2026-11-01T22:32:07.670813+08:00",
+    "runs": [
+      {
+        "id": "verify-yana-ai-20261101-221820-2012",
+        "level": "unverified",
+        "unverified_reason": "needs_more_resources",
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@78f2945fd37d",
+        "checked_at": "2026-11-01T22:32:07.670813+08:00",
+        "tool_version": "1.5.1",
+        "install_method": "uv",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "uv tool install yana-ai 2>&1",
+            "purpose": "install yana-ai CLI wrapper via uv tool install yana-ai (isolated from PEP 668)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "yana-ai doctor . 2>&1; echo EXIT:$?\nyana-ai --version 2>&1",
+            "expected_signal": "yana-ai 1.5.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "yana-ai 1.5.0",
+            "setup": [
+              {
+                "command": "uv tool install yana-ai 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Download Yana Studio v1.7.0 .dmg from latest release (1081 MB)",
+            "actually_needed": "curl download at ~1.4 MB/s needs >760s, exceeds 600s command timeout; two attempts timed out at 120s and 600s with 79% complete (commands 4,5). No Homebrew cask exists (command 1).",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "pip install yana-ai then yana-ai doctor . works",
+            "actually_needed": "uv tool install succeeds but yana-ai doctor requires compiled yana-rt binary (cargo install yana-rt, needs Rust toolchain not available), exits 1 with 'yana-rt: binary not found' (command 10)",
+            "kind": "note"
+          },
+          {
+            "readme_said": "macOS build is ad-hoc signed and not notarized",
+            "actually_needed": "Docs in docs/MACOS_INSTALL.md require Right-click Open or Open Anyway to bypass Gatekeeper; would need xattr -dr com.apple.quarantine after install",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-yana-ai-20261101-221820-2012/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.053029
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
@@ -469,5 +534,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T22:32:07.672253+08:00"
 }
