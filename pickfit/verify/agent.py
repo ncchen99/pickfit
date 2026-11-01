@@ -454,6 +454,11 @@ not the app's). A Tkinter \
 app needs /usr/bin/python3 (it has tkinter; python3.12 on PATH does not): make its venv with \
 /usr/bin/python3 -m venv."""
 
+FLATPAK_RULE = """ A Flatpak app installs per user as two cited steps, \
+`flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo` and then \
+`flatpak install --user -y flathub <app id>`, and launches with `flatpak run <app id>`: a fresh box has no \
+Flathub remote until the cited step adds it."""
+
 # Public models small enough for an inference check, licenses and URLs checked 2026-10-29.
 # stories260K: karpathy/tinyllamas weights (MIT), GGUF by ggml-org. SmolLM2-135M-Instruct:
 # HuggingFaceTB (Apache-2.0), GGUF by bartowski; Ollama's smollm2:135m is the same model.
@@ -694,6 +699,8 @@ class VerifyAgent:
                                                 minutes=round(limits.max_seconds / 60),
                                                 stdout_chars=f"{STDOUT_CHARS:,}", box_kind=box.kind,
                                                 box_rule=box.user_rule) + (GUI_RULES if box.display else "")
+        if box.display and getattr(box, "runtime", None) == "gvisor":  # flatpak's sandbox needs gVisor's userns
+            self.instructions += FLATPAK_RULE
         self.tools = GUI_TOOLS if box.display else tools_for(box)
         self.commands_used = 0
         self.finish_retries = 0
