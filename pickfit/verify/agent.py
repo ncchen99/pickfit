@@ -402,8 +402,8 @@ would without admin rights: a Homebrew cask with `brew install --cask --appdir=$
 (you cannot write /Applications; a cask that runs a .pkg installer or needs sudo cannot install here: finish \
 unverified with the reason), or the app's own .dmg or .zip: download it, `hdiutil attach -nobrowse -mountpoint \
 $HOME/mnt/<name> <file>.dmg` (or unzip), copy the .app into ~/Applications, then `hdiutil detach`. Start it with \
-launch_gui (`open -a "<App>"` or `open ~/Applications/<App>.app`), never with run_command or run_background: \
-they run outside your desktop session and cannot show windows. Cite that launch_gui as a smoke test with \
+launch_gui by its path, `open ~/Applications/<App>.app` (Launch Services may not know a just-installed app by \
+name yet), never with run_command or run_background. Cite that launch_gui as a smoke test with \
 expected_signal `gui tier: window` (pickfit's own line; window titles, app and process names are the app's and \
 do not count). Before each launch pickfit answers macOS's first-launch prompt ("downloaded from the Internet") \
 with Open for apps Gatekeeper accepts as notarized, as a user does. An app Gatekeeper rejects stays blocked: \

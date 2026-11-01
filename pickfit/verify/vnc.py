@@ -273,15 +273,28 @@ class VncClient:
             start = ((y + i) * self.width + x) * 4
             self.frame[start:start + row] = data[i * row:(i + 1) * row]
 
+    def _frame(self) -> bytes:
+        self._send(struct.pack(">BBHHHH", 3, 0, 0, 0, self.width, self.height))
+        self._read_update()
+        return bytes(self.frame)
+
     def capture(self) -> tuple[int, int, bytes]:
-        """The whole display now, as (width, height, BGRX bytes)."""
-        if self.sock is None:
-            self.connect()
+        """The whole display now, as (width, height, BGRX bytes), from the first frame of a new connection.
+
+        Virtualization.framework's server treats every request after a connection's first like an
+        incremental one: it answers only once the screen changes, and on a connection that sat idle it first
+        sends a frame from before the change (measured 11/1: TextEdit open for 8 s, the first frame on the
+        old connection without it, a new connection's first frame with it; a second request on a quiet
+        screen got no answer in 20 s). A new connection's first frame is the screen as it is now.
+        """
+        self.close()
+        self.connect()
         try:
-            self._send(struct.pack(">BBHHHH", 3, 0, 0, 0, self.width, self.height))
-            self._read_update()
+            self._frame()
         except (OSError, struct.error) as err:
             raise VncError(f"VNC screenshot failed: {err}") from err
+        finally:
+            self.close()  # input reconnects; nothing is left waiting on this one
         return self.width, self.height, bytes(self.frame)
 
     def screenshot(self) -> bytes:

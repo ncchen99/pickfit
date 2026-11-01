@@ -56,11 +56,12 @@ class FakeServer:
         self.password, self.extra, self.encoding = password, extra_before_frame, encoding
         self.sock = socket.socket()
         self.sock.bind(("127.0.0.1", 0))
-        self.sock.listen(1)
+        self.sock.listen(4)
         self.port = self.sock.getsockname()[1]
         self.events: list[tuple] = []
         self.pixel_format: bytes | None = None
         self.encodings: list[int] = []
+        self.connections = 0
         self.thread = threading.Thread(target=self.serve, daemon=True)
         self.thread.start()
 
@@ -74,7 +75,15 @@ class FakeServer:
         return buf
 
     def serve(self) -> None:
-        conn, _ = self.sock.accept()
+        while True:  # a screenshot takes a connection of its own
+            try:
+                conn, _ = self.sock.accept()
+            except OSError:
+                return
+            self.connections += 1
+            self.serve_one(conn)
+
+    def serve_one(self, conn: socket.socket) -> None:
         try:
             conn.sendall(b"RFB 003.008\n")
             self._recv(conn, 12)
@@ -134,6 +143,8 @@ def test_screenshot_is_the_frame_as_png(server: FakeServer):
     assert image.size == (W, H) and image.getpixel((0, 0)) == (255, 0, 0) and image.getpixel((1, 0)) == (0, 0, 255)
     assert server.pixel_format is not None and server.pixel_format[:4] == bytes([32, 24, 0, 1])  # 32 bpp, LE, true
     assert server.encodings == [0, -223]  # Raw, and DesktopSize
+    client.screenshot()
+    assert server.connections == 3  # each screenshot is a new connection's first frame
     client.close()
 
 

@@ -95,6 +95,10 @@ GUI_BASE_VM = f"{BASE_VM}-gui"
 GUI_DISPLAY = "1280x800px"  # pixels, so macOS runs it at 1x: framebuffer, window bounds and the judge's 1280x800 agree
 DESKTOP_WAIT_S = 120  # after the agent answers, until sbx's Dock and Finder run
 VNC_URL_WAIT_S = 30
+# ulimit -u counts every process of the uid, and sbx's desktop session alone runs 230-270 (measured 11/1; macOS
+# caps a uid at 1333): a GUI box's commands get this many more, or brew and hdiutil cannot fork.
+DESKTOP_PIDS = 512
+HARNESS_OUTPUT_BYTES = 4_000_000  # pickfit's own output (process lists, reports) is never cut to a head and tail
 VM_PREFIX = "pf-verify-"
 STATE_DIR = Path.home() / ".pickfit" / "tart"  # base manifests and VM logs, outside the repo
 MAC_USER = "sbx"
@@ -511,13 +515,17 @@ class TartBox(Box):
     def _wait_desktop(self) -> None:
         """Until sbx's desktop session is up (auto-login runs after the root daemon answers)."""
         deadline = time.monotonic() + DESKTOP_WAIT_S
+        why = "no answer"
         while True:
-            up = self._root(DESKTOP_UP, 20)
-            if up.returncode == 0:
-                return
+            try:
+                up = self._root(DESKTOP_UP, 20)
+                if up.returncode == 0:
+                    return
+                why = (up.stdout + up.stderr).strip()[-200:]
+            except BoxError as err:  # measured: while the session starts, exec can hang
+                why = str(err)
             if time.monotonic() > deadline:
-                raise BoxError(f"{MAC_USER}'s desktop did not come up within {DESKTOP_WAIT_S}s: "
-                               f"{(up.stdout + up.stderr).strip()[-200:]}")
+                raise BoxError(f"{MAC_USER}'s desktop did not come up within {DESKTOP_WAIT_S}s: {why}")
             time.sleep(2)
 
     def _root(self, script: str, timeout_s: int = 60) -> subprocess.CompletedProcess[str]:
@@ -651,11 +659,15 @@ class TartBox(Box):
     def user_argv(self, command: str, timeout_s: int, cwd: str, *, stdin: bool = False) -> list[str]:
         """`tart exec` argv that runs `command` as the box user with the limits (tests check it)."""
         lim = self.limits
-        guard = (f"ulimit -u {lim.pids} -n {lim.nofile} -f {lim.home_mb * 1024} && cd {shlex.quote(cwd)} && "
+        pids = lim.pids + (DESKTOP_PIDS if self.display else 0)
+        guard = (f"ulimit -u {pids} -n {lim.nofile} -f {lim.home_mb * 1024} && cd {shlex.quote(cwd)} && "
                  f"exec {TIMEOUT_CMD} {int(timeout_s)} /bin/bash -c {shlex.quote(command)}")
         env = [f"{key}={value}" for key, value in MAC_ENV.items()]
-        return [self.tart, "exec", *(["-i"] if stdin else []), self.name, "sudo", "-n", "-u", MAC_USER, "-H",
-                "/usr/bin/env", "-i", *env, "/bin/bash", "-c", guard]
+        # On a GUI box tart exec runs as root outside any session; the box user's commands run in its desktop
+        # session, as in a Terminal there (hdiutil fails outside one: "No child processes", measured 11/1).
+        session = ["/bin/launchctl", "asuser", str(MAC_UID)] if self.display else []
+        return [self.tart, "exec", *(["-i"] if stdin else []), self.name, *session, "sudo", "-n", "-u", MAC_USER,
+                "-H", "/usr/bin/env", "-i", *env, "/bin/bash", "-c", guard]
 
     def _gone(self) -> str | None:
         """Why the VM or its guest agent is gone, from host-side state alone; None while both are alive.
@@ -720,7 +732,8 @@ class TartBox(Box):
         who = ["-u", f"#{int(as_uid)}"] if as_uid is not None else []
         full = [self.tart, "exec", *(["-i"] if stdin is not None else []), self.name, "sudo", "-n", *who, *argv]
         began = time.monotonic()
-        code, out, err, host_timeout, truncated = run_captured(full, timeout_s + HOST_GRACE_S, stdin=stdin)
+        code, out, err, host_timeout, truncated = run_captured(full, timeout_s + HOST_GRACE_S, stdin=stdin,
+                                                               head=HARNESS_OUTPUT_BYTES, tail=0)
         seconds = round(time.monotonic() - began, 2)
         gone = self._gone() if code != 0 else None
         if gone:
