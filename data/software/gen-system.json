@@ -51,20 +51,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "go",
+      "basis": "replayed",
+      "run_id": "verify-gen-system-20261101-131657-23b8",
+      "method": "npm",
       "steps": [
         {
-          "command": "go install github.com/hpdkhoa/gen-system/generator/cmd/understand-mcp@latest",
-          "purpose": null
+          "command": "npm install -g gen-understand",
+          "purpose": "install gen-understand via npm install -g gen-understand"
         }
       ],
-      "manual_steps": [
-        "Provide Ollama and a 16 GB GPU for the generator experiment"
-      ],
-      "check": null,
-      "first_task": "understand-review --root ."
+      "manual_steps": [],
+      "check": {
+        "command": "gen-understand --version",
+        "expected_signal": "understand-mcp 0.2.0"
+      },
+      "first_task": null
     },
     "linux": {
       "basis": "replayed",
@@ -112,7 +113,7 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:21:35.601294+08:00",
+    "checked_at": "2026-11-01T13:22:43.040611+08:00",
     "runs": [
       {
         "id": "verify-gen-system-20261101-002043-14e2",
@@ -207,6 +208,183 @@
           "called_tool": "architecture",
           "offline": false
         }
+      },
+      {
+        "id": "verify-gen-system-20261101-131657-23b8",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T13:22:43.040611+08:00",
+        "tool_version": "0.2.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g gen-understand",
+            "purpose": "install gen-understand via npm install -g gen-understand"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "gen-understand --version",
+            "expected_signal": "understand-mcp 0.2.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "understand-mcp 0.2.0",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- gen-understand --root /tmp/testrepo 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cat > /tmp/testrepo/main.go <<'GO'\npackage main\n\nimport (\n    \"net/http\"\n    \"os\"\n)\n\nfunc Save(name string) error {\n    return os.WriteFile(name, []byte(\"hi\"), 0644)\n}\n\nfunc Fetch(url string) error {\n    _, err := http.Get(url)\n    return err\n}\n\nfunc Helper(x int) int {\n    if x > 0 {\n        if x > 10 {\n            return x*2\n        }\n        return x+1\n    }\n    return 0\n}\n\nfunc main() {\n    Save(\"out.txt\")\n    Fetch(\"http://example.com\")\n}\nGO\ncat /tmp/testrepo/main.go\ngit -C /tmp/testrepo init 2>&1 | tail\ngit -C /tmp/testrepo config user.email \"test@test.com\"\ngit -C /tmp/testrepo config user.name \"test\"\ngit -C /tmp/testrepo add . && git -C /tmp/testrepo commit -m \"init\" 2>&1 | tail\nls -R /tmp/testrepo",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call effects --args '{}' -- gen-understand --root /tmp/testrepo 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=effects content=text text_chars=794",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cat > /tmp/testrepo/main.go <<'GO'\npackage main\n\nimport (\n    \"net/http\"\n    \"os\"\n)\n\nfunc Save(name string) error {\n    return os.WriteFile(name, []byte(\"hi\"), 0644)\n}\n\nfunc Fetch(url string) error {\n    _, err := http.Get(url)\n    return err\n}\n\nfunc Helper(x int) int {\n    if x > 0 {\n        if x > 10 {\n            return x*2\n        }\n        return x+1\n    }\n    return 0\n}\n\nfunc main() {\n    Save(\"out.txt\")\n    Fetch(\"http://example.com\")\n}\nGO\ncat /tmp/testrepo/main.go\ngit -C /tmp/testrepo init 2>&1 | tail\ngit -C /tmp/testrepo config user.email \"test@test.com\"\ngit -C /tmp/testrepo config user.name \"test\"\ngit -C /tmp/testrepo add . && git -C /tmp/testrepo commit -m \"init\" 2>&1 | tail\nls -R /tmp/testrepo",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call call_graph --args '{\"symbol\": \"/tmp/testrepo/main.go#func:main\"}' -- gen-understand --root /tmp/testrepo 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=call_graph content=text text_chars=1372",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cat > /tmp/testrepo/main.go <<'GO'\npackage main\n\nimport (\n    \"net/http\"\n    \"os\"\n)\n\nfunc Save(name string) error {\n    return os.WriteFile(name, []byte(\"hi\"), 0644)\n}\n\nfunc Fetch(url string) error {\n    _, err := http.Get(url)\n    return err\n}\n\nfunc Helper(x int) int {\n    if x > 0 {\n        if x > 10 {\n            return x*2\n        }\n        return x+1\n    }\n    return 0\n}\n\nfunc main() {\n    Save(\"out.txt\")\n    Fetch(\"http://example.com\")\n}\nGO\ncat /tmp/testrepo/main.go\ngit -C /tmp/testrepo init 2>&1 | tail\ngit -C /tmp/testrepo config user.email \"test@test.com\"\ngit -C /tmp/testrepo config user.name \"test\"\ngit -C /tmp/testrepo add . && git -C /tmp/testrepo commit -m \"init\" 2>&1 | tail\nls -R /tmp/testrepo",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call control_flow --args '{\"symbol\": \"/tmp/testrepo/main.go#func:Helper\"}' -- gen-understand --root /tmp/testrepo 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=control_flow content=text text_chars=1077",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cat > /tmp/testrepo/main.go <<'GO'\npackage main\n\nimport (\n    \"net/http\"\n    \"os\"\n)\n\nfunc Save(name string) error {\n    return os.WriteFile(name, []byte(\"hi\"), 0644)\n}\n\nfunc Fetch(url string) error {\n    _, err := http.Get(url)\n    return err\n}\n\nfunc Helper(x int) int {\n    if x > 0 {\n        if x > 10 {\n            return x*2\n        }\n        return x+1\n    }\n    return 0\n}\n\nfunc main() {\n    Save(\"out.txt\")\n    Fetch(\"http://example.com\")\n}\nGO\ncat /tmp/testrepo/main.go\ngit -C /tmp/testrepo init 2>&1 | tail\ngit -C /tmp/testrepo config user.email \"test@test.com\"\ngit -C /tmp/testrepo config user.name \"test\"\ngit -C /tmp/testrepo add . && git -C /tmp/testrepo commit -m \"init\" 2>&1 | tail\nls -R /tmp/testrepo",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx -y gen-understand --root <repo> with tool review_diff",
+            "actually_needed": "npm package gen-understand 0.2.0 wraps understand-mcp binary cached at ~/.cache/gen-understand/0.2.0/understand-mcp-darwin-arm64; launch as gen-understand --root <repo> and binary downloads on first run",
+            "kind": "note"
+          },
+          {
+            "readme_said": "MCP tool review_diff for code-change review",
+            "actually_needed": "tool not present in npm release 0.2.0 (8 tools listed); README notes it arrives in next release and currently requires building understand-mcp from source",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 8 tools, successful effects tool call with results, and version 0.2.0 output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-gen-system-20261101-131657-23b8/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-gen-system-20261101-131657-23b8/check-1-cmd6.judged.png",
+            "runs/verify/verify-gen-system-20261101-131657-23b8/check-2-cmd8.judged.png",
+            "runs/verify/verify-gen-system-20261101-131657-23b8/check-3-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.070719,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "gen-understand",
+            "--root",
+            "/tmp/testrepo"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "gen-understand",
+          "server_version": "0.2.0",
+          "tools": [
+            "architecture",
+            "search_symbols",
+            "call_graph",
+            "control_flow",
+            "source",
+            "file_symbols",
+            "effects",
+            "beliefs"
+          ],
+          "tool_count": 8,
+          "called_tool": "effects",
+          "offline": false
+        },
+        "features": [
+          {
+            "feature": "review code changes with parser facts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "tool review_diff advertised in README not in 0.2.0 tools/list (8 tools); README says until next release build from source"
+          },
+          {
+            "feature": "show what changed code touches",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "visualize call graphs and control flow",
+            "status": "checked",
+            "smoke_tests": [
+              3,
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -696,5 +874,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:22:27+08:00",
-  "updated_at": "2026-11-01T00:32:32+08:00"
+  "updated_at": "2026-11-01T13:22:43.045066+08:00"
 }
