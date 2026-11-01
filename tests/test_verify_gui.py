@@ -292,6 +292,18 @@ def verify(tmp_path: Path, server: FakeServer, boxes: Boxes):
                        log=lambda s: None, run_id="verify-demo-20261031-000000-abcd")
 
 
+def test_a_gvisor_display_box_tells_the_agent_that_a_flatpak_needs_its_remote_added_as_a_cited_step(tmp_path: Path):
+    from pickfit.verify.agent import VerifyAgent
+    task = load_fixture(FIXTURES / "verify" / "graphtty.json", fetch=lambda url: "# demo\n")
+    gvisor, vm = GuiBox(), GuiBox()
+    gvisor.runtime, vm.runtime = "gvisor", "vm"
+    rule = "flatpak remote-add --user --if-not-exists flathub"
+    assert rule in VerifyAgent(task, gvisor, runs_dir=tmp_path).instructions
+    # A VM box has no user namespaces for flatpak's sandbox, and a box without a runtime is not Modal's.
+    assert rule not in VerifyAgent(task, vm, runs_dir=tmp_path).instructions
+    assert rule not in VerifyAgent(task, GuiBox(), runs_dir=tmp_path).instructions
+
+
 def test_a_rendered_gui_launch_is_install_with_tier_ui_rendered_judged_on_a_crop(tmp_path: Path):
     server = FakeServer(*gui_turns(), gui_judge_answer("main_ui"))
     boxes = Boxes()

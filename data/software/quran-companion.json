@@ -57,19 +57,16 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-quran-companion-20261101-175657-9cd1",
+      "run_id": "verify-quran-companion-20261101-231158-b5bd",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo\nflatpak install --user flathub io.github._0xzer0x.qurancompanion -y 2>&1",
-          "purpose": "Add flathub remote and install quran-companion flatpak"
+          "command": "flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo\nflatpak remotes 2>&1\nflatpak install -y --user flathub io.github._0xzer0x.qurancompanion 2>&1",
+          "purpose": "add flathub remote and install app via flatpak --user"
         }
       ],
       "manual_steps": [],
-      "check": {
-        "command": "flatpak --version",
-        "expected_signal": "Flatpak 1.16.6"
-      },
+      "check": null,
       "first_task": "flatpak run io.github._0xzer0x.qurancompanion"
     },
     "windows": null
@@ -87,39 +84,30 @@
     "url": "https://github.com/0xzer0x/quran-companion/releases/tag/v1.5.2"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T17:59:24.415942+08:00",
+    "checked_at": "2026-11-01T23:41:49.423873+08:00",
     "runs": [
       {
-        "id": "verify-quran-companion-20261101-175657-9cd1",
-        "level": "install",
+        "id": "verify-quran-companion-20261101-231158-b5bd",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx-gui:d66116882a17",
-        "checked_at": "2026-11-01T17:59:24.415942+08:00",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-01T23:41:49.423873+08:00",
         "tool_version": "1.5.2",
         "install_method": "other",
         "replayed": true,
         "steps": [
           {
-            "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo\nflatpak install --user flathub io.github._0xzer0x.qurancompanion -y 2>&1",
-            "purpose": "Add flathub remote and install quran-companion flatpak"
+            "command": "flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo\nflatpak remotes 2>&1\nflatpak install -y --user flathub io.github._0xzer0x.qurancompanion 2>&1",
+            "purpose": "add flathub remote and install app via flatpak --user"
           }
         ],
         "smoke_tests": [
-          {
-            "command": "flatpak --version",
-            "expected_signal": "Flatpak 1.16.6",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Flatpak 1.16.6",
-            "setup": [],
-            "offline": true
-          },
           {
             "command": "flatpak run io.github._0xzer0x.qurancompanion",
             "expected_signal": "gui tier: window",
@@ -128,71 +116,111 @@
             "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "flatpak run io.github._0xzer0x.qurancompanion",
+            "expected_signal": "Alif",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Alif\": yes; \"This is the Book\": yes",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
             "readme_said": "flatpak install flathub io.github._0xzer0x.qurancompanion",
-            "actually_needed": "first add flathub remote: flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo then flatpak install --user flathub io.github._0xzer0x.qurancompanion -y",
-            "kind": "readme_wrong"
+            "actually_needed": "need to add flathub remote first and use --user flag: flatpak remote-add --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo && flatpak install -y --user flathub io.github._0xzer0x.qurancompanion",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "AppImage download for Linux",
+            "actually_needed": "AppImage fails on this box with libOpenGL.so.0 missing (FUSE/AppRun error), flatpak is the working install method",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows flatpak --version printing Flatpak 1.16.6. / The app shows its main Quran reading interface with surah list, Arabic text, English translation, and reciter controls.",
+          "observed": "The screenshot shows Quran Companion's main reading interface with surah list, translation, Arabic text, audio controls, and a Verse of the Day overlay.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-quran-companion-20261101-175657-9cd1/report.json",
+          "trace_path": "runs/verify/verify-quran-companion-20261101-231158-b5bd/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-quran-companion-20261101-175657-9cd1/check-1-cmd6.judged.png",
-            "runs/verify/verify-quran-companion-20261101-175657-9cd1/replay-7-1.app.judged.png"
+            "runs/verify/verify-quran-companion-20261101-231158-b5bd/replay-8-1.app.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.04935,
+        "cost_usd": 0.487771,
         "gui": {
-          "tier": "ui_rendered",
+          "tier": "action_checked",
           "screen": "main_ui",
           "command": "flatpak run io.github._0xzer0x.qurancompanion",
           "window_title": "Quran Companion",
-          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+          "display": "Xvfb 1280x800x24, no window manager, no GPU",
+          "operations": [
+            {
+              "feature": "read Quran mushaf pages verse by verse",
+              "goal": "Press Escape to close any popup. Then in the left surah list click on surah 002 Al-Baqarah and wait for the main reading area to load its verses.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "Alif",
+                "This is the Book"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Alif\": yes; \"This is the Book\": yes",
+              "smoke_test": 1,
+              "actions": 4,
+              "replay": "actions",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-quran-companion-20261101-231158-b5bd/replay-12-2-op-1.png",
+                "runs/verify/verify-quran-companion-20261101-231158-b5bd/replay-12-2-op-2.png",
+                "runs/verify/verify-quran-companion-20261101-231158-b5bd/replay-12-2-op-3.png",
+                "runs/verify/verify-quran-companion-20261101-231158-b5bd/replay-12-2-op-4.png"
+              ]
+            }
+          ]
         },
         "features": [
           {
             "feature": "read Quran mushaf pages verse by verse",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_display",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "Reading mushaf pages requires GUI interaction, max level install"
+            "note": null
           },
           {
             "feature": "play Quran recitations",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "other",
             "failure": null,
-            "note": "Recitation player requires GUI interaction"
+            "note": "no failed check in the log; play button interaction did not produce expected playback indicator; audio backend missing pipewire/pulse"
           },
           {
             "feature": "download recitations from various reciters",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "other",
             "failure": null,
-            "note": "Download recitations requires GUI interaction"
+            "note": "no failed check in the log; reciter dropdown did not reveal Alafasy entry within automation steps"
           },
           {
             "feature": "search Quran verses",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "needs_display",
+            "reason": "other",
             "failure": null,
-            "note": "Verse search requires GUI interaction"
+            "note": "no failed check in the log; search filter for Al-Fatiha works but check text already visible before action; two attempts exhausted"
           }
         ]
       }
@@ -429,5 +457,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:43+08:00",
-  "updated_at": "2026-11-01T23:10:28.390970+08:00"
+  "updated_at": "2026-11-01T23:41:49.427150+08:00"
 }

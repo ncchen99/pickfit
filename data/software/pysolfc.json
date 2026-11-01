@@ -67,13 +67,17 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-pysolfc-20261101-232402-905c",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub io.sourceforge.pysolfc.PySolFC",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>&1 && flatpak remote-list 2>&1",
+          "purpose": "add flathub remote for flatpak"
+        },
+        {
+          "command": "timeout 300 flatpak install --user -y flathub io.sourceforge.pysolfc.PySolFC 2>&1",
+          "purpose": "flatpak install io.sourceforge.pysolfc.PySolFC"
         }
       ],
       "manual_steps": [],
@@ -95,10 +99,128 @@
     "url": "https://github.com/shlomif/PySolFC/releases/tag/pysolfc-3.6.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T23:51:45.897092+08:00",
+    "runs": [
+      {
+        "id": "verify-pysolfc-20261101-232402-905c",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-01T23:51:45.897092+08:00",
+        "tool_version": "3.6.1",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>&1 && flatpak remote-list 2>&1",
+            "purpose": "add flathub remote for flatpak"
+          },
+          {
+            "command": "timeout 300 flatpak install --user -y flathub io.sourceforge.pysolfc.PySolFC 2>&1",
+            "purpose": "flatpak install io.sourceforge.pysolfc.PySolFC"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run io.sourceforge.pysolfc.PySolFC",
+            "expected_signal": "Canfield",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Canfield\": yes",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak install flathub io.sourceforge.pysolfc.PySolFC",
+            "actually_needed": "needed to add flathub remote first: flatpak remote-add --user flathub https://flathub.org/repo/flathub.flatpakrepo",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "PySol Klondike window displays its startup About/welcome dialog with version info over the card table.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-pysolfc-20261101-232402-905c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-pysolfc-20261101-232402-905c/replay-13-3.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.426229,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "flatpak run io.sourceforge.pysolfc.PySolFC",
+          "window_title": "PySol - Klondike",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU",
+          "operations": [
+            {
+              "feature": "solve Freecell games with solver",
+              "goal": "Press Escape to close any About dialog. Click the 'Select' menu at the top, then choose 'All games...' to open the game selection dialog. Wait for the dialog showing the list of games to appear.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "Canfield"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Canfield\": yes",
+              "smoke_test": 0,
+              "actions": 5,
+              "replay": "operated",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-pysolfc-20261101-232402-905c/replay-13-3-op-1.png",
+                "runs/verify/verify-pysolfc-20261101-232402-905c/replay-13-3-op-2.png",
+                "runs/verify/verify-pysolfc-20261101-232402-905c/replay-13-3-op-3.png",
+                "runs/verify/verify-pysolfc-20261101-232402-905c/replay-13-3-op-4.png",
+                "runs/verify/verify-pysolfc-20261101-232402-905c/replay-13-3-op-5.png",
+                "runs/verify/verify-pysolfc-20261101-232402-905c/replay-13-3-op-6.png"
+              ]
+            }
+          ]
+        },
+        "features": [
+          {
+            "feature": "play over 1200 Solitaire games",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; file save to pickfit-out failed due to file-chooser path mangling"
+          },
+          {
+            "feature": "play with multiple deck types",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; Copyright text already visible on launch so check rejected as not a result of operation"
+          },
+          {
+            "feature": "solve Freecell games with solver",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: the feature judge gave no verdict"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -371,5 +493,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:44+08:00",
-  "updated_at": "2026-11-01T17:11:04+08:00"
+  "updated_at": "2026-11-01T23:51:45.903826+08:00"
 }
