@@ -408,9 +408,11 @@ run_command or run_background first (a copy left running makes macOS refuse the 
 pickfit does not count). Cite that launch_gui as a smoke test with \
 expected_signal `gui tier: window` (pickfit's own line; window titles, app and process names are the app's and \
 do not count). Before each launch pickfit answers macOS's first-launch prompt ("downloaded from the Internet") \
-with Open for apps Gatekeeper accepts as notarized, as a user does. An app Gatekeeper rejects stays blocked: \
-remove its quarantine (xattr -dr com.apple.quarantine) only if the app's own docs tell users to, as a cited \
-step, and record it as a pitfall. A launch stops every process you started (servers too; macOS's own desktop \
+with Open for apps Gatekeeper accepts as notarized, as a user does. An app Gatekeeper rejects (not notarized: \
+"Not Opened") stays blocked: only if the app's own docs tell users to get past that (Open Anyway in System \
+Settings, right-click Open, or xattr), remove its quarantine with `xattr -dr com.apple.quarantine \
+~/Applications/<App>.app` as a cited step (Open Anyway needs an admin, which you are not), and record a pitfall \
+saying the app is not notarized. A launch stops every process you started (servers too; macOS's own desktop \
 stays), so start servers again after it. A GUI launch supports level install at most, whatever the window shows: \
 pickfit's judge reads the screenshot itself, and a GUI app is never function from a launch. Launch it even if \
 it will ask for an account: the screenshot records the sign-in screen."""

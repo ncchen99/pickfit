@@ -17,7 +17,7 @@ gui.py's check for a TartBox made with display=True: the same tiers, report and 
   user clicking Open does: it sets the user-approved flag on the bundle's quarantine, which is what that
   click records. A bundle Gatekeeper rejects is left alone, so macOS blocks it as it would for a user.
 - Afterwards root stops every sbx process that was not part of its login session (the app, its helpers,
-  run_background servers), in rounds until none is left. Apple's own agents that launchd restarts on demand
+  run_background servers), in rounds until none is left, and closes Gatekeeper's prompts. Apple's own agents that launchd restarts on demand
   may come back; anything else that survives makes the launch count for nothing.
 
 A launch reaches at most tier `window`; the screen judge gives ui_rendered (judge.judge_gui), and a GUI launch
@@ -52,6 +52,9 @@ SYSTEM_PREFIXES = ("/System/", "/usr/", "/bin/", "/sbin/", "/Library/Apple/", "/
 # Apple's agents launchd restarts on demand: they may be running again after the stop without surviving it.
 RESPAWNED_PREFIXES = ("/System/", "/usr/libexec/", "/usr/sbin/")
 QTN_USER_APPROVED = 0x40  # the quarantine flag the first-launch prompt's Open button sets
+# The session process that shows Gatekeeper's prompts; the stop closes them with it, so a refusal left from one
+# launch does not cover the next (measured 11/1: Quill's "Not Opened" over inlaut's window).
+PROMPT_AGENTS = ("/System/Library/CoreServices/CoreServicesUIAgent.app/Contents/MacOS/CoreServicesUIAgent",)
 MENU_WAIT_S, MENU_SETTLE_S = 8, 2  # after pickfit clicks a menu bar app's item
 SETTLE_GAP_S, SETTLE_MAX_S = 0.4, 4.0  # a screenshot waits until two frames this far apart agree
 DISPLAY_NOTE = "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
@@ -73,7 +76,7 @@ HELPER = r'''
 import ctypes, json, os, re, signal, subprocess, sys, time
 BOX_UID = "@UID@"
 ENV = {"PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "LANG": "en_US.UTF-8"}
-SYSTEM, RESPAWNED, APPROVED = @SYSTEM@, @RESPAWNED@, @APPROVED@
+SYSTEM, RESPAWNED, APPROVED, PROMPTS = @SYSTEM@, @RESPAWNED@, @APPROVED@, @PROMPTS@
 libproc = ctypes.CDLL("/usr/lib/libproc.dylib")
 libc = ctypes.CDLL(None, use_errno=True)
 libc.getxattr.restype = ctypes.c_ssize_t
@@ -252,6 +255,12 @@ def stop(cfg):
     baseline = cfg["baseline"]
     def left():
         return {p: v for p, v in procs().items() if baseline.get(p, [None])[0] != v[0]}
+    for pid, v in procs().items():  # its prompts (a Gatekeeper refusal) outlive the app; launchd restarts it
+        if v[1] in PROMPTS:
+            try:
+                os.kill(int(pid), signal.SIGKILL)
+            except Exception:
+                pass
     for round_ in range(60):
         now = left()
         if not now:
@@ -285,7 +294,8 @@ if __name__ == "__main__":
     elif cmd == "stop":
         stop(cfg)
 '''.replace("@UID@", str(MAC_UID)).replace("@SYSTEM@", repr(SYSTEM_PREFIXES)).replace(
-    "@RESPAWNED@", repr(RESPAWNED_PREFIXES)).replace("@APPROVED@", str(QTN_USER_APPROVED))
+    "@RESPAWNED@", repr(RESPAWNED_PREFIXES)).replace("@APPROVED@", str(QTN_USER_APPROVED)).replace(
+    "@PROMPTS@", repr(PROMPT_AGENTS))
 
 
 def _helper(box: TartBox, cmd: str, payload: dict[str, Any] | None = None, timeout_s: int = 60, *,
