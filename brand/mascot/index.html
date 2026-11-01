@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fitz mascot</title>
+<style>
+  :root {
+    --ink: #4A2E22; --paper: #FFF9EC; --card: #FFFFFF; --muted: #8A7568;
+    --dark: #1C1E1A; --dark-card: #272A24; --dark-ink: #EDE6D8;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); background: var(--paper); }
+  header { padding: 32px 16px 8px; max-width: 1120px; margin: 0 auto; display: flex; gap: 20px; align-items: center; }
+  header img { width: 96px; height: 96px; }
+  h1 { margin: 0; font-size: 28px; }
+  header p { margin: 4px 0 0; color: var(--muted); }
+  section { padding: 20px 16px 28px; }
+  section > div { max-width: 1120px; margin: 0 auto; }
+  h2 { font-size: 18px; margin: 0 0 12px; }
+  .dark { background: var(--dark); color: var(--dark-ink); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
+  .grid.wide { grid-template-columns: repeat(auto-fill, minmax(min(310px, 100%), 1fr)); }
+  figure { margin: 0; background: var(--card); border-radius: 16px; padding: 12px; text-align: center; }
+  .dark figure { background: var(--dark-card); }
+  figure img { width: 100%; height: auto; display: block; }
+  /* states have different widths but the same 200-unit height: fix the height so Fitz keeps one size */
+  .grid.wide img { width: auto; height: 180px; max-width: 100%; object-fit: contain; margin: 0 auto; }
+  figcaption { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .dark figcaption { color: #A9A08F; }
+  figcaption b { color: inherit; display: block; color: var(--ink); font-size: 14px; }
+  .dark figcaption b { color: var(--dark-ink); }
+  .icons { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-end; }
+  .icons figure { padding: 16px 20px; }
+  .icons img { width: auto; display: inline-block; }
+  .icons .zoom img { image-rendering: auto; }
+  .dark .mono { filter: invert(1); }
+  .row { display: flex; gap: 10px; align-items: center; justify-content: center; }
+  .tab { display: inline-flex; align-items: center; gap: 6px; background: #E9E2D3; padding: 6px 10px; border-radius: 8px 8px 0 0; font-size: 13px; }
+  .dark .tab { background: #34372F; }
+  .silhouette img { filter: brightness(0); }
+  .dark .silhouette img { filter: brightness(0) invert(1); }
+  @media (max-width: 520px) { header img { width: 72px; height: 72px; } }
+</style>
+</head>
+<body>
+<header>
+  <img src="states/fitz-idle.svg" alt="">
+  <div>
+    <h1>Fitz, the PickFit tailorbird</h1>
+    <p>Picks the leaves, stitches the nest to fit. Every file here is drawn by <code>build.py</code>.</p>
+  </div>
+</header>
+
+<section>
+  <div>
+    <h2>Character</h2>
+    <div class="grid">
+      <figure><img src="fitz.svg" alt="Fitz, three-quarter view"><figcaption><b>fitz.svg</b>main, three-quarter</figcaption></figure>
+      <figure><img src="fitz-front.svg" alt="Fitz, front view"><figcaption><b>fitz-front.svg</b>front view</figcaption></figure>
+      <figure><img class="mono" src="fitz-mono.svg" alt="Fitz, one colour"><figcaption><b>fitz-mono.svg</b>one colour (currentColor)</figcaption></figure>
+      <figure class="silhouette"><img src="fitz.svg" alt="Fitz silhouette"><figcaption><b>silhouette test</b>round bird, tail up, beak</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div>
+    <h2>Expressions</h2>
+    <div class="grid" id="expr-light"></div>
+  </div>
+</section>
+
+<section>
+  <div>
+    <h2>Animated states</h2>
+    <div class="grid wide" id="states-light"></div>
+  </div>
+</section>
+
+<section>
+  <div>
+    <h2>Icons at actual size</h2>
+    <div class="icons" id="icons-light"></div>
+  </div>
+</section>
+
+<section class="dark">
+  <div>
+    <h2>On dark</h2>
+    <div class="grid" id="expr-dark"></div>
+    <div style="height:14px"></div>
+    <div class="grid wide" id="states-dark"></div>
+    <div style="height:14px"></div>
+    <div class="icons" id="icons-dark"></div>
+  </div>
+</section>
+
+<script>
+  const expressions = [
+    ["neutral", "default; result cards"],
+    ["happy", "good match found"],
+    ["thinking", "clarifying question"],
+    ["surprised", "unexpected result"],
+    ["sorry", "nothing fits / error"],
+    ["proud", "verified pick"],
+  ];
+  const states = [
+    ["idle", "waiting for input"],
+    ["searching", "find_software running"],
+    ["testing", "install + verify in sandbox"],
+    ["recommending", "presenting the pick"],
+    ["test-failed", "verification failed"],
+    ["success", "installed and working"],
+  ];
+  function fig(src, title, note, cls = "") {
+    return `<figure><img ${cls ? `class="${cls}"` : ""} src="${src}" alt="Fitz, ${title}"><figcaption><b>${title}</b>${note}</figcaption></figure>`;
+  }
+  const exprHTML = expressions.map(([n, d]) => fig(`expressions/fitz-${n}.svg`, n, d)).join("");
+  const statesHTML = states.map(([n, d]) => fig(`states/fitz-${n}.svg`, n, d)).join("");
+  const iconsHTML = [
+    ["icons/fitz-16.svg", 16, "16 px"],
+    ["icons/fitz-32.svg", 32, "32 px"],
+    ["icons/fitz-64.svg", 64, "64 px"],
+    ["icons/fitz-mono-32.svg", 32, "mono 32 px", "mono"],
+  ].map(([s, w, l, c]) => `<figure><img ${c ? `class="${c}"` : ""} src="${s}" width="${w}" height="${w}" alt="Fitz icon ${l}"><figcaption>${l}</figcaption></figure>`).join("")
+    + `<figure><div class="tab"><img src="icons/fitz-16.svg" width="16" height="16" alt="">PickFit</div><figcaption>as a favicon</figcaption></figure>`
+    + `<figure class="zoom"><div class="row"><img src="icons/fitz-16.svg" style="width:64px;height:64px" alt=""><img src="icons/fitz-32.svg" style="width:64px;height:64px" alt=""></div><figcaption>16 and 32 at 4× and 2×</figcaption></figure>`;
+  for (const t of ["light", "dark"]) {
+    document.getElementById(`expr-${t}`).innerHTML = exprHTML;
+    document.getElementById(`states-${t}`).innerHTML = statesHTML;
+    document.getElementById(`icons-${t}`).innerHTML = iconsHTML;
+  }
+</script>
+</body>
+</html>
