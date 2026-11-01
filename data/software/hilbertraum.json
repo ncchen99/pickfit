@@ -64,7 +64,24 @@
     "api_keys": []
   },
   "install": {
-    "macos": null,
+    "macos": {
+      "basis": "replayed",
+      "run_id": "verify-hilbertraum-20261101-201816-92b3",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/Applications && cd /tmp && curl -fL -o HilbertRaum.zip https://github.com/HilbertraumAI/HilbertRaum/releases/download/v0.1.64/HilbertRaum-0.1.64-mac-arm64.app.zip && unzip -q HilbertRaum.zip && ls -lh",
+          "purpose": "download mac-arm64 .app.zip from GitHub releases"
+        },
+        {
+          "command": "rm -rf ~/Applications/HilbertRaum.app && cp -R /tmp/HilbertRaum.app ~/Applications/ && ls -ld ~/Applications/HilbertRaum.app && xattr -dr com.apple.quarantine ~/Applications/HilbertRaum.app 2>&1",
+          "purpose": "copy .app to ~/Applications and remove quarantine"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "open ~/Applications/HilbertRaum.app"
+    },
     "linux": {
       "basis": "replayed",
       "run_id": "verify-hilbertraum-20261101-180004-bac2",
@@ -100,7 +117,7 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T18:13:22.631984+08:00",
+    "checked_at": "2026-11-01T20:22:46.293184+08:00",
     "runs": [
       {
         "id": "verify-hilbertraum-20261101-180004-bac2",
@@ -208,6 +225,105 @@
             "reason": "needs_more_resources",
             "failure": null,
             "note": "Translation needs TranslateGemma 12B Q4_K_M (~13GB) sidecar not present"
+          }
+        ]
+      },
+      {
+        "id": "verify-hilbertraum-20261101-201816-92b3",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@78f2945fd37d",
+        "checked_at": "2026-11-01T20:22:46.293184+08:00",
+        "tool_version": "0.1.64",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/Applications && cd /tmp && curl -fL -o HilbertRaum.zip https://github.com/HilbertraumAI/HilbertRaum/releases/download/v0.1.64/HilbertRaum-0.1.64-mac-arm64.app.zip && unzip -q HilbertRaum.zip && ls -lh",
+            "purpose": "download mac-arm64 .app.zip from GitHub releases"
+          },
+          {
+            "command": "rm -rf ~/Applications/HilbertRaum.app && cp -R /tmp/HilbertRaum.app ~/Applications/ && ls -ld ~/Applications/HilbertRaum.app && xattr -dr com.apple.quarantine ~/Applications/HilbertRaum.app 2>&1",
+            "purpose": "copy .app to ~/Applications and remove quarantine"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/HilbertRaum.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "macOS .app is unsigned; allow under System Settings Privacy & Security Open Anyway",
+            "actually_needed": "removed quarantine with xattr -dr com.apple.quarantine before launch to bypass Gatekeeper",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The app shows a centered Welcome onboarding card for HilbertRaum Lite with a Get started button.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hilbertraum-20261101-201816-92b3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hilbertraum-20261101-201816-92b3/replay-5-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.037367,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open ~/Applications/HilbertRaum.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "chat with a local AI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "GUI app; chat requires local LLM download, not testable headlessly"
+          },
+          {
+            "feature": "ask questions about documents with citations",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "document Q&A needs GUI import and model"
+          },
+          {
+            "feature": "ask an offline Wikipedia via knowledge packs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "knowledge packs need ZIM + kiwix tools via GUI"
+          },
+          {
+            "feature": "translate text and whole documents locally",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "translation needs sidecar model and GUI"
           }
         ]
       }
@@ -611,5 +727,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:24+08:00",
-  "updated_at": "2026-11-01T18:30:45.096132+08:00"
+  "updated_at": "2026-11-02T00:55:09.262583+08:00"
 }

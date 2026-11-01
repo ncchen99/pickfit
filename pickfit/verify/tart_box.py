@@ -52,6 +52,15 @@
 - Apple allows at most two macOS VMs at once per Mac, and an open bug
   (FB22967193, reported on macOS 26.5) can leave the limit "used up" until the
   host reboots: run one box at a time, and stop when start() reports it.
+- GUI boxes (display=True) clone a second base, BASE_VM-gui
+  (`pickfit verify --runner tart --display --prepare-base`), made from the
+  hardened one: sbx, not admin, logs in at the console (a 1280x800 desktop at
+  1x), and the guest agent's RPC moves to the root daemon, so `tart exec`
+  runs as root and no agent runs in sbx's session; admin is never logged in.
+  The VM runs with Virtualization.framework's own VNC server on the host
+  (vnc.py): pickfit takes screenshots and sends input from outside the guest,
+  and softnet keeps the guest from reaching that port. gui_mac.py launches
+  apps in sbx's desktop session and judges whose windows they are.
 
 Licences (docs/research/notes/macos-windows-verify.md): macOS SLA 2B(iii) allows
 two extra macOS instances in VMs for software development and testing; Tart is
@@ -82,6 +91,17 @@ from pickfit.verify.box import Box, BoxError, BoxLimits, ExecResult, HOST_GRACE_
 TART = "tart"
 SOURCE_IMAGE = "ghcr.io/cirruslabs/macos-tahoe-base:latest"  # macOS 26 with Homebrew and the guest agent
 BASE_VM = "pickfit-macos-26"
+GUI_BASE_VM = f"{BASE_VM}-gui"
+GUI_DISPLAY = "1280x800px"  # pixels, so macOS runs it at 1x: framebuffer, window bounds and the judge's 1280x800 agree
+DESKTOP_WAIT_S = 120  # after the agent answers, until sbx's Dock and Finder run
+# A GUI box's longest command: a desktop app's own download or installer can run past 10 minutes (yana-ai's DMG at
+# 1.4 MB/s needed ~760 s, local-transcriber's installer fetches speech models). The VM is local: time costs nothing.
+GUI_COMMAND_S = 1800
+VNC_URL_WAIT_S = 30
+# ulimit -u counts every process of the uid, and sbx's desktop session alone runs 230-270 (measured 11/1; macOS
+# caps a uid at 1333): a GUI box's commands get this many more, or brew and hdiutil cannot fork.
+DESKTOP_PIDS = 512
+HARNESS_OUTPUT_BYTES = 4_000_000  # pickfit's own output (process lists, reports) is never cut to a head and tail
 VM_PREFIX = "pf-verify-"
 STATE_DIR = Path.home() / ".pickfit" / "tart"  # base manifests and VM logs, outside the repo
 MAC_USER = "sbx"
@@ -351,11 +371,17 @@ class TartBox(Box):
     user_rule = ("You are a standard macOS user, not an admin: no sudo, nothing written outside $HOME, /tmp and "
                  "the Homebrew prefix /opt/homebrew (yours, so brew install needs no sudo).")
     detach = DETACH_CMD
+    user_uid = MAC_UID  # whose files pickfit's checks read (gui_operate.file_probe)
+    harness_python = GUEST_PYTHON  # pickfit's own Python in the guest (root-owned, never the box user's)
 
-    def __init__(self, *, base: str = BASE_VM, limits: BoxLimits = BoxLimits(), cpus: int = 4,
+    def __init__(self, *, base: str | None = None, limits: BoxLimits = BoxLimits(), cpus: int = 4,
                  memory_mb: int = 8192, name: str | None = None, tart: str = TART,
-                 state_dir: Path | None = None, log: Callable[[str], None] = print) -> None:
-        self.base = base
+                 state_dir: Path | None = None, log: Callable[[str], None] = print, display: bool = False) -> None:
+        self.base = base or (GUI_BASE_VM if display else BASE_VM)
+        self.display = "vnc" if display else None  # a desktop session, seen and driven over VNC from the host
+        self.vnc_url: str | None = None  # holds the server's password: never logged or recorded
+        self.session: dict[str, Any] | None = None  # sbx's login-session processes (gui_mac.session_procs)
+        self._screen: Any = None  # gui_mac.VncDisplay, made on first use
         self.limits = limits
         self.cpus = cpus
         self.memory_mb = memory_mb
@@ -381,13 +407,15 @@ class TartBox(Box):
     def describe(self) -> str:
         m = self.manifest
         tools = ", ".join(f"{k} {m[k]}" for k in ("uv", "pipx", "node", "npm") if m.get(k))
+        screen = (f"A desktop (1280x800) where {MAC_USER} is logged in: start GUI apps with launch_gui." if self.display
+                  else "No display (the VM is headless).")
         return (f"Box: macOS {m.get('macos', '26')} {self.arch} virtual machine (Apple silicon), user {MAC_USER} "
                 f"(standard user, not an admin, no sudo), HOME={self.home}, work dir {self.workdir}. Commands run "
                 "in /bin/bash 3.2 (macOS's own bash: no mapfile, no ${var,,}). PATH starts with ~/.local/bin, "
                 f"then Homebrew (/opt/homebrew/bin; {MAC_USER} owns /opt/homebrew, so brew install works without "
                 f"sudo). Installed: Homebrew {m.get('brew', '')}, Xcode Command Line Tools (git, clang, make, "
                 f"python3 {m.get('python3', '')}), {tools}; curl, unzip, tar. npm -g installs under /opt/homebrew. "
-                "Network: on. No API keys, no accounts, no display (the VM is headless).")
+                f"Network: on. No API keys, no accounts. {screen}")
 
     # -- lifecycle
 
@@ -435,7 +463,21 @@ class TartBox(Box):
         fd = self.control.control_fd
         argv = [self.tart, "run", "--no-graphics", "--no-audio", "--no-clipboard",
                 "--net-softnet", f"--net-softnet-control-fd={fd}", self.name]
+        if self.display:  # with --no-graphics, tart prints the server's address instead of opening a viewer
+            argv.insert(2, "--vnc-experimental")
         return argv, fd
+
+    def _read_vnc_url(self) -> str:
+        """The VNC address tart printed in the run log (only this process and the user can read it)."""
+        assert self.vm_log is not None
+        deadline = time.monotonic() + VNC_URL_WAIT_S
+        while True:
+            m = re.search(r"vnc://\S+", self.vm_log.read_text(errors="replace"))
+            if m:
+                return m.group(0)
+            if time.monotonic() > deadline or (self.vm_proc is not None and self.vm_proc.poll() is not None):
+                raise BoxError("tart did not print its VNC server's address")
+            time.sleep(0.5)
 
     def _boot(self) -> None:
         setup = softnet_ready()
@@ -447,7 +489,8 @@ class TartBox(Box):
         self.state_dir.mkdir(parents=True, exist_ok=True)
         self.vm_log = self.state_dir / f"{self.name}.log"
         argv, control_fd = self.run_argv()
-        with self.vm_log.open("wb") as out:
+        self.vm_log.unlink(missing_ok=True)  # created 0600: a GUI box's log holds the VNC password
+        with open(os.open(self.vm_log, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "wb") as out:
             self.vm_proc = subprocess.Popen(argv, stdout=out, stderr=subprocess.STDOUT,
                                             stdin=subprocess.DEVNULL, start_new_session=True,
                                             pass_fds=(control_fd,))
@@ -468,9 +511,27 @@ class TartBox(Box):
             except BoxError:  # measured: early in boot, exec can hang instead of failing
                 continue
             if probe.returncode == 0:
+                if self.display:
+                    self.vnc_url = self._read_vnc_url()
                 return
             time.sleep(2)
         raise BoxError(f"the guest agent did not answer within {AGENT_WAIT_S}s")
+
+    def _wait_desktop(self) -> None:
+        """Until sbx's desktop session is up (auto-login runs after the root daemon answers)."""
+        deadline = time.monotonic() + DESKTOP_WAIT_S
+        why = "no answer"
+        while True:
+            try:
+                up = self._root(DESKTOP_UP, 20)
+                if up.returncode == 0:
+                    return
+                why = (up.stdout + up.stderr).strip()[-200:]
+            except BoxError as err:  # measured: while the session starts, exec can hang
+                why = str(err)
+            if time.monotonic() > deadline:
+                raise BoxError(f"{MAC_USER}'s desktop did not come up within {DESKTOP_WAIT_S}s: {why}")
+            time.sleep(2)
 
     def _root(self, script: str, timeout_s: int = 60) -> subprocess.CompletedProcess[str]:
         """Harness-only root command (helpers, firewall); never used for model commands.
@@ -503,11 +564,14 @@ class TartBox(Box):
         hardened: refuse a base whose admin account, remote logins, su or guest agent still let the
         box user become root (prepare_base turns it off until it has hardened the base).
         """
+        if self.display:
+            self._wait_desktop()
         if hardened:
-            check = self._root(HARDENED_CHECK, 60)
+            check = self._root(GUI_CHECK if self.display else HARDENED_CHECK, 60)
             if check.returncode != 0:
+                flags = " --display" if self.display else ""
                 raise BoxError(f"the base VM is not hardened ({(check.stdout + check.stderr).strip()[-300:]}); "
-                               "rebuild it with `pickfit verify --runner tart --prepare-base`")
+                               f"rebuild it with `pickfit verify --runner tart{flags} --prepare-base`")
         # Wait for the default route, then pin DNS to PUBLIC resolvers. The gateway cannot be the resolver
         # any more: it is @host, which the online policy blocks, so a gateway resolver would make DNS fail.
         # Public resolvers (1.1.1.1) are globally routable, which softnet allows.
@@ -523,6 +587,10 @@ class TartBox(Box):
         self.gateway = gw.group(1)
         self.resolvers = list(PUBLIC_DNS)
         files = {"timeout": HELPER_TIMEOUT, "detach": HELPER_DETACH, "mdns": HELPER_MDNS}
+        if self.display:
+            from pickfit.verify import gui_mac
+
+            files["gui"] = gui_mac.HELPER
         script = [f"set -e; mkdir -p {HELPER_DIR}"]
         for name, text in files.items():
             script.append(f"cat > {HELPER_DIR}/{name} <<'PICKFIT_EOF'\n{text}PICKFIT_EOF")
@@ -540,6 +608,15 @@ class TartBox(Box):
         self.control.set_policy(True)
         self.network_enabled = True
         self._check_firewall(online=True)
+        if self.display and hardened:
+            from pickfit.verify import gui_mac
+
+            quiet = self.harness_exec(["/bin/launchctl", "asuser", str(MAC_UID), "/usr/bin/sudo", "-n", "-u", MAC_USER,
+                                       "/bin/sh", "-c", QUIET_DESKTOP], 60)
+            if quiet.exit_code != 0:
+                raise BoxError(f"could not quiet the desktop: {(quiet.stdout + quiet.stderr).strip()[-200:]}")
+            self._wait_desktop()  # the Dock is back before the session is noted
+            self.session = gui_mac.session_procs(self)
 
     def _expire(self) -> None:
         self.log(f"tart: {self.name} reached its {self.limits.lifetime_s}s lifetime; stopping it")
@@ -552,6 +629,9 @@ class TartBox(Box):
             if self._timer is not None:
                 self._timer.cancel()
                 self._timer = None
+            if self._screen is not None:
+                self._screen.close()
+                self._screen = None
             if self.vm_proc is not None and self.vm_proc.poll() is None:
                 try:
                     self._tart("stop", self.name, "--timeout", "10", timeout_s=90)
@@ -589,11 +669,15 @@ class TartBox(Box):
     def user_argv(self, command: str, timeout_s: int, cwd: str, *, stdin: bool = False) -> list[str]:
         """`tart exec` argv that runs `command` as the box user with the limits (tests check it)."""
         lim = self.limits
-        guard = (f"ulimit -u {lim.pids} -n {lim.nofile} -f {lim.home_mb * 1024} && cd {shlex.quote(cwd)} && "
+        pids = lim.pids + (DESKTOP_PIDS if self.display else 0)
+        guard = (f"ulimit -u {pids} -n {lim.nofile} -f {lim.home_mb * 1024} && cd {shlex.quote(cwd)} && "
                  f"exec {TIMEOUT_CMD} {int(timeout_s)} /bin/bash -c {shlex.quote(command)}")
         env = [f"{key}={value}" for key, value in MAC_ENV.items()]
-        return [self.tart, "exec", *(["-i"] if stdin else []), self.name, "sudo", "-n", "-u", MAC_USER, "-H",
-                "/usr/bin/env", "-i", *env, "/bin/bash", "-c", guard]
+        # On a GUI box tart exec runs as root outside any session; the box user's commands run in its desktop
+        # session, as in a Terminal there (hdiutil fails outside one: "No child processes", measured 11/1).
+        session = ["/bin/launchctl", "asuser", str(MAC_UID)] if self.display else []
+        return [self.tart, "exec", *(["-i"] if stdin else []), self.name, *session, "sudo", "-n", "-u", MAC_USER,
+                "-H", "/usr/bin/env", "-i", *env, "/bin/bash", "-c", guard]
 
     def _gone(self) -> str | None:
         """Why the VM or its guest agent is gone, from host-side state alone; None while both are alive.
@@ -650,6 +734,57 @@ class TartBox(Box):
             raise BoxError(f"cannot read {path}: {proc.stderr.decode(errors='replace').strip()[-300:]}")
         return proc.stdout[:max_bytes]
 
+    def harness_exec(self, argv: list[str], timeout_s: int, *, as_uid: int | None = None,
+                     stdin: bytes | None = None) -> ExecResult:
+        """argv for pickfit itself, as root (or as `as_uid`), never through the box user's shell."""
+        if self.vm_proc is None:  # setup uses it too, before the box counts as started
+            raise BoxError("box is not running")
+        who = ["-u", f"#{int(as_uid)}"] if as_uid is not None else []
+        full = [self.tart, "exec", *(["-i"] if stdin is not None else []), self.name, "sudo", "-n", *who, *argv]
+        began = time.monotonic()
+        code, out, err, host_timeout, truncated = run_captured(full, timeout_s + HOST_GRACE_S, stdin=stdin,
+                                                               head=HARNESS_OUTPUT_BYTES, tail=0)
+        seconds = round(time.monotonic() - began, 2)
+        gone = self._gone() if code != 0 else None
+        if gone:
+            raise BoxError(f"tart exec failed (the VM or its guest agent is gone: {gone}): {err.strip()[-300:]}")
+        return ExecResult(command=" ".join(argv), exit_code=124 if host_timeout else code, stdout=out, stderr=err,
+                          seconds=seconds, timed_out=host_timeout, truncated=truncated)
+
+    def read_result(self, path: str, max_bytes: int = 1_000_000) -> bytes:
+        """A file the box user can read (a result an operated app saved, say), byte for byte, up to max_bytes.
+
+        pickfit's own command, run as the box user rather than root: a link the app planted cannot make it
+        read what only root may.
+        """
+        import base64
+
+        got = self.harness_exec(["/bin/bash", "-c", 'set -o pipefail; head -c "$1" -- "$2" | /usr/bin/base64',
+                                 "sh", str(int(max_bytes)), path], 60, as_uid=MAC_UID)
+        if got.exit_code != 0:
+            raise BoxError(f"cannot read {path}: {got.stderr.strip()[-200:]}")
+        try:
+            return base64.b64decode("".join(got.stdout.split()), validate=True)
+        except ValueError as err:
+            raise BoxError(f"cannot read {path}: {err}") from err
+
+    def screen(self) -> Any:
+        """The display as pickfit sees and drives it (gui_mac.VncDisplay): screenshot, click, type_text, key."""
+        self._require_started()
+        if not self.vnc_url:
+            raise BoxError("this box has no display (make it with display=True)")
+        if self._screen is None:
+            from pickfit.verify.gui_mac import VncDisplay
+
+            self._screen = VncDisplay(self.vnc_url, self)
+        return self._screen
+
+    def launch_gui(self, command: str, tag: str | int, wait_s: int, *, timeout_s: int | None = None) -> Any:
+        """gui.launch for this box: (the record to keep, what it showed, the screenshot PNG)."""
+        from pickfit.verify import gui_mac
+
+        return gui_mac.launch(self, command, tag, wait_s, timeout_s=timeout_s)
+
     def _curl_codes(self, targets: dict[str, str], timeout: int = 4) -> tuple[dict[str, int], str]:
         """Run `curl` to each target as root, concurrently; return {name: exit code} and the raw output.
 
@@ -672,6 +807,11 @@ class TartBox(Box):
     def _firewall_targets(self, online: bool) -> dict[str, str]:
         targets = {"public": PUBLIC_URL, **UNREACHABLE_PROBES, **PRIVATE_PROBE}
         for port in (5000, 7000, 3000, 22):
+            targets[f"host{port}"] = f"http://$gw:{port}/"
+        if self.vnc_url:  # the VM's own VNC server listens on every host interface; the guest must not reach it
+            from pickfit.verify.vnc import parse_url
+
+            port = parse_url(self.vnc_url)[1]
             targets[f"host{port}"] = f"http://$gw:{port}/"
         return targets
 
@@ -849,15 +989,16 @@ grep -q pam_deny.so /etc/pam.d/su ||   perl -0pi -e 's/^(auth\s+sufficient\s+pam
 )/$1auth       required       pam_deny.so
 /m' /etc/pam.d/su
 """
-# Every box runs this as root before any model command; a non-zero exit refuses the base.
-HARDENED_CHECK = rf"""
+def hardened_check(plists: tuple[str, ...] = AGENT_PLISTS, extra: str = "") -> str:
+    """The root check every box runs before any model command; a non-zero exit refuses the base."""
+    return rf"""
 fail() {{ echo "$1"; exit 1; }}
 dseditgroup -o checkmember -m {MAC_USER} admin >/dev/null 2>&1 && fail "{MAC_USER} is an admin"
 dscl . -authonly admin admin >/dev/null 2>&1 && fail "admin still has the default password"
 [ "$(stat -f '%Su %Lp' /etc/kcpassword)" = "root 600" ] || fail "/etc/kcpassword is not root-only"
 lsof -nP -iTCP:22 -iTCP:5900 -sTCP:LISTEN >/dev/null 2>&1 && fail "Remote Login or Screen Sharing is on"
 grep -Eq '^auth[[:space:]]+required[[:space:]]+pam_deny.so' /etc/pam.d/su || fail "su is open to other users"
-for plist in {' '.join(AGENT_PLISTS)}; do
+for plist in {' '.join(plists)}; do
   bin=$(/usr/libexec/PlistBuddy -c "Print :ProgramArguments:0" "$plist") || fail "cannot read $plist"
   [ "$bin" = "{AGENT_DIR}/tart-guest-agent" ] || fail "guest agent starts from $bin"
 done
@@ -866,8 +1007,74 @@ for path in / /usr /usr/local /usr/local/libexec {AGENT_DIR} {AGENT_DIR}/tart-gu
   [ "$(stat -f %Su "$path")" = root ] || fail "$path is not owned by root"
   sudo -u {MAC_USER} /bin/test -w "$path" && fail "{MAC_USER} can write $path"
 done
-exit 0
+{extra}exit 0
 """
+
+
+HARDENED_CHECK = hardened_check()
+# Run on the hardened base, as root, to make the GUI base. Like HARDEN_ROOT, nothing secret appears in a
+# command line: sbx's new password is made, used for auto-login and dropped inside the guest.
+GUI_ROOT = rf"""
+set -e
+# 1. sbx, not admin, logs in at the console: its own desktop session, where its apps show their windows.
+umask 077
+PICKFIT_LOGIN_PW="$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | cut -c1-32)"
+export PICKFIT_LOGIN_PW
+test "${{#PICKFIT_LOGIN_PW}}" -eq 32
+dscl . -passwd {MAC_HOME} "$PICKFIT_LOGIN_PW"
+{GUEST_PYTHON} -I - <<'PICKFIT_PY'
+import os
+key = (125, 137, 82, 35, 210, 188, 221, 234, 163, 185, 31)  # macOS's kcpassword XOR key
+pw = os.environ["PICKFIT_LOGIN_PW"].encode()
+pw += bytes(-len(pw) % 12)
+fd = os.open("/etc/kcpassword", os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+os.write(fd, bytes(b ^ key[i % len(key)] for i, b in enumerate(pw)))
+os.close(fd)
+PICKFIT_PY
+unset PICKFIT_LOGIN_PW
+chown root:wheel /etc/kcpassword
+chmod 600 /etc/kcpassword
+umask 022
+defaults write /Library/Preferences/com.apple.loginwindow autoLoginUser {MAC_USER}
+# 2. `tart exec` from the root daemon: the per-user agent would run in sbx's session, as sbx.
+plist={AGENT_PLISTS[0]}
+/usr/libexec/PlistBuddy -c "Delete :ProgramArguments" -c "Add :ProgramArguments array" \
+  -c "Add :ProgramArguments:0 string {AGENT_DIR}/tart-guest-agent" -c "Add :ProgramArguments:1 string --run-daemon" \
+  -c "Add :ProgramArguments:2 string --run-rpc" "$plist"
+rm -f {AGENT_PLISTS[1]}
+# 3. sbx's first login: admin's Setup Assistant answers (no Apple ID, Siri or analytics screens), no screen saver.
+prefs={MAC_HOME}/Library/Preferences
+mkdir -p "$prefs/ByHost"
+cp /Users/admin/Library/Preferences/com.apple.SetupAssistant.plist "$prefs/"
+chown -R {MAC_USER}:staff {MAC_HOME}/Library
+sudo -u {MAC_USER} defaults -currentHost write com.apple.screensaver idleTime -int 0
+# 4. A quiet desktop for an operated app: no apps in the Dock and no desktop widgets (a stray click there opens Notes,
+#    Reminders or Games, 11/2), and a click on the wallpaper does not hide every window.
+for args in "com.apple.dock persistent-apps -array" "com.apple.dock persistent-others -array" \
+    "com.apple.dock show-recents -bool false" "com.apple.WindowManager StandardHideWidgets -int 1" \
+    "com.apple.WindowManager StageManagerHideWidgets -int 1" \
+    "com.apple.WindowManager EnableStandardClickToShowDesktop -bool false"; do
+  sudo -u {MAC_USER} defaults write $args
+done
+"""
+# Run as sbx in its desktop session once it is up: the Dock hides itself and holds no apps. macOS rebuilds the Dock
+# at the first login (the base's own setting did not survive it), and a Dock in view covered the bottom of Neon
+# Vision Editor's What's New dialog, buttons and all, while the operator clicked its icons (11/2).
+QUIET_DESKTOP = ("defaults write com.apple.dock autohide -bool true && defaults write com.apple.dock "
+                 "autohide-delay -float 0 && defaults write com.apple.dock persistent-apps -array && "
+                 "defaults write com.apple.dock persistent-others -array && defaults write com.apple.dock "
+                 "show-recents -bool false && defaults write NSGlobalDomain AppleKeyboardUIMode -int 2 && "
+                 "killall Dock")  # AppleKeyboardUIMode 2: Tab reaches a dialog's buttons (a Replace click missed 6x)
+# sbx's desktop is up: it is the console user and its Dock and Finder run.
+DESKTOP_UP = (f'[ "$(stat -f %Su /dev/console)" = {MAC_USER} ] && pgrep -u {MAC_USER} -x Dock >/dev/null && '
+              f'pgrep -u {MAC_USER} -x Finder >/dev/null || {{ echo "console: $(stat -f %Su /dev/console)"; exit 1; }}')
+GUI_CHECK = hardened_check(AGENT_PLISTS[:1], extra=rf"""[ "$(id -u)" = 0 ] || fail "tart exec does not run as root"
+[ -e {AGENT_PLISTS[1]} ] && fail "a guest agent is set to start in the user's session"
+[ "$(/usr/libexec/PlistBuddy -c 'Print :ProgramArguments:2' {AGENT_PLISTS[0]})" = --run-rpc ] \
+  || fail "the root daemon does not serve tart exec"
+[ "$(stat -f %Su /dev/console)" = {MAC_USER} ] || fail "{MAC_USER} is not the console user"
+pgrep -u admin >/dev/null && fail "admin is logged in"
+""")
 PREPARE_USER = ("brew analytics off && brew install uv pipx node && brew cleanup -s --prune=all && "
                 "rm -rf ~/Library/Caches/Homebrew ~/Library/Logs/Homebrew")
 VERSIONS = {
@@ -962,4 +1169,58 @@ def prepare_base(*, source: str = SOURCE_IMAGE, base: str = BASE_VM, tart: str =
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     base_manifest_path(base).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     log(f"tart: base {base} ready in {time.monotonic() - began:.0f}s · {image_label(manifest)}")
+    return manifest
+
+
+def prepare_gui_base(*, base: str = BASE_VM, gui_base: str = GUI_BASE_VM, tart: str = TART,
+                     state_dir: Path | None = None, log: Callable[[str], None] = print) -> dict[str, Any]:
+    """Build the base GUI boxes clone: a copy of the hardened base where sbx logs in at a 1280x800 desktop.
+
+    Boots the copy once to change it (GUI_ROOT), then again to prove sbx's auto-login and the root daemon's
+    `tart exec` work and that it passes GUI_CHECK. Only then is <gui_base>.json written; a failure deletes it.
+    """
+    parent = load_manifest(base, state_dir)
+    if not parent.get("hardened"):
+        raise BoxError(f"base VM {base!r} is not hardened; rebuild it with `pickfit verify --runner tart --prepare-base`")
+    if subprocess.run([tart, "get", gui_base], capture_output=True).returncode == 0:
+        raise BoxError(f"base VM {gui_base!r} already exists; `tart delete {gui_base}` to rebuild it")
+    base_manifest_path(gui_base, state_dir).unlink(missing_ok=True)
+    began = time.monotonic()
+    for argv in ([tart, "clone", base, gui_base], [tart, "set", gui_base, "--display", GUI_DISPLAY]):
+        proc = subprocess.run(argv, capture_output=True, text=True, timeout=600)
+        if proc.returncode != 0:
+            subprocess.run([tart, "delete", gui_base], capture_output=True, timeout=120)
+            raise BoxError(f"tart {argv[1]} failed: {proc.stderr.strip()[-500:]}")
+    box = TartBox(base=gui_base, name=gui_base, tart=tart, state_dir=state_dir, display=True, log=log,
+                  limits=BoxLimits(lifetime_s=3600, max_command_s=1800))
+    box.cloned = False  # close() never deletes the base; a failure below does
+    try:
+        box.manifest = dict(parent)
+        box._boot()
+        log(f"tart: {gui_base} booted; {MAC_USER} takes the console, the root daemon takes tart exec")
+        changed = box._root(GUI_ROOT, 120)
+        if changed.returncode != 0:
+            raise BoxError(f"GUI setup failed: {(changed.stdout + changed.stderr).strip()[-500:]}")
+        _shutdown(box, log)
+        box.vm_proc = None
+        log(f"tart: booting {gui_base} again ({MAC_USER}'s auto-login)")
+        box._boot()
+        box._wait_desktop()
+        check = box._root(GUI_CHECK, 60)
+        if check.returncode != 0:
+            raise BoxError(f"the GUI base fails its check: {(check.stdout + check.stderr).strip()[-300:]}")
+        manifest = {**parent, "base": gui_base, "parent": base, "parent_build_id": parent.get("build_id"),
+                    "build_id": secrets.token_hex(6), "display": GUI_DISPLAY, "gui": True,
+                    "prepared_at": taipei_now().isoformat(timespec="seconds")}
+        _shutdown(box, log)
+    except BaseException:
+        box.close()
+        subprocess.run([tart, "delete", gui_base], capture_output=True, timeout=120)
+        log(f"tart: GUI base build failed; deleted {gui_base}")
+        raise
+    box.close()
+    path = base_manifest_path(gui_base, state_dir)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    log(f"tart: GUI base {gui_base} ready in {time.monotonic() - began:.0f}s · {image_label(manifest)}")
     return manifest

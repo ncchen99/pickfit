@@ -59,18 +59,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-contour-20261102-034953-faf3",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask contour",
-          "purpose": null
+          "command": "brew install --cask --appdir=$HOME/Applications contour",
+          "purpose": "Install Contour via brew cask"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "contour version"
+      "check": {
+        "command": "contour version",
+        "expected_signal": "Contour Terminal Emulator 0.8.0.9335"
+      },
+      "first_task": "open ~/Applications/contour.app"
     },
     "linux": null,
     "windows": null
@@ -88,10 +91,254 @@
     "url": "https://github.com/contour-terminal/contour/releases/tag/v0.8.0.9335"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T04:08:03.349233+08:00",
+    "runs": [
+      {
+        "id": "verify-contour-20261102-034953-faf3",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-02T04:08:03.349233+08:00",
+        "tool_version": "0.8.0.9335",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications contour",
+            "purpose": "Install Contour via brew cask"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "contour version",
+            "expected_signal": "Contour Terminal Emulator 0.8.0.9335",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Contour Terminal Emulator 0.8.0.9335",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/contour.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/contour.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /Users/sbx/pickfit-out/contour-f1.txt: 14 bytes, written after the app started; format text: yes; contains \"pickfit441056\": yes (typed by the operator)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/contour.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /Users/sbx/pickfit-out/contour-f2.txt: 14 bytes, written after the app started; format text: yes; contains \"pickfitf84da7\": yes (typed by the operator)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/contour.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /Users/sbx/pickfit-out/contour-f3b.txt: 23107 bytes, written after the app started; format text: yes; contains \"pickfiteff90c\": yes (typed by the operator); contains \"daemon\": yes",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/contour.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /Users/sbx/pickfit-out/contour-f4b.txt: 14 bytes, written after the app started; format text: yes; contains \"pickfitc30f77\": yes (typed by the operator)",
+            "setup": [
+              {
+                "command": "mkdir -p ~/pickfit-in ~/pickfit-out && printf '\\033Pq\"1;1#0;2;100;0;0#0!20~-\\033\\\\\\n' > ~/pickfit-in/sixel.txt && printf 'sixel-ok\\n' >> ~/pickfit-in/sixel.txt && wc -c ~/pickfit-in/sixel.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "MacOS bundle on releases page, no brew cask path documented",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications contour (user-owned Applications dir, link to /opt/homebrew/bin/contour)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Terminal shows contour version outputting Contour Terminal Emulator 0.8.0.9335. / Terminal emulator window showing an interactive bash shell prompt with a blue status bar.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-contour-20261102-034953-faf3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-contour-20261102-034953-faf3/check-1-cmd2.judged.png",
+            "runs/verify/verify-contour-20261102-034953-faf3/replay-3-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.31104,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "open ~/Applications/contour.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+          "operations": [
+            {
+              "feature": "render with GPU acceleration",
+              "goal": "In the Contour terminal window that opens, wait for the shell prompt, then type exactly: echo {nonce} > ~/pickfit-out/contour-f1.txt and press Enter. Then type exactly: cat ~/pickfit-out/contour-f1.txt and press Enter to show it rendered.",
+              "check": "file",
+              "target": "~/pickfit-out/contour-f1.txt",
+              "expected": [
+                "{nonce}"
+              ],
+              "format": "text",
+              "passed": true,
+              "observed": "file /Users/sbx/pickfit-out/contour-f1.txt: 14 bytes, written after the app started; format text: yes; contains \"pickfit441056\": yes (typed by the operator)",
+              "smoke_test": 2,
+              "actions": 4,
+              "replay": "actions",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-4-2-op-1.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-4-2-op-2.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-4-2-op-3.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-4-2-op-4.png"
+              ]
+            },
+            {
+              "feature": "use terminal tabs",
+              "goal": "In the Contour terminal window, create a new terminal tab using Cmd+T (hold Command and press T), wait for the new tab's shell prompt, then type exactly: echo {nonce} > ~/pickfit-out/contour-f2.txt and press Enter. Then type exactly: cat ~/pickfit-out/contour-f2.txt and press Enter.",
+              "check": "file",
+              "target": "~/pickfit-out/contour-f2.txt",
+              "expected": [
+                "{nonce}"
+              ],
+              "format": "text",
+              "passed": true,
+              "observed": "file /Users/sbx/pickfit-out/contour-f2.txt: 14 bytes, written after the app started; format text: yes; contains \"pickfitf84da7\": yes (typed by the operator)",
+              "smoke_test": 3,
+              "actions": 6,
+              "replay": "actions",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-5-3-op-1.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-5-3-op-2.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-5-3-op-3.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-5-3-op-4.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-5-3-op-5.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-5-3-op-6.png"
+              ]
+            },
+            {
+              "feature": "keep persistent daemon sessions",
+              "goal": "In the Contour terminal window, wait for the shell prompt, then type exactly: contour help > ~/pickfit-out/contour-f3b.txt; echo {nonce} >> ~/pickfit-out/contour-f3b.txt and press Enter. Then type exactly: cat ~/pickfit-out/contour-f3b.txt and press Enter.",
+              "check": "file",
+              "target": "~/pickfit-out/contour-f3b.txt",
+              "expected": [
+                "{nonce}",
+                "daemon"
+              ],
+              "format": "text",
+              "passed": true,
+              "observed": "file /Users/sbx/pickfit-out/contour-f3b.txt: 23107 bytes, written after the app started; format text: yes; contains \"pickfiteff90c\": yes (typed by the operator); contains \"daemon\": yes",
+              "smoke_test": 4,
+              "actions": 4,
+              "replay": "actions",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-7-4-op-1.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-7-4-op-2.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-7-4-op-3.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-7-4-op-4.png"
+              ]
+            },
+            {
+              "feature": "display Sixel inline images",
+              "goal": "In the Contour terminal window, wait for the shell prompt, then type exactly: cat ~/pickfit-in/sixel.txt and press Enter to display a Sixel inline image. Then type exactly: echo {nonce} > ~/pickfit-out/contour-f4b.txt and press Enter. Then type exactly: cat ~/pickfit-out/contour-f4b.txt and press Enter.",
+              "check": "file",
+              "target": "~/pickfit-out/contour-f4b.txt",
+              "expected": [
+                "{nonce}"
+              ],
+              "format": "text",
+              "passed": true,
+              "observed": "file /Users/sbx/pickfit-out/contour-f4b.txt: 14 bytes, written after the app started; format text: yes; contains \"pickfitc30f77\": yes (typed by the operator)",
+              "smoke_test": 5,
+              "actions": 7,
+              "replay": "actions",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-10-5-op-1.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-10-5-op-2.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-10-5-op-3.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-10-5-op-4.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-10-5-op-5.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-10-5-op-6.png",
+                "runs/verify/verify-contour-20261102-034953-faf3/replay-10-5-op-7.png"
+              ]
+            }
+          ]
+        },
+        "features": [
+          {
+            "feature": "render with GPU acceleration",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows the typed string echoed to a file, with no evidence of GPU-accelerated rendering."
+          },
+          {
+            "feature": "use terminal tabs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows the typed string in a file, with no evidence a new tab was created or used."
+          },
+          {
+            "feature": "keep persistent daemon sessions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows help text mentioning daemon plus typed string, not an actual persistent session."
+          },
+          {
+            "feature": "display Sixel inline images",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows the typed marker file, with no captured Sixel image rendering."
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -324,5 +571,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:46:44+08:00",
-  "updated_at": "2026-11-01T17:22:28+08:00"
+  "updated_at": "2026-11-02T04:08:03.352715+08:00"
 }

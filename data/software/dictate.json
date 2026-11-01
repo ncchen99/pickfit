@@ -55,24 +55,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "brew",
+      "basis": "replayed",
+      "run_id": "verify-dictate-20261101-193012-70ea",
+      "method": "uv",
       "steps": [
         {
-          "command": "brew tap 0xbrando/dictate https://github.com/0xbrando/dictate",
-          "purpose": null
-        },
-        {
-          "command": "brew install dictate",
-          "purpose": null
+          "command": "uv tool install dictate-mlx 2>&1",
+          "purpose": "install dictate-mlx with uv tool"
         }
       ],
-      "manual_steps": [
-        "Allow Accessibility and Microphone permissions in macOS settings"
-      ],
-      "check": null,
-      "first_task": "dictate status"
+      "manual_steps": [],
+      "check": {
+        "command": "dictate --version 2>&1",
+        "expected_signal": "dictate 2.5.4"
+      },
+      "first_task": "dictate"
     },
     "linux": null,
     "windows": null
@@ -90,22 +87,133 @@
     "url": "https://github.com/0xbrando/dictate/releases/tag/v2.5.4"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T19:39:21.879548+08:00",
+    "runs": [
+      {
+        "id": "verify-dictate-20261101-193012-70ea",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@78f2945fd37d",
+        "checked_at": "2026-11-01T19:39:21.879548+08:00",
+        "tool_version": "2.5.4",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install dictate-mlx 2>&1",
+            "purpose": "install dictate-mlx with uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "dictate --version 2>&1",
+            "expected_signal": "dictate 2.5.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "dictate 2.5.4",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "dictate status 2>&1",
+            "expected_signal": "Dictate Status v2.5.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[2mNo preferences file (will use defaults)\u001b[0m",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "dictate doctor 2>&1",
+            "expected_signal": "No input devices found",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "\u001b[31m✗\u001b[0m No input devices found",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "dictate devices 2>&1",
+            "expected_signal": "No input devices found.",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "\u001b[2mNo input devices found.\u001b[0m",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "dictate",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew tap 0xbrando/dictate https://github.com/0xbrando/dictate + brew install dictate",
+            "actually_needed": "brew formula requires a full Xcode.app 16.0 build; the box has only Command Line Tools, so `brew install dictate` cannot build here — used `uv tool install dictate-mlx` instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "The cask/DMG path is still planned; pip install dictate-mlx remains the simplest install path",
+            "actually_needed": "no Cask/DMG exists (tap has only Formula/dictate.rb); the app is the Python rumps menu-bar app launched with the `dictate` command, which opens a menu-bar item and menu window",
+            "kind": "note"
+          },
+          {
+            "readme_said": "dictate doctor / dictate devices list audio devices",
+            "actually_needed": "`dictate doctor` and `dictate devices` exit 1 in this VM because no microphone/input device exists ('No input devices found'); output is otherwise sensible",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show dictate 2.5.4 version, status details, and doctor output reporting no input devices with exit 1 as expected. / The screenshot shows Dictate's dropdown menu with Writing Style, Quality, Input Device options and Quit Dictate, topped by a Downloading Parakeet model status.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-dictate-20261101-193012-70ea/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-dictate-20261101-193012-70ea/check-1-cmd4.judged.png",
+            "runs/verify/verify-dictate-20261101-193012-70ea/check-2-cmd5.judged.png",
+            "runs/verify/verify-dictate-20261101-193012-70ea/check-3-cmd6.judged.png",
+            "runs/verify/verify-dictate-20261101-193012-70ea/replay-8-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.101618,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "dictate",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        }
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-01T19:39:21+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 70.8,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.6,
           "weight": 40.0
         },
         "install_docs": {
@@ -148,7 +256,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 38.16
+      "value": 39.15
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -431,5 +539,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:52+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T19:39:21.883764+08:00"
 }

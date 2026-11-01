@@ -431,3 +431,42 @@ def test_an_agent_gets_two_operations_per_feature_and_six_per_run(tmp_path: Path
     assert "F1 has had its 2 operations" in refused and agent.commands_used == 0  # refused before it ran
     agent.report.commands += [done(n) for n in range(2, 2 + OPERATE_MAX)]
     assert "used its 6 operations" in agent._operate_gui(operate_args(feature=9), 3)
+
+
+def test_an_install_only_run_has_no_operate_gui_and_refuses_one_before_it_runs(tmp_path: Path):
+    from pickfit.verify.agent import INSTALL_ONLY_RULE, OPERATE_GUI_TOOL, AgentLimits, VerifyAgent
+
+    usual = VerifyAgent(desktop_task(), OperateBox(tmp_path / "home"), runs_dir=tmp_path, log=lambda s: None)
+    assert OPERATE_GUI_TOOL in usual.tools and INSTALL_ONLY_RULE not in usual.instructions
+    agent = VerifyAgent(desktop_task(), OperateBox(tmp_path / "home"), runs_dir=tmp_path, log=lambda s: None,
+                        limits=AgentLimits(max_operations=0))
+    assert OPERATE_GUI_TOOL not in agent.tools and agent.instructions.endswith(INSTALL_ONLY_RULE)
+    assert "launch_gui" in [t["name"] for t in agent.tools]
+    agent.started = agent.clock()
+    refused = agent._operate_gui(operate_args(), 3)  # a model may still call it by name
+    assert "checks install only" in refused and agent.commands_used == 0
+
+
+def test_the_operator_hears_when_it_goes_in_circles():
+    def step(act: dict[str, Any]) -> op.Step:
+        return op.Step(screenshot=None, sha256="x", changed=True, action=act)
+
+    browse = {"kind": "click", "x": 750, "y": 154, "count": 1}
+    cancel = {"kind": "click", "x": 817, "y": 676, "count": 1}
+    near = {**browse, "x": 780, "y": 147}  # the same button, a little off
+    assert op.circling([step(browse), step(cancel), step(near), step(cancel)]) is None
+    # flint's replay: Browse Hugging Face opened an Import Model dialog, Cancel closed it, again and again.
+    note = op.circling([step(browse), step(cancel), step(near), step(cancel), step(browse), step(cancel)])
+    assert note and "going in circles" in note and "click at 750,154 3 times" in note
+    typing = [step({"kind": "type", "text": "a"}), step({"kind": "wait", "seconds": 2})] * 3
+    assert op.circling(typing) and op.circling(typing[:4]) is None
+
+
+def test_pickfits_samples_are_real_files_of_their_kind():
+    import zipfile
+
+    heads = {"png": b"\x89PNG", "jpeg": b"\xff\xd8\xff", "gif": b"GIF89a", "pdf": b"%PDF-", "wav": b"RIFF", "zip": b"PK"}
+    for kind, head in heads.items():
+        assert op.sample_file(kind).startswith(head), kind
+    assert zipfile.ZipFile(io.BytesIO(op.sample_file("zip"))).namelist() == ["page01.png", "page02.png", "page03.png"]
+    assert op.sample_file("png") == op.sample_file("png")  # the same bytes every time

@@ -56,7 +56,31 @@
     "api_keys": []
   },
   "install": {
-    "macos": null,
+    "macos": {
+      "basis": "replayed",
+      "run_id": "verify-charoite-audio-20261101-200453-7caf",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "brew install ollama && brew services start ollama",
+          "purpose": "install Ollama prerequisite via brew"
+        },
+        {
+          "command": "curl -fL -o /tmp/Charoite.app.zip https://github.com/charoiteai/Charoite_audio/releases/download/v0.101.0/Charoite.app.zip && ls -lh /tmp/Charoite.app.zip",
+          "purpose": "download Charoite.app.zip from latest release v0.101.0"
+        },
+        {
+          "command": "mkdir -p ~/Applications && unzip -q /tmp/Charoite.app.zip -d /tmp/ && mv /tmp/Charoite.app ~/Applications/ && ls -ld ~/Applications/Charoite.app && xattr -dr com.apple.quarantine ~/Applications/Charoite.app 2>&1; echo \"xattr done\" && codesign --verify --deep --strict ~/Applications/Charoite.app 2>&1 | head -20; echo \"verify exit $?\"; spctl --assess --type exec ~/Applications/Charoite.app 2>&1",
+          "purpose": "unzip and install to ~/Applications and clear quarantine"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ollama --version",
+        "expected_signal": "ollama version is 0.40.13"
+      },
+      "first_task": "open ~/Applications/Charoite.app"
+    },
     "linux": null,
     "windows": null
   },
@@ -73,22 +97,107 @@
     "url": "https://github.com/charoiteai/Charoite_audio/releases/tag/v0.100.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T20:14:07.378811+08:00",
+    "runs": [
+      {
+        "id": "verify-charoite-audio-20261101-200453-7caf",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@78f2945fd37d",
+        "checked_at": "2026-11-01T20:14:07.378811+08:00",
+        "tool_version": "v0.101.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install ollama && brew services start ollama",
+            "purpose": "install Ollama prerequisite via brew"
+          },
+          {
+            "command": "curl -fL -o /tmp/Charoite.app.zip https://github.com/charoiteai/Charoite_audio/releases/download/v0.101.0/Charoite.app.zip && ls -lh /tmp/Charoite.app.zip",
+            "purpose": "download Charoite.app.zip from latest release v0.101.0"
+          },
+          {
+            "command": "mkdir -p ~/Applications && unzip -q /tmp/Charoite.app.zip -d /tmp/ && mv /tmp/Charoite.app ~/Applications/ && ls -ld ~/Applications/Charoite.app && xattr -dr com.apple.quarantine ~/Applications/Charoite.app 2>&1; echo \"xattr done\" && codesign --verify --deep --strict ~/Applications/Charoite.app 2>&1 | head -20; echo \"verify exit $?\"; spctl --assess --type exec ~/Applications/Charoite.app 2>&1",
+            "purpose": "unzip and install to ~/Applications and clear quarantine"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ollama --version",
+            "expected_signal": "ollama version is 0.40.13",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ollama version is 0.40.13",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Charoite.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Release builds are signed and notarised so app opens with plain double click",
+            "actually_needed": "removed quarantine with xattr -dr com.apple.quarantine before launch as precaution; launch succeeded showing 1180x692 window (pid 2048, owner Charoite)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Allow microphone and system-audio permissions when macOS asks",
+            "actually_needed": "no permission prompt appeared in VM; microphone permission requirement remains for real use",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows ollama --version printing ollama version is 0.40.13. / The screenshot shows Charoite's fully drawn main dashboard in Russian with sidebar navigation and calendar content.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-charoite-audio-20261101-200453-7caf/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-charoite-audio-20261101-200453-7caf/check-1-cmd13.judged.png",
+            "runs/verify/verify-charoite-audio-20261101-200453-7caf/replay-14-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.075037,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "open ~/Applications/Charoite.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        }
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-01T20:14:07+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 66.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.42,
           "weight": 40.0
         },
         "install_docs": {
@@ -129,7 +238,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 42.92
+      "value": 41.18
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -428,5 +537,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T20:14:07.382931+08:00"
 }
