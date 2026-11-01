@@ -137,3 +137,13 @@ def test_a_launch_needs_the_gui_box():
     box.session = None
     with pytest.raises(ValueError, match="display=True"):
         gui_mac.launch(box, "open -a X", 1, 20)
+
+
+def test_keep_running_leaves_the_app_up_for_an_operating_loop():
+    box = FakeMacBox(report=_report())
+    result, shown, png = gui_mac.launch(box, "open ~/Applications/X.app", 1, 20, keep_running=True)
+    assert result.exit_code == 0 and png == PNG
+    assert "stop" not in [argv[-1] for argv, _ in box.calls]
+    assert result.stdout.rstrip().endswith("left the app running, to operate it.")
+    assert gui_mac.stop(box) == (True, "PICKFIT_KILLED 1")
+    assert box.calls[-1][1] == {"baseline": SESSION}

@@ -741,6 +741,23 @@ class TartBox(Box):
         return ExecResult(command=" ".join(argv), exit_code=124 if host_timeout else code, stdout=out, stderr=err,
                           seconds=seconds, timed_out=host_timeout, truncated=truncated)
 
+    def read_result(self, path: str, max_bytes: int = 1_000_000) -> bytes:
+        """A file the box user can read (a result an operated app saved, say), byte for byte, up to max_bytes.
+
+        pickfit's own command, run as the box user rather than root: a link the app planted cannot make it
+        read what only root may.
+        """
+        import base64
+
+        got = self.harness_exec(["/bin/bash", "-c", 'set -o pipefail; head -c "$1" -- "$2" | /usr/bin/base64',
+                                 "sh", str(int(max_bytes)), path], 60, as_uid=MAC_UID)
+        if got.exit_code != 0:
+            raise BoxError(f"cannot read {path}: {got.stderr.strip()[-200:]}")
+        try:
+            return base64.b64decode("".join(got.stdout.split()), validate=True)
+        except ValueError as err:
+            raise BoxError(f"cannot read {path}: {err}") from err
+
     def screen(self) -> Any:
         """The display as pickfit sees and drives it (gui_mac.VncDisplay): screenshot, click, type_text, key."""
         self._require_started()

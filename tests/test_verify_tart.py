@@ -692,3 +692,14 @@ def test_gui_base_needs_a_hardened_parent_and_no_existing_copy(fake_tart: Path, 
     (state_dir / "pickfit-macos-26.json").write_text(json.dumps({**MANIFEST, "hardened": False}))
     with pytest.raises(BoxError, match="not hardened"):
         tb.prepare_gui_base(tart=str(fake_tart), state_dir=state_dir, log=lambda s: None)
+
+
+@POSIX_ONLY
+def test_read_result_reads_as_the_box_user_and_decodes(make_box, fake_tart: Path, monkeypatch: pytest.MonkeyPatch):
+    box = make_box()
+    box.start()
+    with pytest.raises(BoxError, match="cannot read"):  # the fake answers "ok", which is not base64 of a file
+        box.read_result("/Users/sbx/Documents/x.txt")
+    call = _calls(fake_tart)[-1]
+    assert call[2:6] == ["sudo", "-n", "-u", "#1001"] and call[-1] == "/Users/sbx/Documents/x.txt"
+    assert "set -o pipefail" in call[8]

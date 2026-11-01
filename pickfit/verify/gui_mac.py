@@ -309,7 +309,7 @@ def _scale(windows: list[GuiWindow], factor: float) -> None:
         w.x, w.y, w.width, w.height = (round(v * factor) for v in (w.x, w.y, w.width, w.height))
 
 
-def observation(launch: GuiLaunch, approved: list[dict[str, Any]]) -> str:
+def observation(launch: GuiLaunch, approved: list[dict[str, Any]], *, kept: bool = False) -> str:
     """pickfit's own lines (stdout): what the agent cites and the replay checks. Nothing the app chooses."""
     meaning = {"window": "a window of the app's own process is shown",
                "process_alive": "the app is still running but showed no window of its own",
@@ -332,9 +332,18 @@ def observation(launch: GuiLaunch, approved: list[dict[str, Any]]) -> str:
                      "blocked, as macOS blocks them for a user")
     if launch.error:
         lines.append(f"note: {launch.error}")
-    lines.append("pickfit took a screenshot of the VM's display over VNC, then stopped every process of the box "
-                 "user outside its desktop session.")
+    if kept:
+        lines.append("pickfit took a screenshot of the VM's display over VNC and left the app running, to operate it.")
+    else:
+        lines.append("pickfit took a screenshot of the VM's display over VNC, then stopped every process of the box "
+                     "user outside its desktop session.")
     return "\n".join(lines)
+
+
+def stop(box: TartBox) -> tuple[bool, str]:
+    """Stop every sbx process outside its login session; (whether none survived, the helper's line)."""
+    stopped = _helper(box, "stop", {"baseline": box.session}, 90)
+    return "PICKFIT_KILLED" in stopped.stdout, stopped.stdout.strip()[-200:]
 
 
 def app_facts(launch: GuiLaunch, approved: list[dict[str, Any]]) -> str:
@@ -350,9 +359,12 @@ def app_facts(launch: GuiLaunch, approved: list[dict[str, Any]]) -> str:
     return "\n".join(lines).rstrip()
 
 
-def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s: int | None = None
-           ) -> tuple[ExecResult, GuiLaunch, bytes | None]:
-    """Launch on the box's desktop; (the record to keep, what it showed, the screenshot PNG)."""
+def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s: int | None = None,
+           keep_running: bool = False) -> tuple[ExecResult, GuiLaunch, bytes | None]:
+    """Launch on the box's desktop; (the record to keep, what it showed, the screenshot PNG).
+
+    keep_running leaves the app up for an operating loop (VncDisplay), which then calls stop() itself.
+    """
     wait_s = max(1, min(int(wait_s), gui.WAIT_MAX_S))
     if not box.display or box.session is None:
         raise ValueError("a macOS GUI launch needs a TartBox made with display=True")
@@ -385,16 +397,17 @@ def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s
             width = box.screen().size[0]
             if points and width and points[0] != width:  # a HiDPI mode: bounds are in points
                 _scale(shown.windows + shown.other_windows, width / points[0])
-    stopped = _helper(box, "stop", {"baseline": box.session}, 90)
-    survived = "PICKFIT_KILLED" not in stopped.stdout
-    if survived:  # something the box user started outlived the launch: nothing about it counts
-        shown.error = "; ".join(filter(None, [shown.error, "box-user processes survived the stop: "
-                                              + stopped.stdout.strip()[-200:]]))
-        png = None
+    survived = False
+    if not keep_running:
+        ok, line = stop(box)
+        survived = not ok
+        if survived:  # something the box user started outlived the launch: nothing about it counts
+            shown.error = "; ".join(filter(None, [shown.error, f"box-user processes survived the stop: {line}"]))
+            png = None
     log = box.exec(f"/usr/bin/tail -c 3000 -- {APP_LOG_DIR}/{tag}.log", 20)
     shown.log_tail = log.stdout if log.exit_code == 0 else ""
     code = 0 if shown.tier == "window" and png is not None and not timed_out and not survived else 1
-    result = ExecResult(command=command, exit_code=code, stdout=observation(shown, approved),
+    result = ExecResult(command=command, exit_code=code, stdout=observation(shown, approved, kept=keep_running),
                         stderr=app_facts(shown, approved), seconds=seconds, timed_out=timed_out)
     return result, shown, png
 
@@ -416,7 +429,7 @@ class VncDisplay:
 
     @property
     def size(self) -> tuple[int, int]:
-        client = self._connected()
+        client = self._client if self._client.width else self._connected()
         return client.width, client.height
 
     def screenshot(self) -> bytes:
