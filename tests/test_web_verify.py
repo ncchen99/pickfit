@@ -226,7 +226,8 @@ def test_a_batch_stops_before_the_pipeline_or_task_caps():
     assert wv.budget_stop(10, spend) is None
     assert "158" in wv.budget_stop(10, {**spend, "pipeline_total": 157.9})
     assert "modal" in wv.budget_stop(60, {**spend, "modal": 14.0})
-    assert "modal" in wv.budget_stop(1, {**spend, "modal": 14.7}, wv.WORST_SITE_USD), "each site checks a worst case"
+    near = wv.MY_CAPS_USD["modal"] - 0.3
+    assert "modal" in wv.budget_stop(1, {**spend, "modal": near}, wv.WORST_SITE_USD), "each site checks a worst case"
 
 
 def test_typed_text_counts_only_when_the_app_rendered_it_outside_inputs():
