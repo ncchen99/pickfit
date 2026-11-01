@@ -83,8 +83,9 @@ SEARCH_SKIP_DIRS = ("node_modules", "squashfs-root", ".npm", ".cargo", ".rustup"
 INPUT_DIR = f"{BOX_HOME}/pickfit-in"
 OUTPUT_DIR = f"{BOX_HOME}/pickfit-out"  # made before the app starts, for goals that save a file
 NONCE_FIELD = "{nonce}"
-FORMATS = ("text", "json", "html", "svg", "csv", "srt", "png", "jpeg", "gif", "webp", "pdf", "zip", "gguf", "wav")
-SAMPLES = ("png", "jpeg")
+FORMATS = ("text", "json", "html", "svg", "csv", "srt", "png", "jpeg", "gif", "webp", "avif", "mp4", "pdf", "zip", "gguf",
+           "wav")
+SAMPLES = ("png", "jpeg", "gif", "pdf", "wav", "mp4", "zip")
 BOX_UID = 1000  # the box user (box.py runs every box command as it)
 # A goal or check may not hold pickfit's own result lines, so nothing the agent writes reads as one.
 _OWN_LINES = re.compile(r"gui\s+(?:check|result|tier|goal|operate)\b", re.I)
@@ -284,7 +285,7 @@ class GuiInput(BaseModel):
 
     path: str = Field(description=f"Where, under {INPUT_DIR}/ (~/pickfit-in/).")
     text: str | None = Field(default=None, max_length=4_000)
-    sample: Literal["png", "jpeg"] | None = None
+    sample: Literal["png", "jpeg", "gif", "pdf", "wav", "mp4", "zip"] | None = None
 
     @field_validator("text", "sample", mode="before")
     @classmethod
@@ -392,19 +393,70 @@ def fill(text: str, nonce: str) -> str:
     return text.replace(NONCE_FIELD, nonce)
 
 
-def sample_image(kind: str) -> bytes:
-    """pickfit's own sample image: shapes and a line of text, the same bytes every time."""
+def _picture(shift: int = 0) -> Any:
     from PIL import Image, ImageDraw
 
     image = Image.new("RGB", (480, 320), (250, 248, 240))
     draw = ImageDraw.Draw(image)
-    draw.rectangle((40, 40, 200, 200), fill=(200, 60, 50))
+    draw.rectangle((40 + shift, 40, 200 + shift, 200), fill=(200, 60, 50))
     draw.ellipse((240, 60, 420, 240), fill=(40, 110, 200))
     draw.polygon([(60, 290), (160, 220), (260, 290)], fill=(60, 160, 80))
     draw.text((280, 270), "pickfit sample", fill=(20, 20, 20))
+    return image
+
+
+def sample_file(kind: str) -> bytes:
+    """pickfit's own sample input of a kind, the same bytes every time: an image (png, jpeg, a 3-frame gif), a
+    one-page pdf of it, a 1 s 440 Hz wav, a 2 s mp4 (ffmpeg on the host), or a zip of 3 png pages (a CBZ)."""
+    import wave
+    import zipfile
+
     out = io.BytesIO()
-    image.save(out, "JPEG" if kind == "jpeg" else "PNG", **({"quality": 90} if kind == "jpeg" else {}))
+    if kind in ("png", "jpeg", "pdf"):
+        _picture().save(out, {"png": "PNG", "jpeg": "JPEG", "pdf": "PDF"}[kind], **({"quality": 90} if kind == "jpeg" else {}))
+    elif kind == "gif":
+        frames = [_picture(shift) for shift in (0, 60, 120)]
+        frames[0].save(out, "GIF", save_all=True, append_images=frames[1:], duration=300, loop=0)
+    elif kind == "wav":
+        import math
+        import struct
+
+        with wave.open(out, "wb") as sound:
+            sound.setnchannels(1), sound.setsampwidth(2), sound.setframerate(16000)
+            sound.writeframes(b"".join(struct.pack("<h", int(8000 * math.sin(2 * math.pi * 440 * i / 16000)))
+                                       for i in range(16000)))
+    elif kind == "zip":
+        with zipfile.ZipFile(out, "w") as book:
+            for page in range(1, 4):
+                image = io.BytesIO()
+                _picture(40 * page).save(image, "PNG")
+                book.writestr(f"page{page:02d}.png", image.getvalue())
+    elif kind == "mp4":
+        return _sample_mp4()
+    else:
+        raise ValueError(f"no sample of kind {kind!r}")
     return out.getvalue()
+
+
+_MP4: list[bytes] = []
+
+
+def _sample_mp4() -> bytes:
+    """A 2 s 320x240 test pattern made by ffmpeg on the host (never in the box); ValueError without ffmpeg."""
+    import shutil
+    import subprocess
+    import tempfile
+
+    if not _MP4:
+        ffmpeg = shutil.which("ffmpeg")
+        if ffmpeg is None:
+            raise ValueError("this host has no ffmpeg to make the mp4 sample")
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample.mp4"
+            subprocess.run([ffmpeg, "-v", "error", "-f", "lavfi", "-i", "testsrc=duration=2:size=320x240:rate=10",
+                            "-pix_fmt", "yuv420p", "-c:v", "libx264", "-y", str(target)], check=True, timeout=60)
+            _MP4.append(target.read_bytes())
+    return _MP4[0]
 
 
 # ---------------------------------------------------------------- root's file check
@@ -464,6 +516,8 @@ def fmt(data, name):
     if name == "jpeg": return head.startswith(b"\xff\xd8\xff")
     if name == "gif": return head[:6] in (b"GIF87a", b"GIF89a")
     if name == "webp": return head[:4] == b"RIFF" and head[8:12] == b"WEBP"
+    if name == "avif": return head[4:12] in (b"ftypavif", b"ftypavis")
+    if name == "mp4": return head[4:8] == b"ftyp" and head[8:12] not in (b"avif", b"avis")
     if name == "wav": return head[:4] == b"RIFF" and head[8:12] == b"WAVE"
     if name == "pdf": return head.startswith(b"%PDF-")
     if name == "zip": return head.startswith(b"PK\x03\x04")
@@ -1142,7 +1196,7 @@ def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[
     written: list[str] = []
     for item in args.inputs:
         path = home_path(item.path)
-        box.write_file(path, sample_image(item.sample) if item.sample else fill(item.text or "", nonce))
+        box.write_file(path, sample_file(item.sample) if item.sample else fill(item.text or "", nonce))
         written.append(path)
     target = home_path(args.check.path) if args.check.kind == "file" and args.check.path else None
     before = file_probe(box, {"mode": "before", "target": target or BOX_HOME + "/"})

@@ -446,3 +446,13 @@ def test_the_operator_hears_when_it_goes_in_circles():
     assert note and "going in circles" in note and "click at 750,154 3 times" in note
     typing = [step({"kind": "type", "text": "a"}), step({"kind": "wait", "seconds": 2})] * 3
     assert op.circling(typing) and op.circling(typing[:4]) is None
+
+
+def test_pickfits_samples_are_real_files_of_their_kind():
+    import zipfile
+
+    heads = {"png": b"\x89PNG", "jpeg": b"\xff\xd8\xff", "gif": b"GIF89a", "pdf": b"%PDF-", "wav": b"RIFF", "zip": b"PK"}
+    for kind, head in heads.items():
+        assert op.sample_file(kind).startswith(head), kind
+    assert zipfile.ZipFile(io.BytesIO(op.sample_file("zip"))).namelist() == ["page01.png", "page02.png", "page03.png"]
+    assert op.sample_file("png") == op.sample_file("png")  # the same bytes every time
