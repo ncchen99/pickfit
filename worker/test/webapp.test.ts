@@ -197,6 +197,7 @@ test('page: the tool page of a web app, browse and compare', async () => {
   assert.match(tool, /Open Fixture Web Sketch/);
   assert.match(tool, /Any modern browser, nothing to install/);
   assert.ok(!tool.includes('Before you install') && !tool.includes('Source code'));
+  assert.ok(!tool.includes('This run came before'), 'its browser run recorded features');
   const cmp = await get(`/compare?tools=${SLUG},fixture-json-query`);
   assert.match(cmp, /Nothing to install, just open it/);
   assert.match(cmp, /In a browser, any OS/);
@@ -221,4 +222,17 @@ test('report_outcome: a failed web app is stored for its next browser check, nev
   assert.deepEqual([out.accepted, out.counted_in_score, out.reverify], [true, true, 'none']);
   assert.equal((h.sqlite.prepare('SELECT count(*) AS n FROM reverify_queue').get() as any).n, 0);
   assert.equal((h.sqlite.prepare("SELECT error_excerpt FROM events WHERE type = 'outcome'").get() as any).error_excerpt, 'The page stayed blank');
+});
+
+test('page: a web app no browser run passed on says so, and its features come from its own site', async () => {
+  const data = structuredClone(fixtureIndex()) as any;
+  data.entries.find((e: any) => e.slug === SLUG).web.check = null;
+  const worker = makeWorker(data, { now: () => new Date('2026-11-02T12:00:00Z') });
+  const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
+  const res = await worker.fetch(new Request(`http://127.0.0.1:8787/tool/${SLUG}`, { headers: { accept: 'text/html' } }), { DB: makeD1().db, MODEL_API_KEY: 'k' } as Env, ctx);
+  const html = await res.text();
+  assert.match(html, /pickfit hasn’t checked Fixture Web Sketch in its browser yet<\/b>, so it never suggests it/);
+  assert.match(html, /Not verified yet/);
+  assert.match(html, /pickfit hasn’t run it yet, so these come from its own site only\./);
+  assert.ok(!html.includes('Checked in a browser'));
 });

@@ -76,6 +76,12 @@ const featureWhy = (detail: string) => {
   return (at > 0 ? detail.slice(at + 2) : detail).replace(/^not checked:?\s*/i, '');
 };
 
+/** Why the features come from the profile alone: a run from before feature checks, or no run at all. */
+const notRecorded = (entry: Entry, ran: boolean) =>
+  ran
+    ? 'This run came before pickfit checked features one by one, so these come from the README only.'
+    : `pickfit hasn’t run it yet, so these come from ${isWebApp(entry) ? 'its own site' : 'the README'} only.`;
+
 /** Every advertised feature with what the run did about it. */
 function featureList(entry: Entry): string {
   const guide = bestGuide(entry);
@@ -92,7 +98,7 @@ function featureList(entry: Entry): string {
   ];
   return (
     `<section class="block" aria-labelledby="features-title"><h2 id="features-title">What it does, feature by feature</h2>` +
-    (f.recorded ? '' : '<p class="quiet">This run came before pickfit checked features one by one, so these come from the README only.</p>') +
+    (f.recorded ? '' : `<p class="quiet">${notRecorded(entry, guide !== null || webCheck(entry) !== null)}</p>`) +
     `<ul class="feat-list">${items.join('')}</ul></section>`
   );
 }
