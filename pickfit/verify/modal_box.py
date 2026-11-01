@@ -43,6 +43,14 @@
   through Modal's resolver offline (review 2026-11-01). The box user's apps reach Xvfb by its socket file, which a
   network namespace does not hide. Evidence (window list, screenshot, its hash and copy) is made by root and
   DISPLAY_UID through harness_exec, by absolute path, in a directory the box user cannot open.
+- display=True also installs flatpak, so a Flathub app installs the way its page says, as the box user
+  (`flatpak install --user`; bubblewrap needs user namespaces, so only under gVisor). Root starts a system D-Bus as
+  messagebus (via setpriv) with no service activation and no name anyone may own: a desktop has one, and flatpak's
+  parental-controls check fails without it but passes when it finds no accounts service. Under gVisor flatpak runs
+  bubblewrap through BWRAP_SHIM (FLATPAK_BWRAP): gVisor cannot bring up the loopback of a network namespace made in
+  the box user's, nor bind-mount /proc/self/ns/user, so the shim drops --unshare-net and that bind and the app shares
+  the box user's network namespace, which the offline cut covers. Measured 2026-11-01: a GNOME app installed in 43 s
+  and showed its window offline.
 - Commands name their programs by absolute path: the box user's ~/.local/bin comes first on its PATH.
 
 Credentials come from MODAL_TOKEN_ID / MODAL_TOKEN_SECRET in .env and go to
@@ -114,6 +122,81 @@ def public_cidrs(blocked: tuple[str, ...] = BLOCKED_NETS) -> list[str]:
 
 ONLINE_CIDRS = public_cidrs()
 RUNTIMES = ("gvisor", "vm")
+# Display boxes: Flathub apps and the system bus a desktop has (flatpak's parental-controls check asks it).
+FLATPAK_PACKAGES = ("flatpak", "dbus")
+SYSTEM_BUS_CONF = "/usr/local/lib/pickfit/system-bus.conf"
+SYSTEM_BUS_SOCKET = "/run/dbus/system_bus_socket"
+SYSTEM_BUS_LOG = "/var/log/pickfit-system-bus.log"
+# No servicedir, so nothing is ever activated (flatpak's system helper would run as root); nobody may own a name.
+SYSTEM_BUS_CONF_SOURCE = """<!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-Bus Bus Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+<busconfig>
+  <type>system</type>
+  <listen>unix:path=/run/dbus/system_bus_socket</listen>
+  <auth>EXTERNAL</auth>
+  <policy context="default">
+    <allow user="*"/>
+    <deny own="*"/>
+    <allow send_type="method_call"/>
+    <allow send_type="signal"/>
+    <allow send_requested_reply="true" send_type="method_return"/>
+    <allow send_requested_reply="true" send_type="error"/>
+    <allow receive_type="method_call"/>
+    <allow receive_type="method_return"/>
+    <allow receive_type="error"/>
+    <allow receive_type="signal"/>
+  </policy>
+</busconfig>
+"""
+# Root: the config, then the bus as messagebus, detached like the display. setpriv drops to messagebus: dbus-daemon's
+# own drop (<user>) needs capabilities root lacks under gVisor.
+SYSTEM_BUS = ("/usr/bin/install -d -m 0755 /usr/local/lib/pickfit && "
+              "/usr/bin/install -d -m 0755 -o messagebus -g messagebus /run/dbus && "
+              f"/usr/bin/install -m 0644 /dev/stdin {SYSTEM_BUS_CONF} && "
+              "{ /usr/bin/setsid /usr/bin/setpriv --reuid=messagebus --regid=messagebus --clear-groups --inh-caps=-all "
+              f"--no-new-privs -- /usr/bin/dbus-daemon --config-file={SYSTEM_BUS_CONF} --nofork --nopidfile "
+              f"> {SYSTEM_BUS_LOG} 2>&1 < /dev/null & }}; "
+              f"for i in $(/usr/bin/seq 1 50); do [ -S {SYSTEM_BUS_SOCKET} ] && break; /usr/bin/sleep 0.1; done; "
+              "/usr/bin/sleep 0.5; /usr/bin/pgrep -x dbus-daemon > /dev/null && echo system_bus_up || "
+              f"/usr/bin/tail -5 {SYSTEM_BUS_LOG}")
+# gVisor display boxes: flatpak's bubblewrap, less what gVisor cannot do inside the box user's namespaces.
+BWRAP_SHIM = "/usr/local/lib/pickfit/bwrap-gvisor"
+BWRAP_SHIM_SOURCE = f"""#!{PYTHON} -IS
+# pickfit: bubblewrap for flatpak in a gVisor box. The same arguments without --unshare-net (gVisor cannot bring
+# up the loopback of a network namespace made inside the box user's) and without binds of /proc/self/ns/* (gVisor
+# cannot bind-mount them). Arguments flatpak passes through --args FD are rewritten into a memfd.
+import os, sys
+ALL = [b"--unshare-user-try", b"--unshare-ipc", b"--unshare-pid", b"--unshare-uts", b"--unshare-cgroup-try"]
+BINDS = (b"--bind", b"--ro-bind", b"--bind-try", b"--ro-bind-try", b"--dev-bind", b"--dev-bind-try")
+def options(args):
+    out, i = [], 0
+    while i < len(args):
+        a = args[i]
+        if a == b"--":
+            return out + args[i:]
+        if a in BINDS and i + 1 < len(args) and args[i + 1].startswith(b"/proc/self/ns/"):
+            i += 3
+            continue
+        if a == b"--args" and i + 1 < len(args):
+            fd, data = int(args[i + 1]), b""
+            while chunk := os.read(fd, 65536):
+                data += chunk
+            os.close(fd)
+            mem = os.memfd_create("bwrap-args", 0)
+            os.write(mem, b"".join(x + b"\\0" for x in options(data.split(b"\\0")[:-1])))
+            os.lseek(mem, 0, os.SEEK_SET)
+            out += [b"--args", str(mem).encode()]
+            i += 2
+            continue
+        if a != b"--unshare-net":
+            out += ALL if a == b"--unshare-all" else [a]
+        i += 1
+    return out
+if __name__ == "__main__":
+    os.execv("/usr/bin/bwrap", [b"bwrap", *options([os.fsencode(a) for a in sys.argv[1:]])])
+"""
+INSTALL_BWRAP_SHIM = (f"/usr/bin/install -d -m 0755 /usr/local/lib/pickfit && "
+                      f"/usr/bin/install -m 0755 /dev/stdin {BWRAP_SHIM}")
 VM_PACKAGES = ("nftables",)  # root's offline DNS rule (VM only: gVisor has no netfilter)
 # Drops the box user's DNS (to Modal's resolver or anywhere) while the network is off; root sets it.
 DNS_TABLE = "pickfit_offline"
@@ -153,7 +236,8 @@ def image_layers(runtime: str = "gvisor", display: bool = False) -> tuple[str, t
 
     The plain box keeps `pickfit-sbx:<Dockerfile hash>`; a variant hashes the Dockerfile and its packages.
     """
-    packages = (*(VM_PACKAGES if runtime == "vm" else ()), *(GUI_PACKAGES if display else ()))
+    packages = (*(VM_PACKAGES if runtime == "vm" else ()), *(GUI_PACKAGES if display else ()),
+                *(FLATPAK_PACKAGES if display else ()))
     if not packages:
         return sandbox_image_tag(), ()
     digest = hashlib.sha256(SANDBOX_DOCKERFILE.read_bytes() + "\n".join(packages).encode()).hexdigest()[:12]
@@ -396,6 +480,13 @@ class ModalBox(Box):
             steps.append(("the virtual display", xvfb))
             pid = next((line.split()[1] for line in xvfb.stdout.splitlines() if line.startswith("xvfb_pid ")), "")
             self.xvfb_pid = int(pid) if pid.isdigit() else None
+            bus = self._exec_raw(["/usr/bin/bash", "-c", SYSTEM_BUS], 30, as_root=True,
+                                 stdin=SYSTEM_BUS_CONF_SOURCE.encode())
+            steps.append(("the system bus", bus))
+            self._fail_on(steps, missing="system_bus_up" not in bus.stdout)
+            if self.runtime == "gvisor":
+                steps.append(("flatpak's bubblewrap", self._exec_raw(["/usr/bin/bash", "-c", INSTALL_BWRAP_SHIM], 30,
+                                                                     as_root=True, stdin=BWRAP_SHIM_SOURCE.encode())))
         self._fail_on(steps, missing=bool(self.display and self.xvfb_pid is None))
         self.start_s = round(time.monotonic() - began, 2)
 
@@ -432,6 +523,8 @@ class ModalBox(Box):
         guard = (f"ulimit -u {lim.pids} -n {lim.nofile} -f {lim.home_mb * 1024} && cd {shlex.quote(cwd)} && "
                  f"exec /usr/bin/timeout -s KILL {timeout_s} /usr/bin/bash -c {shlex.quote(command)}")
         env = [f"{key}={value}" for key, value in BOX_ENV.items()]
+        if self.display and self.runtime == "gvisor":
+            env.append(f"FLATPAK_BWRAP={BWRAP_SHIM}")
         return [*self.enter(), *_drop_to(BOX_UID), *self.seccomp(), "/usr/bin/env", "-i", *env, "/usr/bin/bash", "-c",
                 guard]
 
