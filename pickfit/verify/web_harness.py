@@ -46,9 +46,7 @@ EXCLUDED_ACTIONS = ["search", "evaluate", "save_as_pdf", "write_file", "replace_
 CREDENTIAL_HINTS = ("password", "passwd", "email", "e-mail", "phone", "mobile", "card", "cvv", "cvc", "iban",
                     "username", "user name", "login", "otp", "one-time", "verification code", "ssn")
 
-_proto = os.fdopen(os.dup(1), "w", buffering=1, encoding="utf-8")
-os.dup2(2, 1)
-sys.stdout = sys.stderr
+_proto: Any = None  # the real stdout, set by main(); library prints go to stderr
 
 
 def send(message: dict[str, Any]) -> None:
@@ -153,9 +151,10 @@ class StubLLM:
 # ---------------------------------------------------------------- Chromium
 
 
-def launch_chrome(user_agent: str) -> subprocess.Popen[bytes]:
-    PROFILE.mkdir(parents=True, exist_ok=True)
-    args = [CHROME, "--headless=new", f"--remote-debugging-port={CDP_PORT}", "--remote-debugging-address=127.0.0.1",
+def chrome_args(user_agent: str) -> list[str]:
+    """Headless Chromium that sends everything, loopback included, through the guard; no QUIC, no direct WebRTC
+    UDP, no background services, no sync or sign-in."""
+    return [CHROME, "--headless=new", f"--remote-debugging-port={CDP_PORT}", "--remote-debugging-address=127.0.0.1",
             f"--user-data-dir={PROFILE}", f"--proxy-server={PROXY}", "--proxy-bypass-list=<-loopback>",
             "--ignore-certificate-errors", f"--user-agent={user_agent}", "--window-size=1280,900",
             "--force-webrtc-ip-handling-policy=disable_non_proxied_udp", "--disable-quic",
@@ -165,6 +164,11 @@ def launch_chrome(user_agent: str) -> subprocess.Popen[bytes]:
             "InterestFeedContentSuggestions,CertificateTransparencyComponentUpdater",
             "--no-first-run", "--no-default-browser-check", "--metrics-recording-only", "--mute-audio",
             "--lang=en-US", "--hide-scrollbars", "--password-store=basic", "about:blank"]
+
+
+def launch_chrome(user_agent: str) -> subprocess.Popen[bytes]:
+    PROFILE.mkdir(parents=True, exist_ok=True)
+    args = chrome_args(user_agent)
     chrome_log = open(EVIDENCE / "chrome.log", "wb")
     proc = subprocess.Popen(args, stdout=chrome_log, stderr=chrome_log)
     deadline = time.monotonic() + 30
@@ -274,12 +278,9 @@ def make_tools() -> Any:
     async def input(params: InputTextAction, browser_session: BrowserSession, has_sensitive_data: bool = False,
                     sensitive_data: dict[str, str | dict[str, str]] | None = None) -> Any:
         node = await browser_session.get_element_by_index(params.index)
-        attrs = {k.lower(): str(v).lower() for k, v in ((node.attributes or {}) if node else {}).items()}
-        described = " ".join(attrs.get(k, "") for k in ("type", "name", "id", "autocomplete", "placeholder",
-                                                         "aria-label", "inputmode"))
-        refused = attrs.get("type") in ("password", "email", "tel") or any(h in described for h in CREDENTIAL_HINTS)
-        if refused or _looks_personal(params.text):
-            log(f"refused typing into a credential field: {described[:120]!r}")
+        why = typing_refused((node.attributes or {}) if node else {}, params.text)
+        if why:
+            log(f"refused typing: {why}")
             return ActionResult(error="pickfit refuses typing into credential, contact or login fields and typing "
                                       "personal data. Use the site's tool without an account.")
         return await original(params=params, browser_session=browser_session, has_sensitive_data=has_sensitive_data,
@@ -288,10 +289,23 @@ def make_tools() -> Any:
     return tools
 
 
-def _looks_personal(text: str) -> bool:
+def typing_refused(attributes: dict[str, Any], text: str) -> str | None:
+    """Why typing `text` into an element with these attributes is refused, or None.
+
+    Credential, contact and login fields are never typed into, and an email address or a card-like number is
+    never typed anywhere."""
     import re
 
-    return bool(re.search(r"[\w.+-]+@[\w-]+\.[\w.]+", text) or re.search(r"\b(?:\d[ -]?){13,19}\b", text))
+    attrs = {str(k).lower(): str(v).lower() for k, v in attributes.items()}
+    described = " ".join(attrs.get(k, "") for k in ("type", "name", "id", "autocomplete", "placeholder",
+                                                     "aria-label", "inputmode"))
+    if attrs.get("type") in ("password", "email", "tel") or any(h in described for h in CREDENTIAL_HINTS):
+        return f"a credential, contact or login field ({described.strip()[:80]})"
+    if re.search(r"[\w.+-]+@[\w-]+\.[\w.]+", text):
+        return "an email address"
+    if re.search(r"\b(?:\d[ -]?){13,19}\b", text):
+        return "a card-like number"
+    return None
 
 
 def outcome_model() -> Any:
@@ -455,6 +469,10 @@ async def run(channel: Channel) -> None:
 
 
 def main() -> None:
+    global _proto
+    _proto = os.fdopen(os.dup(1), "w", buffering=1, encoding="utf-8")
+    os.dup2(2, 1)
+    sys.stdout = sys.stderr
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     channel = Channel(loop)

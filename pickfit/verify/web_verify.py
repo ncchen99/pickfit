@@ -29,6 +29,7 @@ import io
 import json
 import re
 import secrets
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -133,13 +134,17 @@ class AlreadyVisited(RuntimeError):
     pass
 
 
+_visits_lock = threading.Lock()
+
+
 def claim_visit(site: str, slug: str, run_id: str, *, revisit: str | None = None, path: Path | None = None) -> None:
     """Record this run as the site's visit; refuse a second one unless `revisit` gives the reason."""
-    earlier = past_visit(site, path)
-    if earlier and not revisit:
-        raise AlreadyVisited(f"{site} was visited by run {earlier.get('run_id')} at {earlier.get('at')}; "
-                             "pickfit visits a site once (pass a reason to revisit)")
-    record_visit(site, slug, run_id, revisit=revisit if earlier else None, path=path)
+    with _visits_lock:
+        earlier = past_visit(site, path)
+        if earlier and not revisit:
+            raise AlreadyVisited(f"{site} was visited by run {earlier.get('run_id')} at {earlier.get('at')}; "
+                                 "pickfit visits a site once (pass a reason to revisit)")
+        record_visit(site, slug, run_id, revisit=revisit if earlier else None, path=path)
 
 
 # ---------------------------------------------------------------- robots.txt and terms, before the browser
@@ -910,6 +915,49 @@ def reevaluate(run_dir: Path, target: WebTarget, log: Callable[[str], None] = pr
     return evaluate(target, result, seen, run_dir, finish, run_id=old["run_id"], scope=f"web:{target.slug}", log=log)
 
 
+# ---------------------------------------------------------------- spend
+
+
+# This task's caps (the coordinator's brief, 11/2): Meta for judges, Modal for the operator and the VMs,
+# Baseten for the fallback operator; and the whole Meta pipeline must stay under PIPELINE_STOP_USD.
+MY_CAPS_USD = {"meta": 8.0, "modal": 15.0, "baseten": 5.0}
+PIPELINE_STOP_USD = 158.0
+PER_SITE_USD = {"meta": 0.04, "modal": 0.30, "baseten": 0.05}  # worst cases seen so far, rounded up
+
+
+def web_spend(ledger_path: Path | None = None) -> dict[str, float]:
+    """What the web verifier spent: model calls from the shared ledger (stages web-*), VMs from saved results."""
+    import sqlite3
+
+    from pickfit.ledger import DEFAULT_PATH
+
+    path = ledger_path or Path(get_env("PICKFIT_LEDGER") or DEFAULT_PATH)
+    spend = {"meta": 0.0, "modal": 0.0, "baseten": 0.0, "pipeline_total": 0.0}
+    with sqlite3.connect(path) as conn:
+        cost = "COALESCE(SUM(CASE WHEN status = 'reserved' THEN reserved_usd ELSE cost_usd END), 0)"
+        for provider, usd in conn.execute(f"SELECT provider, {cost} FROM calls WHERE stage LIKE 'web-%' "
+                                          "AND stage != 'web-match-check' GROUP BY provider"):
+            spend[provider if provider in spend else "meta"] += float(usd)
+        spend["pipeline_total"] = float(conn.execute(f"SELECT {cost} FROM calls WHERE budget = 'pipeline'").fetchone()[0])
+    for result in runs_dir().glob("*/web-*/web_result.json"):
+        try:
+            spend["modal"] += float(json.loads(result.read_text(encoding="utf-8")).get("costs", {}).get("sandbox_usd") or 0)
+        except (ValueError, OSError):
+            pass
+    return {k: round(v, 4) for k, v in spend.items()}
+
+
+def budget_stop(sites: int, spend: dict[str, float]) -> str | None:
+    """Why a batch of `sites` must not start, or None."""
+    if spend["pipeline_total"] + sites * PER_SITE_USD["meta"] > PIPELINE_STOP_USD:
+        return (f"the Meta pipeline total ${spend['pipeline_total']:.2f} could pass ${PIPELINE_STOP_USD:.0f} "
+                f"with {sites} more sites")
+    for name, cap in MY_CAPS_USD.items():
+        if spend[name] + sites * PER_SITE_USD[name] > cap:
+            return f"{name} ${spend[name]:.2f} + {sites} sites could pass this task's ${cap:.0f}"
+    return None
+
+
 def main(argv: list[str] | None = None) -> int:
     import argparse
 
@@ -919,17 +967,41 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-steps", type=int, default=MAX_STEPS)
     parser.add_argument("--revisit", help="reason to visit a site again (recorded with the visit)")
     parser.add_argument("--reevaluate", action="store_true", help="evaluate each target's latest saved visit again")
+    parser.add_argument("--concurrency", type=int, default=1, help="sites at once (each in its own VM)")
+    parser.add_argument("--spend", action="store_true", help="print what the web verifier spent and stop")
     args = parser.parse_args(argv)
+    if args.spend:
+        print(json.dumps(web_spend(), indent=1))
+        return 0
     targets = [WebTarget(**t) for t in json.loads(Path(args.targets).read_text(encoding="utf-8"))]
     if args.only:
         targets = [t for t in targets if t.slug in args.only]
-    for target in targets:
-        if args.reevaluate:
+    if args.reevaluate:
+        for target in targets:
             saved = sorted((runs_dir() / target.slug).glob("web-*/web_result.json"))
             if saved:
                 reevaluate(saved[-1].parent, target)
-            continue
-        verify_site(target, max_steps=args.max_steps, revisit=args.revisit)
+        return 0
+    todo = [t for t in targets if args.revisit or not past_visit(site_of(t.url))]
+    stop = budget_stop(len(todo), web_spend())
+    if stop:
+        print(f"not starting: {stop}")
+        return 2
+    from concurrent.futures import ThreadPoolExecutor
+
+    def one(target: WebTarget) -> dict[str, Any]:
+        try:
+            return verify_site(target, max_steps=args.max_steps, revisit=args.revisit,
+                               log=lambda m, s=target.slug: print(f"[{s}] {m}", flush=True))
+        except Exception as err:  # one site's failure never stops the batch
+            print(f"[{target.slug}] failed: {type(err).__name__}: {err}", flush=True)
+            return {"slug": target.slug, "level": "error", "reason": str(err)[:200]}
+
+    with ThreadPoolExecutor(max_workers=max(1, args.concurrency)) as pool:
+        results = list(pool.map(one, todo))
+    for r in results:
+        print(f"{r.get('slug')}: {r.get('level')} offline={r.get('works_offline')} reason={r.get('reason')}")
+    print(json.dumps(web_spend()))
     return 0
 
 

@@ -219,3 +219,10 @@ def test_sample_files_carry_the_marker():
 def test_the_user_agent_is_honest():
     ua = wv.user_agent("156.0.1")
     assert "HeadlessChrome/156.0.1" in ua and "pickfit-verifier" in ua
+
+
+def test_a_batch_stops_before_the_pipeline_or_task_caps():
+    spend = {"meta": 0.1, "modal": 1.0, "baseten": 0.0, "pipeline_total": 120.0}
+    assert wv.budget_stop(10, spend) is None
+    assert "158" in wv.budget_stop(10, {**spend, "pipeline_total": 157.9})
+    assert "modal" in wv.budget_stop(60, {**spend, "modal": 14.0})
