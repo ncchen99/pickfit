@@ -9,7 +9,7 @@ import { bestGuide, nameKey, OSES, verifiedOn, type Arch, type Catalog, type Ent
 import { featuresOut } from '../features.ts';
 import { day, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, readerIssues, setupWords } from '../ui/facts.ts';
 import { esc, link, listOf, SLUG } from '../ui/html.ts';
-import { icon } from '../ui/icons.ts';
+import { icon, type IconName } from '../ui/icons.ts';
 import { age, badge, coverage, fitz, kindTag, levelIcon, osList, sysTag, tape } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 
@@ -53,7 +53,7 @@ export function compareTable(entries: Entry[], opts: Opts): string {
   const head = entries
     .map((e) => {
       const remove = opts.removable
-        ? `<a class="cmp-remove" href="/compare?tools=${opts.removable.filter((s) => s !== e.slug).join(',')}${opts.os ? `&amp;os=${opts.os}` : ''}">${icon('x')}Remove</a>`
+        ? `<a class="cmp-remove" href="/compare?tools=${opts.removable.filter((s) => s !== e.slug).join(',')}${opts.os ? `&amp;os=${opts.os}` : ''}" aria-label="Remove ${esc(e.name)}" data-tip="Remove">${icon('x')}</a>`
         : '';
       return (
         `<th scope="col"><a href="/tool/${esc(e.slug)}">${esc(e.name)}</a>` +
@@ -147,7 +147,17 @@ export function compareTable(entries: Entry[], opts: Opts): string {
   rows.push(row('Licence', entries.map((e) => (e.license ? `<code>${esc(e.license)}</code>` : unknown) + (e.open_source === true ? ' <span class="small quiet">open source</span>' : ''))));
   const releases = entries.map((e) => (e.last_release ? new Date(e.last_release).getTime() : null)).map((t) => (t !== null && Number.isNaN(t) ? null : t));
   rows.push(row('Last release', entries.map((e) => (e.last_release ? `${esc(day(e.last_release))}<div class="small quiet">${esc(age(e.last_release, opts.now) ?? '')}</div>` : unknown)), bestOf(releases)));
-  rows.push(row('Links', entries.map((e) => [link(e.repo_url, 'Source'), e.homepage && e.homepage !== e.repo_url ? link(e.homepage, 'Homepage') : '', `<a href="/tool/${esc(e.slug)}">Profile</a>`].filter(Boolean).join(' · '))));
+  // The name at the top of each column already links to the profile; these are the outside links, as marks.
+  const outLink = (url: string | null | undefined, mark: IconName, name: string) => {
+    const a = link(url, `${icon(mark)}<span class="sr">${name}</span>`, 'icon-link');
+    return a ? `<span data-tip="${name}">${a}</span>` : '';
+  };
+  rows.push(
+    row(
+      'Links',
+      entries.map((e) => `<span class="cmp-links">${outLink(e.repo_url, 'code', 'Source code')}${e.homepage && e.homepage !== e.repo_url ? outLink(e.homepage, 'globe', 'Homepage') : ''}</span>`),
+    ),
+  );
 
   // A group heading with no rows left under it goes too.
   const body = rows.filter(Boolean).filter((r, i, all) => !(r.startsWith('<tr class="grp">') && (i === all.length - 1 || all[i + 1].startsWith('<tr class="grp">'))));

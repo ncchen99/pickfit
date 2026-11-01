@@ -264,9 +264,9 @@ export function coverage(features: FeaturesOut, opts: { pop?: string } = {}): st
   );
 }
 
-/** One at-a-glance cell: an icon, a short label and its value; the tone carries meaning only. */
+/** One at-a-glance cell: an icon and its value, which say enough; the label is for screen readers and the hover title. */
 export function glance(ico: IconName | { svg: string }, label: string, value: string, tone: 'pass' | 'caution' | 'fail' | 'quiet' | 'plain' = 'plain'): string {
-  return `<div class="gl gl-${tone}">${typeof ico === 'string' ? icon(ico) : ico.svg}<span class="gl-label">${esc(label)}</span><span class="gl-value">${value}</span></div>`;
+  return `<div class="gl gl-${tone}" title="${esc(label)}">${typeof ico === 'string' ? icon(ico) : ico.svg}<span class="gl-label sr">${esc(label)}: </span><span class="gl-value">${value}</span></div>`;
 }
 
 /** The checkbox that puts a tool in the compare tray (the tray is script; without it, the link to /compare works). */

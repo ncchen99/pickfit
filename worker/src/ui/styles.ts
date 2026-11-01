@@ -189,10 +189,9 @@ button.badge{cursor:help}
 
 /* at-a-glance cells */
 .glance{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:2px;border-radius:var(--r-ctl);overflow:hidden;background:var(--rule);margin:0}
-.gl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 7px;align-content:start;align-items:center;padding:12px;background:var(--tag)}
-.gl .i,.gl .os{width:16px;height:16px;color:var(--ink-2)}
-.gl-label{font:600 .75rem/1.2 var(--display);color:var(--ink-2);text-transform:none}
-.gl-value{grid-column:1/-1;font:600 .92rem/1.3 var(--sans);color:var(--ink)}
+.gl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 8px;align-content:start;align-items:start;padding:12px;background:var(--tag)}
+.gl .i,.gl .os{width:17px;height:17px;margin-top:1px;color:var(--ink-2)}
+.gl-value{grid-column:2;font:600 .92rem/1.3 var(--sans);color:var(--ink)}
 .gl-pass .i,.gl-pass .os,.gl-pass .gl-value{color:var(--pass)}
 .gl-pass .gl-value small{color:var(--ink-2)}
 .gl-caution .i,.gl-caution .os,.gl-caution .gl-value{color:var(--caution)}
@@ -600,10 +599,15 @@ body.is-results .home-only{display:none}
 .cmp-table th[scope=col] a:hover{text-decoration:underline}
 .cmp-table .meter{min-width:170px}
 .cmp-table .meter-label{display:none}
-.cmp-table th[scope=col] a.cmp-remove{font:600 .8rem/1 var(--display);color:var(--ink-2)}
-.cmp-table th[scope=col] a.cmp-remove .i{width:14px;height:14px}
+.cmp-table th[scope=col] a.cmp-remove{color:var(--ink-2)}
+.cmp-table th[scope=col] a.cmp-remove .i{width:16px;height:16px}
+.cmp-links{display:inline-flex;gap:8px}
+.icon-link{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--sunk);color:var(--ink)}
+.icon-link:hover{background:color-mix(in srgb,var(--ink) 10%,var(--sunk))}
+.icon-link .i{width:17px;height:17px}
 body.has-tray{padding-bottom:72px}
-.cmp-remove{display:inline-flex;align-items:center;gap:4px;margin-top:8px;font:600 .8rem/1 var(--display);color:var(--ink-2)}
+.cmp-remove{display:inline-grid;place-items:center;width:28px;height:28px;margin-top:6px;border-radius:50%;color:var(--ink-2)}
+.cmp-remove:hover{background:var(--sunk);color:var(--ink)}
 .cmp-same{margin-top:20px;padding:18px 22px;border-radius:var(--r-card);background:color-mix(in srgb,var(--sunk) 55%,var(--tag))}
 .cmp-same-title{font:700 .95rem/1.2 var(--display);margin:0 0 8px}
 .yes{color:var(--pass);font-weight:600}.no{color:var(--caution);font-weight:600}
@@ -686,7 +690,7 @@ const RESPONSIVE = `
 .stages::before{display:none}
 .stage{display:flex;flex-direction:column;align-items:center;grid-row:auto;gap:6px}
 .layout,.layout-browse{grid-template-columns:minmax(0,1fr)}
-.side{position:static;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.side{position:static;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));align-items:start}
 }
 @media (max-width:900px){
 .nav{display:none}.menu{display:block}
