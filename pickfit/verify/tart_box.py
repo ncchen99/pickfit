@@ -1063,7 +1063,8 @@ done
 QUIET_DESKTOP = ("defaults write com.apple.dock autohide -bool true && defaults write com.apple.dock "
                  "autohide-delay -float 0 && defaults write com.apple.dock persistent-apps -array && "
                  "defaults write com.apple.dock persistent-others -array && defaults write com.apple.dock "
-                 "show-recents -bool false && killall Dock")
+                 "show-recents -bool false && defaults write NSGlobalDomain AppleKeyboardUIMode -int 2 && "
+                 "killall Dock")  # AppleKeyboardUIMode 2: Tab reaches a dialog's buttons (a Replace click missed 6x)
 # sbx's desktop is up: it is the console user and its Dock and Finder run.
 DESKTOP_UP = (f'[ "$(stat -f %Su /dev/console)" = {MAC_USER} ] && pgrep -u {MAC_USER} -x Dock >/dev/null && '
               f'pgrep -u {MAC_USER} -x Finder >/dev/null || {{ echo "console: $(stat -f %Su /dev/console)"; exit 1; }}')

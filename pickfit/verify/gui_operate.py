@@ -767,7 +767,8 @@ def _mac_instructions(text: str) -> str:
         ("In a file dialog, type the full path the goal gives into its name or location field (ctrl+l opens one in "
          "GTK dialogs) and press Return.",
          "In a Save or Open dialog, press cmd+shift+g, type the full folder path the goal gives and press Return, "
-         "then type the file name if asked and press Return."),
+         "then type the file name if asked and press Return. In any dialog, Tab moves between its buttons and space "
+         "presses the one with the focus ring; Return presses the blue default button."),
     ):
         assert old in text, old[:60]
         text = text.replace(old, new)
@@ -1155,7 +1156,9 @@ def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[
     stopped = (gui_mac.stop_box_user if mac else gui.stop_box_user)(box)  # the app is the only box-user process
     if "PICKFIT_KILLED" not in stopped.stdout:
         op.error = "box-user processes survived the stop before the launch"
-    box.exec(f"mkdir -p {home}/pickfit-in {home}/pickfit-out", 30)  # where goals read and save
+    # Where goals read and save, emptied first: a file an earlier attempt left there makes the app ask to replace it
+    # (a Mac's Replace sheet, 11/2), and only a file written after this start counts anyway.
+    box.exec(f"rm -rf {home}/pickfit-out && mkdir -p {home}/pickfit-in {home}/pickfit-out", 30)
     written: list[str] = []
     for item in args.inputs:
         path = home_path(item.path, home)
