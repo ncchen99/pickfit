@@ -66,20 +66,25 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-neboto-tui-20261101-133919-fcb6",
+      "method": "script",
       "steps": [
         {
-          "command": "cargo binstall --git https://github.com/neboto/neboto-tui neboto",
-          "purpose": null
+          "command": "curl -fsSLO https://raw.githubusercontent.com/neboto/neboto-tui/main/install.sh && ls -l install.sh && wc -l install.sh",
+          "purpose": "download installer script"
+        },
+        {
+          "command": "NEBOTO_VERSION=v0.11.0 sh install.sh 2>&1",
+          "purpose": "install pinned version bypassing GitHub API rate limit"
         }
       ],
-      "manual_steps": [
-        "configured AWS credentials"
-      ],
-      "check": null,
-      "first_task": "neboto --demo"
+      "manual_steps": [],
+      "check": {
+        "command": "neboto --version",
+        "expected_signal": "neboto 0.11.0"
+      },
+      "first_task": null
     },
     "linux": {
       "basis": "replayed",
@@ -119,7 +124,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T04:07:06.855982+08:00",
+    "checked_at": "2026-11-01T13:42:40.740693+08:00",
     "runs": [
       {
         "id": "verify-neboto-tui-20261031-040559-48f6",
@@ -254,6 +259,98 @@
             "reason": "other",
             "failure": null,
             "note": "TUI-only in-pane view (m); no headless --demo CLI, needs interactive terminal/live AWS"
+          }
+        ]
+      },
+      {
+        "id": "verify-neboto-tui-20261101-133919-fcb6",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T13:42:40.740693+08:00",
+        "tool_version": "0.11.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSLO https://raw.githubusercontent.com/neboto/neboto-tui/main/install.sh && ls -l install.sh && wc -l install.sh",
+            "purpose": "download installer script"
+          },
+          {
+            "command": "NEBOTO_VERSION=v0.11.0 sh install.sh 2>&1",
+            "purpose": "install pinned version bypassing GitHub API rate limit"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "neboto --version",
+            "expected_signal": "neboto 0.11.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "neboto 0.11.0",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/neboto/neboto-tui/main/install.sh | sh installs latest",
+            "actually_needed": "GitHub API returned 403 for /releases/latest (rate limit); needed NEBOTO_VERSION=v0.11.0 sh install.sh to fetch tarball directly",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows neboto --version printing neboto 0.11.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-neboto-tui-20261101-133919-fcb6/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-neboto-tui-20261101-133919-fcb6/check-1-cmd14.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.117098,
+        "features": [
+          {
+            "feature": "browse AWS services in terminal UI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; neboto ls --demo ec2 returned ec2 resources"
+          },
+          {
+            "feature": "view console-style detail panes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; neboto get --demo lambda orders-api showed detail panes"
+          },
+          {
+            "feature": "tail live logs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "live log tail is TUI interactive (t/f) requiring terminal UI, no CLI equivalent"
+          },
+          {
+            "feature": "view CloudWatch charts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "CloudWatch charts are TUI pane (m) requiring interactive display"
           }
         ]
       }
@@ -633,5 +730,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:31+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T13:42:40.744711+08:00"
 }
