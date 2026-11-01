@@ -14,7 +14,8 @@ post or the repository linked) are cited to that API. Web-app specifics:
 - repo_id is the repository's `gh:<id>` when the site has one, else the site's `web:` id,
   and `repo` is null then; `web.url` is the address to open (https only).
 - kind must read as web_app: a site the extraction calls something else is skipped.
-- category: local_ai when the sources say the AI runs on the user's device, else other.
+- category: as the sources show it (other for most; dev_cli for a developer tool; local_ai
+  when the AI runs on the user's device), never mcp_server.
 - platforms: all three by rule, since a browser opens the app on each; network is required
   unless a source says otherwise; install stays empty.
 
@@ -125,7 +126,7 @@ def build_web_record(site: dict[str, Any], extraction: dict[str, Any], *, slug: 
     if kind != "web_app":
         raise ValueError(f"not_web_app: kind {kind}")
     category = cited("/category", result.category.value, result.category.quote)
-    if category != "local_ai":
+    if category not in ("dev_cli", "local_ai", "other"):  # a web app is not an MCP server
         category = "other"
         ev.items = [e for e in ev.items if e["field"] != "/category"]
         ev.api("/category", "site", checked_at, method="rule")
