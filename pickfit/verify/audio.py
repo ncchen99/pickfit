@@ -112,6 +112,25 @@ def heard(text: str, words: list[str]) -> list[bool]:
     return [w.lower() in found for w in words]
 
 
+# A result may name a few other words of the list (a word misheard as another); one that names more is a list, not
+# a transcript: the list is public, and printing all of it would hold any three words.
+OTHERS_MAX = 3
+
+
+def others(text: str, words: list[str]) -> list[str]:
+    """The list's words in the text that were not spoken."""
+    found, spoken = tokens(text), {w.lower() for w in words}
+    return [w for w in WORDS if w in found and w not in spoken]
+
+
+def too_many(extra: list[str]) -> str | None:
+    """Why a result naming these unspoken list words shows nothing; None when it names few enough."""
+    if len(extra) <= OTHERS_MAX:
+        return None
+    return (f"it also names {len(extra)} other words of pickfit's list ({', '.join(extra[:6])}"
+            f"{'...' if len(extra) > 6 else ''}): a list of words, not a transcript")
+
+
 def typed_words(words: list[str], typed: list[str]) -> list[str]:
     """The spoken words the operator typed itself: a result holding them shows nothing."""
     found = tokens(" ".join(typed))
@@ -314,11 +333,12 @@ def words_line(where: str, words: list[str], found: list[bool]) -> str:
 
 def _check_output(run: Listening, text: str) -> None:
     found = heard(text, run.words)
-    run.passed = all(found)
+    listed = too_many(others(text, run.words))
+    run.passed = all(found) and listed is None
     run.line = words_line("the command's output holds the spoken words", run.words, found)
     run.seen = {"output": text.strip()[-300:]}
     if not run.passed:
-        run.why = "the output does not hold every spoken word"
+        run.why = listed or "the output does not hold every spoken word"
 
 
 def _check_file(box: Box, run: Listening, target: str, before: dict[str, Any]) -> None:
@@ -326,16 +346,17 @@ def _check_file(box: Box, run: Listening, target: str, before: dict[str, Any]) -
 
     since = float(before.get("now") or 0.0)
     report = file_probe(box, {"mode": "after", "target": target, "since": since - 1, "before": before.get("before"),
-                              "words": run.words})
+                              "words": run.words, "listed": list(WORDS)})
     found = report.get("found")
     if "error" in report or not found:
         run.why = report.get("error") or report.get("why") or "not found"
         run.line = f"file {target}: {run.why}"
         return
     hits = list(found.get("words") or [])
-    run.passed = bool(hits) and all(hits)
+    listed = too_many(list(found.get("others") or []))
+    run.passed = bool(hits) and all(hits) and listed is None
     run.line = words_line(f"file {found['path']} ({found['bytes']} bytes, written after the command started) holds "
                           "the spoken words", run.words, hits)
     run.seen = {"path": found["path"], "excerpt": found.get("excerpt")}
     if not run.passed:
-        run.why = "the file does not hold every spoken word"
+        run.why = listed or "the file does not hold every spoken word"

@@ -284,3 +284,35 @@ def test_a_box_sized_for_weights_tells_the_agent_how_large_a_model_fits():
     assert big_box(mb.ModalBox(client=object())) == ""
     line = big_box(mb.ModalBox(gpu="L4", client=object(), limits=BoxLimits(memory_mb=24576, home_mb=10240)))
     assert "24 GiB of memory" in line and "about 8 GB fits" in line
+
+
+def test_a_result_that_names_most_of_the_list_is_a_list_not_a_transcript(tmp_path: Path):
+    words = ["apple", "tiger", "oven"]
+    assert audio.too_many(audio.others("I saw an apple, a tiger, and an oven. A melon?", words)) is None
+    dump = " ".join(audio.WORDS)
+    assert "a list of words, not a transcript" in (audio.too_many(audio.others(dump, words)) or "")
+    passed, part = op.spoken_part(words, audio.heard(dump, words), [], audio.others(dump, words))
+    assert not passed and "not a transcript" in part
+
+    class DumpBox(MicBox):
+        def exec(self, command: str, timeout_s: int, *, cwd: str | None = None) -> ExecResult:
+            if command.startswith("transcribe"):
+                return ExecResult(command, 0, " ".join(audio.WORDS) + "\n", "", 1.0)
+            return super().exec(command, timeout_s, cwd=cwd)
+
+    result, heard = run_listen(DumpBox(), listen_args(), 9, log=lambda s: None)
+    assert not heard.passed and "not a transcript" in result.stdout
+    # The same in a file root reads.
+    class DumpFileBox(MicBox):
+        def exec(self, command: str, timeout_s: int, *, cwd: str | None = None) -> ExecResult:
+            if command.startswith("transcribe"):
+                out = self.home / "pickfit-out" / "t.txt"
+                out.parent.mkdir(parents=True, exist_ok=True)
+                out.write_text(" ".join(audio.WORDS))
+                return ExecResult(command, 0, "", "", 1.0)
+            return super().exec(command, timeout_s, cwd=cwd)
+
+    args = ListenArgs.model_validate({"command": "transcribe --out x", "timeout_s": 60, "feature": None,
+                                      "check": {"kind": "file", "path": "~/pickfit-out/t.txt"}})
+    result, heard = run_listen(DumpFileBox(tmp_path / "home"), args, 10, log=lambda s: None)
+    assert not heard.passed and "not a transcript" in result.stdout

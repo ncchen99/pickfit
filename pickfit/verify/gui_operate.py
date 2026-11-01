@@ -484,6 +484,8 @@ def judge(path, data, st):
     found = [norm(c) in text for c in P["contains"]]
     words = set(re.findall(r"[a-z]+", text.lower()))  # spoken words (audio.py): whole words, any case
     heard = [w.lower() in words for w in P["words"]]
+    spoken = {w.lower() for w in P["words"]}
+    others = [w for w in P["listed"] if w in words and w not in spoken]  # audio.py's list, beyond the spoken
     excerpt = ""
     raw = data.decode("utf-8", "replace")
     for c in P["contains"]:
@@ -498,6 +500,7 @@ def judge(path, data, st):
             break
     return {"path": path, "bytes": st.st_size, "sha256": hashlib.sha256(data).hexdigest(), "mtime": st.st_mtime,
             "truncated": st.st_size > len(data), "format_ok": format_ok, "contains": found, "words": heard,
+            "others": others,
             "excerpt": "".join(ch if ch.isprintable() else " " for ch in excerpt)[:300]}
 out = {"now": time.time()}
 target = P["target"]
@@ -565,7 +568,8 @@ def file_probe(box: Box, params: dict[str, Any]) -> dict[str, Any]:
     """Run root's file check; its report, or {"error": why}."""
     nonce = secrets.token_hex(12)
     full = {"home": BOX_HOME, "uid": int(BOX_UID), "max": FILE_MAX_BYTES, "nonce": nonce,
-            "max_files": SEARCH_MAX_FILES, "format": None, "contains": [], "words": [], "since": 0, "before": None,
+            "max_files": SEARCH_MAX_FILES, "format": None, "contains": [], "words": [], "listed": [], "since": 0,
+            "before": None,
             "skip": [], "skip_dirs": list(SEARCH_SKIP_DIRS), **params}
     source = _FILE_PY.replace("@PARAMS@", repr(json.dumps(full)))
     done = box.harness_exec([gui.PYTHON, "-I", "-S", "-"], 120, stdin=source.encode())
@@ -996,13 +1000,17 @@ def spoken(spec: GuiCheckSpec) -> bool:
     return any(c.strip() == audio.SPOKEN_FIELD for c in spec.contains)
 
 
-def spoken_part(words: list[str], found: list[bool], typed: list[str]) -> tuple[bool, str]:
-    """(every spoken word found and none typed by the operator, the line's part about them)."""
+def spoken_part(words: list[str], found: list[bool], typed: list[str], others: list[str] | None = None
+                ) -> tuple[bool, str]:
+    """(every spoken word found, none typed by the operator and few other list words, the line's part about them)."""
     echoed = audio.typed_words(words, typed)
     part = audio.words_line("spoken words", words, found)
     if echoed:
         part += f" (typed by the operator: {', '.join(echoed)}; that shows nothing)"
-    return all(found) and not echoed, part
+    listed = audio.too_many(others or [])
+    if listed:
+        part += f" ({listed})"
+    return all(found) and not echoed and listed is None, part
 
 
 def _contains_line(expected: list[str], found: list[bool], typed: list[str]) -> str:
@@ -1020,7 +1028,8 @@ def check_file(box: Box, spec: GuiCheckSpec, nonce: str, since: float, before: s
     expected = expected_texts(spec, nonce)
     words = words or []
     report = file_probe(box, {"mode": "after", "target": target, "since": since - 1, "before": before, "skip": skip,
-                              "format": spec.format, "contains": expected, "words": words})
+                              "format": spec.format, "contains": expected, "words": words,
+                              "listed": list(audio.WORDS) if words else []})
     shown = target if target.endswith("/") else target
     if "error" in report:
         return {"passed": False, "why": f"pickfit's file check failed: {report['error']}",
@@ -1048,7 +1057,8 @@ def check_file(box: Box, spec: GuiCheckSpec, nonce: str, since: float, before: s
         parts.append(_contains_line(expected, found["contains"], typed))
         ok = ok and all(found["contains"])
     if words:
-        heard, part = spoken_part(words, list(found.get("words") or [False] * len(words)), typed)
+        heard, part = spoken_part(words, list(found.get("words") or [False] * len(words)), typed,
+                                  list(found.get("others") or []))
         parts.append(part)
         ok = ok and heard
     where = f"a file under {shown}" if target.endswith("/") else f"file {shown}"
@@ -1073,7 +1083,7 @@ def check_clipboard(display: XvfbDisplay, spec: GuiCheckSpec, nonce: str, typed:
     ok = all(found)
     parts = [_contains_line(expected, found, typed)] if expected else []
     if words:
-        heard, part = spoken_part(words, audio.heard(text, words), typed)
+        heard, part = spoken_part(words, audio.heard(text, words), typed, audio.others(text, words))
         ok, parts = ok and heard, [*parts, part]
     result = {"passed": ok, "line": f"clipboard (read by the display user): {len(text)} characters; "
                                     + "; ".join(parts), "seen": {"clipboard": text[:300]}}
@@ -1118,7 +1128,8 @@ def check_screen(png: bytes | None, spec: GuiCheckSpec, nonce: str, typed: list[
                     "line": "on screen: unread"}
         cost += more
         already = seen(early)
-    ok = all(found) and not any(already)
+    listed = audio.too_many(audio.others(" ".join(texts), words)) if words else None
+    ok = all(found) and not any(already) and listed is None
     marks = [("yes, but already there before the first action" if a else "yes") if f else "no"
              for f, a in zip(found, already)]
     result = {"passed": ok, "cost_usd": cost,
@@ -1126,8 +1137,8 @@ def check_screen(png: bytes | None, spec: GuiCheckSpec, nonce: str, typed: list[
                       + "; ".join(f"{_quote(e)}: {m}" for e, m in zip(expected, marks)),
               "seen": {"read": [t[:200] for t in texts]}}
     if not ok:
-        result["why"] = ("the expected text was on screen before the first action: it is not a result of the "
-                         "operation" if all(found) else "the screen does not show the expected text")
+        result["why"] = listed or ("the expected text was on screen before the first action: it is not a result of "
+                                   "the operation" if all(found) else "the screen does not show the expected text")
     return result
 
 
