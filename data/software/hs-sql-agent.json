@@ -66,50 +66,80 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "needs_more_resources",
-    "checked_at": "2026-11-01T00:35:40.086445+08:00",
+    "unverified_reason": "needs_account",
+    "checked_at": "2026-11-02T02:56:25.413688+08:00",
     "runs": [
       {
-        "id": "verify-hs-sql-agent-20261101-003424-f9eb",
+        "id": "verify-hs-sql-agent-20261102-025116-899b",
         "level": "unverified",
-        "unverified_reason": "needs_more_resources",
+        "unverified_reason": "needs_account",
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:35:40.086445+08:00",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T02:56:25.413688+08:00",
         "tool_version": null,
-        "install_method": "other",
+        "install_method": "source",
         "replayed": false,
         "steps": [
           {
-            "command": "curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh && head -n 30 /tmp/dotnet-install.sh && wc -l /tmp/dotnet-install.sh",
-            "purpose": "download dotnet-install script"
+            "command": "curl -sSL -o /tmp/dotnet-install.sh https://dot.net/v1/dotnet-install.sh && ls -l /tmp/dotnet-install.sh && head -c 500 /tmp/dotnet-install.sh",
+            "purpose": "download dotnet install script"
           },
           {
-            "command": "rm -rf $HOME/.dotnet && bash /tmp/dotnet-install.sh --channel 8.0 --install-dir $HOME/.dotnet 2>&1 | tail -n 5\nls -lh $HOME/.dotnet/dotnet; du -sh $HOME/.dotnet\nexport PATH=$HOME/.dotnet:$PATH; export DOTNET_ROOT=$HOME/.dotnet; $HOME/.dotnet/dotnet --version; echo ok:$?",
-            "purpose": "install .NET SDK 8.0.427 to ~/.dotnet"
+            "command": "bash /tmp/dotnet-install.sh --channel 10.0 --install-dir $HOME/.dotnet 2>&1 | tail -n 20; $HOME/.dotnet/dotnet --version",
+            "purpose": "install dotnet 10 SDK"
+          },
+          {
+            "command": "git clone --depth 1 https://github.com/tse-wei-chen/hs-sql-agent /tmp/hs-sql-agent && ls /tmp/hs-sql-agent && cat /tmp/hs-sql-agent/global.json 2>&1; echo ---; ls /tmp/hs-sql-agent/backend/src/Modules/ 2>&1 | head -n 30; cat /tmp/hs-sql-agent/.env.example 2>&1 | head -n 80",
+            "purpose": "clone hs-sql-agent source"
           }
         ],
-        "smoke_tests": [],
+        "smoke_tests": [
+          {
+            "command": "export DOTNET_ROOT=$HOME/.dotnet; export PATH=$HOME/.dotnet:$HOME/.local/bin:$PATH && nohup hs-sql-agent > /tmp/hs.log 2>&1 & sleep 25 && python3 ~/.pickfit/mcp_probe.py --url http://127.0.0.1:8089/mcp --timeout 120",
+            "expected_signal": "handshake: ok",
+            "exit_code": 4,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"error\": \"server/discover returned error None\", \"exit\": null, \"launch\": [], \"noise\": 0, \"ok\": false, \"probe\": 1, \"transport\": \"streamable_http\", \"url\": \"http://127.0.0.1:8089/mcp\"}",
+            "setup": [
+              {
+                "command": "export DOTNET_ROOT=$HOME/.dotnet; export PATH=$HOME/.dotnet:$HOME/.local/bin:$PATH\ndotnet publish /tmp/hs-sql-agent/backend/src/ToolBox/ToolBox.csproj -c Debug -o $HOME/hs-sql-agent-publish\nmkdir -p $HOME/.local/bin $HOME/hs-data\nprintf '#!/bin/sh\\nexport DOTNET_ROOT=$HOME/.dotnet\\nexec $HOME/.dotnet/dotnet $HOME/hs-sql-agent-publish/ToolBox.dll \"$@\"\\n' > $HOME/.local/bin/hs-sql-agent\nchmod +x $HOME/.local/bin/hs-sql-agent\nDBK=$(openssl rand -base64 32); DMLK=$(openssl rand -base64 32); FP=$(openssl rand -base64 32)\nHMAC=$(openssl rand -hex 32); JWT=$(openssl rand -hex 32)\npython3 -c \"import json; p='$HOME/hs-sql-agent-publish/appsettings.json'; ex=json.load(open('$HOME/hs-sql-agent-publish/appsettings.Example.json')); ex['SecretProtection']['DatabasePasswords']['Keys']={'db-1': '$DBK'}; ex['SecretProtection']['DmlPayloads']['Keys']={'dml-1': '$DMLK'}; ex['SecretProtection']['DmlFingerprintKey']='$FP'; ex['McpKeySettings']['HmacSecretKey']='$HMAC'; ex['JwtSettings']['SecretKey']='$JWT'; ex['Mcp']['PublicEndpoint']='http://127.0.0.1:8089/mcp'; ex['ASPNETCORE_URLS']='http://127.0.0.1:8089'; ex['AdminDatabase']['ConnectionString']='Data Source=$HOME/hs-data/hsqlagent.db'; ex['Bootstrap']['Enabled']=False; json.dump(ex, open(p,'w'), indent=2); print('wrote', p)\"\nls -l $HOME/.local/bin/hs-sql-agent $HOME/hs-sql-agent-publish/ToolBox.dll $HOME/hs-sql-agent-publish/appsettings.json",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
         "pitfalls": [
           {
-            "readme_said": "docker compose up -d runs the server or dotnet add package embeds it",
-            "actually_needed": "dotnet SDK install hits box file-size limit (SIGXFSZ, exit 153) on dotnet --version; dotnet --info/--list-sdks works via prlimit but building/running the MCP server exceeds budget and would need cloning and full build",
+            "readme_said": "dotnet add package HsSqlAgent.Hosting",
+            "actually_needed": "install .NET 10 SDK via dotnet-install.sh into $HOME/.dotnet (fetches 240MB SDK binary tarball, unreadable as binary)",
+            "kind": "note"
+          },
+          {
+            "readme_said": "dotnet publish ToolBox (Release builds frontend via pnpm)",
+            "actually_needed": "publish ToolBox with -c Debug to skip the Release-only pnpm frontend build (pnpm not installed)",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "cp .env.example .env and docker compose up",
+            "actually_needed": "provide appsettings.json with generated SecretProtection keys, HMAC/JWT secrets >=32 bytes, Mcp:PublicEndpoint=http://127.0.0.1:8089/mcp and sqlite admin DB path; server aborts without Mcp:PublicEndpoint outside Development",
+            "kind": "readme_wrong"
           }
         ],
-        "blocking_error": null,
+        "blocking_error": "step 14 is longer than 500 characters",
         "judge": null,
         "evidence": {
-          "trace_path": "runs/verify/verify-hs-sql-agent-20261101-003424-f9eb/report.json",
+          "trace_path": "runs/verify/verify-hs-sql-agent-20261102-025116-899b/report.json",
           "log_path": null,
           "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.097189
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.130233
       }
     ]
   },
@@ -487,5 +517,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:34+08:00",
-  "updated_at": "2026-11-01T00:45:12+08:00"
+  "updated_at": "2026-11-02T03:04:12.138148+08:00"
 }
