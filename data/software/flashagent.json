@@ -73,18 +73,25 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-flashagent-20261101-121503-34e0",
+      "method": "script",
       "steps": [
         {
-          "command": "cargo install --git https://github.com/flashback7766/FlashAgent flashagent-tui",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/flashback7766/FlashAgent/main/install.sh -o /tmp/install_flashagent.sh && ls -l /tmp/install_flashagent.sh && wc -l /tmp/install_flashagent.sh",
+          "purpose": "Download install.sh (read before running)"
+        },
+        {
+          "command": "bash /tmp/install_flashagent.sh",
+          "purpose": "Run install.sh - installs to ~/.local/bin/flashagent"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "flashagent --help"
+      "check": {
+        "command": "flashagent --help 2>&1",
+        "expected_signal": "FlashAgent TUI"
+      },
+      "first_task": null
     },
     "linux": {
       "basis": "replayed",
@@ -133,8 +140,104 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:22:43.682808+08:00",
+    "checked_at": "2026-11-01T12:17:15.395459+08:00",
     "runs": [
+      {
+        "id": "verify-flashagent-20261101-121503-34e0",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T12:17:15.395459+08:00",
+        "tool_version": "v1.0.0+b610",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/flashback7766/FlashAgent/main/install.sh -o /tmp/install_flashagent.sh && ls -l /tmp/install_flashagent.sh && wc -l /tmp/install_flashagent.sh",
+            "purpose": "Download install.sh (read before running)"
+          },
+          {
+            "command": "bash /tmp/install_flashagent.sh",
+            "purpose": "Run install.sh - installs to ~/.local/bin/flashagent"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flashagent --help 2>&1",
+            "expected_signal": "FlashAgent TUI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "FlashAgent TUI",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "flashagent --version",
+            "expected_signal": "FlashAgent v1.0.0+b610",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "FlashAgent v1.0.0+b610",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show FlashAgent responding with the help header and the expected version string.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-flashagent-20261101-121503-34e0/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-flashagent-20261101-121503-34e0/check-1-cmd7.judged.png",
+            "runs/verify/verify-flashagent-20261101-121503-34e0/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.066557,
+        "features": [
+          {
+            "feature": "code in terminal with local models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Requires running local model server (LM Studio/Ollama) with model loaded; no server in box"
+          },
+          {
+            "feature": "connect to local model servers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; flashagent attempted http://localhost:1234/v1/chat/completions, proving OpenAI-compatible local server detection"
+          },
+          {
+            "feature": "test whether models can call tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; flashagent --tool-test runs 20 scenarios and writes JSON; output shows 0/20 incomplete without server and 'tool-calling check is done'"
+          },
+          {
+            "feature": "run tasks autonomously end to end",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Autonomous /goal mode requires model capable of tool-calling; needs API key or local model server"
+          }
+        ]
+      },
       {
         "id": "verify-flashagent-20261031-032143-91d7",
         "level": "function",
@@ -663,5 +766,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-01T17:32:32.178528+08:00"
+  "updated_at": "2026-11-01T23:02:54.709881+08:00"
 }

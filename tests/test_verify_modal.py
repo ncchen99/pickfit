@@ -422,3 +422,92 @@ def test_the_cut_needs_every_box_user_process_in_the_holders_namespace():
     assert _same_netns({"10": ("1000 1000 1000 1000", "net:[9]"), "11": ("0 0 0 0", "net:[2]")}) == (0, "")
     code, why = _same_netns({"10": ("1000 1000 1000 1000", "net:[9]"), "12": ("1000 1000 1000 1000", "net:[2]")})
     assert code == 1 and "12 is in net:[2]" in why
+
+
+class DisplaySandbox(FakeSandbox):
+    """Answers a display box's setup: namespaces, Xvfb and the system bus."""
+
+    def exec(self, *argv: str, **kw: Any) -> FakeProc:
+        script = argv[-1]
+        if "Xvfb" in script:
+            self.replies.insert(0, (0, [b"xvfb_pid 77\n"], []))
+        elif "dbus-daemon" in script:
+            self.replies.insert(0, (0, [b"system_bus_up\n"], []))
+        return super().exec(*argv, **kw)
+
+
+def test_display_boxes_install_flatpak_and_start_a_system_bus_with_nothing_to_activate(
+        monkeypatch: pytest.MonkeyPatch):
+    import modal
+
+    assert {"flatpak", "dbus"} <= set(mb.image_layers("gvisor", display=True)[1])
+    assert "flatpak" not in mb.image_layers("gvisor", display=False)[1]
+    sandbox = DisplaySandbox()
+    monkeypatch.setattr(modal.App, "lookup", lambda name, **kw: f"app:{name}")
+    monkeypatch.setattr(modal.Sandbox, "create", lambda *a, **kw: sandbox)
+    monkeypatch.setattr(modal.Image, "from_name", lambda name: f"image:{name}")
+    box = ModalBox(client="client", display=True, log=lambda s: None)
+    box.start()
+    scripts = [call[0][-1] for call in sandbox.calls]
+    bus = next(i for i, s in enumerate(scripts) if s == mb.SYSTEM_BUS)
+    assert sandbox.procs[bus].stdin.data == mb.SYSTEM_BUS_CONF_SOURCE.encode()
+    assert "--reuid=messagebus" in mb.SYSTEM_BUS and "<servicedir" not in mb.SYSTEM_BUS_CONF_SOURCE
+    assert '<deny own="*"/>' in mb.SYSTEM_BUS_CONF_SOURCE
+    shim = scripts.index(mb.INSTALL_BWRAP_SHIM)
+    assert shim > bus and sandbox.procs[shim].stdin.data == mb.BWRAP_SHIM_SOURCE.encode()
+
+
+def test_a_bus_that_does_not_come_up_stops_the_box(monkeypatch: pytest.MonkeyPatch):
+    import modal
+
+    class NoBus(DisplaySandbox):
+        def exec(self, *argv: str, **kw: Any) -> FakeProc:
+            if "dbus-daemon" in argv[-1]:
+                return FakeSandbox.exec(self, *argv, **kw)  # "ok": the daemon is not running
+            return super().exec(*argv, **kw)
+
+    monkeypatch.setattr(modal.App, "lookup", lambda name, **kw: f"app:{name}")
+    monkeypatch.setattr(modal.Sandbox, "create", lambda *a, **kw: NoBus())
+    monkeypatch.setattr(modal.Image, "from_name", lambda name: f"image:{name}")
+    with pytest.raises(BoxError, match="the system bus failed"):
+        ModalBox(client="client", display=True, log=lambda s: None).start()
+
+
+def test_only_gvisor_display_boxes_point_flatpak_at_the_bwrap_shim():
+    flag = f"FLATPAK_BWRAP={mb.BWRAP_SHIM}"
+    plain = started(FakeSandbox())
+    assert flag not in plain.user_argv("true", 5, "/w")
+    gui = ModalBox(client=object(), display=True, log=lambda s: None)
+    gui.netns_pid = 4242
+    assert flag in gui.user_argv("true", 5, "/w")
+    vm = ModalBox(runtime="vm", client=object(), display=True, log=lambda s: None)
+    assert flag not in vm.user_argv("true", 5, "/w")
+
+
+def shim_options() -> Any:
+    namespace: dict[str, Any] = {"__name__": "shim"}
+    exec(compile(mb.BWRAP_SHIM_SOURCE, "bwrap-gvisor", "exec"), namespace)
+    return namespace["options"]
+
+
+def test_the_bwrap_shim_drops_only_what_gvisor_cannot_do():
+    options = shim_options()
+    assert mb.BWRAP_SHIM_SOURCE.startswith(f"#!{mb.PYTHON} -IS\n")
+    args = [b"--unshare-all", b"--ro-bind-try", b"/proc/self/ns/user", b"/run/.userns", b"--unshare-net",
+            b"--ro-bind", b"/usr", b"/usr", b"--dir", b"/tmp", b"--", b"app", b"--unshare-net"]
+    assert options(args) == [b"--unshare-user-try", b"--unshare-ipc", b"--unshare-pid", b"--unshare-uts",
+                             b"--unshare-cgroup-try", b"--ro-bind", b"/usr", b"/usr", b"--dir", b"/tmp",
+                             b"--", b"app", b"--unshare-net"]  # the app's own arguments are left alone
+
+
+@pytest.mark.skipif(not hasattr(__import__("os"), "memfd_create"), reason="memfd_create is Linux-only")
+def test_the_bwrap_shim_rewrites_arguments_passed_through_a_file_descriptor():
+    import os
+
+    options = shim_options()
+    read, write = os.pipe()
+    os.write(write, b"--unshare-net\0--dir\0/tmp\0")
+    os.close(write)
+    out = options([b"--args", str(read).encode(), b"--", b"app"])
+    assert out[0] == b"--args" and out[2:] == [b"--", b"app"]
+    assert os.read(int(out[1]), 100) == b"--dir\0/tmp\0"

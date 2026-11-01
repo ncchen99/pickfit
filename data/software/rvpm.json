@@ -61,18 +61,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-rvpm-20261101-163837-0526",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install rvpm",
-          "purpose": null
+          "command": "curl -L -o /tmp/rvpm.tar.gz https://github.com/yukimemi/rvpm/releases/download/v3.52.0/rvpm-aarch64-apple-darwin.tar.gz && mkdir -p /tmp/rvpm-extract2 && tar -xzf /tmp/rvpm.tar.gz -C /tmp/rvpm-extract2 && mkdir -p ~/.local/bin && cp /tmp/rvpm-extract2/rvpm ~/.local/bin/rvpm && chmod +x ~/.local/bin/rvpm",
+          "purpose": "Download and install pre-built aarch64-apple-darwin binary from GitHub Releases"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "rvpm init --write"
+      "check": {
+        "command": "rvpm --version",
+        "expected_signal": "rvpm 3.52.0"
+      },
+      "first_task": null
     },
     "linux": {
       "basis": "replayed",
@@ -121,7 +124,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:53:50.901265+08:00",
+    "checked_at": "2026-11-01T16:41:55.365128+08:00",
     "runs": [
       {
         "id": "verify-rvpm-20261031-035227-d8bc",
@@ -288,6 +291,136 @@
             "reason": "needs_service",
             "failure": null,
             "note": "browse needs GitHub topic network plus interactive TUI; cannot run non-interactively or with network off on replay"
+          }
+        ]
+      },
+      {
+        "id": "verify-rvpm-20261101-163837-0526",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T16:41:55.365128+08:00",
+        "tool_version": "3.52.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -L -o /tmp/rvpm.tar.gz https://github.com/yukimemi/rvpm/releases/download/v3.52.0/rvpm-aarch64-apple-darwin.tar.gz && mkdir -p /tmp/rvpm-extract2 && tar -xzf /tmp/rvpm.tar.gz -C /tmp/rvpm-extract2 && mkdir -p ~/.local/bin && cp /tmp/rvpm-extract2/rvpm ~/.local/bin/rvpm && chmod +x ~/.local/bin/rvpm",
+            "purpose": "Download and install pre-built aarch64-apple-darwin binary from GitHub Releases"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "rvpm --version",
+            "expected_signal": "rvpm 3.52.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "rvpm 3.52.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rvpm list --no-tui",
+            "expected_signal": "Checking plugin status",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Error: No such file or directory (os error 2)",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "rvpm generate && ls -lh ~/.cache/rvpm/nvim/plugins/loader.lua && head -n 50 ~/.cache/rvpm/nvim/plugins/loader.lua",
+            "expected_signal": "Generating loader.lua",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "No such file or directory (os error 2)",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "grep TokyonightEnable /Users/sbx/.cache/rvpm/nvim/plugins/loader.lua",
+            "expected_signal": "TokyonightEnable",
+            "exit_code": 2,
+            "passed": false,
+            "observed_excerpt": "grep: /Users/sbx/.cache/rvpm/nvim/plugins/loader.lua: No such file or directory",
+            "setup": [
+              {
+                "command": "cat > /tmp/test_rvpm_lazy.toml <<'EOF'\n[options]\nauto_helptags = false\n\n[[plugins]]\nname = \"test-plugin\"\nurl = \"folke/tokyonight.nvim\"\non_cmd = [\"TokyonightEnable\"]\non_ft = [\"lua\"]\nEOF\ncat /tmp/test_rvpm_lazy.toml\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "rvpm browse --help",
+            "expected_signal": "Browse and install Neovim plugins from GitHub",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Browse and install Neovim plugins from GitHub",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install rvpm",
+            "actually_needed": "Used pre-built binary rvpm-aarch64-apple-darwin.tar.gz from GitHub Releases; box has no Rust toolchain for cargo install",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Terminal shows rvpm --version printing rvpm 3.52.0 with exit code 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-rvpm-20261101-163837-0526/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-rvpm-20261101-163837-0526/check-1-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.067465,
+        "features": [
+          {
+            "feature": "Manage Neovim plugins from terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "Generate pre-compiled loader for startup",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "Lazy-load plugins on triggers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "Browse and install plugins via TUI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; rvpm browse --help available; full TUI needs interactive display"
           }
         ]
       }
@@ -653,5 +786,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:13+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:41:55.380149+08:00"
 }

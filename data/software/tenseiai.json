@@ -60,18 +60,25 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "binary",
+      "basis": "replayed",
+      "run_id": "verify-tenseiai-20261101-124324-9dd2",
+      "method": "pip",
       "steps": [
         {
-          "command": "curl -fL -o TenSeiAi.pyz \"https://github.com/Koustubh12345/TenSeiAi/releases/latest/download/TenSeiAi.pyz\"",
-          "purpose": null
+          "command": "python3 -m pip install --user --break-system-packages numpy 2>&1 | tail -n 20; python3 -c \"import numpy; print(numpy.__version__)\"",
+          "purpose": "install numpy dependency with --break-system-packages for Homebrew Python 3.15"
+        },
+        {
+          "command": "curl -fL -o TenSeiAi.pyz \"https://github.com/Koustubh12345/TenSeiAi/releases/latest/download/TenSeiAi.pyz\" 2>&1 | tail -n 20; ls -lh TenSeiAi.pyz; python3 --version",
+          "purpose": "download TenSeiAi.pyz 81 MB release artifact"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "python TenSeiAi.pyz chat --offline"
+      "check": {
+        "command": "python3 TenSeiAi.pyz ask \"What is the difference between a process and a thread?\" --offline 2>&1",
+        "expected_signal": "A **process** is an independent executing program"
+      },
+      "first_task": "python3 TenSeiAi.pyz ask \"What is the difference between a process and a thread?\" --offline 2>&1"
     },
     "linux": {
       "basis": "replayed",
@@ -124,8 +131,107 @@
   "verification": {
     "level": "inference",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:57:22.157755+08:00",
+    "checked_at": "2026-11-01T12:48:12.066789+08:00",
     "runs": [
+      {
+        "id": "verify-tenseiai-20261101-124324-9dd2",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T12:48:12.066789+08:00",
+        "tool_version": "v1",
+        "install_method": "pip",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "python3 -m pip install --user --break-system-packages numpy 2>&1 | tail -n 20; python3 -c \"import numpy; print(numpy.__version__)\"",
+            "purpose": "install numpy dependency with --break-system-packages for Homebrew Python 3.15"
+          },
+          {
+            "command": "curl -fL -o TenSeiAi.pyz \"https://github.com/Koustubh12345/TenSeiAi/releases/latest/download/TenSeiAi.pyz\" 2>&1 | tail -n 20; ls -lh TenSeiAi.pyz; python3 --version",
+            "purpose": "download TenSeiAi.pyz 81 MB release artifact"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 TenSeiAi.pyz ask \"What is the difference between a process and a thread?\" --offline 2>&1",
+            "expected_signal": "A **process** is an independent executing program",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "**Answer:** A **process** is an independent executing program with its own dedicated memory space, file descriptors, and system resources allocated by the operating system. A **thread** (often called a lightweight process) is a smaller execution unit *within* a process that shares the parent proces…",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "python3 -m pip install --user numpy",
+            "actually_needed": "python3 -m pip install --user --break-system-packages numpy required on Homebrew Python due to PEP 668",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "curl download then python3 TenSeiAi.pyz serve --port 8765",
+            "actually_needed": "serve binds to 127.0.0.1:8765 and exposes OpenAI-compatible /v1/chat/completions and /v1/models",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows an offline answer defining a process as an independent executing program and contrasting it with a thread.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tenseiai-20261101-124324-9dd2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tenseiai-20261101-124324-9dd2/check-1-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.076145,
+        "features": [
+          {
+            "feature": "answer questions offline on CPU",
+            "status": "checked",
+            "smoke_tests": [
+              0
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "chat via terminal or web console",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; serve started and GET / returned TenSeiAi HTML console title"
+          },
+          {
+            "feature": "retrieve live web research on demand",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; ask without --offline returned Paris for France capital via online-enabled mode"
+          },
+          {
+            "feature": "serve OpenAI-compatible local API",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; POST /v1/chat/completions returned chatcmpl JSON with completion_tokens"
+          }
+        ]
+      },
       {
         "id": "verify-tenseiai-20261031-035603-4d9d",
         "level": "inference",
@@ -623,5 +729,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:59+08:00",
-  "updated_at": "2026-11-01T19:31:53.081076+08:00"
+  "updated_at": "2026-11-01T23:02:55.540362+08:00"
 }

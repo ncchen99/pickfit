@@ -1,5 +1,6 @@
 /**
- * report_outcome (architecture E.3): one events row per (rec_id, slug, stage).
+ * report_outcome (architecture E.3): one events row per (rec_id, slug, stage, result); for the
+ * later stages, one per change of state (a repeat of the latest report is a duplicate).
  * A report counts toward the score only when it cites a rec_id pickfit issued
  * for that slug in the last 7 days (installed, first_run), or 120 days for the
  * later stages (still_using, replaced, abandoned); then the row keeps the rec_id (so
@@ -114,7 +115,20 @@ export async function reportOutcome(input: OutcomeInput, deps: OutcomeDeps): Pro
   const ttl = later ? REC_TTL_LATER_DAYS : REC_TTL_DAYS;
   const rec = input.rec_id ? await issuedRec(deps.db, now, input.rec_id, input.slug, ttl) : null;
   const recId = rec ? input.rec_id! : null;
-  if (recId) {
+  const replacedBy = input.stage === 'replaced' ? scrubHead(input.replaced_by, 100) : null;
+  if (recId && later) {
+    // The user's state can change back and forth: a repeat of the latest report is the duplicate.
+    const latest = await deps.db
+      .prepare(
+        `SELECT id, success, replaced_by FROM events WHERE type = 'outcome' AND rec_id = ?1 AND slug = ?2 AND stage = ?3
+          ORDER BY ts DESC, rowid DESC LIMIT 1`,
+      )
+      .bind(recId, input.slug, stage)
+      .first<{ id: string; success: number; replaced_by: string | null }>();
+    if (latest && latest.success === (success ? 1 : 0) && latest.replaced_by === replacedBy) {
+      return dedupe(latest.id, recId, input, failed);
+    }
+  } else if (recId) {
     const existing = await deps.db
       .prepare(`SELECT id FROM events WHERE type = 'outcome' AND rec_id = ?1 AND slug = ?2 AND stage = ?3 AND success = ?4`)
       .bind(recId, input.slug, stage, success ? 1 : 0)
@@ -139,7 +153,7 @@ export async function reportOutcome(input: OutcomeInput, deps: OutcomeDeps): Pro
         success,
         satisfied: SATISFIED[input.satisfaction ?? 'unknown'],
         error_excerpt: errorExcerpt,
-        replaced_by: input.stage === 'replaced' ? scrubHead(input.replaced_by, 100) : null,
+        replaced_by: replacedBy,
         // Untrusted text: stored for people to read, never echoed or fed to a model.
         note: scrubHead(input.note, NOTE_MAX),
         last_used: later ? (input.last_used ?? null) : null,
@@ -176,7 +190,7 @@ function dedupe(id: string | null, recId: string, input: OutcomeInput, failed: b
     report_id: id ?? 'duplicate',
     rec_id: recId,
     deduplicated: true,
-    counted_in_score: true, // the first report of this stage counts, once
+    counted_in_score: true, // the report it repeats counts, once
     not_counted_reason: null,
     reverify: 'none',
     next: nextHint(input, failed),

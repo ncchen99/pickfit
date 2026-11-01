@@ -67,18 +67,25 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-xyntetik-runner-20261101-120452-4b1d",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -LO https://github.com/Joakimpalm-Zen/xyntetik-runner/releases/latest/download/runner-macos-arm64",
-          "purpose": null
+          "command": "curl -LO https://github.com/Joakimpalm-Zen/xyntetik-runner/releases/latest/download/runner-macos-arm64 && chmod +x runner-macos-arm64 && mv runner-macos-arm64 runner && ls -lh runner\n",
+          "purpose": "Download macOS arm64 binary from GitHub releases"
+        },
+        {
+          "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/stories260K.gguf",
+          "purpose": "Download tiny GGUF model stories260K for testing"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "./runner --version"
+      "check": {
+        "command": "./runner --version",
+        "expected_signal": "runner 1.10.0"
+      },
+      "first_task": "./runner --info caps"
     },
     "linux": {
       "basis": "replayed",
@@ -118,8 +125,137 @@
   "verification": {
     "level": "inference",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:41:22.036969+08:00",
+    "checked_at": "2026-11-01T12:07:56.670803+08:00",
     "runs": [
+      {
+        "id": "verify-xyntetik-runner-20261101-120452-4b1d",
+        "level": "inference",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T12:07:56.670803+08:00",
+        "tool_version": "1.10.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -LO https://github.com/Joakimpalm-Zen/xyntetik-runner/releases/latest/download/runner-macos-arm64 && chmod +x runner-macos-arm64 && mv runner-macos-arm64 runner && ls -lh runner\n",
+            "purpose": "Download macOS arm64 binary from GitHub releases"
+          },
+          {
+            "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -lh ~/models/stories260K.gguf",
+            "purpose": "Download tiny GGUF model stories260K for testing"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "./runner --version",
+            "expected_signal": "runner 1.10.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "runner 1.10.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "./runner --info caps",
+            "expected_signal": "kv_types",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"version\":\"1.10.0\",\"os\":\"macos\",\"arch\":\"arm64\",\"cpu_cores\":4,\"ram_bytes\":8589934592,\"ram_available_bytes\":3867443200,\"host\":{\"cpu_cores\":4,\"ram_bytes\":8589934592,\"ram_available_bytes\":3867443200},\"limits\":{\"source\":\"none\",\"cpu_quota\":null,\"memory_max_bytes\":null},\"code_page\":null,\"gpu\":{\"backend\":…",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "./runner -m ~/models/stories260K.gguf --verify /tmp/run.json 2>&1\ncat /tmp/run.json | python3 -c \"import json,sys; d=json.load(open('/tmp/run.json')); print(d['schema_version'])\"",
+            "expected_signal": "VERIFIED",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "FileNotFoundError: [Errno 2] No such file or directory: '/tmp/run.json'",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8080/v1/chat/completions -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"Say hello in one sentence.\"}],\"temperature\":0,\"max_tokens\":16}' > /tmp/out.json && cat /tmp/out.json && python3 -c \"import json; d=json.load(open('/tmp/out.json')); assert 'completion_tokens' in open('/tmp/out.json').read(); print('completion_tokens OK')\"",
+            "expected_signal": "completion_tokens",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":\"chatcmpl-0\",\"object\":\"chat.completion\",\"created\":1793506039,\"model\":\"stories260K.gguf\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\" are toys, but it was too big. \\nO\"},\"finish_reason\":\"length\"}],\"usage\":{\"prompt_tokens\":29,\"prompt_tokens_details\":{\"cached_tokens\":0},\"compl…",
+            "setup": [
+              {
+                "command": "./runner -m ~/models/stories260K.gguf --serve --port 8080 2>&1",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Published release 1.6.1",
+            "actually_needed": "Downloaded binary reports 1.10.0, still compatible",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show caps JSON containing kv_types, a successful chat completion containing completion_tokens, and version output runner 1.10.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-xyntetik-runner-20261101-120452-4b1d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-xyntetik-runner-20261101-120452-4b1d/check-1-cmd4.judged.png",
+            "runs/verify/verify-xyntetik-runner-20261101-120452-4b1d/check-2-cmd15.judged.png",
+            "runs/verify/verify-xyntetik-runner-20261101-120452-4b1d/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.087535,
+        "features": [
+          {
+            "feature": "serve models via OpenAI-compatible API",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "train LoRA through quantized weights",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "Train succeeded in output but masked exit prevents citation; budget exhausted to redo cleanly"
+          },
+          {
+            "feature": "complete tool calls past token limit",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "Tool-call closure verified in masked output but no clean command left to cite"
+          },
+          {
+            "feature": "replay runs as signed receipts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          }
+        ]
+      },
       {
         "id": "verify-xyntetik-runner-20261031-013940-4634",
         "level": "inference",
@@ -701,5 +837,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-11-01T19:33:04.917766+08:00"
+  "updated_at": "2026-11-01T23:02:55.664929+08:00"
 }

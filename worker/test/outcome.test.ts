@@ -67,9 +67,9 @@ test('the seven stages are stored as (stage, success); replaced keeps replaced_b
   for (const [stage] of expected) {
     await report(h, { slug: 'fixture-llm-runner', stage, rec_id: rec, replaced_by: 'Ollama' });
   }
-  // abandoned and replaced are both ('still_using', 0): the second is a duplicate.
-  const abandoned = await report(h, { slug: 'fixture-llm-runner', stage: 'abandoned', rec_id: rec });
-  assert.equal(abandoned.deduplicated, true);
+  // Replaced by the same tool again is a duplicate.
+  const again = await report(h, { slug: 'fixture-llm-runner', stage: 'replaced', rec_id: rec, replaced_by: 'Ollama' });
+  assert.equal(again.deduplicated, true);
   const rows = outcomes(h);
   assert.deepEqual(rows.map((r) => [r.stage, r.success]), expected.map(([, stage, success]) => [stage, success]));
   assert.deepEqual(rows.map((r) => r.replaced_by), [null, null, null, 'Ollama']);
@@ -138,6 +138,38 @@ test('still_using, replaced and abandoned count with a rec_id up to 120 days old
     outcomes(h).map((r) => [r.stage, r.success, r.rec_id !== null]),
     [['first_run', 1, false], ['still_using', 1, true], ['still_using', 0, true], ['still_using', 1, false], ['still_using', 0, false]],
   );
+});
+
+test('fetching the guide again under the same rec_id does not restart its window', async () => {
+  const h = harness(null, { modelEnabled: false });
+  const rec = await recommend(h); // issued 2026-10-30T12:00:00Z
+  // Day 100: the guide is fetched again with the old rec_id, which logs a fresh install_guide row.
+  await logEvent(h.deps.db, new Date('2027-02-07T12:00:00Z'), { type: 'install_guide', rec_id: rec, slug: 'fixture-llm-runner' });
+  const at = (iso: string, stage: OutcomeInput['stage']) =>
+    reportOutcome({ slug: 'fixture-llm-runner', stage, rec_id: rec }, { catalog: h.deps.catalog, db: h.deps.db, now: () => new Date(iso), reporter: 'external' });
+  // Day 101: an install report would count under a fresh rec_id, but not under this one.
+  assert.equal((await at('2027-02-08T12:00:00Z', 'installed')).counted_in_score, false);
+  // Day 121 is past 120 days from the first issue, whatever the later guide row says.
+  assert.equal((await at('2027-02-28T12:00:01Z', 'still_using')).not_counted_reason, 'unknown_or_expired_rec_id');
+});
+
+test('a later report that changes the state is stored; one that repeats the latest is a duplicate', async () => {
+  const h = harness(null, { modelEnabled: false });
+  const rec = await recommend(h);
+  const send = (stage: OutcomeInput['stage'], replaced_by?: string) =>
+    report(h, { slug: 'fixture-llm-runner', stage, rec_id: rec, replaced_by });
+  const first = await send('still_using');
+  assert.equal((await send('still_using')).report_id, first.report_id); // repeat of the latest
+  assert.equal((await send('abandoned')).deduplicated, false);
+  const back = await send('still_using'); // used again: a third report, not a repeat of the first
+  assert.equal(back.deduplicated, false);
+  assert.notEqual(back.report_id, first.report_id);
+  assert.equal((await send('replaced', 'other-cli')).deduplicated, false); // abandoned -> replaced is new
+  assert.equal((await send('replaced', 'other-cli')).deduplicated, true);
+  assert.equal((await send('abandoned')).deduplicated, false);
+  assert.deepEqual(outcomes(h).map((r) => [r.success, r.replaced_by]), [
+    [1, null], [0, null], [1, null], [0, 'other-cli'], [0, null],
+  ]);
 });
 
 test('last_used is kept coarse, and only for the later stages', async () => {

@@ -58,18 +58,25 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-bitrun-20261101-134929-b919",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/IshekKhal/bitrun/main/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/IshekKhal/bitrun/main/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
+          "purpose": "download install.sh from GitHub"
+        },
+        {
+          "command": "sh /tmp/install.sh 2>&1",
+          "purpose": "run install.sh to extract bitrun binaries to ~/.bitrun/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "bitrun hardware"
+      "check": {
+        "command": "export PATH=\"$HOME/.bitrun/bin:$PATH\" && bitrun --version 2>&1",
+        "expected_signal": "bitrun version 0.2.0-beta"
+      },
+      "first_task": "export PATH=\"$HOME/.bitrun/bin:$PATH\" && bitrun hardware 2>&1"
     },
     "linux": {
       "basis": "replayed",
@@ -124,6 +131,135 @@
     "unverified_reason": null,
     "checked_at": "2026-11-01T16:06:42.244957+08:00",
     "runs": [
+      {
+        "id": "verify-bitrun-20261101-134929-b919",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T13:54:13.165031+08:00",
+        "tool_version": "0.2.0-beta",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/IshekKhal/bitrun/main/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
+            "purpose": "download install.sh from GitHub"
+          },
+          {
+            "command": "sh /tmp/install.sh 2>&1",
+            "purpose": "run install.sh to extract bitrun binaries to ~/.bitrun/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "export PATH=\"$HOME/.bitrun/bin:$PATH\" && bitrun --version 2>&1",
+            "expected_signal": "bitrun version 0.2.0-beta",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "bitrun version 0.2.0-beta (darwin/arm64)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.bitrun/bin:$PATH\" && bitrun hardware 2>&1",
+            "expected_signal": "ARM DotProd SIMD",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ARM DotProd SIMD: true",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.bitrun/bin:$PATH\" && bitrun pull bitnet-70m 2>&1",
+            "expected_signal": "Successfully installed bitnet-70m",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "[bitrun] Model bitnet-70m already cached at /Users/sbx/.bitrun/models/bitnet-m7-70m.Q8_0.gguf",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "export PATH=\"$HOME/.bitrun/bin:$PATH\" && bitrun bench bitnet-70m --tokens 64 2>&1",
+            "expected_signal": "Token Generation",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ Token Generation 1083.9 tok/s 64 tokens in 59 ms │",
+            "setup": [
+              {
+                "command": "export PATH=\"$HOME/.bitrun/bin:$PATH\" && bitrun pull bitnet-70m 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "bitrun --help shows usage",
+            "actually_needed": "bitrun --help prints help but exits 1, not 0 (bitrun --version exits 0)",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show BitRun printing version 0.2.0-beta, reporting ARM DotProd SIMD true, and completing a 64-token bench with Token Generation telemetry.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-bitrun-20261101-134929-b919/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-bitrun-20261101-134929-b919/check-1-cmd13.judged.png",
+            "runs/verify/verify-bitrun-20261101-134929-b919/check-2-cmd5.judged.png",
+            "runs/verify/verify-bitrun-20261101-134929-b919/check-3-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.079707,
+        "features": [
+          {
+            "feature": "run 1-bit ternary LLMs on CPU",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "pull 1-bit models from Hugging Face",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "launch full-screen terminal dashboard",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "full-screen Bubble Tea dashboard requires interactive TTY, headless VM cannot verify"
+          },
+          {
+            "feature": "serve local OpenAI-compatible REST server",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          }
+        ]
+      },
       {
         "id": "verify-bitrun-20261101-160515-d763",
         "level": "inference",
@@ -633,5 +769,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:22:54+08:00",
-  "updated_at": "2026-11-01T19:18:07.054303+08:00"
+  "updated_at": "2026-11-01T23:02:54.362354+08:00"
 }

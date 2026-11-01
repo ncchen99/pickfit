@@ -55,18 +55,25 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-wcode-20261101-123950-ad45",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -n 200 /tmp/install.sh",
+          "purpose": "download install.sh"
+        },
+        {
+          "command": "sh /tmp/install.sh",
+          "purpose": "install wcode via script"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "wcode --version"
+      "check": {
+        "command": "wcode --version",
+        "expected_signal": "wcode 0.9.1"
+      },
+      "first_task": "wcode --show-config"
     },
     "linux": {
       "basis": "replayed",
@@ -119,7 +126,7 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:49:37.154284+08:00",
+    "checked_at": "2026-11-01T12:42:44.859558+08:00",
     "runs": [
       {
         "id": "verify-wcode-20261031-024743-dd20",
@@ -372,6 +379,255 @@
             "reason": null,
             "failure": "sandbox",
             "note": "verify_project reports no verifiable project in bare work dir"
+          }
+        ]
+      },
+      {
+        "id": "verify-wcode-20261101-123950-ad45",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T12:42:44.859558+08:00",
+        "tool_version": "0.9.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/francis-du/wcode/main/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -n 200 /tmp/install.sh",
+            "purpose": "download install.sh"
+          },
+          {
+            "command": "sh /tmp/install.sh",
+            "purpose": "install wcode via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "wcode --version",
+            "expected_signal": "wcode 0.9.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "wcode 0.9.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "wcode --show-config",
+            "expected_signal": "\"workspace_paths\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"workspace_paths\": [",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- wcode mcp-stdio",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call workspace_info --args '{}' -- wcode mcp-stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=workspace_info content=text text_chars=16659",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call list_files --args '{}' -- wcode mcp-stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list_files content=text text_chars=65",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call read_file --args '{\"path\":\"sample.txt\"}' -- wcode mcp-stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=read_file content=text text_chars=232",
+            "setup": [
+              {
+                "command": "cat > /tmp/test_sample.txt <<'EOF'\nhello world\nthis is a test file for wcode\nEOF\ncat /tmp/test_sample.txt\n# need file inside work dir for wcode\ncp /tmp/test_sample.txt /Users/sbx/work/sample.txt\nls -l /Users/sbx/work/sample.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call project_context --args '{}' -- wcode mcp-stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=project_context content=text text_chars=60174",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show --show-config JSON with workspace_paths, MCP stdio probe with 85 tools and handshake ok, and version wcode 0.9.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-wcode-20261101-123950-ad45/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-wcode-20261101-123950-ad45/check-1-cmd4.judged.png",
+            "runs/verify/verify-wcode-20261101-123950-ad45/check-2-cmd6.judged.png",
+            "runs/verify/verify-wcode-20261101-123950-ad45/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.064757,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "wcode",
+            "mcp-stdio"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "wcode",
+          "server_version": "0.9.1",
+          "tools": [
+            "workspace_info",
+            "design_status",
+            "acceptance_policy",
+            "convention_status",
+            "scope_status",
+            "design_init",
+            "software_graph",
+            "graph_provider_import",
+            "graph_provider_status",
+            "semantic_provider_status",
+            "semantic_provider_install",
+            "language_quality_status",
+            "language_quality_run",
+            "semantic_provider_refresh",
+            "semantic_navigation",
+            "graph_history",
+            "graph_query",
+            "graph_diff",
+            "traceability_status",
+            "drift_status",
+            "risk_status",
+            "impact_analysis",
+            "software_context",
+            "agent_context",
+            "execution_status",
+            "execution_policy_status",
+            "execution_propose",
+            "execution_steer",
+            "execution_handoff",
+            "worklist_status",
+            "worklist_update",
+            "worklist_claim",
+            "worklist_submit",
+            "semantic_status",
+            "semantic_query",
+            "semantic_record",
+            "semantic_confirm",
+            "semantic_retire",
+            "verification_plan",
+            "verification_claim",
+            "verification_submit",
+            "verification_executor_status",
+            "verification_execute_stages",
+            "verification_stage_submit",
+            "verification_approve",
+            "change_acceptance",
+            "verification_status",
+            "verification_history",
+            "evidence_status",
+            "reconciliation_plan",
+            "reconciliation_status",
+            "reconciliation_history",
+            "reconciliation_approve",
+            "reconciliation_execution_status",
+            "reconciliation_claim",
+            "reconciliation_submit",
+            "reconciliation_retry",
+            "project_context",
+            "review_changes",
+            "parallel_tools",
+            "verify_project",
+            "list_files",
+            "search_code",
+            "search_many",
+            "scan_patterns",
+            "search_syntax",
+            "file_outline",
+            "find_symbol",
+            "symbol_context",
+            "read_file",
+            "read_files",
+            "read_media",
+            "path_info",
+            "replace_text",
+            "apply_edits",
+            "write_file",
+            "create_directory",
+            "create_file",
+            "create_files",
+            "apply_file_edits",
+            "move_path",
+            "move_paths",
+            "delete_path",
+            "run_command",
+            "command_task"
+          ],
+          "tool_count": 85,
+          "called_tool": "workspace_info",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "Read repositories and build task context",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: All four outputs show the same tool list/server metadata, not file listings, file content, or project context."
+          },
+          {
+            "feature": "Change code with bounded edits",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "budget exhausted before bounded-edit tool call"
+          },
+          {
+            "feature": "Inspect changes and assess impact",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "review_changes/impact_analysis not verified, budget exhausted"
+          },
+          {
+            "feature": "Run checks and verify projects",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "verify_project not attempted, budget exhausted"
           }
         ]
       }
@@ -746,5 +1002,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:42+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T12:42:44.863153+08:00"
 }

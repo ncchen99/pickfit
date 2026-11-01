@@ -60,18 +60,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-lcode-20261101-134241-b62b",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install nasser1941/tap/lcode",
-          "purpose": null
+          "command": "brew install nasser1941/tap/lcode 2>&1",
+          "purpose": "brew install nasser1941/tap/lcode"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "lcode setup"
+      "check": {
+        "command": "lcode --help 2>&1",
+        "expected_signal": "usage: lcode"
+      },
+      "first_task": "lcode models 2>&1"
     },
     "linux": {
       "basis": "replayed",
@@ -107,7 +110,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:29:45.204471+08:00",
+    "checked_at": "2026-11-01T13:49:28.522400+08:00",
     "runs": [
       {
         "id": "verify-lcode-20261031-032908-1561",
@@ -208,6 +211,108 @@
             "reason": "needs_gpu",
             "failure": null,
             "note": "Requires a running Ollama model; none fits/runs on this CPU-only 2 GB box."
+          }
+        ]
+      },
+      {
+        "id": "verify-lcode-20261101-134241-b62b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T13:49:28.522400+08:00",
+        "tool_version": "0.53.0",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install nasser1941/tap/lcode 2>&1",
+            "purpose": "brew install nasser1941/tap/lcode"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lcode --help 2>&1",
+            "expected_signal": "usage: lcode",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: lcode [-h] [-p PROMPT] [--output {text,json,stream-json}] [--max-steps N]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lcode models 2>&1",
+            "expected_signal": "Models for this machine",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Models for this machine: Apple M5 (Virtual), 8 GB unified memory (~5 GB usable by",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lcode doctor 2>&1",
+            "expected_signal": "Hardware Apple M5 (Virtual)",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "✓ Hardware Apple M5 (Virtual), 8 GB unified memory (~5 GB usable by the GPU)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show lcode help usage, model catalog table, and doctor diagnostics all displaying expected content.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lcode-20261101-134241-b62b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lcode-20261101-134241-b62b/check-1-cmd3.judged.png",
+            "runs/verify/verify-lcode-20261101-134241-b62b/check-2-cmd5.judged.png",
+            "runs/verify/verify-lcode-20261101-134241-b62b/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.049589,
+        "features": [
+          {
+            "feature": "run entirely on local machine with open-weight models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists models as too large and shows Ollama unreachable, with no local model run shown."
+          },
+          {
+            "feature": "talk to repository in terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "talk to repository requires running Ollama service and downloading 3-25GB model; lcode -p fails with cannot reach Ollama"
+          },
+          {
+            "feature": "write and edit files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "write and edit files requires agent inference via Ollama model; not exercisable without Ollama"
+          },
+          {
+            "feature": "run scripts and tests",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "run scripts and tests requires agent loop with model; needs Ollama + large model download"
           }
         ]
       }
@@ -581,5 +686,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T13:49:28.528773+08:00"
 }

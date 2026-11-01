@@ -60,18 +60,25 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-code-cortex-mcp-20261101-130123-6625",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/tigercosmos/code-cortex-mcp/main/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/tigercosmos/code-cortex-mcp/main/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 100 /tmp/install.sh",
+          "purpose": "download install.sh from GitHub"
+        },
+        {
+          "command": "bash /tmp/install.sh --skip-config 2>&1",
+          "purpose": "run install.sh --skip-config to install binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "code-cortex-mcp cli inspect_symbol --symbol hexStringToByteArray"
+      "check": {
+        "command": "code-cortex-mcp --version && which code-cortex-mcp && ls -l ~/.local/bin/code-cortex-mcp",
+        "expected_signal": "code-cortex-mcp 0.23.0"
+      },
+      "first_task": null
     },
     "linux": {
       "basis": "replayed",
@@ -124,8 +131,230 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T02:07:24.079607+08:00",
+    "checked_at": "2026-11-01T13:04:38.331889+08:00",
     "runs": [
+      {
+        "id": "verify-code-cortex-mcp-20261101-130123-6625",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T13:04:38.331889+08:00",
+        "tool_version": "0.23.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/tigercosmos/code-cortex-mcp/main/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 100 /tmp/install.sh",
+            "purpose": "download install.sh from GitHub"
+          },
+          {
+            "command": "bash /tmp/install.sh --skip-config 2>&1",
+            "purpose": "run install.sh --skip-config to install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "code-cortex-mcp --version && which code-cortex-mcp && ls -l ~/.local/bin/code-cortex-mcp",
+            "expected_signal": "code-cortex-mcp 0.23.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "code-cortex-mcp 0.23.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- code-cortex-mcp mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call index_repository --args '{\"repo_path\":\"/tmp/testproj\"}' -- code-cortex-mcp mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=index_repository content=text text_chars=650",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testproj && cat > /tmp/testproj/app.py <<'PY'\ndef hexStringToByteArray(s):\n    return bytes.fromhex(s)\n\ndef handleRequest(data):\n    return hexStringToByteArray(data)\n\ndef mainHandler(x):\n    return handleRequest(x)\n\nclass MyHandler:\n    def process(self, v):\n        return mainHandler(v)\nPY\ncat > /tmp/testproj/util.js <<'JS'\nfunction hexStringToByteArray(str) {\n  return Buffer.from(str, 'hex');\n}\nfunction apiHandler(req) {\n  return hexStringToByteArray(req.body);\n}\nJS\ncd /tmp/testproj && git init -q && git config user.email \"a@b.c\" && git config user.name \"test\" && git add . && git commit -qm init\nls -R /tmp/testproj\necho done",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call inspect_symbol --args '{\"symbol\":\"hexStringToByteArray\",\"project\":\"private-tmp-testproj\"}' -- code-cortex-mcp mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=inspect_symbol content=text text_chars=473",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testproj && cat > /tmp/testproj/app.py <<'PY'\ndef hexStringToByteArray(s):\n    return bytes.fromhex(s)\n\ndef handleRequest(data):\n    return hexStringToByteArray(data)\n\ndef mainHandler(x):\n    return handleRequest(x)\n\nclass MyHandler:\n    def process(self, v):\n        return mainHandler(v)\nPY\ncat > /tmp/testproj/util.js <<'JS'\nfunction hexStringToByteArray(str) {\n  return Buffer.from(str, 'hex');\n}\nfunction apiHandler(req) {\n  return hexStringToByteArray(req.body);\n}\nJS\ncd /tmp/testproj && git init -q && git config user.email \"a@b.c\" && git config user.name \"test\" && git add . && git commit -qm init\nls -R /tmp/testproj\necho done",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search_code --args '{\"pattern\":\"Handler\",\"project\":\"private-tmp-testproj\"}' -- code-cortex-mcp mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search_code content=text text_chars=921",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testproj && cat > /tmp/testproj/app.py <<'PY'\ndef hexStringToByteArray(s):\n    return bytes.fromhex(s)\n\ndef handleRequest(data):\n    return hexStringToByteArray(data)\n\ndef mainHandler(x):\n    return handleRequest(x)\n\nclass MyHandler:\n    def process(self, v):\n        return mainHandler(v)\nPY\ncat > /tmp/testproj/util.js <<'JS'\nfunction hexStringToByteArray(str) {\n  return Buffer.from(str, 'hex');\n}\nfunction apiHandler(req) {\n  return hexStringToByteArray(req.body);\n}\nJS\ncd /tmp/testproj && git init -q && git config user.email \"a@b.c\" && git config user.name \"test\" && git add . && git commit -qm init\nls -R /tmp/testproj\necho done",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call trace_path --args '{\"function_name\":\"hexStringToByteArray\",\"project\":\"private-tmp-testproj\"}' -- code-cortex-mcp mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=trace_path content=text text_chars=473",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testproj && cat > /tmp/testproj/app.py <<'PY'\ndef hexStringToByteArray(s):\n    return bytes.fromhex(s)\n\ndef handleRequest(data):\n    return hexStringToByteArray(data)\n\ndef mainHandler(x):\n    return handleRequest(x)\n\nclass MyHandler:\n    def process(self, v):\n        return mainHandler(v)\nPY\ncat > /tmp/testproj/util.js <<'JS'\nfunction hexStringToByteArray(str) {\n  return Buffer.from(str, 'hex');\n}\nfunction apiHandler(req) {\n  return hexStringToByteArray(req.body);\n}\nJS\ncd /tmp/testproj && git init -q && git config user.email \"a@b.c\" && git config user.name \"test\" && git add . && git commit -qm init\nls -R /tmp/testproj\necho done",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search_graph --args '{\"name_pattern\":\".*Handler.*\",\"label\":\"Function\",\"project\":\"private-tmp-testproj\"}' -- code-cortex-mcp mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search_graph content=text text_chars=951",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testproj && cat > /tmp/testproj/app.py <<'PY'\ndef hexStringToByteArray(s):\n    return bytes.fromhex(s)\n\ndef handleRequest(data):\n    return hexStringToByteArray(data)\n\ndef mainHandler(x):\n    return handleRequest(x)\n\nclass MyHandler:\n    def process(self, v):\n        return mainHandler(v)\nPY\ncat > /tmp/testproj/util.js <<'JS'\nfunction hexStringToByteArray(str) {\n  return Buffer.from(str, 'hex');\n}\nfunction apiHandler(req) {\n  return hexStringToByteArray(req.body);\n}\nJS\ncd /tmp/testproj && git init -q && git config user.email \"a@b.c\" && git config user.name \"test\" && git add . && git commit -qm init\nls -R /tmp/testproj\necho done",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call query_graph --args '{\"query\":\"MATCH (f:Function) RETURN f.name LIMIT 5\",\"project\":\"private-tmp-testproj\"}' -- code-cortex-mcp mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=query_graph content=text text_chars=118",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testproj && cat > /tmp/testproj/app.py <<'PY'\ndef hexStringToByteArray(s):\n    return bytes.fromhex(s)\n\ndef handleRequest(data):\n    return hexStringToByteArray(data)\n\ndef mainHandler(x):\n    return handleRequest(x)\n\nclass MyHandler:\n    def process(self, v):\n        return mainHandler(v)\nPY\ncat > /tmp/testproj/util.js <<'JS'\nfunction hexStringToByteArray(str) {\n  return Buffer.from(str, 'hex');\n}\nfunction apiHandler(req) {\n  return hexStringToByteArray(req.body);\n}\nJS\ncd /tmp/testproj && git init -q && git config user.email \"a@b.c\" && git config user.name \"test\" && git add . && git commit -qm init\nls -R /tmp/testproj\necho done",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.23.0, successful MCP handshake with 15 tools, and successful index_repository tool call.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-code-cortex-mcp-20261101-130123-6625/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-code-cortex-mcp-20261101-130123-6625/check-1-cmd3.judged.png",
+            "runs/verify/verify-code-cortex-mcp-20261101-130123-6625/check-2-cmd4.judged.png",
+            "runs/verify/verify-code-cortex-mcp-20261101-130123-6625/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.084566,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "code-cortex-mcp",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "code-cortex-mcp",
+          "server_version": "0.23.0",
+          "tools": [
+            "index_repository",
+            "search_graph",
+            "query_graph",
+            "trace_path",
+            "get_code_snippet",
+            "inspect_symbol",
+            "get_graph_schema",
+            "get_architecture",
+            "search_code",
+            "list_projects",
+            "delete_project",
+            "index_status",
+            "detect_changes",
+            "manage_adr",
+            "ingest_traces"
+          ],
+          "tool_count": 15,
+          "called_tool": "index_repository",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "index codebase into queryable knowledge graph",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "trace call paths and data flow",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only ambiguous status asking to pick a qualified_name with no call path traced."
+          },
+          {
+            "feature": "inspect symbol definitions and callers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only ambiguous status with suggestions and no definition or callers."
+          },
+          {
+            "feature": "search code with graph-augmented grep",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      },
       {
         "id": "verify-code-cortex-mcp-20261101-020603-0e18",
         "level": "service",
@@ -899,5 +1128,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:39:20+08:00",
-  "updated_at": "2026-11-01T19:18:58.468954+08:00"
+  "updated_at": "2026-11-01T23:02:54.479754+08:00"
 }

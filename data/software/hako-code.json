@@ -63,18 +63,29 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-hako-code-20261101-125816-0788",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://mithraeums.github.io/hako.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://mithraeums.github.io/hako.sh -o /tmp/hako.sh && ls -lh /tmp/hako.sh && wc -l /tmp/hako.sh",
+          "purpose": "download hako.sh proxy"
+        },
+        {
+          "command": "curl -fsSL \"https://raw.githubusercontent.com/mithraeums/hako-code/main/install.sh\" -o /tmp/install.sh && ls -lh /tmp/install.sh && wc -l /tmp/install.sh",
+          "purpose": "download real install.sh"
+        },
+        {
+          "command": "sh /tmp/install.sh && ls -lh ~/.local/bin/hako && ~/.local/bin/hako --version",
+          "purpose": "install hako to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "hako -p \"summarize README.md\""
+      "check": {
+        "command": "hako --version",
+        "expected_signal": "hako v0.3.0 (build Oct 30 2026"
+      },
+      "first_task": "hako -p \"summarize README.md\" --output-format json"
     },
     "linux": {
       "basis": "replayed",
@@ -118,8 +129,134 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:39:42.161376+08:00",
+    "checked_at": "2026-11-01T13:01:21.862249+08:00",
     "runs": [
+      {
+        "id": "verify-hako-code-20261101-125816-0788",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T13:01:21.862249+08:00",
+        "tool_version": "v0.3.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://mithraeums.github.io/hako.sh -o /tmp/hako.sh && ls -lh /tmp/hako.sh && wc -l /tmp/hako.sh",
+            "purpose": "download hako.sh proxy"
+          },
+          {
+            "command": "curl -fsSL \"https://raw.githubusercontent.com/mithraeums/hako-code/main/install.sh\" -o /tmp/install.sh && ls -lh /tmp/install.sh && wc -l /tmp/install.sh",
+            "purpose": "download real install.sh"
+          },
+          {
+            "command": "sh /tmp/install.sh && ls -lh ~/.local/bin/hako && ~/.local/bin/hako --version",
+            "purpose": "install hako to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "hako --version",
+            "expected_signal": "hako v0.3.0 (build Oct 30 2026",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hako v0.3.0 (build Oct 30 2026 17:08:11)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "hako -p \"summarize README.md\" --output-format json",
+            "expected_signal": "\"error\":\"no provider configured\"",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "{\"ok\":false,\"error\":\"no provider configured\",\"provider\":\"none\",\"model\":\"\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0},\"session\":\"6ae6c786294e\",\"version\":\"0.3.0\"}",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "hako --serve --port 8789 2>&1",
+            "expected_signal": "hako studio v0.3.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hako studio v0.3.0 — http://127.0.0.1:8789",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://mithraeums.github.io/hako.sh | sh",
+            "actually_needed": "hako.sh is a 4-line proxy that execs curl for https://raw.githubusercontent.com/mithraeums/hako-code/main/install.sh; downloaded both scripts and read before executing",
+            "kind": "note"
+          },
+          {
+            "readme_said": "hako --update pulls latest release",
+            "actually_needed": "hako --update failed with 'could not fetch latest release' (transient GitHub API limit) even though install had just fetched v0.3.0",
+            "kind": "note"
+          },
+          {
+            "readme_said": "install drops hako into /usr/local/bin (or ~/.local/bin)",
+            "actually_needed": "on this unprivileged box it correctly chose ~/.local/bin/hako which is on PATH",
+            "kind": "tool_handled"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the JSON no-provider error, the studio server startup banner, and the version string all matching expected signals.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hako-code-20261101-125816-0788/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hako-code-20261101-125816-0788/check-1-cmd15.judged.png",
+            "runs/verify/verify-hako-code-20261101-125816-0788/check-2-cmd11.judged.png",
+            "runs/verify/verify-hako-code-20261101-125816-0788/check-3-cmd14.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.119199,
+        "features": [
+          {
+            "feature": "Run standalone terminal coding agent",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows error 'no provider configured' with ok false, not a summary answer."
+          },
+          {
+            "feature": "Use local models or cloud providers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "14 cloud providers need OAuth/API key; local mithraeum needs 1.9GB hakm pull not attempted"
+          },
+          {
+            "feature": "Read, edit files and run shell",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "read_file/list_dir/grep/write_file/run_shell are LLM-driven tools requiring a provider; bench requires provider"
+          },
+          {
+            "feature": "Use persistent sessions and skills",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Outputs show provider error and server startup with provider none, not persistent sessions or skills use."
+          }
+        ]
+      },
       {
         "id": "verify-hako-code-20261031-033756-9bd5",
         "level": "service",
@@ -633,5 +770,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-01T19:21:49.762133+08:00"
+  "updated_at": "2026-11-01T23:02:54.925168+08:00"
 }

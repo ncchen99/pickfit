@@ -45,7 +45,7 @@ TIMEOUT_S = 30
 LAST_USED = ("this_week", "this_month", "older", "unknown")
 
 _NAME = r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}"
-_NPM = r"(?:@[a-z0-9._-]+/)?[a-z0-9._-]{1,100}"
+_NPM = r"(?:@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]{0,99}"  # never a leading "-": not an option
 _APP = r"[A-Za-z0-9][A-Za-z0-9 .+_-]{0,60}"
 _ONLY = rf"(?: \| grep -i -- '\^({_NAME}) '| \| Select-String -Pattern '\^({_NAME}) ')"
 _REC_ID = re.compile(r"^rec_[0-9a-f]{32}$")

@@ -65,18 +65,22 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "other",
+      "basis": "replayed",
+      "run_id": "verify-flowstate-20261101-185255-d34a",
+      "method": "source",
       "steps": [
         {
-          "command": ".venv/bin/python -m pytest tests -q",
-          "purpose": null
+          "command": "git clone https://github.com/dialectforge/FlowState.git FlowState && ls FlowState/mcp-server",
+          "purpose": "git clone FlowState repo"
+        },
+        {
+          "command": "cd FlowState && /opt/homebrew/bin/python3 -m venv .venv && .venv/bin/python -m pip install -e mcp-server",
+          "purpose": "create venv and pip install -e mcp-server"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": ".venv/bin/python -m pytest tests -q"
+      "first_task": null
     },
     "linux": {
       "basis": "replayed",
@@ -129,8 +133,199 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T16:09:23.261566+08:00",
+    "checked_at": "2026-11-01T19:32:11.383540+08:00",
     "runs": [
+      {
+        "id": "verify-flowstate-20261101-185255-d34a",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T19:32:11.383540+08:00",
+        "tool_version": "2.4.5",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/dialectforge/FlowState.git FlowState && ls FlowState/mcp-server",
+            "purpose": "git clone FlowState repo"
+          },
+          {
+            "command": "cd FlowState && /opt/homebrew/bin/python3 -m venv .venv && .venv/bin/python -m pip install -e mcp-server",
+            "purpose": "create venv and pip install -e mcp-server"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- FlowState/.venv/bin/python -m flowstate",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call log_work --args '{\"project\":\"demo-proj\",\"kind\":\"decision\",\"summary\":\"Use Postgres not SQLite for multi-user\"}' -- env FLOWSTATE_DB=/tmp/flowstate_test.db FlowState/.venv/bin/python -m flowstate",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=log_work content=text text_chars=537",
+            "setup": [
+              {
+                "command": "python3 ~/.pickfit/mcp_probe.py --call manage_projects --args '{\"action\":\"create\",\"name\":\"demo-proj\",\"description\":\"test project\"}' -- env FLOWSTATE_DB=/tmp/flowstate_test.db FlowState/.venv/bin/python -m flowstate\npython3 ~/.pickfit/mcp_probe.py --call manage_projects --args '{\"action\":\"list\"}' -- env FLOWSTATE_DB=/tmp/flowstate_test.db FlowState/.venv/bin/python -m flowstate",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call start_here --args '{\"project\":\"demo-proj\"}' -- env FLOWSTATE_DB=/tmp/flowstate_test.db FlowState/.venv/bin/python -m flowstate",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=start_here content=text text_chars=960",
+            "setup": [
+              {
+                "command": "python3 ~/.pickfit/mcp_probe.py --call manage_projects --args '{\"action\":\"create\",\"name\":\"demo-proj\",\"description\":\"test project\"}' -- env FLOWSTATE_DB=/tmp/flowstate_test.db FlowState/.venv/bin/python -m flowstate\npython3 ~/.pickfit/mcp_probe.py --call manage_projects --args '{\"action\":\"list\"}' -- env FLOWSTATE_DB=/tmp/flowstate_test.db FlowState/.venv/bin/python -m flowstate",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call manage_todos --args '{\"action\":\"add\",\"project\":\"demo-proj\",\"title\":\"Implement Postgres migration\"}' -- env FLOWSTATE_DB=/tmp/flowstate_test.db FlowState/.venv/bin/python -m flowstate",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=manage_todos content=text text_chars=372",
+            "setup": [
+              {
+                "command": "python3 ~/.pickfit/mcp_probe.py --call manage_projects --args '{\"action\":\"create\",\"name\":\"demo-proj\",\"description\":\"test project\"}' -- env FLOWSTATE_DB=/tmp/flowstate_test.db FlowState/.venv/bin/python -m flowstate\npython3 ~/.pickfit/mcp_probe.py --call manage_projects --args '{\"action\":\"list\"}' -- env FLOWSTATE_DB=/tmp/flowstate_test.db FlowState/.venv/bin/python -m flowstate",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search --args '{\"query\":\"Postgres\",\"project\":\"demo-proj\"}' -- env FLOWSTATE_DB=/tmp/flowstate_test.db FlowState/.venv/bin/python -m flowstate\nls -lh /tmp/flowstate_test.db && file /tmp/flowstate_test.db",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search content=text text_chars=766",
+            "setup": [
+              {
+                "command": "python3 ~/.pickfit/mcp_probe.py --call manage_projects --args '{\"action\":\"create\",\"name\":\"demo-proj\",\"description\":\"test project\"}' -- env FLOWSTATE_DB=/tmp/flowstate_test.db FlowState/.venv/bin/python -m flowstate\npython3 ~/.pickfit/mcp_probe.py --call manage_projects --args '{\"action\":\"list\"}' -- env FLOWSTATE_DB=/tmp/flowstate_test.db FlowState/.venv/bin/python -m flowstate",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "manage_projects with project param",
+            "actually_needed": "create action requires name field, not project",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show FlowState MCP server v2.4.5 listing 12 tools and successfully executing log_work and start_here calls.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-flowstate-20261101-185255-d34a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-flowstate-20261101-185255-d34a/check-1-cmd5.judged.png",
+            "runs/verify/verify-flowstate-20261101-185255-d34a/check-2-cmd8.judged.png",
+            "runs/verify/verify-flowstate-20261101-185255-d34a/check-3-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.094299,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "env",
+            "FLOWSTATE_DB=/tmp/flowstate_test.db",
+            "FlowState/.venv/bin/python",
+            "-m",
+            "flowstate"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "flowstate",
+          "server_version": "2.4.5",
+          "tools": [
+            "start_here",
+            "log_work",
+            "search",
+            "manage_todos",
+            "manage_problems",
+            "manage_review",
+            "manage_handoffs",
+            "manage_rules",
+            "manage_links",
+            "manage_history",
+            "manage_projects",
+            "manage_memory"
+          ],
+          "tool_count": 12,
+          "called_tool": "log_work",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "Share project memory across AI apps",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Read short project brief when starting",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Record decisions, changes, problems and todos",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Store memory locally in SQLite file",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; SQLite file 676K exists and search returns stored decision"
+          }
+        ]
+      },
       {
         "id": "verify-flowstate-20261101-160740-ee50",
         "level": "service",
@@ -334,15 +529,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-01T19:32:11+08:00",
     "quality": {
-      "total": 81.8,
+      "total": 89.3,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -383,7 +578,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 51.04
+      "value": 55.72
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -826,5 +1021,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:31+08:00",
-  "updated_at": "2026-11-01T19:20:35.443867+08:00"
+  "updated_at": "2026-11-01T23:02:54.765779+08:00"
 }

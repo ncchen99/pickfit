@@ -50,17 +50,20 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-botsay-20261101-122402-2703",
       "method": "brew",
       "steps": [
         {
           "command": "brew install maebert/tap/botsay",
-          "purpose": null
+          "purpose": "brew install maebert/tap/botsay"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "botsay --version",
+        "expected_signal": "botsay 0.2.2"
+      },
       "first_task": "botsay hello"
     },
     "linux": {
@@ -101,7 +104,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T11:59:25.147307+08:00",
+    "checked_at": "2026-11-01T12:26:27.729526+08:00",
     "runs": [
       {
         "id": "verify-botsay-20261101-115829-b1c5",
@@ -238,20 +241,148 @@
             "note": null
           }
         ]
+      },
+      {
+        "id": "verify-botsay-20261101-122402-2703",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T12:26:27.729526+08:00",
+        "tool_version": "0.2.2",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install maebert/tap/botsay",
+            "purpose": "brew install maebert/tap/botsay"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "botsay --version",
+            "expected_signal": "botsay 0.2.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "botsay 0.2.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "botsay hello",
+            "expected_signal": "╭───────╮ │ hello │",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "▌ ▐",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "botsay -s manu hello",
+            "expected_signal": "╭───────╮ │ hello │",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "▐▜▀▛▌",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "botthink \"hmm...\"",
+            "expected_signal": "╭────────╮ │ hmm... │",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "▗▟▙▖",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "botsay --gallery 27",
+            "expected_signal": "0 1 2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0 1 2 3 4 5 6 7 8",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show botsay printing the hello bubble with robot art and reporting version 0.2.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-botsay-20261101-122402-2703/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-botsay-20261101-122402-2703/check-1-cmd4.judged.png",
+            "runs/verify/verify-botsay-20261101-122402-2703/check-2-cmd5.judged.png",
+            "runs/verify/verify-botsay-20261101-122402-2703/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.041683,
+        "features": [
+          {
+            "feature": "Display messages with cute robot",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Generate seeded robots in seed colors",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Draw thought balloons instead",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Browse robots in seed gallery",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:31:58+08:00",
+    "computed_at": "2026-11-01T16:23:27+08:00",
     "quality": {
-      "total": 86.6,
+      "total": 94.1,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -292,7 +423,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 68.07
+      "value": 73.96
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -573,5 +704,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:22:55+08:00",
-  "updated_at": "2026-11-01T11:59:25.148615+08:00"
+  "updated_at": "2026-11-01T16:23:27.026106+08:00"
 }

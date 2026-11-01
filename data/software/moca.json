@@ -69,18 +69,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-moca-20261101-122122-720a",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install adeotek/tap/moca",
-          "purpose": null
+          "command": "brew install adeotek/tap/moca 2>&1",
+          "purpose": "brew install adeotek/tap/moca"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "moca config sample"
+      "check": {
+        "command": "moca --version 2>&1",
+        "expected_signal": "moca v0.7.12"
+      },
+      "first_task": null
     },
     "linux": {
       "basis": "replayed",
@@ -133,8 +136,90 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:21:43.302360+08:00",
+    "checked_at": "2026-11-01T12:24:00.830221+08:00",
     "runs": [
+      {
+        "id": "verify-moca-20261101-122122-720a",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T12:24:00.830221+08:00",
+        "tool_version": "v0.7.12",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install adeotek/tap/moca 2>&1",
+            "purpose": "brew install adeotek/tap/moca"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "moca --version 2>&1",
+            "expected_signal": "moca v0.7.12",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "moca v0.7.12",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows the command output 'moca v0.7.12'.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-moca-20261101-122122-720a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-moca-20261101-122122-720a/check-1-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.048284,
+        "features": [
+          {
+            "feature": "Edit code with eight frozen tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; binary strings show web fetch and mcp proxy, config shows mcp/web/shell blocks; EIGHT_FROZEN_TOOLS_OK printed"
+          },
+          {
+            "feature": "Drive agent from editors via ACP",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; moca acp prints ACP usage, confirms Agent Client Protocol support"
+          },
+          {
+            "feature": "Use MCP servers without prompt bloat",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; moca mcp index reports no MCP servers configured, mcp import runs, proxy lazy ~200 token design present in binary"
+          },
+          {
+            "feature": "Search and fetch web keyless",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; moca config sample shows web.search provider tavily keyless by default"
+          }
+        ]
+      },
       {
         "id": "verify-moca-20261031-032009-7513",
         "level": "function",
@@ -677,5 +762,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:20+08:00",
-  "updated_at": "2026-11-01T19:23:44.937419+08:00"
+  "updated_at": "2026-11-01T23:02:55.270348+08:00"
 }

@@ -45,7 +45,8 @@ def _discover(args: argparse.Namespace) -> int:
         return 2
     funnel = run_discover(token=token, channel=args.channel, per_query=args.per_query,
                           pushed_days=args.pushed_days, days=args.days, categories=args.category,
-                          skip_details=args.skip_details, max_rate_wait_s=args.max_rate_wait)
+                          skip_details=args.skip_details, max_rate_wait_s=args.max_rate_wait,
+                          pick_n=args.pick, seed=args.seed)
     print(json.dumps(funnel, ensure_ascii=False, indent=2))
     return 0
 
@@ -106,14 +107,20 @@ def _funnel(args: argparse.Namespace) -> int:
 
 def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     from pickfit.discover.github import PUSHED_DAYS, RATE_LIMIT_MAX_WAIT_S, TOPICS
-    from pickfit.discover.run import CHANNELS, DEFAULT_PER_QUERY
+    from pickfit.discover.run import CHANNELS, DEFAULT_PER_QUERY, DEFAULT_SEED
     from pickfit.discover.showhn import DEFAULT_DAYS
     from pickfit.schema import LISTED_CATEGORIES
 
-    d = sub.add_parser("discover", help="find candidates (GitHub search or Show HN), fetch details, apply rules ($0)")
+    d = sub.add_parser("discover", help="find candidates (GitHub search, Show HN, Flathub, Homebrew Cask), "
+                                        "fetch details, apply rules ($0)")
     d.add_argument("--channel", choices=CHANNELS, default="github",
                    help="github: topic searches per category (default); show_hn: recent Show HN posts "
-                        "that point to a GitHub repo")
+                        "that point to a GitHub repo; flathub, homebrew_cask: the store's catalog under "
+                        "neutral rules (docs/source-terms.md)")
+    d.add_argument("--pick", type=int, default=0,
+                   help="flathub, homebrew_cask: list a batch of N candidates and fetch their details")
+    d.add_argument("--seed", default=DEFAULT_SEED,
+                   help=f"flathub, homebrew_cask: the batch is ordered by sha256(seed:app id) (default {DEFAULT_SEED})")
     d.add_argument("--days", type=int, default=DEFAULT_DAYS,
                    help=f"show_hn: posts from the last N days (default {DEFAULT_DAYS})")
     d.add_argument("--per-query", type=int, default=DEFAULT_PER_QUERY,
@@ -338,6 +345,41 @@ def _add_queue_commands(sub: argparse._SubParsersAction) -> None:
     r.set_defaults(func=_reverify)
 
 
+# --- usage outcomes from D1 ------------------------------------------------------
+
+
+def _outcomes_sync(args: argparse.Namespace) -> int:
+    from pickfit.d1 import D1, D1Error
+    from pickfit.ledger import taipei_now
+    from pickfit.outcomes import load_exclude, sync
+
+    try:
+        exclude = load_exclude(args.exclude)
+        return sync(args.data, D1(remote=not args.local, worker_dir=args.worker), now=taipei_now(),
+                    dry_run=args.dry_run, exclude=exclude)
+    except (D1Error, ValueError) as err:
+        print(f"pickfit: {err}", file=sys.stderr)
+        return 2
+
+
+def _add_outcomes_command(sub: argparse._SubParsersAction) -> None:
+    from pickfit.d1 import DEFAULT_WORKER_DIR
+    from pickfit.profiles import DEFAULT_OUT
+
+    o = sub.add_parser("outcomes", help="usage reports from the Worker's D1")
+    osub = o.add_subparsers(dest="outcomes_command", required=True)
+    s = osub.add_parser("sync", help="read report_outcome counts from D1 (read-only) into data/software and "
+                                     "refresh scores; outside reports only ($0)")
+    s.add_argument("--dry-run", action="store_true", help="print what would change per slug; write nothing")
+    s.add_argument("--exclude", type=Path, default=None,
+                   help="file of rec_ids (one per line, kept outside the repo) to leave out: our own checks "
+                        "sent without X-Pickfit-Reporter")
+    s.add_argument("--local", action="store_true", help="the local D1 of `wrangler dev` instead of the remote one")
+    s.add_argument("--worker", type=Path, default=DEFAULT_WORKER_DIR, help="the Worker directory (wrangler runs there)")
+    s.add_argument("--data", type=Path, default=DEFAULT_OUT, help="records directory (default data/software)")
+    s.set_defaults(func=_outcomes_sync)
+
+
 # --- publish (P4.2) ---------------------------------------------------------------
 
 
@@ -377,6 +419,7 @@ def main(argv: list[str] | None = None) -> int:
     _add_pipeline_commands(sub)
     _add_score_command(sub)
     _add_queue_commands(sub)
+    _add_outcomes_command(sub)
     _add_publish_command(sub)
 
     from pickfit.verify.cli import add_parser as add_verify_parser
