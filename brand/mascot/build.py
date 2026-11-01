@@ -67,7 +67,7 @@ POSES = {
         eyes=((72, 118, 1.0), (128, 118, 1.0)),
         cap="M28 118 C 44 100, 62 94, 80 96 C 88 97, 94 103, 100 110 C 106 103, 112 97, 120 96 "
         "C 138 94, 156 100, 172 118 L172 40 L28 40 Z",
-        blush=((62, 130, 7, 3.8), (138, 130, 7, 3.8)),
+        blush=((59, 133, 7, 3.8), (141, 133, 7, 3.8)),
         band=(((32, 134), (100, 154), (168, 134)), ((32, 144.5), (100, 165), (168, 144.5))),
         end_x=118,
         wings=(
@@ -78,12 +78,12 @@ POSES = {
         belly=(100, 173),
     ),
     "turn": dict(
-        eyes=((100, 118, 1.0), (146, 110, 0.72)),
-        cap="M28 112 C 48 96, 76 90, 104 92 C 118 93, 126 96, 131 102 L138 111.5 L145 101 "
-        "C 152 97, 166 96, 178 99 L178 40 L28 40 Z",
-        blush=((86, 131, 7, 3.8),),
-        band=(((32, 132), (118, 154), (168, 128)), ((32, 142.5), (118, 165), (168, 138.5))),
-        end_x=104,
+        eyes=((92, 118, 1.0), (141, 113, 0.78)),
+        cap="M28 112 C 48 96, 70 90, 92 93 C 101 94, 106 99, 110 104 L116 111 L122 103 "
+        "C 130 96, 152 94, 178 99 L178 40 L28 40 Z",
+        blush=((78, 134, 7, 3.8), (153, 133, 4.5, 3.2)),
+        band=(((32, 133), (112, 155), (168, 130)), ((32, 143.5), (112, 166), (168, 140.5))),
+        end_x=98,
         wings=("M54 139 C 66 145, 70 161, 60 173 C 52 171, 44 159, 46 145 Z",),
         tuft='transform="rotate(-14 100 66) translate(-6 0)"',
         belly=(110, 173),
@@ -129,25 +129,26 @@ def qd(p):
 
 # ---------------------------------------------------------------- parts
 def eye(cx, cy, kind, k=1.0):
-    """One small dot eye, wrapped in <g class="eye"> so it can blink. k narrows the far eye."""
-    rx, ry = 5.2 * k, 6.2
+    """One eye (dark oval with a white highlight, v1 size), wrapped in <g class="eye"> so it
+    can blink. k narrows the far eye in the turned pose."""
+    rx, ry = 6.8 * k, 8.3
     if kind in ("open", "look_up", "look_down", "wide"):
-        dy = {"look_up": -1.8, "look_down": 2}.get(kind, 0)
+        dy = {"look_up": -2, "look_down": 2.2}.get(kind, 0)
         if kind == "wide":
-            rx, ry = rx * 1.3, ry * 1.3
+            rx, ry = rx * 1.18, ry * 1.18
         return (
             f'<g class="eye"><ellipse cx="{f(cx)}" cy="{f(cy + dy)}" rx="{f(rx)}" ry="{f(ry)}" fill="{INK}"/>'
-            f'<circle cx="{f(cx - 1.5 * k)}" cy="{f(cy + dy - 2.2)}" r="{f(1.7 if kind == "wide" else 1.5)}" fill="{WHITE}"/></g>'
+            f'<circle cx="{f(cx - 1.9 * k)}" cy="{f(cy + dy - 2.8)}" r="{f(2.4 if kind == "wide" else 2.1)}" fill="{WHITE}"/></g>'
         )
-    w = 6 * k
+    w = 7 * k
     if kind == "happy":  # closed, smiling arcs
-        d = f"M{f(cx - w)} {f(cy + 2)} Q{f(cx)} {f(cy - 6)} {f(cx + w)} {f(cy + 2)}"
+        d = f"M{f(cx - w)} {f(cy + 2)} Q{f(cx)} {f(cy - 7)} {f(cx + w)} {f(cy + 2)}"
     elif kind == "proud":  # pointed ^ ^, chin goes up with it
-        d = f"M{f(cx - w)} {f(cy + 2.5)} L{f(cx)} {f(cy - 4)} L{f(cx + w)} {f(cy + 2.5)}"
+        d = f"M{f(cx - w)} {f(cy + 2.5)} L{f(cx)} {f(cy - 4.5)} L{f(cx + w)} {f(cy + 2.5)}"
     else:
         raise ValueError(kind)
     return (
-        f'<g class="eye"><path d="{d}" fill="none" stroke="{INK}" stroke-width="3.6" '
+        f'<g class="eye"><path d="{d}" fill="none" stroke="{INK}" stroke-width="4" '
         f'stroke-linecap="round" stroke-linejoin="round"/></g>'
     )
 
@@ -155,10 +156,10 @@ def eye(cx, cy, kind, k=1.0):
 # (left brow, right brow) as points relative to each eye centre:
 # two points = straight line, three = start, control, end of a curve.
 BROWS = {
-    "worried": (((-7, -10), (5, -14)), ((-5, -14), (7, -10))),
-    "raised": (((-6.5, -13), (0, -18), (6.5, -13)), ((-6.5, -13), (0, -18), (6.5, -13))),
-    "curious": (((-6, -12), (5, -12.5)), ((-5.5, -14), (0, -20), (5.5, -14))),
-    "determined": (((-6.5, -14), (5, -10.5)), ((-5, -10.5), (6.5, -14))),
+    "worried": (((-8, -12.5), (6, -17)), ((-6, -17), (8, -12.5))),
+    "raised": (((-7.5, -15.5), (0, -21.5), (7.5, -15.5)), ((-7.5, -15.5), (0, -21.5), (7.5, -15.5))),
+    "curious": (((-7, -14.5), (6, -15)), ((-6.5, -17), (0, -24), (6.5, -17))),
+    "determined": (((-7.5, -17), (6, -13)), ((-6, -13), (7.5, -17))),
 }
 
 
@@ -184,8 +185,9 @@ def beak(kind="closed", pose="front"):
     """Front: a tiny diamond between the eyes. Turn: a small side triangle on the face."""
     s = f'stroke="{INK}" stroke-width="2.4" stroke-linejoin="round"'
     if pose == "turn":
-        up = "M139.5 117.5 L161.5 123 L138 123.5 Z"
-        lo = "M138 123.5 L161.5 123 L140 129 Z"
+        # on the face between the eyes (nearer the far one), pointing right
+        up = "M114.5 121.5 L136 127 L113 127.5 Z"
+        lo = "M113 127.5 L136 127 L115 133 Z"
         inner = f'<path d="{lo}" fill="{BEAK}" {s}/><path d="{up}" fill="{BEAK_TOP}" {s}/>'
         return f'<g class="beak">{inner}</g>'
     if kind == "open":
@@ -327,7 +329,7 @@ def exclaim(cls="exclaim"):
 
 
 # ---------------------------------------------------------------- props
-BEAK_TIP = (161, 123)  # tip of the turned beak: where props are held
+BEAK_TIP = (136, 127)  # tip of the turned beak: where props are held
 
 
 def leaf(cls="leaf"):
@@ -340,7 +342,7 @@ def leaf(cls="leaf"):
     )
     x, y = BEAK_TIP
     return (
-        f'<g class="{cls}"><g transform="translate({x - 4} {y + 1}) rotate(4)">'
+        f'<g class="{cls}"><g transform="translate({x - 4} {y + 1}) rotate(46)">'
         f'<path d="{shape}" fill="{LEAF}" stroke="{INK}" stroke-width="{SW2}" stroke-linejoin="round"/>'
         f'<path d="{rib}" fill="none" stroke="{LEAF_DARK}" stroke-width="2.4" stroke-linecap="round"/>'
         f'<path d="{stitches}" stroke="{BELLY}" stroke-width="2.4" stroke-linecap="round"/>'
@@ -363,7 +365,7 @@ def package(x=212, y=134, w=72, h=58):
     )
 
 
-def strip(x0, length, y=119, h=9, cls="strip"):
+def strip(x0, length, y=122.5, h=9, cls="strip"):
     """A straight run of tape from the beak tip, with its hook end."""
     ticks = " ".join(
         f"M{f(x)} {f(y)} L{f(x)} {f(y + (5 if k % 2 == 0 else 3))}"
@@ -505,9 +507,10 @@ def build_states():
     )
     body = (
         package()
+        + bird(cid="fitz-test", pose="turn", brow="determined")
         + reel
         + f'<g clip-path="url(#reel)">{strip(x0, full)}</g>'
-        + bird(cid="fitz-test", pose="turn", brow="determined")
+        + beak(pose="turn")  # beak again on top: it grips the tape end
         + f'<path class="edge" d="M293 108 L293 138" stroke="{GOOD}" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 5"/>'
     )
     write("states/fitz-testing.svg", doc(view, body, "Fitz, testing",
@@ -536,10 +539,10 @@ def build_states():
     )
     body = (
         package()
-        + '<g class="shake">' + reel + f'<g clip-path="url(#reel)">{strip(x0, short)}</g>'
-        + bird(cid="fitz-fail", pose="turn", eyes="look_down", brow="worried") + "</g>"
+        + '<g class="shake">' + bird(cid="fitz-fail", pose="turn", eyes="look_down", brow="worried")
+        + reel + f'<g clip-path="url(#reel)">{strip(x0, short)}</g>' + beak(pose="turn") + "</g>"
         + gap
-        + sweat(154, 64)
+        + sweat(162, 70)
     )
     write("states/fitz-test-failed.svg", doc(view, body, "Fitz, test failed",
                                              "Fitz's tape comes up short of the package; it shakes its head, sorry.", css))
@@ -559,8 +562,8 @@ def build_states():
         "@keyframes twinkle{0%,100%{transform:scale(.55);opacity:.5}40%{transform:scale(1.1);opacity:1}}"
     )
     body = (
-        '<g class="offer">' + leaf() + bird(cid="fitz-rec", pose="turn", eyes="happy") + "</g>"
-        + star(222, 76, 9, "star") + star(242, 104, 6, "star s2") + star(200, 62, 5, "star s3")
+        '<g class="offer">' + bird(cid="fitz-rec", pose="turn", eyes="happy") + leaf() + beak(pose="turn") + "</g>"
+        + star(214, 112, 9, "star") + star(234, 140, 6, "star s2") + star(194, 96, 5, "star s3")
     )
     write("states/fitz-recommending.svg", doc(view, body, "Fitz, recommending",
                                               "Fitz turns and holds out a stitched leaf: this one fits.", css))
@@ -623,8 +626,8 @@ def icon_64(ink=INK, suffix=""):
         f'<path d="M14.8 45 C 17.3 47, 17.8 52, 15.8 55 C 13.8 54, 12.3 50.5, 12.6 46.5 Z" {w}/>'
         f'<path d="M49.2 45 C 46.7 47, 46.2 52, 48.2 55 C 50.2 54, 51.7 50.5, 51.4 46.5 Z" {w}/>'
         f'<g fill="{BLUSH}" opacity=".55"><ellipse cx="18" cy="42.5" rx="2.6" ry="1.5"/><ellipse cx="46" cy="42.5" rx="2.6" ry="1.5"/></g>'
-        f'<ellipse cx="22" cy="38.5" rx="1.9" ry="2.2" fill="{INK}"/><ellipse cx="42" cy="38.5" rx="1.9" ry="2.2" fill="{INK}"/>'
-        f'<circle cx="21.5" cy="37.7" r=".6" fill="{WHITE}"/><circle cx="41.5" cy="37.7" r=".6" fill="{WHITE}"/>'
+        f'<ellipse cx="22" cy="37.8" rx="2.6" ry="3.1" fill="{INK}"/><ellipse cx="42" cy="37.8" rx="2.6" ry="3.1" fill="{INK}"/>'
+        f'<circle cx="21.2" cy="36.7" r=".95" fill="{WHITE}"/><circle cx="41.2" cy="36.7" r=".95" fill="{WHITE}"/>'
         f'<path d="M29.6 40.5 L34.4 40.5 L32 43.2 Z" fill="{BEAK}" stroke="{ink}" stroke-width="1" stroke-linejoin="round"/>'
         f'<path d="M29.6 40.5 L32 38 L34.4 40.5 Z" fill="{BEAK_TOP}" stroke="{ink}" stroke-width="1" stroke-linejoin="round"/>'
     )
@@ -644,7 +647,8 @@ def icon_32(ink=INK, suffix=""):
         f'<path d="M19.2 24.5 L19.2 27.6" stroke="{TAPE}" stroke-width="2"/>'
         f'<path d="{I32["body"]}" fill="none" stroke="{ink}" stroke-width="1.5"/>'
         f'<path d="M7 22.5 Q 8.4 25 7.6 27.4 M25 22.5 Q 23.6 25 24.4 27.4" fill="none" stroke="{ink}" stroke-width="1.2" stroke-linecap="round"/>'
-        f'<circle cx="11" cy="19.4" r="1.25" fill="{INK}"/><circle cx="21" cy="19.4" r="1.25" fill="{INK}"/>'
+        f'<ellipse cx="11" cy="19.2" rx="1.5" ry="1.9" fill="{INK}"/><ellipse cx="21" cy="19.2" rx="1.5" ry="1.9" fill="{INK}"/>'
+        f'<circle cx="10.6" cy="18.5" r=".5" fill="{WHITE}"/><circle cx="20.6" cy="18.5" r=".5" fill="{WHITE}"/>'
         f'<path d="M14.6 20.6 L17.4 20.6 L16 22.4 Z" fill="{BEAK}"/>'
         f'<path d="M14.6 20.6 L16 19 L17.4 20.6 Z" fill="{BEAK_TOP}"/>'
     )
@@ -662,7 +666,7 @@ def icon_16(ink=INK, suffix=""):
         f'<g clip-path="url(#{cid})"><path d="M0 9.8 C 3 8.2, 6 8, 8.5 9.6 C 11 8, 14 8.2, 17 9.8 L17 0 L0 0 Z" fill="{CAP}"/>'
         f'<path d="M0 14 Q 8.5 16 17 14 L17 16 L0 16 Z" fill="{BELLY}"/></g>'
         f'<ellipse {body_e} fill="none" stroke="{ink}" stroke-width="1"/>'
-        f'<rect x="5" y="10" width="1" height="2" fill="{INK}"/><rect x="11" y="10" width="1" height="2" fill="{INK}"/>'
+        f'<rect x="5" y="9.5" width="2" height="2.5" rx=".6" fill="{INK}"/><rect x="10" y="9.5" width="2" height="2.5" rx=".6" fill="{INK}"/>'
         f'<path d="M7.4 11.6 L8.5 10.5 L9.6 11.6 L8.5 12.9 Z" fill="{BEAK}"/>'
     )
     write(f"icons/fitz-16{suffix}.svg", doc("0 0 16 16", s, "Fitz icon", "Fitz the tailorbird, 16 px icon."))
@@ -691,7 +695,7 @@ def mono():
         f'<path d="{tape_ticks(top)}" stroke-width="1.8"/></g></g>'
         + "".join(f'<path d="{d}" stroke-width="{SW2}"/>' for d in P["wings"])
         + "</g>"
-        + "".join(f'<ellipse cx="{x}" cy="{y}" rx="5.2" ry="6.2" fill="{cc}"/>' for x, y, _ in P["eyes"])
+        + "".join(f'<ellipse cx="{x}" cy="{y}" rx="6.8" ry="8.3" fill="{cc}"/>' for x, y, _ in P["eyes"])
         + f'<path d="M93.5 124 L100 117.5 L106.5 124 L100 131 Z M93.5 124 L106.5 124" fill="none" stroke="{cc}" stroke-width="2.4" stroke-linejoin="round"/>'
     )
     write("fitz-mono.svg", doc(VIEW, s, "Fitz, one colour", "Fitz the tailorbird as a one-colour line drawing."))
@@ -700,7 +704,7 @@ def mono():
         f'<defs><clipPath id="m32"><path d="{I32["body"]}"/></clipPath></defs>'
         f'<g fill="{cc}"><path d="{I32["tail"]}"/><path d="{I32["tuft"]}"/>'
         f'<path clip-path="url(#m32)" d="{I32["cap"]}"/>'
-        '<circle cx="11" cy="19.4" r="1.3"/><circle cx="21" cy="19.4" r="1.3"/>'
+        '<ellipse cx="11" cy="19.2" rx="1.5" ry="1.9"/><ellipse cx="21" cy="19.2" rx="1.5" ry="1.9"/>'
         '<path d="M14.5 20.7 L16 19 L17.5 20.7 L16 22.6 Z"/></g>'
         f'<g fill="none" stroke="{cc}" stroke-linecap="round"><path d="{I32["body"]}" stroke-width="2"/>'
         '<path clip-path="url(#m32)" d="M3 22.6 Q16 27 29 22.6" stroke-width="1.3"/>'
