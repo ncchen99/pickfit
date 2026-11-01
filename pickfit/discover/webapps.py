@@ -18,9 +18,12 @@ first rule it fails, so every filter step has a count. The rules, in order:
    download (`no_link`, `no_homepage`, `code_host`, `platform`, `download`).
 2. GitHub only: open source (GitHub's license), maintained (pushed in the last
    MAINTAINED_DAYS, not archived), not a fork or template.
-3. used but not famous: between the BAND percentiles of the source's popularity measure
-   (Show HN points, GitHub stars) among that source's rows that pass 1-2, as listings.py
-   does for the package stores (`below_band`, `above_band`).
+3. used but not famous: some sign of use (FLOOR: a Show HN post starts at the submitter's
+   own point, so a site needs a post with 2 or more; a repository needs 2 or more stars, as
+   one may be its owner's; `unused`), then between the BAND
+   percentiles of the source's popularity measure (Show HN points, the best post's per
+   site; GitHub stars) among that source's rows that pass 1-2, as listings.py does for the
+   package stores (`below_band`, `above_band`).
 
 Topic plays no part. The rows that pass are ordered by sha256(seed:site key) and
 checked one by one, in that order, until a source has its quota (check_site):
@@ -76,6 +79,10 @@ FILTERS_VERSION = "webapps.v1"
 DEFAULT_DAYS = 120  # Show HN posts from the last N days
 MAINTAINED_DAYS = 365
 BAND = (0.25, 0.75)  # the middle half of each source's popularity measure
+# A sign that someone besides the author uses it, as a cask needs an install in the last 30 days: a Show
+# HN post starts at 1 point, the submitter's own, so a site needs a post with 2 or more; one star may be
+# the owner's own, so a repository needs 2 or more. Without it the lower percentile is just that floor.
+FLOOR = {"show_hn": 2, "github": 2}
 DEFAULT_SEED = "p2.8"
 ROBOTS_AGENT = "pickfit"
 
@@ -374,20 +381,20 @@ def github_outcome(repo: dict[str, Any], now: datetime) -> str | None:
     return None
 
 
-def apply_band(rows: list[dict[str, Any]]) -> tuple[int, int] | None:
-    """Rule 3 for one source's rows: one value per site (its best post), the middle half."""
+def apply_band(rows: list[dict[str, Any]], floor: int = 0) -> tuple[int, int] | None:
+    """Rule 3 for one source's rows: one value per site (its best post), `unused` below `floor`, then the
+    middle half of the rest."""
     best: dict[str, int] = {}
     for r in rows:
         if r["outcome"] == "site":
             best[r["site_key"]] = max(best.get(r["site_key"], 0), int(r.get("popularity") or 0))
-    if not best:
-        return None
-    values = list(best.values())
-    band = (int(percentile(values, BAND[0])), int(percentile(values, BAND[1])))
+    values = [v for v in best.values() if v >= floor]
+    band = (int(percentile(values, BAND[0])), int(percentile(values, BAND[1]))) if values else None
     for r in rows:
         if r["outcome"] == "site":
             value = best[r["site_key"]]
-            r["outcome"] = "below_band" if value < band[0] else "above_band" if value > band[1] else "in_band"
+            r["outcome"] = ("unused" if value < floor or band is None else "below_band" if value < band[0]
+                            else "above_band" if value > band[1] else "in_band")
     return band
 
 
@@ -865,7 +872,7 @@ def run_gather(db: WebSites, *, source: str, hn: HN | None, gh: GitHub, now: dat
     else:
         raise ValueError(f"unknown source {source!r}; expected one of {SOURCES}")
     stats = GatherStats(source, rows=len(rows))
-    stats.band = apply_band(rows)
+    stats.band = apply_band(rows, floor=FLOOR[source])
     stats.sites_in_band = len({r["site_key"] for r in rows if r["outcome"] == "in_band"})
     for r in rows:
         stats.by_outcome[r["outcome"]] += 1

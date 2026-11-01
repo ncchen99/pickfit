@@ -113,6 +113,12 @@ def test_apply_band_one_value_per_site():
     assert rows[-1]["outcome"] == "platform"
 
 
+def test_apply_band_floor_marks_unused_and_bands_the_rest():
+    rows = [{"outcome": "site", "site_key": f"web:s{i}", "popularity": p} for i, p in enumerate([1, 1, 1, 2, 3, 4, 9])]
+    assert w.apply_band(rows, floor=2) == (3, 4)  # nearest-rank P25 and P75 of 2, 3, 4, 9
+    assert [r["outcome"] for r in rows] == ["unused"] * 3 + ["below_band", "in_band", "in_band", "above_band"]
+
+
 def _repo(**kw):
     base = {"homepage": "https://x.example.com", "fork": False, "is_template": False, "license": "MIT",
             "archived": False, "disabled": False, "pushed_at": "2026-10-01T00:00:00Z"}
