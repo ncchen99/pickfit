@@ -84,21 +84,26 @@
       "first_task": null
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "npm",
+      "basis": "replayed",
+      "run_id": "verify-flint-20261101-180553-a308",
+      "method": "binary",
       "steps": [
         {
-          "command": "npm install -g @jozkah/flint",
-          "purpose": null
+          "command": "mkdir -p ~/apps && curl -fL -o /tmp/Flint_1.0.1_amd64.AppImage https://github.com/Jozkah/flint/releases/download/v1.0.1/Flint_1.0.1_amd64.AppImage && ls -lh /tmp/Flint_1.0.1_amd64.AppImage",
+          "purpose": "Download Linux AppImage from GitHub releases"
+        },
+        {
+          "command": "chmod +x /tmp/Flint_1.0.1_amd64.AppImage",
+          "purpose": "Make AppImage executable"
+        },
+        {
+          "command": "/tmp/Flint_1.0.1_amd64.AppImage --appimage-extract",
+          "purpose": "Extract AppImage"
         }
       ],
-      "manual_steps": [
-        "Click More info, then Run anyway in Windows SmartScreen on first launch",
-        "Right-click Flint in Applications and choose Open, then Open again on macOS"
-      ],
+      "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "/tmp/Flint_1.0.1_amd64.AppImage --appimage-extract-and-run --no-sandbox 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -127,22 +132,170 @@
   "processing": "hybrid",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T18:30:30.701866+08:00",
+    "runs": [
+      {
+        "id": "verify-flint-20261101-180553-a308",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-vm",
+        "image": "pickfit-sbx-vm-gui:57d565a999ec",
+        "checked_at": "2026-11-01T18:30:30.701866+08:00",
+        "tool_version": "1.0.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/apps && curl -fL -o /tmp/Flint_1.0.1_amd64.AppImage https://github.com/Jozkah/flint/releases/download/v1.0.1/Flint_1.0.1_amd64.AppImage && ls -lh /tmp/Flint_1.0.1_amd64.AppImage",
+            "purpose": "Download Linux AppImage from GitHub releases"
+          },
+          {
+            "command": "chmod +x /tmp/Flint_1.0.1_amd64.AppImage",
+            "purpose": "Make AppImage executable"
+          },
+          {
+            "command": "/tmp/Flint_1.0.1_amd64.AppImage --appimage-extract",
+            "purpose": "Extract AppImage"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "/tmp/Flint_1.0.1_amd64.AppImage --appimage-extract-and-run --no-sandbox 2>&1",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "/tmp/Flint_1.0.1_amd64.AppImage --appimage-extract-and-run --no-sandbox 2>&1",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Hugging Face\": yes",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Installers attached to releases page, no Linux CLI command",
+            "actually_needed": "AppImage requires chmod +x and --appimage-extract-and-run --no-sandbox (no FUSE, no root) - FUSE open fails, needs --no-sandbox in this box",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "install step 3 runs Flint_1.0.1_amd64.AppImage",
+            "actually_needed": "nothing to change; a note: the box ran Flint_1.0.1_amd64.AppImage, downloaded, without reading it first, so pickfit did not inspect it",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows a 'Migrate from JAN' setup dialog with data import options over the app's chat interface.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-flint-20261101-180553-a308/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-flint-20261101-180553-a308/replay-5-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.445378,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "/tmp/Flint_1.0.1_amd64.AppImage --appimage-extract-and-run --no-sandbox 2>&1",
+          "window_title": "Flint",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU",
+          "operations": [
+            {
+              "feature": "Browse and download GGUF models from Hugging Face",
+              "goal": "Dismiss any initial dialogs by clicking Start fresh or Skip. Then click the \"Browse Hugging Face\" button at the top of the Models page to open the Hugging Face browsing view. Wait for the browsing interface to appear.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "Hugging Face"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Hugging Face\": yes",
+              "smoke_test": 1,
+              "actions": 18,
+              "replay": "actions",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-1.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-2.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-3.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-4.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-5.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-6.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-7.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-8.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-9.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-10.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-11.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-12.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-13.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-14.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-15.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-16.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-17.png",
+                "runs/verify/verify-flint-20261101-180553-a308/replay-10-2-op-18.png"
+              ]
+            }
+          ]
+        },
+        "features": [
+          {
+            "feature": "Chat with models on your computer",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; New Chat visible but onboarding blocks composer; check required Message not shown"
+          },
+          {
+            "feature": "Let agent work on files and projects",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; Cowork switcher visible but agent panel not surfaced in headless sandbox"
+          },
+          {
+            "feature": "Browse and download GGUF models from Hugging Face",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only confirms 'Hugging Face' text visible with cache description, showing no model list or download."
+          }
+        ]
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T18:30:45+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 61.8,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.51,
           "weight": 40.0
         },
         "install_docs": {
@@ -183,7 +336,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 48.78
+      "value": 43.69
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -506,5 +659,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T18:30:45.093732+08:00"
 }
