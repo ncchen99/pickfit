@@ -71,6 +71,7 @@ BACKGROUND_WAIT_S = 90
 MAX_NUDGES = 2
 MAX_FINISH_RETRIES = 1  # a finish the log does not support goes back to the model once
 WRAP_UP_SECONDS = 90  # leave this much of the time limit for the finish-only turn
+OPERATE_RESERVE_S = 300  # operate_gui: the operator's turns take minutes; none starts without them
 
 _ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b[@-Z\\-_]")
 
@@ -1039,6 +1040,9 @@ class VerifyAgent:
         if refused:
             self._say(f"  ◈ {_one_line(args.goal, 200)} → refused (budget)")
             return refused
+        if self._elapsed() + OPERATE_RESERVE_S >= self.limits.max_seconds - WRAP_UP_SECONDS:
+            self._say(f"  ◈ {_one_line(args.goal, 120)} → refused (time)")
+            return "error: too little time is left for an operation (a few minutes). Call finish."
         problems = spec_problems(args)
         if problems:  # nothing ran: not budgeted
             self._say(f"  ◈ {_one_line(args.goal, 120)} → refused ({_one_line(problems[0], 120)})")
