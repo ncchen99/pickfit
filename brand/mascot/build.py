@@ -145,6 +145,8 @@ def eye(cx, cy, kind, k=1.0):
         d = f"M{f(cx - w)} {f(cy + 2)} Q{f(cx)} {f(cy - 7)} {f(cx + w)} {f(cy + 2)}"
     elif kind == "proud":  # pointed ^ ^, chin goes up with it
         d = f"M{f(cx - w)} {f(cy + 2.5)} L{f(cx)} {f(cy - 4.5)} L{f(cx + w)} {f(cy + 2.5)}"
+    elif kind == "sleep":  # closed and relaxed: the arc hangs down
+        d = f"M{f(cx - w)} {f(cy - 1)} Q{f(cx)} {f(cy + 6)} {f(cx + w)} {f(cy - 1)}"
     else:
         raise ValueError(kind)
     return (
@@ -590,6 +592,74 @@ def build_states():
                                          "Fitz hops and flaps its wings next to a green check.", css))
 
 
+# ------------------------------------------------ web extensions (11/1)
+# Poses the product web page needs that the set above does not cover. Same
+# shapes, palette and line weights; nothing new is drawn except the Z marks.
+def build_web():
+    # hello: the home page's first moment. One wing lifts and waves twice, then idle.
+    css = (
+        PIVOTS
+        + f".bird{{{BIRD_PIVOT}animation:breathe 4s 1.8s ease-in-out infinite}}"
+        ".wing.r{animation:wave .9s ease-in-out 2 both}"
+        ".tail{animation:bob 4s 1.8s ease-in-out infinite}"
+        ".eye{animation:blink 4s 1.8s ease-in-out infinite}"
+        "@keyframes wave{0%,100%{transform:rotate(0)}30%{transform:rotate(-34deg)}60%{transform:rotate(-18deg)}80%{transform:rotate(-30deg)}}"
+        "@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.012,.986)}}"
+        "@keyframes bob{0%,55%,100%{transform:rotate(0)}64%{transform:rotate(-8deg)}74%{transform:rotate(4deg)}84%{transform:rotate(-2deg)}}"
+        "@keyframes blink{0%,40%,48%,100%{transform:scaleY(1)}44%{transform:scaleY(.12)}}"
+    )
+    write("states/fitz-hello.svg", doc(VIEW, bird(cid="fitz-hello", eyes="happy"), "Fitz, hello",
+                                       "Fitz smiles and lifts one wing to say hello.", css))
+
+    # resting: model matching is paused (budget, busy). Eyes closed, slow breath, Z marks.
+    css = (
+        PIVOTS
+        + f".bird{{{BIRD_PIVOT}animation:breathe 4.4s ease-in-out infinite}}"
+        ".z{transform-box:fill-box;transform-origin:50% 50%;animation:float 4.4s ease-in-out infinite}"
+        ".z.z2{animation-delay:1.1s}"
+        "@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.02,.975)}}"
+        "@keyframes float{0%{opacity:0;transform:translate(0,6px) scale(.7)}30%,60%{opacity:1}100%{opacity:0;transform:translate(8px,-10px) scale(1)}}"
+    )
+    z = lambda x, y, s, cls: (  # noqa: E731
+        f'<path class="{cls}" d="M{x} {y} h{s} l-{s} {s} h{s}" fill="none" stroke="{CAP}" '
+        f'stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>'
+    )
+    write(
+        "states/fitz-resting.svg",
+        doc(VIEW, bird(cid="fitz-rest", eyes="sleep") + z(150, 58, 12, "z") + z(170, 36, 9, "z z2"),
+            "Fitz, resting", "Fitz rests with its eyes closed while the model is paused.", css),
+    )
+
+    # comparing: looks from one package to the other and back.
+    view = "0 0 280 200"
+    css = (
+        PIVOTS
+        + ".pupils{animation:look 3.6s ease-in-out infinite}"
+        f".bird{{{BIRD_PIVOT}animation:lean 3.6s ease-in-out infinite}}"
+        ".pa,.pb{transform-box:fill-box;transform-origin:50% 100%}"
+        ".pa{animation:pa 3.6s ease-in-out infinite}.pb{animation:pb 3.6s ease-in-out infinite}"
+        "@keyframes look{0%,100%{transform:translateX(0)}12%,40%{transform:translateX(-4px)}58%,86%{transform:translateX(4px)}}"
+        "@keyframes lean{0%,100%{transform:rotate(0)}12%,40%{transform:rotate(-3deg)}58%,86%{transform:rotate(3deg)}}"
+        "@keyframes pa{0%,8%,44%,100%{transform:translateY(0)}20%,32%{transform:translateY(-5px)}}"
+        "@keyframes pb{0%,54%,90%,100%{transform:translateY(0)}66%,78%{transform:translateY(-5px)}}"
+    )
+    body = (
+        f'<g class="pa">{package(4, 140, 52, 44)}</g>'
+        + f'<g class="pb">{package(224, 140, 52, 44)}</g>'
+        + f'<g transform="translate(40 0)">{bird(cid="fitz-cmp", brow="curious")}</g>'
+    )
+    write("states/fitz-comparing.svg", doc(view, body, "Fitz, comparing",
+                                           "Fitz looks from one software package to the other.", css))
+
+    # peek: the head over an edge, for hints and tips. Cut just below the tape.
+    body = (
+        '<defs><clipPath id="peek-cut"><rect x="0" y="0" width="200" height="146"/></clipPath></defs>'
+        f'<g clip-path="url(#peek-cut)">{bird(cid="fitz-peek")}</g>'
+    )
+    write("fitz-peek.svg", doc("0 34 200 112", body, "Fitz, peeking", "Fitz's head peeking over an edge.",
+                               size=("200", "112")))
+
+
 # ------------------------------------------------ icons
 # Each size is drawn on its own grid. The "-dark" variants swap the brown
 # outline for cream so the silhouette holds on dark backgrounds.
@@ -717,6 +787,7 @@ if __name__ == "__main__":
     build_main()
     build_expressions()
     build_states()
+    build_web()
     for ink, suffix in ((INK, ""), (BELLY, "-dark")):
         icon_64(ink, suffix)
         icon_32(ink, suffix)
