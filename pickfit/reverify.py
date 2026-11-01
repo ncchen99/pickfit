@@ -364,6 +364,10 @@ class Reverifier:
             result.notes.append(f"{path.name} is not in {self.data_dir}")
             return
         record = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8"))
+        if record.repo is None:
+            result.outcome = "gave_up"
+            result.notes.append("a hosted web app has no repository: the web verifier re-checks it, not this loop")
+            return
         item = self.steps.github.repo(record.repo.full_name)
         if item is None or repo_key(item["id"]) != record.repo_id:
             result.outcome = "gave_up"

@@ -46,6 +46,7 @@ type Kind = Literal[
     "tui",
     "desktop_app",
     "self_hosted_web_app",
+    "web_app",
     "server_daemon",
     "mcp_server_or_agent_plugin",
     "browser_extension",
@@ -114,7 +115,7 @@ type FeatureFailure = Literal["sandbox", "tool"]
 type CapReason = Literal["archived", "verification_failed", "not_a_tool", "unverified"]
 type SourceKind = Literal[
     "github_api", "readme", "release", "manifest", "package_registry",
-    "hn", "submission", "sandbox", "human",
+    "hn", "submission", "sandbox", "human", "website",
 ]
 type EvidenceMethod = Literal["api", "model", "sandbox", "rule", "human"]
 type McpTransport = Literal["stdio", "streamable_http", "sse"]
@@ -131,6 +132,7 @@ TOOL_KINDS: frozenset[str] = frozenset(
         "tui",
         "desktop_app",
         "self_hosted_web_app",
+        "web_app",
         "server_daemon",
         "mcp_server_or_agent_plugin",
         "browser_extension",
@@ -178,7 +180,12 @@ MCP_TOOLS_MAX = 200
 type Slug = Annotated[
     str, StringConstraints(pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$", max_length=64)
 ]
-type RepoId = Annotated[str, StringConstraints(pattern=r"^gh:[1-9][0-9]*$")]
+# 'gh:' + GitHub numeric repository id; a hosted web app with no repository: 'web:' + its host and path.
+type RepoId = Annotated[
+    str, StringConstraints(pattern=r"^(?:gh:[1-9][0-9]*|web:[a-z0-9.-]+(?:/[A-Za-z0-9._~-]+)*)$", max_length=200)
+]
+# A host name as a browser saw it in a request, e.g. fonts.googleapis.com.
+type HostName = Annotated[str, StringConstraints(pattern=r"^[a-z0-9-]+(?:\.[a-z0-9-]+)+$", max_length=253)]
 type HttpsUrl = Annotated[
     str, StringConstraints(pattern=r"^https://[^\s/?#]+[^\s]*$", max_length=2048)
 ]
@@ -466,7 +473,9 @@ class ExtractionResult(_Model):
     kind: Cited[Kind] = Field(
         description=(
             "cli_tool and tui: terminal programs; server_daemon: a long-running local "
-            "service such as an inference server; library_sdk and framework: imported "
+            "service such as an inference server; web_app: hosted by its makers and used "
+            "by opening a URL; self_hosted_web_app: a web app the user runs on their own "
+            "server; library_sdk and framework: imported "
             "by code; demo_prototype, tutorial_course, homework, template_starter, "
             "curated_list, dotfiles_config: not usable software."
         )
@@ -847,6 +856,77 @@ class McpHandshake(_Model):
         return self
 
 
+# What the browser showed after the URL loaded: only main_ui supports a passed run.
+type WebScreen = Literal["main_ui", "sign_in_wall", "error_page", "parked_or_gone", "blank_or_loading", "other"]
+type WebCheckKind = Literal["page_text", "element", "url", "download", "clipboard"]
+# Whether data pickfit typed in, or a file it chose, left the device during the session.
+type DataSent = Literal["none", "observed", "unknown"]
+# A PWA's offline check: loaded, network cut, reloaded, still usable.
+type PwaOffline = Literal["verified", "not_offline", "not_tested"]
+
+
+class WebOperation(_Model):
+    """One goal pickfit reached on a hosted web app through the page itself, in the run's one browser session.
+
+    Muse Spark chose each action from the page (browser-use); pickfit checked the result itself: text on the
+    page, an element, the URL, a downloaded file, the clipboard. Only side-effect-free operations (search,
+    in-page tools, games): no form that posts, mails, signs up or orders. The goal and the expected text hold
+    {nonce} where pickfit put a fresh word.
+    """
+
+    feature: str | None = Field(default=None, max_length=FEATURE_MAX, description="The listed feature it exercises.")
+    goal: str = Field(min_length=1, max_length=600, description="What the operator was asked to do.")
+    check: WebCheckKind
+    expected: list[Annotated[str, StringConstraints(min_length=1, max_length=200)]] = Field(default=[], max_length=4)
+    passed: bool = Field(description="pickfit's check, never the operator's word.")
+    observed: str = Field(max_length=500, description="pickfit's line about what the check found.")
+    smoke_test: int = Field(ge=0, description="Index into the run's smoke_tests: this operation's check.")
+    actions: int = Field(ge=0, description="Actions the operator took.")
+    operator_model: str | None = Field(default=None, max_length=80)
+
+
+class WebCheck(_Model):
+    """What pickfit saw of a hosted web app (kind web_app) in a sandboxed browser.
+
+    One session per site, no replay: sites are real and each is visited once, slowly. install: the URL loaded
+    to the app's own main screen (not an error page, a parked domain or a sign-in wall); function: also an
+    operation passed pickfit's own check. The other facts are what the browser's own records showed.
+    """
+
+    url: HttpsUrl = Field(description="The URL the browser opened.")
+    final_url: HttpsUrl | None = Field(default=None, description="Where it ended after redirects, when different.")
+    screen: WebScreen = Field(description="What the page showed once loaded.")
+    browser: str = Field(min_length=1, max_length=120, description="e.g. Chromium 131 headless via browser-use 0.9.")
+    account_needed: bool | None = Field(
+        description="An account or sign-in is needed for the core use; null when pickfit could not tell.")
+    ads_seen: bool | None = Field(description="Ads on the page during the session; null when not looked at.")
+    third_party_domains: int | None = Field(
+        ge=0, description="Distinct domains other than the site's own that the page contacted; null when not counted.")
+    third_party_hosts: list[HostName] = Field(
+        default=[], max_length=50, exclude_if=lambda value: not value,
+        description="Those hosts, as the browser saw them (at most 50).")
+    data_sent: DataSent = Field(
+        description=("none: pickfit typed data in or chose a file during an operation and no request carried it off "
+                     "the device; observed: a request did; unknown: not checked, or the requests could not tell."))
+    data_sent_note: str | None = Field(default=None, max_length=300, description="pickfit's line on what it saw.")
+    pwa: bool | None = Field(description="Has a web app manifest and a service worker; null when not looked at.")
+    offline: PwaOffline = Field(
+        description="verified: a PWA reloaded with the network off and still worked; only PWAs are tested.")
+    operations: list[WebOperation] = Field(
+        default=[], max_length=FEATURES_MAX * 2, exclude_if=lambda value: not value,
+        description="Goals pickfit operated the site toward, and what its checks found.")
+
+    @model_validator(mode="after")
+    def _facts_fit(self) -> WebCheck:
+        if self.third_party_domains is not None and self.third_party_domains < len(self.third_party_hosts):
+            raise ValueError("third_party_domains must be at least the number of hosts listed")
+        if self.offline != "not_tested" and self.pwa is not True:
+            raise ValueError("only a PWA is tested offline")
+        if self.data_sent == "none" and not self.operations:
+            raise ValueError("data_sent 'none' needs an operation in which pickfit entered data")
+        return self
+
+
 class VerificationRun(_Model):
     """One verification attempt on one OS (C.3)."""
 
@@ -892,6 +972,11 @@ class VerificationRun(_Model):
         exclude_if=lambda value: value is None,
         description="MCP servers: the handshake a fresh box completed; required for a passed run of one.",
     )
+    web: WebCheck | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="Hosted web apps: what the sandboxed browser saw; required for a passed run of one.",
+    )
     features: list[FeatureCheck] = Field(
         default=[],
         max_length=FEATURES_MAX,
@@ -933,12 +1018,33 @@ class VerificationRun(_Model):
         return self
 
     @model_validator(mode="after")
+    def _check_web(self) -> VerificationRun:
+        """A web operation cites its own smoke test; a passed web run loaded the main screen, and function stands
+        on an operation whose test passed."""
+        if self.web is None:
+            return self
+        for op in self.web.operations:
+            if op.smoke_test >= len(self.smoke_tests):
+                raise ValueError("a web operation cites a smoke test the run does not have")
+            if op.passed and not self.smoke_tests[op.smoke_test].passed:
+                raise ValueError("a web operation passed only when its smoke test passed")
+        if is_passed(self.level):
+            if self.web.screen != "main_ui":
+                raise ValueError(f"a passed web run must load the app's main screen, not {self.web.screen!r}")
+            if self.level not in ("install", "function"):
+                raise ValueError(f"a web app's run is install, or function on a checked operation, not {self.level!r}")
+            if self.level == "function" and not any(op.passed for op in self.web.operations):
+                raise ValueError("a web run is function only on an operation that passed pickfit's check")
+        return self
+
+    @model_validator(mode="after")
     def _check_outcome(self) -> VerificationRun:
         _check_reason(self.level, self.unverified_reason)
         if is_passed(self.level):
             if not self.steps:
                 raise ValueError("a passed run must record its steps")
-            if self.method == "sandbox" and not self.replayed:
+            # A real site is visited once (WebCheck), so a web run has no replay.
+            if self.method == "sandbox" and not self.replayed and self.web is None:
                 raise ValueError("a passed sandbox run must pass a fresh-sandbox replay")
             if self.judge and self.judge.verdict != "working":
                 raise ValueError("a passed run needs the judge's verdict to be 'working'")
@@ -1235,6 +1341,12 @@ class McpServer(_Model):
     tools: list[str] = Field(default=[], max_length=30, description="Tool names the sources list.")
 
 
+class WebApp(_Model):
+    """A hosted web app (kind web_app): where to open it. What a browser saw lives in verification.runs[].web."""
+
+    url: HttpsUrl = Field(description="The address users open, as the sources give it.")
+
+
 class Source(_Model):
     id: str = Field(
         pattern=r"^\S+$", max_length=200, description="e.g. readme, release:<tag>."
@@ -1268,7 +1380,9 @@ class SoftwareRecord(_Model):
 
     schema_version: Literal["software.v1"] = SCHEMA_VERSION
     slug: Slug = Field(description="Never changes; also the file name. Renames go to aliases.")
-    repo_id: RepoId = Field(description="Primary key: 'gh:' + GitHub numeric repository id.")
+    repo_id: RepoId = Field(
+        description="Primary key: 'gh:' + GitHub numeric repository id; 'web:' + host and path for a web app with no repo."
+    )
     name: str = Field(min_length=1, max_length=100)
     summary: str = Field(min_length=1, max_length=200)
     aliases: list[str] = Field(default=[], description="Earlier names or owner/name pairs.")
@@ -1294,7 +1408,7 @@ class SoftwareRecord(_Model):
     )
     why_worth_it: str | None = Field(default=None, max_length=200)
     homepage: WebUrl | None
-    repo: Repo
+    repo: Repo | None = Field(description="Null only for a hosted web app with no public repository ('web:' id).")
     platforms: list[OS] = Field(
         description="Platforms the sources claim; tested results live in install and verification."
     )
@@ -1312,6 +1426,11 @@ class SoftwareRecord(_Model):
         default=None,
         exclude_if=lambda value: value is None,
         description="Only for category mcp_server: transport, launch command, client config, env vars, tools.",
+    )
+    web: WebApp | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="Only for kind web_app: the URL to open.",
     )
     scores: Scores | None = None
     outcomes: Outcomes = Field(default_factory=Outcomes)
@@ -1356,6 +1475,25 @@ class SoftwareRecord(_Model):
         return self
 
     @model_validator(mode="after")
+    def _check_web_app(self) -> SoftwareRecord:
+        """A web app is opened at its URL, never installed; its passed runs rest on what the browser saw."""
+        web_id = self.repo_id.startswith("web:")
+        if (self.repo is None) != web_id:
+            raise ValueError("repo is null exactly when repo_id is a 'web:' id")
+        if web_id and self.kind != "web_app":
+            raise ValueError("a 'web:' id belongs to kind web_app only")
+        if (self.kind == "web_app") != (self.web is not None):
+            raise ValueError("web (the URL to open) is required for kind web_app and only for it")
+        if self.kind == "web_app" and self.install.guides():
+            raise ValueError("a web app is opened at its URL: install stays empty")
+        for run in self.verification.runs:
+            if self.kind != "web_app" and run.web is not None:
+                raise ValueError(f"run {run.id}: only a web app's run carries web facts")
+            if self.kind == "web_app" and is_passed(run.level) and run.web is None:
+                raise ValueError(f"run {run.id}: a passed web app run needs what the browser saw (web)")
+        return self
+
+    @model_validator(mode="after")
     def _check_install_guides(self) -> SoftwareRecord:
         runs = {run.id: run for run in self.verification.runs}
         for os_name, guide in self.install.guides():
@@ -1383,7 +1521,7 @@ class SoftwareRecord(_Model):
         if self.scores is None:
             return self
         quality = self.scores.quality
-        expected = binding_cap(self.kind, self.repo.archived, self.verification.level)
+        expected = binding_cap(self.kind, self.repo is not None and self.repo.archived, self.verification.level)
         if quality.cap_reason != expected:
             raise ValueError(f"scores.quality.cap_reason must be {expected!r}")
         usage = quality.components.usage_outcomes
