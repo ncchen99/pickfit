@@ -575,7 +575,9 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
         lines.insert(3, f"GPU: one NVIDIA {box.gpu_name or box.gpu} (driver, libcuda and nvidia-smi present, no CUDA "
                         "toolkit: use builds or wheels that bring their CUDA runtime), so GPU examples can run here; "
                         "use the smallest model the tool supports: when its example names a model too large for "
-                        "this box, run the same command on the smallest model it accepts." + big_box(box))
+                        "this box, run the same command on the smallest model it accepts.")
+    if big_box(box):
+        lines.insert(3, big_box(box).strip())
     if box.display and ex.kind.value == "desktop_app":
         lines.insert(3, "This is a desktop (GUI) app: install the app itself (a release build if there is one for "
                         "Linux; an AppImage runs with --appimage-extract-and-run, no FUSE needed), then start it "
