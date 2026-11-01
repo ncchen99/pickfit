@@ -47,21 +47,21 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-comic-book-reader-20261102-005159-c208",
-      "method": "other",
+      "run_id": "verify-comic-book-reader-20261102-011048-9c5e",
+      "method": "binary",
       "steps": [
         {
-          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
-          "purpose": "add flathub user remote"
+          "command": "curl -L -o /tmp/ACBR_Linux.zip https://github.com/binarynonsense/comic-book-reader/releases/latest/download/ACBR_Linux.zip",
+          "purpose": "Download ACBR Linux zip"
         },
         {
-          "command": "flatpak install -y --user flathub com.binarynonsense.acbr",
-          "purpose": "install ACBR flatpak user"
+          "command": "unzip -q -o /tmp/ACBR_Linux.zip -d /home/sbx/apps-acbr",
+          "purpose": "Extract ACBR Linux zip"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "dbus-run-session -- flatpak run com.binarynonsense.acbr --no-sandbox"
+      "first_task": "/home/sbx/apps-acbr/ACBR_Linux/acbr-comic-book-reader --no-sandbox"
     },
     "windows": null
   },
@@ -80,10 +80,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-02T00:57:40.542416+08:00",
+    "checked_at": "2026-11-02T01:38:15.236370+08:00",
     "runs": [
       {
-        "id": "verify-comic-book-reader-20261102-005159-c208",
+        "id": "verify-comic-book-reader-20261102-011048-9c5e",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -91,90 +91,149 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx-gui:242bd3411e2e",
-        "checked_at": "2026-11-02T00:57:40.542416+08:00",
+        "checked_at": "2026-11-02T01:38:15.236370+08:00",
         "tool_version": "3.26.3",
-        "install_method": "other",
+        "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
-            "purpose": "add flathub user remote"
+            "command": "curl -L -o /tmp/ACBR_Linux.zip https://github.com/binarynonsense/comic-book-reader/releases/latest/download/ACBR_Linux.zip",
+            "purpose": "Download ACBR Linux zip"
           },
           {
-            "command": "flatpak install -y --user flathub com.binarynonsense.acbr",
-            "purpose": "install ACBR flatpak user"
+            "command": "unzip -q -o /tmp/ACBR_Linux.zip -d /home/sbx/apps-acbr",
+            "purpose": "Extract ACBR Linux zip"
           }
         ],
         "smoke_tests": [
           {
-            "command": "dbus-run-session -- flatpak run com.binarynonsense.acbr --no-sandbox",
+            "command": "/home/sbx/apps-acbr/ACBR_Linux/acbr-comic-book-reader --no-sandbox",
             "expected_signal": "gui tier: window",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "/home/sbx/apps-acbr/ACBR_Linux/acbr-comic-book-reader --no-sandbox",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"pickfit868d06\": yes",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "flatpak install flathub com.binarynonsense.acbr",
-            "actually_needed": "add flathub user remote first: flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo, then flatpak install -y --user flathub com.binarynonsense.acbr",
+            "readme_said": "flatpak install flathub com.binarynonsense.acbr / flatpak run com.binarynonsense.acbr",
+            "actually_needed": "flatpak run fails here: bwrap pidns Operation not permitted (no user namespaces) even under dbus-run-session; used native Linux zip instead",
             "kind": "sandbox"
           },
           {
-            "readme_said": "flatpak run com.binarynonsense.acbr",
-            "actually_needed": "launch with dbus-run-session -- flatpak run com.binarynonsense.acbr --no-sandbox",
+            "readme_said": "Linux AppImage/zip runs directly",
+            "actually_needed": "must launch as acbr-comic-book-reader --no-sandbox or Electron zygote aborts without userns",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "--version or --help works",
+            "actually_needed": "--version/--help segfault without X display (Missing X server, exit 139); version taken from VERSION file and GUI window instead",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The app shows its main comic library screen with menu bar, OPEN FILE button, Favorites and Recent sections.",
+          "observed": "The screenshot shows the ACBR Comic Book Reader library with OPEN FILE button, Favorites and Recent sections fully drawn.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-comic-book-reader-20261102-005159-c208/report.json",
+          "trace_path": "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-comic-book-reader-20261102-005159-c208/replay-16-1.app.judged.png"
+            "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-10-1.app.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.167098,
+        "cost_usd": 0.661525,
         "gui": {
           "tier": "ui_rendered",
           "screen": "main_ui",
-          "command": "dbus-run-session -- flatpak run com.binarynonsense.acbr --no-sandbox",
+          "command": "/home/sbx/apps-acbr/ACBR_Linux/acbr-comic-book-reader --no-sandbox",
           "window_title": "Comic Book Reader - ACBR",
-          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+          "display": "Xvfb 1280x800x24, no window manager, no GPU",
+          "operations": [
+            {
+              "feature": "view pages in single or double page modes",
+              "goal": "Open the ebook /home/sbx/pickfit-in/novel.fb2 in the reader, then switch to double page mode from the View page mode menu so pages display side by side.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "{nonce}"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"pickfit868d06\": yes",
+              "smoke_test": 1,
+              "actions": 26,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": [
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-1.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-2.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-3.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-4.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-5.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-6.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-7.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-8.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-9.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-10.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-11.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-12.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-13.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-14.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-15.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-16.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-17.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-18.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-19.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-20.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-21.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-22.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-23.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-24.png",
+                "runs/verify/verify-comic-book-reader-20261102-011048-9c5e/replay-18-2-op-25.png"
+              ]
+            }
+          ]
         },
         "features": [
           {
             "feature": "read CBZ CBR CB7 PDF EPUB and image files",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "no operate_gui attempted before command budget exhausted"
+            "note": "no failed check in the log; CBZ opened in UI per operator log but extract-to-PNG exceeded 28-step file-dialog navigation; second check refused filename as typed text"
           },
           {
             "feature": "view pages in single or double page modes",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "no operate_gui attempted before command budget exhausted"
+            "note": "its check passed, but the output does not show it: Output only shows ebook text visible, not side-by-side double page layout."
           },
           {
             "feature": "convert comic books and ebooks to other formats",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "no operate_gui attempted before command budget exhausted"
+            "note": "no failed check in the log; QR code generated from nonce in UI but save-dialog navigation exceeded 28-step cap so file never saved"
           },
           {
             "feature": "browse and open books from Komga Kavita servers",
@@ -182,7 +241,7 @@
             "smoke_tests": [],
             "reason": "needs_service",
             "failure": null,
-            "note": "needs Komga/Kavita media servers, an outside service"
+            "note": "needs Komga/Kavita media server outside box"
           }
         ]
       }
@@ -419,5 +478,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:41+08:00",
-  "updated_at": "2026-11-02T01:10:19.227988+08:00"
+  "updated_at": "2026-11-02T01:38:50.865013+08:00"
 }

@@ -58,21 +58,21 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-imageflow-20261102-002345-d040",
+      "run_id": "verify-imageflow-20261102-011048-c55b",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
-          "purpose": "add flathub user remote"
+          "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "Add flathub remote user-wide"
         },
         {
           "command": "flatpak install --user -y flathub tech.digiroad.ImageFlow",
-          "purpose": "install ImageFlow flatpak from flathub"
+          "purpose": "Install ImageFlow flatpak from Flathub"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "flatpak run tech.digiroad.ImageFlow --help",
+        "command": "flatpak run --filesystem=home tech.digiroad.ImageFlow --help-all",
         "expected_signal": "Usage:"
       },
       "first_task": null
@@ -94,10 +94,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-02T00:39:41.011575+08:00",
+    "checked_at": "2026-11-02T01:36:40.141001+08:00",
     "runs": [
       {
-        "id": "verify-imageflow-20261102-002345-d040",
+        "id": "verify-imageflow-20261102-011048-c55b",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -105,23 +105,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx-gui:242bd3411e2e",
-        "checked_at": "2026-11-02T00:39:41.011575+08:00",
+        "checked_at": "2026-11-02T01:36:40.141001+08:00",
         "tool_version": "1.2.5",
         "install_method": "other",
         "replayed": true,
         "steps": [
           {
-            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
-            "purpose": "add flathub user remote"
+            "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "Add flathub remote user-wide"
           },
           {
             "command": "flatpak install --user -y flathub tech.digiroad.ImageFlow",
-            "purpose": "install ImageFlow flatpak from flathub"
+            "purpose": "Install ImageFlow flatpak from Flathub"
           }
         ],
         "smoke_tests": [
           {
-            "command": "flatpak run tech.digiroad.ImageFlow --help",
+            "command": "flatpak run --filesystem=home tech.digiroad.ImageFlow --help-all",
             "expected_signal": "Usage:",
             "exit_code": 0,
             "passed": true,
@@ -133,55 +133,60 @@
         "pitfalls": [
           {
             "readme_said": "flatpak install flathub tech.digiroad.ImageFlow",
-            "actually_needed": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo then flatpak install --user -y flathub tech.digiroad.ImageFlow",
+            "actually_needed": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo first; box had no remotes",
             "kind": "sandbox"
           },
           {
-            "readme_said": "open and save video files normally",
-            "actually_needed": "flatpak run --filesystem=host tech.digiroad.ImageFlow /home/sbx/pickfit-in/input.mp4 to preload video; bare Open button and Save dialog do not work isolated (no session dbus portal, no filesystem permission)",
+            "readme_said": "open video via UI file dialog",
+            "actually_needed": "run with --filesystem=home and pass video on command line: flatpak run --filesystem=home tech.digiroad.ImageFlow ~/pickfit-in/input.mp4; file dialog needs portal this box lacks",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "convert video to GIF WebP AVIF",
+            "actually_needed": "result is written to ~/.var/app/tech.digiroad.ImageFlow/cache/result.{gif,webp,avif} on Generate without save dialog; save dialog copies it elsewhere",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The terminal shows ImageFlow help output with Usage and help options listed.",
+          "observed": "Screenshot shows Usage: imageflow help output with help options listed.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-imageflow-20261102-002345-d040/report.json",
+          "trace_path": "runs/verify/verify-imageflow-20261102-011048-c55b/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-imageflow-20261102-002345-d040/check-1-cmd6.judged.png"
+            "runs/verify/verify-imageflow-20261102-011048-c55b/check-1-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.458402,
+        "cost_usd": 0.562692,
         "features": [
           {
             "feature": "configure conversion parameters",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "no commands left to try after install and F4/F3 attempts"
+            "note": "no failed check in the log; Configure params then Generate; operator looped on Size dropdown Y mapping, no cache GIF produced."
           },
           {
             "feature": "select video time range",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "no commands left to try after install and F4/F3 attempts"
+            "note": "no failed check in the log; Trim toggle clicks at top bar missed hitbox; Start/End fields never appeared."
           },
           {
             "feature": "preview conversion result",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "other",
+            "reason": "not_attempted",
             "failure": null,
-            "note": "no failed check in the log; Generate never started; screen never showed Done toast"
+            "note": "No operate attempted; bottom-bar Preview/Generate unreachable in this box."
           },
           {
             "feature": "convert video to GIF WebP AVIF",
@@ -189,7 +194,7 @@
             "smoke_tests": [],
             "reason": "other",
             "failure": null,
-            "note": "no failed check in the log; out.gif missing; Open dialog and Generate button unreachable in box"
+            "note": "no failed check in the log; Video preloaded via CLI OK, but Generate button clicks missed (Y ~636 vs ~795) twice; no file saved."
           }
         ]
       }
@@ -426,5 +431,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:47+08:00",
-  "updated_at": "2026-11-02T00:41:02.376876+08:00"
+  "updated_at": "2026-11-02T01:38:50.863289+08:00"
 }
