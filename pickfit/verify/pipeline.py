@@ -6,6 +6,8 @@
    tests offline, then reruns failed feature checks once (replay.py).
 4. If the replay passed, the screen judge reads its outputs (judge.py); a GUI
    launch's real screenshot goes to the GUI judge, and the worse verdict wins.
+   A GUI operation (gui_operate.py) runs its operator on Muse Spark Open in the
+   replay too, when its recorded actions do not pass again.
    When the tool is seen working, the feature judge reads whether each checked
    feature's output shows that feature working (feature_judge.py).
    A failed claim whose failing command is the tool's own, run after every
@@ -28,7 +30,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from pickfit.meta import is_open_model, resolve_model
+from pickfit.meta import resolve_model
 from pickfit.schema import VerificationRun, is_passed
 from pickfit.verify.agent import DEFAULT_MODE, AgentLimits, HistoryMode, VerifyAgent, VerifyReport, new_run_id
 from pickfit.verify.box import Box, BoxError
@@ -42,7 +44,15 @@ from pickfit.verify.failure import (
     output_limit,
     tool_command,
 )
-from pickfit.verify.judge import JudgeResult, judge_checks, judge_gui, merge
+from pickfit.verify.judge import (  # noqa: F401 (OPEN_JUDGE_MODEL, judge_model_for: also read from here)
+    OPEN_JUDGE_MODEL,
+    JudgeResult,
+    judge_checks,
+    judge_gui,
+    judge_model_for,
+    merge,
+    read_screen_text,
+)
 from pickfit.verify.mcp import is_mcp
 from pickfit.verify.replay import Replayer, ReplayResult, judged_launch, plan_from
 from pickfit.verify.result import DATA_DIR, build_run, save_run, write_back
@@ -96,16 +106,6 @@ def _start(box: Box) -> float:
     began = time.monotonic()
     box.start()
     return round(time.monotonic() - began, 1)
-
-
-# The agent may run on Muse Spark Open (Baseten); the output, screenshot and feature judges stay on
-# muse-spark-1.3.
-OPEN_JUDGE_MODEL = "prod"
-
-
-def judge_model_for(model: str | None) -> str | None:
-    """The judges' model for an agent model: muse-spark-1.3 when the agent runs on Muse Spark Open."""
-    return OPEN_JUDGE_MODEL if is_open_model(model) else model
 
 
 def _judge_features(task: VerifyTask, report: VerifyReport, replay: ReplayResult, evidence_dir: Path, *,
@@ -195,9 +195,12 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
         plan = plan_from(agent.verdict, report.commands, rerun_failed=failed_ids(report.features))
         replay_box = make_box(run_id, "replay")
         box_began = time.monotonic()
+        scope = dict(run_id=run_id, scope=f"verify:{task.slug}", scope_cap_usd=limits.scope_cap_usd)
+        operator = dict(read_screen=read_screen_text(_display_name(task), model=judge_model_for(model), log=log,
+                                                     **scope, **call_kwargs), **scope, **call_kwargs)
         try:
             phases["replay_box_start"] = _start(replay_box)
-            replay = Replayer(replay_box, log=log, evidence_dir=evidence_dir).run(plan, task)
+            replay = Replayer(replay_box, log=log, evidence_dir=evidence_dir, operator=operator).run(plan, task)
         except BoxError as err:
             replay = ReplayResult(passed=False, level=None, offline=False, error=f"box error: {err}")
             log(f"replay box failed: {err}")
@@ -230,7 +233,7 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
                                                          run_id=run_id, limits=limits, log=log, notes=notes,
                                                          **call_kwargs)
 
-    judge_cost = (judge.cost_usd if judge else 0.0) + feature_cost
+    judge_cost = (judge.cost_usd if judge else 0.0) + feature_cost + (replay.cost_usd if replay else 0.0)
     run, build_notes = build_run(report, replay, judge, evidence_dir=evidence_dir,
                                  screenshots=[Path(p) for p in (judge.annotated or judge.screenshots)] if judge else [],
                                  judge_cost_usd=judge_cost, confirm=confirm,

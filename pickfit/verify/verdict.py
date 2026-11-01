@@ -13,8 +13,9 @@ the log and decides from what actually ran:
   install needs a passing check, function a README example (not only
   --version/--help), service a background server, inference a generation
   request against it. A GUI launch (launch_gui: a window of the app's own)
-  supports install only: a GUI app is not function until an action is shown
-  to change checkable state, which pickfit does not check yet;
+  supports install only; operating the app (operate_gui, gui_operate.py)
+  supports function when pickfit's own check of the result passed (its line
+  `gui check: passed`, exit 0), whatever signal the agent cited;
 - for an MCP server (mcp.py), only pickfit's probe counts: function needs its
   completed handshake, service a tool call; nothing else passes, and a check
   or step that sets a credential variable never counts.
@@ -615,13 +616,17 @@ def _excerpt(record: CommandRecord, signal: str) -> str:
 
 
 MCP_KINDS = ("mcp", "mcp_call")
+GUI_KINDS = ("gui", "gui_op")  # a launch, an operation: each stops every box-user process, so they run last
+GUI_PASSED_LINE = "gui check: passed"
 
 
 def check_kind(command: str, tool: str = "run_command") -> str:
-    """gui (a launch_gui), mcp or mcp_call (pickfit's MCP probe), version (--version/--help only), generation
-    (asks a model for text), or example."""
+    """gui (a launch_gui), gui_op (an operate_gui), mcp or mcp_call (pickfit's MCP probe), version
+    (--version/--help only), generation (asks a model for text), or example."""
     if tool == "launch_gui":
         return "gui"
+    if tool == "operate_gui":
+        return "gui_op"
     probe = probe_kind(last_command(command))
     if probe:
         return probe
@@ -696,6 +701,13 @@ def evaluate_check(record: CommandRecord, expected_exit_code: int, expected_sign
     return not problems, problems
 
 
+def gui_op_problems(exit_code: int | None, stdout: str) -> list[str]:
+    """An operation passes only on pickfit's own check line and exit 0, whatever the agent cited."""
+    if exit_code == 0 and GUI_PASSED_LINE in stdout.splitlines():
+        return []
+    return ["pickfit's check of the operation did not pass (no `gui check: passed` with exit 0)"]
+
+
 def mcp_problems(kind: str, stdout: str) -> list[str]:
     """Why a probe check's output does not show what its kind claims; [] when it does."""
     summary = parse_summary(stdout)
@@ -726,7 +738,7 @@ def supported_level(steps_ok: bool, checks: list[ResolvedCheck], has_service: bo
         return "service" if "mcp_call" in kinds else "function" if "mcp" in kinds else None
     if any(c.kind == "generation" for c in passing) and has_service:
         return "inference"
-    if has_service and any(c.kind not in ("version", "gui") for c in passing):
+    if has_service and any(c.kind not in ("version", *GUI_KINDS) for c in passing):
         return "service"
     if any(c.kind not in ("version", "gui") for c in passing):
         return "function"
@@ -824,9 +836,11 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord], *, mcp: bool 
             setup_ok = False
             check.problems.append(missing)
         ok, why = evaluate_check(record, check.expected_exit_code, check.expected_signal,
-                                 trusted_only=check.kind == "gui")
+                                 trusted_only=check.kind in GUI_KINDS)
         if check.kind in MCP_KINDS:
             why += mcp_problems(check.kind, record.stdout)
+        if check.kind == "gui_op":
+            why += gui_op_problems(record.exit_code, record.stdout)
         if mcp:
             fake = sorted({name for cid in (test.command_id, *test.setup_ids) if cid in by_id
                            for name in credentials(by_id[cid].command)})

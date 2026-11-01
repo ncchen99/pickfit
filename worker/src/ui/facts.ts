@@ -3,6 +3,7 @@
  * by every page so the same fact is always said the same way.
  */
 import type { Arch, Entry, GuiEvidence, InstallGuide, OS } from '../catalog.ts';
+import { operatedText } from '../evidence.ts';
 
 export const OS_NAME: Record<OS, string> = { macos: 'macOS', linux: 'Linux', windows: 'Windows' };
 export const DAY = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
@@ -43,6 +44,7 @@ const SCREEN_SEEN: Record<GuiEvidence['screen'], string> = {
 
 /** What a run proves, by its evidence: a GUI app's screen, an MCP server's handshake, or the level. */
 export function levelLabel(level: string, evidence: { gui?: GuiEvidence | null; mcp?: { called_tool: string | null } | null } = {}): string {
+  if (evidence.gui && operatedText(evidence.gui)) return 'A feature worked when operated';
   if (evidence.gui) return SCREEN_LABEL[evidence.gui.screen] ?? 'It opened a window';
   if (evidence.mcp) return evidence.mcp.called_tool ? 'An MCP client called one of its tools' : 'An MCP client connects and lists its tools';
   return LEVEL_LABEL[level] ?? level;
@@ -51,11 +53,15 @@ export function levelLabel(level: string, evidence: { gui?: GuiEvidence | null; 
 /** The check mark is for runs that passed; a GUI app that showed an error or a blank window gets none. */
 export const passed = (gui?: GuiEvidence | null) => !gui || gui.screen === 'main_ui' || gui.screen === 'first_run';
 
-/** The GUI launch in words: where it ran, who looked, and that no feature was used. */
+/** The GUI launch in words: where it ran, who looked, and whether a feature was operated and checked. */
 export function guiSentence(gui: GuiEvidence): string {
+  const operated = operatedText(gui);
   return (
     `pickfit launched it on a virtual display (${gui.display}), and a separate model reading a screenshot of its window judged that ${SCREEN_SEEN[gui.screen]}. ` +
-    `That shows it installs and starts; pickfit did not use any of its features.${gui.launch_offline ? ' The launch passed again with the network off.' : ''}`
+    (operated
+      ? `${operated[0].toUpperCase()}${operated.slice(1)}.`
+      : 'That shows it installs and starts; pickfit did not use any of its features.') +
+    `${gui.launch_offline ? ' The launch passed again with the network off.' : ''}`
   );
 }
 

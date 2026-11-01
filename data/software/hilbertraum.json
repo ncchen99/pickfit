@@ -67,28 +67,21 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-hilbertraum-20261101-164911-33b8",
-      "method": "npm",
+      "run_id": "verify-hilbertraum-20261101-180004-bac2",
+      "method": "binary",
       "steps": [
         {
-          "command": "ls -la ~/.local/bin | head -n 20; pwd; git clone --depth 1 https://github.com/HilbertraumAI/HilbertRaum.git HilbertRaum 2>&1",
-          "purpose": "clone repo from GitHub"
+          "command": "curl -fL -o HilbertRaum-0.1.64.AppImage https://github.com/HilbertraumAI/HilbertRaum/releases/download/v0.1.64/HilbertRaum-0.1.64.AppImage",
+          "purpose": "download Linux AppImage v0.1.64"
         },
         {
-          "command": "cd HilbertRaum && npm ci 2>&1",
-          "purpose": "npm ci - install dependencies"
-        },
-        {
-          "command": "cd HilbertRaum && node node_modules/electron/install.js 2>&1",
-          "purpose": "download Electron binary via node_modules/electron/install.js (lazy download removed in Electron >=42)"
+          "command": "chmod +x HilbertRaum-0.1.64.AppImage",
+          "purpose": "make AppImage executable"
         }
       ],
       "manual_steps": [],
-      "check": {
-        "command": "node --version && npm --version && dpkg -l libgomp1 | tail -n 5; git --version",
-        "expected_signal": "v22.23.4"
-      },
-      "first_task": "cd /home/sbx/work/HilbertRaum && ELECTRON_DISABLE_SANDBOX=1 npm run dev 2>&1"
+      "check": null,
+      "first_task": "./HilbertRaum-0.1.64.AppImage --appimage-extract-and-run --no-sandbox"
     },
     "windows": null
   },
@@ -107,47 +100,34 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T16:55:10.297920+08:00",
+    "checked_at": "2026-11-01T18:13:22.631984+08:00",
     "runs": [
       {
-        "id": "verify-hilbertraum-20261101-164911-33b8",
+        "id": "verify-hilbertraum-20261101-180004-bac2",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-vm",
-        "image": "pickfit-sbx-vm-gui:14dd5b7442cc",
-        "checked_at": "2026-11-01T16:55:10.297920+08:00",
+        "image": "pickfit-sbx-vm-gui:57d565a999ec",
+        "checked_at": "2026-11-01T18:13:22.631984+08:00",
         "tool_version": "0.1.64",
-        "install_method": "npm",
+        "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "ls -la ~/.local/bin | head -n 20; pwd; git clone --depth 1 https://github.com/HilbertraumAI/HilbertRaum.git HilbertRaum 2>&1",
-            "purpose": "clone repo from GitHub"
+            "command": "curl -fL -o HilbertRaum-0.1.64.AppImage https://github.com/HilbertraumAI/HilbertRaum/releases/download/v0.1.64/HilbertRaum-0.1.64.AppImage",
+            "purpose": "download Linux AppImage v0.1.64"
           },
           {
-            "command": "cd HilbertRaum && npm ci 2>&1",
-            "purpose": "npm ci - install dependencies"
-          },
-          {
-            "command": "cd HilbertRaum && node node_modules/electron/install.js 2>&1",
-            "purpose": "download Electron binary via node_modules/electron/install.js (lazy download removed in Electron >=42)"
+            "command": "chmod +x HilbertRaum-0.1.64.AppImage",
+            "purpose": "make AppImage executable"
           }
         ],
         "smoke_tests": [
           {
-            "command": "node --version && npm --version && dpkg -l libgomp1 | tail -n 5; git --version",
-            "expected_signal": "v22.23.4",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "v22.23.4",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "cd /home/sbx/work/HilbertRaum && ELECTRON_DISABLE_SANDBOX=1 npm run dev 2>&1",
+            "command": "./HilbertRaum-0.1.64.AppImage --appimage-extract-and-run --no-sandbox",
             "expected_signal": "gui tier: window",
             "exit_code": 0,
             "passed": true,
@@ -158,37 +138,41 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "npm ci then npm run dev launches the app",
-            "actually_needed": "On Electron >=42 (this repo uses 43.8.3) npm ci no longer downloads the binary; must run node node_modules/electron/install.js manually before first launch",
-            "kind": "readme_wrong"
+            "readme_said": "On Linux run chmod +x HilbertRaum-<version>.AppImage once before starting it",
+            "actually_needed": "AppImage also needs --appimage-extract-and-run (no FUSE) and --no-sandbox on this box (Chromium/Electron sandbox fails without user namespaces)",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "npm run dev launches the app",
-            "actually_needed": "In sandbox without root, chrome-sandbox SUID fails; need ELECTRON_DISABLE_SANDBOX=1 npm run dev",
-            "kind": "sandbox"
+            "readme_said": "npm run dev launches app in developer/demo mode",
+            "actually_needed": "Prebuilt AppImage runs with offlineMode true and demoMode false; chat blocked by 'No model is running' until llama-server + model downloaded",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Workspace creation is one-time",
+            "actually_needed": "Workspace persists in ~/.config/@hilbertraum/desktop/ ; to retry creation must rm -rf workspace and config dirs",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows node v22.23.4, npm 10.9.9, libgomp1 installed, and git version output. / The app shows a first-run setup checklist titled 'Almost set up' prompting to choose a model and add content.",
+          "observed": "The app shows a centered HilbertRaum Lite welcome card with a Get started button.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-hilbertraum-20261101-164911-33b8/report.json",
+          "trace_path": "runs/verify/verify-hilbertraum-20261101-180004-bac2/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-hilbertraum-20261101-164911-33b8/check-1-cmd1.judged.png",
-            "runs/verify/verify-hilbertraum-20261101-164911-33b8/replay-13-1.app.judged.png"
+            "runs/verify/verify-hilbertraum-20261101-180004-bac2/replay-6-1.app.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.117657,
+        "cost_usd": 0.373552,
         "gui": {
           "tier": "ui_rendered",
           "screen": "first_run",
-          "command": "cd /home/sbx/work/HilbertRaum && ELECTRON_DISABLE_SANDBOX=1 npm run dev 2>&1",
+          "command": "./HilbertRaum-0.1.64.AppImage --appimage-extract-and-run --no-sandbox",
           "window_title": "HilbertRaum",
           "display": "Xvfb 1280x800x24, no window manager, no GPU"
         },
@@ -199,7 +183,7 @@
             "smoke_tests": [],
             "reason": "needs_more_resources",
             "failure": null,
-            "note": "requires local GGUF model (~3GB) download via prepare-drive"
+            "note": "Chat needs local GGUF model + llama-server (~2.7GB smallest) not present; demo mode only in dev build"
           },
           {
             "feature": "ask questions about documents with citations",
@@ -207,7 +191,7 @@
             "smoke_tests": [],
             "reason": "needs_more_resources",
             "failure": null,
-            "note": "document Q&A needs embeddings model and imported docs"
+            "note": "Document Q&A needs embeddings model and OCR/reranker not present"
           },
           {
             "feature": "ask an offline Wikipedia via knowledge packs",
@@ -215,7 +199,7 @@
             "smoke_tests": [],
             "reason": "needs_more_resources",
             "failure": null,
-            "note": "offline Wikipedia needs ZIM archives and kiwix-tools"
+            "note": "Knowledge packs need kiwix-tools + ZIM archives (hundreds MB to 100GB) not present"
           },
           {
             "feature": "translate text and whole documents locally",
@@ -223,7 +207,7 @@
             "smoke_tests": [],
             "reason": "needs_more_resources",
             "failure": null,
-            "note": "translation needs TranslateGemma 12B sidecar (~7GB)"
+            "note": "Translation needs TranslateGemma 12B Q4_K_M (~13GB) sidecar not present"
           }
         ]
       }
@@ -231,15 +215,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T16:55:10+08:00",
+    "computed_at": "2026-10-31T13:19:37+08:00",
     "quality": {
-      "total": 65.7,
+      "total": 70.2,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
+          "score": 0.6,
           "weight": 40.0
         },
         "install_docs": {
@@ -280,7 +264,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 17.34
+      "value": 18.53
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -627,5 +611,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:24+08:00",
-  "updated_at": "2026-11-01T16:55:10.350789+08:00"
+  "updated_at": "2026-11-01T18:30:45.096132+08:00"
 }
