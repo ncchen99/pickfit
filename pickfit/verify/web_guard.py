@@ -22,8 +22,8 @@ third-party sites the page contacted, whether an ad network loaded, and whether 
 the file it chose left the device (find_leaks).
 """
 
-from __future__ import annotations
-
+# No `from __future__ import annotations`: mitmdump loads this file as a module it does not register, and
+# dataclasses cannot resolve string annotations there.
 import base64
 import ipaddress
 import json
