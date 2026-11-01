@@ -946,7 +946,9 @@ def reevaluate(run_dir: Path, target: WebTarget, log: Callable[[str], None] = pr
 # Baseten for the fallback operator; and the whole Meta pipeline must stay under PIPELINE_STOP_USD.
 MY_CAPS_USD = {"meta": 8.0, "modal": 15.0, "baseten": 5.0}
 PIPELINE_STOP_USD = 158.0
-PER_SITE_USD = {"meta": 0.04, "modal": 0.30, "baseten": 0.05}  # worst cases seen so far, rounded up
+# Planning: batch 1's means rounded up (Modal $0.14 a site); each site also checks a worst case before it starts.
+PER_SITE_USD = {"meta": 0.03, "modal": 0.18, "baseten": 0.05}
+WORST_SITE_USD = {"meta": 0.06, "modal": 0.40, "baseten": 0.10}
 
 
 def web_spend(ledger_path: Path | None = None) -> dict[str, float]:
@@ -971,13 +973,13 @@ def web_spend(ledger_path: Path | None = None) -> dict[str, float]:
     return {k: round(v, 4) for k, v in spend.items()}
 
 
-def budget_stop(sites: int, spend: dict[str, float]) -> str | None:
-    """Why a batch of `sites` must not start, or None."""
-    if spend["pipeline_total"] + sites * PER_SITE_USD["meta"] > PIPELINE_STOP_USD:
+def budget_stop(sites: int, spend: dict[str, float], per_site: dict[str, float] = PER_SITE_USD) -> str | None:
+    """Why a batch of `sites` (or one more site, with WORST_SITE_USD) must not start, or None."""
+    if spend["pipeline_total"] + sites * per_site["meta"] > PIPELINE_STOP_USD:
         return (f"the Meta pipeline total ${spend['pipeline_total']:.2f} could pass ${PIPELINE_STOP_USD:.0f} "
                 f"with {sites} more sites")
     for name, cap in MY_CAPS_USD.items():
-        if spend[name] + sites * PER_SITE_USD[name] > cap:
+        if spend[name] + sites * per_site[name] > cap:
             return f"{name} ${spend[name]:.2f} + {sites} sites could pass this task's ${cap:.0f}"
     return None
 
@@ -1023,6 +1025,11 @@ def main(argv: list[str] | None = None) -> int:
     from concurrent.futures import ThreadPoolExecutor
 
     def one(target: WebTarget) -> dict[str, Any]:
+        with _visits_lock:
+            stop = budget_stop(1, web_spend(), WORST_SITE_USD)
+        if stop:
+            print(f"[{target.slug}] not started: {stop}", flush=True)
+            return {"slug": target.slug, "level": "not_started", "reason": stop}
         try:
             result = verify_site(target, max_steps=args.max_steps, revisit=args.revisit,
                                  log=lambda m, s=target.slug: print(f"[{s}] {m}", flush=True))
