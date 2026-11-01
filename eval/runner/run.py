@@ -8,8 +8,9 @@ experimental and rules-only groups (--strict-mcp-config). `--bare` is not used:
 it drops WebSearch and WebFetch (checked 10/29 with Claude Code 2.1.304).
 
 Commands:
+  freeze-candidates --to DIR      A3: read-only copies of every runs/pipeline.db (the candidate pool)
   snapshot --label before|after   A3 version record -> eval/results/versions-<label>.json
-  run1                            first run, all three groups, order per B1
+  run1 [--until QID]              first run, all three groups, order per B1 (--until q02: the pilot)
   reruns                          runs 2 and 3, control and experimental, per B3
   haiku                           9.2 C: control and experimental once with the Haiku model
   bset                            9.2 E: the B question set, control and experimental once
@@ -528,6 +529,12 @@ def cmd_run1(args, config=None, questions=None, api_key=None, base=None, log=pri
                 if projection > cap:
                     raise Stop(f"projected ${projection:.2f} > cap ${cap}: B4 requires a 9.2 section with a new cap, "
                                f"committed before the next question; then raise caps_usd.run1 and rerun this command")
+            if question["id"] == getattr(args, "until", None):
+                # The pilot (B1: q01 and q02 are the estimate questions and count as run 1): stop for a
+                # go/no-go; running run1 again resumes at the next question, settled slots are skipped.
+                write_marker("run1-paused", {"after_question": question["id"], "spent_usd": spent(["run1"], base)}, base)
+                log(f"paused after {question['id']}: ${spent(['run1'], base):.2f} spent; run run1 again to continue")
+                return 0
     except Stop as stop:
         log(f"stopped: {stop}")
         write_marker("run1-stopped", {"reason": str(stop)}, base)
@@ -737,6 +744,97 @@ def git(*args: str) -> str:
     return subprocess.run(["git", *args], cwd=ROOT, check=True, capture_output=True, text=True).stdout.strip()
 
 
+def main_checkout() -> Path:
+    """The main checkout, also when this runs in a worktree (where runs/ is someone else's)."""
+    return Path(git("rev-parse", "--path-format=absolute", "--git-common-dir")).parent
+
+
+def pickfit_tree_sha256(rev: str = "HEAD") -> str:
+    """The commit's tree without eval/: what A2 freezes. Runner fixes and results move HEAD, not pickfit."""
+    lines = [line for line in git("ls-tree", rev).splitlines() if line.split("\t", 1)[1] != "eval"]
+    return hashlib.sha256("\n".join(lines).encode()).hexdigest()
+
+
+# The candidate pool (A3 `runs/pipeline.db`) is one database per checkout: discovery ran in many
+# worktrees, and their sessions keep writing. The snapshot hashes read-only copies made once.
+CANDIDATE_DB = "pipeline.db"
+
+
+def candidate_sources() -> list[tuple[str, Path]]:
+    main = main_checkout()
+    found = [("main", main / "runs" / CANDIDATE_DB)]
+    found += [(p.parents[1].name, p) for p in sorted((main / ".claude" / "worktrees").glob(f"*/runs/{CANDIDATE_DB}"))]
+    return [(name, path) for name, path in found if path.is_file()]
+
+
+def freeze_candidates(target: Path, sources: list[tuple[str, Path]]) -> dict[str, Any]:
+    """A consistent copy of each database (SQLite backup, source opened read-only), then chmod 444."""
+    import sqlite3
+
+    target.mkdir(parents=True, exist_ok=False)
+    copies = {}
+    for name, source in sources:
+        dest = target / name / CANDIDATE_DB
+        dest.parent.mkdir()
+        src = sqlite3.connect(f"file:{source}?mode=ro", uri=True)
+        dst = sqlite3.connect(dest)
+        try:
+            src.backup(dst)
+        finally:
+            dst.close()
+            src.close()
+        dest.chmod(0o444)
+        copies[name] = {"source": str(source), "source_mtime": dt.datetime.fromtimestamp(source.stat().st_mtime, TAIPEI)
+                        .isoformat(timespec="seconds"), "bytes": dest.stat().st_size, "sha256": sha256_file(dest)}
+    record = {"at": now(), "copies": copies}
+    (target / "sources.json").write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return record
+
+
+def candidate_dbs(candidates: Path | None) -> dict[str, Path]:
+    if candidates is None:
+        return {"runs": ROOT / "runs" / CANDIDATE_DB}
+    return {p.parent.name: p for p in sorted(candidates.glob(f"*/{CANDIDATE_DB}"))}
+
+
+def funnel_of(db: Path) -> tuple[str | None, Any]:
+    """`pickfit funnel` on a clone of the database: opening one applies the schema, which writes."""
+    if not db.exists():
+        return None, {"error": f"{db} does not exist"}
+    with tempfile.TemporaryDirectory(prefix="pickfit-eval-funnel-") as tmp:
+        clone = Path(tmp) / CANDIDATE_DB
+        subprocess.run(["cp", "-c", str(db), str(clone)], check=True)  # APFS clone: no copy of the bytes
+        clone.chmod(0o644)
+        out = subprocess.run(["uv", "run", "pickfit", "funnel"], cwd=ROOT, capture_output=True, text=True,
+                             env={**os.environ, "PICKFIT_RUNS_DIR": tmp})
+    if out.returncode != 0:
+        return None, {"error": out.stderr[-500:]}
+    return out.stdout, json.loads(out.stdout)
+
+
+def candidate_record(candidates: Path | None) -> dict[str, Any]:
+    dbs = candidate_dbs(candidates)
+    hashes = {name: sha256_file(path) for name, path in dbs.items()}
+    funnels = {name: funnel_of(path) for name, path in dbs.items()}
+    combined, funnel_digest = hashlib.sha256(), hashlib.sha256()
+    for name in sorted(dbs):
+        combined.update(f"{name}\0{hashes[name]}\n".encode())
+        funnel_digest.update(f"{name}\0{funnels[name][0]}\n".encode())
+    single = candidates is None
+    sources = candidates / "sources.json" if candidates else None
+    frozen = ({name: c["sha256"] for name, c in json.loads(sources.read_text(encoding="utf-8"))["copies"].items()}
+              if sources and sources.exists() else None)
+    return {
+        "candidates_dir": str(candidates) if candidates else None,
+        "candidates_sha256": hashes,
+        "candidates_frozen_sha256": frozen,
+        "pipeline_db_sha256": hashes["runs"] if single else (combined.hexdigest() if dbs else None),
+        "funnel_sha256": (hashlib.sha256(funnels["runs"][0].encode()).hexdigest() if funnels["runs"][0] else None)
+        if single else funnel_digest.hexdigest(),
+        "funnel": funnels["runs"][1] if single else {name: f[1] for name, f in funnels.items()},
+    }
+
+
 def deployment_status(spec: dict[str, Any]) -> dict[str, Any]:
     record: dict[str, Any] = {"env": spec["env"], "host": spec["host"]}
     try:
@@ -759,25 +857,28 @@ def deployment_status(spec: dict[str, Any]) -> dict[str, Any]:
     return record
 
 
-def snapshot_record(label: str, config: dict[str, Any]) -> dict[str, Any]:
+def snapshot_record(label: str, config: dict[str, Any], pickfit_commit: str | None = None,
+                    candidates: Path | None = None) -> dict[str, Any]:
     claude = os.path.expanduser(config["claude_bin"])
     version = subprocess.run([claude, "--version"], capture_output=True, text=True).stdout.strip()
-    funnel = subprocess.run(["uv", "run", "pickfit", "funnel"], cwd=ROOT, capture_output=True, text=True)
     data_dir = ROOT / "data" / "software"
     return {
         "label": label,
         "at": now(),
         "git_head": git("rev-parse", "HEAD"),
         "git_dirty": [line for line in git("status", "--porcelain").splitlines() if line],
+        "pickfit_tree_sha256": pickfit_tree_sha256("HEAD"),
+        "pickfit_commit": pickfit_commit,
+        "pickfit_commit_tree_sha256": pickfit_tree_sha256(pickfit_commit) if pickfit_commit else None,
         "data_software_sha256": tree_sha256(data_dir, "*.json"),
         "served_data_sha256": served_data_sha256(data_dir),
         "data_software_files": len(list(data_dir.glob("*.json"))),
-        "pipeline_db_sha256": sha256_file(ROOT / "runs" / "pipeline.db"),
-        "funnel_sha256": hashlib.sha256(funnel.stdout.encode()).hexdigest() if funnel.returncode == 0 else None,
-        "funnel": json.loads(funnel.stdout) if funnel.returncode == 0 else {"error": funnel.stderr[-500:]},
+        **candidate_record(candidates),
         "evidence_manifest_sha256": sha256_file(RESULTS / "evidence-manifest.json"),
         "deployments": {group: deployment_status(spec) for group, spec in config["deployments"].items()},
         "claude_code_version": version,
+        "claude_bin": claude,
+        "claude_bin_sha256": sha256_file(Path(os.path.realpath(claude))),
         "model": config["model"],
         "config_sha256": sha256_file(CONFIG_PATH),
         "questions_sha256": sha256_file(QUESTIONS_A),
@@ -789,6 +890,18 @@ def record_problems(record: dict[str, Any], config: dict[str, Any]) -> list[str]
     problems = []
     if record["git_dirty"]:
         problems.append(f"uncommitted changes: {record['git_dirty'][:5]}")
+    if record.get("pickfit_commit") and record.get("pickfit_tree_sha256") != record.get("pickfit_commit_tree_sha256"):
+        problems.append(f"HEAD's pickfit (everything outside eval/) differs from the snapshot commit {record['pickfit_commit']}")
+    if "pickfit_tree_sha256" in record and not record.get("pickfit_commit"):
+        problems.append("no --pickfit-commit: the coordinator's snapshot commit is what A3 records")
+    if "candidates_sha256" in record and (record.get("pipeline_db_sha256") is None
+                                          or any(v is None for v in record["candidates_sha256"].values())):
+        problems.append(f"no candidate pool to hash ({record.get('candidates_sha256')}); freeze-candidates, then --candidates")
+    if record.get("candidates_dir") and record.get("candidates_frozen_sha256") != record.get("candidates_sha256"):
+        problems.append("the frozen candidate pool no longer matches its sources.json")
+    for name, funnel in ((record.get("funnel") or {}).items() if record.get("candidates_dir") else []):
+        if isinstance(funnel, dict) and "error" in funnel:
+            problems.append(f"funnel of candidate pool {name} failed: {funnel['error'][-200:]}")
     if not record["claude_code_version"].startswith(config["claude_code_version"]):
         problems.append(f"claude {record['claude_code_version']} != {config['claude_code_version']}")
     served = {}
@@ -806,9 +919,27 @@ def record_problems(record: dict[str, Any], config: dict[str, Any]) -> list[str]
     return problems
 
 
+def cmd_freeze_candidates(args, log=print) -> int:
+    sources = candidate_sources()
+    record = freeze_candidates(Path(args.to).expanduser().resolve(), sources)
+    for name, copy in record["copies"].items():
+        log(f"{name}: {copy['bytes']} bytes, sha256 {copy['sha256'][:12]}… from {copy['source']}")
+    log(f"froze {len(record['copies'])} candidate database(s) into {args.to}")
+    return 0
+
+
 def cmd_snapshot(args, log=print) -> int:
     config = load_config()
-    record = snapshot_record(args.label, config)
+    pickfit_commit, candidates = args.pickfit_commit, args.candidates
+    before = RESULTS / "versions-before.json"
+    if args.label == "after" and before.exists():
+        # The after record checks the same commit and the same frozen pool as the before record.
+        recorded = json.loads(before.read_text(encoding="utf-8"))
+        pickfit_commit = pickfit_commit or recorded.get("pickfit_commit")
+        candidates = candidates or recorded.get("candidates_dir")
+    if pickfit_commit:
+        pickfit_commit = git("rev-parse", "--verify", f"{pickfit_commit}^{{commit}}")
+    record = snapshot_record(args.label, config, pickfit_commit, Path(candidates).expanduser() if candidates else None)
     record["problems"] = record_problems(record, config)
     RESULTS.mkdir(parents=True, exist_ok=True)
     path = RESULTS / f"versions-{args.label}.json"
@@ -819,9 +950,11 @@ def cmd_snapshot(args, log=print) -> int:
     return 1 if record["problems"] else 0
 
 
-COMPARED = ("git_head", "data_software_sha256", "served_data_sha256", "pipeline_db_sha256", "funnel_sha256",
-            "evidence_manifest_sha256", "claude_code_version", "model", "config_sha256", "questions_sha256",
-            "questions_b_sha256")
+# git_head is recorded, not compared: committing results or a runner fix under eval/ moves HEAD while
+# pickfit stays as it was; pickfit_tree_sha256 is everything outside eval/.
+COMPARED = ("pickfit_tree_sha256", "pickfit_commit", "data_software_sha256", "served_data_sha256", "pipeline_db_sha256",
+            "funnel_sha256", "evidence_manifest_sha256", "claude_code_version", "claude_bin_sha256", "model",
+            "config_sha256", "questions_sha256", "questions_b_sha256")
 
 
 def compare_records(before: dict[str, Any], after: dict[str, Any]) -> list[str]:
@@ -854,10 +987,15 @@ def cmd_compare(args, log=print) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="eval/runner/run.py")
     sub = parser.add_subparsers(dest="command", required=True)
+    f = sub.add_parser("freeze-candidates")
+    f.add_argument("--to", required=True, help="a new folder outside the repo, e.g. ~/.pickfit/eval-snapshot/candidates")
     s = sub.add_parser("snapshot")
     s.add_argument("--label", required=True, choices=["before", "after"])
+    s.add_argument("--pickfit-commit", help="the coordinator's snapshot commit (after: taken from the before record)")
+    s.add_argument("--candidates", help="the freeze-candidates folder (after: taken from the before record)")
     sub.add_parser("compare")
-    sub.add_parser("run1")
+    r = sub.add_parser("run1")
+    r.add_argument("--until", help="stop after this question (the q01-q02 pilot); run run1 again to continue")
     sub.add_parser("reruns")
     sub.add_parser("haiku")
     sub.add_parser("bset")
@@ -871,7 +1009,7 @@ def main(argv: list[str] | None = None) -> int:
     v.add_argument("--group", required=True, choices=list(GROUPS))
     sub.add_parser("status")
     args = parser.parse_args(argv)
-    handlers = {"snapshot": cmd_snapshot, "compare": cmd_compare, "run1": cmd_run1, "reruns": cmd_reruns,
+    handlers = {"freeze-candidates": cmd_freeze_candidates, "snapshot": cmd_snapshot, "compare": cmd_compare, "run1": cmd_run1, "reruns": cmd_reruns,
                 "haiku": lambda a: cmd_extra("haiku", a), "bset": lambda a: cmd_extra("bset", a), "cut": cmd_cut,
                 "check": cmd_check, "void": cmd_void, "status": cmd_status}
     return handlers[args.command](args)

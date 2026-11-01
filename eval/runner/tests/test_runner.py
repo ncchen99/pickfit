@@ -328,9 +328,9 @@ def test_served_digest_matches_the_index_formula(tmp_path: Path) -> None:
 
 
 def test_compare_lists_what_changed() -> None:
-    before = {"git_head": "1", "model": "m", "deployments": {"experimental": {"root": {"data_sha256": "aa"}, "latest_deployment": {"id": "v1"}}}}
-    after = {"git_head": "2", "model": "m", "deployments": {"experimental": {"root": {"data_sha256": "aa"}, "latest_deployment": {"id": "v2"}}}}
-    assert run.compare_records(before, after) == ["git_head: 1 -> 2", "experimental.deployment: v1 -> v2"]
+    before = {"pickfit_tree_sha256": "1", "model": "m", "deployments": {"experimental": {"root": {"data_sha256": "aa"}, "latest_deployment": {"id": "v1"}}}}
+    after = {"pickfit_tree_sha256": "2", "model": "m", "deployments": {"experimental": {"root": {"data_sha256": "aa"}, "latest_deployment": {"id": "v2"}}}}
+    assert run.compare_records(before, after) == ["pickfit_tree_sha256: 1 -> 2", "experimental.deployment: v1 -> v2"]
 
 
 # --- 9.2 ---------------------------------------------------------------------------------
@@ -423,3 +423,88 @@ def test_snapshot_records_and_compares_the_b_set() -> None:
     before = {"questions_b_sha256": "a", "deployments": {}}
     after = {"questions_b_sha256": "b", "deployments": {}}
     assert run.compare_records(before, after) == ["questions_b_sha256: a -> b"]
+
+
+# --- 11/2: the pilot pause, the pickfit tree, the frozen candidate pool --------------------
+
+
+def test_until_pauses_after_the_pilot_question_and_a_rerun_continues(tmp_path: Path) -> None:
+    config = config_for(make_fake(tmp_path))
+    base = tmp_path / "runs"
+    assert run.cmd_run1(argparse.Namespace(until="q02"), config, QUESTIONS, "k", base, quiet) == 0
+    assert json.loads((base / "run1-paused.json").read_text())["after_question"] == "q02"
+    assert (base / "run1-estimate.json").exists() and not (base / "run1-complete.json").exists()
+    assert len((tmp_path / "calls.log").read_text().splitlines()) == 6  # q01 and q02, three groups each
+    assert not run.attempts("run1", "q03", "control", base)
+    assert run.cmd_run1(argparse.Namespace(until=None), config, QUESTIONS, "k", base, quiet) == 0
+    assert len((tmp_path / "calls.log").read_text().splitlines()) == 12 and (base / "run1-complete.json").exists()
+
+
+def test_compare_ignores_head_but_not_the_pickfit_tree() -> None:
+    before = {"git_head": "1", "pickfit_tree_sha256": "t", "deployments": {}}
+    assert run.compare_records(before, dict(before, git_head="2")) == []
+    assert run.compare_records(before, dict(before, pickfit_tree_sha256="u")) == ["pickfit_tree_sha256: t -> u"]
+
+
+def test_pickfit_tree_leaves_out_eval_only() -> None:
+    head = run.pickfit_tree_sha256("HEAD")
+    assert len(head) == 64
+    names = [line.split("\t", 1)[1] for line in run.git("ls-tree", "HEAD").splitlines()]
+    assert "eval" in names and "pickfit" in names
+
+
+def test_snapshot_problems_need_the_commit_the_pool_and_a_matching_tree() -> None:
+    config = json.loads(run.CONFIG_PATH.read_text())
+    good = {"git_dirty": [], "claude_code_version": "2.1.304 (Claude Code)", "served_data_sha256": "aa",
+            "evidence_manifest_sha256": "ee", "pickfit_tree_sha256": "t", "pickfit_commit": "c",
+            "pickfit_commit_tree_sha256": "t", "candidates_dir": "/frozen", "candidates_sha256": {"main": "h"},
+            "candidates_frozen_sha256": {"main": "h"}, "pipeline_db_sha256": "p", "funnel": {"main": {"stages": []}},
+            "deployments": {"experimental": {"matches_expectation": True, "root": {"data_sha256": "aa"}},
+                            "rules_only": {"matches_expectation": True, "root": {"data_sha256": "aa"}}}}
+    assert run.record_problems(good, config) == []
+    assert any("differs from the snapshot commit" in p for p in run.record_problems(dict(good, pickfit_commit_tree_sha256="x"), config))
+    assert any("no --pickfit-commit" in p for p in run.record_problems(dict(good, pickfit_commit=None), config))
+    assert any("no longer matches" in p for p in run.record_problems(dict(good, candidates_frozen_sha256={"main": "x"}), config))
+    assert any("funnel of candidate pool main" in p for p in run.record_problems(dict(good, funnel={"main": {"error": "x"}}), config))
+    no_pool = dict(good, candidates_dir=None, candidates_sha256={"runs": None}, pipeline_db_sha256=None, funnel={})
+    assert any("no candidate pool" in p for p in run.record_problems(no_pool, config))
+
+
+def test_frozen_candidates_are_read_only_copies_and_the_funnel_never_writes_them(tmp_path: Path, monkeypatch) -> None:
+    import sqlite3
+    source = tmp_path / "wt" / "runs" / "pipeline.db"
+    source.parent.mkdir(parents=True)
+    conn = sqlite3.connect(source)
+    conn.execute("create table t (x)")
+    conn.execute("insert into t values (1)")
+    conn.commit()
+    conn.close()
+    target = tmp_path / "frozen"
+    record = run.freeze_candidates(target, [("wt", source)])
+    copy = target / "wt" / "pipeline.db"
+    assert record["copies"]["wt"]["sha256"] == run.sha256_file(copy) and not (copy.stat().st_mode & 0o222)
+    assert sqlite3.connect(f"file:{copy}?mode=ro", uri=True).execute("select x from t").fetchall() == [(1,)]
+    seen = {}
+
+    def fake_run(cmd, **kwargs):
+        if cmd[0] == "uv":
+            clone = Path(kwargs["env"]["PICKFIT_RUNS_DIR"]) / "pipeline.db"
+            seen["clone"] = clone != copy and clone.exists()
+            clone.write_bytes(b"schema applied")  # what PipelineDB may do to the clone
+            return subprocess.CompletedProcess(cmd, 0, stdout='{"stages": []}', stderr="")
+        return real_run(cmd, **kwargs)
+
+    import subprocess
+    real_run = subprocess.run
+    monkeypatch.setattr(run.subprocess, "run", fake_run)
+    out = run.candidate_record(target)
+    assert seen["clone"] and out["candidates_sha256"]["wt"] == record["copies"]["wt"]["sha256"]
+    assert out["candidates_frozen_sha256"] == out["candidates_sha256"] and out["funnel"] == {"wt": {"stages": []}}
+
+
+def test_evidence_roots_come_from_the_main_checkout_in_a_worktree(tmp_path: Path) -> None:
+    import collect_evidence
+    roots = collect_evidence.source_roots(run.ROOT, [tmp_path])
+    main = run.main_checkout()
+    assert tmp_path.resolve() in roots
+    assert all(str(r).startswith(str(main.resolve())) or r == tmp_path.resolve() for r in roots)
