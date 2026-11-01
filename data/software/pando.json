@@ -61,18 +61,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-pando-20261101-183010-02fc",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install mertkaradayi/tap/pando",
-          "purpose": null
+          "command": "brew install mertkaradayi/tap/pando 2>&1",
+          "purpose": "brew install mertkaradayi/tap/pando"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "pando doctor"
+      "check": {
+        "command": "pando --version 2>&1 && pando --help 2>&1",
+        "expected_signal": "pando 0.11.2"
+      },
+      "first_task": "mkdir -p /tmp/pando-test && cd /tmp/pando-test && git init -b main && git config user.email \"test@test.com\" && git config user.name \"test\" && echo \"hello\" > README.md && git add . && git commit -m init && git log --oneline && pando doctor 2>&1"
     },
     "linux": {
       "basis": "replayed",
@@ -112,7 +115,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:20:26.603423+08:00",
+    "checked_at": "2026-11-01T19:31:51.667849+08:00",
     "runs": [
       {
         "id": "verify-pando-20261031-031832-00a8",
@@ -310,6 +313,156 @@
             "reason": "needs_service",
             "failure": null,
             "note": "pando doctor reports cloudflared not found; share needs a public tunnel URL via outside service"
+          }
+        ]
+      },
+      {
+        "id": "verify-pando-20261101-183010-02fc",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T19:31:51.667849+08:00",
+        "tool_version": "0.11.2",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install mertkaradayi/tap/pando 2>&1",
+            "purpose": "brew install mertkaradayi/tap/pando"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "pando --version 2>&1 && pando --help 2>&1",
+            "expected_signal": "pando 0.11.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "pando 0.11.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/pando-test && cd /tmp/pando-test && git init -b main && git config user.email \"test@test.com\" && git config user.name \"test\" && echo \"hello\" > README.md && git add . && git commit -m init && git log --oneline && pando doctor 2>&1",
+            "expected_signal": "0 problems, 1 note",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0 problems, 1 note",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/pando-test && pando ls 2>&1",
+            "expected_signal": "no worktrees",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no worktrees — `pando new <branch>` creates one",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/pando-test && pando status 2>&1",
+            "expected_signal": "no worktrees",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no worktrees — `pando new <branch>` creates one",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/pando-test && pando new feat/test-branch 2>&1 && echo \"---NEW_OK---\" && pando ls 2>&1 && echo \"---LS_OK---\" && git worktree list 2>&1",
+            "expected_signal": "created feat+test-branch",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "created feat+test-branch at /Users/sbx/.pando/projects/pando-test-c215e6bb/worktrees/feat+test-branch",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/pando-test && pando rm feat/test-branch 2>&1 && echo \"---RM_OK---\" && pando ls 2>&1 && git worktree list 2>&1",
+            "expected_signal": "removed feat+test-branch",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "removed feat+test-branch",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/pando-test2 && pando new feat/a 2>&1 && pando start feat/a --no-wait 2>&1 && sleep 3 && pando status 2>&1; pando logs feat/a 2>&1",
+            "expected_signal": "started feat+a",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "/bin/bash: line 0: cd: /tmp/pando-test2: No such file or directory",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "cd /tmp/pando-test2 && pando stop feat/a 2>&1 && pando rm feat/a 2>&1 && pando status 2>&1",
+            "expected_signal": "stopped feat+a",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "/bin/bash: line 0: cd: /tmp/pando-test2: No such file or directory",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show expected outputs: version 0.11.2 with help, doctor reporting 0 problems 1 note, and ls reporting no worktrees.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-pando-20261101-183010-02fc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-pando-20261101-183010-02fc/check-1-cmd2.judged.png",
+            "runs/verify/verify-pando-20261101-183010-02fc/check-2-cmd3.judged.png",
+            "runs/verify/verify-pando-20261101-183010-02fc/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.096439,
+        "features": [
+          {
+            "feature": "create and remove git worktrees per branch",
+            "status": "checked",
+            "smoke_tests": [
+              4,
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run each worktree dev server on separate ports",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "give each worktree private service copies",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_container",
+            "failure": null,
+            "note": "requires Docker/Compose and service containers; docker not found per pando doctor"
+          },
+          {
+            "feature": "share running worktrees via public URL",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "requires cloudflared for public tunnel; not installed per pando doctor"
           }
         ]
       }
@@ -657,5 +810,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:22+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T19:31:51.669256+08:00"
 }
