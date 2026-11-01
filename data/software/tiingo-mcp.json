@@ -65,20 +65,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-tiingo-mcp-20261101-165430-43fd",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install major7apps/tiingo-mcp/tiingo-mcp",
-          "purpose": null
+          "command": "brew tap major7apps/tiingo-mcp https://github.com/major7apps/tiingo-mcp 2>&1 && brew install major7apps/tiingo-mcp/tiingo-mcp 2>&1",
+          "purpose": "brew tap and install tiingo-mcp 2.3.0"
         }
       ],
-      "manual_steps": [
-        "Create a Tiingo API key at api.tiingo.com"
-      ],
-      "check": null,
-      "first_task": "tiingo-mcp --version"
+      "manual_steps": [],
+      "check": {
+        "command": "tiingo-mcp --version 2>&1",
+        "expected_signal": "tiingo-mcp 2.3.0"
+      },
+      "first_task": null
     },
     "linux": {
       "basis": "replayed",
@@ -137,7 +138,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:07:33.345398+08:00",
+    "checked_at": "2026-11-01T16:59:59.966109+08:00",
     "runs": [
       {
         "id": "verify-tiingo-mcp-20261031-030654-0bdc",
@@ -302,6 +303,151 @@
             "note": "subscription tools require TIINGO_API_KEY and live websocket feeds"
           }
         ]
+      },
+      {
+        "id": "verify-tiingo-mcp-20261101-165430-43fd",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T16:59:59.966109+08:00",
+        "tool_version": "2.3.0",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew tap major7apps/tiingo-mcp https://github.com/major7apps/tiingo-mcp 2>&1 && brew install major7apps/tiingo-mcp/tiingo-mcp 2>&1",
+            "purpose": "brew tap and install tiingo-mcp 2.3.0"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "tiingo-mcp --version 2>&1",
+            "expected_signal": "tiingo-mcp 2.3.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tiingo-mcp 2.3.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- tiingo-mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show tiingo-mcp 2.3.0 printed and MCP probe listing 38 tools with handshake ok.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tiingo-mcp-20261101-165430-43fd/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tiingo-mcp-20261101-165430-43fd/check-1-cmd2.judged.png",
+            "runs/verify/verify-tiingo-mcp-20261101-165430-43fd/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.076102,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "tiingo-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "Tiingo?MCP?Server",
+          "server_version": "2.3.0",
+          "tools": [
+            "get_boats_prices",
+            "get_boats_snapshot",
+            "get_bulk_eod_prices",
+            "get_company_meta",
+            "get_crypto_metadata",
+            "get_crypto_prices",
+            "get_crypto_quote",
+            "get_crypto_yield_metrics",
+            "get_crypto_yield_platforms",
+            "get_crypto_yield_pools",
+            "get_crypto_yield_ticks",
+            "get_daily_fundamentals",
+            "get_distributions_by_ex_date",
+            "get_dividend_yield",
+            "get_dividends",
+            "get_equity_intraday_prices",
+            "get_equity_realtime_snapshot",
+            "get_financial_statements",
+            "get_forex_prices",
+            "get_forex_quote",
+            "get_forex_quotes",
+            "get_fund_fee_metrics",
+            "get_fund_metadata",
+            "get_fundamentals_definitions",
+            "get_iex_market_snapshot",
+            "get_intraday_prices",
+            "get_news",
+            "get_realtime_price",
+            "get_splits",
+            "get_splits_by_ex_date",
+            "get_stock_metadata",
+            "get_stock_prices",
+            "get_ticker_metadata",
+            "poll_market_data_subscription",
+            "search_tiingo_assets",
+            "start_market_data_subscription",
+            "stop_market_data_subscription",
+            "update_market_data_subscription"
+          ],
+          "tool_count": 38,
+          "called_tool": null,
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "Get stock, forex and crypto prices",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "get_stock_prices requires TIINGO_API_KEY"
+          },
+          {
+            "feature": "Search financial news articles",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "get_news requires TIINGO_API_KEY"
+          },
+          {
+            "feature": "Get company fundamentals and financial statements",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "get_financial_statements requires TIINGO_API_KEY"
+          },
+          {
+            "feature": "Subscribe to live market data feeds",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "start_market_data_subscription requires TIINGO_API_KEY"
+          }
+        ]
       }
     ]
   },
@@ -357,15 +503,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T17:00:00+08:00",
     "quality": {
-      "total": 80.1,
+      "total": 86.1,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.68,
+          "score": 0.8,
           "weight": 40.0
         },
         "install_docs": {
@@ -408,7 +554,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 45.82
+      "value": 49.25
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -947,5 +1093,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:34+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T17:00:00.030658+08:00"
 }

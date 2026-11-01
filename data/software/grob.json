@@ -62,18 +62,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-grob-20261101-130808-c39b",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install azerozero/tap/grob",
-          "purpose": null
+          "command": "brew install azerozero/tap/grob 2>&1",
+          "purpose": "Install grob via brew tap azerozero/tap/grob"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "grob status"
+      "check": {
+        "command": "grob status 2>&1",
+        "expected_signal": "Service: ❌ stopped"
+      },
+      "first_task": "grob status 2>&1"
     },
     "linux": {
       "basis": "replayed",
@@ -113,7 +116,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T02:18:07.438193+08:00",
+    "checked_at": "2026-11-01T13:11:02.476594+08:00",
     "runs": [
       {
         "id": "verify-grob-20261031-021724-edb0",
@@ -208,6 +211,104 @@
             "reason": "needs_account",
             "failure": null,
             "note": "needs a configured provider account to generate audit traffic"
+          }
+        ]
+      },
+      {
+        "id": "verify-grob-20261101-130808-c39b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T13:11:02.476594+08:00",
+        "tool_version": "0.36.129",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install azerozero/tap/grob 2>&1",
+            "purpose": "Install grob via brew tap azerozero/tap/grob"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "grob status 2>&1",
+            "expected_signal": "Service: ❌ stopped",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Service: ❌ stopped",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "grob doctor 2>&1",
+            "expected_signal": "Grob Doctor — Diagnostic Checks",
+            "exit_code": 2,
+            "passed": true,
+            "observed_excerpt": "🩺 Grob Doctor — Diagnostic Checks",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "grob status example expects running service",
+            "actually_needed": "First run creates default config at ~/.grob/config.toml and shows stopped service with placeholder-model",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both screenshots show grob status reporting stopped service and grob doctor printing diagnostic checks with 2 errors.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-grob-20261101-130808-c39b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-grob-20261101-130808-c39b/check-1-cmd4.judged.png",
+            "runs/verify/verify-grob-20261101-130808-c39b/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.07394,
+        "features": [
+          {
+            "feature": "screen requests for secrets",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "DLP screening requires configured provider and test request"
+          },
+          {
+            "feature": "switch providers after a failure",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Provider failover needs two configured providers with accounts"
+          },
+          {
+            "feature": "enforce spending budgets",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Budget enforcement needs provider account to incur spend"
+          },
+          {
+            "feature": "record signed audit logs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Signed audit logs require running proxy with traffic"
           }
         ]
       }
@@ -555,5 +656,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:54+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T13:11:02.481477+08:00"
 }

@@ -68,18 +68,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-halpradio-20261101-122640-c3b4",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install halpworld/tap/halpradio",
-          "purpose": null
+          "command": "brew install halpworld/tap/halpradio 2>&1",
+          "purpose": "brew install halpworld/tap/halpradio"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "halpradio current"
+      "check": {
+        "command": "halpradio current 2>&1",
+        "expected_signal": "halpradio is not currently running"
+      },
+      "first_task": "halpradio current 2>&1"
     },
     "linux": {
       "basis": "replayed",
@@ -132,7 +135,7 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:36:52.506481+08:00",
+    "checked_at": "2026-11-01T12:29:43.102635+08:00",
     "runs": [
       {
         "id": "verify-halpradio-20261031-033534-adf4",
@@ -275,6 +278,98 @@
             "reason": "needs_service",
             "failure": null,
             "note": "needs live streaming station; stopped daemon shows no artist/title"
+          }
+        ]
+      },
+      {
+        "id": "verify-halpradio-20261101-122640-c3b4",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T12:29:43.102635+08:00",
+        "tool_version": "0.8.1",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install halpworld/tap/halpradio 2>&1",
+            "purpose": "brew install halpworld/tap/halpradio"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "halpradio current 2>&1",
+            "expected_signal": "halpradio is not currently running",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "Error: halpradio is not currently running (socket /Users/sbx/Library/Application Support/halpradio/ipc.sock not found)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "halpradio current --json 2>&1",
+            "expected_signal": "\"status\": \"stopped\"",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "\"status\": \"stopped\"",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both commands report halpradio is not running, as plain-text error and as JSON with status stopped.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-halpradio-20261101-122640-c3b4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-halpradio-20261101-122640-c3b4/check-1-cmd4.judged.png",
+            "runs/verify/verify-halpradio-20261101-122640-c3b4/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.063463,
+        "features": [
+          {
+            "feature": "stream internet radio in terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; stations list --plain shows 20 catalog entries with stream URLs; stations list --json shows url field"
+          },
+          {
+            "feature": "search 30,000+ online stations",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; stations search lofi returned chillhop-radio and lofi-girl; --online flag documented in help"
+          },
+          {
+            "feature": "watch beat-reactive animal DJ visualizers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "beat-reactive animal DJ visualizers are TUI-only (press v), requires interactive terminal display"
+          },
+          {
+            "feature": "view live ICY song metadata",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only a stopped-daemon error with no song metadata."
           }
         ]
       }
@@ -678,5 +773,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:22+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T12:29:43.109359+08:00"
 }

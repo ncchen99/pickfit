@@ -59,18 +59,22 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-prod-code-20261101-123202-7056",
+      "method": "script",
       "steps": [
         {
-          "command": "cargo install --path crates/prod-code-client",
-          "purpose": null
+          "command": "curl -fsSL https://prod.codes/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -n 200 /tmp/install.sh",
+          "purpose": "download install script"
+        },
+        {
+          "command": "VERSION=v0.3.47 sh /tmp/install.sh",
+          "purpose": "install prod-code v0.3.47 via script"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "prod-code update --check"
+      "first_task": null
     },
     "linux": {
       "basis": "replayed",
@@ -110,7 +114,7 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T02:09:09.178577+08:00",
+    "checked_at": "2026-11-01T12:35:08.839563+08:00",
     "runs": [
       {
         "id": "verify-prod-code-20261101-020743-96c3",
@@ -317,6 +321,176 @@
             "reason": "needs_service",
             "failure": null,
             "note": "remote builds/tests (code_check, code_test, code_exec, code_status) require gateway cluster; code_status and code_check errored with connection refused in this box"
+          }
+        ]
+      },
+      {
+        "id": "verify-prod-code-20261101-123202-7056",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-01T12:35:08.839563+08:00",
+        "tool_version": "0.3.47",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://prod.codes/install.sh -o /tmp/install.sh && wc -c /tmp/install.sh && head -n 200 /tmp/install.sh",
+            "purpose": "download install script"
+          },
+          {
+            "command": "VERSION=v0.3.47 sh /tmp/install.sh",
+            "purpose": "install prod-code v0.3.47 via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- prod-code mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://prod.codes/install.sh | sh installs latest",
+            "actually_needed": "script queries GitHub API for latest tag, hits rate limit and falls back to v0.3.19 which has no binary (404); need VERSION=v0.3.47 sh /tmp/install.sh to get a release with binaries",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows MCP initialize succeeding, 70 tools listed, and handshake ok with version 0.3.47.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-prod-code-20261101-123202-7056/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-prod-code-20261101-123202-7056/check-1-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.093559,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "prod-code",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2024-11-05",
+          "server_name": "prod-code-mcp",
+          "server_version": "0.3.47",
+          "tools": [
+            "code_exec",
+            "code_coverage",
+            "code_check",
+            "code_lint",
+            "code_benchmarks",
+            "code_test",
+            "code_assists",
+            "code_assist",
+            "code_callers",
+            "code_callees",
+            "code_implementations",
+            "code_supertypes",
+            "code_definition",
+            "code_references",
+            "code_source",
+            "code_outline",
+            "code_symbols",
+            "code_hover",
+            "code_type_at",
+            "code_safe_delete",
+            "code_rename",
+            "code_schema_rename",
+            "code_encapsulate_field",
+            "code_migrate_type",
+            "code_extract_field",
+            "code_generify",
+            "code_invert_boolean",
+            "code_make_static",
+            "code_convert_to_method",
+            "code_inline_parameter",
+            "code_extract_delegate",
+            "code_extract_trait",
+            "code_loop_to_iterator",
+            "code_replace_constructor_with_factory",
+            "code_replace_constructor_with_builder",
+            "code_pull_up",
+            "code_push_down",
+            "code_replace_inheritance_with_delegation",
+            "code_replace_conditional_with_polymorphism",
+            "code_extract_interface",
+            "code_extract_function",
+            "code_introduce_variable",
+            "code_wrap_return",
+            "code_extract_parameter",
+            "code_introduce_parameter_object",
+            "code_move",
+            "code_move_module",
+            "code_move_method",
+            "code_change_signature",
+            "code_impact",
+            "code_diagnose_failure",
+            "code_diagnostics",
+            "code_validate_edit",
+            "code_validate_edits",
+            "code_shadow_run",
+            "code_slice",
+            "code_search",
+            "code_grep",
+            "code_codemod",
+            "code_generate_fixture",
+            "code_dead_code",
+            "code_prune_orphans",
+            "code_pull",
+            "code_report_issue",
+            "code_status",
+            "code_sync",
+            "code_dependencies",
+            "code_find_duplicates",
+            "code_structural_search",
+            "code_propose_expression"
+          ],
+          "tool_count": 70,
+          "called_tool": null,
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "semantic navigation of remote code",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "semantic navigation tools require remote gateway node (127.0.0.1:9400 DOWN) not available in box"
+          },
+          {
+            "feature": "safe refactoring of code",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "safe refactoring tools require remote gateway and mirrored workspace"
+          },
+          {
+            "feature": "run builds and tests on remote nodes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "builds/tests run on remote nodes, no gateway in box"
           }
         ]
       }
@@ -821,5 +995,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:31+08:00",
-  "updated_at": "2026-11-01T02:09:09.179849+08:00"
+  "updated_at": "2026-11-01T16:23:27.036154+08:00"
 }
