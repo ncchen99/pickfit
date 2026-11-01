@@ -137,7 +137,7 @@ def test_rerun_timeouts_follow_the_recorded_time():
     plan = plan_from(verdict([{"command_id": 2, "expected_signal": "0.4.1"}]), LOG)
     box = box_for_log()
     Replayer(box, log=lambda s: None).run(plan, TASK)
-    assert [t for _, t in box.ran] == [60, 60]  # LOG records 0.1 s for each
+    assert [t for _, t in box.ran] == [600, 60]  # the install step gets the full time; the check 4 x 0.1 s + 30
 
 
 def test_steps_cited_as_setup_are_not_run_twice():
