@@ -13,10 +13,10 @@ import type { FindOutput, PickOut } from './find.ts';
 import { fitNote } from './fit.ts';
 import { PIPE_TO_SHELL, type InstallOutput } from './install.ts';
 import { compareTable } from './pages/compare.ts';
-import { day, guiSentence, howRan, KIND, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system, kindLine } from './ui/facts.ts';
+import { day, guiSentence, howRan, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system } from './ui/facts.ts';
 import { esc, link, listOf } from './ui/html.ts';
-import { icon } from './ui/icons.ts';
-import { badge, command, compareToggle, coverage, fitz, glance, notice, says, SEAM, tape, type FitzName } from './ui/kit.ts';
+import { icon, osMark, type IconName } from './ui/icons.ts';
+import { badge, command, compareToggle, coverage, fitz, glance, kindTag, levelIcon, notice, osList, runFacts, says, SEAM, sysTag, tape, type FitzName } from './ui/kit.ts';
 import { renderShell } from './ui/shell.ts';
 
 export { esc, safeUrl } from './ui/html.ts';
@@ -121,20 +121,26 @@ export function yourSystem(v: PickOut['verification'], form: FormValues): { stat
 }
 
 const CHECK = '<svg class="check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.6l3 3 6.6-7.2"/></svg>';
-export const levelLine = (label: string, ok: boolean) => `<p class="level${ok ? '' : ' level-caution'}">${ok ? CHECK : icon('triangle-alert')}${esc(label)}</p>`;
+/** The level a run reached: its own mark when it passed (else the check), a warning when it did not. */
+export const levelLine = (label: string, ok: boolean, mark?: IconName) =>
+  `<p class="level${ok ? '' : ' level-caution'}">${ok ? (mark ? `<span class="level-i">${icon(mark)}</span>` : CHECK) : icon('triangle-alert')}${esc(label)}</p>`;
 
 function facts(pick: PickOut): string {
   const items: string[] = [];
-  if (pick.open_source === true) items.push(pick.license ? `Open source (${esc(pick.license)})` : 'Open source');
-  if (pick.open_source === false) items.push('Not open source');
+  const item = (mark: string, text: string) => `<li class="rf">${mark}${text}</li>`;
+  if (pick.open_source === true) items.push(item(icon('scroll-text'), pick.license ? `Open source (${esc(pick.license)})` : 'Open source'));
+  if (pick.open_source === false) items.push(item(icon('scroll-text'), 'Not open source'));
   const where = PROCESSING[pick.processing];
-  if (where) items.push(where);
-  if (pick.platforms.length) items.push(`For ${listOf(pick.platforms.map((os) => osName(os)))}`);
-  return items.length ? `<p class="small quiet facts">${items.join(' · ')}</p>` : '';
+  if (where) items.push(item(icon('laptop'), esc(where)));
+  if (pick.platforms.length) {
+    const names = listOf(pick.platforms.map((os) => osName(os)));
+    items.push(`<li class="rf">${osList(pick.platforms, { tone: 'quiet', say: `Claims to run on ${names}` })}</li>`);
+  }
+  return items.length ? `<ul class="run-facts">${items.join('')}</ul>` : '';
 }
 
-/** The steps get_install_guide returns, for a person instead of an agent. */
-export function installSection(guide: InstallOutput, form: FormValues, open: boolean): string {
+/** The steps get_install_guide returns, for a person instead of an agent. `inRun`: inside a run card that already names the system. */
+export function installSection(guide: InstallOutput, form: FormValues, open: boolean, inRun = false): string {
   const v = guide.verification;
   if (guide.steps.length === 0) return '';
   const parts: string[] = [];
@@ -192,44 +198,62 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
     );
   }
   return (
-    `<details class="install"${open ? ' open' : ''}><summary>Install steps that worked on ${esc(system(v.os, v.arch))}${icon('chevron-down')}</summary>` +
+    `<details class="install"${open ? ' open' : ''}><summary><span>${inRun ? 'Install steps' : `Install steps that worked on <span class="sys">${v.os ? osMark(v.os) : ''}${esc(system(v.os, v.arch))}</span>`}</span>${icon('chevron-down')}</summary>` +
     `<div class="install-body">${parts.join('')}</div></details>`
   );
 }
 
-/** The run record: the evidence half of a pick, under the seam. */
+/** The run record: the evidence half of a pick, under the seam. Each fact once, as a mark; only a mismatch with the reader's OS is said in words. */
 function record(pick: PickOut, guide: InstallOutput | undefined, form: FormValues): string {
   const v = pick.verification;
   const mine = yourSystem(v, form);
-  const offline = guide?.verification.works_offline;
-  // A GUI app's launch sentence already says whether the launch passed offline.
-  const offlineLine =
-    offline === true
-      ? v.gui
-        ? ''
-        : ' Its checks passed again with the network off.'
-      : offline === false
-        ? ' Its checks failed with the network off: it needed the network in pickfit’s run.'
-        : form.offline
-          ? ' pickfit hasn’t checked it with the network off.'
-          : '';
   const mcp = guide?.mcp_client_config ?? null;
   const shown = (tools: string[]) => tools.slice(0, 6).join(', ') + (tools.length > 6 ? ', …' : '');
   const mcpLine = mcp
     ? `An MCP client handshake over ${mcp.transport === 'stdio' ? 'stdio' : 'HTTP'} listed its ${mcp.tool_count} tool${mcp.tool_count === 1 ? '' : 's'}` +
       `${mcp.tools.length ? ` (${shown(mcp.tools)})` : ''}${mcp.called_tool ? `, and a call to ${mcp.called_tool} returned a result` : ''}.`
     : '';
+  // A GUI app's launch sentence already says whether the launch passed offline.
+  const offline = v.gui ? null : guide?.verification.works_offline;
   return (
     `<section class="record" aria-label="Test record">` +
     `<p class="record-title">${icon('badge-check')}Test record</p>` +
-    levelLine(levelLabel(v.level, { gui: v.gui, mcp }), passed(v.gui)) +
-    `<p>${esc(ranSentence(v) + offlineLine)}</p>` +
+    levelLine(levelLabel(v.level, { gui: v.gui, mcp }), passed(v.gui), levelIcon(v.level, { gui: v.gui, mcp })) +
+    (v.os ? runFacts(v, { offline, mine: v.verified_on_user_os, askedOffline: form.offline && !v.gui }) : `<p>${esc(ranSentence(v))}</p>`) +
     (mcpLine ? `<p>${esc(mcpLine)}</p>` : '') +
     (v.gui ? `<p>${esc(guiSentence(v.gui))}</p>` : '') +
-    `<p class="mine mine-${mine.state}">${esc(mine.text)}</p>` +
+    (mine.state === 'no' ? `<p class="mine mine-no">${esc(mine.text)}</p>` : mine.state === 'unknown' ? `<p class="small quiet">${esc(mine.text)}</p>` : '') +
     `<details class="how"><summary>How we know</summary><p>${esc(pick.how_we_know)}</p></details>` +
     `</section>`
   );
+}
+
+/** The mark for the profile field a reason cites; a run on an OS gets that OS's mark. */
+const FIELD_MARK: Record<string, IconName> = {
+  platforms: 'monitor',
+  use_cases: 'target',
+  features_checked: 'list',
+  processing: 'laptop',
+  network: 'wifi-off',
+  pricing: 'tag',
+  pricing_note: 'tag',
+  open_source: 'scroll-text',
+  license: 'scroll-text',
+  gpu: 'cpu',
+  apple_silicon_only: 'cpu',
+  min_ram_gb: 'cpu',
+  runtimes: 'package',
+  system_packages: 'package',
+  install_method_user_os: 'terminal',
+  last_release: 'calendar',
+  mcp_tools: 'plug',
+  mcp_env_vars: 'plug',
+  quality: 'ruler',
+};
+function reasonMark(field: string, value: string): string {
+  const os = /^(linux|macos|windows)\b/.exec(value)?.[1] as OS | undefined;
+  if ((field === 'verified_on' || field === 'verified_on_user_os') && os) return osMark(os);
+  return icon(FIELD_MARK[field] ?? 'check');
 }
 
 const MATCH_LABEL = { good: 'Good match', partial: 'Partial match', weak: 'Weak match' } as const;
@@ -253,12 +277,14 @@ function glanceStrip(pick: PickOut, guide: InstallOutput | undefined, form: Form
   const v = pick.verification;
   const where = system(v.os, v.arch);
   const cells: string[] = [];
-  if (v.verified_on_user_os === true) cells.push(glance('monitor', 'Your system', `Ran on ${esc(where)}`, 'pass'));
-  else if (v.verified_on_user_os === false) cells.push(glance('monitor', 'Your system', `Ran on ${esc(where)} only`, 'caution'));
-  else cells.push(glance('monitor', 'Ran on', v.os ? esc(where) : 'No run', 'plain'));
+  const sys = v.os ? { svg: osMark(v.os) } : 'monitor';
+  if (v.verified_on_user_os === true) cells.push(glance(sys, 'Your system', `Ran on ${esc(where)}`, 'pass'));
+  else if (v.verified_on_user_os === false) cells.push(glance(sys, 'Your system', `Ran on ${esc(where)} only`, 'caution'));
+  else cells.push(glance(sys, 'Ran on', v.os ? esc(where) : 'No run', 'plain'));
   const off = guide?.verification.works_offline;
   const offline = off === true ? '<small>Works offline</small>' : off === false && form.offline ? '<small>Needed the network</small>' : '';
-  cells.push(glance('badge-check', 'Proof', esc(levelLabel(v.level, { gui: v.gui, mcp: guide?.mcp_client_config ?? null })) + offline, passed(v.gui) ? 'pass' : 'caution'));
+  const evidence = { gui: v.gui, mcp: guide?.mcp_client_config ?? null };
+  cells.push(glance(levelIcon(v.level, evidence), 'Proof', esc(levelLabel(v.level, evidence)) + offline, passed(v.gui) ? 'pass' : 'caution'));
   if (guide && guide.steps.length) cells.push(glance('terminal', 'Setup', esc(setupWords(guide.steps.length, guide.manual_steps.length)), 'plain'));
   cells.push(glance('tag', 'Price', esc(PRICE[pick.pricing]), pick.pricing === 'unknown' ? 'quiet' : 'plain'));
   return `<div class="glance t-glance">${cells.join('')}</div>`;
@@ -297,8 +323,13 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
     best ? badge('free', 'Best free option', { icon: 'leaf' }) : '',
     pick.scores.treasure ? badge('gem', 'Hidden gem', { icon: 'gem', pop: 'pop-gem' }) : '',
   ].join('');
+  // Each reason leads with the mark of the fact it rests on; the cited profile field opens from the claim.
   const why = pick.why
-    .map((r) => `<li>${esc(r.claim)}<span class="cite">From its profile: ${esc(r.field)} is “${esc(r.value)}”</span></li>`)
+    .map(
+      (r) =>
+        `<li><span class="why-i">${reasonMark(r.field, r.value)}</span><details class="why-src"><summary>${esc(r.claim)}${icon('file-text')}</summary>` +
+        `<p class="cite">From its profile: <code>${esc(r.field)}</code> is “${esc(r.value)}”</p></details></li>`,
+    )
     .join('');
   const fitSaid = pick.match ? fitNote(pick.match) : null;
   const tradeoffs = pick.tradeoffs
@@ -306,7 +337,7 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
     .map((t) => `<li>${esc(t)}</li>`)
     .join('');
   const guide = result.guides[pick.slug];
-  const kind = entry ? kindLine(entry) : '';
+  const kind = entry ? kindTag(entry) : '';
   const links = [
     link(pick.repo, `${icon('external-link')}Source code`),
     pick.homepage && pick.homepage !== pick.repo ? link(pick.homepage, `${icon('external-link')}Homepage`) : '',
@@ -318,7 +349,7 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
     `<article class="pick" id="pick-${esc(pick.slug)}" aria-labelledby="name-${esc(pick.slug)}">` +
     `<div class="t-top"><div>` +
     `<h3 class="t-name" id="name-${esc(pick.slug)}"><a href="/tool/${esc(pick.slug)}">${esc(pick.name)}</a></h3>` +
-    (kind ? `<p class="t-kind">${esc(kind)}</p>` : '') +
+    (kind ? `<p class="t-kind">${kind}</p>` : '') +
     `</div>` +
     (badges ? `<p class="badges">${badges}</p>` : '') +
     `</div>` +
@@ -331,10 +362,9 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
     // On the rules path the fit sentence is the summary: say it once.
     (pick.fit === pick.summary ? '' : `<p class="summary">${esc(pick.summary)}</p>`) +
     (pick.match ? matchCoverage(pick.match) : '') +
-    (why ? `<h4>Why it fits</h4><ul class="why">${why}</ul>` : '') +
+    (why ? `<h4>Why it fits</h4><ul class="why why-marks">${why}</ul>` : '') +
     (tradeoffs ? `<h4>Tradeoffs</h4><ul class="tradeoffs">${tradeoffs}</ul>` : '') +
     (pick.vs_well_known ? `<p class="vs"><span class="lead-in">Compared with better-known tools:</span> ${esc(pick.vs_well_known)}</p>` : '') +
-    (best ? `<p><span class="lead-in">Best free option:</span> ${esc(best.reason)}</p>` : '') +
     facts(pick) +
     `</div><div class="t-measure">` +
     tape('Quality', pick.scores.quality, { pop: 'pop-quality' }) +
@@ -501,7 +531,9 @@ export function renderResults(
     parts.push(
       `<div class="aside best-free"><p><span class="lead-in">Best free option:</span> ` +
         `<a href="/tool/${esc(free.slug)}">${esc(free.name)}</a>. ${esc(out.best_free.reason)}</p>` +
-        `<p class="quiet">${esc(ranSentence(v))}</p><p class="mine mine-${mine.state}">${esc(mine.text)}</p></div>`,
+        (v.os ? runFacts(v, { mine: v.verified_on_user_os }) : `<p class="quiet">${esc(ranSentence(v))}</p>`) +
+        (mine.state === 'no' ? `<p class="mine mine-no">${esc(mine.text)}</p>` : '') +
+        `</div>`,
     );
   }
   // Not verified: no stitches, no badge, no steps, no link. The missing record is the label.
@@ -601,7 +633,7 @@ function freshSection(showcase: Showcase): string {
         `<h3><a href="/tool/${esc(issue.entry.slug)}">${esc(issue.entry.name)}</a></h3>` +
         `<ul class="readme-vs"><li class="was"><b>README said</b><span>${esc(fixIssue.readme_said)}</span></li>` +
         `<li class="now"><b>What worked</b><span>${esc(fixIssue.actually_needed)}</span></li></ul>` +
-        `<figcaption>${esc(system(issue.guide.run.os, issue.guide.run.arch))}, ${esc(day(issue.guide.run.checked_at))}</figcaption></figure>`
+        `<figcaption>${sysTag(issue.guide.run.os, issue.guide.run.arch)} · ${esc(day(issue.guide.run.checked_at))}</figcaption></figure>`
       : '';
   const rows = recent
     .map(({ entry, guide }) => {
@@ -610,7 +642,7 @@ function freshSection(showcase: Showcase): string {
         `<li class="run-row"><a class="name" href="/tool/${esc(entry.slug)}">${esc(entry.name)}</a>` +
         (entry.scores?.treasure ? badge('gem', 'Hidden gem', { icon: 'gem' }) : '<span></span>') +
         `<p class="sum">${esc(entry.summary)}</p>` +
-        `<p class="meta"><span>${esc(KIND[entry.category] ?? entry.category)}</span><span>${icon('badge-check')}${esc(system(r.os, r.arch))}, ${esc(day(r.checked_at, SHORT_DAY))}</span></p></li>`
+        `<p class="meta">${kindTag(entry)}<span>${sysTag(r.os, r.arch)} · ${esc(day(r.checked_at, SHORT_DAY))}</span></p></li>`
       );
     })
     .join('');

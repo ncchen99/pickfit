@@ -69,8 +69,10 @@ test('a tool page shows every verified run with its steps, and only real runs ge
   const html = await (await s.get('/tool/fixture-llm-runner')).text();
   assert.match(html, /<h1>Fixture LLM Runner<\/h1>/);
   assert.ok(html.includes('id="run-macos"') && html.includes('id="run-linux"'), 'one card per verified OS');
-  assert.match(html, /Install steps that worked on macOS arm64/);
-  assert.match(html, /Install steps that worked on Linux x86_64/);
+  // Each run card names its system once, in the heading, with the OS mark.
+  assert.match(html, /<h3><svg class="os os-macos"[^>]*><use href="#os-macos"\/><\/svg>macOS <span class="arch">arm64<\/span><\/h3>/);
+  assert.match(html, /<h3><svg class="os os-linux"[^>]*><use href="#os-linux"\/><\/svg>Linux <span class="arch">x86_64<\/span><\/h3>/);
+  assert.match(html, /<symbol id="os-linux"/, 'the page carries the OS marks it points at');
   assert.match(html, /brew install fixture\/tap\/fixture-llm-runner/);
   // Two runs, two seams; the gem badge comes from the score.
   assert.equal(html.split('<div class="seam" aria-hidden="true"></div>').length - 1, 2);
@@ -105,8 +107,8 @@ test('compare takes two to four known tools, marks "best" only on recorded numbe
   assert.equal(slugsFrom(new URLSearchParams(`tools=${slugs}`), catalog).length, 4);
 
   const table = compareTable([catalog.bySlug.get('fixture-llm-runner')!, catalog.bySlug.get('fixture-chat-tui')!], { os: 'macos', now: new Date(catalog.built_at) });
-  assert.match(table, /<span class="yes">.*macOS and Linux<\/span>/);
-  assert.match(table, /<span class="no">Linux only<\/span>/);
+  assert.match(table, /<span class="oses oses-pass" data-tip="macOS and Linux, including yours">/);
+  assert.match(table, /<span class="oses oses-caution" data-tip="Linux only, not macOS">/);
   for (const best of table.split('best here').slice(0, -1)) {
     const row = best.slice(best.lastIndexOf('<th scope="row">'));
     assert.match(row, /^<th scope="row">(Install|Quality|Features|Last release)<\/th>/, 'best is marked only on plain recorded comparisons');
