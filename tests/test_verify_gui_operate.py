@@ -140,15 +140,33 @@ def test_the_operators_answer_becomes_a_checked_action_in_screen_pixels():
                 "direction": None, "seconds": None, "why": ""}
         return OperatorAction.model_validate({**base, "action": action, **f})
 
-    assert op.to_action(answer("click", x=500, y=250), 1280, 800)[0] == {"kind": "click", "x": 640, "y": 200,
-                                                                          "count": 1}
-    assert op.to_action(answer("click", x=1000, y=1000, clicks=2), 1280, 800)[0]["x"] == 1279
-    assert op.to_action(answer("click", x=1200, y=10), 1280, 800)[0] is None
-    assert op.to_action(answer("key", key="Control+Shift+Z"), 1280, 800)[0] == {"kind": "key", "name": "ctrl+shift+z"}
-    assert op.to_action(answer("key", key="enter"), 1280, 800)[0] == {"kind": "key", "name": "Return"}
-    assert op.to_action(answer("key", key="rm -rf /"), 1280, 800)[0] is None
-    assert op.to_action(answer("type", text="a\x07b"), 1280, 800)[0] is None
-    assert op.to_action(answer("wait", seconds=60), 1280, 800)[0] == {"kind": "wait", "seconds": op.WAIT_MAX_S}
+    screen = op.View(0, 0, 1280, 800)
+    assert op.to_action(answer("click", x=500, y=250), screen)[0] == {"kind": "click", "x": 640, "y": 200, "count": 1}
+    assert op.to_action(answer("click", x=1000, y=1000, clicks=2), screen)[0]["x"] == 1279
+    assert op.to_action(answer("click", x=1200, y=10), screen)[0] is None
+    # The operator sees the part the app draws on, zoomed: its 0-1000 map back onto that part of the screen.
+    zoomed = op.View(40, 30, 800, 560, 1.43)
+    assert op.to_action(answer("click", x=500, y=500), zoomed)[0] == {"kind": "click", "x": 440, "y": 310, "count": 1}
+    assert op.to_action(answer("key", key="Control+Shift+Z"), screen)[0] == {"kind": "key", "name": "ctrl+shift+z"}
+    assert op.to_action(answer("key", key="Alt_L+F"), screen)[0] == {"kind": "key", "name": "alt+f"}
+    assert op.to_action(answer("key", key="enter"), screen)[0] == {"kind": "key", "name": "Return"}
+    assert op.to_action(answer("key", key="rm -rf /"), screen)[0] is None
+    assert op.to_action(answer("type", text="a\x07b"), screen)[0] is None
+    assert op.to_action(answer("wait", seconds=60), screen)[0] == {"kind": "wait", "seconds": op.WAIT_MAX_S}
+
+
+def test_the_operator_sees_what_the_app_draws_zoomed_with_its_last_click_marked():
+    image = Image.new("RGB", (1280, 800), (0, 0, 0))
+    image.paste((230, 230, 230), (40, 30, 840, 590))
+    out = io.BytesIO()
+    image.save(out, "PNG")
+    shown, view = op.view_of(out.getvalue(), mark=(440, 566))
+    assert (view.x, view.y, view.width, view.height) == (28, 18, 824, 584) and view.zoom == pytest.approx(1.37, 0.01)
+    seen = Image.open(io.BytesIO(shown))
+    assert seen.size == (round(824 * view.zoom), round(584 * view.zoom))
+    ring = seen.getpixel((round((440 - 28) * view.zoom) + 11, round((566 - 18) * view.zoom)))
+    assert ring[0] > 200 and ring[1] < 80  # the red ring around the last click
+    assert not op.changed(out.getvalue(), out.getvalue())
 
 
 def test_pickfit_refuses_specs_it_cannot_check_before_anything_runs():

@@ -63,6 +63,8 @@ HISTORY_STEPS = 12  # earlier actions the operator is reminded of
 TYPE_MAX = 300
 WAIT_MAX_S = 10
 SETTLE_MAX_S = 6.0  # a screenshot waits this long at most for two equal frames
+VIEW_MARGIN = 12  # pixels around what the app draws, in the operator's view
+VIEW_MAX_ZOOM = 2.0
 FILE_MAX_BYTES = 4_000_000
 CLIPBOARD_MAX_BYTES = 64_000
 SEARCH_MAX_FILES = 20_000
@@ -546,11 +548,11 @@ def file_probe(box: Box, params: dict[str, Any]) -> dict[str, Any]:
 
 OPERATOR_INSTRUCTIONS = """\
 You operate a desktop app for pickfit, which checks that one of the app's features works. Each turn you see a \
-screenshot of the whole virtual screen, the goal, and the actions taken so far. There is no window manager: \
-windows have no title bars, and there is no desktop, taskbar or terminal, only the app. Return the one next \
-action:
-- click: x and y of the point to click, normalized 0-1000 over the screenshot (0,0 is the top left, 1000,1000 \
-the bottom right); clicks 2 for a double click.
+screenshot of the part of the virtual screen the app draws on, the goal, and the actions taken so far. There is \
+no window manager: windows have no title bars, and there is no desktop, taskbar or terminal, only the app. \
+Return the one next action:
+- click: x and y of the point to click, normalized 0-1000 over the image (0,0 is the top left, 1000,1000 the \
+bottom right); aim at the middle of the control; clicks 2 for a double click.
 - type: the text to type into the field that has focus (click the field first). Type exactly the text the \
 goal gives.
 - key: one key or combination, e.g. Return, Tab, Escape, BackSpace, ctrl+a, ctrl+s, ctrl+c.
@@ -600,16 +602,61 @@ def normalize_key(name: str) -> str | None:
     return "+".join(out)
 
 
-def to_action(answer: OperatorAction, width: int, height: int) -> tuple[dict[str, Any] | None, str | None]:
-    """The operator's answer as an action pickfit performs (pixels), or (None, why it cannot be done)."""
+@dataclass(frozen=True)
+class View:
+    """The part of the screen the operator is shown (x, y, width, height in screen pixels), and its zoom."""
+
+    x: int
+    y: int
+    width: int
+    height: int
+    zoom: float = 1.0
+
+    def to_screen(self, nx: int, ny: int) -> tuple[int, int]:
+        """0-1000 coordinates over the view, as screen pixels."""
+        return (min(self.x + self.width - 1, self.x + round(nx * self.width / 1000)),
+                min(self.y + self.height - 1, self.y + round(ny * self.height / 1000)))
+
+
+def view_of(png: bytes, mark: tuple[int, int] | None = None) -> tuple[bytes, View]:
+    """What the operator sees: the part of the screen the app draws on (the root window is black with no window
+    manager), zoomed to fill the screen's size, with a red ring where the last click landed."""
+    from PIL import Image, ImageDraw
+
+    image = Image.open(io.BytesIO(png)).convert("RGB")
+    width, height = image.size
+    drawn = image.convert("L").point(lambda v: 255 if v > 2 else 0).getbbox() or (0, 0, width, height)
+    x0, y0 = max(0, drawn[0] - VIEW_MARGIN), max(0, drawn[1] - VIEW_MARGIN)
+    x1, y1 = min(width, drawn[2] + VIEW_MARGIN), min(height, drawn[3] + VIEW_MARGIN)
+    if mark:
+        x0, y0 = min(x0, max(0, mark[0] - 20)), min(y0, max(0, mark[1] - 20))
+        x1, y1 = max(x1, min(width, mark[0] + 20)), max(y1, min(height, mark[1] + 20))
+    view = image.crop((x0, y0, x1, y1))
+    zoom = min(VIEW_MAX_ZOOM, width / (x1 - x0), height / (y1 - y0))
+    if zoom > 1.05:
+        view = view.resize((round((x1 - x0) * zoom), round((y1 - y0) * zoom)), Image.Resampling.LANCZOS)
+    else:
+        zoom = 1.0
+    if mark:
+        draw = ImageDraw.Draw(view)
+        cx, cy = (mark[0] - x0) * zoom, (mark[1] - y0) * zoom
+        draw.ellipse((cx - 11, cy - 11, cx + 11, cy + 11), outline=(255, 0, 0), width=3)
+        draw.line((cx - 4, cy, cx + 4, cy), fill=(255, 0, 0), width=2)
+        draw.line((cx, cy - 4, cx, cy + 4), fill=(255, 0, 0), width=2)
+    out = io.BytesIO()
+    view.save(out, "PNG")
+    return out.getvalue(), View(x0, y0, x1 - x0, y1 - y0, round(zoom, 3))
+
+
+def to_action(answer: OperatorAction, view: View) -> tuple[dict[str, Any] | None, str | None]:
+    """The operator's answer as an action pickfit performs (screen pixels), or (None, why it cannot be done)."""
     kind = answer.action
     if kind in ("done", "give_up"):
         return {"kind": kind}, None
     if kind in ("click", "scroll"):
         if answer.x is None or answer.y is None or not (0 <= answer.x <= 1000 and 0 <= answer.y <= 1000):
             return None, f"{kind} needs x and y between 0 and 1000"
-        x = min(width - 1, round(answer.x * width / 1000))
-        y = min(height - 1, round(answer.y * height / 1000))
+        x, y = view.to_screen(answer.x, answer.y)
         if kind == "scroll":
             return ({"kind": "scroll", "x": x, "y": y, "direction": answer.direction}, None) if answer.direction \
                 else (None, "scroll needs a direction")
@@ -736,7 +783,8 @@ def _png_url(data: bytes) -> str:
     return "data:image/png;base64," + base64.b64encode(data).decode()
 
 
-def _operator_turn(goal: str, steps: list[Step], step_no: int, max_steps: int, note: str | None) -> str:
+def _operator_turn(goal: str, steps: list[Step], step_no: int, max_steps: int, note: str | None,
+                   marked: bool = False) -> str:
     lines = [f"Goal: {goal}", "", f"This is step {step_no} of at most {max_steps}."]
     done = [s for s in steps if s.action is not None or s.refused]
     if done:
@@ -745,7 +793,9 @@ def _operator_turn(goal: str, steps: list[Step], step_no: int, max_steps: int, n
             lines.append(f"- {describe(s.action) if s.action else 'refused: ' + (s.refused or '')}: {s.why[:160]}")
     if note:
         lines.append(note)
-    lines.append("The screenshot shows the screen now. Return the next action.")
+    if marked:
+        lines.append("A red ring marks where your last click landed.")
+    lines.append("The image shows the screen now (the part the app draws on). Return the next action.")
     return "\n".join(lines)
 
 
@@ -771,8 +821,11 @@ def operate(display: Display, goal: str, *, model: str | None = OPERATOR_MODEL, 
         step = Step(screenshot=save(step_no, png), sha256=sha, changed=changed(previous, png), action=None)
         if not step.changed and steps and steps[-1].action and steps[-1].action["kind"] != "wait":
             note = (note + " " if note else "") + "Your last action did not change the screen."
-        content = [{"type": "input_text", "text": _operator_turn(goal, steps, step_no, max_steps, note)},
-                   {"type": "input_image", "image_url": _png_url(png)}]
+        last = steps[-1].action if steps else None
+        mark = (last["x"], last["y"]) if last and last["kind"] in ("click", "scroll") else None
+        shown, view = view_of(png, mark)
+        content = [{"type": "input_text", "text": _operator_turn(goal, steps, step_no, max_steps, note, bool(mark))},
+                   {"type": "input_image", "image_url": _png_url(shown)}]
         body = {"instructions": OPERATOR_INSTRUCTIONS, "input": [{"type": "message", "role": "user",
                                                                   "content": content}],
                 "store": False, "text": {"format": {"type": "json_schema", "name": "gui_operator", "schema": schema,
@@ -796,7 +849,7 @@ def operate(display: Display, goal: str, *, model: str | None = OPERATOR_MODEL, 
             png, previous = None, png
             continue
         step.observation, step.why = answer.observation[:300], answer.why[:300]
-        act, why = to_action(answer, display.width, display.height)
+        act, why = to_action(answer, view)
         if act is None:
             step.refused = why
             steps.append(step)
