@@ -61,20 +61,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-difflet-20261031-000241-3dd5",
+      "run_id": "verify-difflet-20261101-163632-1f54",
       "method": "source",
       "steps": [
         {
-          "command": "git clone https://github.com/ai-decentralized/Difflet.git Difflet-src && ls -la && df -h /home/sbx /tmp && python3 --version && pip --version",
-          "purpose": "Clone Difflet source with HTTPS"
+          "command": "git clone https://github.com/ai-decentralized/Difflet.git && ls Difflet/pyproject.toml Difflet/scripts/setup_env.sh 2>&1",
+          "purpose": "clone Difflet repo"
         },
         {
-          "command": "pip install --index-url https://download.pytorch.org/whl/cu128 torch==2.11.0",
-          "purpose": "Install torch cu128 per README"
+          "command": "pip install --index-url https://download.pytorch.org/whl/cu128 torch==2.11.0 2>&1",
+          "purpose": "pip install torch cu128 from CUDA index"
         },
         {
-          "command": "cd Difflet-src && pip install -e \".[cuda]\"",
-          "purpose": "Install difflet with cuda extras"
+          "command": "cd Difflet && pip install -e \".[cuda]\" 2>&1",
+          "purpose": "pip install -e .[cuda] in repo"
         }
       ],
       "manual_steps": [],
@@ -97,33 +97,33 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:09:13.215242+08:00",
+    "checked_at": "2026-11-01T16:41:46.545230+08:00",
     "runs": [
       {
-        "id": "verify-difflet-20261031-000241-3dd5",
+        "id": "verify-difflet-20261101-163632-1f54",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:09:13.215242+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:41:46.545230+08:00",
         "tool_version": "0.0.0.dev0",
         "install_method": "source",
         "replayed": true,
         "steps": [
           {
-            "command": "git clone https://github.com/ai-decentralized/Difflet.git Difflet-src && ls -la && df -h /home/sbx /tmp && python3 --version && pip --version",
-            "purpose": "Clone Difflet source with HTTPS"
+            "command": "git clone https://github.com/ai-decentralized/Difflet.git && ls Difflet/pyproject.toml Difflet/scripts/setup_env.sh 2>&1",
+            "purpose": "clone Difflet repo"
           },
           {
-            "command": "pip install --index-url https://download.pytorch.org/whl/cu128 torch==2.11.0",
-            "purpose": "Install torch cu128 per README"
+            "command": "pip install --index-url https://download.pytorch.org/whl/cu128 torch==2.11.0 2>&1",
+            "purpose": "pip install torch cu128 from CUDA index"
           },
           {
-            "command": "cd Difflet-src && pip install -e \".[cuda]\"",
-            "purpose": "Install difflet with cuda extras"
+            "command": "cd Difflet && pip install -e \".[cuda]\" 2>&1",
+            "purpose": "pip install -e .[cuda] in repo"
           }
         ],
         "smoke_tests": [
@@ -138,7 +138,7 @@
           },
           {
             "command": "difflet cache ls",
-            "expected_signal": "no manifests found under",
+            "expected_signal": "no manifests found",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "no manifests found under /home/sbx/.cache/difflet",
@@ -146,8 +146,17 @@
             "offline": true
           },
           {
-            "command": "difflet plan --model-id black-forest-labs/FLUX.1-dev --objective latency",
-            "expected_signal": "sp_enabled and cp_degree > 1 are mutually exclusive",
+            "command": "python3 -c \"from difflet import DiffletPipeline, DiffletParallelConfig; print('import ok'); help(DiffletPipeline.from_pretrained)\" 2>&1",
+            "expected_signal": "import ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "import ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "DIFFLET_BACKEND=cpu difflet plan --model-id black-forest-labs/FLUX.1-dev --objective latency 2>&1",
+            "expected_signal": "tp1cp2",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "dp2tp1cp2sp [exclusivity] sp_enabled and cp_degree > 1 are mutually exclusive",
@@ -155,50 +164,73 @@
             "offline": true
           }
         ],
-        "pitfalls": [
-          {
-            "readme_said": "git clone git@github.com:ai-decentralized/Difflet.git",
-            "actually_needed": "Clone with https://github.com/ai-decentralized/Difflet.git (e.g. git clone https://github.com/ai-decentralized/Difflet.git Difflet-src); the git@ SSH URL needs an SSH key/account.",
-            "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "difflet run / serve generates images and videos",
-            "actually_needed": "Generation and serving need an NVIDIA GPU (or AWS Trainium2) with tens of GB plus gated Hugging Face access; on this CPU-only box only the CPU-safe commands (--help, cache ls, plan) can run.",
-            "kind": "note"
-          }
-        ],
+        "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show the empty cache message, plan output with sp_enabled exclusivity notes, and the difflet help usage text.",
+          "observed": "All three checks show expected outputs: empty cache message, successful import with API help, and CLI usage help.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-difflet-20261031-000241-3dd5/report.json",
+          "trace_path": "runs/verify/verify-difflet-20261101-163632-1f54/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-difflet-20261031-000241-3dd5/check-1-cmd6.judged.png",
-            "runs/verify/verify-difflet-20261031-000241-3dd5/check-2-cmd7.judged.png",
-            "runs/verify/verify-difflet-20261031-000241-3dd5/check-3-cmd5.judged.png"
+            "runs/verify/verify-difflet-20261101-163632-1f54/check-1-cmd5.judged.png",
+            "runs/verify/verify-difflet-20261101-163632-1f54/check-2-cmd7.judged.png",
+            "runs/verify/verify-difflet-20261101-163632-1f54/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.119863
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.070127,
+        "features": [
+          {
+            "feature": "run diffusion transformers on multiple accelerators",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "Requires NVIDIA GPU / Trainium / TPU with large HBM; not available in sandbox"
+          },
+          {
+            "feature": "run one-shot generation via CLI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "difflet run CLI exists (verified via --help) but one-shot generation needs GPU and model weights"
+          },
+          {
+            "feature": "serve models via OpenAI-compatible server",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "difflet serve CLI exists (verified via --help) but serving requires GPU/Trainium and model load"
+          },
+          {
+            "feature": "generate via Python API mirroring diffusers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only import success and help text for from_pretrained, not actual generation."
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T16:41:46+08:00",
     "quality": {
-      "total": 66.2,
+      "total": 72.2,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.68,
+          "score": 0.8,
           "weight": 40.0
         },
         "install_docs": {
@@ -239,7 +271,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 46.01
+      "value": 50.18
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -516,5 +548,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:43+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:41:46.602120+08:00"
 }

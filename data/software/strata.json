@@ -45,12 +45,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-strata-20261101-002426-1e81",
+      "run_id": "verify-strata-20261101-155248-23cb",
       "method": "pipx",
       "steps": [
         {
-          "command": "pipx install strata-mem",
-          "purpose": "install strata-mem via pipx (provides strata and strata-mcp)"
+          "command": "pipx install strata-mem 2>&1",
+          "purpose": "pipx install strata-mem"
         }
       ],
       "manual_steps": [],
@@ -77,25 +77,25 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:25:58.084177+08:00",
+    "checked_at": "2026-11-01T15:54:00.910089+08:00",
     "runs": [
       {
-        "id": "verify-strata-20261101-002426-1e81",
+        "id": "verify-strata-20261101-155248-23cb",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:25:58.084177+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T15:54:00.910089+08:00",
         "tool_version": "1.19.0",
         "install_method": "pipx",
         "replayed": true,
         "steps": [
           {
-            "command": "pipx install strata-mem",
-            "purpose": "install strata-mem via pipx (provides strata and strata-mcp)"
+            "command": "pipx install strata-mem 2>&1",
+            "purpose": "pipx install strata-mem"
           }
         ],
         "smoke_tests": [
@@ -109,14 +109,23 @@
             "offline": true
           },
           {
-            "command": "cd /tmp/strata-test && python3 /home/sbx/.pickfit/mcp_probe.py --timeout 30 -- strata-mcp 2>&1",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- strata-mcp 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/strata-demo && python3 ~/.pickfit/mcp_probe.py --call strata_list_scopes --args '{}' -- strata-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=strata_list_scopes content=text text_chars=340",
             "setup": [
               {
-                "command": "mkdir -p /tmp/strata-test && cd /tmp/strata-test && git init -q && strata register --harness claude-code --harness codex --description \"test scope\" 2>&1 | head -n 100\nls -R .strata 2>&1 | head -n 100\ncat .strata/fleet.yaml 2>&1 | head -n 100\ncat .strata/config.toml 2>&1 | head -n 100",
+                "command": "mkdir -p /tmp/strata-demo && cd /tmp/strata-demo && git init -q && strata register --description \"test fleet\" 2>&1 | tail -n 30; echo ---REGISTER_EXIT:$?; ls -la .strata/; cat .strata/fleet.yaml 2>&1 | head -n 50",
                 "background": false,
                 "port": null
               }
@@ -124,14 +133,29 @@
             "offline": true
           },
           {
-            "command": "cd /tmp/strata-test && python3 /home/sbx/.pickfit/mcp_probe.py --call strata_list_scopes --args '{}' -- strata-mcp 2>&1",
+            "command": "cd /tmp/strata-demo && python3 ~/.pickfit/mcp_probe.py --call strata_read_perspective --args '{\"scope_id\":\"g_root\"}' -- strata-mcp 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=strata_list_scopes content=text text_chars=340",
+            "observed_excerpt": "tools/call: ok tool=strata_read_perspective content=text text_chars=828",
             "setup": [
               {
-                "command": "mkdir -p /tmp/strata-test && cd /tmp/strata-test && git init -q && strata register --harness claude-code --harness codex --description \"test scope\" 2>&1 | head -n 100\nls -R .strata 2>&1 | head -n 100\ncat .strata/fleet.yaml 2>&1 | head -n 100\ncat .strata/config.toml 2>&1 | head -n 100",
+                "command": "mkdir -p /tmp/strata-demo && cd /tmp/strata-demo && git init -q && strata register --description \"test fleet\" 2>&1 | tail -n 30; echo ---REGISTER_EXIT:$?; ls -la .strata/; cat .strata/fleet.yaml 2>&1 | head -n 50",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/strata-demo && python3 ~/.pickfit/mcp_probe.py --call strata_read_scope_record --args '{\"scope_id\":\"g_root\"}' -- strata-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=strata_read_scope_record content=text text_chars=235",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/strata-demo && cd /tmp/strata-demo && git init -q && strata register --description \"test fleet\" 2>&1 | tail -n 30; echo ---REGISTER_EXIT:$?; ls -la .strata/; cat .strata/fleet.yaml 2>&1 | head -n 50",
                 "background": false,
                 "port": null
               }
@@ -139,31 +163,25 @@
             "offline": true
           }
         ],
-        "pitfalls": [
-          {
-            "readme_said": "strata-mcp starts unconditionally",
-            "actually_needed": "MCP server requires a registered project (strata register creates .strata/config.toml and fleet.yaml) and must be launched from that project directory; without it it exits with 3 validation failures",
-            "kind": "note"
-          }
-        ],
+        "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show strata version 1.19.0, MCP handshake with 17 tools, and successful strata_list_scopes call.",
+          "observed": "Screenshots show version 1.19.0, MCP handshake ok with 17 tools, and successful strata_list_scopes call.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-strata-20261101-002426-1e81/report.json",
+          "trace_path": "runs/verify/verify-strata-20261101-155248-23cb/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-strata-20261101-002426-1e81/check-1-cmd10.judged.png",
-            "runs/verify/verify-strata-20261101-002426-1e81/check-2-cmd7.judged.png",
-            "runs/verify/verify-strata-20261101-002426-1e81/check-3-cmd11.judged.png"
+            "runs/verify/verify-strata-20261101-155248-23cb/check-1-cmd3.judged.png",
+            "runs/verify/verify-strata-20261101-155248-23cb/check-2-cmd4.judged.png",
+            "runs/verify/verify-strata-20261101-155248-23cb/check-3-cmd7.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.076926,
+        "cost_usd": 0.076811,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -195,7 +213,35 @@
           "tool_count": 17,
           "called_tool": "strata_list_scopes",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "share memory across AI coding agent fleet",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "write learnings to a scope and read others'",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Reads succeeded but returned empty contributions and total 0 with no written learning shown."
+          },
+          {
+            "feature": "check every write with an LLM judge",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "every write checked by LLM judge requires JUDGE_API_KEY per README"
+          }
+        ]
       }
     ]
   },
@@ -543,5 +589,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:20:08+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T15:54:00.912269+08:00"
 }

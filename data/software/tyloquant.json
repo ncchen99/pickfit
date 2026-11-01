@@ -61,28 +61,28 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-tyloquant-20261031-001723-b726",
+      "run_id": "verify-tyloquant-20261101-164155-9e75",
       "method": "source",
       "steps": [
         {
-          "command": "rm -rf MFQ && git clone https://github.com/Tylogi/MFQ.git MFQ",
-          "purpose": "Clone MFQ source per README"
+          "command": "git clone https://github.com/Tylogi/MFQ.git MFQ\n",
+          "purpose": "git clone MFQ"
         },
         {
-          "command": "cd MFQ && uv sync",
-          "purpose": "Install Python dependencies with uv sync"
+          "command": "cd MFQ && uv sync 2>&1",
+          "purpose": "uv sync base deps"
         },
         {
-          "command": "mkdir -p ~/.local/bin && ln -sf /home/sbx/work/MFQ/.venv/bin/mfq ~/.local/bin/mfq && test -x ~/.local/bin/mfq",
-          "purpose": "Put built mfq entry point on PATH"
+          "command": "cd MFQ && uv sync --extra train 2>&1",
+          "purpose": "uv sync --extra train to get torch for quantize"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "mfq --version",
+        "command": "cd MFQ && uv run mfq --version 2>&1",
         "expected_signal": "mfq 0.1.0"
       },
-      "first_task": null
+      "first_task": "cd MFQ && uv run mfq quantize /tmp/tiny_hf /tmp/tiny.mfq --preset S4-M --backend cpu --dry-run 2>&1"
     },
     "windows": null
   },
@@ -99,40 +99,40 @@
     "url": "https://github.com/Tylogi/TyloQuant/releases/tag/v0.4.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:19:36.756011+08:00",
+    "checked_at": "2026-11-01T16:45:17.104665+08:00",
     "runs": [
       {
-        "id": "verify-tyloquant-20261031-001723-b726",
-        "level": "install",
+        "id": "verify-tyloquant-20261101-164155-9e75",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:19:36.756011+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:45:17.104665+08:00",
         "tool_version": "0.1.0",
         "install_method": "source",
         "replayed": true,
         "steps": [
           {
-            "command": "rm -rf MFQ && git clone https://github.com/Tylogi/MFQ.git MFQ",
-            "purpose": "Clone MFQ source per README"
+            "command": "git clone https://github.com/Tylogi/MFQ.git MFQ\n",
+            "purpose": "git clone MFQ"
           },
           {
-            "command": "cd MFQ && uv sync",
-            "purpose": "Install Python dependencies with uv sync"
+            "command": "cd MFQ && uv sync 2>&1",
+            "purpose": "uv sync base deps"
           },
           {
-            "command": "mkdir -p ~/.local/bin && ln -sf /home/sbx/work/MFQ/.venv/bin/mfq ~/.local/bin/mfq && test -x ~/.local/bin/mfq",
-            "purpose": "Put built mfq entry point on PATH"
+            "command": "cd MFQ && uv sync --extra train 2>&1",
+            "purpose": "uv sync --extra train to get torch for quantize"
           }
         ],
         "smoke_tests": [
           {
-            "command": "mfq --version",
+            "command": "cd MFQ && uv run mfq --version 2>&1",
             "expected_signal": "mfq 0.1.0",
             "exit_code": 0,
             "passed": true,
@@ -141,52 +141,122 @@
             "offline": true
           },
           {
-            "command": "cd MFQ && uv run mfq --help",
-            "expected_signal": "Mixed Format Quantization",
+            "command": "cd MFQ && uv run mfq quantize /tmp/tiny_hf /tmp/tiny.mfq --preset S4-M --backend cpu --dry-run 2>&1",
+            "expected_signal": "mfq_quantize",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Mixed Format Quantization toolchain.",
-            "setup": [],
+            "observed_excerpt": "{\"event\": \"mfq_quantize\", \"source_format\": \"hf\", \"input\": \"/tmp/tiny_hf\", \"output\": \"/tmp/tiny.mfq\", \"recipe\": null, \"standard_preset\": \"S4-M\", \"scheme\": null, \"imatrix\": null, \"full_precision\": false, \"quantize_vision\": false, \"quantize_mtp\": false, \"nint_data_free\": false, \"important_neurons\": nu…",
+            "setup": [
+              {
+                "command": "cd MFQ && uv run python -c \"\nimport json, os, pathlib\nimport torch\nfrom safetensors.torch import save_file\n# create tiny hf model\nout='/tmp/tiny_hf'\nos.makedirs(out, exist_ok=True)\nconfig={\n  'model_type':'qwen3',\n  'hidden_size':128,\n  'num_hidden_layers':2,\n  'num_attention_heads':4,\n  'num_key_value_heads':4,\n  'intermediate_size':256,\n  'vocab_size':32000,\n  'max_position_embeddings':512,\n  'hidden_act':'silu',\n  'rms_norm_eps':1e-05\n}\nopen(os.path.join(out,'config.json'),'w').write(json.dumps(config))\n# create dummy weights matching qwen3?\n# Look at expected keys: model.embed_tokens, model.layers.0 etc\nsd={}\ndef rand(shape): return torch.randn(shape, dtype=torch.float16)\nsd['model.embed_tokens.weight']=rand((32000,128))\nfor i in range(2):\n    p=f'model.layers.{i}'\n    sd[f'{p}.self_attn.q_proj.weight']=rand((128,128))\n    sd[f'{p}.self_attn.k_proj.weight']=rand((128,128))\n    sd[f'{p}.self_attn.v_proj.weight']=rand((128,128))\n    sd[f'{p}.self_attn.o_proj.weight']=rand((128,128))\n    sd[f'{p}.mlp.gate_proj.weight']=rand((256,128))\n    sd[f'{p}.mlp.up_proj.weight']=rand((256,128))\n    sd[f'{p}.mlp.down_proj.weight']=rand((128,256))\n    sd[f'{p}.input_layernorm.weight']=rand((128,))\n    sd[f'{p}.post_attention_layernorm.weight']=rand((128,))\nsd['model.norm.weight']=rand((128,))\nsd['lm_head.weight']=rand((32000,128))\nsave_file(sd, os.path.join(out,'model.safetensors'))\nprint('done', os.listdir(out))\n\" 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd MFQ && uv run mfq quantize /tmp/tiny_hf /tmp/tiny.mfq --preset S4-M --backend cpu --overwrite 2>&1",
+            "expected_signal": "\"status\": \"ok\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\": \"ok\", \"output\": \"/tmp/tiny.mfq\", \"outputs\": [\"/tmp/tiny.mfq\"], \"shard_count\": 1, \"output_gb\": 0.008, \"elapsed_sec\": 3.54, \"writer_mode\": \"streaming\"}",
+            "setup": [
+              {
+                "command": "cd MFQ && uv run python -c \"\nimport json, os, pathlib\nimport torch\nfrom safetensors.torch import save_file\n# create tiny hf model\nout='/tmp/tiny_hf'\nos.makedirs(out, exist_ok=True)\nconfig={\n  'model_type':'qwen3',\n  'hidden_size':128,\n  'num_hidden_layers':2,\n  'num_attention_heads':4,\n  'num_key_value_heads':4,\n  'intermediate_size':256,\n  'vocab_size':32000,\n  'max_position_embeddings':512,\n  'hidden_act':'silu',\n  'rms_norm_eps':1e-05\n}\nopen(os.path.join(out,'config.json'),'w').write(json.dumps(config))\n# create dummy weights matching qwen3?\n# Look at expected keys: model.embed_tokens, model.layers.0 etc\nsd={}\ndef rand(shape): return torch.randn(shape, dtype=torch.float16)\nsd['model.embed_tokens.weight']=rand((32000,128))\nfor i in range(2):\n    p=f'model.layers.{i}'\n    sd[f'{p}.self_attn.q_proj.weight']=rand((128,128))\n    sd[f'{p}.self_attn.k_proj.weight']=rand((128,128))\n    sd[f'{p}.self_attn.v_proj.weight']=rand((128,128))\n    sd[f'{p}.self_attn.o_proj.weight']=rand((128,128))\n    sd[f'{p}.mlp.gate_proj.weight']=rand((256,128))\n    sd[f'{p}.mlp.up_proj.weight']=rand((256,128))\n    sd[f'{p}.mlp.down_proj.weight']=rand((128,256))\n    sd[f'{p}.input_layernorm.weight']=rand((128,))\n    sd[f'{p}.post_attention_layernorm.weight']=rand((128,))\nsd['model.norm.weight']=rand((128,))\nsd['lm_head.weight']=rand((32000,128))\nsave_file(sd, os.path.join(out,'model.safetensors'))\nprint('done', os.listdir(out))\n\" 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "uv run mfq build --backend auto",
-            "actually_needed": "NVIDIA CUDA Toolkit 12+ with nvcc (Linux/Windows) or Apple silicon Metal on macOS; this Linux x86_64 box has neither, so 'uv run mfq build --backend auto' exits 1 with BuildError: no supported inference accelerator was detected",
+            "readme_said": "uv sync + uv run mfq build --backend auto works on any host",
+            "actually_needed": "build requires CUDA toolkit nvcc/CMake or Apple Silicon Metal; on plain Linux x86 without accelerator it fails with 'no supported inference accelerator was detected'",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "uv run mfq serve starts server",
+            "actually_needed": "serve also auto-detects backend and fails with same BuildError when no accelerator present, so F3 cannot be tested in this sandbox",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "quantize from HF safetensors",
+            "actually_needed": "quantize --backend cpu works with torch+extra train deps, verified with tiny synthetic Qwen3 checkpoint; README example uses --backend auto which would require accelerator",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows `mfq --version` printing `mfq 0.1.0`.",
+          "observed": "All three screenshots show version 0.1.0, dry-run quantize plan with mfq_quantize event, and full quantize finishing with status ok.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-tyloquant-20261031-001723-b726/report.json",
+          "trace_path": "runs/verify/verify-tyloquant-20261101-164155-9e75/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-tyloquant-20261031-001723-b726/check-1-cmd12.judged.png"
+            "runs/verify/verify-tyloquant-20261101-164155-9e75/check-1-cmd4.judged.png",
+            "runs/verify/verify-tyloquant-20261101-164155-9e75/check-2-cmd14.judged.png",
+            "runs/verify/verify-tyloquant-20261101-164155-9e75/check-3-cmd15.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.142294
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.140198,
+        "features": [
+          {
+            "feature": "run large models on local hardware",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "requires Metal on Apple silicon or CUDA/HIP; box has no accelerator, build detect fails"
+          },
+          {
+            "feature": "download and run models in MFQ Studio",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "MFQ Studio is desktop app with GUI, not CLI testable"
+          },
+          {
+            "feature": "serve models via OpenAI-compatible APIs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "serve needs native runtime; build not possible without accelerator, serve exits with BuildError"
+          },
+          {
+            "feature": "quantize Hugging Face checkpoints to MFQ",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T16:45:17+08:00",
     "quality": {
-      "total": 63.8,
+      "total": 78.3,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
+          "score": 0.8,
           "weight": 40.0
         },
         "install_docs": {
@@ -227,7 +297,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 19.52
+      "value": 23.96
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -502,5 +572,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:11+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:45:17.108802+08:00"
 }

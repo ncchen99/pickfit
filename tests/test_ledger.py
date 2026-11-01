@@ -71,7 +71,7 @@ def test_total_cap_setting_can_only_lower_it(monkeypatch: pytest.MonkeyPatch):
 def test_baseten_daily_cap_is_raised_on_11_1_and_11_2_only():
     assert BASETEN_CAPS.total_usd == 100.0
     assert BASETEN_CAPS.daily_usd(date(2026, 10, 31)) == 25.0
-    assert BASETEN_CAPS.daily_usd(date(2026, 11, 1)) == 45.0
+    assert BASETEN_CAPS.daily_usd(date(2026, 11, 1)) == 70.0
     assert BASETEN_CAPS.daily_usd(date(2026, 11, 2)) == 35.0
     assert BASETEN_CAPS.daily_usd(date(2026, 11, 3)) == 25.0
 

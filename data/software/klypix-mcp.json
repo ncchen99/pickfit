@@ -78,17 +78,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-klypix-mcp-20261101-000953-32ff",
+      "run_id": "verify-klypix-mcp-20261101-154810-0ced",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g klypix-mcp",
+          "command": "npm install -g klypix-mcp 2>&1",
           "purpose": "install klypix-mcp globally via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "npx klypix-mcp doctor 2>&1 | tail -n 30\nnpx klypix-mcp runtime 2>&1 | tail -n 30\nnpx klypix-mcp conformance 2>&1",
+        "expected_signal": "KLYPIX MCP conformance v1.110.0: PASS"
+      },
+      "first_task": "npx klypix-mcp doctor 2>&1 | tail -n 30\nnpx klypix-mcp runtime 2>&1 | tail -n 30\nnpx klypix-mcp conformance 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -120,30 +123,30 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:12:02.042257+08:00",
+    "checked_at": "2026-11-01T15:50:10.041080+08:00",
     "runs": [
       {
-        "id": "verify-klypix-mcp-20261101-000953-32ff",
+        "id": "verify-klypix-mcp-20261101-154810-0ced",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:12:02.042257+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T15:50:10.041080+08:00",
         "tool_version": "1.110.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g klypix-mcp",
+            "command": "npm install -g klypix-mcp 2>&1",
             "purpose": "install klypix-mcp globally via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- klypix-mcp",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- klypix-mcp 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -152,43 +155,117 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --call klypix_status --args '{}' -- klypix-mcp",
+            "command": "python3 ~/.pickfit/mcp_probe.py --call brain_sync --args '{\"project\":\"/home/sbx/work\",\"phase\":\"start\",\"intent\":\"test F1 decisions carry over\",\"files\":[]}' -- klypix-mcp --vault /home/sbx/work 2>&1",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=klypix_status content=text text_chars=1065",
-            "setup": [],
+            "observed_excerpt": "tools/call: ok tool=brain_sync content=text text_chars=1356",
+            "setup": [
+              {
+                "command": "pwd; ls -la; cat ~/.local/bin/klypix-mcp | head -n 5; klypix-mcp init 2>&1; ls -lh *.klypix 2>&1; ls -lh brain* 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call brain_note --args '{\"text\":\"Use SQLite for the trial project database because this prototype runs on one machine.\",\"area\":\"Storage\"}' -- klypix-mcp --vault /home/sbx/work 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=brain_note content=text,text text_chars=193",
+            "setup": [
+              {
+                "command": "pwd; ls -la; cat ~/.local/bin/klypix-mcp | head -n 5; klypix-mcp init 2>&1; ls -lh *.klypix 2>&1; ls -lh brain* 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call brain_doctor --args '{\"project\":\"/home/sbx/work\"}' -- klypix-mcp --vault /home/sbx/work 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=brain_doctor content=text,text text_chars=2023",
+            "setup": [
+              {
+                "command": "pwd; ls -la; cat ~/.local/bin/klypix-mcp | head -n 5; klypix-mcp init 2>&1; ls -lh *.klypix 2>&1; ls -lh brain* 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call brain_ask --args '{\"question\":\"Which database does the trial project use?\",\"canvas\":\"brain\"}' -- klypix-mcp --vault /home/sbx/work 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=brain_ask content=text,text text_chars=1196",
+            "setup": [
+              {
+                "command": "pwd; ls -la; cat ~/.local/bin/klypix-mcp | head -n 5; klypix-mcp init 2>&1; ls -lh *.klypix 2>&1; ls -lh brain* 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "npx klypix-mcp doctor 2>&1 | tail -n 30\nnpx klypix-mcp runtime 2>&1 | tail -n 30\nnpx klypix-mcp conformance 2>&1",
+            "expected_signal": "KLYPIX MCP conformance v1.110.0: PASS",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "KLYPIX MCP conformance v1.110.0: PASS",
+            "setup": [
+              {
+                "command": "pwd; ls -la; cat ~/.local/bin/klypix-mcp | head -n 5; klypix-mcp init 2>&1; ls -lh *.klypix 2>&1; ls -lh brain* 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "npx klypix-mcp --version / --help shows version",
-            "actually_needed": "bare klypix-mcp without subcommand starts MCP stdio server and hangs; version is visible via MCP probe server version 1.110.0",
-            "kind": "note"
+            "readme_said": "klypix-mcp --version / --help shows version/help",
+            "actually_needed": "klypix-mcp without verb runs MCP server; --version/--help hang waiting for stdio, doctor command shows version v1.110.0",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "npx klypix-mcp install as install",
+            "actually_needed": "npm install -g klypix-mcp used; install requires interactive project detection, global install provides launch command for offline replay",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both probes list 29 tools with handshake ok, and klypix_status call returns file-mode status text.",
+          "observed": "All three screenshots show successful MCP handshake with 29 tools and successful brain_sync and brain_note tool calls.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-klypix-mcp-20261101-000953-32ff/report.json",
+          "trace_path": "runs/verify/verify-klypix-mcp-20261101-154810-0ced/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-klypix-mcp-20261101-000953-32ff/check-1-cmd8.judged.png",
-            "runs/verify/verify-klypix-mcp-20261101-000953-32ff/check-2-cmd9.judged.png"
+            "runs/verify/verify-klypix-mcp-20261101-154810-0ced/check-1-cmd6.judged.png",
+            "runs/verify/verify-klypix-mcp-20261101-154810-0ced/check-2-cmd8.judged.png",
+            "runs/verify/verify-klypix-mcp-20261101-154810-0ced/check-3-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.205467,
+        "cost_usd": 0.093839,
         "mcp": {
           "transport": "stdio",
           "launch": [
-            "klypix-mcp"
+            "klypix-mcp",
+            "--vault",
+            "/home/sbx/work"
           ],
           "url": null,
           "protocol_version": "2025-11-25",
@@ -226,9 +303,45 @@
             "canvas_view"
           ],
           "tool_count": 29,
-          "called_tool": "klypix_status",
+          "called_tool": "brain_sync",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Carry decisions over across sessions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: brain_ask output shows only lexical notice, not the stored SQLite decision."
+          },
+          {
+            "feature": "Warn when sessions overlap files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: brain_sync output reports no other declared task, not an overlap warning."
+          },
+          {
+            "feature": "Leave notes and handoffs between sessions",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Guard shared git checkouts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: brain_doctor output says NOT INSTALLED with no guard result."
+          }
+        ]
       }
     ]
   },
@@ -275,15 +388,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-01T15:50:10+08:00",
     "quality": {
-      "total": 96.1,
+      "total": 88.6,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -326,7 +439,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 48.05
+      "value": 44.3
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -769,5 +882,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T15:50:10.043857+08:00"
 }

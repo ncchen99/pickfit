@@ -111,6 +111,50 @@ test('a rec_id older than 7 days no longer counts', async () => {
   assert.equal(out.not_counted_reason, 'unknown_or_expired_rec_id');
 });
 
+test('still_using, replaced and abandoned count with a rec_id up to 120 days old', async () => {
+  const h = harness(null, { modelEnabled: false });
+  const rec = await recommend(h); // issued 2026-10-30T12:00:00Z
+  const at = (iso: string) => (input: OutcomeInput) =>
+    reportOutcome(input, { catalog: h.deps.catalog, db: h.deps.db, now: () => new Date(iso), reporter: 'external' });
+
+  // Day 60: a first run is too late to count, a check-in is not.
+  const day60 = at('2026-12-29T12:00:00Z');
+  const late = await day60({ slug: 'fixture-llm-runner', stage: 'first_run_ok', rec_id: rec });
+  assert.equal(late.counted_in_score, false);
+  const using = await day60({ slug: 'fixture-llm-runner', stage: 'still_using', rec_id: rec });
+  assert.equal(using.counted_in_score, true);
+  assert.equal(using.rec_id, rec);
+
+  // Day 119 still counts; the slug must still be one pickfit gave under that rec_id.
+  const day119 = at('2027-02-26T12:00:00Z');
+  assert.equal((await day119({ slug: 'fixture-llm-runner', stage: 'abandoned', rec_id: rec })).counted_in_score, true);
+  assert.equal((await day119({ slug: 'fixture-json-query', stage: 'still_using', rec_id: rec })).counted_in_score, false);
+
+  // Day 121: too late for any stage.
+  const day121 = at('2027-02-28T12:00:01Z');
+  const expired = await day121({ slug: 'fixture-llm-runner', stage: 'replaced', rec_id: rec, replaced_by: 'other' });
+  assert.equal(expired.not_counted_reason, 'unknown_or_expired_rec_id');
+  assert.deepEqual(
+    outcomes(h).map((r) => [r.stage, r.success, r.rec_id !== null]),
+    [['first_run', 1, false], ['still_using', 1, true], ['still_using', 0, true], ['still_using', 1, false], ['still_using', 0, false]],
+  );
+});
+
+test('last_used is kept coarse, and only for the later stages', async () => {
+  const h = harness(null, { modelEnabled: false });
+  const rec = await recommend(h);
+  await report(h, { slug: 'fixture-llm-runner', stage: 'installed', rec_id: rec, last_used: 'this_week' });
+  await report(h, { slug: 'fixture-llm-runner', stage: 'still_using', rec_id: rec, last_used: 'this_month' });
+  await report(h, { slug: 'fixture-llm-runner', stage: 'abandoned', rec_id: rec, last_used: 'older' });
+  assert.deepEqual(outcomes(h).map((r) => [r.stage, r.success, r.last_used]), [
+    ['installed', 1, null],
+    ['still_using', 1, 'this_month'],
+    ['still_using', 0, 'older'],
+  ]);
+  // The column takes nothing but the four buckets, so an exact time cannot be stored.
+  assert.throws(() => h.sqlite.prepare("UPDATE events SET last_used = '2026-10-31T09:12:00Z'").run(), /CHECK/);
+});
+
 test('a failed install with an error excerpt queues a re-run; a pending one is not queued twice', async () => {
   const h = harness(null, { modelEnabled: false });
   const rec = await recommend(h);

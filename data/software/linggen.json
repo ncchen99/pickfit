@@ -75,24 +75,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-linggen-20261031-004203-b5cc",
+      "run_id": "verify-linggen-20261101-162825-a2f4",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL -o /tmp/install.sh https://linggen.dev/install.sh && wc -c /tmp/install.sh && head -c 2000 /tmp/install.sh",
-          "purpose": "download install script for reading before running"
+          "command": "curl -fsSL https://linggen.dev/install.sh -o /tmp/install.sh && ls -la /tmp/install.sh && wc -l /tmp/install.sh",
+          "purpose": "Download install script from linggen.dev"
         },
         {
           "command": "bash /tmp/install.sh",
-          "purpose": "run install script to install ling"
+          "purpose": "Run install script to install ling binary"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "ling --version",
+        "command": "ling --version; ling --help",
         "expected_signal": "ling 1.9.0"
       },
-      "first_task": "curl -fsS http://127.0.0.1:9527/api/health"
+      "first_task": "ling --web --port 9527"
     },
     "windows": null
   },
@@ -111,34 +111,34 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T00:44:22.151046+08:00",
+    "checked_at": "2026-11-01T16:30:09.081407+08:00",
     "runs": [
       {
-        "id": "verify-linggen-20261031-004203-b5cc",
+        "id": "verify-linggen-20261101-162825-a2f4",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:44:22.151046+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:30:09.081407+08:00",
         "tool_version": "1.9.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL -o /tmp/install.sh https://linggen.dev/install.sh && wc -c /tmp/install.sh && head -c 2000 /tmp/install.sh",
-            "purpose": "download install script for reading before running"
+            "command": "curl -fsSL https://linggen.dev/install.sh -o /tmp/install.sh && ls -la /tmp/install.sh && wc -l /tmp/install.sh",
+            "purpose": "Download install script from linggen.dev"
           },
           {
             "command": "bash /tmp/install.sh",
-            "purpose": "run install script to install ling"
+            "purpose": "Run install script to install ling binary"
           }
         ],
         "smoke_tests": [
           {
-            "command": "ling --version",
+            "command": "ling --version; ling --help",
             "expected_signal": "ling 1.9.0",
             "exit_code": 0,
             "passed": true,
@@ -147,21 +147,31 @@
             "offline": true
           },
           {
-            "command": "curl -fsS http://127.0.0.1:9527/api/health",
-            "expected_signal": "\"ok\":true",
+            "command": "ling status | grep -i reviewer; echo \"REVIEWER_CHECK\"; ling status",
+            "expected_signal": "Agents (global): 4 agent files in /home/sbx/.linggen/agents",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "{\"ok\":true,\"version\":\"1.9.0\"}",
+            "observed_excerpt": "\u001b[32m[OK]\u001b[0m Agents (global): 4 agent files in /home/sbx/.linggen/agents",
             "setup": [
               {
-                "command": "ling init && ls -la ~/.linggen/ && cat ~/.linggen/linggen.toml 2>/dev/null; cat ~/.linggen/config* 2>/dev/null; ls ~/.linggen/agents/ 2>/dev/null",
+                "command": "mkdir -p ~/.linggen/agents && cat > ~/.linggen/agents/reviewer.md <<'EOF'\n---\nname: reviewer\ndescription: Code review specialist.\ntools: [\"Read\", \"Glob\", \"Grep\"]\nmodel: claude-sonnet-5\n---\n\nYou review code for bugs, style issues, and security vulnerabilities.\nEOF\ncat ~/.linggen/agents/reviewer.md && echo \"CREATED\"",
                 "background": false,
                 "port": null
-              },
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "ling --web --port 9527",
+            "expected_signal": "Server running on http://127.0.0.1:9527",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[2m2026-11-01T08:29:53\u001b[0m \u001b[32m INFO\u001b[0m \u001b[2msrc/server/mod.rs\u001b[0m\u001b[2m:\u001b[0m\u001b[2m105\u001b[0m\u001b[2m:\u001b[0m Server running on http://127.0.0.1:9527",
+            "setup": [
               {
-                "command": "ling --port 9527",
-                "background": true,
-                "port": 9527
+                "command": "mkdir -p ~/.linggen/agents && cat > ~/.linggen/agents/reviewer.md <<'EOF'\n---\nname: reviewer\ndescription: Code review specialist.\ntools: [\"Read\", \"Glob\", \"Grep\"]\nmodel: claude-sonnet-5\n---\n\nYou review code for bugs, style issues, and security vulnerabilities.\nEOF\ncat ~/.linggen/agents/reviewer.md && echo \"CREATED\"",
+                "background": false,
+                "port": null
               }
             ],
             "offline": true
@@ -169,57 +179,87 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -fsSL https://linggen.dev/install.sh | bash",
-            "actually_needed": "ran `bash /tmp/install.sh` after downloading; it installed `ling` to $HOME/.local/bin (fallback, no root) and verified SHA-256; bundled bun 1.4.4",
+            "readme_said": "curl -fsSL https://linggen.dev/install.sh | bash then ling opens web UI",
+            "actually_needed": "Must run ling init first to create ~/.linggen/config and skills before status/server shows agents/skills",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "Engine installs ling-mem memory backend automatically",
+            "actually_needed": "install.sh warned tar: ling-mem: Not found in archive and skipped ling-mem install, but continued; server later auto-tries to install",
+            "kind": "tool_handled"
+          },
+          {
+            "readme_said": "Install requires glibc 2.39+ Ubuntu 24.04+",
+            "actually_needed": "Box has glibc 2.41 Debian 13, install succeeded to fallback dir ~/.local/bin when /usr/local/bin not writable",
             "kind": "sandbox"
-          },
-          {
-            "readme_said": "single install.sh one-liner with SHA-256 verification",
-            "actually_needed": "pre-downloaded and read install-bin.sh (/tmp/install-bin.sh); install.sh still pipes a remotely-fetched install-bin.sh into bash at runtime, plus fetches opaque ling tarball and bun zip which cannot be read before running",
-            "kind": "note"
-          },
-          {
-            "readme_said": "install.sh installs ling plus pinned ling-mem memory backend",
-            "actually_needed": "ling-mem install soft-failed with `tar: ling-mem: Not found in archive` then warning `couldn't install ling-mem`; install continued and `ling status` reports ling-mem not on PATH",
-            "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "ling / ling --web starts server on http://localhost:9527",
-            "actually_needed": "start server with `ling --port 9527` (bare `ling` also starts server); there is no `--web` flag in `ling --help` despite post-install text `ling --web # Start server (foreground)` and README implying `ling` opens web UI",
-            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show expected outputs: health API returns ok true and CLI prints ling 1.9.0.",
+          "observed": "Screenshots show status with 4 global agents, web server opening port 9527 with Server Address 127.0.0.1:9527, and version 1.9.0 with help.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-linggen-20261031-004203-b5cc/report.json",
+          "trace_path": "runs/verify/verify-linggen-20261101-162825-a2f4/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-linggen-20261031-004203-b5cc/check-1-cmd9.judged.png",
-            "runs/verify/verify-linggen-20261031-004203-b5cc/check-2-cmd4.judged.png"
+            "runs/verify/verify-linggen-20261101-162825-a2f4/check-1-cmd13.judged.png",
+            "runs/verify/verify-linggen-20261101-162825-a2f4/check-2-cmd15.judged.png",
+            "runs/verify/verify-linggen-20261101-162825-a2f4/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.136714
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.100324,
+        "features": [
+          {
+            "feature": "run AI apps on own machine",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only voice/model download failures and fallback, not a working local app."
+          },
+          {
+            "feature": "use any AI model",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; Config shows default_models deepseek-flash and server logs list 3 providers (chatgpt, openai)"
+          },
+          {
+            "feature": "add apps as markdown files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows no reviewer match before REVIEWER_CHECK, only generic status with no new app."
+          },
+          {
+            "feature": "share models over P2P WebRTC",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "P2P WebRTC room sharing requires second peer and signaling relay, not testable offline with single box"
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T16:30:09+08:00",
     "quality": {
-      "total": 70.8,
+      "total": 76.5,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6502,
+          "score": 0.765,
           "weight": 40.0
         },
         "install_docs": {
@@ -260,7 +300,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 41.21
+      "value": 44.52
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -543,5 +583,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T16:30:09.287677+08:00"
 }

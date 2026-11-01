@@ -14,6 +14,7 @@ from pickfit.verify.verdict import (
     masked_exit,
     modified_copy,
     split_last,
+    unmasked,
     unread_scripts,
     written_paths,
 )
@@ -58,6 +59,41 @@ def test_honest_commands_are_not_masked(command: str):
 def test_masked_exit_codes_are_caught(command: str, why: str):
     reason = masked_exit(command)
     assert reason is not None and why in reason
+
+
+@pytest.mark.parametrize(("command", "clean", "dropped"), [
+    ("uv tool install agent-lsp 2>&1 | tail -30", "uv tool install agent-lsp 2>&1", "| tail -30"),
+    ("tool --help | head -n 20", "tool --help", "| head -n 20"),
+    ("curl -s localhost:8000/api 2>&1 | head -c 2000", "curl -s localhost:8000/api 2>&1", "| head -c 2000"),
+    ("tool --help 2>&1; echo \"EXIT:$?\"", "tool --help 2>&1", "; echo \"EXIT:$?\""),
+    ("pip install x 2>&1 | tail -5; echo exit=$?", "pip install x 2>&1", "| tail -5; echo exit=$?"),
+    ("git clone u /tmp/y && ls /tmp/y | head -n 20", "git clone u /tmp/y && ls /tmp/y", "| head -n 20"),
+    ("cat > in.txt <<'EOF'\nhi; echo no\nEOF\necho ok", "cat > in.txt <<'EOF'\nhi; echo no\nEOF", "echo ok"),
+    ("tool x;\necho ok", "tool x", ";\necho ok"),
+])
+def test_a_trailing_tail_head_or_echo_is_dropped(command: str, clean: str, dropped: str):
+    assert unmasked(command) == (clean, dropped)
+    assert masked_exit(clean) is None
+
+
+@pytest.mark.parametrize("command", [
+    "pipx install evnx",
+    "tool --version | grep 1.2",
+    "pipx install evnx || true",
+    "tool x || :",
+    "set +e; tool x | tail -2",
+    "! tool x | tail -2",
+    "pipx install evnx; cat README.md | head -5",  # still masked by `cat` without the head
+    "yes | head -5",  # head is what ends these
+    "tail -f server.log | head -5",
+    "tool x | tail -f",
+    "tool x | head -5 > out.txt",
+    "tool x; echo done > marker",
+    "tool x; echo \"$(tool --version)\"",
+    "tool run &",
+])
+def test_other_masks_are_left_for_the_log_rules(command: str):
+    assert unmasked(command) is None
 
 
 def test_check_kind():

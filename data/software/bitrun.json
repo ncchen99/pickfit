@@ -73,22 +73,22 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-bitrun-20261101-001726-c0bc",
+      "run_id": "verify-bitrun-20261101-160515-d763",
       "method": "script",
       "steps": [
         {
           "command": "curl -fsSL https://raw.githubusercontent.com/IshekKhal/bitrun/main/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
-          "purpose": "download install.sh from GitHub"
+          "purpose": "Download install.sh"
         },
         {
           "command": "sh /tmp/install.sh",
-          "purpose": "run install.sh to extract linux/amd64 binaries to ~/.bitrun/bin"
+          "purpose": "Run install script"
         }
       ],
       "manual_steps": [],
       "check": {
         "command": "export PATH=\"$HOME/.bitrun/bin:$PATH\" && bitrun --version",
-        "expected_signal": "bitrun version 0.2.0-beta (linux/amd64)"
+        "expected_signal": "bitrun version 0.2.0-beta"
       },
       "first_task": "export PATH=\"$HOME/.bitrun/bin:$PATH\" && bitrun hardware"
     },
@@ -122,35 +122,35 @@
   "verification": {
     "level": "inference",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:19:15.902045+08:00",
+    "checked_at": "2026-11-01T16:06:42.244957+08:00",
     "runs": [
       {
-        "id": "verify-bitrun-20261101-001726-c0bc",
+        "id": "verify-bitrun-20261101-160515-d763",
         "level": "inference",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:19:15.902045+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T16:06:42.244957+08:00",
         "tool_version": "0.2.0-beta",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
             "command": "curl -fsSL https://raw.githubusercontent.com/IshekKhal/bitrun/main/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
-            "purpose": "download install.sh from GitHub"
+            "purpose": "Download install.sh"
           },
           {
             "command": "sh /tmp/install.sh",
-            "purpose": "run install.sh to extract linux/amd64 binaries to ~/.bitrun/bin"
+            "purpose": "Run install script"
           }
         ],
         "smoke_tests": [
           {
             "command": "export PATH=\"$HOME/.bitrun/bin:$PATH\" && bitrun --version",
-            "expected_signal": "bitrun version 0.2.0-beta (linux/amd64)",
+            "expected_signal": "bitrun version 0.2.0-beta",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "bitrun version 0.2.0-beta (linux/amd64)",
@@ -159,7 +159,7 @@
           },
           {
             "command": "export PATH=\"$HOME/.bitrun/bin:$PATH\" && bitrun hardware",
-            "expected_signal": "Logical CPU Cores:",
+            "expected_signal": "Logical CPU Cores",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "Logical CPU Cores: 2",
@@ -167,29 +167,38 @@
             "offline": true
           },
           {
-            "command": "curl -s http://127.0.0.1:11435/v1/models",
-            "expected_signal": "\"object\":\"list\"",
+            "command": "export PATH=\"$HOME/.bitrun/bin:$PATH\" && timeout 120 bitrun pull bitnet-70m 2>&1",
+            "expected_signal": "Successfully installed bitnet-70m",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "[bitrun] Model bitnet-70m already cached at /home/sbx/.bitrun/models/bitnet-m7-70m.Q8_0.gguf",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "export PATH=\"$HOME/.bitrun/bin:$PATH\" && timeout 30 bitrun bench bitnet-70m --tokens 16 2>&1",
+            "expected_signal": "Token Generation",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "{\"models\":[{\"name\":\"bitnet-70m\",\"model\":\"bitnet-70m\",\"modified_at\":\"\",\"size\":\"\",\"digest\":\"\",\"type\":\"model\",\"description\":\"\",\"tags\":[\"\"],\"capabilities\":[\"completion\"],\"parameters\":\"\",\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"\",\"families\":[\"\"],\"parameter_size\":\"\",\"quantization_level\":\"\"}…",
+            "observed_excerpt": "│ Token Generation 271.5 tok/s 16 tokens in 58 ms │",
             "setup": [
               {
-                "command": "export PATH=\"$HOME/.bitrun/bin:$PATH\" && bitrun serve bitnet-70m --port 11435",
-                "background": true,
-                "port": 11435
+                "command": "export PATH=\"$HOME/.bitrun/bin:$PATH\" && timeout 120 bitrun pull bitnet-70m 2>&1",
+                "background": false,
+                "port": null
               }
             ],
             "offline": true
           },
           {
-            "command": "curl -s http://127.0.0.1:11435/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\":\"bitnet-70m\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"temperature\":0,\"max_tokens\":16}'",
+            "command": "curl -s http://127.0.0.1:11435/v1/models 2>&1\necho \"---MODELS DONE---\"\ncurl -s http://127.0.0.1:11435/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\":\"bitnet-70m\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"temperature\":0,\"max_tokens\":16}' 2>&1",
             "expected_signal": "completion_tokens",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "{\"choices\":[{\"finish_reason\":\"length\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\">\\n>\\n>\\n>\\n>\\n>\\n>\\n>\\n\"}}],\"created\":1793463550,\"model\":\"bitnet-70m\",\"system_fingerprint\":\"b1-4a18b23\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":16,\"prompt_tokens\":29,\"total_tokens\":45,\"prompt_t…",
+            "observed_excerpt": "{\"choices\":[{\"finish_reason\":\"length\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\">\\n>\\n>\\n>\\n>\\n>\\n>\\n>\\n\"}}],\"created\":1793520391,\"model\":\"bitnet-70m\",\"system_fingerprint\":\"b1-4a18b23\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":16,\"prompt_tokens\":29,\"total_tokens\":45,\"prompt_t…",
             "setup": [
               {
-                "command": "export PATH=\"$HOME/.bitrun/bin:$PATH\" && bitrun serve bitnet-70m --port 11435",
+                "command": "/home/sbx/.bitrun/bin/bitrun serve bitnet-70m --port 11435",
                 "background": true,
                 "port": 11435
               }
@@ -199,53 +208,86 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "bitrun --help shows usage",
-            "actually_needed": "bitrun --help exits 1 but prints help; use bitrun --version for version check",
-            "kind": "readme_wrong"
+            "readme_said": "curl -fsSL ... | sh adds bitrun to PATH",
+            "actually_needed": "Installer appends to ~/.bashrc; current shell needs export PATH=\"$HOME/.bitrun/bin:$PATH\"",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "install.sh adds PATH to shell profile",
-            "actually_needed": "installer appends export PATH=\"$HOME/.bitrun/bin:$PATH\" to ~/.bashrc; need manual export PATH in current session",
-            "kind": "note"
-          },
-          {
-            "readme_said": "bitrun bench requires pre-pulled model",
-            "actually_needed": "bench auto-downloads missing model (bitnet-2b 1132 MB) before benchmarking",
+            "readme_said": "bitrun cockpit <model> launches dashboard",
+            "actually_needed": "Requires /dev/tty; fails in headless sandbox with 'could not open a new TTY'",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show hardware topology with CPU cores, models API list response, and correct version string.",
+          "observed": "All three screenshots show hardware topology with Logical CPU Cores, benchmark telemetry with Token Generation, and version 0.2.0-beta output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-bitrun-20261101-001726-c0bc/report.json",
+          "trace_path": "runs/verify/verify-bitrun-20261101-160515-d763/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-bitrun-20261101-001726-c0bc/check-1-cmd15.judged.png",
-            "runs/verify/verify-bitrun-20261101-001726-c0bc/check-2-cmd13.judged.png",
-            "runs/verify/verify-bitrun-20261101-001726-c0bc/check-3-cmd12.judged.png"
+            "runs/verify/verify-bitrun-20261101-160515-d763/check-1-cmd15.judged.png",
+            "runs/verify/verify-bitrun-20261101-160515-d763/check-2-cmd7.judged.png",
+            "runs/verify/verify-bitrun-20261101-160515-d763/check-3-cmd13.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.110082
+        "cost_usd": 0.076187,
+        "features": [
+          {
+            "feature": "run 1-bit ternary LLMs on CPU",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "pull 1-bit models from Hugging Face",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "launch full-screen terminal dashboard",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Cockpit needs TTY, fails headless"
+          },
+          {
+            "feature": "serve local OpenAI-compatible REST server",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:31:58+08:00",
+    "computed_at": "2026-11-01T16:06:42+08:00",
     "quality": {
-      "total": 83.1,
+      "total": 90.6,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.85,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -286,7 +328,7 @@
     },
     "treasure": {
       "is_treasure": true,
-      "value": 51.44
+      "value": 56.08
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -591,5 +633,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:22:54+08:00",
-  "updated_at": "2026-11-01T02:04:09+08:00"
+  "updated_at": "2026-11-01T16:06:42.246740+08:00"
 }

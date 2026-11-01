@@ -75,7 +75,7 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-dreamd-20261101-000847-d387",
+      "run_id": "verify-dreamd-20261101-155609-c11b",
       "method": "npm",
       "steps": [
         {
@@ -85,10 +85,10 @@
       ],
       "manual_steps": [],
       "check": {
-        "command": "dreamd-mcp --help",
+        "command": "which dreamd-mcp; ls ~/.local/bin/dreamd* 2>&1; dreamd-mcp --help 2>&1",
         "expected_signal": "dreamd-mcp — npx shim"
       },
-      "first_task": null
+      "first_task": "cd /tmp/testproj && dreamd-mcp doctor 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -120,18 +120,18 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:10:03.327227+08:00",
+    "checked_at": "2026-11-01T15:57:13.377428+08:00",
     "runs": [
       {
-        "id": "verify-dreamd-20261101-000847-d387",
+        "id": "verify-dreamd-20261101-155609-c11b",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:10:03.327227+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T15:57:13.377428+08:00",
         "tool_version": "1.2.0",
         "install_method": "npm",
         "replayed": true,
@@ -143,7 +143,7 @@
         ],
         "smoke_tests": [
           {
-            "command": "dreamd-mcp --help",
+            "command": "which dreamd-mcp; ls ~/.local/bin/dreamd* 2>&1; dreamd-mcp --help 2>&1",
             "expected_signal": "dreamd-mcp — npx shim",
             "exit_code": 0,
             "passed": true,
@@ -152,14 +152,14 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 -- dreamd-mcp 2>&1",
+            "command": "cd /tmp/testproj && python3 ~/.pickfit/mcp_probe.py -- dreamd-mcp",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
             "setup": [
               {
-                "command": "dreamd-mcp setup --yes --harness none 2>&1\necho EXIT:$?\nls -la .agent/ 2>&1 | head -n 50\ndreamd-mcp doctor 2>&1; echo EXIT2:$?\n",
+                "command": "mkdir -p /tmp/testproj && cd /tmp/testproj && git init -q && mkdir -p work && ls -la",
                 "background": false,
                 "port": null
               }
@@ -167,14 +167,54 @@
             "offline": true
           },
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 30 --call search_nodes --args '{\"query\":\"test\"}' -- dreamd-mcp 2>&1",
+            "command": "cd /tmp/testproj && dreamd-mcp doctor 2>&1",
+            "expected_signal": "index_freshness: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "index_freshness: ok",
+            "setup": [
+              {
+                "command": "cd /tmp/testproj && dreamd-mcp init 2>&1; echo \"EXIT:$?\"; ls -R .agent 2>&1 | head -n 100",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/testproj && python3 ~/.pickfit/mcp_probe.py --call append_node --args '{\"content\":\"Test learning: pickfit verification works\",\"source_harness\":\"test\",\"skill_action\":\"verify\"}' -- dreamd-mcp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=search_nodes content=text text_chars=14",
+            "observed_excerpt": "tools/call: ok tool=append_node content=text text_chars=110",
             "setup": [
               {
-                "command": "dreamd-mcp setup --yes --harness none 2>&1\necho EXIT:$?\nls -la .agent/ 2>&1 | head -n 50\ndreamd-mcp doctor 2>&1; echo EXIT2:$?\n",
+                "command": "mkdir -p /tmp/testproj && cd /tmp/testproj && git init -q && mkdir -p work && ls -la",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/testproj && dreamd-mcp init 2>&1; echo \"EXIT:$?\"; ls -R .agent 2>&1 | head -n 100",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/testproj && python3 ~/.pickfit/mcp_probe.py --call search_nodes --args '{\"query\":\"pickfit verification\"}' -- dreamd-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search_nodes content=text text_chars=305",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testproj && cd /tmp/testproj && git init -q && mkdir -p work && ls -la",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/testproj && dreamd-mcp init 2>&1; echo \"EXIT:$?\"; ls -R .agent 2>&1 | head -n 100",
                 "background": false,
                 "port": null
               }
@@ -184,34 +224,34 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "npx -y dreamd-mcp setup scaffolds .agent/",
-            "actually_needed": "requires project sentinel (.git/package.json) and .agent store created via setup --yes --harness none",
+            "readme_said": "npx -y dreamd-mcp init --yes and npx -y dreamd-mcp setup require sentinel .git/Cargo.toml/package.json/pyproject.toml",
+            "actually_needed": "Must create sentinel project directory with git init before handshake/tools work reliably; otherwise server cannot locate project root",
             "kind": "note"
           },
           {
-            "readme_said": "npm install gives runnable binary",
-            "actually_needed": "shim downloads prebuilt binary on first run to ~/.cache/dreamd-mcp/1.2.0/dreamd, needs network on first invocation",
-            "kind": "note"
+            "readme_said": "npx -y dreamd-mcp as launch command",
+            "actually_needed": "Installed globally with npm install -g dreamd-mcp so launch is `dreamd-mcp` on PATH, avoiding npx fetch on each probe and satisfying offline replay",
+            "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake succeeding, search_nodes tool call returning empty results, and dreamd-mcp npx shim help text.",
+          "observed": "All three checks show expected signals: shim help, MCP handshake with 2 tools, and doctor with index_freshness ok.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-dreamd-20261101-000847-d387/report.json",
+          "trace_path": "runs/verify/verify-dreamd-20261101-155609-c11b/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-dreamd-20261101-000847-d387/check-1-cmd8.judged.png",
-            "runs/verify/verify-dreamd-20261101-000847-d387/check-2-cmd9.judged.png",
-            "runs/verify/verify-dreamd-20261101-000847-d387/check-3-cmd15.judged.png"
+            "runs/verify/verify-dreamd-20261101-155609-c11b/check-1-cmd2.judged.png",
+            "runs/verify/verify-dreamd-20261101-155609-c11b/check-2-cmd4.judged.png",
+            "runs/verify/verify-dreamd-20261101-155609-c11b/check-3-cmd9.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.10901,
+        "cost_usd": 0.077184,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -226,9 +266,47 @@
             "search_nodes"
           ],
           "tool_count": 2,
-          "called_tool": "search_nodes",
+          "called_tool": "append_node",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Share one memory folder across harnesses",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; init scaffolded .agent/ with episodic/semantic folders"
+          },
+          {
+            "feature": "Search stored memories via MCP",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Append learnings through single-writer daemon",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Consolidate learnings into LESSONS.md",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; dream --no-llm --no-commit completed cycle"
+          }
+        ]
       }
     ]
   },
@@ -653,5 +731,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:45+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T15:57:13.382609+08:00"
 }

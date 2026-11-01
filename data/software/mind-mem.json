@@ -60,21 +60,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-mind-mem-20261101-005546-bd98",
+      "run_id": "verify-mind-mem-20261101-155609-aed9",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install \"mind-mem[mcp]\" 2>&1",
-          "purpose": "install mind-mem[mcp] via uv tool install"
-        },
-        {
-          "command": "rm -rf ~/my-workspace2 && mind-mem-init ~/my-workspace2 2>&1",
-          "purpose": "initialize workspace at ~/my-workspace2 for MCP server"
+          "command": "uv tool install \"mind-mem[mcp]\" --force",
+          "purpose": "install mind-mem with MCP extra via uv tool install"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "mind-mem-mcp --help",
+        "expected_signal": "usage: mind-mem-mcp"
+      },
+      "first_task": "mind-mem-init ~/my-workspace && ls ~/my-workspace && cat ~/my-workspace/mind-mem.json"
     },
     "windows": null
   },
@@ -93,69 +92,137 @@
   "verification": {
     "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:57:23.220057+08:00",
+    "checked_at": "2026-11-01T15:57:45.607827+08:00",
     "runs": [
       {
-        "id": "verify-mind-mem-20261101-005546-bd98",
+        "id": "verify-mind-mem-20261101-155609-aed9",
         "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:57:23.220057+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T15:57:45.607827+08:00",
         "tool_version": "5.0.3",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install \"mind-mem[mcp]\" 2>&1",
-            "purpose": "install mind-mem[mcp] via uv tool install"
-          },
-          {
-            "command": "rm -rf ~/my-workspace2 && mind-mem-init ~/my-workspace2 2>&1",
-            "purpose": "initialize workspace at ~/my-workspace2 for MCP server"
+            "command": "uv tool install \"mind-mem[mcp]\" --force",
+            "purpose": "install mind-mem with MCP extra via uv tool install"
           }
         ],
         "smoke_tests": [
           {
-            "command": "MIND_MEM_WORKSPACE=/home/sbx/my-workspace2 python3 ~/.pickfit/mcp_probe.py -- mind-mem-mcp 2>&1",
-            "expected_signal": "handshake: ok",
+            "command": "mind-mem-mcp --help",
+            "expected_signal": "usage: mind-mem-mcp",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "handshake: ok",
+            "observed_excerpt": "usage: mind-mem-mcp [-h] [--transport {stdio,http}] [--host HOST] [--port PORT]",
             "setup": [],
             "offline": true
           },
           {
-            "command": "MIND_MEM_WORKSPACE=/home/sbx/my-workspace2 python3 ~/.pickfit/mcp_probe.py --call index_stats --args '{}' -- mind-mem-mcp 2>&1",
+            "command": "mind-mem-init ~/my-workspace && ls ~/my-workspace && cat ~/my-workspace/mind-mem.json",
+            "expected_signal": "mind-mem init: /home/sbx/my-workspace",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mind-mem init: /home/sbx/my-workspace (backend=markdown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "MIND_MEM_WORKSPACE=/home/sbx/my-workspace python3 ~/.pickfit/mcp_probe.py -- mind-mem-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "mind-mem-init ~/my-workspace && ls ~/my-workspace && cat ~/my-workspace/mind-mem.json",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "MIND_MEM_WORKSPACE=/home/sbx/my-workspace python3 ~/.pickfit/mcp_probe.py --call recall --args '{\"query\":\"API decisions\"}' -- mind-mem-mcp",
             "expected_signal": "tools/call: ok",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tools/call: ok tool=index_stats content=text text_chars=598",
-            "setup": [],
+            "observed_excerpt": "tools/call: ok tool=recall content=text text_chars=1337",
+            "setup": [
+              {
+                "command": "mind-mem-init ~/my-workspace && ls ~/my-workspace && cat ~/my-workspace/mind-mem.json",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "MIND_MEM_WORKSPACE=/home/sbx/my-workspace python3 ~/.pickfit/mcp_probe.py --call hybrid_search --args '{\"query\":\"API decisions\"}' -- mind-mem-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=hybrid_search content=text text_chars=1436",
+            "setup": [
+              {
+                "command": "mind-mem-init ~/my-workspace && ls ~/my-workspace && cat ~/my-workspace/mind-mem.json",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "MIND_MEM_WORKSPACE=/home/sbx/my-workspace python3 ~/.pickfit/mcp_probe.py --call scan --args '{}' -- mind-mem-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=scan content=text text_chars=252",
+            "setup": [
+              {
+                "command": "mind-mem-init ~/my-workspace && ls ~/my-workspace && cat ~/my-workspace/mind-mem.json",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "pip install mind-mem provides mind-mem-mcp",
+            "actually_needed": "mind-mem-mcp requires extra: pip install \"mind-mem[mcp]\" (uv tool install \"mind-mem[mcp]\") else error No module named fastmcp",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "MIND_MEM_WORKSPACE env var implied",
+            "actually_needed": "MCP server requires MIND_MEM_WORKSPACE env var pointing to initialized workspace to start",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Both screenshots show successful MCP initialize, 107 tools listed, handshake ok, and index_stats returning data.",
+          "observed": "Screenshots show workspace init succeeded, MCP server handshake ok with 107 tools, and --help usage displayed.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-mind-mem-20261101-005546-bd98/report.json",
+          "trace_path": "runs/verify/verify-mind-mem-20261101-155609-aed9/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-mind-mem-20261101-005546-bd98/check-1-cmd9.judged.png",
-            "runs/verify/verify-mind-mem-20261101-005546-bd98/check-2-cmd10.judged.png"
+            "runs/verify/verify-mind-mem-20261101-155609-aed9/check-1-cmd9.judged.png",
+            "runs/verify/verify-mind-mem-20261101-155609-aed9/check-2-cmd12.judged.png",
+            "runs/verify/verify-mind-mem-20261101-155609-aed9/check-3-cmd6.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.122579,
+        "cost_usd": 0.104444,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -275,9 +342,43 @@
             "compiled_truth"
           ],
           "tool_count": 107,
-          "called_tool": "index_stats",
+          "called_tool": "recall",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Persistent AI memory for agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output lists available tools including recall but shows no recalled memories."
+          },
+          {
+            "feature": "Governed recall with audit evidence",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "budget exhausted before list_evidence/verify_chain call could complete; recall attestation was shown but explicit audit evidence not probed"
+          },
+          {
+            "feature": "Hybrid BM25 vector search",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output lists available tools but shows no hybrid search results."
+          },
+          {
+            "feature": "Detect drift and contradictions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output lists available tools including scan but shows no drift or contradiction findings."
+          }
+        ]
       }
     ]
   },
@@ -301,15 +402,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:57:23+08:00",
+    "computed_at": "2026-11-01T15:57:45+08:00",
     "quality": {
-      "total": 89.1,
+      "total": 82.4,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 1.0,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -352,7 +453,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 44.1
+      "value": 40.79
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -659,5 +760,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:45+08:00",
-  "updated_at": "2026-11-01T01:56:45+08:00"
+  "updated_at": "2026-11-01T15:57:45.611876+08:00"
 }

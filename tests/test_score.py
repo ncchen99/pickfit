@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 import httpx2
 import openai
 import pytest
+from queue_fakes import ROOT
 from test_profiles import MODEL, README, add, extraction
 
 import pickfit.env
 from pickfit import meta
+from pickfit.d1 import SqliteD1, sql
 from pickfit.discover.store import PipelineDB
 from pickfit.extract import build_sources, sources_sha
 from pickfit.ledger import TAIPEI, Caps, Ledger
@@ -31,6 +33,7 @@ from pickfit.score import (
     FORMULA_VERSION,
     Graded,
     compose_quality,
+    fetch_outcomes,
     grade_docs,
     hygiene_parts,
     install_actions,
@@ -43,6 +46,7 @@ from pickfit.score import (
     sandbox_score,
     score_records,
     treasure,
+    usage_outcomes_weight,
     usage_score,
     weights,
 )
@@ -261,6 +265,58 @@ def test_usage_outcomes_need_three_external_reports_and_take_weight_from_four_co
     w = weights(20)
     assert sum(w.values()) == pytest.approx(100) and w["sandbox_verification"] == 40
     assert w["install_docs"] == pytest.approx(25 * (1 - 10 / 50), abs=1e-3)
+
+
+ISSUED = datetime.fromisoformat("2026-10-30T12:00:00+00:00")
+
+
+def _outcome_db(tmp_path: Path, rows: list[tuple[Any, ...]]) -> SqliteD1:
+    """report_outcome rows as the Worker writes them: rec_id kept only when the report counted."""
+    db = SqliteD1(tmp_path / "d1.sqlite", ROOT / "worker" / "migrations")
+    for i, (rec, day, stage, success, reporter, *rest) in enumerate(rows):
+        ts = (ISSUED + timedelta(days=day)).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        db.execute(sql("INSERT INTO events (id, ts, type, rec_id, slug, stage, success, reporter, replaced_by, last_used) "
+                       "VALUES (?1, ?2, 'outcome', ?3, 'tool-a', ?4, ?5, ?6, ?7, ?8)",
+                       f"evt_{i}", ts, rec, stage, success, reporter, *(rest + [None, None])[:2]))
+    return db
+
+
+def test_usage_outcomes_count_still_using_check_ins_months_later(tmp_path: Path) -> None:
+    rec = lambda c: "rec_" + c * 32  # noqa: E731
+    db = _outcome_db(tmp_path, [
+        (rec("1"), 1, "installed", 1, "external"),
+        (rec("1"), 100, "still_using", 1, "external", None, "this_month"),  # day 100: inside 120
+        (rec("2"), 2, "installed", 0, "external"),
+        (rec("2"), 3, "installed", 1, "external"),  # failed, then fixed: installed
+        (rec("2"), 20, "still_using", 1, "external", None, "this_week"),
+        (rec("2"), 90, "still_using", 0, "external", None, "older"),  # the latest wins: abandoned
+        (rec("3"), 60, "still_using", 0, "external", "other-tool"),
+        (None, 130, "still_using", 1, "external"),  # past 120 days: stored, not counted
+        (rec("4"), 50, "still_using", 1, "eval"),
+    ])
+    now = ISSUED + timedelta(days=131)
+    outcomes = fetch_outcomes(db, now)["tool-a"]
+    assert outcomes.external.model_dump() == {"installed": 2, "install_failed": 0, "first_run_ok": 0,
+                                              "first_run_failed": 0, "still_using": 1, "replaced": 1, "abandoned": 1}
+    assert outcomes.eval.still_using == 1 and outcomes.replaced_by == {"other-tool": 1}
+    assert outcomes.last_report_at == ISSUED + timedelta(days=100) and outcomes.synced_at == now
+    # Install 2/2, retention 1/3; no first-run reports, so that stage drops out.
+    assert usage_score(outcomes) == pytest.approx((0.4 * 1 + 0.3 * 1 / 3) / 0.7, abs=1e-4)
+    assert usage_outcomes_weight(outcomes.external.total()) == 10
+
+
+def test_retention_alone_has_no_weight_until_three_external_reports(tmp_path: Path) -> None:
+    rows = [("rec_" + c * 32, 30 + i, "still_using", 1, "external") for i, c in enumerate("ab")]
+    rows += [("rec_" + c * 32, 40, "still_using", 1, "demo") for c in "cdef"]
+    two = fetch_outcomes(_outcome_db(tmp_path, rows), ISSUED + timedelta(days=60))["tool-a"]
+    assert two.external.total() == 2 and usage_score(two) is None
+    quality = compose_quality({"sandbox_verification": 1.0, "usage_outcomes": usage_score(two)},
+                              usage_outcomes_weight(two.external.total()), None)
+    assert quality["components"]["usage_outcomes"]["score"] is None and quality["total"] == 100
+    (tmp_path / "d1.sqlite").unlink()
+    three = fetch_outcomes(_outcome_db(tmp_path, [*rows, ("rec_" + "9" * 32, 110, "still_using", 1, "external")]),
+                           ISSUED + timedelta(days=120))["tool-a"]
+    assert three.external.still_using == 3 and usage_score(three) == 1.0
 
 
 def test_missing_components_leave_the_denominator_and_caps_bind() -> None:

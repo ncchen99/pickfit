@@ -108,12 +108,13 @@ def pipeline_caps() -> Caps:
 # Baseten's hackathon credits are separate from Meta's, so they get their own budget in the same
 # file. $100 of credits and a $100 stop: the key is the hackathon's and is not charged past them.
 def baseten_daily_cap(day: date) -> float:
-    """$25 a day; $45 on 11/1 and $35 on 11/2.
+    """$25 a day; $70 on 11/1 and $35 on 11/2.
 
-    念誠 raised 11/1 to $35, then to $45, for feature coverage and its rerun after the head/tail fix;
-    on 11/1 he also raised 11/2 to $35 and the total from $80 to $100 for GUI checks and new sources.
+    念誠 raised 11/1 to $35, then to $45, for feature coverage and its rerun after the head/tail fix,
+    then to $70 so the Mac batch and the GUI and source work run that day; he also raised 11/2 to $35
+    and the total from $80 to $100 for GUI checks and new sources.
     """
-    return {date(2026, 11, 1): 45.0, date(2026, 11, 2): 35.0}.get(day, 25.0)
+    return {date(2026, 11, 1): 70.0, date(2026, 11, 2): 35.0}.get(day, 25.0)
 
 
 BASETEN_CAPS = Caps(total_usd=100.0, daily_usd=baseten_daily_cap)
