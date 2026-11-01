@@ -71,17 +71,24 @@
       "first_task": "flatpak run io.github.NickKarpowicz.LightwaveExplorer"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "pip",
+      "basis": "replayed",
+      "run_id": "verify-lightwaveexplorer-20261102-003306-d9c7",
+      "method": "other",
       "steps": [
         {
-          "command": "pip install LightwaveExplorer",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add flathub remote per-user"
+        },
+        {
+          "command": "flatpak install --user -y flathub io.github.NickKarpowicz.LightwaveExplorer",
+          "purpose": "install LightwaveExplorer flatpak"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "flatpak info io.github.NickKarpowicz.LightwaveExplorer",
+        "expected_signal": "Version: 2026.1"
+      },
       "first_task": "flatpak run io.github.NickKarpowicz.LightwaveExplorer"
     },
     "windows": {
@@ -112,10 +119,114 @@
     "url": "https://github.com/NickKarpowicz/LightwaveExplorer/releases/tag/v2026.1.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T00:37:40.608312+08:00",
+    "runs": [
+      {
+        "id": "verify-lightwaveexplorer-20261102-003306-d9c7",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T00:37:40.608312+08:00",
+        "tool_version": "2026.1",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add flathub remote per-user"
+          },
+          {
+            "command": "flatpak install --user -y flathub io.github.NickKarpowicz.LightwaveExplorer",
+            "purpose": "install LightwaveExplorer flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak info io.github.NickKarpowicz.LightwaveExplorer",
+            "expected_signal": "Version: 2026.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Version: 2026.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "flatpak run io.github.NickKarpowicz.LightwaveExplorer",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows flatpak info for Lightwave Explorer with Version 2026.1 installed. / The Lightwave Explorer main interface with simulation parameter fields, Run controls, and empty plot panels is fully drawn.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lightwaveexplorer-20261102-003306-d9c7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lightwaveexplorer-20261102-003306-d9c7/check-1-cmd4.judged.png",
+            "runs/verify/verify-lightwaveexplorer-20261102-003306-d9c7/replay-5-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.049627,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "flatpak run io.github.NickKarpowicz.LightwaveExplorer",
+          "window_title": "Lightwave Explorer",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "simulate nonlinear optics with ultrashort pulses",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "manage extensible database of nonlinear materials",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "string together crystals, mirrors and propagation elements",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "fit simulation parameters to measured data",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -380,5 +491,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:43+08:00",
-  "updated_at": "2026-11-02T00:32:44+08:00"
+  "updated_at": "2026-11-02T00:37:40.609643+08:00"
 }

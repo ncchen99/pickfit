@@ -54,13 +54,17 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-qmplay2-20261102-003701-e46c",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub io.github.zaps166.QMPlay2",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "Add Flathub remote per user"
+        },
+        {
+          "command": "flatpak install --user -y flathub io.github.zaps166.QMPlay2",
+          "purpose": "Install QMPlay2 flatpak"
         }
       ],
       "manual_steps": [],
@@ -82,10 +86,96 @@
     "url": "https://github.com/zaps166/QMPlay2/releases/tag/26.08.02"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T00:39:48.254234+08:00",
+    "runs": [
+      {
+        "id": "verify-qmplay2-20261102-003701-e46c",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T00:39:48.254234+08:00",
+        "tool_version": null,
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "Add Flathub remote per user"
+          },
+          {
+            "command": "flatpak install --user -y flathub io.github.zaps166.QMPlay2",
+            "purpose": "Install QMPlay2 flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run io.github.zaps166.QMPlay2",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows QMPlay2's main media player interface with video area, playlist panels, and playback controls.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-qmplay2-20261102-003701-e46c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-qmplay2-20261102-003701-e46c/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.039663,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "flatpak run io.github.zaps166.QMPlay2",
+          "window_title": "QMPlay2",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "play all formats supported by FFmpeg",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "play Audio CD, raw files and chiptunes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "browse and play YouTube videos",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -294,5 +384,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:44+08:00",
-  "updated_at": "2026-11-02T00:32:44+08:00"
+  "updated_at": "2026-11-02T00:39:48.256860+08:00"
 }

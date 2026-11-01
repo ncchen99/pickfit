@@ -47,18 +47,22 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-lincity-ng-20261102-003544-19c5",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub io.github.lincity_ng.lincity-ng",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "Add Flathub remote per user"
+        },
+        {
+          "command": "flatpak install --user -y flathub io.github.lincity_ng.lincity-ng",
+          "purpose": "Install LinCity-NG flatpak"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "lincity-ng"
+      "first_task": "SDL_AUDIODRIVER=dummy flatpak run io.github.lincity_ng.lincity-ng"
     },
     "windows": null
   },
@@ -75,10 +79,102 @@
     "url": "https://github.com/lincity-ng/lincity-ng/releases/tag/lincity-ng-2.15.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T00:37:44.287134+08:00",
+    "runs": [
+      {
+        "id": "verify-lincity-ng-20261102-003544-19c5",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T00:37:44.287134+08:00",
+        "tool_version": "2.15.0-flatpak",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "Add Flathub remote per user"
+          },
+          {
+            "command": "flatpak install --user -y flathub io.github.lincity_ng.lincity-ng",
+            "purpose": "Install LinCity-NG flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "SDL_AUDIODRIVER=dummy flatpak run io.github.lincity_ng.lincity-ng",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak run io.github.lincity_ng.lincity-ng",
+            "actually_needed": "SDL_AUDIODRIVER=dummy flatpak run io.github.lincity_ng.lincity-ng",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "LinCity-NG title screen showing cartoon buildings and menu buttons for Continue, New Game, Load, Save, Options, Credits, and Quit.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lincity-ng-20261102-003544-19c5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lincity-ng-20261102-003544-19c5/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.031255,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "SDL_AUDIODRIVER=dummy flatpak run io.github.lincity_ng.lincity-ng",
+          "window_title": "lincity-ng 2.15.0-flatpak",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "build and maintain a city",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "build a sustainable economy",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "evacuate citizens with spaceships",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -287,5 +383,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:44+08:00",
-  "updated_at": "2026-11-02T00:17:10+08:00"
+  "updated_at": "2026-11-02T00:37:44.288282+08:00"
 }
