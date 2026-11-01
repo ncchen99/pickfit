@@ -17,6 +17,7 @@ import { MATCH_INSTRUCTIONS } from '../src/prompt.ts';
 import { leansInstall, rankByRules, WEB_BAND } from '../src/rules.ts';
 import { normalizeWebUrl, submitSoftware } from '../src/submit.ts';
 import { makeWorker } from '../src/worker.ts';
+import { logEvent } from '../src/events.ts';
 import type { Env } from '../src/env.ts';
 import { fixtureIndex, harness, makeD1 } from './helpers.ts';
 
@@ -202,4 +203,18 @@ test('page: the tool page of a web app, browse and compare', async () => {
   const home = await get('/');
   assert.match(home, /name="private" value="1"/);
   assert.match(home, /<strong>1<\/strong> web app used in a browser/);
+});
+
+test('report_outcome: a failed web app is stored for its next browser check, never queued for an install re-run', async () => {
+  const { reportOutcome } = await import('../src/outcome.ts');
+  const h = harness(null, { modelEnabled: false });
+  const guide = installGuide(h.deps.catalog, { slug: SLUG, os: 'macos' });
+  await logEvent(h.deps.db, h.deps.now(), { type: 'install_guide', slug: SLUG, os: 'macos', rec_id: guide.rec_id, results: ['exact'] });
+  const out = await reportOutcome(
+    { slug: SLUG, stage: 'first_run_failed', rec_id: guide.rec_id, os: 'macos', error_excerpt: 'The page stayed blank' },
+    { catalog: h.deps.catalog, db: h.deps.db, now: h.deps.now, reporter: 'dev' },
+  );
+  assert.deepEqual([out.accepted, out.counted_in_score, out.reverify], [true, true, 'none']);
+  assert.equal((h.sqlite.prepare('SELECT count(*) AS n FROM reverify_queue').get() as any).n, 0);
+  assert.equal((h.sqlite.prepare("SELECT error_excerpt FROM events WHERE type = 'outcome'").get() as any).error_excerpt, 'The page stayed blank');
 });
