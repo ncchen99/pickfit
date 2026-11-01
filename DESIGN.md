@@ -124,7 +124,7 @@ Rule from the mascot README: Fitz is happy or proud only next to something that 
 ## 7. Motion
 
 - **Easing:** `--ease-out: cubic-bezier(.16,1,.3,1)` for entrances, `--ease-in-out: cubic-bezier(.65,0,.35,1)` for state changes. **Durations:** 120ms (press), 200ms (hover, toggle), 360ms (reveal), 600ms (stitch draw).
-- **The one authored moment:** when results arrive, each ticket's seam is stitched on (the dash pattern draws left to right), then its tape meters extend to their reading. It says "these were measured" without a word.
+- **The one authored moment:** when results arrive, the tickets settle in one after another (a short rise, transform only). Seams and tape meters render in their final state: they carry meaning, so they never depend on an animation running (a background tab or a paused timeline would otherwise leave them blank).
 - Fitz's own loops live inside its SVGs and stop under reduced motion. The page adds only: the hero Fitz settling in once, hover lift on tickets, the loading tape, the popover and dialog fade, and toast slide.
 - `prefers-reduced-motion: reduce`: every animation and transition is off, and stitches and meters render in their final state.
 

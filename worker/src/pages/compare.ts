@@ -5,7 +5,7 @@
  * features checked, highest quality score, newest release. Nothing else is
  * ranked.
  */
-import { bestGuide, OSES, verifiedOn, type Arch, type Catalog, type Entry, type OS } from '../catalog.ts';
+import { bestGuide, nameKey, OSES, verifiedOn, type Arch, type Catalog, type Entry, type OS } from '../catalog.ts';
 import { featuresOut } from '../features.ts';
 import { day, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, system, kindLine } from '../ui/facts.ts';
 import { esc, link, listOf, SLUG } from '../ui/html.ts';
@@ -149,7 +149,10 @@ export function compareTable(entries: Entry[], opts: Opts): string {
 /** The slugs in ?tools=, known and unique, at most four. */
 export function slugsFrom(params: URLSearchParams, catalog: Catalog): string[] {
   // ?add= is the "Add a verified tool" form on the page itself.
-  const raw = [...(params.get('tools') ?? '').split(','), params.get('add') ?? ''].map((s) => s.trim().toLowerCase());
+  // ?add= may be a slug (a suggestion was picked) or a name typed in full.
+  const add = (params.get('add') ?? '').trim();
+  const named = add ? catalog.entries.find((e) => nameKey(e.name) === nameKey(add))?.slug ?? add : '';
+  const raw = [...(params.get('tools') ?? '').split(','), named].map((s) => s.trim().toLowerCase());
   const out: string[] = [];
   for (const s of raw) if (SLUG.test(s) && catalog.bySlug.has(s) && !out.includes(s)) out.push(s);
   return out.slice(0, COMPARE_MAX);
@@ -163,6 +166,7 @@ export function renderCompare(catalog: Catalog, params: URLSearchParams, nonce: 
   const arch = archParam === 'arm64' || archParam === 'x86_64' ? (archParam as Arch) : undefined;
   const entries = slugs.map((s) => catalog.bySlug.get(s)!);
   const verified = catalog.entries.filter((e) => verifiedOn(e).length).sort((a, b) => a.name.localeCompare(b.name));
+  // Typed, not picked from a 420-item list: the datalist suggests names, and the slug is what gets sent.
   const options = verified.map((e) => `<option value="${esc(e.slug)}">${esc(e.name)}</option>`).join('');
   const osLinks = [['', 'Any OS'], ...OSES.map((o) => [o, OS_NAME[o]])]
     .map(([v, t]) => {
@@ -176,7 +180,7 @@ export function renderCompare(catalog: Catalog, params: URLSearchParams, nonce: 
         `<input type="hidden" name="tools" value="${esc(slugs.join(','))}">` +
         (os ? `<input type="hidden" name="os" value="${os}">` : '') +
         `<label class="sr" for="add-tool">Add a verified tool</label>` +
-        `<select id="add-tool" class="select" name="add" required><option value="">Add a verified tool…</option>${options}</select>` +
+        `<input id="add-tool" name="add" list="tool-names" required autocomplete="off" placeholder="Add a verified tool by name…"><datalist id="tool-names">${options}</datalist>` +
         `<button class="btn btn-quiet" type="submit">${icon('plus')}Add</button></form>`
       : '';
   const body =

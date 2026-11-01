@@ -99,6 +99,8 @@ test('compare takes two to four known tools, marks "best" only on recorded numbe
   const catalog = fixtureCatalog();
   assert.deepEqual(slugsFrom(new URLSearchParams('tools=fixture-llm-runner,FIXTURE-CHAT-TUI,nope,fixture-llm-runner'), catalog), ['fixture-llm-runner', 'fixture-chat-tui']);
   assert.equal(slugsFrom(new URLSearchParams('tools=a,b&add=fixture-json-query'), catalog).join(), 'fixture-json-query');
+  // The add field suggests names; a name typed in full works as well as the slug.
+  assert.deepEqual(slugsFrom(new URLSearchParams('tools=fixture-llm-runner&add=Fixture JSON Query'), catalog), ['fixture-llm-runner', 'fixture-json-query']);
   const slugs = ['fixture-llm-runner', 'fixture-chat-tui', 'fixture-json-query', 'fixture-transcribe', 'fixture-notes-mcp'].join(',');
   assert.equal(slugsFrom(new URLSearchParams(`tools=${slugs}`), catalog).length, 4);
 

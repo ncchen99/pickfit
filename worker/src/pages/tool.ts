@@ -156,13 +156,12 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
     runs(catalog, entry) +
     featureList(entry) +
     `</div><aside class="side" aria-label="At a glance">` +
-    `<div class="panel"><h2>At a glance</h2>${factSheet(entry, now)}</div>` +
-    `<div class="panel"><h2>Measures</h2><div class="t-measure">` +
+    `<div class="panel"><h2>At a glance</h2>${factSheet(entry, now)}<div class="t-measure panel-measure">` +
     tape('Quality', entry.scores?.quality ?? null, { pop: 'pop-quality' }) +
     tape('Popularity', entry.scores?.popularity ?? null, { pop: 'pop-popularity', tone: 'quiet' }) +
     coverage(features, { pop: 'pop-features' }) +
     `</div><p class="small quiet">Scored apart; ranked by neither. <a href="/how#scores">How scores work</a></p></div>` +
-    (sources ? `<div class="panel"><h2>Sources</h2><ul class="small">${sources}</ul><p class="small quiet">Every field in the profile cites one of these.</p></div>` : '') +
+    (sources ? `<details class="panel sources"><summary>Sources</summary><ul class="small">${sources}</ul><p class="small quiet">Every field in the profile cites one of these.</p></details>` : '') +
     `</aside></div>`;
   return renderShell({
     nonce,
