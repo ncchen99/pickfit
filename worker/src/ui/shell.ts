@@ -58,7 +58,7 @@ function nav(active: NavKey): string {
 
 const FOOTER = () => `<footer class="foot mat">
 <div class="wrap foot-grid">
-<div class="foot-brand">${BRAND}<p>${L('Software that fits, tried on first. pickfit installs every tool it suggests in a fresh sandbox, and hands you the steps that worked.', '合身的軟體，先試穿過。pickfit 推薦的每款工具都先在全新沙盒裡裝過，再把可行的步驟交給你。')}</p></div>
+<div class="foot-brand">${BRAND}<p>${L('Software that fits, tried on first. pickfit installs every tool it suggests in a fresh sandbox, and hands you the steps that worked.', '每款軟體，都先幫你試過。pickfit 推薦的每款工具都先在全新沙盒裡裝過，再把可行的步驟交給你。')}</p></div>
 <nav class="foot-links" aria-label="${L('Footer', '頁尾')}"><p class="foot-h">${L('Use pickfit', '使用 pickfit')}</p><a href="/">${L('Find software', '搜尋軟體')}</a><a href="/browse">${L('Browse verified tools', '瀏覽已驗證的工具')}</a><a href="/compare">${L('Compare tools', '比較工具')}</a><a href="/agents">${L('Connect your agent', '接上你的 agent')}</a></nav>
 <nav class="foot-links" aria-label="${L('About', '關於')}"><p class="foot-h">${L('Why trust it', '為什麼可以信任')}</p><a href="/how">${L('How Fitz checks a tool', 'Fitz 如何檢查工具')}</a><a href="/how#labels">${L('What the labels mean', '標籤說明')}</a><a href="/how#rules">${L('Fitz’s rules', 'Fitz 的原則')}</a></nav>
 </div>

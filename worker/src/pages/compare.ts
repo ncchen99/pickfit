@@ -260,7 +260,7 @@ export function renderCompare(catalog: Catalog, params: URLSearchParams, nonce: 
         )}</p></div></div>`;
   const main =
     `<section class="head mat after-top"><div class="wrap head-row"><div>` +
-    `<h1>${L('Compare tools', '比較工具')}</h1><p class="lede">${L('Only the differences, from pickfit’s own runs', '只列出差異，全部來自 pickfit 的實測')}</p>` +
+    `<h1>${L('Compare tools', '比較工具')}</h1><p class="lede">${L('Only the differences, from pickfit’s own runs', '只列出不一樣的地方，資料都來自 pickfit 實測')}</p>` +
     `${add}</div>${fitz('comparing', 150, { eager: true })}</div><div class="ruler" aria-hidden="true"></div></section>` +
     `<div class="wrap sec-tight">${body}</div>` +
     `<script type="application/json" data-compare-shown>${JSON.stringify(entries.map((e) => ({ slug: e.slug, name: e.name }))).replace(/</g, '\\u003c')}</script>`;

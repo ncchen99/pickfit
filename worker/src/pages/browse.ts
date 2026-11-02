@@ -116,8 +116,8 @@ export function renderBrowse(catalog: Catalog, params: URLSearchParams, nonce: s
   const kindPart = q.kind ? ` · ${esc(KIND_PLURAL[q.kind])}` : '';
   const osPart = q.os ? L(` · verified on ${esc(OS_NAME[q.os])}`, ` · 已在 ${esc(OS_NAME[q.os])} 驗證`) : '';
   const main =
-    `<section class="head mat after-top"><div class="wrap head-row"><div><h1>${L('Browse verified tools', '瀏覽已驗證的工具')}</h1>` +
-    `<p class="lede">${L('Every tool here was installed by pickfit in a fresh sandbox; every web app was opened and used in a sandboxed browser', '這裡每款工具都由 pickfit 在全新沙盒裡裝過；網頁應用則在沙盒瀏覽器裡實際用過')}</p></div>` +
+    `<section class="head mat after-top"><div class="wrap head-row"><div><h1>${L('Browse verified tools', '所有驗證過的工具')}</h1>` +
+    `<p class="lede">${L('Every tool here was installed by pickfit in a fresh sandbox; every web app was opened and used in a sandboxed browser', '這裡的每款工具，pickfit 都在全新沙盒裡裝過；網頁應用也都在瀏覽器裡實際用過')}</p></div>` +
     `${fitz('idle', 150, { eager: true })}</div><div class="ruler" aria-hidden="true"></div></section>` +
     `<div class="wrap layout layout-browse"><aside class="side side-left">${filters}</aside><div>` +
     `<p class="cat-count">${L(

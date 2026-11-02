@@ -237,7 +237,7 @@ function stageRow(stages: Stage[]): string {
   );
 }
 
-const progressTitle = () => `<h2 id="progress-title">${L('How far pickfit got', 'pickfit 測到哪裡')}</h2>`;
+const progressTitle = () => `<h2 id="progress-title">${L('How far pickfit got', 'pickfit 測到哪一步')}</h2>`;
 
 /** One row per verified system, and the systems the project claims that pickfit has not tried. */
 function progress(entry: Entry): string {
