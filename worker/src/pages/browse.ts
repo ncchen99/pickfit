@@ -136,7 +136,7 @@ export function renderBrowse(catalog: Catalog, params: URLSearchParams, nonce: s
     title: L('Browse verified tools · pickfit', '瀏覽已驗證的工具 · pickfit'),
     description: L(
       'Developer CLIs, local AI tools, MCP servers and web apps that pickfit tried itself: installed in a fresh sandbox, or used in a sandboxed browser.',
-      'pickfit 親自試穿過的開發者 CLI、本機 AI 工具、MCP 伺服器與網頁應用：在全新的沙盒中安裝，或在沙盒瀏覽器中實際使用。',
+      'pickfit 親自試過的開發者 CLI、本機 AI 工具、MCP 伺服器與網頁應用：在全新的沙盒中安裝，或在沙盒瀏覽器中實際使用。',
     ),
     active: 'browse',
     main,

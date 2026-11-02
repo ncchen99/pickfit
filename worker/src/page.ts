@@ -742,7 +742,7 @@ export function renderResults(
   const slugs = out.picks.map((p) => p.slug);
   const cmpHref = `/compare?tools=${slugs.map(encodeURIComponent).join(',')}${form.os ? `&amp;os=${form.os}` : ''}${form.arch ? `&amp;arch=${form.arch}` : ''}`;
   const tools = out.picks.length
-    ? `<div class="res-tools"><button type="button" class="btn btn-quiet btn-sm js-only" data-open-legend>${icon('circle-help')}${L('How to read a ticket', '怎麼看試穿單')}</button>` +
+    ? `<div class="res-tools"><button type="button" class="btn btn-quiet btn-sm js-only" data-open-legend>${icon('circle-help')}${L('How to read a ticket', '怎麼看工具卡')}</button>` +
       (out.picks.length > 1 ? `<a class="btn btn-quiet btn-sm" href="${cmpHref}">${icon('scale')}${L('Compare these', '比較這幾款')}</a>` : '') +
       `</div>`
     : '';
