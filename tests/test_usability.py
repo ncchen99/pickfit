@@ -343,3 +343,28 @@ def test_the_comparison_ranks_ties_and_maps_overall_to_verdicts() -> None:
     assert spearman([1, 2, 3, 4], [1, 2, 3, 4]) == 1.0 and spearman([1, 2], [2, 1]) is None
     assert [human_verdict(v) for v in (5, 4, 3, 2, 1, None, "cant_tell")] == [
         "easy", "easy", "some_friction", "hard", "hard", None, None]
+
+
+def test_the_contrast_runs_p2_and_sends_opus_the_same_images_and_schema(bundle: Bundle) -> None:
+    from scripts.ease_contrast import P2, ComfortChecksP2, FirstLookAnswerP2, opus_messages
+
+    from pickfit.schema import meta_strict_schema
+    from pickfit.usability import P1, _body, first_look_text
+
+    assert "Do not judge colours, style or branding." in P1.first_look
+    assert "Do not judge colours" not in P2.first_look and "dated and rough" in P2.first_look
+    assert P2.in_use == P1.in_use
+    meta_strict_schema(FirstLookAnswerP2)
+    body = _body(P2.first_look, first_look_text(bundle), bundle.first_look_shots(), "ease_first_look", FirstLookAnswerP2)
+    request = opus_messages(body)
+    blocks = request["messages"][0]["content"]
+    assert [b["type"] for b in blocks] == ["text", "image", "image"]
+    assert blocks[1]["source"]["media_type"] == "image/png" and request["system"] == P2.first_look
+    assert request["output_config"]["format"]["schema"] == body["text"]["format"]["schema"]
+    assert "temperature" not in request and request["output_config"]["effort"] == "low"
+    # Six checks under P2; one app problem still scores 1.
+    answer = {"observed": "x", "screen_broken": False, "findings": [],
+              "ready": {"score": 2, "evidence": cite(1, "Chats")}, "comfort_seen": cite(1, "New message"),
+              "comfort": dict.fromkeys(ComfortChecksP2.model_fields, OK) | {"looks_current": bad(1, "Chats")}}
+    checked = check_first_look(FirstLookAnswerP2.model_validate(answer), bundle, TextFinder(fake_ocr))
+    assert checked.first["comfortable"] == (1, "scored") and checked.findings[0]["check"] == "looks_current"

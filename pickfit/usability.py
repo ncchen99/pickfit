@@ -795,8 +795,23 @@ def meta_ask(model: str = MODEL, cap_usd: float = STAGE_CAP_USD, run_id: str = S
     return ask
 
 
-def inputs_sha(bundle: Bundle) -> str:
-    parts = {"prompt": PROMPT_VERSION, "first": first_look_text(bundle),
+@dataclass(frozen=True)
+class Variant:
+    """The prompts and answer shapes one judgement uses. P1 is the product's; scripts/ease_contrast.py adds a research
+    variant for the exploratory comparison in docs/usability-pilot.md section 7."""
+
+    name: str
+    first_look: str
+    first_answer: type[BaseModel]
+    in_use: str
+    in_use_answer: type[BaseModel]
+
+
+P1 = Variant(PROMPT_VERSION, FIRST_LOOK_INSTRUCTIONS, FirstLookAnswer, IN_USE_INSTRUCTIONS, InUseAnswer)
+
+
+def inputs_sha(bundle: Bundle, variant: Variant = P1) -> str:
+    parts = {"prompt": variant.name, "first": first_look_text(bundle),
              "first_shots": [s.sha256 for s in bundle.first_look_shots()]}
     if bundle.operated:
         parts |= {"in_use": in_use_text(bundle), "in_use_shots": [s.sha256 for s in bundle.in_use_shots()]}
@@ -804,11 +819,12 @@ def inputs_sha(bundle: Bundle) -> str:
 
 
 def judge(bundle: Bundle, ask: Ask, finder: TextFinder, *, samples: int = SAMPLES,
-          log: Callable[[str], None] = lambda line: None) -> dict[str, Any]:
+          log: Callable[[str], None] = lambda line: None, variant: Variant = P1) -> dict[str, Any]:
     """Both calls, `samples` times each, checked and combined. Returns the result (Usability's fields and more)."""
-    first_body = _body(FIRST_LOOK_INSTRUCTIONS, first_look_text(bundle), bundle.first_look_shots(),
-                       "ease_first_look", FirstLookAnswer)
-    use_body = (_body(IN_USE_INSTRUCTIONS, in_use_text(bundle), bundle.in_use_shots(), "ease_in_use", InUseAnswer)
+    first_out, use_out = variant.first_answer, variant.in_use_answer
+    first_body = _body(variant.first_look, first_look_text(bundle), bundle.first_look_shots(), "ease_first_look",
+                       first_out)
+    use_body = (_body(variant.in_use, in_use_text(bundle), bundle.in_use_shots(), "ease_in_use", use_out)
                 if bundle.operated and bundle.operations else None)
     first: list[Checked] = []
     in_use: list[Checked] = []
@@ -817,7 +833,7 @@ def judge(bundle: Bundle, ask: Ask, finder: TextFinder, *, samples: int = SAMPLE
     models: set[str] = set()
     errors: list[str] = []
     for n in range(samples):
-        for kind, body, out in (("first_look", first_body, FirstLookAnswer), ("in_use", use_body, InUseAnswer)):
+        for kind, body, out in (("first_look", first_body, first_out), ("in_use", use_body, use_out)):
             if body is None:
                 continue
             asked = ask(body, out, kind)
@@ -851,8 +867,8 @@ def judge(bundle: Bundle, ask: Ask, finder: TextFinder, *, samples: int = SAMPLE
         "operations": len(bundle.operations) if bundle.operated else 0, "attempted": bundle.attempted,
         "screens": len(bundle.first_look_shots()) + (len(bundle.in_use_shots()) if use_body else 0),
         "sandbox": bundle.sandbox[:200], "not_checked": NOT_CHECKED, "measured": bundle.measured,
-        "model": ", ".join(sorted(models)) or None, "prompt_version": PROMPT_VERSION, "samples": samples,
-        "inputs_sha": inputs_sha(bundle), "checked_at": taipei_now().isoformat(timespec="seconds"),
+        "model": ", ".join(sorted(models)) or None, "prompt_version": variant.name, "samples": samples,
+        "inputs_sha": inputs_sha(bundle, variant), "checked_at": taipei_now().isoformat(timespec="seconds"),
         "cost_usd": round(cost, 6), "errors": errors,
         "problems": [p for c in first + in_use for p in c.problems], "raw": raw,
     }

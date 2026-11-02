@@ -62,3 +62,31 @@
 - 證據不足時（pinit、eli-v2-0 只有第一個畫面），r1 已改成不給分，和念誠的備註一致。
 
 決定（照第 4 節）：易用性**只顯示、不計分，也不進寶藏門檻**。`pickfit/score.py` 的 `EASE_SCORED` 維持 False；gui.v1、web.v2 的程式留著但不啟用。要不要顯示、顯示到什麼程度（例如只列歸因到 app 的發現，不給總分和判語），由念誠和協調 session 決定；全部約 186 款跑一次約 $4–5。
+
+## 7. 探索性對照：是模型還是 prompt（11/3，付費呼叫前 commit）
+
+**這是事先規則（只允許改一次）之後的探索，不推翻第 6 節「沒過」的判定**，也不改紀錄、`EASE_SCORED` 或 worker。念誠想知道落差來自評審模型，還是來自「不評風格」這條指令。
+
+**設計**：2×2，同樣 12 款、同樣證據（`bundle_for`）、同樣 OCR／DOM 引用檢查、每格每款取樣 2 次，比對念誠同一份評分（`8a6ff111`）。程式在 `scripts/ease_contrast.py`。
+
+| | P1：r1 現行 prompt（`0193989a`，不評風格） | P2：也評視覺設計 |
+|---|---|---|
+| muse-spark-1.3 | muse-p1：第 6 節 r1 重跑的結果，直接沿用 | muse-p2 |
+| claude-opus-5-5（只當對照） | opus-p1 | opus-p2 |
+
+- **P2 只改第一眼的「看起來舒服」**：拿掉「Do not judge colours, style or branding」，改成也看新舊與精緻度、間距與對齊、破圖、視覺層次。檢核從 5 項變 6 項：字好讀、版面完整、間距與對齊、視覺層次、看起來新且完成度高、沒有東西蓋住。換算規則不變（沒有 app 的問題 2、一項 1、兩項以上 0）。仍然要引用畫面上的字、只扣 app 造成的問題、看不出來就給 null；「使用中」那次呼叫和 P1 完全一樣。
+- **Opus 的設定**：Messages API、同樣的圖和文字、同樣的 strict JSON schema（`output_config.format`），effort 固定 `low`（和 muse-spark-1.3 的 reasoning effort 一樣），不送 temperature，不開 refusal fallback（確保每個答案都是 claude-opus-5-5 的）。專案規則不准計分的 session 讀 `eval/`，所以沒有參考 `eval/runner/config.json`。每次呼叫的 token 和花費記在結果檔和共用帳本（budget `anthropic-research`）。
+- **花費上限**：Anthropic $15（帳本強制）、Meta $2（scope 上限）。先用 1 款試算，估計會超過就停。
+
+**每格要報的數字**：`scripts/ease_compare.py` 的四個標準和是否全過；和念誠整體分的 Spearman；「看起來舒服」差距 ≤1 級的比例；探針 portfolio、usdx 的分數；兩次取樣的一致度；花費。
+
+**怎麼下結論（事先定）**：
+- 模型效果 = 兩種 prompt 下（Opus − Muse）的 Spearman 差，取平均。
+- prompt 效果 = 兩種模型下（P2 − P1）的 Spearman 差，取平均。
+- 某個效果 ≥ 0.3，而且兩組裡方向一致，才算「有影響」。
+- 結論：只有模型有影響就是「模型的問題」，只有 prompt 就是「prompt 的問題」，兩個都有就是「兩者都有」，都沒有就是「都不是，或 12 款看不出來」。也會寫是否有任何一格四條全過。
+
+**限制（不論結果都會寫）**：
+- 只有 12 款（Spearman 只有 9 款可比），由一位評分者評，數字雜訊大。
+- P2 是看過念誠的評分之後才寫的；任何一格「看起來過了」，都是用同樣 12 款調出來的，有過度擬合的風險。
+- 要上線，得用一組念誠沒評過的新 App 另外驗證，而且產品裡的評審必須是 Meta 模型；Opus 只能當對照。
