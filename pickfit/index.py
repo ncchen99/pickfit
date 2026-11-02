@@ -138,6 +138,16 @@ def _web(record: SoftwareRecord) -> dict[str, Any] | None:
     return {"url": record.web.url, "check": check}
 
 
+def _video(run: VerificationRun) -> dict[str, Any] | None:
+    """A run's verification clip and the raw recordings it was cut from (files the Worker serves from R2 at
+    /video/<slug>/<file>; the poster is the clip's name with .jpg)."""
+    v = run.video
+    if v is None:
+        return None
+    return {"clip": v.clip, "clip_sha256": v.clip_sha256, "seconds": v.seconds, "recorded_at": _iso(v.recorded_at),
+            "features": list(v.features), "raw": [{"file": r.file, "sha256": r.sha256, "seconds": r.seconds} for r in v.raw]}
+
+
 def _run_summary(run: VerificationRun) -> dict[str, Any]:
     return {
         "id": run.id,
@@ -153,6 +163,7 @@ def _run_summary(run: VerificationRun) -> dict[str, Any]:
         "gui": _gui(run),
         "gpu": run.gpu,
         "microphone": run.microphone,
+        "video": _video(run),
     }
 
 

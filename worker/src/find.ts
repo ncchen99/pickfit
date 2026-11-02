@@ -24,7 +24,7 @@ import {
 } from './catalog.ts';
 import { toCard, type Card } from './cards.ts';
 import { checkBudget, recordSpend } from './budget.ts';
-import { ranSentence } from './evidence.ts';
+import { ranSentence, videoSentence } from './evidence.ts';
 import { featureSentence, featuresOut, type FeaturesOut } from './features.ts';
 import type { Settings } from './env.ts';
 import { logEvent, logFailure, newId, type Reporter } from './events.ts';
@@ -64,6 +64,8 @@ export interface Deps {
   reporter?: Reporter;
   /** The wait before retrying Meta; a seam for tests. */
   sleep?: (ms: number) => Promise<void>;
+  /** This deployment's origin when it serves /video/ (VIDEOS bound); null: no clip URLs. */
+  videoBase?: string | null;
 }
 
 export interface PickOut {
@@ -130,10 +132,12 @@ export interface AlternativesOutput extends FindOutput {
   keep_current: { recommended: boolean; reason: string } | null;
 }
 
-function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, considered: number): string {
+function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, considered: number, videoBase?: string | null): string {
   const parts: string[] = [];
   const web = webCheck(entry);
   if (guide) parts.push(ranSentence(guide));
+  const clip = guide ? videoSentence(entry.slug, guide.run.video, videoBase) : null;
+  if (clip) parts.push(clip);
   else if (web) parts.push(webRanSentence(web));
   const covered = featureSentence(featuresOut(entry, guide));
   if (covered) parts.push(covered);
@@ -170,6 +174,7 @@ function pickOut(
   arch: Arch | undefined,
   matchedBy: string,
   considered: number,
+  videoBase?: string | null,
 ): PickOut {
   const guide = bestGuide(entry, os);
   const web = isWebApp(entry) ? webCheck(entry) : null;
@@ -213,7 +218,7 @@ function pickOut(
       gui: guide?.run.gui ?? null,
     },
     features: featuresOut(entry, guide),
-    how_we_know: howWeKnow(entry, guide, matchedBy, considered),
+    how_we_know: howWeKnow(entry, guide, matchedBy, considered, videoBase),
     evidence_url: guide?.run.evidence_url ?? web?.evidence_url ?? null,
     scores: {
       quality: entry.scores?.quality ?? null,
@@ -535,7 +540,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     model_attempts: statuses.length,
     model_http_status: httpStatus,
     considered: passed,
-    picks: choice.picks.map((chosen) => pickOut(entries.get(chosen.slug)!, chosen, cond.os, cond.arch, matchedBy, passed)),
+    picks: choice.picks.map((chosen) => pickOut(entries.get(chosen.slug)!, chosen, cond.os, cond.arch, matchedBy, passed, deps.videoBase)),
     best_free: choice.bestFree,
     no_install_option: choice.noInstall,
     well_known_option: choice.wellKnown.option

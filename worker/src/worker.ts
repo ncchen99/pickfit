@@ -4,6 +4,7 @@ import { loadCatalog } from './catalog.ts';
 import { settings, type Env } from './env.ts';
 import { reporterFrom } from './events.ts';
 import { buildServer } from './server.ts';
+import { serveVideo } from './video.ts';
 import { makeWeb } from './web.ts';
 
 function allowedHosts(env: Env): string[] {
@@ -30,6 +31,8 @@ export function makeWorker(indexData: unknown, options: WorkerOptions = {}) {
   return {
     async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
       const url = new URL(request.url);
+      const video = await serveVideo(request, env.VIDEOS, catalog);
+      if (video) return video;
       if (url.pathname !== '/mcp') {
         const page = await web.fetch(request, env, ctx, allowedHosts(env));
         if (page) return page;
@@ -64,6 +67,8 @@ export function makeWorker(indexData: unknown, options: WorkerOptions = {}) {
           waitUntil: (promise) => ctx.waitUntil(promise),
           fetch: options.fetch,
           reporter: reporterFrom(request.headers.get('x-pickfit-reporter')),
+          // Clip URLs only where this deployment can serve them.
+          videoBase: env.VIDEOS ? url.origin : null,
         }),
       );
       // Every call is matched anew; tell any cache on the way not to keep a response.

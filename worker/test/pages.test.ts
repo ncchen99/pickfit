@@ -36,7 +36,7 @@ test('every page answers with HTML under a nonce CSP that allows only this Worke
     assert.equal(res.status, 200, path);
     assert.match(res.headers.get('content-type')!, /^text\/html/);
     const csp = res.headers.get('content-security-policy')!;
-    assert.match(csp, /img-src 'self' data:; font-src 'self'/);
+    assert.match(csp, /img-src 'self' data:; media-src 'self'; font-src 'self'/);
     const nonce = /script-src 'nonce-([0-9a-f]+)'/.exec(csp)![1];
     const html = await res.text();
     assert.ok(html.includes(`<script nonce="${nonce}">`) && html.includes(`<style nonce="${nonce}">`), path);
