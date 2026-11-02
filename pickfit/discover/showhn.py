@@ -15,7 +15,7 @@ runs AI models on the user's own machine, Model Context Protocol servers). The r
 is then read through the GitHub REST API, which follows renames, so the candidate key
 is `gh:<id>` and a repo already in the pool, under its current or an earlier name,
 is the same candidate. A repo above the GitHub queries' star bound (STAR_MAX) is
-left out, as a submission would be. The post only says where to look: a profile's facts still come
+left out, as the GitHub queries leave it out (submissions take any star count). The post only says where to look: a profile's facts still come
 from the repository. What is kept of a post: its id and HN URL, title, link, points,
 comment count and time; never its text or comments, which belong to their authors.
 """
@@ -50,7 +50,8 @@ HITS_MAX = 1000  # Algolia returns at most this many hits for one query
 TRIES = 3
 REQUEST_INTERVAL_S = 0.2
 FILTERS_VERSION = "show_hn.v1"
-# The GitHub queries' upper bound, which submissions also use: pickfit lists lesser-known tools.
+# The GitHub queries' default upper bound: discovery starts with newer tools few people know yet,
+# to show such tools can be tested too. Submissions have no star limit.
 # No lower bound: being shown on HN is the signal a star count gives the GitHub queries.
 STAR_MAX = int(STARS.split("..")[1])
 

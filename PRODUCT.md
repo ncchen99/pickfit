@@ -4,7 +4,7 @@ Written 2026-11-01 for the web redesign. Product truth lives in [docs/brief.md](
 
 ## What pickfit is
 
-A neutral software advisor for a person, delivered through their AI agent (MCP) and through this web page. It finds little-known software, **installs it in a fresh sandbox before suggesting it**, and hands over the steps that worked. The web page and the MCP are two doors to the same brain: the page runs the MCP's own `find_software` and `get_install_guide`.
+A neutral software advisor for a person, delivered through their AI agent (MCP) and through this web page. It matches software to what the person needs, **installs it in a fresh sandbox before suggesting it**, and hands over the steps that worked. The web page and the MCP are two doors to the same brain: the page runs the MCP's own `find_software` and `get_install_guide`.
 
 Unique mechanism, in one sentence: *nothing is suggested until pickfit has installed it, and every claim on screen points at the field or run it rests on.*
 

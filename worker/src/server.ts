@@ -11,7 +11,7 @@ import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './subm
 import { NO_INSTALL_LABEL } from './webapp.ts';
 
 const ABOUT =
-  'pickfit recommends software it installed and tested in a sandbox, mostly lesser-known. Scope: dev CLIs, local AI tools, MCP servers, desktop GUI apps, web apps. ';
+  "pickfit matches software to the user's need; each was installed and tested in a sandbox. Scope: dev CLIs, local AI tools, MCP servers, desktop GUI apps, web apps. ";
 const RULES = "Ask 1-2 questions only if you can't guess (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars. ";
 /** How to write the answer to the user, from reading agents' answers: pick first, alternative before the steps, no narration. */
 const ANSWER =
