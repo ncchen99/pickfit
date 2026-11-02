@@ -195,7 +195,7 @@ def test_a_check_must_name_the_features_effect_and_prove_more_than_the_text_type
     assert "name the feature's effect" in op.spec_problems(operate_args(check={**FILE_CHECK, "effect": None}))[0]
     screen = {"kind": "screen_text", "path": None, "format": None, "effect": "the note", "effect_kind": "stored"}
     for check in (screen, {**screen, "kind": "clipboard"}, {**FILE_CHECK, "effect_kind": "computed"}):
-        assert "is in the goal, so the operator types it" in op.spec_problems(operate_args(
+        assert "is in the goal, so the operator can type it" in op.spec_problems(operate_args(
             check={**check, "contains": ["{nonce}"]}))[0]
     # A converter's result in another case is not the text typed (the screen check keeps case too).
     upper = {**screen, "contains": ["HELLO WORLD"], "effect_kind": "computed"}

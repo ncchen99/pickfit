@@ -451,8 +451,8 @@ def effect_problems(args: OperateArgs) -> list[str]:
         return problems
     echoed = typed_texts(args)
     if echoed and not (check.kind == "file" and check.effect_kind == "stored"):
-        problems.append(f"{echoed[0]!r} is in the goal, so the operator types it: seeing or copying it shows "
-                        "nothing. Expect what the app makes from the input (a value it computes or converts, text "
+        problems.append(f"{echoed[0]!r} is in the goal, so the operator can type it or read it off the goal: seeing "
+                        "or copying it shows nothing. Expect what the app makes from the input (a value it computes or converts, text "
                         "of an input file it opens or finds), or, when keeping what is typed is the feature, a "
                         "file the app saves (effect_kind stored)")
     inputs = " ".join(_norm(i.text or "") for i in args.inputs)
