@@ -1,3 +1,5 @@
+> **不採用（念誠 11/2）：** 這份由 Gemini 4 寫的腳本與分鏡暫時擱置，新腳本不要以它為底。新的方向見 [story.md](story.md)。
+
 # pickfit — 3-Minute Demo Video Storyboard (`VIDEO.draft.md`)
 
 **Target Runtime**: 3:00 (180 seconds)
