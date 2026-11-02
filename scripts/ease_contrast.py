@@ -8,8 +8,10 @@ Cells, each over the same 12 apps, the same evidence and two samples:
 - muse-p2 / opus-p2: prompt P2, which judges visual design too (current or dated, finish, spacing and alignment,
   broken images, visual hierarchy). Evidence, causes and null-when-unsure are unchanged.
 
-Opus gets the same images, text and strict JSON schema through the Messages API (output_config.format), at a fixed
-effort (OPUS_EFFORT) and no sampling parameters; no refusal fallback, so every answer is claude-opus-5-5's. Each call
+Opus gets the same images, text and strict JSON schema through the Messages API (the schema in the system prompt,
+since structured outputs cannot compile it; the answer is validated against the same pydantic model, one retry if it
+does not parse), at a fixed effort (OPUS_EFFORT) and no sampling parameters; no refusal fallback, so every answer is
+claude-opus-5-5's. Each call
 is reserved and settled in the shared ledger under budget "anthropic-research" (ANTHROPIC_CAP_USD); Meta calls run
 under their own scope cap (META_CAP_USD). Results go to ~/.pickfit/usability/contrast/<cell>/<slug>.json.
 
@@ -95,8 +97,50 @@ def anthropic_ledger() -> Ledger:
                   caps=Caps(total_usd=ANTHROPIC_CAP_USD, daily_usd=lambda day: ANTHROPIC_CAP_USD))
 
 
+def _nullable(node: dict[str, Any]) -> dict[str, Any] | None:
+    """The non-null form of a nullable schema node (`type: [X, "null"]` or `anyOf: [X, null]`, as Meta's strict mode
+    writes them), else None."""
+    branches = node.get("anyOf")
+    if isinstance(branches, list) and {"type": "null"} in branches and len(branches) == 2:
+        other = next(b for b in branches if b != {"type": "null"})
+        return {**{k: v for k, v in node.items() if k != "anyOf"}, **other}
+    kinds = node.get("type")
+    if not (isinstance(kinds, list) and "null" in kinds):
+        return None
+    others = [k for k in kinds if k != "null"]
+    inner = {**node, "type": others[0] if len(others) == 1 else others}
+    if "enum" in inner:
+        inner["enum"] = [v for v in inner["enum"] if v is not None]
+    return inner
+
+
+def fill_nulls(data: Any, schema: dict[str, Any]) -> Any:
+    """Put back, as null, every property the strict schema lists that an answer left out; a box written as the rules
+    show it, [x_min, y_min, x_max, y_max], becomes the schema's object."""
+    props = schema.get("properties") or {}
+    if isinstance(data, list) and list(props) == ["x_min", "y_min", "x_max", "y_max"] and len(data) == 4:
+        data = dict(zip(props, data))
+    if isinstance(data, dict) and "properties" in schema:
+        out = {}
+        for name, prop in schema["properties"].items():
+            inner = _nullable(prop) or prop
+            out[name] = fill_nulls(data[name], inner) if name in data and data[name] is not None else None
+        return out
+    if isinstance(data, list) and "items" in schema:
+        return [fill_nulls(item, schema["items"]) for item in data]
+    return data
+
+
+JSON_RULE = ("\n\nAnswer with one JSON object and nothing else: no prose, no code fence. It must match this JSON "
+             "schema exactly, with every property present (null where the schema allows it):\n")
+
+
 def opus_messages(body: dict[str, Any]) -> dict[str, Any]:
-    """The Meta Responses body (instructions, text and data-URL images, strict schema) as a Messages API request."""
+    """The Meta Responses body (instructions, text and data-URL images, strict schema) as a Messages API request.
+
+    Anthropic's structured outputs cannot compile this schema (more than 16 nullable parameters, then "compiled grammar
+    is too large"), so the same strict schema goes into the system prompt and the answer is validated against the same
+    pydantic model afterwards."""
     blocks: list[dict[str, Any]] = []
     for part in body["input"][0]["content"]:
         if part["type"] == "input_text":
@@ -104,10 +148,17 @@ def opus_messages(body: dict[str, Any]) -> dict[str, Any]:
         else:
             media, data = part["image_url"].removeprefix("data:").split(";base64,", 1)
             blocks.append({"type": "image", "source": {"type": "base64", "media_type": media, "data": data}})
-    return {"model": OPUS, "max_tokens": OPUS_MAX_TOKENS, "system": body["instructions"],
-            "messages": [{"role": "user", "content": blocks}],
-            "output_config": {"effort": OPUS_EFFORT,
-                              "format": {"type": "json_schema", "schema": body["text"]["format"]["schema"]}}}
+    schema = json.dumps(body["text"]["format"]["schema"], separators=(",", ":"))
+    return {"model": OPUS, "max_tokens": OPUS_MAX_TOKENS, "system": body["instructions"] + JSON_RULE + schema,
+            "messages": [{"role": "user", "content": blocks}], "output_config": {"effort": OPUS_EFFORT}}
+
+
+def parse_json(text: str) -> Any:
+    """The answer's JSON object; tolerates a code fence or a line around it."""
+    start, end = text.find("{"), text.rfind("}")
+    if start < 0 or end < start:
+        raise ValueError("no JSON object in the answer")
+    return json.loads(text[start:end + 1])
 
 
 def opus_cost(usage: Any) -> float:
@@ -124,6 +175,14 @@ def opus_ask(ledger: Ledger, client: Any = None):
         client = anthropic.Anthropic(api_key=key, max_retries=4)
 
     def ask(body: dict[str, Any], out: type[BaseModel], kind: str) -> Asked:
+        first = once(body, out, kind)
+        if first.parsed is not None or not (first.error or "").startswith("unparsable"):
+            return first
+        again = once(body, out, kind)  # one retry for an answer that did not parse; both costs count
+        again.cost_usd += first.cost_usd
+        return again
+
+    def once(body: dict[str, Any], out: type[BaseModel], kind: str) -> Asked:
         request = opus_messages(body)
         images = sum(b["type"] == "image" for b in request["messages"][0]["content"])
         chars = len(request["system"]) + sum(len(b.get("text", "")) for b in request["messages"][0]["content"])
@@ -150,7 +209,8 @@ def opus_ask(ledger: Ledger, client: Any = None):
             return Asked(None, cost, OPUS, usage, error=f"stop_reason {message.stop_reason}")
         text = next((b.text for b in message.content if b.type == "text"), "")
         try:
-            return Asked(out.model_validate_json(text), cost, OPUS, usage)
+            data = fill_nulls(parse_json(text), body["text"]["format"]["schema"])
+            return Asked(out.model_validate(data), cost, OPUS, usage)
         except ValueError as err:
             return Asked(None, cost, OPUS, usage, error=f"unparsable answer: {str(err)[:200]}")
 

@@ -359,9 +359,21 @@ def test_the_contrast_runs_p2_and_sends_opus_the_same_images_and_schema(bundle: 
     request = opus_messages(body)
     blocks = request["messages"][0]["content"]
     assert [b["type"] for b in blocks] == ["text", "image", "image"]
-    assert blocks[1]["source"]["media_type"] == "image/png" and request["system"] == P2.first_look
-    assert request["output_config"]["format"]["schema"] == body["text"]["format"]["schema"]
-    assert "temperature" not in request and request["output_config"]["effort"] == "low"
+    assert blocks[1]["source"]["media_type"] == "image/png"
+    assert request["system"].startswith(P2.first_look) and json.dumps(body["text"]["format"]["schema"],
+                                                                  separators=(",", ":")) in request["system"]
+    from scripts.ease_contrast import fill_nulls, parse_json
+
+    strict = body["text"]["format"]["schema"]
+    text = "```json\n" + json.dumps({"observed": "x", "screen_broken": False, "findings": [], "ready": {"score": 2},
+                                     "comfort": {name: {"ok": True} for name in ComfortChecksP2.model_fields}}) + "\n```"
+    parsed = FirstLookAnswerP2.model_validate(fill_nulls(parse_json(text), strict))
+    boxed = {"observed": "x", "screen_broken": False, "findings": [], "ready": {"score": 2, "evidence": {
+        "image": 1, "box": [340, 710, 660, 800], "quote": "Chats"}},
+             "comfort": {name: {"ok": True} for name in ComfortChecksP2.model_fields}}
+    assert FirstLookAnswerP2.model_validate(fill_nulls(boxed, strict)).ready.evidence.box.y_max == 800
+    assert parsed.ready.evidence is None and parsed.comfort_seen is None and parsed.comfort.layout_intact.cause is None
+    assert "temperature" not in request and request["output_config"] == {"effort": "low"}
     # Six checks under P2; one app problem still scores 1.
     answer = {"observed": "x", "screen_broken": False, "findings": [],
               "ready": {"score": 2, "evidence": cite(1, "Chats")}, "comfort_seen": cite(1, "New message"),
