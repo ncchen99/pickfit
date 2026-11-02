@@ -58,6 +58,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--no-memory-limit", action="store_true", help="--memory is only the request; no hard limit")
     p.add_argument("--timeout", type=int, default=3600)
     p.add_argument("--confirm-spend", action="store_true")
+    p.add_argument("--results", type=Path, default=RESULTS, help="parent of the output folder (L2 uses eval/results/l2)")
     a = p.parse_args(argv)
     if not a.confirm_spend:
         print("refused: this starts a Modal sandbox; pass --confirm-spend")
@@ -70,7 +71,7 @@ def main(argv: list[str] | None = None) -> int:
     image = l2_image.read_record()["images"][a.variant]["name"]
     client = l2_image.modal_client()
     app = modal.App.lookup(l2_image.APP_NAME, create_if_missing=True, client=client)
-    out_dir = RESULTS / a.label
+    out_dir = a.results.resolve() / a.label
     out_dir.mkdir(parents=True, exist_ok=True)
     record = {"label": a.label, "script": str(a.script), "fixtures": a.fixtures, "variant": a.variant, "image": image,
               "cpu": a.cpu, "memory_mib": a.memory, "memory_limit": not a.no_memory_limit, "started_at": now()}

@@ -327,7 +327,7 @@ def pickfit_unavailable(parsed: Parsed) -> list[str]:
 
 
 def run_once(config: dict[str, Any], question: dict[str, Any], group: str, rnd: str, attempt: int,
-             api_key: str, base: Path | None = None) -> dict[str, Any]:
+             api_key: str, base: Path | None = None, prompt: str | None = None) -> dict[str, Any]:
     folder = attempt_dir(rnd, question["id"], group, attempt, base)
     folder.mkdir(parents=True, exist_ok=False)
     # A neutral name: Claude Code puts the working directory and the memory path (under HOME) in the
@@ -341,7 +341,7 @@ def run_once(config: dict[str, Any], question: dict[str, Any], group: str, rnd: 
         mcp_json = json.dumps({"mcpServers": config["groups"][group]["mcp"]})
         mcp_path.write_text(mcp_json, encoding="utf-8")
         (folder / "mcp.json").write_text(mcp_json, encoding="utf-8")  # the scratch copy is deleted below
-        prompt = build_prompt(config, question)
+        prompt = prompt or build_prompt(config, question)
         cmd = build_cmd(config, group, mcp_path, prompt)
         execution = execute(cmd, isolated_env(home, api_key), work, folder / "stream.jsonl",
                             folder / "stderr.txt", int(config["timeout_s"]))
@@ -683,6 +683,46 @@ def cmd_extra(rnd: str, args, config=None, questions=None, api_key=None, base=No
     return 0
 
 
+C6_PROMPT = EVAL / "prompts" / "c6_no_fit_search.md"
+
+
+def c6_prompt(question: dict[str, Any], template_path: Path = C6_PROMPT) -> str:
+    """9.1 C6: the fixed English text after the '---' line, with the question's fields filled in, sent alone."""
+    template = template_path.read_text(encoding="utf-8").split("\n---\n", 1)[1].strip()
+    c = question.get("constraints") or {}
+    fields = {
+        "{prompt}": question["prompt"].strip(),
+        "{constraints.os}": str(c.get("os")), "{constraints.arch}": str(c.get("arch")),
+        "{constraints.budget}": str(c.get("budget")), "{constraints.must_run_locally}": str(c.get("must_run_locally")),
+        "{constraints.other, one per line}": "\n".join(f"- {o}" for o in c.get("other") or []),
+        "{each [L1] item from success_checklist, one per line}":
+            "\n".join(f"- {i}" for i in question["success_checklist"] if i.startswith("[L1]")),
+    }
+    for k, v in fields.items():
+        template = template.replace(k, v)
+    return template
+
+
+def cmd_c6(args, config=None, api_key=None, base=None, log=print) -> int:
+    """9.1 C6: once per question with a "nothing fits" answer, after every run; control isolation, no pickfit."""
+    import grade  # the C6 spend counts toward the grading cap, in the same ledger
+
+    config = config or load_config()
+    questions = {q["id"]: q for path in (QUESTIONS_A, QUESTIONS_B) for q in load_questions(path)}
+    api_key = api_key or read_api_key()
+    for qid in args.questions:
+        if any(m["valid"] for m in attempts("c6", qid, "control", base)):
+            log(f"c6 {qid}: already done")
+            continue
+        meta = run_once(config, questions[qid], "control", "c6", next_attempt("c6", qid, "control", base), api_key,
+                        base, prompt=c6_prompt(questions[qid]))
+        grade.record({"use": "c6", "question": qid, "attempt": meta["attempt"], "at": meta["ended_at"],
+                      "model": meta["model"], "usage": meta["usage"], "cost_usd": meta["cost_usd"]}, "grading")
+        log(f"c6 {qid} attempt {meta['attempt']}: valid={meta['valid']} cost=${meta['cost_usd']:.3f} "
+            f"{meta['invalid_reason'] or ''}")
+    return 0
+
+
 def cmd_cut(args, base=None, log=print) -> int:
     """9.1 G / 9.2 F: an item cut for lack of time, money or hands is recorded, never silent."""
     write_marker(f"{args.item}-cut", {"item": args.item, "reason": args.reason}, base)
@@ -1019,10 +1059,12 @@ def main(argv: list[str] | None = None) -> int:
     v.add_argument("--round", required=True, choices=list(ROUNDS))
     v.add_argument("--group", required=True, choices=list(GROUPS))
     sub.add_parser("status")
+    c6 = sub.add_parser("c6")
+    c6.add_argument("questions", nargs="+", help="question ids with a 'nothing fits' answer (9.1 C6)")
     args = parser.parse_args(argv)
     handlers = {"freeze-candidates": cmd_freeze_candidates, "snapshot": cmd_snapshot, "compare": cmd_compare, "run1": cmd_run1, "reruns": cmd_reruns,
                 "haiku": lambda a: cmd_extra("haiku", a), "bset": lambda a: cmd_extra("bset", a), "cut": cmd_cut,
-                "check": cmd_check, "void": cmd_void, "status": cmd_status}
+                "check": cmd_check, "void": cmd_void, "status": cmd_status, "c6": cmd_c6}
     return handlers[args.command](args)
 
 

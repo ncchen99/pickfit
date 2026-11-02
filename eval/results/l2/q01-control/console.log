@@ -1,0 +1,60 @@
+/tmp/node.tar.xz: OK
+debconf: delaying package configuration, since apt-utils is not installed
+RESULT PASS
+seed exit 0
+== install 1: npm install -g sync-agents-settings
+install 1 exit 0
+
+added 3 packages in 608ms
+== step 01: sync-agents list
+egress: 01 exit=0 timed_out=False 0.2s tracer_running=False trace=/opt/eval/state/q01-egress/01.strace
+step 01 exit 0
+== step 02: sync-agents diff --target gemini codex
+egress: 02 exit=0 timed_out=False 0.2s tracer_running=False trace=/opt/eval/state/q01-egress/02.strace
+step 02 exit 0
+== step 03: sync-agents sync --target gemini --dry-run
+egress: 03 exit=0 timed_out=False 0.2s tracer_running=False trace=/opt/eval/state/q01-egress/03.strace
+step 03 exit 0
+== step 04: sync-agents sync --target codex --dry-run
+egress: 04 exit=0 timed_out=False 0.2s tracer_running=False trace=/opt/eval/state/q01-egress/04.strace
+step 04 exit 0
+== step 05: sync-agents sync --target gemini
+egress: 05 exit=0 timed_out=False 0.2s tracer_running=False trace=/opt/eval/state/q01-egress/05.strace
+step 05 exit 0
+== step 06: sync-agents sync --target codex
+egress: 06 exit=0 timed_out=False 0.2s tracer_running=False trace=/opt/eval/state/q01-egress/06.strace
+step 06 exit 0
+== step 07: sync-agents doctor --target gemini codex
+egress: 07 exit=0 timed_out=False 0.2s tracer_running=False trace=/opt/eval/state/q01-egress/07.strace
+step 07 exit 0
+== step 08: claude mcp add fixture-echo -- python3 /opt/eval/fixtures/q01/server/fixture_mcp_server.py
+egress: 08 exit=0 timed_out=False 0.4s tracer_running=False trace=/opt/eval/state/q01-egress/08.strace
+step 08 exit 0
+== step 09: sync-agents sync --target gemini
+egress: 09 exit=0 timed_out=False 0.2s tracer_running=False trace=/opt/eval/state/q01-egress/09.strace
+step 09 exit 0
+== step 10: sync-agents sync --target codex
+egress: 10 exit=0 timed_out=False 0.2s tracer_running=False trace=/opt/eval/state/q01-egress/10.strace
+step 10 exit 0
+item 2 check exit 0: RESULT PASS (every seeded file exists, parses, and keeps its seeded setting)
+item 3 claude list exit 0 fixture-echo=1
+item 3 codex list exit 0 fixture-echo=0
+item 3 gemini list exit 0 fixture-echo=0
+item 4 egress report exit 1: egress: FAIL (3 egress attempt(s))
+== done
+install 1 exit 0
+step 01 exit 0
+step 02 exit 0
+step 03 exit 0
+step 04 exit 0
+step 05 exit 0
+step 06 exit 0
+step 07 exit 0
+step 08 exit 0
+step 09 exit 0
+step 10 exit 0
+item 2 check exit 0: RESULT PASS (every seeded file exists, parses, and keeps its seeded setting)
+item 3 claude list exit 0 fixture-echo=1
+item 3 codex list exit 0 fixture-echo=0
+item 3 gemini list exit 0 fixture-echo=0
+item 4 egress report exit 1: egress: FAIL (3 egress attempt(s))

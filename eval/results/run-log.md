@@ -164,3 +164,4 @@
   - q10、q20 的 [L3] 看的是整個答案怎麼說（C4：只能從答案原文判斷的項目逐一評），所以每個答案各自一項（首選後面加 `[answer Axxxx]`，答案編號不透露組別），並把該答案去識別的原文附在那一項的 evidence 裡給評分模型（`l1-A/l1-batch.jsonl` 產生後加上，sha256 `157ef2ba…`）。
   - 「沒有工具符合」：q01 的 A0099、b09 的 A0019、A0023（兩則都先說找不到單一工具全部做到，再給「最接近的」組合）；照 C2 記 no_fit，要做 C6。
 - `blind.py l1-batch`：A 批 78 項（1 個答案沒有項目：no_fit）、B 批 18 項（2 個 no_fit）。給念誠的 `l1-form.csv` 在他交出偏好表單之後才給。
+- B 題組更正（`answers-B/picks-corrections.json`，2 筆）：b09 的 A0019、A0023 原記 no_fit；但 b09 自己的 [L1] 檢查寫明可以組合多個 server（「each part is named and the combination covers the same steps」），並要求沒有單一 server 全包時寫出缺哪些步驟，所以改記為組合首選（tool），重建 B 批：20 項、0 個沒有項目的答案（key `618d3516…`）。B 批在評分模型讀到之前就換好了。C6 只剩 q01（A0099）。

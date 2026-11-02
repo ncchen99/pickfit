@@ -1,0 +1,84 @@
+{
+ "note": "L2 per 9.1 C7: run-1 control and experimental answers, Linux questions in order, Modal dev image; scripts in l2/scripts, raw output in l2/<q>-<group>/. Verdicts are the grader's (this session) reading of those outputs; 念誠's decisions are final.",
+ "results": {
+  "q01": {
+   "control": {
+    "pick": "sync-agents-settings (answer says no tool fits exactly; this is its closest fit)",
+    "items": {
+     "1": "pass (npm install -g sync-agents-settings exit 0)",
+     "2": "pass (seed_configs check RESULT PASS)",
+     "3": "fail (claude lists fixture-echo; codex and gemini do not: the answer's `claude mcp add` wrote Claude's local scope by default and `sync-agents sync` read 0 user-scope servers)",
+     "4": "fail (3 attempts, all in step 08 `claude mcp add`: DNS 172.21.0.1:53 and 160.79.104.10:443)"
+    },
+    "l2": "fail",
+    "notes": [
+     "placeholder of `claude mcp add …` filled with the fixture server (README section 3), scope left at its default (local); the answer assumes user-wide configs. With --scope user item 3 might differ, but item 4 fails on the same claude mcp add, so the L2 verdict would not change"
+    ]
+   },
+   "experimental": {
+    "pick": "mcpshare",
+    "items": {
+     "1": "fail (`brew install uv` exit 127: the answer's install is for macOS with Homebrew; the dev image has neither)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q02": {
+   "control": {
+    "pick": "leakguard",
+    "items": {
+     "1": "fail (rustup under a pty with the default accepted: exit 0; `cargo install leakguard` exit 101: linker `cc` not found, the dev image has no C compiler and the answer installs none; `leakguard --list-kinds` exit 127)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7; the traced pipeline itself made no attempt)"
+    },
+    "l2": "fail",
+    "notes": [
+     "environment: sudo installed in the image for every q02 run (9.3 A substitution); rustup's installer reads /dev/tty, run under a pty with Enter (accept the default)"
+    ]
+   },
+   "experimental": {
+    "pick": "leakguard",
+    "items": {
+     "1": "pass (`sudo apt install cargo` with the default Y accepted, exit 0; `cargo install leakguard` exit 0)",
+     "2": "fail (the pipeline `cat app.log | leakguard > clean.log` exit 127: cargo installed to /root/.cargo/bin, which is not on PATH, and the answer never adds it; check_clean's `masking PASS` is only because clean.log is empty)",
+     "3": "fail (check_clean ITEM ordinary FAIL: empty output)",
+     "4": "pass (no egress attempt; the tool never ran)"
+    },
+    "l2": "fail",
+    "notes": [
+     "first attempt (q02-experimental-attempt1-apt-prompt) is a harness measurement failure: apt's [Y/n] prompt got no input and aborted; rerun with the default accepted, answer unchanged",
+     "item 2 recorded as fail although check_clean prints masking PASS: no tool output exists to be masked (for 念誠 to confirm)"
+    ]
+   }
+  },
+  "q03": {
+   "control": {
+    "pick": "qsv",
+    "items": {
+     "1": "fail (base image: `unzip` exit 127 (not installed), `install -m 755 qsv-dl/qsv ~/.local/bin/` exit 1, `qsv --version` exit 127; check_runtime empty before and after)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": [
+     "step 1 is a browser download from the releases page; not performed in the box (the base image has no downloader), and the next line `unzip` fails regardless"
+    ]
+   },
+   "experimental": {
+    "pick": "DuckDB CLI",
+    "items": {
+     "1": "fail (base image: `wget` exit 127, `unzip` exit 127, `install` exit 1; Option A, the first given)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  }
+ }
+}
