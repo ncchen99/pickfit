@@ -852,9 +852,9 @@ export function renderNotice(kind: 'busy' | 'error', title: string, text: string
 
 /** Examples on the page: tasks the catalog covers, written for this page. */
 export const EXAMPLES: [string, string][] = [
-  ['Subtitles from recordings, offline', 'Turn a folder of interview recordings into subtitles, offline'],
+  ['Offline subtitles', 'Turn a folder of interview recordings into subtitles, offline'],
   ['Audit my MCP configs', 'Check my MCP server configs for risky permissions before I install one'],
-  ['A codebase map for my agent', 'An MCP server that gives my coding agent a map of my codebase'],
+  ['Codebase map for agents', 'An MCP server that gives my coding agent a map of my codebase'],
   ['Free up port 3000', 'See which process holds port 3000 and stop it'],
 ];
 
@@ -896,7 +896,7 @@ export function searchForm(form: FormValues): string {
     `<div class="seg" role="radiogroup" aria-labelledby="os-label">${os}</div>` +
     `<select class="select" name="arch" data-dropdown aria-label="${L('CPU architecture', 'CPU 架構')}">${arch}</select>` +
     `<label class="chip"><input type="checkbox" name="free_only" value="1"${form.free_only ? ' checked' : ''}>${icon('leaf')}${L('Free', '免費')}</label>` +
-    `<label class="chip"><input type="checkbox" name="offline" value="1"${form.offline ? ' checked' : ''}>${icon('wifi-off')}${L('Works offline', '不需網路')}</label>` +
+    `<label class="chip"><input type="checkbox" name="offline" value="1"${form.offline ? ' checked' : ''}>${icon('wifi-off')}${L('Offline', '不需網路')}</label>` +
     `<label class="chip"><input type="checkbox" name="private" value="1"${form.private ? ' checked' : ''}>${icon('laptop')}${L('Data stays local', '資料在本地')}</label></div>` +
     `<div class="ask-go"><span class="counter" data-counter aria-live="polite"></span>` +
     `<button type="submit" class="btn btn-primary go"><span class="btn-label">${L('Find tools', '幫我挑')}</span>${icon('arrow-right')}</button></div>` +
@@ -1020,7 +1020,7 @@ export function renderPage(input: PageInput): string {
   const mcp = `${input.origin}/mcp`;
   const served = input.results !== '';
   const main =
-    `<section class="hero mat after-top" aria-labelledby="title"><div class="wrap hero-grid"><div>` +
+    `<section class="hero mat after-top" aria-labelledby="title"><div class="wrap hero-grid"><div class="hero-main">` +
     `<h1 id="title">${L('Every tool, <em>tested</em> first', '先幫你<em>試過</em>推薦的軟體')}</h1>` +
     `<p class="lede">${L(
       'Tell pickfit what you want to do. It suggests tools it has already installed and tested, with commands that work.',
@@ -1032,12 +1032,12 @@ export function renderPage(input: PageInput): string {
       .join('')}</div>` +
     `<ul class="proof"><li>${icon('book-open')}<span>${L(`<strong>${stats.listed}</strong> READMEs read`, `讀過 <strong>${stats.listed}</strong> 份 README`)}</span></li>` +
     `<li>${icon('shield-check')}<span>${L(
-      `<strong>${stats.replayed}</strong> installed and replayed in a sandbox`,
+      `<strong>${stats.replayed}</strong> replayed in a sandbox`,
       `<strong>${stats.replayed}</strong> 款在沙盒中安裝並重跑`,
     )}</span></li>` +
     (stats.web
       ? `<li>${icon('globe')}<span>${L(
-          `<strong>${stats.web}</strong> web ${stats.web === 1 ? 'app' : 'apps'} used in a browser`,
+          `<strong>${stats.web}</strong> web ${stats.web === 1 ? 'app' : 'apps'} tried in a browser`,
           `<strong>${stats.web}</strong> 款網頁應用在瀏覽器實測過`,
         )}</span></li>`
       : '') +

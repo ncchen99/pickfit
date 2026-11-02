@@ -208,7 +208,7 @@ test('page: the tool page of a web app, browse and compare', async () => {
   assert.match(how, /its quality is the browser run 50% .* what the browser saw 40%/);
   const home = await get('/');
   assert.match(home, /name="private" value="1"/);
-  assert.match(home, /<strong>1<\/strong> web app used in a browser/);
+  assert.match(home, /<strong>1<\/strong> web app tried in a browser/);
 });
 
 test('report_outcome: a failed web app is stored for its next browser check, never queued for an install re-run', async () => {
