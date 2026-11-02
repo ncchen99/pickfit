@@ -76,28 +76,36 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-hako-20261101-161753-cf79",
+      "run_id": "verify-hako-20261102-003721-6741",
       "method": "script",
       "steps": [
         {
           "command": "curl -fsSL https://mithraeums.github.io/hakm.sh -o /tmp/hakm.sh",
-          "purpose": "download proxy installer hakm.sh"
+          "purpose": "download hakm.sh proxy script"
         },
         {
           "command": "curl -fsSL https://raw.githubusercontent.com/mithraeums/hako/main/install.sh -o /tmp/install.sh",
-          "purpose": "download actual install.sh from github"
+          "purpose": "download actual install.sh"
         },
         {
           "command": "sh /tmp/install.sh",
-          "purpose": "install hakm release binary via install.sh"
+          "purpose": "install hakm release binary via script"
+        },
+        {
+          "command": "mkdir -p ~/models && curl -fL -o ~/models/SmolLM2-135M-Instruct-Q8_0.gguf https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf",
+          "purpose": "download tiny SmolLM2 Q8_0 GGUF model"
+        },
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/mithraeums/hako/main/tools/gguf2mlf.py -o ~/gguf2mlf.py && python3 ~/gguf2mlf.py ~/models/SmolLM2-135M-Instruct-Q8_0.gguf ~/models/smol135.mlf2",
+          "purpose": "prepare replayable converter and model"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "hakm --version",
-        "expected_signal": "hakm v0.0.4"
+        "command": "hakm --help",
+        "expected_signal": "the hako engine"
       },
-      "first_task": "hakm list"
+      "first_task": "hakm ~/models/smol135.mlf2 --info"
     },
     "windows": null
   },
@@ -116,10 +124,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T16:18:48.802708+08:00",
+    "checked_at": "2026-11-02T00:38:58.607677+08:00",
     "runs": [
       {
-        "id": "verify-hako-20261101-161753-cf79",
+        "id": "verify-hako-20261102-003721-6741",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -127,97 +135,144 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:f56cd5b7aa53",
-        "checked_at": "2026-11-01T16:18:48.802708+08:00",
+        "checked_at": "2026-11-02T00:38:58.607677+08:00",
         "tool_version": "v0.0.4",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
             "command": "curl -fsSL https://mithraeums.github.io/hakm.sh -o /tmp/hakm.sh",
-            "purpose": "download proxy installer hakm.sh"
+            "purpose": "download hakm.sh proxy script"
           },
           {
             "command": "curl -fsSL https://raw.githubusercontent.com/mithraeums/hako/main/install.sh -o /tmp/install.sh",
-            "purpose": "download actual install.sh from github"
+            "purpose": "download actual install.sh"
           },
           {
             "command": "sh /tmp/install.sh",
-            "purpose": "install hakm release binary via install.sh"
+            "purpose": "install hakm release binary via script"
+          },
+          {
+            "command": "mkdir -p ~/models && curl -fL -o ~/models/SmolLM2-135M-Instruct-Q8_0.gguf https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf",
+            "purpose": "download tiny SmolLM2 Q8_0 GGUF model"
+          },
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/mithraeums/hako/main/tools/gguf2mlf.py -o ~/gguf2mlf.py && python3 ~/gguf2mlf.py ~/models/SmolLM2-135M-Instruct-Q8_0.gguf ~/models/smol135.mlf2",
+            "purpose": "prepare replayable converter and model"
           }
         ],
         "smoke_tests": [
           {
-            "command": "hakm --version",
-            "expected_signal": "hakm v0.0.4",
+            "command": "hakm --help",
+            "expected_signal": "the hako engine",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "hakm v0.0.4 (build Oct 15 2026 14:36:38)",
+            "observed_excerpt": "hakm v0.0.4 — the hako engine. Usually started by hako; run it directly to test a model.",
             "setup": [],
             "offline": true
           },
           {
-            "command": "hakm list",
-            "expected_signal": "none installed",
+            "command": "hakm ~/models/smol135.mlf2 --info",
+            "expected_signal": "arch llama",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "(none installed — hakm pull <id>)",
+            "observed_excerpt": "hakm: hako engine · arch llama · 0.13B params · 30 layers · d_model 576 · heads 9/3 (GQA) · ffn 1536 · vocab 49152 · ctx 2048 · rope_theta 100000",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "hakm ~/models/smol135.mlf2 --raw -t 0 -n 16 \"def fibonacci(n):\"",
+            "expected_signal": "def fibonacci(n):",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "def fibonacci(n):",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "printf 'hello\\n' | hakm ~/models/smol135.mlf2 --sys \"You are hako.\" -n 16 -t 0",
+            "expected_signal": "welcome",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "*I glance around the room, taking in the familiar surroundings* Ah, welcome",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "printf '1 16\\nuser\\n5\\nhello' | hakm ~/models/smol135.mlf2 --serve -t 0 -n 16",
+            "expected_signal": "R 71",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "R 71",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "make test works with no deps (libc+libm+pthread)",
-            "actually_needed": "box has no make/cc toolchain; install.sh correctly fell back to release binary, make test cannot run here",
-            "kind": "sandbox"
+            "readme_said": "curl -fsSL https://mithraeums.github.io/hakm.sh | sh",
+            "actually_needed": "downloaded hakm.sh and install.sh, read both, then ran sh /tmp/install.sh; release tarball fetched at install time is a binary that cannot be pre-read",
+            "kind": "note"
           },
           {
-            "readme_said": "./hakm \"$M\" --info etc require model path",
-            "actually_needed": "without model, invoking --info without positional model mis-resolves --info as model id and prints 'hakm pull --info' hint; correct order is hakm <model> --info",
+            "readme_said": "./hakm \"$M\" --info arch banner",
+            "actually_needed": "hakm --info banner prints to stderr, exit 0; check stderr for arch line",
+            "kind": "note"
+          },
+          {
+            "readme_said": "install step 5 runs gguf2mlf.py",
+            "actually_needed": "nothing to change; a note: the box ran gguf2mlf.py, downloaded, without reading it first, so pickfit did not inspect it",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show empty list with none-installed hint and hakm v0.0.4 version output.",
+          "observed": "Screenshots show model info with arch llama, a fibonacci code completion with timing stats, and help text describing the hako engine.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-hako-20261101-161753-cf79/report.json",
+          "trace_path": "runs/verify/verify-hako-20261102-003721-6741/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-hako-20261101-161753-cf79/check-1-cmd9.judged.png",
-            "runs/verify/verify-hako-20261101-161753-cf79/check-2-cmd4.judged.png"
+            "runs/verify/verify-hako-20261102-003721-6741/check-1-cmd8.judged.png",
+            "runs/verify/verify-hako-20261102-003721-6741/check-2-cmd9.judged.png",
+            "runs/verify/verify-hako-20261102-003721-6741/check-3-cmd4.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.057695,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.151067,
         "features": [
           {
             "feature": "run interactive multi-turn chat REPL",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_more_resources",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
             "failure": null,
-            "note": "interactive REPL needs hako-sho/koi mlf2 (~1.9GB), no tiny model support"
+            "note": null
           },
           {
             "feature": "generate raw greedy completions",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_more_resources",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "raw greedy completion needs hako model weights"
+            "note": null
           },
           {
             "feature": "serve resident model reusing KV cache",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_more_resources",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
             "failure": null,
-            "note": "--serve resident KV cache needs model to keep warm"
+            "note": null
           },
           {
             "feature": "run 3B and 7B models on CPU",
@@ -225,7 +280,7 @@
             "smoke_tests": [],
             "reason": "needs_more_resources",
             "failure": null,
-            "note": "3B/7B CPU inference requires downloading 1.9GB+ weights"
+            "note": "hako-sho 3B ~1.9GB exceeds 300MB box budget; proved engine on 0.13B llama instead"
           }
         ]
       }
@@ -233,15 +288,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-02T00:39:30+08:00",
     "quality": {
-      "total": 79.3,
+      "total": 67.3,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.8,
+          "score": 0.56,
           "weight": 40.0
         },
         "install_docs": {
@@ -282,7 +337,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 63.28
+      "value": 53.71
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -581,5 +636,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-11-01T19:21:49.894814+08:00"
+  "updated_at": "2026-11-02T00:39:30.919046+08:00"
 }

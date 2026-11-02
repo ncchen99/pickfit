@@ -60,18 +60,25 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-vokoscreenng-20261102-012610-941d",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub com.github.vkohaupt.vokoscreenNG",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add flathub remote for user"
+        },
+        {
+          "command": "flatpak install --user -y flathub com.github.vkohaupt.vokoscreenNG",
+          "purpose": "install vokoscreenNG flatpak"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "DISPLAY=:99 flatpak run com.github.vkohaupt.vokoscreenNG --help",
+        "expected_signal": "-h or --help"
+      },
+      "first_task": "flatpak run com.github.vkohaupt.vokoscreenNG"
     },
     "windows": null
   },
@@ -88,10 +95,173 @@
     "url": "https://github.com/vkohaupt/vokoscreenNG/releases/tag/4.11.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T01:55:06.750278+08:00",
+    "runs": [
+      {
+        "id": "verify-vokoscreenng-20261102-012610-941d",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui-audio:5c7d9880874a",
+        "checked_at": "2026-11-02T01:55:06.750278+08:00",
+        "tool_version": "4.11.1",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add flathub remote for user"
+          },
+          {
+            "command": "flatpak install --user -y flathub com.github.vkohaupt.vokoscreenNG",
+            "purpose": "install vokoscreenNG flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "DISPLAY=:99 flatpak run com.github.vkohaupt.vokoscreenNG --help",
+            "expected_signal": "-h or --help",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "-h or --help Print this message",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "flatpak run com.github.vkohaupt.vokoscreenNG",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "flatpak run com.github.vkohaupt.vokoscreenNG",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: a file under /home/sbx/Videos/: 12719427 bytes, written after the app started; format gif: yes",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "README install commands with no DISPLAY note",
+            "actually_needed": "run with DISPLAY=:99 (e.g. DISPLAY=:99 flatpak run com.github.vkohaupt.vokoscreenNG --help); without DISPLAY Qt xcb fails with no display",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "--help prints help",
+            "actually_needed": "--help text is printed on stderr, stdout stays empty, exit 0",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows the --help output listing -h and -v options with exit code 0. / Screenshot shows vokoscreenNG screen recorder main interface with capture options, codec settings, and Start controls fully drawn.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-vokoscreenng-20261102-012610-941d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-vokoscreenng-20261102-012610-941d/check-1-cmd7.judged.png",
+            "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-8-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.461921,
+        "gui": {
+          "tier": "action_checked",
+          "screen": "main_ui",
+          "command": "flatpak run com.github.vkohaupt.vokoscreenNG",
+          "window_title": "vokoscreenNG 4.11.1",
+          "display": "Xvfb 1280x800x24, no window manager, GPU Tesla T4",
+          "operations": [
+            {
+              "feature": "record screen, area or window",
+              "goal": "Start a fullscreen recording: if Format is not gif set it to gif, press Start, wait 6 seconds, press Stop. Leave files where the app saves them.",
+              "check": "file",
+              "target": "~/Videos/",
+              "expected": [],
+              "format": "gif",
+              "passed": true,
+              "observed": "a file under /home/sbx/Videos/: 12719427 bytes, written after the app started; format gif: yes",
+              "smoke_test": 2,
+              "actions": 28,
+              "replay": "actions",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-1.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-2.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-3.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-4.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-5.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-6.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-7.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-8.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-9.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-10.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-11.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-12.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-13.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-14.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-15.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-16.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-17.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-18.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-19.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-20.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-21.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-22.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-23.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-24.png",
+                "runs/verify/verify-vokoscreenng-20261102-012610-941d/replay-11-2-op-25.png"
+              ]
+            }
+          ]
+        },
+        "gpu": "Tesla T4",
+        "microphone": "simulated: a PulseAudio source playing fresh random words pickfit spoke with flite for each check",
+        "features": [
+          {
+            "feature": "record screen, area or window",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "record audio from multiple sources",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; Audio tab blank once; Start button unresponsive on retry, flaky UI in box"
+          },
+          {
+            "feature": "record video with built-in camera",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "no camera device in box to exercise camera recording"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -332,5 +502,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:42+08:00",
-  "updated_at": "2026-11-02T01:10:20+08:00"
+  "updated_at": "2026-11-02T02:01:04.353961+08:00"
 }

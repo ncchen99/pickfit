@@ -51,6 +51,10 @@ BOX_ENV = {
     "NPM_CONFIG_PREFIX": f"{BOX_HOME}/.local",
     "NPM_CONFIG_UPDATE_NOTIFIER": "false",
     "DEBIAN_FRONTEND": "noninteractive",
+    # .NET 7+ maps its JIT code twice (W^X) through a memfd it sizes to 2 TB; under the box's
+    # `ulimit -f` cap that ftruncate raises SIGXFSZ and every dotnet command dies (exit 153).
+    # Off, JIT pages are plain RWX inside the .NET process; no limit of the box changes.
+    "DOTNET_EnableWriteXorExecute": "0",
 }
 
 # Output kept per stream: the first HEAD bytes and the last TAIL bytes.
@@ -108,7 +112,9 @@ class Box(ABC):
     workdir: str = BOX_WORKDIR
     network_enabled: bool = True
     gpu: str | None = None  # e.g. "T4" when the box has an NVIDIA GPU
+    gpu_name: str | None = None  # the card as nvidia-smi names it in the started box, e.g. "Tesla T4"
     display: str | None = None  # e.g. ":99" when an X server runs for GUI apps (gui.py)
+    audio: bool = False  # a simulated microphone (audio.py) the box user's apps can record from
     # How the agent's instructions name the box and the box user's limits.
     kind: str = "Linux sandbox"
     user_rule: str = "You are not root: no sudo, no apt-get, nothing written outside $HOME and /tmp."
@@ -125,12 +131,15 @@ class Box(ABC):
 
     def describe(self) -> str:
         """The box line of the agent's task: OS, user, paths and what is installed."""
-        screen = (f"A virtual display (X server {self.display}, 1280x800, no window manager, no GPU) runs for GUI "
+        gpu = f"NVIDIA GPU: {self.gpu_name or self.gpu}" if self.gpu else "no GPU"
+        screen = (f"A virtual display (X server {self.display}, 1280x800, no window manager, {gpu}) runs for GUI "
                   "apps: start one with launch_gui." if self.display else "No GUI.")
+        mic = (" A simulated microphone (PulseAudio, the default source; ALSA's default device goes to it): use "
+               "listen to check a feature that records speech." if self.audio else "")
         return (f"Box: Debian-based Linux {self.arch}, user sbx (uid 1000, not root, no sudo), HOME={self.home}, "
                 f"work dir {self.workdir}. PATH starts with ~/.local/bin. Installed: python3.12 with pip, uv, pipx; "
                 "node 22 with npm (global prefix ~/.local); git, curl, unzip, xz, zstd. Network: on. No API keys, "
-                f"no accounts. {screen}")
+                f"no accounts. {screen}{mic}")
 
     @abstractmethod
     def start(self) -> None:

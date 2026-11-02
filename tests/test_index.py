@@ -42,6 +42,10 @@ def test_only_run_install_guides_are_indexed(data_dir: Path) -> None:
     assert {os: g["basis"] for os, g in runner.items()} == {"macos": "human", "linux": "replayed"}
     assert runner["linux"]["run"]["replayed"] is True
     assert runner["linux"]["run"]["evidence_url"].startswith("https://example.invalid/runs/")
+    # The box's GPU and simulated microphone reach the page; a box without them says null.
+    assert runner["linux"]["run"]["gpu"] is None and runner["linux"]["run"]["microphone"] is None
+    transcribe = entries["fixture-transcribe"]["install"]["linux"]["run"]
+    assert transcribe["gpu"] == "Tesla T4" and transcribe["microphone"].startswith("simulated:")
     assert runner["linux"]["works_offline"] is True and runner["macos"]["works_offline"] is None
     assert runner["linux"]["first_task_setup"] == [{"command": "fixture-llm-runner pull tiny-test",
                                                    "background": False}]

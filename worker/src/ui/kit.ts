@@ -120,6 +120,9 @@ export interface RunFacts {
   replayed: boolean | null;
   checked_at: string | null;
   tool_version?: string | null;
+  /** The sandbox's GPU and simulated microphone (index runs only); absent or null: none. */
+  gpu?: string | null;
+  microphone?: string | null;
 }
 
 /**
@@ -143,6 +146,10 @@ export function runFacts(run: RunFacts, opts: { offline?: boolean | null; mine?:
     run.method === 'human'
       ? item('', icon('hand'), 'Installed by hand')
       : item('', icon('refresh-cw'), run.replayed ? 'Replayed from scratch' : 'Sandbox install'),
+    run.gpu ? item('', icon('cpu'), `GPU: ${esc(run.gpu)}`, 'The sandbox had this GPU') : '',
+    run.microphone
+      ? item('', icon('mic'), 'Simulated microphone', 'A simulated microphone played words pickfit spoke for each check')
+      : '',
     opts.offline === true
       ? item('', icon('wifi-off'), 'Works offline', 'Its checks passed again with the network off')
       : opts.offline === false

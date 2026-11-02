@@ -70,20 +70,25 @@
       "first_task": "lumen run qwen3.5-9b:q8_0 \"Write a haiku about light\""
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-lumen-20261102-003442-e79a",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://servelumen.com/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL -o /tmp/install.sh https://servelumen.com/install.sh",
+          "purpose": "download install script"
+        },
+        {
+          "command": "bash /tmp/install.sh 2>&1",
+          "purpose": "install lumen binaries via script"
         }
       ],
-      "manual_steps": [
-        "Set up WSL and restart on Windows 11 before installing"
-      ],
-      "check": null,
-      "first_task": "lumen run qwen3.5-9b:q8_0 \"Write a haiku about light\""
+      "manual_steps": [],
+      "check": {
+        "command": "lumen --version",
+        "expected_signal": "lumen v0.51.0"
+      },
+      "first_task": "curl -fsSL http://127.0.0.1:8000/v1/models"
     },
     "windows": null
   },
@@ -100,56 +105,143 @@
     "url": "https://github.com/faisalmumtaz89/Lumen/releases/tag/v0.51.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_gpu",
-    "checked_at": "2026-10-31T02:18:29.089120+08:00",
+    "level": "inference",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T00:45:24.439839+08:00",
     "runs": [
       {
-        "id": "verify-lumen-20261031-021805-7e0f",
-        "level": "unverified",
-        "unverified_reason": "needs_gpu",
+        "id": "verify-lumen-20261102-003442-e79a",
+        "level": "inference",
+        "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:18:29.089120+08:00",
-        "tool_version": null,
-        "install_method": null,
-        "replayed": false,
-        "steps": [],
-        "smoke_tests": [],
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-02T00:45:24.439839+08:00",
+        "tool_version": "v0.51.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/install.sh https://servelumen.com/install.sh",
+            "purpose": "download install script"
+          },
+          {
+            "command": "bash /tmp/install.sh 2>&1",
+            "purpose": "install lumen binaries via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lumen --version",
+            "expected_signal": "lumen v0.51.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lumen v0.51.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lumen --help",
+            "expected_signal": "lumen - GPU-resident LLM inference engine",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lumen - GPU-resident LLM inference engine",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://127.0.0.1:8000/v1/models",
+            "expected_signal": "\"id\":\"qwen3.5-9b\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"object\":\"list\",\"data\":[{\"id\":\"qwen3.5-9b\",\"object\":\"model\",\"created\":1793551512,\"owned_by\":\"lumen\"}]}",
+            "setup": [
+              {
+                "command": "lumen pull qwen3.5-9b:q4_0 --yes",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "lumen-server qwen3.5-9b:q4_0 --port 8000",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsSL http://127.0.0.1:8000/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"qwen3.5-9b\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi\"}],\"temperature\":0,\"max_tokens\":16}'",
+            "expected_signal": "\"completion_tokens\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":\"chatcmpl-lumen-6ae76c9d-0\",\"object\":\"chat.completion\",\"created\":1793551517,\"model\":\"qwen3.5-9b\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hi there! 👋 How can I help you today?\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":14,\"completion_tokens\":13,\"total_tokens\":27…",
+            "setup": [
+              {
+                "command": "lumen pull qwen3.5-9b:q4_0 --yes",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "lumen-server qwen3.5-9b:q4_0 --port 8000",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          }
+        ],
         "pitfalls": [
           {
-            "readme_said": "Runs on NVIDIA ... and Apple Silicon, and, much more slowly, on the CPU of a machine with neither",
-            "actually_needed": "install.sh exits 1 on Linux without an NVIDIA GPU ('no NVIDIA GPU detected — the prebuilt Linux binary is CUDA-only'), so the prebuilt binary path cannot be used here despite the README describing a slower CPU fallback",
+            "readme_said": "curl -fsSL https://servelumen.com/install.sh | bash",
+            "actually_needed": "download with curl -fsSL -o /tmp/install.sh, read /tmp/install.sh fully, then run bash /tmp/install.sh",
+            "kind": "note"
+          },
+          {
+            "readme_said": "no CUDA SDK needed",
+            "actually_needed": "installer auto-fetched NVIDIA NVRTC + cuBLAS 12.9 (670 MB) into ~/.local/lib/lumen because the box has a driver but no CUDA toolkit",
+            "kind": "tool_handled"
+          },
+          {
+            "readme_said": "lumen run qwen3.5-9b:q8_0",
+            "actually_needed": "used qwen3.5-9b:q4_0 (~5.5 GB LBC) instead of README q8_0; Q4_0 is the smallest quant for the 9B and is verified on T4 cc 7.5",
             "kind": "note"
           }
         ],
         "blocking_error": null,
-        "judge": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show Lumen serving the models list, returning a chat completion with token usage, and reporting version v0.51.0.",
+          "model": "muse-spark-1.3"
+        },
         "evidence": {
-          "trace_path": "runs/verify/verify-lumen-20261031-021805-7e0f/report.json",
+          "trace_path": "runs/verify/verify-lumen-20261102-003442-e79a/report.json",
           "log_path": null,
-          "screenshot_paths": [],
+          "screenshot_paths": [
+            "runs/verify/verify-lumen-20261102-003442-e79a/check-1-cmd10.judged.png",
+            "runs/verify/verify-lumen-20261102-003442-e79a/check-2-cmd11.judged.png",
+            "runs/verify/verify-lumen-20261102-003442-e79a/check-3-cmd4.judged.png"
+          ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.040744
+        "cost_usd": 0.096741,
+        "gpu": "Tesla T4"
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-02T00:45:36+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 88.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
@@ -189,8 +281,8 @@
       "packages": []
     },
     "treasure": {
-      "is_treasure": false,
-      "value": 50.51
+      "is_treasure": true,
+      "value": 64.64
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -465,5 +557,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:49:14+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-02T00:45:36.206993+08:00"
 }

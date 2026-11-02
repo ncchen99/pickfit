@@ -29,6 +29,7 @@ from dataclasses import asdict, dataclass, field
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from pickfit.schema import COMMAND_MAX, PASSED_LEVELS, is_passed
+from pickfit.verify.audio import MIC_PASSED_LINE
 from pickfit.verify.mcp import credentials, parse_summary, probe_kind, remote_proxy
 
 if TYPE_CHECKING:
@@ -722,6 +723,9 @@ def _excerpt(record: CommandRecord, signal: str) -> str:
 MCP_KINDS = ("mcp", "mcp_call")
 GUI_KINDS = ("gui", "gui_op")  # a launch, an operation: each stops every box-user process, so they run last
 GUI_PASSED_LINE = "gui check: passed"
+# Checks whose stdout is pickfit's own lines (the app's output is in stderr): a launch, an operation, and a listen
+# (audio.py: pickfit spoke fresh words into the simulated microphone and checked what the command produced).
+TRUSTED_KINDS = (*GUI_KINDS, "mic")
 
 
 def check_kind(command: str, tool: str = "run_command") -> str:
@@ -731,6 +735,8 @@ def check_kind(command: str, tool: str = "run_command") -> str:
         return "gui"
     if tool == "operate_gui":
         return "gui_op"
+    if tool == "listen":
+        return "mic"
     probe = probe_kind(last_command(command))
     if probe:
         return probe
@@ -810,6 +816,13 @@ def gui_op_problems(exit_code: int | None, stdout: str) -> list[str]:
     if exit_code == 0 and GUI_PASSED_LINE in stdout.splitlines():
         return []
     return ["pickfit's check of the operation did not pass (no `gui check: passed` with exit 0)"]
+
+
+def mic_problems(exit_code: int | None, stdout: str) -> list[str]:
+    """A listen passes only on pickfit's own check line and exit 0, whatever the agent cited."""
+    if exit_code == 0 and MIC_PASSED_LINE in stdout.splitlines():
+        return []
+    return ["pickfit's check of the spoken words did not pass (no `mic check: passed` with exit 0)"]
 
 
 def mcp_problems(kind: str, stdout: str) -> list[str]:
@@ -940,11 +953,13 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord], *, mcp: bool 
             setup_ok = False
             check.problems.append(missing)
         ok, why = evaluate_check(record, check.expected_exit_code, check.expected_signal,
-                                 trusted_only=check.kind in GUI_KINDS)
+                                 trusted_only=check.kind in TRUSTED_KINDS)
         if check.kind in MCP_KINDS:
             why += mcp_problems(check.kind, record.stdout)
         if check.kind == "gui_op":
             why += gui_op_problems(record.exit_code, record.stdout)
+        if check.kind == "mic":
+            why += mic_problems(record.exit_code, record.stdout)
         if mcp:
             fake = sorted({name for cid in (test.command_id, *test.setup_ids) if cid in by_id
                            for name in credentials(by_id[cid].command)})

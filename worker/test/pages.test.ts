@@ -80,6 +80,15 @@ test('a tool page shows every verified run with its steps, and only real runs ge
   assert.match(html, /aria-label="Quality: \d+ out of 100/);
 });
 
+test('a run card says when the sandbox had a GPU or a simulated microphone, and only then', async () => {
+  const s = site();
+  const html = await (await s.get('/tool/fixture-transcribe')).text();
+  assert.match(html, /data-tip="The sandbox had this GPU">.*GPU: Tesla T4<\/li>/);
+  assert.match(html, /data-tip="A simulated microphone played words pickfit spoke for each check">.*Simulated microphone<\/li>/);
+  const plain = await (await s.get('/tool/fixture-llm-runner')).text();
+  assert.ok(!plain.includes('GPU:') && !plain.includes('Simulated microphone'));
+});
+
 test('browse lists verified tools only unless asked, filters by plain links, and keeps typed text out of URLs', async () => {
   const s = site();
   const all = await (await s.get('/browse')).text();
