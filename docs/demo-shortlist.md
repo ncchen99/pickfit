@@ -66,6 +66,51 @@
 - `wulkano/Kap`：最新 release 是 2022，而且錄螢幕要權限。
 - 語音輸入類：都要麥克風。
 
+### List C：念誠自己提的候選
+
+念誠 11/2 晚上的口述（語音轉文字，照錄）：
+
+> 关于这个挑软体的方向，我又想到几个实际的案例，我想用口述的方式，请你帮我记下来。我自己有安装的是这个 Parley P A R L E Y 的这个 detection 软体，然后还有磁碟清理的这个 MongoDisk，但是呢，它因为这可能几个月。变得比较有名，所以它的星星已经超过五千个了。然后另外一个是我这个 Mac 管理显示器的这个 Crisp C R I S P 这个软体，我我当时在装的时候只只有几几千个星星了。哦，我想到有一个朋友，他花钱买了这个，呃，Mac 的这个可以看电池状态和充电充电情形那个电流分配的这一个小小的工具，它会在 Mac 的这个，呃，就是上面状态列嘛，这个有很多小工具这边它会出现一颗的这种东西。这个是他花钱买的，所以我在想，如果再再再再找一个一个一个开源，然后然后有同样功能的，可能 demo 也是不错。
+
+確認對應的 repo：協調 session 從念誠 Mac 上的 app 認出來，我再對 GitHub 與 Homebrew 核對過。
+
+- Parley：`pathorsAI/parley`。官網 parley.tw 與 bundle id `com.pathors.parley` 對得上，最新 release v0.35.2（11/1）也和他裝的版本一樣。
+- 「MongoDisk」是 MangoDisk：`harry0703/MangoDisk`，Homebrew cask `mangodisk` 指向它的 release。
+- Crisp：`didriksg/Crisp`，cask `crisp` 指向它的 release，官網 crispmac.app。
+
+VM 的限制：tart 的 macOS VM 沒有電池、沒有外接螢幕（所以沒有 DDC）、沒有真的麥克風。主要功能需要這些的 app 只會驗到 install。
+
+「在 pickfit 裡」欄比對了 `data/software/`、所有本機 pipeline 資料庫（含評測快照）和線上 D1 的 `submissions`。「被發現過」的意思是：discovery 抓到過，但從沒抽取、從沒驗證，所以不在目錄裡，也從沒用 `submit_software` 送過。
+
+| app | 工作 | repo | 授權 | star | 安裝 | 最新 release | 截圖 | 在 pickfit 裡？ | VM 能驗到什麼 | 介面 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **MangoDisk** | 磁碟清理、空間分析、重複檔、移除 app | [harry0703/MangoDisk](https://github.com/harry0703/MangoDisk) | GPL-3.0 | 5,170 | `brew install --cask mangodisk` | v1.2.2（2026-11-01；cask 還在 1.2.1） | [en-light.jpg](https://assets.mangodisk.app/images/readme/en-light.jpg) | 沒有 | **主要功能可以驗**：預設是唯讀掃描。在家目錄放一個大檔和幾個重複檔，檢查「大檔案」「重複檔」頁有沒有列出來；要驗清理，就確認那幾個檔被刪掉。系統位置可能要「完整磁碟取用權限」，VM 裡掃到的會比較少。「AI 解釋」不是主要功能，可能要 key | 好：暖色調、側欄清楚，清單有大小與勾選，很適合錄影 |
+| **Crisp** | 外接螢幕：HiDPI 縮放、DDC 亮度音量、預設組、虛擬螢幕 | [didriksg/Crisp](https://github.com/didriksg/Crisp) | MIT | 2,289 | `brew install --cask crisp` | v1.7.1（2026-10-11） | [crispmac.app/screenshot.png](https://crispmac.app/screenshot.png)（README 沒有截圖） | 被發現過（11/1，來源 `homebrew_cask:crisp`） | **主要功能驗不到**：沒有外接螢幕，DDC、外接螢幕 HiDPI 都只會到 install。可能驗得到的是「建立虛擬螢幕」，再用 `system_profiler SPDisplaysDataType` 看有沒有多一個螢幕，以及存一個預設組。虛擬螢幕在 VZ 虛擬機裡能不能建，沒有把握 | 好：原生深色選單面板，像控制中心；macOS 26 上用 Liquid Glass |
+| **Parley** | 業務、談判通話的即時 AI 教練（逐字稿、建議、會後報告），附 54 個工具的本機 MCP server | [pathorsAI/parley](https://github.com/pathorsAI/parley) | Apache-2.0 | 24 | 只有 GitHub release 的 dmg（**沒有 cask**） | v0.35.2（2026-11-01） | [desktop-live-en.jpg](https://raw.githubusercontent.com/pathorsAI/parley/main/website/assets/shots/desktop-live-en.jpg) | 被發現過（10/30，`local_ai` 查詢，規則通過） | **主要功能驗不到**：要麥克風加系統音訊，還要自己的 STT 與 LLM key（或登入用他們的服務），只會到 install。可能驗得到的是匯入一份 `.txt` 逐字稿、整理到資料夾，以及本機 MCP server 回應 `list_folders` 這類工具；這些都不是它的主要工作 | 好：乾淨的三欄介面，但偏工作工具，不是視覺亮點 |
+
+**電池工具（取代朋友買的付費 app）**：口述裡說的「看電池和充電的電流分配」，很像 AlDente Pro 的 Power Flow 畫面，但沒有確認；要問那位朋友是哪個 app。`find_alternatives` 需要那個 app 的名字。
+
+| app | repo | 授權 | star | 安裝 | 最新 release | 截圖 | 在 pickfit 裡？ | 做到朋友那個功能的程度 | VM 能驗到什麼 | 介面 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **Stats** | [exelban/stats](https://github.com/exelban/stats) | MIT | 43,047 | `brew install --cask stats` | v3.0.24（2026-11-01） | [popups.png](https://cdn.mac-stats.com/assets/images/popups.png) | 沒有 | 選單列的電池面板：電量、電源來源、充電中與否、電流、電壓、功率、健康度、循環次數，加上電源轉接器的功率、電流、電壓 | 電池模組驗不到（沒有電池）。CPU、記憶體、磁碟、網路模組驗得到，但那不是這個情境的工作 | 好：原生小面板、圖表整齊；資訊很密，Mac 使用者熟悉的樣子 |
+| **Status Trio** | [lingyired/status-trio](https://github.com/lingyired/status-trio) | Apache-2.0 | 1,303 | `brew install --cask status-trio` | v1.8.0（2026-10-29） | [menu-bar-wifi.jpg](https://raw.githubusercontent.com/lingyired/status-trio/main/screenshots/menu-bar-wifi.jpg) | 被發現過 | 一個選單列圖示整合 Wi‑Fi、電池、音量；電池那列展開後有轉接器功率、電壓、電流、循環次數 | 電池驗不到；音量、輸出裝置切換也許可以 | 很好：原生，像控制中心 |
+| **AirStats** | [byrencheema/airstats](https://github.com/byrencheema/airstats) | MIT | 488 | `brew install --cask airstats` | v1.6（2026-10-15） | （README 的截圖連結抓不到；見 [airstats.app](https://airstats.app)） | 被發現過 | 選單列系統監看：CPU、記憶體、GPU、網路、磁碟、電池、溫度 | 電池驗不到；其他模組驗得到 | 沒看到截圖，沒有評 |
+| **batt** | [charlie0129/batt](https://github.com/charlie0129/batt) | GPL-2.0 | 1,787 | `brew install batt`（formula） | v0.8.0（2026-07-21） | — | 沒有 | 只做充電上限（Apple Silicon），不是看電流的工具 | 驗不到（要真的電池與 SMC，還要 root 的 daemon） | — |
+
+沒列入：
+
+- `AppHouseKitchen/AlDente-…`：README 說 AlDente 已經不是開源，repo 只剩舊版程式碼。
+- `rurza/BatFi`：開源的程式碼只到 2.3（2025），cask 裝的是封閉的 4.x。
+
+**List C 的評估**：
+
+1. **MangoDisk 最適合**。「硬碟滿了」大家都遇過，清理時要看著清單勾選，是親手做的事；介面好看；主要功能在 VM 裡驗得到；有官方 cask；11/1 還有 release。要注意：
+   - 目錄裡已經有一個同類的 `opendisk`（只驗到 install），驗過的 MangoDisk 應該會排在它前面，但要實測才知道。
+   - 它一驗到 function，就會碰到上面那個 GUI 的 schema bug。
+2. **Crisp**：介面好看，需求也真實（外接螢幕糊、亮度調不了），但主要功能在 VM 裡驗不到。如果虛擬螢幕建得起來，頂多驗到那一項，demo 時「驗過」講的就不是使用者真正要的功能。
+3. **Parley**：主要功能要麥克風和 key，只會到 install，不適合當「驗過」的 demo。
+4. **電池工具**：Stats 最接近朋友那個 app，但 VM 沒有電池，電池功能只會到 install。目錄裡也沒有任何電池工具，所以今天用 `find_alternatives` 問「取代某某付費 app」，不會回 Stats，除非先送進去並驗證；而驗證只會到 install。拿來講「取代付費 app」的故事可以，但畫面上的 pickfit 結果會是「只驗到 install」。
+
 ## 第一版（11/2 下午，CLI 為主）
 
 ### 先講結論
