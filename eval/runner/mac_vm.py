@@ -78,7 +78,7 @@ class VM:
         return self
 
     def start(self) -> None:
-        self.proc = subprocess.Popen(["tart", "run", self.name, "--no-graphics"] + (["--nested"] if self.nested else []),
+        self.proc = subprocess.Popen(["tart", "run", self.name, "--no-graphics", "--suspendable"] + (["--nested"] if self.nested else []),
                                      stdout=self.run_log, stderr=subprocess.STDOUT, start_new_session=True)
         self.wait_agent()
 

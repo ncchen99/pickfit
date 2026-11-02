@@ -1,4 +1,4 @@
-"""L2 for q12 (eval/fixtures/q12/README.md), run 1, in a tart clone (16 GB, 8 vCPU; method change of 2026-11-02).
+"""L2 for q12 (eval/fixtures/q12/README.md), run 1, in a tart clone (8 GB, 8 vCPU: host memory, coordinator 2026-11-02; method change of 2026-11-02).
 
   uv run python eval/results/l2/scripts/q12.py control|experimental setup|run
 
@@ -56,7 +56,7 @@ def serve_and_check(tag: str) -> str:
 
 
 if PHASE == "setup":
-    with VM(f"q12-{GROUP}", OUT, ["q12", "q11", "_mac", "_shared"], cpu=8, memory_mb=16384, keep=True) as vm:
+    with VM(f"q12-{GROUP}", OUT, ["q12", "q11", "_mac", "_shared"], cpu=8, memory_mb=8192, keep=True) as vm:
         setup(vm, R)
         vm.sh(f"sudo mkdir -p /var/eval-grader && sudo /var/eval-image-aside/homebrew/bin/python3.15 -m venv /var/eval-grader/venv && "
               f"sudo {G} -m pip install -q openai=={OPENAI} && {G} -m pip freeze > {R}/grader-requirements.lock; tail -3 {R}/grader-requirements.lock",
