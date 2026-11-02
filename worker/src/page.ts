@@ -414,11 +414,11 @@ function quickInstall(guide: InstallOutput | undefined, form: FormValues): strin
 // ---------------------------------------------------------------- a web app's ticket
 
 /** A web app's facts as a short list, each with its tone; the same words on the ticket and the profile. */
-export function webFactList(entry: Entry): string {
+export function webFactList(entry: Entry, cls = ''): string {
   const check = webCheck(entry);
   if (!check) return '';
   const tone = { pass: 'yes', caution: 'no', plain: '' } as const;
-  return `<ul class="web-facts">${webFacts(check)
+  return `<ul class="web-facts${cls ? ` ${cls}` : ''}">${webFacts(check)
     .map((f) => `<li${tone[f.tone] ? ` class="${tone[f.tone]}"` : ''}>${f.tone === 'pass' ? icon('check') : f.tone === 'caution' ? icon('triangle-alert') : icon('info')}${esc(f.text)}</li>`)
     .join('')}</ul>`;
 }
@@ -457,7 +457,7 @@ function webGlance(pick: PickOut, entry: Entry | undefined): string {
 /** The one action on a web app's ticket: open it. */
 function webOpen(pick: PickOut): string {
   const web = pick.web_app!;
-  const open = link(web.url, `${icon('external-link')}${L(`Open ${esc(pick.name)}`, `開啟 ${esc(pick.name)}`)}`, 'btn btn-primary btn-sm');
+  const open = link(web.url, `${icon('external-link')}${L('Open the site', '開啟網站')}`, 'btn btn-primary btn-sm');
   return open
     ? `<div class="t-install"><p class="t-install-label">${icon('globe')}${esc(noInstallLabel())}</p><p class="t-open">${open}<span class="quiet small" translate="no">${esc(web.url)}</span></p></div>`
     : '';
@@ -670,14 +670,14 @@ const NOTE_ZH: [RegExp, (m: RegExpMatchArray) => string][] = (() => {
     return m ? `每款都只涵蓋一部分（排第一的沒有提到 ${words(m[1])}）` : null;
   };
   const each = '每款的符合度標示了它涵蓋哪些部分。';
-  const known = 'pickfit 收錄的多半是較冷門的工具，知名工具仍可能適合你。';
+  const known = 'pickfit 的資料還沒涵蓋所有工具，知名工具仍可能適合你。';
   return [
-    [/^No verified (tool|alternative) in pickfit meets these conditions\. Coverage today: .+? pickfit lists mostly lesser-known tools, so a well-known one may still fit\./,
+    [/^No verified (tool|alternative) in pickfit meets these conditions\. Coverage today: .+? pickfit's catalog doesn't cover every tool yet, so a well-known one may still fit\./,
       (m) => `pickfit 沒有符合這些條件的已驗證${what(m[1])}。目前涵蓋開發者 CLI 工具、本機 AI／LLM 工具、MCP 伺服器、桌面 GUI 應用和部分網頁應用。${known}`],
     [/^None of the (\d+) verified tools that meet the conditions fits this request\./, (m) => `符合條件的 ${m[1]} 款已驗證工具中，沒有一款適合這個需求。`],
     [/^None of the listed (tool|alternative)s clearly does this job: judging by their profiles, (.+?)\. They are listed as the top-ranked \1s; each pick's match says what it covers\./,
       (m) => `列出的${what(m[1])}都不太能完成這件事：從簡介看，${miss(m[2]) ?? '\u0000'}。它們只是排名最前的${what(m[1])}；${each}`],
-    [/^pickfit has no verified (tool|alternative) that clearly does this job\. Judging by their profiles, the listed \1s are the closest it has, but (.+?); each pick's match says what it covers\. pickfit lists mostly lesser-known tools, so a well-known one may still fit\./,
+    [/^pickfit has no verified (tool|alternative) that clearly does this job\. Judging by their profiles, the listed \1s are the closest it has, but (.+?); each pick's match says what it covers\. pickfit's catalog doesn't cover every tool yet, so a well-known one may still fit\./,
       (m) => `pickfit 沒有明顯能完成這件事的已驗證${what(m[1])}。從簡介看，列出的是最接近的，但${miss(m[2]) ?? '\u0000'}；${each}${known}`],
     [/^No listed (tool|alternative) covers the whole request(?:: the closest, (.+?), does not mention (.+?))?\. Each pick's match says what it covers\./,
       (m) => `沒有一款${what(m[1])}涵蓋你的全部需求${m[2] ? `：最接近的 ${m[2]} 沒有提到 ${words(m[3])}` : ''}。${each}`],
@@ -1023,8 +1023,8 @@ export function renderPage(input: PageInput): string {
     `<section class="hero mat after-top" aria-labelledby="title"><div class="wrap hero-grid"><div>` +
     `<h1 id="title">${L('Every tool, <em>tested</em> first', '每款軟體，都先幫你<em>試過</em>')}</h1>` +
     `<p class="lede">${L(
-      'Tell pickfit what you want to do. It suggests tools it has already installed and tested, often ones you haven’t heard of, with commands that work.',
-      '說說你想做什麼，pickfit 會推薦它親自裝過、測過的工具，很多是你可能沒聽過的好工具，還附上實際跑得動的指令',
+      'Tell pickfit what you want to do. It suggests tools it has already installed and tested, with commands that work.',
+      '說說你想做什麼，pickfit 會推薦它親自裝過、測過的工具，還附上實際跑得動的指令',
     )}</p>` +
     `<div class="hero-form">${searchForm(form)}</div>` +
     `<div class="tries js-only"><span class="label">${L('Or try', '或試試')}</span>${examples()
@@ -1084,8 +1084,8 @@ export function renderPage(input: PageInput): string {
     nonce: input.nonce,
     title: L('pickfit: every tool, tested first', 'pickfit：每款軟體，都先幫你試過'),
     description: L(
-      'Describe the job in one sentence. pickfit suggests developer CLI tools, local AI tools, MCP servers, desktop apps and web apps it has tested itself, mostly lesser-known ones, with the evidence and the steps that worked.',
-      '用一句話描述你要做的事。pickfit 會推薦它親自測試過的開發者 CLI 工具、本機 AI 工具、MCP 伺服器、桌面應用和網頁應用，多半是較少人知道的，並附上證據和實際可行的步驟。',
+      'Describe the job in one sentence. pickfit suggests developer CLI tools, local AI tools, MCP servers, desktop apps and web apps it has tested itself, including good ones few people know yet, with the evidence and the steps that worked.',
+      '用一句話描述你要做的事。pickfit 會推薦它親自測試過的開發者 CLI 工具、本機 AI 工具、MCP 伺服器、桌面應用和網頁應用，也包括還少有人知道的好工具，並附上證據和實際可行的步驟。',
     ),
     active: 'find',
     bodyClass: served ? 'is-results' : '',
