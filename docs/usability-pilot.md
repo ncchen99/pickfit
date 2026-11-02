@@ -1,0 +1,42 @@
+> 2026-11-02 晚上，易用性 session 寫。在任何付費呼叫之前、念誠評分之前 commit。之後要改，只能照第 4 節「改一次」的規則。
+
+# 易用性（ease.v1）試點：抽樣規則與通過標準
+
+依據 [usability-proposal.md](usability-proposal.md) 第 5 節。念誠 11/2 同意第 9 節四點，並要求先試跑 12 款。
+
+## 1. 抽哪 12 款
+
+規則寫在 `scripts/ease_pilot.py`，結果在 `data/calibration/ease-pilot.json`。只讀 `data/software` 的紀錄和 `~/.pickfit/evidence` 的 run 資料夾，不看任何模型評分。
+
+- 種子：`pickfit-ease.v1-pilot-2026-11-02`。每一層把 App 照 `sha256("<種子>:<slug>")` 由小到大排，取最前面的；各層依序抽，抽過的不再抽。
+- 已有影片的 GUI 4 款（提案點名）：concessio、nip4、breaktimer-app、neon-vision-editor。
+- 「好看但難用」探針 2 款：GUI 的某個 run 畫面是 main_ui、有一個操作通過 pickfit 的檢查，而且同一個 run 的 report.json 裡有操作卡到步數上限（step_cap）或放棄（give_up）。要求「有通過的操作」，是為了讓「使用中」那次呼叫有東西可看；不然探針只會測到第一眼（池子 13 款）。
+- 只啟動過的 GUI：Linux 1 款、macOS 1 款（所有 GUI run 都沒有通過的操作）。
+- 操作過的網頁 3 款（有 function 等級的 run）、只到 install 的網頁 1 款。
+
+抽到的 12 款：concessio、nip4、breaktimer-app、neon-vision-editor；探針 portfolio、usdx；只啟動 pinit（Linux）、eli-v2-0（macOS）；網頁 capitolisation、farsimatrix、orrery；只到 install 的網頁 stock-fundamental-analysis-tool。
+
+## 2. 提案沒寫死、這次先定下來的地方
+
+- **兩次取樣怎麼合**：每個維度兩次都要有分，取平均；兩次差兩級（0 和 2）記「評審不一致」，不給分。任一次沒分（引用找不到、沙盒弄壞、沒歸因到 app）也不給分。
+- **只看了第一眼**（run 裡沒有通過的操作）：易用性 = 第一眼兩個維度的加權分 × 0.6，和沙盒驗證「只啟動 0.6」同樣是乘數，所以最高 60。頁面不顯示總分。
+- **判語**：pickfit 易用性 ≥70「容易上手」、40–69「有些卡關」、<40「不好上手」。念誠的整體 1–5：4–5 容易上手、3 有些卡關、1–2 不好上手。只看了第一眼的 App 不給判語。
+- **扣分要歸因到 app**：低於 2 分的維度要有一條歸因為 app 的發現，並引用 OCR／DOM 找得到的字；只歸因到操作員或環境的，該維度不給分（不是 2，也不是 0）。
+
+## 3. 通過標準（四條都要過）
+
+1. **每個維度的一致度**：只算 pickfit 和念誠都有給 0/1/2 的 App（任一邊「看不出來」或沒分就不算）。差距 ≤1 級的比例要 ≥ 10/12（約 83%），而且每個維度至少有 5 款可比。
+2. **整體排序**：念誠的整體分數（1–5）和 pickfit 易用性（0–100）的 Spearman ≥ 0.5，只算 pickfit 有易用性分數的 App。
+3. **探針**：兩個探針的易用性都 ≤ 50。
+4. **判語**：沒有任何一款差到兩個判語等級（一邊「容易上手」、一邊「不好上手」）；只算雙方都有判語的 App。
+
+同時回報、但不算進通過標準：1.3 自己兩次的一致度、Muse Spark Open（Modal）的交叉一致度（有時間才跑）、易用性和知名度的 Spearman（|rho| 應 ≤ 0.3）、同一款 App 在 Linux 和 macOS 的分差（這次的 12 款如果沒有雙平台的就寫沒有）。
+
+## 4. 沒過怎麼辦
+
+- 只能改一次評分標準或 prompt，不能加分數偏移；改完同樣這 12 款重跑，用同一份念誠的評分比對。
+- 還是不過：易用性改成只顯示、不計分，也不進寶藏門檻。
+
+## 5. 念誠評分時看不到的東西
+
+盲評頁（`scripts/ease_sheet.py` 產生）只放模型看到的同一批畫面、操作目標和同一份評分標準，不放 pickfit 的分數、發現或判語。評分存在 `data/calibration/ease-ratings.yaml`（不在 eval/）。pickfit 的分數在念誠存檔之後才比對。
