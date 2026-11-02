@@ -261,6 +261,11 @@ const installOutput = z.object({
       .nullable()
       .describe('true = its checks passed again with the network off after install; false = they needed the network; null = not checked'),
     gui: gui,
+    video: z
+      .object({ url: z.string(), seconds: z.number().int(), shows: z.array(z.string()), recorded_at: z.string() })
+      .nullable()
+      .optional()
+      .describe('A short clip pickfit recorded of this run operating the app, and the checked features it shows'),
   }),
   applies_to_user_system: z.object({
     match: z.enum(['exact', 'same_os_other_arch', 'other_os', 'none']),
@@ -440,9 +445,9 @@ export function buildServer(deps: Deps): McpServer {
     {
       title: 'Get a verified install guide',
       description:
-        'Use after the user picks a tool from find_software or find_alternatives. Returns install steps pickfit actually ran (replayed in a fresh sandbox, or done by hand), with the OS, date and evidence, ' +
+        'Use after the user picks a tool from find_software or find_alternatives. Returns install steps pickfit actually ran (replayed in a fresh sandbox, or by hand), with the OS, date and evidence (verification.video: a short clip of the run, if any), ' +
         'the steps only the user can do (permissions, accounts), a command to verify the install and a first task to try. ' +
-        'For an MCP server, mcp_client_config gives the `claude mcp add` line and the mcpServers JSON for the launch command pickfit started, with placeholders for keys the user must supply. ' +
+        'For an MCP server, mcp_client_config gives the `claude mcp add` line and the mcpServers JSON for the launch command pickfit started, with placeholders for user keys. ' +
         'Show each command to the user before running it, and ask before any step that needs sudo or pipes a script into a shell. ' +
         'If applies_to_user_system.match is not "exact", tell the user the steps were checked on a different system. ' +
         'For a web app (web_app set) there are no steps: give the user its URL and the facts pickfit checked.' +
@@ -456,7 +461,7 @@ export function buildServer(deps: Deps): McpServer {
     async (args) => {
       try {
         const now = deps.now();
-        const out = installGuide(deps.catalog, args, now);
+        const out = installGuide(deps.catalog, args, now, deps.videoBase ?? null);
         // The read-only deployment has no report_outcome to check in with.
         if (readonly) out.check_in = null;
         deps.waitUntil(

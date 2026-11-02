@@ -592,6 +592,11 @@ body.is-results .home-only{display:none}
 .uses{columns:2;column-gap:32px}.uses li{break-inside:avoid;margin-bottom:6px}
 .run-card{background:var(--tag);border-radius:var(--r-card);padding:22px 24px;box-shadow:var(--lift-1);margin-bottom:20px}
 .run-card .install{background:color-mix(in srgb,var(--sunk) 55%,var(--tag))}
+.run-video{margin:14px 0 16px}
+.run-video video{display:block;width:100%;max-width:720px;height:auto;border-radius:var(--r-ctl);background:#000}
+.run-video figcaption{margin-top:8px;font-size:var(--t-small);color:var(--ink-2);max-width:720px}
+.run-video .raw ul{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:6px}
+.run-video .hash{overflow-wrap:anywhere;word-break:break-all;font-size:.8rem}
 .run-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:center}
 .run-head h3{display:flex;align-items:center;gap:10px;font-size:1.25rem}
 .run-head .arch{font:500 .9rem/1 var(--sans);color:var(--ink-2)}

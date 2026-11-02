@@ -5,6 +5,18 @@ export type Arch = 'arm64' | 'x86_64';
 export type Need = 'required' | 'optional' | 'none';
 export const OSES: readonly OS[] = ['macos', 'linux', 'windows'];
 
+/** A run's verification clip (index.py _video): served at /video/<slug>/<file>, the poster at <clip stem>.jpg. */
+export interface RunVideo {
+  clip: string;
+  clip_sha256: string;
+  seconds: number;
+  recorded_at: string;
+  /** The run's checked features the clip shows. */
+  features: string[];
+  /** The unedited recordings the clip was cut from. */
+  raw: { file: string; sha256: string; seconds: number }[];
+}
+
 export interface RunSummary {
   id: string;
   level: 'inference' | 'service' | 'function' | 'install';
@@ -18,6 +30,8 @@ export interface RunSummary {
   evidence_url: string | null;
   /** A GUI app's launch on pickfit's virtual display; absent or null for anything else. */
   gui?: GuiEvidence | null;
+  /** A clip of pickfit operating it in this run; absent or null when none was recorded. */
+  video?: RunVideo | null;
   /** The sandbox's GPU as its driver named it (e.g. Tesla T4); absent or null: no GPU. */
   gpu?: string | null;
   /** The sandbox's simulated microphone (it played words pickfit spoke for each check); absent or null: none. */

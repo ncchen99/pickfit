@@ -133,7 +133,7 @@ async function sha256(text: string): Promise<string> {
 function csp(nonce: string | null): string {
   const inline = nonce ? `'nonce-${nonce}'` : `'none'`;
   // Fitz, the icons and the font are this Worker's own static assets (worker/public/assets).
-  return `default-src 'none'; script-src ${inline}; style-src ${inline}; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'`;
+  return `default-src 'none'; script-src ${inline}; style-src ${inline}; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'`;
 }
 
 function html(body: string, status: number, nonce: string | null, extra: Record<string, string> = {}): Response {

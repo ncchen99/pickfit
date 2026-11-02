@@ -20,6 +20,8 @@ export interface Env {
   WEB_DAILY_CAP_USD?: string;
   /** Workers rate limiting binding for web searches (wrangler.jsonc ratelimits); without it, a per-isolate count. */
   WEB_RATE_LIMITER?: RateLimit;
+  /** R2 bucket pickfit-videos: verification clips at <slug>/<file>. Without it, /video/ answers 404. */
+  VIDEOS?: R2Bucket;
 }
 
 export type ToolSet = 'all' | 'readonly';

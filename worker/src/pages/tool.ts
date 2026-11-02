@@ -5,7 +5,7 @@
  * catalog only; nothing here calls a model. A tool without a run says so and
  * shows no steps.
  */
-import { bestGuide, isVerified, isWebApp, OSES, verifiedOn, webCheck, type Catalog, type Entry, type OS } from '../catalog.ts';
+import { bestGuide, isVerified, isWebApp, OSES, verifiedOn, webCheck, type Catalog, type Entry, type OS, type RunVideo } from '../catalog.ts';
 import { featuresOut } from '../features.ts';
 import { installGuide } from '../install.ts';
 import { EMPTY_FORM, installSection, levelLine, webFactList } from '../page.ts';
@@ -14,6 +14,7 @@ import { esc, link, listOf, safeUrl } from '../ui/html.ts';
 import { icon, osMark } from '../ui/icons.ts';
 import { age, badge, compareToggle, coverage, fitz, kindTag, levelIcon, osList, runFacts, SEAM, tape, type FitzName } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
+import { posterOf, videoPath } from '../video.ts';
 import { NO_INSTALL_LABEL, webRanSentence } from '../webapp.ts';
 
 const MATURITY: Record<string, string> = { stable: 'Stable', beta: 'Beta', alpha: 'Alpha', prototype: 'Prototype' };
@@ -130,6 +131,28 @@ function webRun(entry: Entry): string {
   );
 }
 
+/** A run's clip: pickfit's own recording, the line that says what it is, and the raw recordings it was cut from. */
+function runVideo(slug: string, runId: string, video: RunVideo): string {
+  const id = `video-${runId}`;
+  const seconds = Math.round(video.seconds);
+  const raw = video.raw
+    .map(
+      (r) =>
+        `<li><a href="${esc(videoPath(slug, r.file))}" download>${esc(r.file)}</a> <span class="quiet">(${Math.round(r.seconds)} s)</span>` +
+        `<br><span class="quiet small">sha256</span> <code class="hash" translate="no">${esc(r.sha256)}</code></li>`,
+    )
+    .join('');
+  return (
+    `<figure class="run-video">` +
+    `<video controls preload="metadata" playsinline poster="${esc(videoPath(slug, posterOf(video.clip)))}" aria-describedby="${esc(id)}">` +
+    `<source src="${esc(videoPath(slug, video.clip))}" type="video/mp4">` +
+    `<a href="${esc(videoPath(slug, video.clip))}">Download the clip</a></video>` +
+    `<figcaption id="${esc(id)}">Recorded by pickfit in a sandbox on ${esc(day(video.recorded_at))} · ${seconds} s · shows ${esc(listOf(video.features))}.</figcaption>` +
+    `<details class="raw"><summary class="small">Unedited recordings (${video.raw.length})</summary><ul class="small">${raw}</ul></details>` +
+    `</figure>`
+  );
+}
+
 /** One run per verified OS: the record, then the steps that worked there. */
 function runs(catalog: Catalog, entry: Entry): string {
   if (isWebApp(entry) && entry.web) return webRun(entry);
@@ -153,6 +176,7 @@ function runs(catalog: Catalog, entry: Entry): string {
       levelLine(levelLabel(r.level, evidence), passed(r.gui), levelIcon(r.level, evidence)) +
       runFacts(r, { offline: r.gui ? null : g.works_offline, named: true }) +
       (r.gui ? `<p>${esc(guiSentence(r.gui))}</p>` : '') +
+      (r.video ? runVideo(entry.slug, r.id, r.video) : '') +
       (g.mcp ? `<p>An MCP client handshake over ${g.mcp.transport === 'stdio' ? 'stdio' : 'HTTP'} listed ${g.mcp.tool_count} tool${g.mcp.tool_count === 1 ? '' : 's'}${g.mcp.called_tool ? `, and a call to <code>${esc(g.mcp.called_tool)}</code> returned a result` : ''}.</p>` : '') +
       (recordUrl ? `<p>${link(recordUrl, `${icon('external-link')} Run record`)}</p>` : '') +
       installSection(out, { ...EMPTY_FORM, os }, i === 0, true) +

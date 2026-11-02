@@ -1,5 +1,6 @@
 /** how_we_know text, built by code from the verification record (never by the model). */
-import type { GuiEvidence, GuiOperation, InstallGuide } from './catalog.ts';
+import type { GuiEvidence, GuiOperation, InstallGuide, RunVideo } from './catalog.ts';
+import { videoPath } from './video.ts';
 
 const LEVEL_TEXT: Record<string, string> = {
   install: 'the install finished and the tool started',
@@ -86,4 +87,16 @@ export function ranSentence(guide: InstallGuide): string {
       ? `installed it in a fresh ${r.os}/${r.arch} sandbox${runner}${boxExtras(r) ? ` with ${boxExtras(r)}` : ''} and replayed the steps from scratch`
       : `installed it by hand on ${r.os}/${r.arch}${runner}`;
   return `pickfit ${where} on ${runDay(r.checked_at)}; ${mcpText(guide) ?? guiText(guide) ?? LEVEL_TEXT[r.level] ?? r.level}.`;
+}
+
+/** A run's clip for an agent: its absolute URL (where this deployment serves /video/) and what it shows. */
+export function videoOut(slug: string, video: RunVideo | null | undefined, base: string | null | undefined) {
+  if (!video || !base) return null;
+  return { url: base + videoPath(slug, video.clip), seconds: Math.round(video.seconds), shows: video.features, recorded_at: video.recorded_at };
+}
+
+/** "A 20 s video of pickfit operating it in that run shows ...: <url>" for how_we_know, or null. */
+export function videoSentence(slug: string, video: RunVideo | null | undefined, base: string | null | undefined): string | null {
+  const out = videoOut(slug, video, base);
+  return out ? `A ${out.seconds} s video recorded in that run shows pickfit using it (${out.shows.join('; ')}): ${out.url}` : null;
 }
