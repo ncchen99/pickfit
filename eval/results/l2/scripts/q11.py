@@ -21,6 +21,7 @@ Phases share one clone (clone.txt); `score` deletes it. Recorded choices, the sa
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -108,6 +109,19 @@ with VM(f"q11-{GROUP}", OUT, [], name=clone_name(OUT), keep=PHASE != "score") as
               f"> {R}/footprint.log 2>&1 & sleep 3; cat {R}/footprint.log", "L2-1 footprint watch part 2 starts")
         vm.sh(zsh(f"cd ~ && {CREATE}; echo create exit $?"), "ollama create tw -f Modelfile again (it downloads the model; no grader limit short of 90 min)", timeout=5400)
         vm.sh(zsh("ollama list; ollama --version"), "models and version")
+    elif PHASE == "reboot":  # host swapping while the guest's memory was full of the download (2026-11-02 20:50):
+        # network back on, footprint part 2 closed, clean reboot so the guest starts with empty memory, part 3 started
+        vm.sh(f"PATH=/usr/bin:/bin:/usr/sbin:/sbin sudo sh {FIX}/q11/mac/offline.sh on {R}/net-state.txt 2>&1 | tail -2; "
+              f"cd {R} && sudo rm -f net-state.txt; [ -d replies ] && mv replies replies-attempt2-hostswap; ls", "network on; prompts so far set aside")
+        vm.sh(f"sudo touch {R}/footprint/stop; sleep 5; ls {R}/footprint; cd {R} && sudo mv footprint footprint-part2 && sudo mv footprint.log footprint-part2.log",
+              "L2-1 footprint part 2 stop")
+        vm.reboot()
+    if PHASE in ("reboot", "restart"):  # restart: the reboot step alone (the first try stopped inside reboot())
+        if PHASE == "restart":
+            vm.reboot()
+        vm.sh("whoami; stat -f %Su /dev/console; pgrep -fl 'ollama serve' | cut -c1-80", "after reboot: user, the answer's background server")
+        vm.sh(f"sudo nohup /usr/bin/python3 {FIX}/q11/mac/footprint_watch.py --uid $(id -u) --out {R}/footprint "
+              f"> {R}/footprint.log 2>&1 & sleep 3; cat {R}/footprint.log", "L2-1 footprint watch part 3 starts")
     elif PHASE == "model":
         if FIRST_RUN:
             vm.sh(f"cd ~ && ( until grep -q 'Send a message' {R}/first-run.txt 2> /dev/null; do sleep 5; done; printf '/bye\\n' ) | "
@@ -118,7 +132,9 @@ with VM(f"q11-{GROUP}", OUT, [], name=clone_name(OUT), keep=PHASE != "score") as
         vm.sh(zsh(f"cd ~ && {CREATE}; echo create exit $?"), "ollama create tw -f Modelfile", timeout=1200)
         vm.sh(zsh("ollama list; ollama --version"), "models and version")
     elif PHASE == "ask":
-        vm.sh(f"PATH=/usr/bin:/bin:/usr/sbin:/sbin sudo sh {FIX}/q11/mac/offline.sh off {R}/net-state.txt 2>&1 | tail -4", "L2-2 offline off (guest network services)")
+        START = tuple(int(x) for x in os.environ.get("Q11_START", "1:1").split(":"))  # resume at run:prompt
+        vm.sh(f"PATH=/usr/bin:/bin:/usr/sbin:/sbin; if [ -f {R}/net-state.txt ]; then sh {FIX}/q11/mac/offline.sh check 2>&1 | tail -1; "
+              f"else sudo sh {FIX}/q11/mac/offline.sh off {R}/net-state.txt 2>&1 | tail -4; fi", "L2-2 offline off (guest network services)")
         for run in (1, 2, 3):
             free = subprocess.run("memory_pressure | tail -1", shell=True, capture_output=True, text=True).stdout.strip()
             swap = subprocess.run(["sysctl", "-n", "vm.swapusage"], capture_output=True, text=True).stdout.strip()
@@ -132,8 +148,14 @@ with VM(f"q11-{GROUP}", OUT, [], name=clone_name(OUT), keep=PHASE != "score") as
                 raise SystemExit(f"host memory: level {level}, swap used {used_mb:.0f} MB; stopping (coordinator rule)")
             vm.sh(f"mkdir -p {R}/replies/run{run}", f"run {run} folder", quiet=True)
             for p in range(1, 6):
-                vm.sh(zsh(f"cd ~ && perl -e 'alarm shift; exec @ARGV' 600 ollama run tw < {FIX}/q11/prompts/P{p}.txt "
-                          f"> {R}/replies/run{run}/P{p}.txt 2> {R}/replies/run{run}/P{p}.err; echo exit $?; wc -m < {R}/replies/run{run}/P{p}.txt"),
+                if (run, p) < START:
+                    continue
+                # README L2-2: a prompt with no reply within 10 minutes fails; the watchdog stops the client at 600 s
+                # (attempts before 2026-11-02 21:25 used perl's alarm, which does not stop ollama)
+                out, err = f"{R}/replies/run{run}/P{p}.txt", f"{R}/replies/run{run}/P{p}.err"
+                vm.sh(zsh(f"cd ~ && ollama run tw < {FIX}/q11/prompts/P{p}.txt > {out} 2> {err} & pid=$!; "
+                          f"( sleep 600; kill $pid 2> /dev/null && echo 'grader: stopped at the 10-minute limit' >> {err} ) & w=$!; "
+                          f"wait $pid; rc=$?; kill $w 2> /dev/null; echo exit $rc; wc -m < {out}"),
                       f"L2-2 run {run} P{p}", timeout=700, quiet=True)
         vm.sh(f"PATH=/usr/bin:/bin:/usr/sbin:/sbin sh {FIX}/q11/mac/offline.sh check 2>&1 | tail -2; sudo sh {FIX}/q11/mac/offline.sh on {R}/net-state.txt 2>&1 | tail -2",
               "L2-2 offline check after the prompts, then network on")

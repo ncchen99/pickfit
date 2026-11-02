@@ -317,5 +317,94 @@
   "exit": 0,
   "at": "2026-11-02T19:51:55+08:00",
   "tail": "-rw-r--r--  1 evaluser  wheel  28883 Nov  2 11:51 /tmp/keep.tgz\n"
+ },
+ {
+  "what": "set aside the replies made without a model; keep footprint part 1",
+  "cmd": "cd /Users/Shared/eval-runs/q11-experimental && mv replies replies-attempt1-no-model && sudo mv footprint footprint-part1 && sudo mv footprint.log footprint-part1.log && ls",
+  "exit": 0,
+  "at": "2026-11-02T19:52:35+08:00",
+  "tail": "before\nfootprint-part1\nfootprint-part1.log\ninstall-1.txt\ninstall-2.txt\ninstall-3.txt\ninstall-4.txt\ninstall.lines\njudge-requests.jsonl\nlib.zsh\nmarker\nnet-state.txt\npreflight.txt\nreplies-attempt1-no-model\nsnapshot-before.log\nsteps.txt\n"
+ },
+ {
+  "what": "L2-1 footprint watch part 2 starts",
+  "cmd": "sudo nohup /usr/bin/python3 /Users/Shared/eval-fixtures/q11/mac/footprint_watch.py --uid $(id -u) --out /Users/Shared/eval-runs/q11-experimental/footprint > /Users/Shared/eval-runs/q11-experimental/footprint.log 2>&1 & sleep 3; cat /Users/Shared/eval-runs/q11-experimental/footprint.log",
+  "exit": 0,
+  "at": "2026-11-02T19:52:38+08:00",
+  "tail": "watching (uid 502, shell 0); stop with Ctrl-C or: touch /Users/Shared/eval-runs/q11-experimental/footprint/stop\n"
+ },
+ {
+  "what": "ollama create tw -f Modelfile again (it downloads the model; no grader limit short of 90 min)",
+  "cmd": "/bin/zsh -il -c 'cd ~ && ollama create tw -f Modelfile; echo create exit $?'",
+  "exit": 0,
+  "at": "2026-11-02T20:47:22+08:00",
+  "tail": "732a1d698 100% ▕███████████████████▏  552 B                         \u001b[K\nverifying sha256 digest \u001b[K\nwriting manifest \u001b[K\nsuccess \u001b[K\nusing existing layer sha256:0518a86029ea8d03cab962ff3dcfd06e59f50ec8a3f255c62c73ab109c0261d6 \u001b[K\nusing existing layer sha256:948af2743fc78a328dcb3b0f5a31b3d75f415840fdb699e8b1235978392ecf85 \u001b[K\ncreating new layer sha256:e36aac08790021785da7e4de2a02e8e9c03afcd13dbc94d3fe831b082ae840ef \u001b[K\ncreating new layer sha256:5ef0d204894be74914c24b53f7361550b6233ce98828d095d0be050a87274b36 \u001b[K\nwriting manifest ⠋ \u001b[K\u001b[?25h\u001b[?2026l\u001b[?2026h\u001b[?25l\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[1Ggathering model components \u001b[K\npulling manifest \u001b[K\npulling 0518a86029ea 100% ▕██████████████████ ▏ 4.9 GB/4.9 GB  1.1 MB/s      0s\u001b[K\npulling 948af2743fc7   0% ▕                   ▏    0 B/1.5 KB                  \u001b[K\npulling 6c0b08d96525   0% ▕                   ▏    0 B/  65 B                  \u001b[K\npulling 429732a1d698 100% ▕███████████████████▏  552 B                         \u001b[K\nverifying sha256 digest \u001b[K\nwriting manifest \u001b[K\nsuccess \u001b[K\nusing existing layer sha256:0518a86029ea8d03cab962ff3dcfd06e59f50ec8a3f255c62c73ab109c0261d6 \u001b[K\nusing existing layer sha256:948af2743fc78a328dcb3b0f5a31b3d75f415840fdb699e8b1235978392ecf85 \u001b[K\ncreating new layer sha256:e36aac08790021785da7e4de2a02e8e9c03afcd13dbc94d3fe831b082ae840ef \u001b[K\ncreating new layer sha256:5ef0d204894be74914c24b53f7361550b6233ce98828d095d0be050a87274b36 \u001b[K\nwriting manifest \u001b[K\nsuccess \u001b[K\u001b[?25h\u001b[?2026l\ncreate exit 0\n"
+ },
+ {
+  "what": "models and version",
+  "cmd": "/bin/zsh -il -c 'ollama list; ollama --version'",
+  "exit": 0,
+  "at": "2026-11-02T20:47:23+08:00",
+  "tail": "NAME                                                                         ID              SIZE      MODIFIED     \ntw:latest                                                                    ca598d0e106f    4.9 GB    1 second ago    \nhf.co/DevQuasar-9/voidful.Llama-Breeze2-8B-Instruct-text-only-GGUF:Q4_K_M    c0715e48b632    4.9 GB    1 second ago    \nollama version is 0.40.13\n"
+ },
+ {
+  "what": "network on; prompts so far set aside",
+  "cmd": "PATH=/usr/bin:/bin:/usr/sbin:/sbin sudo sh /Users/Shared/eval-fixtures/q11/mac/offline.sh on /Users/Shared/eval-runs/q11-experimental/net-state.txt 2>&1 | tail -2; cd /Users/Shared/eval-runs/q11-experimental && sudo rm -f net-state.txt; [ -d replies ] && mv replies replies-attempt2-hostswap; ls",
+  "exit": 0,
+  "at": "2026-11-02T20:48:45+08:00",
+  "tail": "  enabled: Ethernet\nnetwork services restored; Wi-Fi may take a few seconds to rejoin\nbefore\nfootprint\nfootprint-part1\nfootprint-part1.log\nfootprint.log\ninstall-1.txt\ninstall-2.txt\ninstall-3.txt\ninstall-4.txt\ninstall.lines\njudge-requests.jsonl\nlib.zsh\nmarker\npreflight.txt\nreplies-attempt1-no-model\nreplies-attempt2-hostswap\nsnapshot-before.log\nsteps.txt\n"
+ },
+ {
+  "what": "L2-1 footprint part 2 stop",
+  "cmd": "sudo touch /Users/Shared/eval-runs/q11-experimental/footprint/stop; sleep 5; ls /Users/Shared/eval-runs/q11-experimental/footprint; cd /Users/Shared/eval-runs/q11-experimental && sudo mv footprint footprint-part2 && sudo mv footprint.log footprint-part2.log",
+  "exit": 0,
+  "at": "2026-11-02T20:48:51+08:00",
+  "tail": "footprint.json\nstop\n"
+ },
+ {
+  "what": "shutdown from inside the guest (the agent goes away with it)",
+  "cmd": "sync; sudo shutdown -h now",
+  "exit": 1,
+  "at": "2026-11-02T20:48:51+08:00",
+  "tail": "sudo: shutdown: command not found\n"
+ },
+ {
+  "what": "shutdown from inside the guest (the agent goes away with it)",
+  "cmd": "sync; sudo shutdown -h now",
+  "exit": 1,
+  "at": "2026-11-02T20:49:48+08:00",
+  "tail": "sudo: shutdown: command not found\n"
+ },
+ {
+  "what": "after reboot: user, the answer's background server",
+  "cmd": "whoami; stat -f %Su /dev/console; pgrep -fl 'ollama serve' | cut -c1-80",
+  "exit": 0,
+  "at": "2026-11-02T20:55:10+08:00",
+  "tail": "evaluser\nevaluser\n502 /opt/homebrew/opt/ollama/bin/ollama serve\n"
+ },
+ {
+  "what": "L2-1 footprint watch part 3 starts",
+  "cmd": "sudo nohup /usr/bin/python3 /Users/Shared/eval-fixtures/q11/mac/footprint_watch.py --uid $(id -u) --out /Users/Shared/eval-runs/q11-experimental/footprint > /Users/Shared/eval-runs/q11-experimental/footprint.log 2>&1 & sleep 3; cat /Users/Shared/eval-runs/q11-experimental/footprint.log",
+  "exit": 0,
+  "at": "2026-11-02T20:55:14+08:00",
+  "tail": ""
+ },
+ {
+  "what": "L2-2 offline off (guest network services)",
+  "cmd": "PATH=/usr/bin:/bin:/usr/sbin:/sbin; if [ -f /Users/Shared/eval-runs/q11-experimental/net-state.txt ]; then sh /Users/Shared/eval-fixtures/q11/mac/offline.sh check 2>&1 | tail -1; else sudo sh /Users/Shared/eval-fixtures/q11/mac/offline.sh off /Users/Shared/eval-runs/q11-experimental/net-state.txt 2>&1 | tail -4; fi",
+  "exit": 0,
+  "at": "2026-11-02T21:21:06+08:00",
+  "tail": "offline check: FAIL\n"
+ },
+ {
+  "what": "host memory before prompt set 1",
+  "at": "2026-11-02T21:21:06+08:00",
+  "exit": 0,
+  "tail": "System-wide memory free percentage: 34%; swap total = 19456.00M  used = 18358.38M  free = 1097.62M  (encrypted); pressure level 2"
+ },
+ {
+  "what": "stopped before prompt set 1: host memory",
+  "at": "2026-11-02T21:21:06+08:00",
+  "exit": 1,
+  "tail": "total = 19456.00M  used = 18358.38M  free = 1097.62M  (encrypted)"
  }
 ]

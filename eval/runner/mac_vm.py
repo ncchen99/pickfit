@@ -85,12 +85,23 @@ class VM:
     def reboot(self) -> None:
         """Shut down from inside the guest (so every write reaches the disk), then start the same clone again."""
         self.sh("sync; sudo shutdown -h now", "shutdown from inside the guest (the agent goes away with it)", timeout=60, quiet=True)
-        try:
-            self.proc.wait(timeout=300)
-        except subprocess.TimeoutExpired:
-            tart("stop", self.name, "--timeout", "120", timeout=300)
-            self.proc.wait(timeout=60)
+        if self.proc is not None:
+            try:
+                self.proc.wait(timeout=300)
+            except subprocess.TimeoutExpired:
+                tart("stop", self.name, "--timeout", "120", timeout=300)
+                self.proc.wait(timeout=60)
+        else:  # attached to a clone another process started: wait on tart's own state
+            end = time.time() + 300
+            while time.time() < end and self.state() == "running":
+                time.sleep(5)
+            if self.state() == "running":
+                tart("stop", self.name, "--timeout", "120", timeout=300)
         self.start()
+
+    def state(self) -> str:
+        out = tart("list", "--format", "json", timeout=60).stdout.decode()
+        return next((v.get("State", v.get("state", "")) for v in json.loads(out) if v.get("Name") == self.name), "").lower()
 
     def baseline(self, script: Path) -> None:
         """mac_baseline.sh as the image's admin, a clean reboot, and a check that the agent now runs as the new user."""
