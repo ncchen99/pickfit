@@ -208,7 +208,7 @@ button.badge{cursor:help}
 @media (hover:hover){
 [data-tip]{position:relative}
 [data-tip]:hover::after{content:attr(data-tip)}
-[data-tip]:hover::after,.cat-card .chip-compare:hover::after{position:absolute;left:0;bottom:calc(100% + 6px);z-index:3;padding:6px 9px;border-radius:6px;background:var(--ink);color:var(--paper);font:600 .78rem/1.3 var(--sans);width:max-content;max-width:220px;pointer-events:none}
+[data-tip]:hover::after,.cat-card .chip-compare:hover::after{position:absolute;left:0;bottom:calc(100% + 6px);z-index:3;padding:6px 9px;border-radius:6px;background:var(--ink);color:var(--paper);font:600 .78rem/1.3 var(--sans);width:max-content;max-width:220px;white-space:normal;pointer-events:none}
 }
 
 /* tape meters */
