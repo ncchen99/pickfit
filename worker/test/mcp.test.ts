@@ -55,7 +55,7 @@ test('legacy clients: initialize, list and call without a session', async () => 
   assert.equal(init.status, 200);
   assert.equal(init.headers.get('mcp-session-id'), null);
   const initMsg = await message(init);
-  assert.match(initMsg.result.instructions, /^pickfit recommends software it installed and tested in a sandbox, mostly lesser-known\. Scope: .*desktop GUI apps/);
+  assert.match(initMsg.result.instructions, /^pickfit matches software to the user's need; each was installed and tested in a sandbox\. Scope: .*desktop GUI apps/);
   // Every client loads these each session: keep them short (they grew past 512 with the answer guidance, past 900 with the GUI scope).
   assert.ok(initMsg.result.instructions.length <= 920);
 
