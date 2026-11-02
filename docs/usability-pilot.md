@@ -244,3 +244,19 @@
   - 品質分的中位數 +3.7，範圍 −16.7 到 +10.2。
   - 失去寶藏的有 4 款：astrobservatories、boltzyml-v2-0、capitolisation、free-online-tools-for-video-audio-pdfs-images-and-ai；新成為寶藏的有 2 款：backstory、carte-des-antennes-mobiles-anfr。
 - **還沒改的地方**：工具頁的品質分說明框（`worker/src/ui/shell.ts` 的 popover）仍寫「沙盒 40%、安裝文件 25%」。這個檔案歸工具頁的 session，這邊沒動；「How pickfit works」頁（`worker/src/pages/info.ts`）已補上視覺品質的說明。
+
+### 10.2 跑完全部 186 款（11/3，經 OpenRouter）
+
+Meta 帳務一直失敗，念誠決定 Meta 的模型改走 OpenRouter（`PICKFIT_META_VIA=openrouter`；只走 Meta 自己的端點、不收集資料）。紀錄裡的模型名稱仍是 `muse-wonder-1.0`。
+
+- **剩下的 135 款**：全部跑完，沒有錯誤，花 $4.89（帳本 budget `openrouter`）。這個 stage 合計 $6.43：先前在 Meta API 花的 $1.54，加上這次 $4.89。
+- **186 款的結果**：117 款沒有缺陷，42 款只有輕微缺陷，27 款有嚴重缺陷。101 款桌面 App 改用 gui.v2，85 款網頁 App 改用 web.v3。
+- **品質分的變化**（同一批紀錄拿掉 `visual_check` 重算來比，只看這一項的影響）：
+  - 186 款的中位數 +3.6，平均 +0.8，範圍 −16.7 到 +10.2。
+  - 依檢查結果分：沒有缺陷的 +5.4（117 款），只有輕微缺陷的 −4.8（42 款），有嚴重缺陷的 −12.9（27 款）。以上都是中位數。
+  - 桌面 App：中位數 +5.1，品質分中位數 63.8 → 66.6。網頁 App：中位數 +1.9，但品質分中位數 87.3 → 82.1，因為下降的幅度比上升的大。
+- **寶藏**：這 186 款裡原本有 42 款寶藏，改完是 37 款。
+  - 失去 10 款：astrobservatories、boltzyml-v2-0、capitolisation、free-online-tools-for-video-audio-pdfs-images-and-ai、image-tools、oh-my-score-studio、paintracker-ca、pockettts-raven、stegmoji、stem-digital-lab。
+  - 新增 5 款：backstory、carte-des-antennes-mobiles-anfr、openzpl、opstrellis、vest-fyi。
+  - 所有紀錄的寶藏總數從 162 變成 157。
+- **要念誠確認的**：這會改變線上的分數和寶藏標章。另外，沒有缺陷的 App 會比沒檢查前高約 5 分；沒有截圖可以檢查的 104 款拿不到這一項。
