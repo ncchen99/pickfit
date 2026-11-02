@@ -177,3 +177,9 @@ def test_an_unknown_env_refuses(repo: Path) -> None:
     code, lines = dry_run(repo, env="nope")
     assert code == 1
     assert "- wrangler.jsonc: no env.nope section" in lines
+
+
+def test_a_web_app_on_an_invalid_host_is_a_fixture() -> None:
+    index = {"entries": [{"slug": "sketch", "repo_url": None, "web": {"url": "https://sketch.example.invalid/"}},
+                         {"slug": "real", "repo_url": "https://github.com/a/b", "web": None}]}
+    assert publish_mod.fixture_entries(index) == ["sketch"]
