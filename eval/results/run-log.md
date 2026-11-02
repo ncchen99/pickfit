@@ -61,3 +61,26 @@
 - D5（`d5_check.py --rounds run1`）：0 違反、34 筆主張找得到、0 無法檢查（`d5-run1.json`）。
 - 對照組的污染掃描：兩題對照組的 WebSearch／WebFetch 都沒有碰到 pickfit 的網址；`pickfit` 字樣只出現在 init 事件的工作目錄與記憶路徑（見下）。
 - **發現的問題（暫停，等念誠決定）**：暫存資料夾名稱是 `pickfit-eval-<題號>-<組別>-…`，Claude Code 把工作目錄與記憶路徑（在 HOME 底下）放進受測 agent 的上下文，所以三組的上下文各自含有「pickfit」與自己的組名。`324145f` 改成沒有前綴的 `mkdtemp()`，還沒用它跑任何一次。
+
+## 作廢試跑、重跑 q01、q02（B2）
+
+- 念誠 09:4x 選擇把資料夾名稱當成設定錯誤（B2）：`run.py void --round run1 --group <組>` 三組各做一次（09:46:43–09:46:45），6 次移到 `runs/voided/run1-<組>-<時間>/`，保留供報告；試跑的 `run1-estimate.json`、`run1-paused.json`、`d5-run1.json` 移到 `runs/voided/run1-markers-20261102-094646/`（commit `a833413`）。
+- 重跑：`run.py run1 --until q02`，執行器 `324145f`（暫存資料夾用沒有前綴的 `mkdtemp()`），其餘設定與快照不變（A3 紀錄同一份；eval/ 以外沒動）。開跑 09:46:58，停在 q02 之後 09:52:50。順序同 B1。
+
+| 題 | 組 | 開始 | 秒 | 回合 | 花費 | pickfit 呼叫 | 有效 |
+|---|---|---|---|---|---|---|---|
+| q01 | control | 09:46:58 | 95.6 | 11 | $0.196 | — | True |
+| q01 | experimental | 09:48:33 | 49.3 | 5 | $0.123 | find_software | True |
+| q01 | rules_only | 09:49:23 | 45.2 | 7 | $0.139 | find_software | True |
+| q02 | experimental | 09:50:08 | 68.3 | 6 | $0.112 | find_software | True |
+| q02 | control | 09:51:16 | 46.2 | 4 | $0.097 | — | True |
+| q02 | rules_only | 09:52:02 | 48.0 | 5 | $0.125 | find_software | True |
+
+- 合計 $0.792；B4 預估第 1 次 $7.92（上限 $30）。執行器的 B4 花費只算 `runs/run1/`，作廢的 $0.950 不算進第 1 次的上限；到這裡 Anthropic 實際花在第 1 次的是 $1.742。Meta：`pickfit-eval` 重跑兩次配對 $0.0331（`meta_budget` 2026-11-02 UTC），試跑另有 $0.0319；`pickfit-eval-rules` $0。
+- B2 核對：0 個設定問題；6 次都是 2.1.304、`claude-opus-5-5`、`permission_denials` 空；argv 只差 MCP 設定檔路徑與 `mcp__pickfit` 允許項；同一題三組的 prompt sha256 相同；`mcp.json`：對照 `{}`、實驗 `pickfit-mcp-eval`、rules-only `pickfit-mcp-eval-rules`；兩個 MCP 組的 pickfit 都 connected。
+- init 事件掃描（不含 mcp_servers、tools；兩個 MCP 組的伺服器都叫 pickfit）：6 次的工作目錄都是 `/private/var/folders/g7/…/T/tmpXXXXXXXX/work`，找不到 pickfit、組名、題號、eval、Software-Advisor、ncchen、worktree 字樣。
+- 哪個部署回答（D1）：實驗組 `rec_db6b3272…`（09:48:38）、`rec_f962b07a…`（09:50:13）只在 `pickfit-eval`，`matched_by` muse-spark-1.3、Meta 200；rules-only `rec_5d2f1b08…`（09:49:28）、`rec_79305247…`（09:52:07）只在 `pickfit-eval-rules`，`matched_by` rules、`model_off`；時間都落在該次執行之內。兩個資料庫裡另外只有試跑的 4 筆。
+- 對照組污染：兩題對照組的串流裡沒有 pickfit 或 ncchen99；搜尋與讀取的網址都不是 pickfit 的。
+- D5：0 違反、34 筆主張找得到、0 無法檢查（`d5-run1.json`）。結果裡沒有金鑰。
+- 觀察（不是流程問題）：實驗組兩題的 pickfit 仍回 0 個推薦（沒降級），agent 改用網路搜尋；rules-only 各回 3 個。
+- B3 的 24 小時：執行器從重跑的 q01（09:46:58）起算；第一次試跑的 q01 是 07:56:20。兩種算法都會在報告寫出。
