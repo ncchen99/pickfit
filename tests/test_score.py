@@ -714,3 +714,92 @@ def test_refresh_follows_the_web_run_and_clears_a_web_app_scored_by_another_form
     assert refresh_scores(data, LATER) is None
     data["scores"]["formula_version"] = FORMULA_VERSION
     assert "rescore" in refresh_scores(data, LATER) and data["scores"] is None
+
+
+# --- usability in quality: gui.v1 and web.v2 (off until the ease.v1 pilot passes) -----------------------
+
+from pickfit import score as score_module  # noqa: E402
+from pickfit.schema import Scores  # noqa: E402
+from pickfit.score import GUI_WEIGHTS, WEB2_WEIGHTS, build_scores  # noqa: E402
+
+CHAT_FIXTURE = ROOT / "worker" / "test" / "fixtures" / "software" / "fixture-chat-tui.json"
+
+
+def ease(run_id: str, score: float = 85.0) -> dict[str, Any]:
+    level = 2.0 if score >= 70 else 1.0
+    return {"version": "ease.v1", "run_id": run_id, "basis": "operated", "score": score,
+            "verdict": "easy" if score >= 70 else "some_friction" if score >= 40 else "hard",
+            "dimensions": {k: {"score": level, "status": "scored"} for k in ("ready", "findable", "responsive", "comfortable")},
+            "operations": 1, "screens": 4, "sandbox": "Xvfb 1280x800x24", "model": "muse-spark-1.3",
+            "prompt_version": "ease.v1", "samples": 2, "inputs_sha": "0" * 64,
+            "checked_at": "2026-11-02T23:00:00+08:00", "cost_usd": 0.05}
+
+
+def desktop_record(score: float = 85.0) -> dict[str, Any]:
+    data = json.loads(CHAT_FIXTURE.read_text(encoding="utf-8"))
+    data["kind"] = "desktop_app"
+    run_ = data["verification"]["runs"][0]
+    run_["gui"] = {"tier": "ui_rendered", "screen": "main_ui", "command": "chat --gui", "display": "Xvfb 1280x800x24"}
+    data["usability"] = ease(run_["id"], score)
+    return data
+
+
+def test_usability_stays_out_of_quality_until_the_pilot_passes() -> None:
+    assert score_module.EASE_SCORED is False
+    data = web_record()
+    data["usability"] = ease(data["verification"]["runs"][0]["id"])
+    scores = web_scores(data)
+    assert scores["formula_version"] == WEB_FORMULA_VERSION and "usability" not in scores["quality"]["components"]
+    desk = build_scores(SoftwareRecord.model_validate(desktop_record()), None, None, None, now=NOW)
+    assert desk["formula_version"] == FORMULA_VERSION and "usability" not in desk["quality"]["components"]
+
+
+def test_gui_v1_weighs_usability_and_a_treasure_needs_seventy(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(score_module, "EASE_SCORED", True)
+    assert sum(GUI_WEIGHTS.values()) == 100 and sum(WEB2_WEIGHTS.values()) == 100
+    scores = build_scores(SoftwareRecord.model_validate(desktop_record()), None, None, None, now=NOW)
+    assert scores["formula_version"] == "gui.v1"
+    components = scores["quality"]["components"]
+    assert {k: c["weight"] for k, c in components.items()} == GUI_WEIGHTS
+    assert components["usability"]["score"] == 0.85 and components["sandbox_verification"]["score"] == 0.6
+    assert scores["quality"]["total"] == round(100 * (0.6 * 25 + 0.85 * 30) / 55, 1)
+    Scores.model_validate(scores)
+    # A command-line tool keeps b3.v5 and no usability component.
+    tool = json.loads(CHAT_FIXTURE.read_text(encoding="utf-8"))
+    assert build_scores(SoftwareRecord.model_validate(tool), None, None, None, now=NOW)["formula_version"] == FORMULA_VERSION
+    high = {"total": 90.0, "components": {"usability": {"score": 0.69, "weight": 30}}}
+    assert treasure(high, 30.0, ease=True)["is_treasure"] is False
+    assert treasure(high | {"components": {"usability": {"score": 0.7, "weight": 30}}}, 30.0, ease=True)["is_treasure"]
+    assert treasure(high, 30.0)["is_treasure"]  # b3.v5 and web.v1 do not look at usability
+    shown = scores | {"popularity": scores["popularity"] | {"score": 30.0},
+                      "quality": scores["quality"] | {"total": 90.0, "components": components | {
+                          "usability": {"score": 0.69, "weight": 30}}},
+                      "treasure": {"is_treasure": True, "value": 63.0}}
+    with pytest.raises(ValueError, match="usability >= 0.7"):
+        Scores.model_validate(shown)
+
+
+def test_refresh_moves_records_to_the_usability_formulas_and_back(monkeypatch: pytest.MonkeyPatch) -> None:
+    data = desktop_record()
+    data["scores"] = build_scores(SoftwareRecord.model_validate(data), None, None, None, now=NOW)
+    web = web_record()
+    web["usability"] = ease(web["verification"]["runs"][0]["id"], 60.0)
+    web["scores"] = web_scores(web)
+    monkeypatch.setattr(score_module, "EASE_SCORED", True)
+    assert refresh_scores(data, LATER) == "scores moved from formula b3.v5 to gui.v1, refreshed from the record"
+    assert data["scores"]["quality"]["components"]["usability"]["score"] == 0.85
+    assert refresh_scores(web, LATER) == "scores moved from formula web.v1 to web.v2, refreshed from the record"
+    components = web["scores"]["quality"]["components"]
+    assert components["usability"] == {"score": 0.6, "weight": 35} and components["browser_facts"]["weight"] == 30
+    assert web["scores"]["treasure"]["is_treasure"] is False
+    for record in (data, web):
+        SoftwareRecord.model_validate(record)
+    # A re-verified record whose usability read a run it no longer has drops the component until judged again.
+    data["usability"]["run_id"] = "verify-gone"
+    assert refresh_scores(data, LATER) == "scores refreshed from the record"
+    assert data["scores"]["quality"]["components"]["usability"]["score"] is None
+    monkeypatch.setattr(score_module, "EASE_SCORED", False)
+    assert refresh_scores(data, LATER) == "scores moved from formula gui.v1 to b3.v5, refreshed from the record"
+    assert "usability" not in data["scores"]["quality"]["components"]
+    assert refresh_scores(web, LATER) == "scores moved from formula web.v2 to web.v1, refreshed from the record"
+    SoftwareRecord.model_validate(data)
