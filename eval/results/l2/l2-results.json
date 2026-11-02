@@ -465,6 +465,54 @@
      "input placeholder meeting.m4a filled with /work/input/meeting.wav; the run starts in /work/whisper.cpp; experimental's optional VAD model downloaded because its run command uses --vad; CPU model name is 'unknown' in every box (gVisor), so 'same CPU model' could only be recorded as unknown on both sides"
     ]
    }
+  },
+  "q08": {
+   "control": {
+    "pick": "Colima",
+    "items": {
+     "1": "not run: a macOS guest has no nested virtualization (tart: 'macOS virtual machines do not support nested virtualization'; guest kern.hv_support 0), so Colima cannot start its Linux VM; no Docker install on 念誠's own Mac (coordinator 2026-11-02). l2/mac-gate/gate.json",
+     "2": "not run: a macOS guest has no nested virtualization (tart: 'macOS virtual machines do not support nested virtualization'; guest kern.hv_support 0), so Colima cannot start its Linux VM; no Docker install on 念誠's own Mac (coordinator 2026-11-02). l2/mac-gate/gate.json",
+     "3": "not run: a macOS guest has no nested virtualization (tart: 'macOS virtual machines do not support nested virtualization'; guest kern.hv_support 0), so Colima cannot start its Linux VM; no Docker install on 念誠's own Mac (coordinator 2026-11-02). l2/mac-gate/gate.json",
+     "4": "not run: a macOS guest has no nested virtualization (tart: 'macOS virtual machines do not support nested virtualization'; guest kern.hv_support 0), so Colima cannot start its Linux VM; no Docker install on 念誠's own Mac (coordinator 2026-11-02). l2/mac-gate/gate.json"
+    },
+    "l2": "not_run",
+    "notes": [
+     "method: agent in a tart clone (2026-11-02 method change); a blind comparison with the official docs is in l2/q08-docs-note/ (a note, not L2)"
+    ]
+   },
+   "experimental": {
+    "pick": "Colima",
+    "items": {
+     "1": "not run: a macOS guest has no nested virtualization (tart: 'macOS virtual machines do not support nested virtualization'; guest kern.hv_support 0), so Colima cannot start its Linux VM; no Docker install on 念誠's own Mac (coordinator 2026-11-02). l2/mac-gate/gate.json",
+     "2": "not run: a macOS guest has no nested virtualization (tart: 'macOS virtual machines do not support nested virtualization'; guest kern.hv_support 0), so Colima cannot start its Linux VM; no Docker install on 念誠's own Mac (coordinator 2026-11-02). l2/mac-gate/gate.json",
+     "3": "not run: a macOS guest has no nested virtualization (tart: 'macOS virtual machines do not support nested virtualization'; guest kern.hv_support 0), so Colima cannot start its Linux VM; no Docker install on 念誠's own Mac (coordinator 2026-11-02). l2/mac-gate/gate.json",
+     "4": "not run: a macOS guest has no nested virtualization (tart: 'macOS virtual machines do not support nested virtualization'; guest kern.hv_support 0), so Colima cannot start its Linux VM; no Docker install on 念誠's own Mac (coordinator 2026-11-02). l2/mac-gate/gate.json"
+    },
+    "l2": "not_run",
+    "notes": [
+     "method: agent in a tart clone (2026-11-02 method change); a blind comparison with the official docs is in l2/q08-docs-note/ (a note, not L2)"
+    ]
+   }
+  },
+  "q12": {
+   "control": {
+    "pick": "mlx-lm (option A: uv)",
+    "method": "agent, tart clone (8 GB, 8 vCPU), macOS 26.6.2 guest",
+    "items": {
+     "1": "pass (preflight PASS; `brew install uv` and `uv tool install mlx-lm` exit 0; no app or cask added)",
+     "2": "fail (`mlx_lm.server --model mlx-community/Qwen2.5-1.5B-Instruct-4bit --host 127.0.0.1 --port 8080`: `zsh: command not found: mlx_lm.server`; uv put the commands in ~/.local/bin, which is not on PATH, and printed that warning; the answer does not add it)",
+     "3": "fail (no server: APIConnectionError)",
+     "4": "fail (no server: APIConnectionError)",
+     "5": "fail (no server; offline check run as written)",
+     "6": "pass (scan_transcript: 0 lines to review; no login or account prompt)"
+    },
+    "l2": "fail",
+    "notes": [
+     "option A, the first given; the optional generation step not run; the pinned fixture model fills the answer's example model; API key 'local' (the answer's placeholder)",
+     "grader errors, answer unchanged: the setup's grader venv failed (the image's Homebrew Python cannot run once moved aside), the host-side run was stopped after the install lines had started in the guest; the install shell finished on its own (exits in steps.txt), the venv was rebuilt from a pinned standalone CPython 3.12.16 and the checks ran (run-phase-stopped.log)",
+     "the marker file was made by the before snapshot (09:56 guest time), before the first install line; the later `touch` by the test user failed on its root-owned file and was not needed"
+    ]
+   }
   }
  }
 }

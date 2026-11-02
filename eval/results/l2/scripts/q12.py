@@ -45,6 +45,21 @@ else:
 INSTALL = "# Option A\n" + INSTALL  # the block's own first line is a comment too
 
 
+PBS = ("https://github.com/astral-sh/python-build-standalone/releases/download/20261026/"
+       "cpython-3.12.16%2B20261026-aarch64-apple-darwin-install_only.tar.gz")
+PBS_SHA = "fbf4afef53c2a6b72bb741bc06d5671a9dfaf87bd84e5aa73ac9b3d0d589f14e"
+
+
+def grader_venv(vm: VM) -> None:
+    """The grader's Python (openai 3.42.1 needs 3.10+; macOS has 3.9): a pinned standalone CPython in /var/eval-grader,
+    outside the test user's home and PATH, with the pinned openai client."""
+    vm.sh(f"sudo mkdir -p /var/eval-grader && cd /var/eval-grader && sudo curl -fsSL -o py.tgz '{PBS}' && "
+          f"echo '{PBS_SHA}  py.tgz' | shasum -a 256 -c - && sudo tar xzf py.tgz && sudo rm -rf venv && "
+          f"sudo /var/eval-grader/python/bin/python3 -m venv /var/eval-grader/venv && sudo {G} -m pip install -q openai=={OPENAI} && "
+          f"{G} -m pip freeze > {R}/grader-requirements.lock; {G} -V; shasum -a 256 {R}/grader-requirements.lock; grep -i openai {R}/grader-requirements.lock",
+          "grader venv outside the user's PATH (pinned standalone CPython 3.12.16, openai 3.42.1)", timeout=900)
+
+
 def serve_and_check(tag: str) -> str:
     return (f"cd ~ && ( {SERVER} ) > {R}/server-{tag}-transcript.txt 2>&1 & SRV=$!; "
             f"for i in $(seq 1 300); do lsof -nP -iTCP:8080 -sTCP:LISTEN > /dev/null 2>&1 && break; kill -0 $SRV 2> /dev/null || break; sleep 2; done; "
@@ -58,13 +73,18 @@ def serve_and_check(tag: str) -> str:
 if PHASE == "setup":
     with VM(f"q12-{GROUP}", OUT, ["q12", "q11", "_mac", "_shared"], cpu=8, memory_mb=8192, keep=True) as vm:
         setup(vm, R)
-        vm.sh(f"sudo mkdir -p /var/eval-grader && sudo /var/eval-image-aside/homebrew/bin/python3.15 -m venv /var/eval-grader/venv && "
-              f"sudo {G} -m pip install -q openai=={OPENAI} && {G} -m pip freeze > {R}/grader-requirements.lock; tail -3 {R}/grader-requirements.lock",
-              "grader venv outside the user's PATH (pinned openai client)", timeout=900)
+        grader_venv(vm)
+        vm.sh(f"cd {FIX}/q12 && {G} selftest.py 2>&1 | tail -3", "q12 selftest with the grader venv", timeout=600)
+    sys.exit(0)
+
+if PHASE == "grader":  # control: the setup's venv step failed (the image's Homebrew Python cannot run once moved)
+    with VM(f"q12-{GROUP}", OUT, [], name=clone_name(OUT), keep=True) as vm:
+        grader_venv(vm)
         vm.sh(f"cd {FIX}/q12 && {G} selftest.py 2>&1 | tail -3", "q12 selftest with the grader venv", timeout=600)
     sys.exit(0)
 
 with VM(f"q12-{GROUP}", OUT, [], name=clone_name(OUT)) as vm:
+  if PHASE == "run":
     vm.sh(f"curl -s https://huggingface.co/api/models/{REPO}/revision/main | python3 -c 'import json,sys; print(json.load(sys.stdin)[\"sha\"])'; "
           f"echo pinned {PIN['REVISION']}", "fixture model: latest revision still the pinned one?")
     vm.sh(f"touch {R}/marker", "marker before the first install line")
@@ -72,6 +92,10 @@ with VM(f"q12-{GROUP}", OUT, [], name=clone_name(OUT)) as vm:
     vm.sh(zsh(f"setopt interactivecomments; cd ~ && OUT={R}; . {R}/lib.zsh; run_lines install {R}/install.lines; "
               f"all_ok install && echo INSTALL-OK || echo INSTALL-FAIL; cat {R}/install-*.txt > {R}/steps-transcript.txt"),
           "L2-1 install lines (one zsh; # starts a comment, as in bash)", timeout=3600)
+  if PHASE in ("run", "checks"):
+    if PHASE == "checks":  # control: the install shell kept running in the guest after the host-side run was stopped
+        vm.sh("while pgrep -f 'run_lines install' > /dev/null; do sleep 10; done; "
+              f"cat {R}/steps.txt; cat {R}/install-*.txt > {R}/steps-transcript.txt", "L2-1 install lines finished (exits in steps.txt)", timeout=3600)
     vm.sh(zsh(serve_and_check("online")), "L2-2, L2-3, L2-4 server online and checks", timeout=1800)
     vm.sh(f"sudo sh {FIX}/q11/mac/offline.sh off {R}/net-state.txt 2>&1 | tail -2", "L2-5 offline off")
     vm.sh(zsh(serve_and_check("offline")), "L2-5 server restarted offline and checks", timeout=1800)
