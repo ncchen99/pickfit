@@ -50,7 +50,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from pickfit.env import get_env
 from pickfit.ledger import BudgetExceeded
-from pickfit.meta import call_meta, resolve_model
+from pickfit.meta import EFFORTS, call_meta, resolve_model
 from pickfit.schema import meta_strict_schema
 from pickfit.verify import audio, gui, record
 from pickfit.verify.box import BOX_HOME, ExecResult
@@ -66,7 +66,18 @@ OPERATOR_MODEL = "open"
 def operator_model() -> str:
     return get_env("PICKFIT_OPERATOR_MODEL") or OPERATOR_MODEL
 STAGE = "verify-gui-operator"
-REASONING_EFFORT = "low"
+
+
+def operator_effort(value: str | None) -> str:
+    """PICKFIT_OPERATOR_EFFORT, a comparison only (scripts/gui_compare.py, arm D), e.g. medium; low unless set.
+    Checked when read, so a bad value fails before any box is paid for rather than stop every operation."""
+    effort = value or "low"
+    if effort not in EFFORTS:
+        raise ValueError(f"PICKFIT_OPERATOR_EFFORT must be one of {', '.join(EFFORTS)}, got {effort!r}")
+    return effort
+
+
+REASONING_EFFORT = operator_effort(get_env("PICKFIT_OPERATOR_EFFORT"))
 MAX_OUTPUT_TOKENS = 1_500
 MAX_STEPS = 28  # actions per operation, done and give_up included (a first-run wizard alone can take 8)
 HISTORY_STEPS = 12  # earlier actions the operator is reminded of
