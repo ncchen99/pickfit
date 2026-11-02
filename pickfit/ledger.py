@@ -130,6 +130,10 @@ BASETEN_CAPS = Caps(total_usd=100.0, daily_usd=baseten_daily_cap)
 # on 11/2 (verification videos: Muse watches pickfit's screen recordings), then to $100 and $50 a day
 # the same evening (web recordings and GUI checks).
 MODAL_LLM_CAPS = Caps(total_usd=100.0, daily_usd=lambda day: 50.0)
+# Meta's models through OpenRouter (PICKFIT_META_VIA=openrouter), paid from 念誠's OpenRouter balance: its own
+# budget. 11/3 Meta's API refused the team's key with 402 billing errors; 念誠 topped OpenRouter up with $50. The
+# live Worker spends the same balance (its own caps, in D1), so the pipeline stops at $40 and leaves it about $10.
+OPENROUTER_CAPS = Caps(total_usd=40.0, daily_usd=lambda day: 40.0)
 
 
 def taipei_now(clock: Callable[[], datetime] | None = None) -> datetime:
@@ -347,3 +351,8 @@ def baseten_ledger() -> Ledger:
 def modal_llm_ledger() -> Ledger:
     """The modal-llm budget in the shared ledger file (Muse Spark Open on Modal's endpoint)."""
     return Ledger(get_env("PICKFIT_LEDGER") or DEFAULT_PATH, budget="modal-llm", caps=MODAL_LLM_CAPS)
+
+
+def openrouter_ledger() -> Ledger:
+    """The openrouter budget in the shared ledger file (Meta's models reached through OpenRouter)."""
+    return Ledger(get_env("PICKFIT_LEDGER") or DEFAULT_PATH, budget="openrouter", caps=OPENROUTER_CAPS)

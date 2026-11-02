@@ -6,7 +6,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import type { Env } from '../src/env.ts';
+import { settings, type Env } from '../src/env.ts';
 import { makeWorker } from '../src/worker.ts';
 import { answer, fixtureIndex, makeD1, metaResponse } from './helpers.ts';
 
@@ -187,4 +187,17 @@ test('the full deployment: the guide has a check_in, and report_outcome takes on
   const ok = (await d.call('report_outcome', { ...args, last_used: 'this_week' })).result.structuredContent;
   assert.equal(ok.counted_in_score, true);
   assert.equal(d.sqlite.prepare("SELECT last_used FROM events WHERE type = 'outcome'").get()!.last_used, 'this_week');
+});
+
+test('META_VIA picks the route and its key; anything but "openrouter" stays on Meta', () => {
+  const base = { DB: {} as D1Database, MODEL_API_KEY: 'meta-key', OPENROUTER_API_KEY: 'or-key' };
+  assert.deepEqual(
+    [settings({ ...base }).via, settings({ ...base }).apiKey],
+    ['meta', 'meta-key'],
+  );
+  assert.deepEqual(
+    [settings({ ...base, META_VIA: ' OpenRouter ' }).via, settings({ ...base, META_VIA: 'openrouter' }).apiKey],
+    ['openrouter', 'or-key'],
+  );
+  assert.equal(settings({ ...base, META_VIA: 'open-router' }).via, 'meta');
 });
