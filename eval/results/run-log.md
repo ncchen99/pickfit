@@ -139,3 +139,9 @@
     - 比對腳本沒有改，次數照腳本算；上面是逐筆讀過原文的內容（D5 的寫法：寫明次數與內容）。
 - 結果裡沒有金鑰（`sk-ant-` 掃描）。
 - Anthropic 合計（評測執行器）：第 1 次 $6.403＋第 2、3 次 $7.902＋Haiku $0.480＋B 題組 $3.377＝$18.163；另有作廢的試跑 $0.950、準備時的管線測試 $0.094，共 $19.207。評分還沒做（上限 $20）。
+
+## 跑完後的快照（A3，`versions-after.json`、`versions-compare.json`）
+
+- 第一次 after 快照（12:29:33）把本 session 還沒 commit 的 `eval/results/` 結果檔記成問題（`uncommitted changes`；比對本身 0 差異）；那份放在 repo 外。結果 commit（`7db57b1`）之後重做：記錄時間 2026-11-02T12:31:05+08:00，problems []。
+- `compare`：**0 差異**。pickfit commit `4e0dd4b`、eval/ 以外的 tree `1ab18b47…` 與 commit 相同；served data `acb3891c…`（768 筆）；實驗組 deployment `418c4c68…`／version `bb5215d3…`（model、readonly）、rules-only `0714f636…`／`fe7b37fa…`（off、readonly），兩邊的 `/` 都回同一個 `data_sha256` 與 `index_built_at`；候選庫合併雜湊 `007054d8…`、漏斗 `55753da7…`；evidence manifest `d0626a8e…`；Claude Code 2.1.304、執行檔 sha256 `b9ac5374…`；config、questions、questions-b 的雜湊都沒變。
+- 評測執行到這裡結束：2026-11-02 09:46:58（重跑的 q01）到 12:26:31（B 題組最後一格）；作廢的試跑另在 07:56:20–08:03:16。評分（C4、9.2 B 的第三評分者）、E 的輸因標記、L2 還沒做。
