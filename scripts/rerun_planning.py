@@ -1,6 +1,7 @@
 """Rerun the verify agent on chosen Linux desktop apps, limited to chosen features, without writing anything back.
 
     uv run python scripts/rerun_planning.py prepare --features features.json --out tasks/
+    uv run python scripts/rerun_planning.py tally --features features.json --arm old=<dir> --arm new=<dir>
     PICKFIT_OPERATOR_MODEL=open-modal uv run --project <checkout> python scripts/rerun_planning.py run \\
         --tasks tasks/ --features features.json --runs-dir <dir> [--concurrency 10]
 
@@ -67,13 +68,18 @@ def prepare(features: dict[str, Any], out: Path) -> None:
               f"${sum(r['cost_usd'] for r in rows):.4f}", flush=True)
 
 
-def run(features: dict[str, Any], tasks_dir: Path, runs_dir: Path, concurrency: int) -> None:
+def run(features: dict[str, Any], tasks_dir: Path, runs_dir: Path, concurrency: int, *, agent_model: str = AGENT_MODEL,
+        scope_cap_usd: float = SCOPE_CAP_USD) -> None:
+    from pickfit.meta import is_open_model
+    from pickfit.verify import judge
     from pickfit.verify.agent import DEFAULT_MODE, AgentLimits
     from pickfit.verify.cli import GUI_LIMITS, LIFETIME_MARGIN_S, box_factory
     from pickfit.verify.pipeline import verify_task
     from pickfit.verify.task import load_fixture
 
-    limits = replace(AgentLimits(), **{**GUI_LIMITS, "scope_cap_usd": SCOPE_CAP_USD})
+    if is_open_model(agent_model):  # the judges too, on the same endpoint (Meta's API was refusing calls, 11/3)
+        judge.OPEN_JUDGE_MODEL = agent_model
+    limits = replace(AgentLimits(), **{**GUI_LIMITS, "scope_cap_usd": scope_cap_usd})
     slugs = sorted(s for s in features if (tasks_dir / f"{s}.json").exists())
     runs_dir.mkdir(parents=True, exist_ok=True)
 
@@ -86,7 +92,7 @@ def run(features: dict[str, Any], tasks_dir: Path, runs_dir: Path, concurrency: 
                 fh.flush()
             began = time.monotonic()
             try:
-                outcome = verify_task(load_fixture(tasks_dir / f"{slug}.json"), make_box, model=AGENT_MODEL,
+                outcome = verify_task(load_fixture(tasks_dir / f"{slug}.json"), make_box, model=agent_model,
                                       mode=DEFAULT_MODE, limits=limits, runs_dir=runs_dir, log=log, write=False)
                 summary = {"slug": slug, **outcome.summary()}
             except Exception as err:  # one app's failure is reported, never stops the others
@@ -100,6 +106,55 @@ def run(features: dict[str, Any], tasks_dir: Path, runs_dir: Path, concurrency: 
     (runs_dir / "summary.json").write_text(json.dumps(results, ensure_ascii=False, indent=1, default=str) + "\n")
 
 
+def _runs(runs_dir: Path) -> dict[str, Path]:
+    """Each slug's latest run directory under runs_dir/verify."""
+    found: dict[str, Path] = {}
+    for d in sorted((runs_dir / "verify").glob("verify-*")):
+        slug = d.name.removeprefix("verify-").rsplit("-", 3)[0]
+        found[slug] = d
+    return found
+
+
+CHECK_DESIGN = ("typed by the operator", "before the first action")
+
+
+def feature_rows(slug: str, labels: list[str], run_dir: Path | None) -> list[dict[str, Any]]:
+    """Per feature: the record's status and reason, the operations spent and their steps, specs pickfit refused
+    before running, and whether the failure lies in the check or the goal (its own check refused an echo or text
+    already on screen, or the feature judge saw no proof)."""
+    report = json.loads((run_dir / "report.json").read_text()) if run_dir and (run_dir / "report.json").exists() else {}
+    record = (json.loads((run_dir / "verification_run.json").read_text())
+              if run_dir and (run_dir / "verification_run.json").exists() else {})
+    final = {f["feature"]: f for f in record.get("features") or []}
+    numbers = {f["feature"]: f.get("number") for f in report.get("features") or []}
+    ops = [c["operate"] for c in report.get("commands") or [] if c.get("operate")]
+    rows = []
+    for i, label in enumerate(labels, 1):
+        number = numbers.get(label, i)
+        mine = [op for op in ops if (op.get("spec") or {}).get("feature") == number]
+        refused = [r for r in report.get("refused_specs") or [] if r.get("feature") == number]
+        f = final.get(label) or {}
+        whys = " ".join(str((op.get("result") or {}).get("why") or "") for op in mine)
+        rows.append({
+            "slug": slug, "feature": label, "status": f.get("status") or ("no record" if report else "no run"),
+            "reason": f.get("reason"), "note": (f.get("note") or "")[:160], "operations": len(mine),
+            "passed_ops": sum(bool(op.get("passed")) for op in mine),
+            "steps": sum(len(op.get("steps") or []) for op in mine), "refused": len(refused),
+            "check_design": f.get("reason") == "not_shown" or any(k in whys for k in CHECK_DESIGN),
+            "level": record.get("level"), "cost_usd": report.get("cost_usd")})
+    return rows
+
+
+def tally(features: dict[str, Any], arms: dict[str, Path]) -> list[dict[str, Any]]:
+    rows = []
+    for arm, runs_dir in arms.items():
+        runs = _runs(runs_dir)
+        for slug, want in sorted(features.items()):
+            for row in feature_rows(slug, want["features"], runs.get(slug)):
+                rows.append({"arm": arm, **row})
+    return rows
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -111,12 +166,35 @@ def main() -> int:
     r.add_argument("--tasks", required=True)
     r.add_argument("--runs-dir", required=True)
     r.add_argument("--concurrency", type=int, default=10)
+    r.add_argument("--agent-model", default=AGENT_MODEL, help="e.g. open-modal: the agent and the judges")
+    r.add_argument("--scope-cap", type=float, default=SCOPE_CAP_USD, help="each run's model spend cap (USD)")
+    t = sub.add_parser("tally")
+    t.add_argument("--features", required=True)
+    t.add_argument("--arm", action="append", required=True, help="name=runs dir")
+    t.add_argument("--json", default=None)
     args = ap.parse_args()
     features = json.loads(Path(args.features).read_text())
+    if args.cmd == "tally":
+        rows = tally(features, {a.split("=", 1)[0]: Path(a.split("=", 1)[1]) for a in args.arm})
+        if args.json:
+            Path(args.json).write_text(json.dumps(rows, ensure_ascii=False, indent=1) + "\n")
+        for arm, runs_dir in ((a.split("=", 1)[0], Path(a.split("=", 1)[1])) for a in args.arm):
+            part = [r for r in rows if r["arm"] == arm]
+            summary = runs_dir / "summary.json"
+            runs = json.loads(summary.read_text()) if summary.exists() else []
+            print(f"{arm}: runs {len(runs)}, model ${sum(r.get('cost_usd') or 0 for r in runs):.2f}, boxes "
+                  f"${sum(r.get('box_usd') or 0 for r in runs):.2f}, levels "
+                  + ", ".join(f"{r['slug']} {r.get('level') or r.get('error', '')[:30]}" for r in runs))
+            print(f"{arm}: checked {sum(r['status'] == 'checked' for r in part)}/{len(part)}, check or goal failures "
+                  f"{sum(r['check_design'] and r['status'] != 'checked' for r in part)}, operations "
+                  f"{sum(r['operations'] for r in part)}, refused at spec time {sum(r['refused'] for r in part)}, "
+                  f"steps {sum(r['steps'] for r in part)}")
+        return 0
     if args.cmd == "prepare":
         prepare(features, Path(args.out))
     else:
-        run(features, Path(args.tasks), Path(args.runs_dir), args.concurrency)
+        run(features, Path(args.tasks), Path(args.runs_dir), args.concurrency, agent_model=args.agent_model,
+            scope_cap_usd=args.scope_cap)
     return 0
 
 
