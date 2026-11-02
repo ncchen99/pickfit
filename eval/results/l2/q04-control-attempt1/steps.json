@@ -1,0 +1,472 @@
+[
+ {
+  "box": "A",
+  "what": "copy fixtures",
+  "cmd": "mkdir -p /opt/eval/fixtures /opt/eval/state /opt/eval/xfer && tar -C /opt/eval/fixtures -xzf /tmp/fixtures.tgz",
+  "exit": 0,
+  "at": "2026-11-02T12:53:53+08:00",
+  "tail": ""
+ },
+ {
+  "box": "B",
+  "what": "copy fixtures",
+  "cmd": "mkdir -p /opt/eval/fixtures /opt/eval/state /opt/eval/xfer && tar -C /opt/eval/fixtures -xzf /tmp/fixtures.tgz",
+  "exit": 0,
+  "at": "2026-11-02T12:53:57+08:00",
+  "tail": ""
+ },
+ {
+  "box": "C",
+  "what": "copy fixtures",
+  "cmd": "mkdir -p /opt/eval/fixtures /opt/eval/state /opt/eval/xfer && tar -C /opt/eval/fixtures -xzf /tmp/fixtures.tgz",
+  "exit": 0,
+  "at": "2026-11-02T12:53:59+08:00",
+  "tail": ""
+ },
+ {
+  "box": "A",
+  "what": "grader: latest sops release (fills vX.Y.Z)",
+  "cmd": "curl -fsSL https://api.github.com/repos/getsops/sops/releases/latest | python3 -c 'import json,sys; print(json.load(sys.stdin)[\"tag_name\"])'",
+  "exit": 0,
+  "at": "2026-11-02T12:54:00+08:00",
+  "tail": "v3.13.3\n"
+ },
+ {
+  "box": "A",
+  "what": "environment: git identity, sudo (9.3 A)",
+  "cmd": "git config --global user.name 'Developer A' && git config --global user.email dev-a@example.test && apt-get update -qq > /dev/null && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq sudo > /dev/null",
+  "exit": 0,
+  "at": "2026-11-02T12:54:07+08:00",
+  "tail": "debconf: delaying package configuration, since apt-utils is not installed\n"
+ },
+ {
+  "box": "A",
+  "what": "grader: EDITOR that pastes the new values",
+  "cmd": "printf '#!/bin/sh\\ncp /work/team-app/.env \"$1\"\\n' > /usr/local/bin/paste-v2 && chmod 755 /usr/local/bin/paste-v2",
+  "exit": 0,
+  "at": "2026-11-02T12:54:08+08:00",
+  "tail": ""
+ },
+ {
+  "box": "A",
+  "what": "install 1 (default accepted)",
+  "cmd": "printf '\\n' | script -qec 'sudo apt install age' /dev/null",
+  "exit": 0,
+  "at": "2026-11-02T12:54:10+08:00",
+  "tail": "Reading state information... 0% \r\rReading state information... 2%\r\rReading state information... Done\r\r\nThe following NEW packages will be installed:\r\n  age\r\n0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.\r\nNeed to get 1630 kB of archives.\r\nAfter this operation, 5969 kB of additional disk space will be used.\r\n\u001b[33m\r0% [Working]\u001b[0m\r            \rGet:1 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 age amd64 1.1.1-1ubuntu0.24.04.3 [1630 kB]\r\n\u001b[33m\r0% [1 age 0 B/1630 kB 0%]\u001b[0m\u001b[33m\r                         \r100% [Working]\u001b[0m\r              \rFetched 1630 kB in 0s (12.6 MB/s)\r\ndebconf: delaying package configuration, since apt-utils is not installed\r\nSelecting previously unselected package age.\r\n(Reading database ... \r(Reading database ... 5%\r(Reading database ... 10%\r(Reading database ... 15%\r(Reading database ... 20%\r(Reading database ... 25%\r(Reading database ... 30%\r(Reading database ... 35%\r(Reading database ... 40%\r(Reading database ... 45%\r(Reading database ... 50%\r(Reading database ... 55%\r(Reading database ... 60%\r(Reading database ... 65%\r(Reading database ... 70%\r(Reading database ... 75%\r(Reading database ... 80%\r(Reading database ... 85%\r(Reading database ... 90%\r(Reading database ... 95%\r(Reading database ... 100%\r(Reading database ... 9488 files and directories currently installed.)\r\nPreparing to unpack .../age_1.1.1-1ubuntu0.24.04.3_amd64.deb ...\r\nUnpacking age (1.1.1-1ubuntu0.24.04.3) ...\r\nSetting up age (1.1.1-1ubuntu0.24.04.3) ...\r\n"
+ },
+ {
+  "box": "A",
+  "what": "install 2",
+  "cmd": "cd /tmp && curl -LO https://github.com/getsops/sops/releases/download/v3.13.3/sops-v3.13.3.linux.amd64",
+  "exit": 0,
+  "at": "2026-11-02T12:54:11+08:00",
+  "tail": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\n\r 68 49.7M   68 33.8M    0     0   125M      0 --:--:-- --:--:-- --:--:--  125M\r100 49.7M  100 49.7M    0     0   145M      0 --:--:-- --:--:-- --:--:--  223M\n"
+ },
+ {
+  "box": "A",
+  "what": "install 3",
+  "cmd": "cd /tmp && sudo install -m 755 sops-v3.13.3.linux.amd64 /usr/local/bin/sops",
+  "exit": 0,
+  "at": "2026-11-02T12:54:11+08:00",
+  "tail": ""
+ },
+ {
+  "box": "A",
+  "what": "install check",
+  "cmd": "sops --version && age --version",
+  "exit": 0,
+  "at": "2026-11-02T12:54:12+08:00",
+  "tail": "sops 3.13.3 (latest)\n\n[warning] Note that in a future version, sops will no longer check whether the current version is the latest when asking for sops' version. If you want to explicitly check for the latest version, add the `--check-for-updates` option to `sops --version`. This will hide this deprecation warning and will always check, even if the default behavior changes in the future.\n1.1.1\n"
+ },
+ {
+  "box": "A",
+  "what": "keygen 1",
+  "cmd": "mkdir -p ~/.config/sops/age",
+  "exit": 0,
+  "at": "2026-11-02T12:54:13+08:00",
+  "tail": ""
+ },
+ {
+  "box": "A",
+  "what": "keygen 2",
+  "cmd": "age-keygen -o ~/.config/sops/age/keys.txt",
+  "exit": 0,
+  "at": "2026-11-02T12:54:13+08:00",
+  "tail": "Public key: age1a4xc67k850m46ckmhg9lztfkqk6cunhq6xhc3dqkzgk83y2epyzqsgrwgs\n"
+ },
+ {
+  "box": "B",
+  "what": "environment: git identity, sudo (9.3 A)",
+  "cmd": "git config --global user.name 'Developer B' && git config --global user.email dev-b@example.test && apt-get update -qq > /dev/null && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq sudo > /dev/null",
+  "exit": 0,
+  "at": "2026-11-02T12:54:21+08:00",
+  "tail": "debconf: delaying package configuration, since apt-utils is not installed\n"
+ },
+ {
+  "box": "B",
+  "what": "grader: EDITOR that pastes the new values",
+  "cmd": "printf '#!/bin/sh\\ncp /work/team-app/.env \"$1\"\\n' > /usr/local/bin/paste-v2 && chmod 755 /usr/local/bin/paste-v2",
+  "exit": 0,
+  "at": "2026-11-02T12:54:21+08:00",
+  "tail": ""
+ },
+ {
+  "box": "B",
+  "what": "install 1 (default accepted)",
+  "cmd": "printf '\\n' | script -qec 'sudo apt install age' /dev/null",
+  "exit": 0,
+  "at": "2026-11-02T12:54:24+08:00",
+  "tail": "Reading state information... 0% \r\rReading state information... 2%\r\rReading state information... Done\r\r\nThe following NEW packages will be installed:\r\n  age\r\n0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.\r\nNeed to get 1630 kB of archives.\r\nAfter this operation, 5969 kB of additional disk space will be used.\r\n\u001b[33m\r0% [Working]\u001b[0m\r            \rGet:1 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 age amd64 1.1.1-1ubuntu0.24.04.3 [1630 kB]\r\n\u001b[33m\r0% [1 age 0 B/1630 kB 0%]\u001b[0m\u001b[33m\r                         \r100% [Working]\u001b[0m\r              \rFetched 1630 kB in 0s (6407 kB/s)\r\ndebconf: delaying package configuration, since apt-utils is not installed\r\nSelecting previously unselected package age.\r\n(Reading database ... \r(Reading database ... 5%\r(Reading database ... 10%\r(Reading database ... 15%\r(Reading database ... 20%\r(Reading database ... 25%\r(Reading database ... 30%\r(Reading database ... 35%\r(Reading database ... 40%\r(Reading database ... 45%\r(Reading database ... 50%\r(Reading database ... 55%\r(Reading database ... 60%\r(Reading database ... 65%\r(Reading database ... 70%\r(Reading database ... 75%\r(Reading database ... 80%\r(Reading database ... 85%\r(Reading database ... 90%\r(Reading database ... 95%\r(Reading database ... 100%\r(Reading database ... 9488 files and directories currently installed.)\r\nPreparing to unpack .../age_1.1.1-1ubuntu0.24.04.3_amd64.deb ...\r\nUnpacking age (1.1.1-1ubuntu0.24.04.3) ...\r\nSetting up age (1.1.1-1ubuntu0.24.04.3) ...\r\n"
+ },
+ {
+  "box": "B",
+  "what": "install 2",
+  "cmd": "cd /tmp && curl -LO https://github.com/getsops/sops/releases/download/v3.13.3/sops-v3.13.3.linux.amd64",
+  "exit": 0,
+  "at": "2026-11-02T12:54:35+08:00",
+  "tail": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:03 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:04 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:05 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:06 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:07 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:08 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:09 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:10 --:--:--     0\n\r 55 49.7M   55 27.6M    0     0  2724k      0  0:00:18  0:00:10  0:00:08 2724k\r100 49.7M  100 49.7M    0     0  4844k      0  0:00:10  0:00:10 --:--:--  190M\n"
+ },
+ {
+  "box": "B",
+  "what": "install 3",
+  "cmd": "cd /tmp && sudo install -m 755 sops-v3.13.3.linux.amd64 /usr/local/bin/sops",
+  "exit": 0,
+  "at": "2026-11-02T12:54:35+08:00",
+  "tail": ""
+ },
+ {
+  "box": "B",
+  "what": "install check",
+  "cmd": "sops --version && age --version",
+  "exit": 0,
+  "at": "2026-11-02T12:54:36+08:00",
+  "tail": "sops 3.13.3 (latest)\n\n[warning] Note that in a future version, sops will no longer check whether the current version is the latest when asking for sops' version. If you want to explicitly check for the latest version, add the `--check-for-updates` option to `sops --version`. This will hide this deprecation warning and will always check, even if the default behavior changes in the future.\n1.1.1\n"
+ },
+ {
+  "box": "B",
+  "what": "keygen 1",
+  "cmd": "mkdir -p ~/.config/sops/age",
+  "exit": 0,
+  "at": "2026-11-02T12:54:37+08:00",
+  "tail": ""
+ },
+ {
+  "box": "B",
+  "what": "keygen 2",
+  "cmd": "age-keygen -o ~/.config/sops/age/keys.txt",
+  "exit": 0,
+  "at": "2026-11-02T12:54:38+08:00",
+  "tail": "Public key: age1l4tkr359yl20n8wjcrsqu7efpn0jm58cqfvg3pjxhult25hj0dsq4z4nqj\n"
+ },
+ {
+  "box": "C",
+  "what": "environment: git identity, sudo (9.3 A)",
+  "cmd": "git config --global user.name 'Developer C' && git config --global user.email dev-c@example.test && apt-get update -qq > /dev/null && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq sudo > /dev/null",
+  "exit": 0,
+  "at": "2026-11-02T12:54:47+08:00",
+  "tail": "debconf: delaying package configuration, since apt-utils is not installed\n"
+ },
+ {
+  "box": "C",
+  "what": "grader: EDITOR that pastes the new values",
+  "cmd": "printf '#!/bin/sh\\ncp /work/team-app/.env \"$1\"\\n' > /usr/local/bin/paste-v2 && chmod 755 /usr/local/bin/paste-v2",
+  "exit": 0,
+  "at": "2026-11-02T12:54:48+08:00",
+  "tail": ""
+ },
+ {
+  "box": "C",
+  "what": "install 1 (default accepted)",
+  "cmd": "printf '\\n' | script -qec 'sudo apt install age' /dev/null",
+  "exit": 0,
+  "at": "2026-11-02T12:54:51+08:00",
+  "tail": "te information... 2%\r\rReading state information... Done\r\r\nThe following NEW packages will be installed:\r\n  age\r\n0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.\r\nNeed to get 1630 kB of archives.\r\nAfter this operation, 5969 kB of additional disk space will be used.\r\n\u001b[33m\r0% [Working]\u001b[0m\r            \rGet:1 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 age amd64 1.1.1-1ubuntu0.24.04.3 [1630 kB]\r\n\u001b[33m\r0% [1 age 0 B/1630 kB 0%]\u001b[0m\u001b[33m\r12% [1 age 242 kB/1630 kB 15%]\u001b[0m\u001b[33m\r                              \r100% [Working]\u001b[0m\r              \rFetched 1630 kB in 1s (1551 kB/s)\r\ndebconf: delaying package configuration, since apt-utils is not installed\r\nSelecting previously unselected package age.\r\n(Reading database ... \r(Reading database ... 5%\r(Reading database ... 10%\r(Reading database ... 15%\r(Reading database ... 20%\r(Reading database ... 25%\r(Reading database ... 30%\r(Reading database ... 35%\r(Reading database ... 40%\r(Reading database ... 45%\r(Reading database ... 50%\r(Reading database ... 55%\r(Reading database ... 60%\r(Reading database ... 65%\r(Reading database ... 70%\r(Reading database ... 75%\r(Reading database ... 80%\r(Reading database ... 85%\r(Reading database ... 90%\r(Reading database ... 95%\r(Reading database ... 100%\r(Reading database ... 9488 files and directories currently installed.)\r\nPreparing to unpack .../age_1.1.1-1ubuntu0.24.04.3_amd64.deb ...\r\nUnpacking age (1.1.1-1ubuntu0.24.04.3) ...\r\nSetting up age (1.1.1-1ubuntu0.24.04.3) ...\r\n"
+ },
+ {
+  "box": "C",
+  "what": "install 2",
+  "cmd": "cd /tmp && curl -LO https://github.com/getsops/sops/releases/download/v3.13.3/sops-v3.13.3.linux.amd64",
+  "exit": 0,
+  "at": "2026-11-02T12:54:52+08:00",
+  "tail": "  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\n\r100 49.7M  100 49.7M    0     0   102M      0 --:--:-- --:--:-- --:--:--  102M\n"
+ },
+ {
+  "box": "C",
+  "what": "install 3",
+  "cmd": "cd /tmp && sudo install -m 755 sops-v3.13.3.linux.amd64 /usr/local/bin/sops",
+  "exit": 0,
+  "at": "2026-11-02T12:54:52+08:00",
+  "tail": ""
+ },
+ {
+  "box": "C",
+  "what": "install check",
+  "cmd": "sops --version && age --version",
+  "exit": 0,
+  "at": "2026-11-02T12:54:53+08:00",
+  "tail": "sops 3.13.3 (latest)\n\n[warning] Note that in a future version, sops will no longer check whether the current version is the latest when asking for sops' version. If you want to explicitly check for the latest version, add the `--check-for-updates` option to `sops --version`. This will hide this deprecation warning and will always check, even if the default behavior changes in the future.\n1.1.1\n"
+ },
+ {
+  "box": "C",
+  "what": "keygen 1",
+  "cmd": "mkdir -p ~/.config/sops/age",
+  "exit": 0,
+  "at": "2026-11-02T12:54:53+08:00",
+  "tail": ""
+ },
+ {
+  "box": "C",
+  "what": "keygen 2",
+  "cmd": "age-keygen -o ~/.config/sops/age/keys.txt",
+  "exit": 0,
+  "at": "2026-11-02T12:54:54+08:00",
+  "tail": "Public key: age1qt4qdsd6s7987lk44yau47f202ywa27f9l6upc56q436e522e47qk6ptxe\n"
+ },
+ {
+  "box": "A",
+  "what": "setup repo, .env v1",
+  "cmd": "sh $F/q04/setup_repo.sh /work/team-app && mkdir -p /opt/eval/state/q04 && python3 $F/q04/make_env.py /work/team-app/.env /opt/eval/state/q04/values-v1.txt",
+  "exit": 0,
+  "at": "2026-11-02T12:54:57+08:00",
+  "tail": "setup_repo: created /work/team-app at 441c5fd\nwrote /work/team-app/.env (5 keys, version 1) and /opt/eval/state/q04/values-v1.txt\n"
+ },
+ {
+  "box": "A",
+  "what": "gitignore (answer step 3)",
+  "cmd": "cd /work/team-app && printf '.env\\n.env.*\\n!*.enc.env\\n' >> .gitignore",
+  "exit": 0,
+  "at": "2026-11-02T12:54:58+08:00",
+  "tail": ""
+ },
+ {
+  "box": "A",
+  "what": "a-encrypt-1",
+  "cmd": "python3 $SHARED/egress.py run --out /opt/eval/state/q04/egress --cwd /work/team-app --label a-encrypt-1 --sh 'sops encrypt .env > secrets.enc.env'",
+  "exit": 1,
+  "at": "2026-11-02T12:54:59+08:00",
+  "tail": "egress: a-encrypt-1 exit=1 timed_out=False 0.1s tracer_running=False trace=/opt/eval/state/q04/egress/a-encrypt-1.strace\n"
+ },
+ {
+  "box": "A",
+  "what": "git add",
+  "cmd": "cd /work/team-app && git add .sops.yaml secrets.enc.env .gitignore",
+  "exit": 0,
+  "at": "2026-11-02T12:54:59+08:00",
+  "tail": ""
+ },
+ {
+  "box": "A",
+  "what": "git commit",
+  "cmd": "cd /work/team-app && git commit -m 'Add encrypted secrets'",
+  "exit": 0,
+  "at": "2026-11-02T12:55:00+08:00",
+  "tail": "[main 4a8c0d6] Add encrypted secrets\n 3 files changed, 8 insertions(+)\n create mode 100644 .gitignore\n create mode 100644 .sops.yaml\n create mode 100644 secrets.enc.env\n"
+ },
+ {
+  "box": "A",
+  "what": "ITEM 1 check_history",
+  "cmd": "sh $F/q04/check_history.sh /work/team-app /opt/eval/state/q04/values-v1.txt secrets.enc.env",
+  "exit": 0,
+  "at": "2026-11-02T12:55:01+08:00",
+  "tail": "PASS  committed: 2 commit(s); secrets.enc.env tracked at HEAD\nPASS  history: secret value #1 not found in any commit\nPASS  history: secret value #2 not found in any commit\nPASS  history: secret value #3 not found in any commit\nPASS  history: secret value #4 not found in any commit\nPASS  history: secret value #5 not found in any commit\nPASS  untracked: .env is not tracked\nPASS  ignored: .env is git-ignored\nRESULT PASS\n"
+ },
+ {
+  "box": "A",
+  "what": "bundle",
+  "cmd": "git -C /work/team-app bundle create /opt/eval/xfer/team-app.bundle --all",
+  "exit": 0,
+  "at": "2026-11-02T12:55:01+08:00",
+  "tail": ""
+ },
+ {
+  "box": "B",
+  "what": "clone",
+  "cmd": "git clone /opt/eval/xfer/team-app.bundle /work/team-app",
+  "exit": 0,
+  "at": "2026-11-02T12:55:05+08:00",
+  "tail": "Cloning into '/work/team-app'...\n"
+ },
+ {
+  "box": "B",
+  "what": "b-decrypt-1",
+  "cmd": "python3 $SHARED/egress.py run --out /opt/eval/state/q04/egress --cwd /work/team-app --label b-decrypt-1 --stdout /opt/eval/state/q04/b1.out --stderr /opt/eval/state/q04/b1.err --sh 'sops decrypt secrets.enc.env > .env'",
+  "exit": 1,
+  "at": "2026-11-02T12:55:06+08:00",
+  "tail": "egress: b-decrypt-1 exit=1 timed_out=False 0.1s tracer_running=False trace=/opt/eval/state/q04/egress/b-decrypt-1.strace\n"
+ },
+ {
+  "box": "C",
+  "what": "clone",
+  "cmd": "git clone /opt/eval/xfer/team-app.bundle /work/team-app",
+  "exit": 0,
+  "at": "2026-11-02T12:55:08+08:00",
+  "tail": "Cloning into '/work/team-app'...\n"
+ },
+ {
+  "box": "C",
+  "what": "c-decrypt-1",
+  "cmd": "python3 $SHARED/egress.py run --out /opt/eval/state/q04/egress --cwd /work/team-app --label c-decrypt-1 --stdout /opt/eval/state/q04/c1.out --stderr /opt/eval/state/q04/c1.err --sh 'sops decrypt secrets.enc.env > .env'",
+  "exit": 1,
+  "at": "2026-11-02T12:55:08+08:00",
+  "tail": "egress: c-decrypt-1 exit=1 timed_out=False 0.1s tracer_running=False trace=/opt/eval/state/q04/egress/c-decrypt-1.strace\n"
+ },
+ {
+  "box": "B",
+  "what": "ITEM 2 B present",
+  "cmd": "sh $F/q04/check_values.sh present /opt/eval/state/q04/values-v1.txt /work/team-app/.env /opt/eval/state/q04/b1.out",
+  "exit": 1,
+  "at": "2026-11-02T12:55:09+08:00",
+  "tail": "FAIL  value #1 missing\nFAIL  value #2 missing\nFAIL  value #3 missing\nFAIL  value #4 missing\nFAIL  value #5 missing\nRESULT FAIL\n"
+ },
+ {
+  "box": "C",
+  "what": "ITEM 2 C absent",
+  "cmd": "sh $F/q04/check_values.sh absent /opt/eval/state/q04/values-v1.txt /work/team-app /opt/eval/state/q04/c1.out /opt/eval/state/q04/c1.err",
+  "exit": 0,
+  "at": "2026-11-02T12:55:10+08:00",
+  "tail": "PASS  no secret value in: /work/team-app /opt/eval/state/q04/c1.out /opt/eval/state/q04/c1.err\nRESULT PASS\n"
+ },
+ {
+  "box": "A",
+  "what": "a updatekeys",
+  "cmd": "python3 $SHARED/egress.py run --out /opt/eval/state/q04/egress --cwd /work/team-app --label a-encrypt-2a --sh 'sops updatekeys -y secrets.enc.env'",
+  "exit": 1,
+  "at": "2026-11-02T12:55:11+08:00",
+  "tail": "egress: a-encrypt-2a exit=1 timed_out=False 0.1s tracer_running=False trace=/opt/eval/state/q04/egress/a-encrypt-2a.strace\n"
+ },
+ {
+  "box": "A",
+  "what": "a rotate",
+  "cmd": "python3 $SHARED/egress.py run --out /opt/eval/state/q04/egress --cwd /work/team-app --label a-encrypt-2b --sh 'sops rotate -i secrets.enc.env'",
+  "exit": 1,
+  "at": "2026-11-02T12:55:12+08:00",
+  "tail": "egress: a-encrypt-2b exit=1 timed_out=False 0.1s tracer_running=False trace=/opt/eval/state/q04/egress/a-encrypt-2b.strace\n"
+ },
+ {
+  "box": "A",
+  "what": "grader: new values (provider rotation)",
+  "cmd": "python3 $F/q04/make_env.py /work/team-app/.env /opt/eval/state/q04/values-v2.txt --version 2",
+  "exit": 0,
+  "at": "2026-11-02T12:55:13+08:00",
+  "tail": "wrote /work/team-app/.env (5 keys, version 2) and /opt/eval/state/q04/values-v2.txt\n"
+ },
+ {
+  "box": "A",
+  "what": "a sops edit (paste new values)",
+  "cmd": "python3 $SHARED/egress.py run --out /opt/eval/state/q04/egress --cwd /work/team-app --label a-encrypt-2c --sh 'EDITOR=paste-v2 sops edit secrets.enc.env'",
+  "exit": 1,
+  "at": "2026-11-02T12:55:13+08:00",
+  "tail": "egress: a-encrypt-2c exit=1 timed_out=False 0.1s tracer_running=False trace=/opt/eval/state/q04/egress/a-encrypt-2c.strace\n"
+ },
+ {
+  "box": "A",
+  "what": "git commit",
+  "cmd": "cd /work/team-app && git commit -am 'Revoke B, rotate secrets'",
+  "exit": 0,
+  "at": "2026-11-02T12:55:14+08:00",
+  "tail": "[main ab113ba] Revoke B, rotate secrets\n 1 file changed, 1 insertion(+), 2 deletions(-)\n"
+ },
+ {
+  "box": "A",
+  "what": "bundle 2",
+  "cmd": "git -C /work/team-app bundle create /opt/eval/xfer/team-app.bundle --all",
+  "exit": 0,
+  "at": "2026-11-02T12:55:15+08:00",
+  "tail": ""
+ },
+ {
+  "box": "B",
+  "what": "B pull",
+  "cmd": "cd /work/team-app && git pull --ff-only",
+  "exit": 0,
+  "at": "2026-11-02T12:55:18+08:00",
+  "tail": "From /opt/eval/xfer/team-app.bundle\n   4a8c0d6..ab113ba  main       -> origin/main\nUpdating 4a8c0d6..ab113ba\nFast-forward\n .sops.yaml | 3 +--\n 1 file changed, 1 insertion(+), 2 deletions(-)\n"
+ },
+ {
+  "box": "B",
+  "what": "b-decrypt-2",
+  "cmd": "python3 $SHARED/egress.py run --out /opt/eval/state/q04/egress --cwd /work/team-app --label b-decrypt-2 --stdout /opt/eval/state/q04/b2.out --stderr /opt/eval/state/q04/b2.err --sh 'sops decrypt secrets.enc.env > .env'",
+  "exit": 1,
+  "at": "2026-11-02T12:55:19+08:00",
+  "tail": "egress: b-decrypt-2 exit=1 timed_out=False 0.1s tracer_running=False trace=/opt/eval/state/q04/egress/b-decrypt-2.strace\n"
+ },
+ {
+  "box": "B",
+  "what": "fresh clone",
+  "cmd": "git clone /opt/eval/xfer/team-app.bundle /work/team-app-fresh",
+  "exit": 0,
+  "at": "2026-11-02T12:55:20+08:00",
+  "tail": "Cloning into '/work/team-app-fresh'...\n"
+ },
+ {
+  "box": "B",
+  "what": "b-decrypt-3",
+  "cmd": "python3 $SHARED/egress.py run --out /opt/eval/state/q04/egress --cwd /work/team-app-fresh --label b-decrypt-3 --stdout /opt/eval/state/q04/b3.out --stderr /opt/eval/state/q04/b3.err --sh 'sops decrypt secrets.enc.env > .env'",
+  "exit": 1,
+  "at": "2026-11-02T12:55:21+08:00",
+  "tail": "egress: b-decrypt-3 exit=1 timed_out=False 0.1s tracer_running=False trace=/opt/eval/state/q04/egress/b-decrypt-3.strace\n"
+ },
+ {
+  "box": "B",
+  "what": "ITEM 3 B absent (v2)",
+  "cmd": "sh $F/q04/check_values.sh absent /opt/eval/state/q04/values-v2.txt /work/team-app /work/team-app-fresh /opt/eval/state/q04/b2.out /opt/eval/state/q04/b2.err /opt/eval/state/q04/b3.out /opt/eval/state/q04/b3.err",
+  "exit": 0,
+  "at": "2026-11-02T12:55:22+08:00",
+  "tail": "PASS  no secret value in: /work/team-app /work/team-app-fresh /opt/eval/state/q04/b2.out /opt/eval/state/q04/b2.err /opt/eval/state/q04/b3.out /opt/eval/state/q04/b3.err\nRESULT PASS\n"
+ },
+ {
+  "box": "A",
+  "what": "egress stop",
+  "cmd": "python3 $SHARED/egress.py stop --out /opt/eval/state/q04/egress",
+  "exit": 0,
+  "at": "2026-11-02T12:55:22+08:00",
+  "tail": ""
+ },
+ {
+  "box": "A",
+  "what": "ITEM 4 egress report box A",
+  "cmd": "python3 $SHARED/egress.py report --out /opt/eval/state/q04/egress --json /tmp/eg-A.json",
+  "exit": 0,
+  "at": "2026-11-02T12:55:23+08:00",
+  "tail": "egress: PASS (no egress attempt in 4 trace(s))\n"
+ },
+ {
+  "box": "B",
+  "what": "egress stop",
+  "cmd": "python3 $SHARED/egress.py stop --out /opt/eval/state/q04/egress",
+  "exit": 0,
+  "at": "2026-11-02T12:55:24+08:00",
+  "tail": ""
+ },
+ {
+  "box": "B",
+  "what": "ITEM 4 egress report box B",
+  "cmd": "python3 $SHARED/egress.py report --out /opt/eval/state/q04/egress --json /tmp/eg-B.json",
+  "exit": 0,
+  "at": "2026-11-02T12:55:25+08:00",
+  "tail": "egress: PASS (no egress attempt in 3 trace(s))\n"
+ },
+ {
+  "box": "C",
+  "what": "egress stop",
+  "cmd": "python3 $SHARED/egress.py stop --out /opt/eval/state/q04/egress",
+  "exit": 0,
+  "at": "2026-11-02T12:55:27+08:00",
+  "tail": ""
+ },
+ {
+  "box": "C",
+  "what": "ITEM 4 egress report box C",
+  "cmd": "python3 $SHARED/egress.py report --out /opt/eval/state/q04/egress --json /tmp/eg-C.json",
+  "exit": 0,
+  "at": "2026-11-02T12:55:27+08:00",
+  "tail": "egress: PASS (no egress attempt in 1 trace(s))\n"
+ },
+ {
+  "box": "grader",
+  "what": "ITEM 4 (every box exit 0 = pass)",
+  "exit": 0,
+  "tail": "{'A': 0, 'B': 0, 'C': 0}"
+ }
+]
