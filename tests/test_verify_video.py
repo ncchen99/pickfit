@@ -252,6 +252,8 @@ class FakeVnc:
 
     def capture(self) -> tuple[int, int, bytes]:
         FakeVnc.captures += 1
+        if FakeVnc.captures == 1:  # a new connection's first frame at another size, black (seen 11/2)
+            return 64, 36, bytes(64 * 36 * 4)
         shade = FakeVnc.captures * 40 % 256
         return 64, 48, bytes([shade, 90, 30, 0]) * (64 * 48)
 
@@ -264,8 +266,14 @@ def test_the_mac_recorder_writes_frames_at_its_rate_and_ends_the_file(tmp_path: 
 
     monkeypatch.setattr(vnc.VncClient, "from_url", classmethod(lambda cls, url, **kw: FakeVnc()))
 
+    class Screen:
+        size = (64, 48)
+
     class Box:
         os, vnc_url, _screen = "macos", "vnc://:pw@127.0.0.1:5900", None
+
+        def screen(self) -> Screen:
+            return Screen()
 
     rec = record.VncRecorder(Box(), tmp_path / "r.mp4")
     rec.start()
@@ -274,3 +282,8 @@ def test_the_mac_recorder_writes_frames_at_its_rate_and_ends_the_file(tmp_path: 
     assert got.error is None and got.clock == "host" and (got.width, got.height) == (64, 48)
     assert got.sha256 == record.sha256_file(tmp_path / "r.mp4") and got.seconds == pytest.approx(2.25, abs=0.5)
     assert rec.frames >= 8 and FakeVnc.captures >= 3
+    last = record.png_frame(tmp_path / "r.mp4", 2.0)
+    from PIL import Image
+    import io
+
+    assert max(Image.open(io.BytesIO(last)).convert("L").getdata()) > 20  # later frames are kept, not the black first

@@ -251,6 +251,15 @@ def draw_pointer(frame: bytes, width: int, height: int, x: int, y: int) -> bytes
     return img.tobytes()
 
 
+def fit(width: int, height: int, frame: bytes, to_w: int, to_h: int) -> bytes:
+    """A BGRX frame at the recording's size (a frame of another size is scaled to it)."""
+    if (width, height) == (to_w, to_h):
+        return frame
+    from PIL import Image
+
+    return Image.frombytes("RGBX", (width, height), frame).resize((to_w, to_h)).tobytes()
+
+
 class VncRecorder:
     """Frames of a tart VM's display at RECORD_FPS, encoded by the host's ffmpeg."""
 
@@ -278,8 +287,12 @@ class VncRecorder:
             if not ffmpeg or not url:
                 raise RuntimeError("no ffmpeg on the host" if not ffmpeg else "the box has no VNC display")
             client = VncClient.from_url(url)
-            width, height, frame = client.capture()
+            # The recording takes the display's size as pickfit drives it (VncDisplay): a new connection's first
+            # frame has come back at another size, black (1280x720 on the 1280x800 desktop, 11/2).
+            screen = self.box.screen() if hasattr(self.box, "screen") else None
+            width, height = screen.size if screen is not None else client.capture()[:2]
             self.rec.width, self.rec.height = width, height
+            frame = fit(*client.capture(), width, height)
             self.host_path.parent.mkdir(parents=True, exist_ok=True)
             self.host_path.unlink(missing_ok=True)
             self._proc = subprocess.Popen(
@@ -309,10 +322,8 @@ class VncRecorder:
             while not self._stop.is_set():
                 self._emit(latest)
                 self._stop.wait(max(0.0, self.rec.started_at + self.frames / self.fps - time.time()))
-                width, height, data = client.capture()  # the first frame of a new connection: the screen now
+                latest = fit(*client.capture(), self.rec.width, self.rec.height)  # a new connection's first frame
                 self.captures += 1
-                if (width, height) == (self.rec.width, self.rec.height):
-                    latest = data
             self._emit(latest)
         except Exception as err:  # the VM went away, or ffmpeg did
             self.rec.error = f"recording cut short: {type(err).__name__}: {err}"[:400]
