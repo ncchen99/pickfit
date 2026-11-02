@@ -61,20 +61,23 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-converternow-20261102-001940-be18",
+      "run_id": "verify-converternow-20261102-025203-7589",
       "method": "other",
       "steps": [
         {
           "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
-          "purpose": "Add Flathub remote for user"
+          "purpose": "add flathub remote for user"
         },
         {
-          "command": "flatpak install --user -y flathub io.github.ferraridamiano.ConverterNOW",
-          "purpose": "Install ConverterNOW via flatpak"
+          "command": "flatpak install -y --user flathub io.github.ferraridamiano.ConverterNOW",
+          "purpose": "install ConverterNOW via flatpak"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "flatpak info io.github.ferraridamiano.ConverterNOW",
+        "expected_signal": "Version: 4.6.3"
+      },
       "first_task": "flatpak run io.github.ferraridamiano.ConverterNOW"
     },
     "windows": {
@@ -105,34 +108,43 @@
     "url": "https://github.com/ferraridamiano/ConverterNOW/releases/tag/v4.6.3"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-02T00:22:05.550464+08:00",
+    "checked_at": "2026-11-02T03:00:01.033490+08:00",
     "runs": [
       {
-        "id": "verify-converternow-20261102-001940-be18",
-        "level": "install",
+        "id": "verify-converternow-20261102-025203-7589",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx-gui:242bd3411e2e",
-        "checked_at": "2026-11-02T00:22:05.550464+08:00",
-        "tool_version": null,
+        "checked_at": "2026-11-02T03:00:01.033490+08:00",
+        "tool_version": "4.6.3",
         "install_method": "other",
         "replayed": true,
         "steps": [
           {
             "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
-            "purpose": "Add Flathub remote for user"
+            "purpose": "add flathub remote for user"
           },
           {
-            "command": "flatpak install --user -y flathub io.github.ferraridamiano.ConverterNOW",
-            "purpose": "Install ConverterNOW via flatpak"
+            "command": "flatpak install -y --user flathub io.github.ferraridamiano.ConverterNOW",
+            "purpose": "install ConverterNOW via flatpak"
           }
         ],
         "smoke_tests": [
+          {
+            "command": "flatpak info io.github.ferraridamiano.ConverterNOW",
+            "expected_signal": "Version: 4.6.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Version: 4.6.3",
+            "setup": [],
+            "offline": true
+          },
           {
             "command": "flatpak run io.github.ferraridamiano.ConverterNOW",
             "expected_signal": "gui tier: window",
@@ -141,40 +153,91 @@
             "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "flatpak run io.github.ferraridamiano.ConverterNOW",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"1000\": yes",
+            "setup": [],
+            "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak install flathub io.github.ferraridamiano.ConverterNOW",
+            "actually_needed": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo before install; box had no remotes",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "It integrates a calculator that let you do the calculations in every page",
+            "actually_needed": "typing 9*9 in Length field shows Error, invalid characters and keeps value 9; calculator likely uses separate button or different operator",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Converter NOW shows its main Length conversion screen with sidebar categories and unit input fields fully drawn.",
+          "observed": "Screenshot shows flatpak info listing ConverterNOW with Version 4.6.3. / The app shows its main converter interface with a category sidebar and Length unit fields.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-converternow-20261102-001940-be18/report.json",
+          "trace_path": "runs/verify/verify-converternow-20261102-025203-7589/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-converternow-20261102-001940-be18/replay-4-1.app.judged.png"
+            "runs/verify/verify-converternow-20261102-025203-7589/check-1-cmd12.judged.png",
+            "runs/verify/verify-converternow-20261102-025203-7589/replay-6-1.app.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.041494,
+        "cost_usd": 0.214446,
         "gui": {
-          "tier": "ui_rendered",
+          "tier": "action_checked",
           "screen": "main_ui",
           "command": "flatpak run io.github.ferraridamiano.ConverterNOW",
           "window_title": "Converter NOW",
-          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+          "display": "Xvfb 1280x800x24, no window manager, no GPU",
+          "operations": [
+            {
+              "feature": "convert units in real time while typing",
+              "goal": "In the Length conversion page shown on launch, click the first/top numeric input field to focus it, select all and delete any existing value, then type exactly 1 and wait 2 seconds for the real-time conversion to update all other units below. Do not navigate away.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "1000"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"1000\": yes",
+              "smoke_test": 2,
+              "actions": 8,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": [
+                "runs/verify/verify-converternow-20261102-025203-7589/replay-7-2-op-1.png",
+                "runs/verify/verify-converternow-20261102-025203-7589/replay-7-2-op-2.png",
+                "runs/verify/verify-converternow-20261102-025203-7589/replay-7-2-op-3.png",
+                "runs/verify/verify-converternow-20261102-025203-7589/replay-7-2-op-4.png",
+                "runs/verify/verify-converternow-20261102-025203-7589/replay-7-2-op-5.png",
+                "runs/verify/verify-converternow-20261102-025203-7589/replay-7-2-op-6.png",
+                "runs/verify/verify-converternow-20261102-025203-7589/replay-7-2-op-7.png",
+                "runs/verify/verify-converternow-20261102-025203-7589/replay-7-2-op-8.png"
+              ]
+            }
+          ]
         },
         "features": [
           {
             "feature": "convert units in real time while typing",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "other",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "reorganize units by priority",
@@ -182,7 +245,7 @@
             "smoke_tests": [],
             "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "no failed check in the log; operate hit daily cap with 0 actions, no reorder performed"
           },
           {
             "feature": "calculate in every conversion page",
@@ -190,15 +253,15 @@
             "smoke_tests": [],
             "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "no failed check in the log; typed 9*9 shows Error, invalid characters; calculator needs different invocation"
           },
           {
             "feature": "convert currencies with daily rates",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "other",
+            "reason": "needs_service",
             "failure": null,
-            "note": "install-only run"
+            "note": "daily rates need internet; replay runs offline"
           }
         ]
       }
@@ -475,5 +538,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:43+08:00",
-  "updated_at": "2026-11-02T00:22:05.555985+08:00"
+  "updated_at": "2026-11-02T03:00:01.035628+08:00"
 }
