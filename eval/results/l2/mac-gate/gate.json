@@ -1,0 +1,23 @@
+{
+  "at": "2026-11-02 (Taipei), before any Mac answer ran",
+  "base": "ghcr.io/cirruslabs/macos-tahoe-base@sha256:4aaa751fa7538902d73c767f27a066fc87e83f183069da4e4b5022863abd4c77",
+  "host": "Apple M5, 24 GiB, macOS 27.2; tart 2.41.1",
+  "guest": "macOS 26.6.2 (25G83), Apple Virtual Machine 1 (VirtualMac2,1)",
+  "nested": {
+    "command": "tart run <clone> --no-graphics --nested",
+    "result": "tart refused: 'macOS virtual machines do not support nested virtualization' (tart-run-nested.log)",
+    "guest_kern.hv_support": 0,
+    "consequence": "q08 (Colima runs a Linux VM with Apple's Virtualization framework) cannot run in a macOS guest: L2 not run for both groups (coordinator 2026-11-02: no Docker install and removal on 念誠's own Mac)"
+  },
+  "metal": {
+    "check": "MLX in a venv in the gate clone: mx.metal.is_available() and a 2048x2048 matmul on the default device",
+    "result": "available; device 'Apple Paravirtual device'; default device gpu; matmul ran (0.24 s)"
+  },
+  "baseline_trial": "first gate clone: changes after a host-side `tart stop` were partly lost (no sync); fixed by sync and a shutdown from inside the guest; the new-user auto-login was confirmed in the q11 control clone",
+  "late_calibration_q12": {
+    "fixture_model": "mlx-community/Qwen2.5-1.5B-Instruct-4bit",
+    "revision": "8b403126fc14f14cfc99bb4cfa72ecbc129ea677",
+    "pinned_in": "the gate clone with pin_model.py (files stayed in the VM)",
+    "openai_client": "3.42.1 (latest on PyPI, uploaded 2026-11-01)"
+  }
+}

@@ -887,9 +887,10 @@ class VideoChapter(_Model):
 
 
 class RunVideo(_Model):
-    """A short captioned clip of pickfit operating a GUI app to check its features (pickfit/verify/video.py).
+    """A short captioned clip of pickfit operating a GUI or web app to check its features (pickfit/verify/video.py).
 
-    A fresh box replayed this run's steps and operations while pickfit recorded its own screen; Muse Spark Open
+    A fresh box replayed this run's steps and operations (a web app: a second, recorded visit replaying the first
+    visit's actions without a model) while pickfit recorded its own screen; Muse Spark Open
     watched each recording with pickfit's action log and picked whole segments, kept in their order (a speed-up
     is labelled on screen), and then watched the cut and confirmed that each caption shows on screen. Captions
     claim only checks that passed in this run and again in the recorded replay. The clip's first frame says it
@@ -1071,7 +1072,7 @@ class VerificationRun(_Model):
     video: RunVideo | None = Field(
         default=None,
         exclude_if=lambda value: value is None,
-        description="GUI apps: a captioned clip of pickfit operating the app to check its features.",
+        description="GUI and web apps: a captioned clip of pickfit operating the app to check its features.",
     )
 
     @model_validator(mode="after")
@@ -1079,9 +1080,9 @@ class VerificationRun(_Model):
         """A clip shows only what this run checked: passed operations' smoke tests and checked features."""
         if self.video is None:
             return self
-        if self.gui is None or not is_passed(self.level):
-            raise ValueError("a video belongs to a passed run of a GUI app")
-        operated = {op.smoke_test for op in self.gui.operations if op.passed}
+        if (self.gui is None and self.web is None) or not is_passed(self.level):
+            raise ValueError("a video belongs to a passed run of a GUI or web app")
+        operated = {op.smoke_test for op in (self.gui or self.web).operations if op.passed}
         for raw in self.video.raw:
             if raw.smoke_test not in operated:
                 raise ValueError("a video's recording must be of an operation that passed in this run")

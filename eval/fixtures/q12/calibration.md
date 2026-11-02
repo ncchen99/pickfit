@@ -16,13 +16,13 @@
 
 | 項目 | 結果 |
 |---|---|
-| repo id | |
-| 固定的 commit（revision） | |
-| API 回報的 gated／license | |
-| `config.json` 的 quantization（bits 要是 4） | |
-| 參數量（依原始模型的說明，≤3B） | |
-| 檔案總大小 | |
-| 不帶 token 下載成功（`pin_model.py` 本身不送 token） | |
+| repo id | `mlx-community/Qwen2.5-1.5B-Instruct-4bit`（needs.json 第一個候選；2026-11-02 補做的固定，在任何 q12 實跑之前，在一台丟棄式 tart clone 裡跑 `pin_model.py`） |
+| 固定的 commit（revision） | `8b403126fc14f14cfc99bb4cfa72ecbc129ea677` |
+| API 回報的 gated／license | gated false；apache-2.0 |
+| `config.json` 的 quantization（bits 要是 4） | bits 4，group_size 64 |
+| 參數量（依原始模型的說明，≤3B） | 1.5B（Qwen/Qwen2.5-1.5B-Instruct） |
+| 檔案總大小 | 880,172,064 bytes，11 個檔 |
+| 不帶 token 下載成功（`pin_model.py` 本身不送 token） | 是 |
 
 4. 每個 Mac 實跑日開始前，確認 repo 的最新 revision 還是固定的那個（否則照 README L2-2 的規則處理）：
    ```sh

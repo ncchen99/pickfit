@@ -1,0 +1,135 @@
+[
+ {
+  "what": "copy fixtures",
+  "cmd": "sudo mkdir -p /Users/Shared/eval-fixtures && sudo tar -C /Users/Shared/eval-fixtures -xzf /tmp/fixtures.tgz && sudo chmod -R a+rX /Users/Shared/eval-fixtures",
+  "exit": 0,
+  "at": "2026-11-02T16:25:39+08:00",
+  "tail": ""
+ },
+ {
+  "what": "baseline part 1 (new user, image Homebrew aside)",
+  "cmd": "bash /tmp/mac_baseline.sh",
+  "exit": 0,
+  "at": "2026-11-02T16:25:44+08:00",
+  "tail": "baseline part 1 done: user evaluser (staff,everyone,localaccounts,_appserverusr,admin,_appserveradm,com.apple.sharepoint.group.1,_appstore,_lpadmin,_lpoperator,_developer,_analyticsusers,com.apple.access_ftp,com.apple.access_screensharing,com.apple.access_ssh,com.apple.access_remote_ae,com.apple.sharepoint.group.2), image Homebrew moved to /var/eval-image-aside\n"
+ },
+ {
+  "what": "shutdown from inside the guest",
+  "cmd": "sync; sudo shutdown -h +0 > /dev/null 2>&1 &",
+  "exit": 0,
+  "at": "2026-11-02T16:25:44+08:00",
+  "tail": ""
+ },
+ {
+  "what": "baseline: logged-in user after reboot",
+  "cmd": "whoami; stat -f %Su /dev/console; ls /opt",
+  "exit": 0,
+  "at": "2026-11-02T16:31:23+08:00",
+  "tail": "evaluser\nevaluser\n"
+ },
+ {
+  "what": "baseline part 2: empty Homebrew, official installer (NONINTERACTIVE: no RETURN prompt)",
+  "cmd": "curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o /tmp/brew-install.sh && shasum -a 256 /tmp/brew-install.sh && NONINTERACTIVE=1 /bin/bash /tmp/brew-install.sh > /tmp/brew-install.log 2>&1; rc=$?; tail -15 /tmp/brew-install.log; exit $rc",
+  "exit": 0,
+  "at": "2026-11-02T16:32:51+08:00",
+  "tail": "5f333bbe53bc490e51e7ccb1df8779b3dd6ee73a1a7379efda216edb08ccb148  /tmp/brew-install.sh\n  https://docs.brew.sh/Analytics\nNo analytics data has been sent yet (nor will any be during this install run).\n\n==> Homebrew is run entirely by unpaid volunteers. Please consider donating:\n  https://github.com/Homebrew/brew#donations\n\n==> Next steps:\n- Run these commands in your terminal to add Homebrew to your PATH:\n    echo >> /Users/evaluser/.zprofile\n    echo 'eval \"$(/opt/homebrew/bin/brew shellenv zsh)\"' >> /Users/evaluser/.zprofile\n    eval \"$(/opt/homebrew/bin/brew shellenv zsh)\"\n- Run brew help to get started\n- Further documentation:\n    https://docs.brew.sh\n\n"
+ },
+ {
+  "what": "baseline: the installer's next-steps line in ~/.zprofile (copied from its output)",
+  "cmd": "L=$(grep -o 'eval \"$(/opt/homebrew/bin/brew shellenv[^)]*)\"' /tmp/brew-install.log | head -1); [ -n \"$L\" ] && echo >> ~/.zprofile && echo \"$L\" >> ~/.zprofile && cat ~/.zprofile",
+  "exit": 0,
+  "at": "2026-11-02T16:32:51+08:00",
+  "tail": "\neval \"$(/opt/homebrew/bin/brew shellenv zsh)\"\n"
+ },
+ {
+  "what": "baseline: Homebrew and CLT versions",
+  "cmd": "/bin/zsh -il -c 'brew --version; brew list --formula | wc -l; brew list --cask | wc -l; xcode-select -p; pkgutil --pkg-info=com.apple.pkg.CLTools_Executables | grep version'",
+  "exit": 0,
+  "at": "2026-11-02T16:32:51+08:00",
+  "tail": "Homebrew 7.0.11\n       0\n       0\n/Library/Developer/CommandLineTools\nversion: 27.0.0.0.1788430756\n"
+ },
+ {
+  "what": "run folder",
+  "cmd": "sudo mkdir -p /Users/Shared/eval-runs/q11-control && sudo chown evaluser /Users/Shared/eval-runs/q11-control && cp /tmp/lib.zsh /Users/Shared/eval-runs/q11-control/lib.zsh",
+  "exit": 0,
+  "at": "2026-11-02T16:32:51+08:00",
+  "tail": ""
+ },
+ {
+  "what": "before snapshot",
+  "cmd": "sudo sh /Users/Shared/eval-fixtures/q11/mac/snapshot_state.sh /Users/Shared/eval-runs/q11-control before evaluser > /Users/Shared/eval-runs/q11-control/snapshot-before.log 2>&1; echo exit $?",
+  "exit": 0,
+  "at": "2026-11-02T16:32:52+08:00",
+  "tail": "exit 0\n"
+ },
+ {
+  "what": "preflight",
+  "cmd": "/bin/zsh -il -c 'sh /Users/Shared/eval-fixtures/q11/mac/preflight.sh /Users/Shared/eval-runs/q11-control/preflight.txt; echo preflight exit $?; tail -5 /Users/Shared/eval-runs/q11-control/preflight.txt'",
+  "exit": 0,
+  "at": "2026-11-02T16:32:53+08:00",
+  "tail": "== machine\n  date: 2026-11-02T08:32:52Z\n  macOS: 26.6.2 (25G83); arch: arm64\n  chip: Apple M5 (Virtual); memory: 16 GiB\n  developer tools: /Library/Developer/CommandLineTools\n== user\n  user: evaluser uid=502 home=/Users/evaluser\n  admin: yes\n  home created: 2026-11-02T08:25\n== home directory (must hold only what macOS creates for a new account)\n  ok\n== environment (names only)\n  no token, key, cache-location or offline variables set\n  PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/opt/homebrew/bin\n== large model-like files readable by this user (>= 100 MB)\n  none\n== package managers and runtimes on PATH\n  brew: /opt/homebrew/bin/brew\n  python3: /usr/bin/python3\n  pip3: /usr/bin/pip3\n  brew prefix: /opt/homebrew owner: evaluser\n  brew formulae: 0, casks: 0\n  /opt/homebrew exists, owner evaluser\n== listening TCP ports\n  none visible to this user\n== virtual machine bridges (stop all VMs before a run)\n  none\n\npreflight: PASS\npreflight exit 0\n  none visible to this user\n== virtual machine bridges (stop all VMs before a run)\n  none\n\npreflight: PASS\n"
+ },
+ {
+  "what": "Terminal zsh: are # comments comments?",
+  "cmd": "/bin/zsh -il -c 'setopt | grep -i interactivecomments || echo '\"'\"'interactivecomments off'\"'\"''",
+  "exit": 0,
+  "at": "2026-11-02T16:32:53+08:00",
+  "tail": "interactivecomments off\n"
+ },
+ {
+  "what": "grader check: does a background job outlive its exec?",
+  "cmd": "nohup sleep 600 > /dev/null 2>&1 < /dev/null & echo started $!",
+  "exit": 0,
+  "at": "2026-11-02T16:32:53+08:00",
+  "tail": "started 1665\n"
+ },
+ {
+  "what": "grader check: background job still there",
+  "cmd": "pgrep -fl 'sleep 600' || echo gone",
+  "exit": 0,
+  "at": "2026-11-02T16:32:53+08:00",
+  "tail": "1665 sleep 600\n"
+ },
+ {
+  "what": "L2-1 footprint watch starts",
+  "cmd": "sudo nohup /usr/bin/python3 /Users/Shared/eval-fixtures/q11/mac/footprint_watch.py --uid $(id -u) --out /Users/Shared/eval-runs/q11-control/footprint > /Users/Shared/eval-runs/q11-control/footprint.log 2>&1 & sleep 3; cat /Users/Shared/eval-runs/q11-control/footprint.log",
+  "exit": 0,
+  "at": "2026-11-02T16:34:34+08:00",
+  "tail": "watching (uid 502, shell 0); stop with Ctrl-C or: touch /Users/Shared/eval-runs/q11-control/footprint/stop\n"
+ },
+ {
+  "what": "L2-1 install lines (one zsh; # starts a comment, as in bash)",
+  "cmd": "/bin/zsh -il -c 'setopt interactivecomments; cd ~ && OUT=/Users/Shared/eval-runs/q11-control; . /Users/Shared/eval-runs/q11-control/lib.zsh; run_lines install /Users/Shared/eval-runs/q11-control/install.lines; all_ok install && echo INSTALL-OK || echo INSTALL-FAIL'",
+  "exit": 0,
+  "at": "2026-11-02T16:37:01+08:00",
+  "tail": "0:02:08  0:01:56  0:00:12 1688k\r 91  219M   91  201M    0     0  1755k      0  0:02:08  0:01:57  0:00:11 1737k\r 92  219M   92  202M    0     0  1755k      0  0:02:08  0:01:58  0:00:10 1832k\r 93  219M   93  204M    0     0  1755k      0  0:02:08  0:01:59  0:00:09 1868k\r 93  219M   93  206M    0     0  1753k      0  0:02:08  0:02:00  0:00:08 1814k\r 94  219M   94  207M    0     0  1752k      0  0:02:08  0:02:01  0:00:07 1754k\r 95  219M   95  209M    0     0  1751k      0  0:02:08  0:02:02  0:00:06 1649k\r 95  219M   95  211M    0     0  1751k      0  0:02:08  0:02:03  0:00:05 1667k\r 96  219M   96  212M    0     0  1750k      0  0:02:08  0:02:04  0:00:04 1637k\r 97  219M   97  214M    0     0  1749k      0  0:02:08  0:02:05  0:00:03 1637k\r 98  219M   98  215M    0     0  1750k      0  0:02:08  0:02:06  0:00:02 1689k\r 98  219M   98  216M    0     0  1744k      0  0:02:09  0:02:07  0:00:02 1575k\r 99  219M   99  218M    0     0  1743k      0  0:02:09  0:02:08  0:00:01 1530k\r100  219M  100  219M    0     0  1742k      0  0:02:09  0:02:09 --:--:-- 1527k\n== install 2: hdiutil attach -nobrowse -mountpoint /tmp/ollama-dmg ~/Downloads/Ollama.dmg && cp -R /tmp/ollama-dmg/Ollama.app /Applications/ && hdiutil detach /tmp/ollama-dmg\ninstall 2 exit 0\n/dev/disk7          \tGUID_partition_scheme          \t\n/dev/disk7s1        \tApple_HFS                      \t/private/tmp/ollama-dmg\n\"disk7\" ejected.\n== install 3: open -a Ollama\ninstall 3 exit 1\nUnable to find application named 'Ollama'\nINSTALL-FAIL\n"
+ },
+ {
+  "what": "after install: apps in the session, ollama on PATH, processes",
+  "cmd": "sleep 45; lsappinfo list | grep -E '^ *[0-9]+\\) \"' ; /bin/zsh -il -c 'command -v ollama'; ls -l /usr/local/bin/ollama 2>&1; ps -axo user,pid,command | grep -i [o]llama | cut -c1-160",
+  "exit": 0,
+  "at": "2026-11-02T16:37:46+08:00",
+  "tail": "\"Control Center\" ASN:0x0-0x17017: \n15) \"Single Sign-On\" ASN:0x0-0x18018: \n16) \"AppSSODaemon\" ASN:0x0-0x19019: \n17) \"Setup Assistant\" ASN:0x0-0x1a01a: (in front) \n18) \"GamePolicyAgent\" ASN:0x0-0x1b01b: \n19) \"SystemUIServer\" ASN:0x0-0x1c01c: \n20) \"Dock\" ASN:0x0-0x1d01d: \n21) \"Finder\" ASN:0x0-0x1e01e: \n22) \"QuickLookUIService (Finder)\" ASN:0x0-0x1f01f: \n23) \"Wallpaper\" ASN:0x0-0x20020: \n24) \"SoftwareUpdateNotificationManager\" ASN:0x0-0x21021: \n25) \"TextInputMenuAgent\" ASN:0x0-0x23023: \n26) \"CursorUIViewService\" ASN:0x0-0x24024: \n27) \"AirPlay Screen Mirroring\" ASN:0x0-0x25025: \n28) \"Siri\" ASN:0x0-0x26026: \n29) \"Spotlight\" ASN:0x0-0x27027: \n30) \"TextInputSwitcher\" ASN:0x0-0x29029: \n31) \"RemindersIntentsExtension\" ASN:0x0-0x2b02b: \n32) \"TipsWidgetExtension\" ASN:0x0-0x2c02c: \n33) \"CalendarWidgetExtension\" ASN:0x0-0x2d02d: \n34) \"macOSWidgetExtension\" ASN:0x0-0x2e02e: \n35) \"Shortcuts\" ASN:0x0-0x32032: \n36) \"nsattributedstringagent\" ASN:0x0-0x34034: \n37) \"nsattributedstringagent\" ASN:0x0-0x35035: \n38) \"Dock Extra\" ASN:0x0-0x3d03d: \n39) \"WallpaperLegacyExtension\" ASN:0x0-0x3e03e: \n40) \"SiriNCService\" ASN:0x0-0x3f03f: \nls: /usr/local/bin/ollama: No such file or directory\nevaluser          1790 /bin/bash -c bash -c 'sleep 45; lsappinfo list | grep -E '\"'\"'^ *[0-9]+\\) \"'\"'\"' ; /bin/zsh -il -c '\"'\"'command -v ollama'\"'\"'; ls -l /us\nevaluser          1791 bash -c sleep 45; lsappinfo list | grep -E '^ *[0-9]+\\) \"' ; /bin/zsh -il -c 'command -v ollama'; ls -l /usr/local/bin/ollama 2>&1; ps -a\n"
+ },
+ {
+  "what": "the new account's first-login Setup Assistant closed (part of making the account, CHECKLIST)",
+  "cmd": "pkill -x \"Setup Assistant\"; sleep 2; pgrep -x \"Setup Assistant\" || echo closed",
+  "exit": 0,
+  "at": "2026-11-02T16:38:23+08:00",
+  "tail": "closed\n"
+ },
+ {
+  "what": "install 3 again as the double-click: open /Applications/Ollama.app",
+  "cmd": "/bin/zsh -il -c 'cd ~ && open /Applications/Ollama.app; echo open exit $?'",
+  "exit": 0,
+  "at": "2026-11-02T16:38:25+08:00",
+  "tail": "open exit 0\n"
+ },
+ {
+  "what": "after opening: apps in the session, ollama on PATH, processes",
+  "cmd": "sleep 45; lsappinfo list | grep -E '^ *[0-9]+\\) \"' ; /bin/zsh -il -c 'command -v ollama'; ls -l /usr/local/bin/ollama 2>&1; ps -axo user,pid,command | grep -i [o]llama | cut -c1-160",
+  "exit": 124,
+  "at": "2026-11-02T16:44:25+08:00",
+  "tail": "host timeout"
+ }
+]

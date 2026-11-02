@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "server_name": "fixture-echo",
+  "mapping": {
+    "HOME": "/root",
+    "PROJECT": "/work/proj",
+    "FIXTURE": "/opt/eval/fixtures/q01"
+  },
+  "locations": [
+    {
+      "id": "claude-user",
+      "agent": "claude-code",
+      "scope": "user (the same file also holds local scope under projects[<path>].mcpServers)",
+      "path": "/root/.claude.json",
+      "format": "json",
+      "key_path": [
+        "editorMode"
+      ],
+      "expected": "vim",
+      "sha256": "974db936186719d8d8332828a88246bf5e76a5d447c6f997546ead1564a7ae15",
+      "comment_line": null
+    },
+    {
+      "id": "claude-project",
+      "agent": "claude-code",
+      "scope": "project",
+      "path": "/work/proj/.mcp.json",
+      "format": "json",
+      "key_path": [
+        "mcpServers",
+        "keep-existing"
+      ],
+      "expected": {
+        "type": "stdio",
+        "command": "python3",
+        "args": [
+          "/opt/eval/fixtures/q01/server/fixture_mcp_server.py",
+          "--server-name",
+          "keep-existing"
+        ],
+        "env": {}
+      },
+      "sha256": "3afa6d3e55d085e6ceb09fdc4b6292225c75e20faa406e2164ea85d27e432882",
+      "comment_line": null
+    },
+    {
+      "id": "codex-user",
+      "agent": "codex-cli",
+      "scope": "user",
+      "path": "/root/.codex/config.toml",
+      "format": "toml",
+      "key_path": [
+        "projects",
+        "/work/proj",
+        "trust_level"
+      ],
+      "expected": "trusted",
+      "sha256": "5675085017aba39d29e65662657d7038e8072206e74b84e39ff34b31d6542149",
+      "comment_line": "# seeded by eval q01: an unrelated setting that must survive"
+    },
+    {
+      "id": "codex-project",
+      "agent": "codex-cli",
+      "scope": "project (trusted projects only)",
+      "path": "/work/proj/.codex/config.toml",
+      "format": "toml",
+      "key_path": [
+        "model_reasoning_effort"
+      ],
+      "expected": "high",
+      "sha256": "df03f36c3aa1c81808e72941cae424eb57eb80aec5d28c73d1c545ad3e0528f9",
+      "comment_line": "# seeded by eval q01: an unrelated setting that must survive"
+    },
+    {
+      "id": "gemini-user",
+      "agent": "gemini-cli",
+      "scope": "user",
+      "path": "/root/.gemini/settings.json",
+      "format": "json",
+      "key_path": [
+        "ui",
+        "theme"
+      ],
+      "expected": "GitHub",
+      "sha256": "165082191ee745375a84b01f1f9bbd5b9240118d1c66c1c845b05262830b6dc7",
+      "comment_line": null
+    },
+    {
+      "id": "gemini-project",
+      "agent": "gemini-cli",
+      "scope": "project",
+      "path": "/work/proj/.gemini/settings.json",
+      "format": "json",
+      "key_path": [
+        "general",
+        "vimMode"
+      ],
+      "expected": true,
+      "sha256": "2258043d3a8467b56b6627bbccafaac4963428a42ecf9f2ad6f726fd44042517",
+      "comment_line": null
+    }
+  ]
+}

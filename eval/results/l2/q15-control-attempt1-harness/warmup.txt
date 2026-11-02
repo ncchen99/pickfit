@@ -1,0 +1,102 @@
+ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers
+  built with gcc 13 (Ubuntu 13.2.0-23ubuntu3)
+  configuration: --prefix=/usr --extra-version=3ubuntu5 --toolchain=hardened --libdir=/usr/lib/x86_64-linux-gnu --incdir=/usr/include/x86_64-linux-gnu --arch=amd64 --enable-gpl --disable-stripping --disable-omx --enable-gnutls --enable-libaom --enable-libass --enable-libbs2b --enable-libcaca --enable-libcdio --enable-libcodec2 --enable-libdav1d --enable-libflite --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libglslang --enable-libgme --enable-libgsm --enable-libharfbuzz --enable-libmp3lame --enable-libmysofa --enable-libopenjpeg --enable-libopenmpt --enable-libopus --enable-librubberband --enable-libshine --enable-libsnappy --enable-libsoxr --enable-libspeex --enable-libtheora --enable-libtwolame --enable-libvidstab --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx265 --enable-libxml2 --enable-libxvid --enable-libzimg --enable-openal --enable-opencl --enable-opengl --disable-sndio --enable-libvpl --disable-libmfx --enable-libdc1394 --enable-libdrm --enable-libiec61883 --enable-chromaprint --enable-frei0r --enable-ladspa --enable-libbluray --enable-libjack --enable-libpulse --enable-librabbitmq --enable-librist --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libx264 --enable-libzmq --enable-libzvbi --enable-lv2 --enable-sdl2 --enable-libplacebo --enable-librav1e --enable-pocketsphinx --enable-librsvg --enable-libjxl --enable-shared
+  libavutil      58. 29.100 / 58. 29.100
+  libavcodec     60. 31.102 / 60. 31.102
+  libavformat    60. 16.100 / 60. 16.100
+  libavdevice    60.  3.100 / 60.  3.100
+  libavfilter     9. 12.100 /  9. 12.100
+  libswscale      7.  5.100 /  7.  5.100
+  libswresample   4. 12.100 /  4. 12.100
+  libpostproc    57.  3.100 / 57.  3.100
+[aist#0:0/pcm_s16le @ 0x55ad0a5e88c0] Guessed Channel Layout: mono
+Input #0, wav, from '/work/input/meeting.wav':
+  Duration: 00:00:10.00, bitrate: 256 kb/s
+  Stream #0:0: Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, 1 channels, s16, 256 kb/s
+Stream mapping:
+  Stream #0:0 -> #0:0 (pcm_s16le (native) -> pcm_s16le (native))
+Press [q] to stop, [?] for help
+Output #0, wav, to 'meeting.wav':
+  Metadata:
+    ISFT            : Lavf60.16.100
+  Stream #0:0: Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, mono, s16, 256 kb/s
+    Metadata:
+      encoder         : Lavc60.31.102 pcm_s16le
+size=       0kB time=00:00:00.00 bitrate=N/A speed=N/A    [out#0/wav @ 0x55ad0a5c41c0] video:0kB audio:312kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: 0.024375%
+size=     313kB time=00:00:09.98 bitrate= 256.5kbits/s speed=1.69e+03x    
+error: model file not found 'models/ggml-large-v3-turbo-q5_0.bin'
+
+usage: ./build/bin/whisper-cli [options] file0 file1 ...
+supported audio formats: flac, mp3, ogg, wav
+
+options:
+  -h,        --help                 [default] show this help message and exit
+             --version              show version information and exit
+  -t N,      --threads N            [8      ] number of threads to use during computation
+  -p N,      --processors N         [1      ] number of processors to use during computation
+  -ot N,     --offset-t N           [0      ] time offset in milliseconds
+  -on N,     --offset-n N           [0      ] segment index offset
+  -d  N,     --duration N           [0      ] duration of audio to process in milliseconds
+  -mc N,     --max-context N        [-1     ] maximum number of text context tokens to store
+  -ml N,     --max-len N            [0      ] maximum segment length in characters
+  -sow,      --split-on-word        [false  ] split on word rather than on token
+  -bo N,     --best-of N            [5      ] number of best candidates to keep
+  -bs N,     --beam-size N          [5      ] beam size for beam search
+  -ac N,     --audio-ctx N          [0      ] audio context size (0 - all)
+  -wt N,     --word-thold N         [0.01   ] word timestamp probability threshold
+  -et N,     --entropy-thold N      [2.40   ] entropy threshold for decoder fail
+  -lpt N,    --logprob-thold N      [-1.00  ] log probability threshold for decoder fail
+  -nth N,    --no-speech-thold N    [0.60   ] no speech threshold
+  -tp,       --temperature N        [0.00   ] The sampling temperature, between 0 and 1
+  -tpi,      --temperature-inc N    [0.20   ] The increment of temperature, between 0 and 1
+  -debug,    --debug-mode           [false  ] enable debug mode (eg. dump log_mel)
+  -tr,       --translate            [false  ] translate from source language to english
+  -di,       --diarize              [false  ] stereo audio diarization
+  -tdrz,     --tinydiarize          [false  ] enable tinydiarize (requires a tdrz model)
+  -nf,       --no-fallback          [false  ] do not use temperature fallback while decoding
+  -otxt,     --output-txt           [false  ] output result in a text file
+  -ovtt,     --output-vtt           [false  ] output result in a vtt file
+  -osrt,     --output-srt           [true   ] output result in a srt file
+  -olrc,     --output-lrc           [false  ] output result in a lrc file
+  -owts,     --output-words         [false  ] output script for generating karaoke video
+  -fp,       --font-path            [/System/Library/Fonts/Supplemental/Courier New Bold.ttf] path to a monospace font for karaoke video
+  -ocsv,     --output-csv           [false  ] output result in a CSV file
+  -oj,       --output-json          [false  ] output result in a JSON file
+  -ojf,      --output-json-full     [false  ] include more information in the JSON file
+  -of FNAME, --output-file FNAME    [       ] output file path (without file extension)
+  -np,       --no-prints            [false  ] do not print anything other than the results
+  -ps,       --print-special        [false  ] print special tokens
+  -pc,       --print-colors         [false  ] print colors
+             --print-confidence     [false  ] print confidence
+  -pp,       --print-progress       [false  ] print progress
+  -nt,       --no-timestamps        [false  ] do not print timestamps
+  -l LANG,   --language LANG        [zh     ] spoken language ('auto' for auto-detect)
+  -dl,       --detect-language      [false  ] exit after automatically detecting language
+             --prompt PROMPT        [以下是一場會議的逐字稿，使用繁體中文與全形標點符號。] initial prompt (max n_text_ctx/2 tokens)
+             --carry-initial-prompt [false  ] always prepend initial prompt
+  -m FNAME,  --model FNAME          [models/ggml-large-v3-turbo-q5_0.bin] model path
+  -f FNAME,  --file FNAME           [       ] input audio file path
+  -oved D,   --ov-e-device DNAME    [CPU    ] the OpenVINO device used for encode inference
+  -dtw MODEL --dtw MODEL            [       ] compute token-level timestamps
+  -ls,       --log-score            [false  ] log best decoder scores of tokens
+  -ng,       --no-gpu               [false  ] disable GPU
+  -dev N,    --device N             [0      ] GPU device ID (default: 0)
+  -fa,       --flash-attn           [true   ] enable flash attention
+  -nfa,      --no-flash-attn        [false  ] disable flash attention
+  -sns,      --suppress-nst         [false  ] suppress non-speech tokens
+  --suppress-regex REGEX            [       ] regular expression matching tokens to suppress
+  --grammar GRAMMAR                 [       ] GBNF grammar to guide decoding
+  --grammar-rule RULE               [       ] top-level GBNF grammar rule name
+  --grammar-penalty N               [100.0  ] scales down logits of nongrammar tokens
+
+Voice Activity Detection (VAD) options:
+             --vad                           [false  ] enable Voice Activity Detection (VAD)
+  -vm FNAME, --vad-model FNAME               [       ] VAD model path
+  -vt N,     --vad-threshold N               [0.50   ] VAD threshold for speech recognition
+  -vspd N,   --vad-min-speech-duration-ms  N [250    ] VAD min speech duration (0.0-1.0)
+  -vsd N,    --vad-min-silence-duration-ms N [100    ] VAD min silence duration (to split segments)
+  -vmsd N,   --vad-max-speech-duration-s   N [FLT_MAX] VAD max speech duration (auto-split longer)
+  -vp N,     --vad-speech-pad-ms           N [30     ] VAD speech padding (extend segments)
+  -vo N,     --vad-samples-overlap         N [0.10   ] VAD samples overlap (seconds between segments)
+
+meeting.wav.srt not found or not accessible.

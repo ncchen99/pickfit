@@ -227,6 +227,7 @@ export function renderCompare(catalog: Catalog, params: URLSearchParams, nonce: 
   const entries = slugs.map((s) => catalog.bySlug.get(s)!);
   const verified = catalog.entries.filter((e) => verifiedOn(e).length).sort((a, b) => a.name.localeCompare(b.name));
   // Typed, not picked from a 420-item list: the datalist suggests names, and the slug is what gets sent.
+  // The page script swaps the datalist for its own list (data-combo), which sends the name instead.
   const options = verified.map((e) => `<option value="${esc(e.slug)}">${esc(e.name)}</option>`).join('');
   const osLinks = [['', L('Any OS', '不限系統')], ...OSES.map((o) => [o, OS_NAME[o]])]
     .map(([v, t]) => {
@@ -240,7 +241,7 @@ export function renderCompare(catalog: Catalog, params: URLSearchParams, nonce: 
         `<input type="hidden" name="tools" value="${esc(slugs.join(','))}">` +
         (os ? `<input type="hidden" name="os" value="${os}">` : '') +
         `<label class="sr" for="add-tool">${L('Add a verified tool', '加入已驗證的工具')}</label>` +
-        `<input id="add-tool" name="add" list="tool-names" required autocomplete="off" placeholder="${L('Add a verified tool by name…', '輸入名稱加入工具…')}"><datalist id="tool-names">${options}</datalist>` +
+        `<input id="add-tool" type="text" name="add" list="tool-names" data-combo required autocomplete="off" placeholder="${L('Add a verified tool by name…', '輸入名稱加入工具…')}"><datalist id="tool-names">${options}</datalist>` +
         `<button class="btn btn-quiet" type="submit">${icon('plus')}${L('Add', '加入')}</button></form>`
       : '';
   const body =

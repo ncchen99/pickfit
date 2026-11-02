@@ -168,21 +168,21 @@ function facts(pick: PickOut): string {
   return items.length ? `<ul class="run-facts">${items.join('')}</ul>` : '';
 }
 
-/** The steps get_install_guide returns, for a person instead of an agent. `inRun`: inside a run card that already names the system. */
-export function installSection(guide: InstallOutput, form: FormValues, open: boolean, inRun = false): string {
+/** The steps get_install_guide returns, for a person instead of an agent. `inRun`: inside a run card that already names the system, so no fold of its own. */
+export function installSection(guide: InstallOutput, form: FormValues, open: boolean, inRun = false, stepper: { hint: string | null } | null = null): string {
   const v = guide.verification;
   if (guide.steps.length === 0) return '';
-  const parts: string[] = [];
+  const cautions: string[] = [];
   const match = guide.applies_to_user_system.match;
   if (match === 'other_os' && form.os) {
-    parts.push(
+    cautions.push(
       `<p class="caution">${L(
         `These steps ran on ${esc(system(v.os, v.arch))}. pickfit hasn’t run them on ${esc(osName(form.os))}, so expect differences.`,
         `這些步驟是在 ${esc(system(v.os, v.arch))} 上跑的；pickfit 還沒在 ${esc(osName(form.os))} 上試過，結果可能不同。`,
       )}</p>`,
     );
   } else if (match === 'same_os_other_arch' && form.arch) {
-    parts.push(
+    cautions.push(
       `<p class="caution">${L(
         `These steps ran on ${esc(system(v.os, v.arch))}, not ${esc(form.arch)}. A download may need the other build.`,
         `這些步驟是在 ${esc(system(v.os, v.arch))} 上跑的，不是 ${esc(form.arch)}；下載時可能要換另一個版本。`,
@@ -198,24 +198,22 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
       `${notes.length ? `<p class="caution small">${notes.join(' ')}</p>` : ''}</li>`
     );
   });
-  parts.push(`<ol class="steps">${steps.join('')}</ol>`);
-  if (guide.manual_steps.length) {
-    parts.push(`<h4>${L('You do these yourself', '需要你手動做的')}</h4><ul><li>${guide.manual_steps.map((s) => esc(s.title)).join('</li><li>')}</li></ul>`);
-  }
-  if (guide.verify) {
-    parts.push(
-      `<h4>${L('Check that it works', '確認能用')}</h4>${command(guide.verify.command)}` +
-        `<p class="quiet small">${L(
-          `The output should contain “${esc(guide.verify.expected_contains)}”.`,
-          `輸出應包含「${esc(guide.verify.expected_contains)}」。`,
-        )}</p>`,
-    );
-  }
-  if (guide.first_task) {
-    const setup = guide.first_task_setup.map((s) => command(s.command)).join('');
-    parts.push(`<h4>${L('First thing to try', '先試試這個')}</h4>${setup}${command(guide.first_task)}`);
-  }
+  const stepList = `<ol class="steps">${steps.join('')}</ol>`;
+  const manual = guide.manual_steps.length
+    ? `<h4>${L('You do these yourself', '需要你手動做的')}</h4><ul><li>${guide.manual_steps.map((s) => esc(s.title)).join('</li><li>')}</li></ul>`
+    : '';
+  const verify = guide.verify
+    ? `<h4>${L('Check that it works', '確認能用')}</h4>${command(guide.verify.command)}` +
+      `<p class="quiet small">${L(
+        `The output should contain “${esc(guide.verify.expected_contains)}”.`,
+        `輸出應包含「${esc(guide.verify.expected_contains)}」。`,
+      )}</p>`
+    : '';
+  const first = guide.first_task
+    ? `<h4>${L('First thing to try', '先試試這個')}</h4>${guide.first_task_setup.map((s) => command(s.command)).join('')}${command(guide.first_task)}`
+    : '';
   const cfg = guide.mcp_client_config;
+  let agent = '';
   if (cfg) {
     const env = cfg.env.length
       ? `<h4>${L('You fill in', '你要填的')}</h4><ul>${cfg.env
@@ -225,29 +223,57 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
           )
           .join('')}</ul>`
       : '';
-    parts.push(
+    agent =
       `<h4>${L('Add it to your agent', '加進你的 agent')}</h4>${command(cfg.claude_code)}` +
-        `<details class="json"><summary class="small">${L('JSON for Claude Desktop, Cursor and other clients', 'Claude Desktop、Cursor 等用戶端用的 JSON')}</summary>${command(cfg.json)}</details>` +
-        env +
-        (cfg.note ? `<p class="quiet small">${esc(cfg.note)}</p>` : ''),
-    );
+      `<details class="json"><summary class="small">${L('JSON for Claude Desktop, Cursor and other clients', 'Claude Desktop、Cursor 等用戶端用的 JSON')}</summary>${command(cfg.json)}</details>` +
+      env +
+      (cfg.note ? `<p class="quiet small">${esc(cfg.note)}</p>` : '');
   }
-  const issues = readerIssues(guide.known_issues);
-  if (issues.length) {
-    parts.push(
-      `<h4>${L('Where the README and reality differ', 'README 與實測不符之處')}</h4><ul class="issues">${issues
+  const issueList = readerIssues(guide.known_issues);
+  const issues = issueList.length
+    ? `<h4>${L('Where the README and reality differ', 'README 與實測不符之處')}</h4><ul class="issues">${issueList
         .map(
           (i) =>
             `<li><span class="quiet">${L('README:', 'README 寫：')}</span> ${esc(i.readme_said)}<br><span class="quiet">${L('What worked:', '實際可行：')}</span> ${esc(i.actually_needed)}</li>`,
         )
-        .join('')}</ul>`,
-    );
-  }
+        .join('')}</ul>`
+    : '';
   const sysSpan = `<span class="sys">${v.os ? osMark(v.os) : ''}${esc(system(v.os, v.arch))}</span>`;
+  const body = stepper
+    ? installStages([
+        { name: L('Install', '安裝'), html: cautions.join('') + stepList + manual + issues },
+        { name: L('Check it works', '確認能用'), html: verify, cls: 'inst-check' },
+        { name: L('Start using it', '開始使用'), html: first + agent + (stepper.hint ? `<p class="open-hint">${icon('arrow-right')}<span>${stepText(stepper.hint)}</span></p>` : '') },
+      ])
+    : `<div class="install-body">${[...cautions, stepList, manual, verify, first, agent, issues].join('')}</div>`;
+  // Inside a run card the steps sit straight in the card: a fold inside it would be a box inside a box.
+  if (inRun) return body;
   return (
-    `<details class="install"${open ? ' open' : ''}><summary><span>${inRun ? L('Install steps', '安裝步驟') : L(`Install steps that worked on ${sysSpan}`, `在 ${sysSpan} 上可行的安裝步驟`)}</span>${icon('chevron-down')}</summary>` +
-    `<div class="install-body">${parts.join('')}</div></details>`
+    `<details class="install"${open ? ' open' : ''}><summary><span>${L(`Install steps that worked on ${sysSpan}`, `在 ${sysSpan} 上可行的安裝步驟`)}</span>${icon('chevron-down')}</summary>` +
+    `${body}</details>`
   );
+}
+
+/** `code` spans in generated text; everything else escaped. */
+export const stepText = (s: string) => esc(s).replace(/`([^`]+)`/g, '<code translate="no">$1</code>');
+
+/**
+ * The guide one stage at a time (install, check, use), with Back and Next naming the stage they go to.
+ * Without the page script every stage shows, one under the other.
+ */
+function installStages(all: { name: string; html: string; cls?: string }[]): string {
+  const stages = all.filter((s) => s.html);
+  if (stages.length < 2) return `<div class="install-body">${stages.map((s) => s.html).join('')}</div>`;
+  const tabs =
+    `<ol class="stage-tabs js-only">` +
+    stages.map((s, i) => `<li><button type="button" data-goto="${i}" aria-label="${esc(s.name)}"${i ? '' : ' aria-current="step"'}><span class="n">${i + 1}</span><span class="lbl">${esc(s.name)}</span></button></li>`).join('') +
+    `</ol>`;
+  const panels = stages.map((s, i) => {
+    const back = i ? `<button type="button" class="btn btn-quiet btn-sm" data-goto="${i - 1}">${icon('arrow-left')}${L(`Back: ${esc(stages[i - 1].name)}`, `上一步：${esc(stages[i - 1].name)}`)}</button>` : '';
+    const next = i + 1 < stages.length ? `<button type="button" class="btn btn-primary btn-sm stage-next" data-goto="${i + 1}">${L(`Next: ${esc(stages[i + 1].name)}`, `下一步：${esc(stages[i + 1].name)}`)}${icon('arrow-right')}</button>` : '';
+    return `<section class="inst-stage${s.cls ? ` ${s.cls}` : ''}" data-stage aria-label="${esc(s.name)}">${s.html}<div class="stage-nav js-only">${back}${next}</div></section>`;
+  });
+  return `<div class="install-body" data-stepper>${tabs}${panels.join('')}</div>`;
 }
 
 /** The run record: the evidence half of a pick, under the seam. Each fact once, as a mark; only a mismatch with the reader's OS is said in words. */
@@ -855,11 +881,12 @@ const ARCH_CHOICES = (): [Arch | '', string][] => [
 
 /** The request: the need in the person's words, and their measurements. */
 export function searchForm(form: FormValues): string {
+  // A system is its mark, named in a tooltip and to screen readers; "any" stays a word.
   const os = OS_CHOICES().map(
-    ([v, text]) => `<label><input type="radio" name="os" value="${v}"${v === form.os ? ' checked' : ''}>${text}</label>`,
+    ([v, text]) =>
+      `<label${v ? ` class="seg-icon" data-tip="${text}"` : ''}><input type="radio" name="os" value="${v}"${v === form.os ? ' checked' : ''}${v ? ` aria-label="${text}"` : ''}>${v ? osMark(v) : text}</label>`,
   ).join('');
   const arch = ARCH_CHOICES().map(([v, text]) => `<option value="${v}"${v === form.arch ? ' selected' : ''}>${text}</option>`).join('');
-  const tick = icon('check').replace('class="i', 'class="i chip-tick');
   return (
     `<form id="search" class="ask-card" method="post" action="/search#results">` +
     `<div class="ask"><label for="need">${L('I need', '我需要')}</label>` +
@@ -867,10 +894,10 @@ export function searchForm(form: FormValues): string {
     `placeholder="${L('a free way to transcribe meeting recordings offline…', '免費離線轉錄會議錄音…')}">${esc(form.need)}</textarea></div>` +
     `<div class="ask-meta"><div class="ask-opts"><span class="label" id="os-label">${L('Runs on', '執行環境')}</span>` +
     `<div class="seg" role="radiogroup" aria-labelledby="os-label">${os}</div>` +
-    `<select class="select" name="arch" aria-label="${L('CPU architecture', 'CPU 架構')}">${arch}</select>` +
-    `<label class="chip"><input type="checkbox" name="free_only" value="1"${form.free_only ? ' checked' : ''}>${tick}${L('Free only', '只看免費')}</label>` +
-    `<label class="chip"><input type="checkbox" name="offline" value="1"${form.offline ? ' checked' : ''}>${tick}${L('Works offline', '可離線使用')}</label>` +
-    `<label class="chip"><input type="checkbox" name="private" value="1"${form.private ? ' checked' : ''}>${tick}${L('Data stays on my device', '資料不離開裝置')}</label></div>` +
+    `<select class="select" name="arch" data-dropdown aria-label="${L('CPU architecture', 'CPU 架構')}">${arch}</select>` +
+    `<label class="chip"><input type="checkbox" name="free_only" value="1"${form.free_only ? ' checked' : ''}>${icon('leaf')}${L('Free', '免費')}</label>` +
+    `<label class="chip"><input type="checkbox" name="offline" value="1"${form.offline ? ' checked' : ''}>${icon('wifi-off')}${L('Works offline', '不需網路')}</label>` +
+    `<label class="chip"><input type="checkbox" name="private" value="1"${form.private ? ' checked' : ''}>${icon('laptop')}${L('Data stays local', '資料在本地')}</label></div>` +
     `<div class="ask-go"><span class="counter" data-counter aria-live="polite"></span>` +
     `<button type="submit" class="btn btn-primary go"><span class="btn-label">${L('Find my fit', '幫我找合身的')}</span>${icon('arrow-right')}</button></div>` +
     `</div></form>`

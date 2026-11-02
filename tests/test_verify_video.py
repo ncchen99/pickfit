@@ -7,6 +7,7 @@ import hashlib
 import json
 import shutil
 import subprocess
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -212,6 +213,8 @@ def test_a_long_caption_is_cut_to_its_first_clause_or_told_from_pickfits_log():
     events = video.events_of(OP, CHANGES, 20.0)
     assert video.logged_caption(events[1:4]) == 'Click, then type "755"'
     assert video.logged_caption(events[2:3]) is None
+    marked = [replace(e, what=e.what + "; the screen changes after it") for e in events[1:4]]
+    assert video.logged_caption(marked) == 'Click, then type "755"'  # what events_of says after an action
 
 
 def _video(**over: Any) -> dict[str, Any]:

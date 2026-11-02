@@ -10,7 +10,7 @@ import { bestGuide, isVerified, isWebApp, OSES, verifiedOn, webCheck, type Catal
 import { featuresOut, type FeaturesOut } from '../features.ts';
 import { L } from '../i18n.ts';
 import { installGuide, type InstallOutput } from '../install.ts';
-import { EMPTY_FORM, installSection, levelLine, webFactList } from '../page.ts';
+import { EMPTY_FORM, installSection, levelLine, stepText, webFactList } from '../page.ts';
 import { day, guiSentence, KIND, KIND_PLURAL, levelLabel, OS_NAME, PRICE, PROCESSING, passed, webLevelLabel } from '../ui/facts.ts';
 import { esc, link, listOf, safeUrl } from '../ui/html.ts';
 import { icon, osMark, type IconName } from '../ui/icons.ts';
@@ -270,14 +270,17 @@ function progress(entry: Entry): string {
   }
   const rows = oses.map((os) => {
     const g = entry.install[os]!;
-    return `<div class="progress-row"><p class="progress-sys">${osMark(os)}${esc(OS_NAME[os])}${g.run.arch ? ` <span class="arch">${esc(g.run.arch)}</span>` : ''}</p>${stageRow(stagesFor(entry, g))}</div>`;
+    return `<div class="progress-row" data-os="${os}"><p class="progress-sys">${osMark(os)}${esc(OS_NAME[os])}${g.run.arch ? ` <span class="arch">${esc(g.run.arch)}</span>` : ''}</p>${stageRow(stagesFor(entry, g))}</div>`;
   });
+  // More than one system: the page script keeps the reader's own (or the first) in view and folds the rest here.
+  // Without the script every row stays, one under the other.
+  const more = rows.length > 1 ? `<details class="progress-more" data-progress-more hidden><summary>${L('Other systems', '其他系統')}${icon('chevron-down')}</summary></details>` : '';
   const untried = entry.platforms.filter((os) => !entry.install[os]);
   const names = esc(listOf(untried.map((os) => OS_NAME[os])));
   const note = untried.length
     ? `<p class="small quiet">${L(`${names}: the project says it runs there; pickfit hasn’t tried it.`, `${names}：專案說支援，但 pickfit 還沒試過。`)}</p>`
     : '';
-  return `<section class="block progress" aria-labelledby="progress-title">${progressTitle()}${rows.join('')}${note}</section>`;
+  return `<section class="block progress" aria-labelledby="progress-title">${progressTitle()}${rows.join('')}${more}${note}</section>`;
 }
 
 // ---------------------------------------------------------------- what it does
@@ -315,8 +318,6 @@ function featureClip(entry: Entry, feature: string): string {
     : '';
 }
 
-/** `code` spans in generated steps; everything else escaped. */
-const stepText = (s: string) => esc(s).replace(/`([^`]+)`/g, '<code translate="no">$1</code>');
 
 function featureList(entry: Entry, f: FeaturesOut): string {
   const guide = entry.usage_guide ?? null;
@@ -330,13 +331,16 @@ function featureList(entry: Entry, f: FeaturesOut): string {
         steps.length || clip
           ? `<details class="how-to"><summary>${L('How to use it', '怎麼使用')}</summary>${steps.length ? `<ol>${steps.map((s) => `<li>${stepText(s)}</li>`).join('')}</ol>` : ''}${clip}</details>`
           : '';
-      return `<li class="feat-ok">${icon('check')}<div><span class="feat-title">${title(feature)}</span> <span class="feat-tag">${L('Tested', '已測試')}</span>${how}</div></li>`;
+      return `<li class="feat-ok"><div><span class="feat-title">${title(feature)}</span>${how}</div><span class="feat-state">${icon('check')}${L('Tested', '已測試')}</span></li>`;
     }),
+    // The feature is the row; whether pickfit tested it is the mark on the right, and why not is its tooltip
+    // (and a line under the title where there is no hover).
     ...f.not_checked.map((n) => {
       const failed = n.reason === 'test_failed';
+      const why = esc(featureWhy(n.detail));
       return (
-        `<li class="${failed ? 'feat-fail' : 'feat-open'}">${icon(failed ? 'x' : 'circle-dashed')}<div><span class="feat-title">${title(n.feature)}</span>` +
-        `<small>${failed ? L('Its test failed: ', '測試失敗：') : L('Not tested: ', '未測試：')}${esc(featureWhy(n.detail))}</small></div></li>`
+        `<li class="${failed ? 'feat-fail' : 'feat-open'}"><div><span class="feat-title">${title(n.feature)}</span><small>${why}</small></div>` +
+        `<span class="feat-state" tabindex="0" data-tip="${why}">${icon(failed ? 'x' : 'circle-dashed')}${failed ? L('Test failed', '測試未通過') : L('Not tested', '未測試')}</span></li>`
       );
     }),
   ];
@@ -382,17 +386,30 @@ function install(catalog: Catalog, entry: Entry): string {
     return needs ? `<section class="block" aria-labelledby="install-title">${installTitle('Install', '安裝')}${needs}</section>` : '';
   }
   const hint = entry.usage_guide?.open_hint ?? null;
-  const cards = oses.map((os: OS, i) => {
+  const tabbed = oses.length > 1;
+  const sysLabel = (os: OS) => {
+    const arch = entry.install[os]!.run.arch;
+    return `${osMark(os)}${esc(OS_NAME[os])}${arch ? ` <span class="arch">${esc(arch)}</span>` : ''}`;
+  };
+  // One card: the systems as tabs across its top, then that system's steps straight in it (no box inside the box).
+  const panels = oses.map((os: OS) => {
     const g = entry.install[os]!;
     const out = readerGuide(installGuide(catalog, { slug: entry.slug, os }), hint, !!g.run.gui);
     return (
-      `<article class="run-card" id="install-${os}"><div class="run-head"><h3>${osMark(os)}${esc(OS_NAME[os])}${g.run.arch ? ` <span class="arch">${esc(g.run.arch)}</span>` : ''}</h3></div>` +
-      installSection(out, { ...EMPTY_FORM, os }, i === 0, true) +
-      (hint ? `<p class="open-hint">${icon('arrow-right')}<span>${stepText(hint)}</span></p>` : '') +
-      `</article>`
+      `<div class="run-panel" id="install-${os}"${tabbed ? ` role="tabpanel" aria-labelledby="tab-${os}" data-os="${os}"` : ''}>` +
+      `<div class="run-head"><h3>${sysLabel(os)}</h3></div>` +
+      installSection(out, { ...EMPTY_FORM, os }, true, true, { hint }) +
+      `</div>`
     );
   });
-  return `<section class="block" aria-labelledby="install-title">${installTitle('Install', '安裝')}${prerequisites(entry)}${cards.join('')}</section>`;
+  // More than one system: tabs, which the page script shows and turns to the reader's own system.
+  // Without the script every card stays, one under the other.
+  const tabs = tabbed
+    ? `<div class="os-tabs" role="tablist" aria-label="${L('Your system', '你的系統')}" data-os-tabs hidden>` +
+      oses.map((os, i) => `<button type="button" role="tab" id="tab-${os}" aria-controls="install-${os}" aria-selected="${i === 0}" data-os="${os}"${i ? ' tabindex="-1"' : ''}>${sysLabel(os)}</button>`).join('') +
+      `</div>`
+    : '';
+  return `<section class="block" aria-labelledby="install-title">${installTitle('Install', '安裝')}${prerequisites(entry)}<article class="run-card install-card">${tabs}${panels.join('')}</article></section>`;
 }
 
 /** A web app: open it, and the facts a person weighs before typing anything in. */
@@ -505,7 +522,10 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
     web
       ? badge('pass', L('Tested in a browser', '已在瀏覽器實測'), { icon: 'badge-check' })
       : verified && on
-        ? badge('pass', L(`Tested on ${on}`, `已在 ${on} 上測試`), { icon: 'badge-check' })
+        ? badge('pass', L(`Tested on ${on}`, `已在 ${on} 上測試`), {
+            icon: 'badge-check',
+            marks: `<span aria-hidden="true">${L('Tested', '已測試')}</span>${verifiedOn(entry).map(osMark).join('')}`,
+          })
         : badge('quiet', L('Not verified yet', '尚未驗證'), { icon: 'circle-dashed' }),
     entry.scores?.treasure ? badge('gem', L('Hidden gem', '寶藏'), { icon: 'gem', pop: 'pop-gem' }) : '',
   ].join('');

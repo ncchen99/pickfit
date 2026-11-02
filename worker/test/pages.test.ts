@@ -69,9 +69,13 @@ test('a tool page shows how far each verified run got, its install steps, and th
   const html = await (await s.get('/tool/fixture-llm-runner')).text();
   assert.match(html, /<h1>Fixture LLM Runner<\/h1>/);
   assert.ok(html.includes('id="install-macos"') && html.includes('id="install-linux"'), 'one install card per verified OS');
-  assert.equal(html.split('<div class="progress-row">').length - 1, 2, 'one progress row per verified OS');
+  assert.equal(html.split('<div class="progress-row" data-os=').length - 1, 2, 'one progress row per verified OS');
+  assert.match(html, /<details class="progress-more" data-progress-more hidden><summary>Other systems/, 'the script folds the other systems');
   assert.match(html, /<li class="prog-stage prog-done"[^>]*><span class="prog-bar"><\/span><span class="prog-label">.*Installs<\/span><\/li>/);
-  assert.match(html, /Tested on macOS and Linux/);
+  assert.match(html, /data-tip="Tested on macOS and Linux"><svg class="i[^"]*"[^>]*>.*?<\/svg><span aria-hidden="true">Tested<\/span><svg class="os os-macos"/, 'the systems as marks, their names in the tooltip');
+  // One install card, no fold inside it.
+  assert.match(html, /<article class="run-card install-card"><div class="os-tabs"/);
+  assert.ok(!html.includes('<details class="install"'), 'no install fold inside the run card');
   assert.match(html, /<details class="block tested"><summary><h2>How pickfit tested it<\/h2>/);
   // Each run card names its system once, in the heading, with the OS mark.
   assert.match(html, /<h3><svg class="os os-macos"[^>]*><use href="#os-macos"\/><\/svg>macOS <span class="arch">arm64<\/span><\/h3>/);
@@ -83,10 +87,19 @@ test('a tool page shows how far each verified run got, its install steps, and th
   assert.match(html, /aria-label="Quality: \d+ out of 100/);
 });
 
+test('install steps come one stage at a time: install, then check, each with Back and Next naming the other', async () => {
+  const html = await (await site().get('/tool/fixture-llm-runner')).text();
+  assert.match(html, /<div class="install-body" data-stepper><ol class="stage-tabs js-only">.*?<span class="lbl">Install<\/span>.*?<span class="lbl">Check it works<\/span>/);
+  assert.match(html, /<section class="inst-stage" data-stage aria-label="Install"><p class="caution">|<section class="inst-stage" data-stage aria-label="Install"><ol class="steps">/);
+  assert.match(html, /data-goto="1">Next: Check it works/);
+  assert.match(html, /data-goto="0">.*?Back: Install<\/button>/);
+});
+
 test('what it does: plain titles from the usage guide, steps only for a feature the run checked, and who wrote them', async () => {
   const html = await (await site().get('/tool/fixture-llm-runner')).text();
-  assert.match(html, /<li class="feat-ok">.*?<span class="feat-title">Serve models over an OpenAI-style API<\/span> <span class="feat-tag">Tested<\/span><details class="how-to"><summary>How to use it<\/summary><ol><li>Run <code translate="no">fixture-llm-runner serve<\/code>\.<\/li>/);
-  assert.match(html, /<li class="feat-open">.*?<span class="feat-title">Download models from a registry<\/span><small>Not tested: /);
+  assert.match(html, /<li class="feat-ok"><div><span class="feat-title">Serve models over an OpenAI-style API<\/span><details class="how-to"><summary>How to use it<\/summary><ol><li>Run <code translate="no">fixture-llm-runner serve<\/code>\.<\/li>.*?<span class="feat-state">.*?Tested<\/span><\/li>/);
+  // An untested feature is greyed, with why in its mark's tooltip.
+  assert.match(html, /<li class="feat-open"><div><span class="feat-title">Download models from a registry<\/span><small>([^<]+)<\/small><\/div><span class="feat-state" tabindex="0" data-tip="\1">.*?Not tested<\/span><\/li>/);
   assert.match(html, /Feature names and steps written by fixture-model from what pickfit’s run did\./);
   // A tool without a guide still lists its features, under the README's own words.
   const plain = await (await site().get('/tool/fixture-transcribe')).text();
