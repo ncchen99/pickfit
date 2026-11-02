@@ -400,7 +400,8 @@ def gui_check(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     title = max(windows, key=lambda w: w.get("width", 0) * w.get("height", 0)).get("title") if windows else None
     fitted = _clip(command, COMMAND_MAX)
     gpu = report.box.get("gpu")
-    display = GUI_DISPLAY.replace("no GPU", f"GPU {gpu}") if gpu else GUI_DISPLAY
+    # gui_mac's launches name their own display; on pickfit's Xvfb a GPU box's note names the card.
+    display = launch.get("display") or (GUI_DISPLAY.replace("no GPU", f"GPU {gpu}") if gpu else GUI_DISPLAY)
     return GuiCheck(tier=tier, screen=screen, command=fitted or "-", window_title=_clip(title, 200),
                     display=_clip(display, 120) or GUI_DISPLAY)
 

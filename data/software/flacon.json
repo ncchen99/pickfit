@@ -72,13 +72,17 @@
       "first_task": "flatpak run com.github.Flacon"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "brew",
+      "basis": "replayed",
+      "run_id": "verify-flacon-20261102-012417-956f",
+      "method": "other",
       "steps": [
         {
-          "command": "brew install --cask flacon",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add Flathub remote"
+        },
+        {
+          "command": "flatpak install --user -y flathub com.github.Flacon",
+          "purpose": "install Flacon flatpak"
         }
       ],
       "manual_steps": [],
@@ -100,10 +104,104 @@
     "url": "https://github.com/flacon/flacon/releases/tag/v13.0.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T01:26:39.934246+08:00",
+    "runs": [
+      {
+        "id": "verify-flacon-20261102-012417-956f",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T01:26:39.934246+08:00",
+        "tool_version": "13.0.2",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add Flathub remote"
+          },
+          {
+            "command": "flatpak install --user -y flathub com.github.Flacon",
+            "purpose": "install Flacon flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run com.github.Flacon",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Flacon's main window is fully drawn with disc/folder controls, output settings, album tag fields, and an empty track table.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-flacon-20261102-012417-956f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-flacon-20261102-012417-956f/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.032254,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "flatpak run com.github.Flacon",
+          "window_title": "Flacon",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "split album file into separate tracks",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "revise or specify track tags",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "convert between supported audio formats",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "analyze Replay Gain",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -342,5 +440,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:41+08:00",
-  "updated_at": "2026-11-02T01:22:09+08:00"
+  "updated_at": "2026-11-02T01:26:39.935240+08:00"
 }

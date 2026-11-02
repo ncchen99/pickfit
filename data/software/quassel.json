@@ -54,22 +54,18 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-quassel-20261101-225653-bd2f",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask skryx-l-a/quassel/quassel",
-          "purpose": null
+          "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications skryx-l-a/quassel/quassel 2>&1",
+          "purpose": "Install Quassel cask to user Applications via brew --appdir"
         }
       ],
-      "manual_steps": [
-        "Grant Input Monitoring and Accessibility on first launch on macOS",
-        "Grant Microphone, Accessibility and Input Monitoring permissions on macOS",
-        "Approve app in System Settings Privacy and Security on macOS on first launch"
-      ],
+      "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "open ~/Applications/Quassel.app"
     },
     "linux": null,
     "windows": {
@@ -104,22 +100,84 @@
     "url": "https://github.com/Skryx-L-A/quassel/releases/tag/v2.9.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T23:02:11.119143+08:00",
+    "runs": [
+      {
+        "id": "verify-quassel-20261101-225653-bd2f",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@78f2945fd37d",
+        "checked_at": "2026-11-01T23:02:11.119143+08:00",
+        "tool_version": "2.9.1",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications skryx-l-a/quassel/quassel 2>&1",
+            "purpose": "Install Quassel cask to user Applications via brew --appdir"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/Quassel.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask skryx-l-a/quassel/quassel",
+            "actually_needed": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications skryx-l-a/quassel/quassel to avoid sudo copy to /Applications which standard user sbx cannot do",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows a menu-bar dropdown displaying Ready status with dictation commands including Quit Quassel.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-quassel-20261101-225653-bd2f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-quassel-20261101-225653-bd2f/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.04022,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "open ~/Applications/Quassel.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        }
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-01T23:02:11+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 71.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.6,
           "weight": 40.0
         },
         "install_docs": {
@@ -160,7 +218,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 49.75
+      "value": 51.34
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -435,5 +493,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:11+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T23:02:11.121864+08:00"
 }

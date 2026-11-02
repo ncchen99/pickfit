@@ -48,7 +48,23 @@
     "api_keys": []
   },
   "install": {
-    "macos": null,
+    "macos": {
+      "basis": "replayed",
+      "run_id": "verify-writer-computer-20261102-032402-5b50",
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install --cask --appdir=$HOME/Applications writer 2>&1",
+          "purpose": "Install Writer via brew cask"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "/opt/homebrew/bin/writer --version",
+        "expected_signal": "writer 0.8.0"
+      },
+      "first_task": "open ~/Applications/Writer.app"
+    },
     "linux": null,
     "windows": null
   },
@@ -65,10 +81,121 @@
     "url": "https://github.com/joelbqz/writer-computer/releases/tag/v0.8.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T03:45:46.334398+08:00",
+    "runs": [
+      {
+        "id": "verify-writer-computer-20261102-032402-5b50",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-02T03:45:46.334398+08:00",
+        "tool_version": "0.8.0",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications writer 2>&1",
+            "purpose": "Install Writer via brew cask"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "/opt/homebrew/bin/writer --version",
+            "expected_signal": "writer 0.8.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "writer 0.8.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Writer.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "open a folder and edit its files in place",
+            "actually_needed": "open a file directly (open ~/pickfit-in/table.md -a ~/Applications/Writer.app) which renders immediately; the Add Folder button and cmd+o never opened a folder chooser in this VM",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "renders extended markdown such as tables and Mermaid diagrams",
+            "actually_needed": "direct file open showed formatted table and Mermaid diagram A->B rendered without any Preview toggle",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The terminal shows the version command output 'writer 0.8.0'. / The app shows a centered 'Stay in touch?' onboarding prompt asking for email and usage-data sharing with Not now and Subscribe options.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-writer-computer-20261102-032402-5b50/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-writer-computer-20261102-032402-5b50/check-1-cmd15.judged.png",
+            "runs/verify/verify-writer-computer-20261102-032402-5b50/replay-2-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.539833,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open ~/Applications/Writer.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "edit markdown files in place",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; Add Folder/cmd+o folder chooser never opened in VM; direct file open works"
+          },
+          {
+            "feature": "render tables and Mermaid diagrams",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; folder chooser blocked; direct open rendered table+Mermaid but check already visible"
+          },
+          {
+            "feature": "support multiple windows",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; cmd+n created no second window; Terminal unavailable via Spotlight"
+          },
+          {
+            "feature": "open large workspaces instantly",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "operate budget exhausted (6 ops per run)"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -309,5 +436,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:46:48+08:00",
-  "updated_at": "2026-11-01T17:11:04+08:00"
+  "updated_at": "2026-11-02T03:45:46.344565+08:00"
 }

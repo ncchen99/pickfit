@@ -68,21 +68,24 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-pysolfc-20261101-232402-905c",
+      "run_id": "verify-pysolfc-20261102-001128-142e",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>&1 && flatpak remote-list 2>&1",
-          "purpose": "add flathub remote for flatpak"
+          "command": "flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "Add flathub user remote for flatpak"
         },
         {
-          "command": "timeout 300 flatpak install --user -y flathub io.sourceforge.pysolfc.PySolFC 2>&1",
-          "purpose": "flatpak install io.sourceforge.pysolfc.PySolFC"
+          "command": "flatpak --user install -y flathub io.sourceforge.pysolfc.PySolFC",
+          "purpose": "Install PySolFC via flatpak user"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "flatpak run io.sourceforge.pysolfc.PySolFC"
+      "check": {
+        "command": "DISPLAY=:99 flatpak run io.sourceforge.pysolfc.PySolFC --version",
+        "expected_signal": "PySol FC version 3.6.1"
+      },
+      "first_task": null
     },
     "windows": null
   },
@@ -101,10 +104,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T23:51:45.897092+08:00",
+    "checked_at": "2026-11-02T00:23:45.340577+08:00",
     "runs": [
       {
-        "id": "verify-pysolfc-20261101-232402-905c",
+        "id": "verify-pysolfc-20261102-001128-142e",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -112,87 +115,59 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx-gui:242bd3411e2e",
-        "checked_at": "2026-11-01T23:51:45.897092+08:00",
+        "checked_at": "2026-11-02T00:23:45.340577+08:00",
         "tool_version": "3.6.1",
         "install_method": "other",
         "replayed": true,
         "steps": [
           {
-            "command": "flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>&1 && flatpak remote-list 2>&1",
-            "purpose": "add flathub remote for flatpak"
+            "command": "flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "Add flathub user remote for flatpak"
           },
           {
-            "command": "timeout 300 flatpak install --user -y flathub io.sourceforge.pysolfc.PySolFC 2>&1",
-            "purpose": "flatpak install io.sourceforge.pysolfc.PySolFC"
+            "command": "flatpak --user install -y flathub io.sourceforge.pysolfc.PySolFC",
+            "purpose": "Install PySolFC via flatpak user"
           }
         ],
         "smoke_tests": [
           {
-            "command": "flatpak run io.sourceforge.pysolfc.PySolFC",
-            "expected_signal": "Canfield",
+            "command": "DISPLAY=:99 flatpak run io.sourceforge.pysolfc.PySolFC --version",
+            "expected_signal": "PySol FC version 3.6.1",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Canfield\": yes",
+            "observed_excerpt": "PySol FC version 3.6.1",
             "setup": [],
-            "offline": false
+            "offline": true
           }
         ],
         "pitfalls": [
           {
             "readme_said": "flatpak install flathub io.sourceforge.pysolfc.PySolFC",
-            "actually_needed": "needed to add flathub remote first: flatpak remote-add --user flathub https://flathub.org/repo/flathub.flatpakrepo",
+            "actually_needed": "flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo then flatpak --user install -y flathub io.sourceforge.pysolfc.PySolFC",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "flatpak run io.sourceforge.pysolfc.PySolFC and python pysol.py",
+            "actually_needed": "run with DISPLAY=:99 (virtual display); without DISPLAY it errors with _tkinter.TclError, and --help exits 1 after printing usage while --version exits 0",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "PySol Klondike window displays its startup About/welcome dialog with version info over the card table.",
+          "observed": "Screenshot shows the --version command outputting 'PySol FC version 3.6.1'.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-pysolfc-20261101-232402-905c/report.json",
+          "trace_path": "runs/verify/verify-pysolfc-20261102-001128-142e/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-pysolfc-20261101-232402-905c/replay-13-3.app.judged.png"
+            "runs/verify/verify-pysolfc-20261102-001128-142e/check-1-cmd9.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.426229,
-        "gui": {
-          "tier": "ui_rendered",
-          "screen": "first_run",
-          "command": "flatpak run io.sourceforge.pysolfc.PySolFC",
-          "window_title": "PySol - Klondike",
-          "display": "Xvfb 1280x800x24, no window manager, no GPU",
-          "operations": [
-            {
-              "feature": "solve Freecell games with solver",
-              "goal": "Press Escape to close any About dialog. Click the 'Select' menu at the top, then choose 'All games...' to open the game selection dialog. Wait for the dialog showing the list of games to appear.",
-              "check": "screen_text",
-              "target": null,
-              "expected": [
-                "Canfield"
-              ],
-              "format": null,
-              "passed": true,
-              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Canfield\": yes",
-              "smoke_test": 0,
-              "actions": 5,
-              "replay": "operated",
-              "operator_model": "meta-models/muse-spark-open-1026",
-              "screenshots": [
-                "runs/verify/verify-pysolfc-20261101-232402-905c/replay-13-3-op-1.png",
-                "runs/verify/verify-pysolfc-20261101-232402-905c/replay-13-3-op-2.png",
-                "runs/verify/verify-pysolfc-20261101-232402-905c/replay-13-3-op-3.png",
-                "runs/verify/verify-pysolfc-20261101-232402-905c/replay-13-3-op-4.png",
-                "runs/verify/verify-pysolfc-20261101-232402-905c/replay-13-3-op-5.png",
-                "runs/verify/verify-pysolfc-20261101-232402-905c/replay-13-3-op-6.png"
-              ]
-            }
-          ]
-        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.396723,
         "features": [
           {
             "feature": "play over 1200 Solitaire games",
@@ -200,23 +175,23 @@
             "smoke_tests": [],
             "reason": "other",
             "failure": null,
-            "note": "no failed check in the log; file save to pickfit-out failed due to file-chooser path mangling"
+            "note": "no failed check in the log; app launches and shows Klondike table; save and player-name checks hit operator/step limits, no tool crash"
           },
           {
             "feature": "play with multiple deck types",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "other",
+            "reason": "not_attempted",
             "failure": null,
-            "note": "no failed check in the log; Copyright text already visible on launch so check rejected as not a result of operation"
+            "note": "budget exhausted before a deck-type check could pass"
           },
           {
             "feature": "solve Freecell games with solver",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_shown",
+            "reason": "not_attempted",
             "failure": null,
-            "note": "its check passed, but the output does not show it: the feature judge gave no verdict"
+            "note": "budget exhausted; flatpak ships fc-solve but solver dialog was not exercised"
           }
         ]
       }
@@ -493,5 +468,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:44+08:00",
-  "updated_at": "2026-11-01T23:51:45.903826+08:00"
+  "updated_at": "2026-11-02T00:41:02.375718+08:00"
 }

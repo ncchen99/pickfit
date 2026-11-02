@@ -8,6 +8,7 @@ from pickfit.index import INDEX_VERSION, IndexBuildError, build_index, write_ind
 from scripts.build_index import main as build_index_main
 
 FIXTURES = Path(__file__).resolve().parent.parent / "worker" / "test" / "fixtures" / "software"
+WEB_APP = Path(__file__).resolve().parent / "fixtures" / "record_web_app.json"
 
 
 @pytest.fixture
@@ -203,3 +204,40 @@ def test_a_gui_apps_operations_reach_the_index_with_pickfits_own_lines_only(data
         {"feature": "chat", "check": "file", "passed": False, "replay": "operated", "goal": "Type {nonce} and press Return.",
          "observed": "no file under /home/sbx/: not found"}]
     assert "replay-3-1-op-1.png" not in json.dumps(chat)  # evidence paths stay in the record
+
+
+@pytest.fixture
+def with_web_app(data_dir: Path) -> Path:
+    shutil.copy(WEB_APP, data_dir / "fixture-web-sketch.json")
+    return data_dir
+
+
+def test_a_web_app_carries_its_url_and_the_facts_its_browser_run_saw(with_web_app: Path) -> None:
+    data_dir = with_web_app
+    entries = {e["slug"]: e for e in build_index(data_dir).index["entries"]}
+    sketch = entries["fixture-web-sketch"]
+    assert (sketch["kind"], sketch["repo_url"], sketch["install"]) == ("web_app", None, {})
+    web = sketch["web"]
+    assert web["url"] == "https://fixture-sketch.example.invalid/"
+    check = web["check"]
+    assert (check["level"], check["checked_at"], check["run_id"]) == ("function", "2026-11-02T09:00:00Z",
+                                                                      "run-20261102-web-1")
+    assert (check["account_needed"], check["ads_seen"], check["third_party_domains"]) == (False, False, 1)
+    assert (check["data_sent"], check["pwa"], check["offline"]) == ("none", True, "verified")
+    assert [o["passed"] for o in check["operations"]] == [True]
+    assert [f["status"] for f in check["features"]] == ["checked", "checked"]
+    assert entries["fixture-json-query"]["web"] is None
+
+
+def test_a_web_app_has_no_checked_facts_before_a_run_passed(with_web_app: Path) -> None:
+    data_dir = with_web_app
+
+    def not_loaded(record: dict) -> None:
+        run = record["verification"]["runs"][0]
+        run.update(level="unverified", unverified_reason="needs_account", smoke_tests=[], features=[])
+        run["web"].update(screen="sign_in_wall", operations=[], data_sent="unknown")
+        record["verification"].update(level="unverified", unverified_reason="needs_account")
+
+    edit(data_dir / "fixture-web-sketch.json", not_loaded)
+    sketch = {e["slug"]: e for e in build_index(data_dir).index["entries"]}["fixture-web-sketch"]
+    assert sketch["web"] == {"url": "https://fixture-sketch.example.invalid/", "check": None}

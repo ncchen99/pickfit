@@ -46,7 +46,7 @@ from pickfit.verify.audio import ListenArgs, run_listen
 from pickfit.verify.box import Box, BoxError, ExecResult
 from pickfit.verify import features as feature_checks
 from pickfit.verify.features import FINISH_FEATURES, FinishFeature, resolve_features
-from pickfit.verify.gui_operate import OperateArgs, run_operation, spec_problems
+from pickfit.verify.gui_operate import OperateArgs, box_home, run_operation, spec_problems
 from pickfit.verify.judge import judge_model_for, read_screen_text
 from pickfit.verify.plan import InstallPlan, plan_for
 from pickfit.verify.rules import RuleHit, error_signature, match_rules
@@ -208,8 +208,10 @@ OPERATE_GUI_TOOL = _fn(
                 "items": {"type": "object", "properties": {
                     "path": {"type": "string", "description": "e.g. ~/pickfit-in/notes.md"},
                     "text": {**_NULL_STR, "description": "The file's text ({nonce} allowed), or null."},
-                    "sample": {"type": ["string", "null"], "enum": ["png", "jpeg", None],
-                               "description": "pickfit's own sample image instead of text, or null."}},
+                    "sample": {"type": ["string", "null"], "enum": [*gui_operate.SAMPLES, None],
+                               "description": "pickfit's own sample file instead of text (an image, a 3-frame gif, "
+                                              "a one-page pdf, a 1 s wav tone, a 2 s mp4, a zip of 3 png pages), "
+                                              "or null."}},
                     "required": ["path", "text", "sample"], "additionalProperties": False}},
      "check": {"type": "object", "description": "What pickfit checks after the operation.", "properties": {
          "kind": {"type": "string", "enum": ["file", "clipboard", "screen_text"]},
@@ -462,7 +464,8 @@ pickfit can check, one operate_gui per feature: a goal a user would do in the ap
 {nonce} where a unique word should go, and where to save), and a check: file (the app saves or exports a file: \
 its path under ~/pickfit-out/, or a folder to search such as ~/ where the app keeps its data, with the text it \
 must hold and/or its format), clipboard (the app copies a result), or screen_text (text the app computes or \
-converts, never the text typed). Put input files the goal needs in inputs (text, or pickfit's sample png/jpeg). \
+converts, never the text typed). Put input files the goal needs in inputs (text, or pickfit's sample png, jpeg, \
+gif, pdf, wav, mp4 or zip). \
 Examples: a notes or editor app: type {nonce}, save to ~/pickfit-out/note.md, check that file contains {nonce}; \
 an image tool: open ~/pickfit-in/photo.png (sample png), export ~/pickfit-out/photo.webp, check format webp; \
 a model browser: download the smallest GGUF it lists, check folder ~/ for format gguf; a document search: an \
@@ -473,10 +476,16 @@ generated, a value it copied, or something it created and then lists or stores. 
 menu or the name of a screen: opening a screen shows nothing about a feature, a screen_text result must not \
 be on the screen before the first action, and pickfit's feature judge refuses such checks. \
 A passing operate_gui is the only way a GUI app reaches level function: cite it as a smoke test with \
-expected_signal `gui check: passed` and in features as checked. A goal that needs an account, a key, a \
-microphone, a camera, a GPU or a model download larger than about 300 MB is not a check: report that feature \
-not_checked with the reason; if no listed feature can show a result here, operate nothing (the launch is \
-install). At most two operate_gui per feature and six per run: one retry with a clearer goal, then move on. This box has no user namespaces, so Chromium and Electron apps usually need --no-sandbox \
+expected_signal `gui check: passed` and in features as checked. A feature that needs what this box lacks is \
+not a check: report it not_checked with the code that names our box's limit, never other: needs_gpu (a GPU), \
+needs_hardware (a microphone, camera or device), needs_more_resources (a model or download over about 300 MB, \
+or too big or slow here), needs_account (an account or key), needs_service (an outside service or server, \
+game or media data the box does not have). If no listed feature can show a result here, operate nothing (the \
+launch is install).
+A Flatpak app here cannot open a file dialog (the box runs no desktop portal): give it a file on the command line \
+(flatpak run --filesystem=home <app id> ~/pickfit-in/<file>), look for what it keeps itself with a folder search \
+of ~/.var/app/<app id>/, and report a feature that works only through a file dialog, or by opening a file in \
+another app (the box has no handler for that), not_checked with needs_service. At most two operate_gui per feature and six per run: one retry with a clearer goal, then move on. This box has no user namespaces, so Chromium and Electron apps usually need --no-sandbox \
 here: add it only if the app fails without it, and record it as a pitfall of kind sandbox (this box's need, \
 not the app's). A Tkinter \
 app needs /usr/bin/python3 (it has tkinter; python3.12 on PATH does not): make its venv with \
@@ -503,6 +512,48 @@ OpenGL on the GPU: the virtual display's own OpenGL is software (Mesa llvmpipe),
 matches this driver): launch them with plain flatpak run. Start a native OpenGL app with `vglrun -d egl <its \
 command>` (VirtualGL, already installed) and record that as a pitfall of kind sandbox: a desktop with a GPU does \
 not need it."""
+
+# The install and operate guidance GUI_RULES gives, shared with MAC_GUI_RULES without what is Linux's own (the
+# Flatpak note, user namespaces, Tkinter).
+OPERATE_RULES = GUI_RULES[GUI_RULES.index("Install steps of a GUI app"):GUI_RULES.index(" This box has no user namespaces")]
+OPERATE_RULES = (OPERATE_RULES[:OPERATE_RULES.index("A Flatpak app here")]
+                 + OPERATE_RULES[OPERATE_RULES.index("At most two operate_gui per feature"):])
+
+MAC_GUI_RULES = """\
+
+GUI apps: this macOS box shows a desktop where you (sbx) are logged in. Install a desktop (GUI) app as a user \
+would without admin rights: a Homebrew cask with `brew install --cask --appdir=$HOME/Applications <cask>` \
+(from a third-party tap, one cited step that also taps and trusts it, as Homebrew now requires: `brew tap \
+<user>/<tap> && brew trust --tap <user>/<tap> && brew install --cask --appdir=$HOME/Applications \
+<user>/<tap>/<cask>`) \
+(you cannot write /Applications; a cask that runs a .pkg installer or needs sudo cannot install here: finish \
+unverified with the reason), or the app's own .dmg or .zip in two cited steps: `curl -fL -o \
+~/Downloads/<file>.dmg <url>`, then `mkdir -p ~/mnt/<name> ~/Applications && hdiutil attach -nobrowse -mountpoint ~/mnt/<name> \
+~/Downloads/<file>.dmg && cp -R ~/mnt/<name>/<App>.app ~/Applications/ && hdiutil detach -force ~/mnt/<name>` \
+(~/Applications does not exist in a new box, and cp -R into a missing folder makes the folder the app; \
+-force: macOS may still be scanning the copied app, and a plain detach says "Resource busy"; a .zip: \
+`unzip -q <file>.zip -d ~/Applications`). The replay runs only your cited steps, in a new VM: never cite a step \
+that resumes a download (curl -C -), tests for (ls) or copies a file an earlier try left behind. Start it with \
+launch_gui by its path, `open ~/Applications/<App>.app` (Launch Services may not know a just-installed app by \
+name yet). Start the app only with launch_gui: do not run its executable or a command-line helper it ships with \
+run_command or run_background first (a copy left running makes macOS refuse the launch, or shows a window \
+pickfit does not count). Cite that launch_gui as a smoke test with \
+expected_signal `gui tier: window` (pickfit's own line; window titles, app and process names are the app's and \
+do not count). Before each launch pickfit answers macOS's first-launch prompt ("downloaded from the Internet") \
+with Open for apps Gatekeeper accepts as notarized, as a user does. An app Gatekeeper rejects (not notarized: \
+"Not Opened") stays blocked: only if the app's own docs tell users to get past that (Open Anyway in System \
+Settings, right-click Open, or xattr), remove its quarantine with `xattr -dr com.apple.quarantine \
+~/Applications/<App>.app` as a cited step (Open Anyway needs an admin, which you are not), and record a pitfall \
+saying the app is not notarized. A download or installer may take up to 30 minutes here: give it run_command \
+timeout_s up to 1800 (a 1 GB file at 1.4 MB/s needs about 13 minutes). \
+Only Homebrew casks and browsers mark downloads with a quarantine: an app you \
+fetched with curl has none, so never cite xattr for it. A launch stops every process you started (servers too; macOS's own desktop \
+stays), so start servers again after it. A launch supports level install at most, whatever the window shows: \
+pickfit's judge reads the screenshot itself. Launch it even if it will ask for an account: the screenshot records \
+the sign-in screen.
+""" + OPERATE_RULES + """ On this Mac, goals name the Mac's shortcuts (cmd+s to save, cmd+c to copy; not ctrl), \
+~/ is /Users/sbx, a menu bar app's controls are in the menu of its item at the top right, and this VM has no \
+microphone or camera (needs_hardware)."""
 
 FLATPAK_RULE = """ A Flatpak app installs per user as two cited steps, \
 `flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo` and then \
@@ -599,7 +650,12 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
                         "this box, run the same command on the smallest model it accepts.")
     if big_box(box):
         lines.insert(3, big_box(box).strip())
-    if box.display and ex.kind.value == "desktop_app":
+    if box.display and ex.kind.value == "desktop_app" and box.os == "macos":
+        lines.insert(3, "This is a desktop (GUI) app: install the app itself (its macOS build: a Homebrew cask, "
+                        "or the release .dmg or .zip), then start it with launch_gui and cite that launch, then "
+                        "exercise its listed features with operate_gui. A test suite or a helper tool is not the "
+                        "app.")
+    elif box.display and ex.kind.value == "desktop_app":
         lines.insert(3, "This is a desktop (GUI) app: install the app itself (a release build if there is one for "
                         "Linux; an AppImage runs with --appimage-extract-and-run, no FUSE needed), then start it "
                         "with launch_gui and cite that launch, then exercise its listed features with operate_gui. "
@@ -769,7 +825,8 @@ class VerifyAgent:
         self.instructions = INSTRUCTIONS.format(max_commands=limits.max_commands, max_turns=limits.max_turns,
                                                 minutes=round(limits.max_seconds / 60),
                                                 stdout_chars=f"{STDOUT_CHARS:,}", box_kind=box.kind,
-                                                box_rule=box.user_rule) + (GUI_RULES if box.display else "")
+                                                box_rule=box.user_rule) + (
+            (MAC_GUI_RULES if box.os == "macos" else GUI_RULES) if box.display else "")
         if box.display and getattr(box, "runtime", None) == "gvisor":  # flatpak's sandbox needs gVisor's userns
             self.instructions += FLATPAK_RULE
         if box.gpu:  # a GPU example is a check here
@@ -1140,8 +1197,10 @@ class VerifyAgent:
         n = self.commands_used
         wait = max(1, min(args.wait_s, gui.WAIT_MAX_S))
         self._say(f"  ▣ {_one_line(args.command, 200)}   [cmd {n}/{self.limits.max_commands}]")
-        result, shown, png = gui.launch(self.box, args.command, n, wait,
-                                        timeout_s=self._timeout(wait + gui.SETTLE_S + gui.BLANK_WAIT_S + 90))
+        launch = getattr(self.box, "launch_gui", None)  # a box with its own display (TartBox) launches its way
+        timeout = self._timeout(wait + gui.SETTLE_S + gui.BLANK_WAIT_S + 90)
+        result, shown, png = (launch(args.command, n, wait, timeout_s=timeout) if launch
+                              else gui.launch(self.box, args.command, n, wait, timeout_s=timeout))
         shot = None
         if png:
             path = self.runs_dir / "verify" / self.run_id / f"gui-{n}.png"
@@ -1160,7 +1219,7 @@ class VerifyAgent:
         if self._elapsed() + OPERATE_RESERVE_S >= self.limits.max_seconds - WRAP_UP_SECONDS:
             self._say(f"  ◈ {_one_line(args.goal, 120)} → refused (time)")
             return "error: too little time is left for an operation (a few minutes). Call finish."
-        problems = spec_problems(args, self.task.readme)
+        problems = spec_problems(args, self.task.readme, home=box_home(self.box))
         done = [c.operate["spec"].get("feature") for c in self.report.commands if c.operate]
         if self.limits.max_operations <= 0:
             problems.append("this run checks install only: report the features not_checked")

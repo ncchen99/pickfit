@@ -225,7 +225,8 @@ class Replayer:
                  operator: dict[str, Any] | None = None) -> None:
         self.box = box
         self.log = log
-        self.timeout = command_timeout_s
+        # A box that allows longer commands (a macOS GUI box: GUI_COMMAND_S) gives its install steps that long too.
+        self.timeout = max(command_timeout_s, getattr(getattr(box, "limits", None), "max_command_s", 0) or 0)
         self.evidence_dir = evidence_dir  # where launch_gui and operate_gui screenshots go
         self.operator = operator or {}  # operate_gui: run_operation's model, read_screen, scope and test seams
         self.launches = 0
@@ -276,7 +277,10 @@ class Replayer:
         ran.listen = asdict(heard)
         return ran
 
-    def rerun(self, cmd: ReplayCommand, max_s: int | None = None) -> RanCommand:
+    def rerun(self, cmd: ReplayCommand, max_s: int | None = None, *, install: bool = False) -> RanCommand:
+        """install: an install step gets the full command time, not replay_timeout's: the agent's cited step can
+        have been quick only because a failed try before it filled a download cache (thundertalk 11/1: a cask
+        install recorded at 10 s needed over 70 s in the fresh box). It runs online, before any check."""
         if cmd.tool == "operate_gui":
             return self._operate(cmd)
         if cmd.tool == "listen":
@@ -286,7 +290,9 @@ class Replayer:
                 raise BoxError("a GUI launch needs a box with a display")
             self.launches += 1
             tag = f"replay-{cmd.command_id}-{self.launches}"
-            result, shown, png = gui.launch(self.box, cmd.command, tag, cmd.wait_s or 30)
+            launch = getattr(self.box, "launch_gui", None)  # a box with its own display (TartBox) launches its way
+            result, shown, png = (launch(cmd.command, tag, cmd.wait_s or 30) if launch
+                                  else gui.launch(self.box, cmd.command, tag, cmd.wait_s or 30))
             ran = self._ran(cmd, result)
             ran.gui = shown.to_dict()
             if png and self.evidence_dir is not None:
@@ -300,7 +306,8 @@ class Replayer:
             result = self.box.exec(self.box.background(cmd.command, cmd.port, wait, f"replay-{cmd.command_id}"),
                                    wait + 15)
         else:
-            result = self.box.exec(cmd.command, min(self.timeout, replay_timeout(cmd.seconds), max_s or self.timeout))
+            limit = self.timeout if install else min(self.timeout, replay_timeout(cmd.seconds))
+            result = self.box.exec(cmd.command, min(limit, max_s or self.timeout))
         return self._ran(cmd, result)
 
     def _ran(self, cmd: ReplayCommand, result: ExecResult) -> RanCommand:
@@ -347,7 +354,7 @@ class Replayer:
             result.error = "no steps to replay"
             return
         for step in plan.steps:
-            ran = self.rerun(step)
+            ran = self.rerun(step, install=True)
             result.steps.append(ran)
             if not ran.ok:
                 result.error = f"step {step.command_id} exited {ran.exit_code}: {_one_line(step.command)}"

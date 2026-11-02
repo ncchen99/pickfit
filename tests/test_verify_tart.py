@@ -103,6 +103,8 @@ if cmd == "run":
             fd = int(m.group(1))
     if fd is not None:
         threading.Thread(target=serve, args=(fd,), daemon=True).start()
+    if "--vnc-experimental" in args:
+        print("VNC server is running at vnc://:fake-pw@127.0.0.1:5999", flush=True)
     end = time.time() + 30
     while not os.path.exists(os.path.join(here, "stopped")) and time.time() < end:
         time.sleep(0.05)
@@ -125,6 +127,9 @@ if cmd == "exec":
         sys.exit(0)
     if "-i" in args:
         open(os.path.join(here, "stdin.bin"), "wb").write(sys.stdin.buffer.read())
+    if args[-1] == "procs":  # gui_mac's helper: sbx's login session
+        print(json.dumps({"401": ["Sun Nov  1 08:00:00 2026", "/System/Library/CoreServices/Dock.app/Contents/MacOS/Dock"]}))
+        sys.exit(0)
     script = args[-1]
     if env("FAKE_FAIL_MATCH") and env("FAKE_FAIL_MATCH") in script:
         print("injected failure"); sys.exit(1)
@@ -598,3 +603,103 @@ def test_macos_limits_fails_closed_when_containment_cannot_run():
     box.validate_containment = lambda timeout=4: (_ for _ in ()).throw(BoxError("no result for host5000"))
     results = {r.name: r for r in run_limits_test(box, log=lambda s: None)}
     assert not results["containment_check_ran"].ok and "no result" in results["containment_check_ran"].detail
+
+
+GUI_MANIFEST = {**MANIFEST, "base": "pickfit-macos-26-gui", "parent": "pickfit-macos-26", "build_id": "0a1b2c3d4e5f",
+                "display": "1280x800px", "gui": True}
+
+
+@POSIX_ONLY
+def test_display_box_clones_the_gui_base_boots_with_vnc_and_keeps_its_port_from_the_guest(
+        make_box, fake_tart: Path, state_dir: Path):
+    (state_dir / "pickfit-macos-26-gui.json").write_text(json.dumps(GUI_MANIFEST))
+    box = make_box(display=True)
+    box.start()
+    calls = _calls(fake_tart)
+    assert ["clone", "pickfit-macos-26-gui", "pf-verify-1-abc"] in calls
+    run = next(c for c in calls if c[0] == "run")
+    assert "--vnc-experimental" in run and "--no-graphics" in run
+    assert box.vnc_url == "vnc://:fake-pw@127.0.0.1:5999" and box.display == "vnc"
+    assert stat.S_IMODE(box.vm_log.stat().st_mode) == 0o600  # the log holds the VNC password
+    scripts = [c[-1] for c in calls if c[0] == "exec"]
+    assert any("pgrep -u sbx -x Dock" in s for s in scripts)  # waited for sbx's desktop
+    assert any("--run-rpc" in s and "admin is logged in" in s for s in scripts)  # GUI_CHECK, not HARDENED_CHECK
+    assert any("http://$gw:5999/" in s or ":5999/" in s for s in scripts)  # the guest must not reach the VNC port
+    assert box.session == {"401": ["Sun Nov  1 08:00:00 2026", "/System/Library/CoreServices/Dock.app/Contents/MacOS/Dock"]}
+    assert "desktop (1280x800) where sbx is logged in" in box.describe()
+    assert box.image.endswith("+pickfit-macos-26-gui@0a1b2c3d4e5f")
+
+
+@POSIX_ONLY
+def test_headless_box_has_no_vnc(make_box, fake_tart: Path):
+    box = make_box()
+    box.start()
+    assert box.display is None and box.vnc_url is None and box.session is None
+    assert "--vnc-experimental" not in next(c for c in _calls(fake_tart) if c[0] == "run")
+    assert "No display (the VM is headless)." in box.describe()
+    with pytest.raises(BoxError, match="no display"):
+        box.screen()
+
+
+@POSIX_ONLY
+def test_harness_exec_runs_as_root_or_a_uid_and_passes_stdin(make_box, fake_tart: Path):
+    box = make_box()
+    box.start()
+    result = box.harness_exec(["/bin/echo", "hi"], 10, stdin=b"payload")
+    assert result.exit_code == 0 and result.stdout.strip() == "ok"
+    assert _calls(fake_tart)[-1] == ["exec", "-i", "pf-verify-1-abc", "sudo", "-n", "/bin/echo", "hi"]
+    assert (fake_tart.parent / "stdin.bin").read_bytes() == b"payload"
+    box.harness_exec(["/usr/bin/true"], 10, as_uid=1001)
+    assert _calls(fake_tart)[-1] == ["exec", "pf-verify-1-abc", "sudo", "-n", "-u", "#1001", "/usr/bin/true"]
+
+
+def test_gui_base_script_logs_sbx_in_and_moves_exec_to_the_root_daemon():
+    script = tb.GUI_ROOT
+    assert 'PICKFIT_LOGIN_PW="$(openssl rand' in script and "unset PICKFIT_LOGIN_PW" in script
+    assert "dscl . -passwd /Users/sbx" in script and "chmod 600 /etc/kcpassword" in script
+    assert "autoLoginUser sbx" in script
+    assert "Add :ProgramArguments:2 string --run-rpc" in script and f"rm -f {tb.AGENT_PLISTS[1]}" in script
+    assert "com.apple.SetupAssistant.plist" in script
+    check = tb.GUI_CHECK
+    assert tb.AGENT_PLISTS[1] not in check.split("for plist in", 1)[1].split("\n", 1)[0]  # only the daemon is pinned
+    assert 'fail "admin is logged in"' in check and '[ "$(id -u)" = 0 ]' in check
+    assert "dscl . -authonly admin admin" in check and "pam_deny.so" in check  # the hardened checks still run
+    assert all(p in tb.HARDENED_CHECK for p in tb.AGENT_PLISTS)  # the headless base's check is unchanged
+
+
+@POSIX_ONLY
+def test_failed_gui_base_build_deletes_it(fake_tart: Path, state_dir: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(tb, "softnet_ready", lambda *a, **k: None)
+    monkeypatch.setenv("FAKE_FAIL_MATCH", "autoLoginUser")
+    try:
+        with pytest.raises(BoxError, match="GUI setup failed"):
+            tb.prepare_gui_base(tart=str(fake_tart), state_dir=state_dir, log=lambda s: None)
+    finally:
+        (fake_tart.parent / "stopped").touch()
+    calls = _calls(fake_tart)
+    assert ["clone", "pickfit-macos-26", "pickfit-macos-26-gui"] in calls
+    assert ["set", "pickfit-macos-26-gui", "--display", "1280x800px"] in calls
+    assert calls[-1] == ["delete", "pickfit-macos-26-gui"]
+    assert not (state_dir / "pickfit-macos-26-gui.json").exists()
+
+
+@POSIX_ONLY
+def test_gui_base_needs_a_hardened_parent_and_no_existing_copy(fake_tart: Path, state_dir: Path,
+                                                               monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("FAKE_BASE_EXISTS", "1")
+    with pytest.raises(BoxError, match="already exists"):
+        tb.prepare_gui_base(tart=str(fake_tart), state_dir=state_dir, log=lambda s: None)
+    (state_dir / "pickfit-macos-26.json").write_text(json.dumps({**MANIFEST, "hardened": False}))
+    with pytest.raises(BoxError, match="not hardened"):
+        tb.prepare_gui_base(tart=str(fake_tart), state_dir=state_dir, log=lambda s: None)
+
+
+@POSIX_ONLY
+def test_read_result_reads_as_the_box_user_and_decodes(make_box, fake_tart: Path, monkeypatch: pytest.MonkeyPatch):
+    box = make_box()
+    box.start()
+    with pytest.raises(BoxError, match="cannot read"):  # the fake answers "ok", which is not base64 of a file
+        box.read_result("/Users/sbx/Documents/x.txt")
+    call = _calls(fake_tart)[-1]
+    assert call[2:6] == ["sudo", "-n", "-u", "#1001"] and call[-1] == "/Users/sbx/Documents/x.txt"
+    assert "set -o pipefail" in call[8]

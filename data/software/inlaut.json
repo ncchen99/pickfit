@@ -55,20 +55,18 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-inlaut-20261101-184212-5062",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask tobymarks/tap/inlaut",
-          "purpose": null
+          "command": "mkdir -p $HOME/Applications && brew install --cask --appdir=$HOME/Applications tobymarks/tap/inlaut",
+          "purpose": "Install inlaut cask into user Applications"
         }
       ],
-      "manual_steps": [
-        "guides you through microphone and Accessibility permissions"
-      ],
+      "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "open ~/Applications/Inlaut.app"
     },
     "linux": null,
     "windows": null
@@ -86,22 +84,84 @@
     "url": "https://github.com/tobymarks/inlaut/releases/tag/v0.6.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T18:46:24.266632+08:00",
+    "runs": [
+      {
+        "id": "verify-inlaut-20261101-184212-5062",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@78f2945fd37d",
+        "checked_at": "2026-11-01T18:46:24.266632+08:00",
+        "tool_version": "0.6.0",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p $HOME/Applications && brew install --cask --appdir=$HOME/Applications tobymarks/tap/inlaut",
+            "purpose": "Install inlaut cask into user Applications"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/Inlaut.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask tobymarks/tap/inlaut",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications tobymarks/tap/inlaut (user-owned Applications dir since /Applications is not writable without admin)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows inlaut's setup wizard with onboarding steps to download speech recognition and grant microphone and accessibility permissions.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-inlaut-20261101-184212-5062/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-inlaut-20261101-184212-5062/replay-2-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.031305,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open ~/Applications/Inlaut.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        }
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-01T18:46:24+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 68.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.6,
           "weight": 40.0
         },
         "install_docs": {
@@ -142,7 +202,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 50.99
+      "value": 50.47
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -425,5 +485,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:18+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T18:46:24.273811+08:00"
 }

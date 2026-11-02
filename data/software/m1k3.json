@@ -53,18 +53,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-m1k3-20261101-183632-7533",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask round-tower/tap/m1k3",
-          "purpose": null
+          "command": "mkdir -p $HOME/Applications && brew tap round-tower/tap 2>&1; brew install --cask --appdir=$HOME/Applications round-tower/tap/m1k3 2>&1",
+          "purpose": "Install M1K3 cask to user Applications"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "m1k3 status"
+      "check": {
+        "command": "m1k3 --help",
+        "expected_signal": "m1k3 — talk to the M1K3 app running on this Mac."
+      },
+      "first_task": "open ~/Applications/M1K3.app"
     },
     "linux": null,
     "windows": null
@@ -82,22 +85,128 @@
     "url": "https://github.com/Round-Tower/M1K3/releases/tag/2026.10.30"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T18:42:12.851460+08:00",
+    "runs": [
+      {
+        "id": "verify-m1k3-20261101-183632-7533",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@78f2945fd37d",
+        "checked_at": "2026-11-01T18:42:12.851460+08:00",
+        "tool_version": "2026.10.31",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p $HOME/Applications && brew tap round-tower/tap 2>&1; brew install --cask --appdir=$HOME/Applications round-tower/tap/m1k3 2>&1",
+            "purpose": "Install M1K3 cask to user Applications"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "m1k3 --help",
+            "expected_signal": "m1k3 — talk to the M1K3 app running on this Mac.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "m1k3 — talk to the M1K3 app running on this Mac.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/M1K3.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew trust round-tower/tap && brew install --cask round-tower/tap/m1k3",
+            "actually_needed": "mkdir -p $HOME/Applications and brew install --cask --appdir=$HOME/Applications round-tower/tap/m1k3 (after brew tap round-tower/tap)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows m1k3 help with tagline and full usage list, exit 0. / M1K3 welcome setup card offering local AI companion onboarding with name field and download options.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-m1k3-20261101-183632-7533/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-m1k3-20261101-183632-7533/check-1-cmd3.judged.png",
+            "runs/verify/verify-m1k3-20261101-183632-7533/replay-2-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.052254,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open ~/Applications/M1K3.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "chat with on-device LLM brains",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "On-device chat needs interactive GUI; not exercised from CLI."
+          },
+          {
+            "feature": "live voice with neural TTS",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Live voice/TTS needs interactive GUI and audio hardware."
+          },
+          {
+            "feature": "remember notes and PDFs locally",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Knowledge/RAG drop-in needs interactive GUI."
+          },
+          {
+            "feature": "encrypted on-device call transcription",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Call transcription needs interactive GUI and mic."
+          }
+        ]
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-01T18:42:12+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 71.4,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.6,
           "weight": 40.0
         },
         "install_docs": {
@@ -138,7 +247,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 52.65
+      "value": 54.48
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -421,5 +530,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T18:42:12.862396+08:00"
 }

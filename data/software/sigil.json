@@ -49,18 +49,18 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-sigil-20261102-070338-d42e",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask sigil",
-          "purpose": null
+          "command": "brew install --cask --appdir=$HOME/Applications sigil",
+          "purpose": "Install Sigil via Homebrew cask to ~/Applications"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "open ~/Applications/Sigil.app"
     },
     "linux": null,
     "windows": null
@@ -78,10 +78,205 @@
     "url": "https://github.com/Sigil-Ebook/Sigil/releases/tag/2.8.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T07:36:19.314177+08:00",
+    "runs": [
+      {
+        "id": "verify-sigil-20261102-070338-d42e",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-02T07:36:19.314177+08:00",
+        "tool_version": "2.8.1",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications sigil",
+            "purpose": "Install Sigil via Homebrew cask to ~/Applications"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/Sigil.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Sigil.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: clipboard (read by the display user): 13 characters; contains \"pickfit8a212d\": yes (typed by the operator)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Sigil.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: clipboard (read by the display user): 860 characters; contains \"pickfit98b2ee\": yes (typed by the operator)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask sigil",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications sigil (cask cannot write /Applications without admin)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Save edited book as .epub and search the file for the text",
+            "actually_needed": "Copy edited text/metadata/ToC to clipboard and check clipboard; a file-contains check on the .epub fails because the nonce is deflated inside the ZIP and is invisible to a raw-byte search (unzip shows it is present).",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows Sigil's main EPUB editor with Book Browser, XHTML code view, and Preview pane for an untitled ebook.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-sigil-20261102-070338-d42e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-sigil-20261102-070338-d42e/replay-2-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.425318,
+        "gui": {
+          "tier": "action_checked",
+          "screen": "main_ui",
+          "command": "open ~/Applications/Sigil.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+          "operations": [
+            {
+              "feature": "edit ebook metadata",
+              "goal": "Create a new empty book. Open Tools > Metadata > Basic (or Edit Metadata) to open the metadata editor. Set the book Title field to the unique word {nonce} (select all in the Title field with cmd+a, type {nonce}). Then select the title text you just typed and press cmd+c to copy it to the clipboard. Press OK to close the metadata dialog, then File > Save As to /Users/sbx/pickfit-out/sigil-meta.epub (cmd+a in File name field, type sigil-meta.epub, folder /Users/sbx/pickfit-out, Save).",
+              "check": "clipboard",
+              "target": null,
+              "expected": [
+                "{nonce}"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "clipboard (read by the display user): 13 characters; contains \"pickfit8a212d\": yes (typed by the operator)",
+              "smoke_test": 1,
+              "actions": 17,
+              "replay": "actions",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-1.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-2.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-3.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-4.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-5.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-6.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-7.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-8.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-9.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-10.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-11.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-12.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-13.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-14.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-15.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-16.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-7-2-op-17.png"
+              ]
+            },
+            {
+              "feature": "generate table of contents",
+              "goal": "New empty book. In Section0001.xhtml set body to <h1>Chapter {nonce}</h1><h2>Section {nonce}</h2>. Use Tools > Table Of Contents > Generate ToC, press OK. Open nav.xhtml, press cmd+a then cmd+c. Save As to /Users/sbx/pickfit-out/sigil-toc.epub.",
+              "check": "clipboard",
+              "target": null,
+              "expected": [
+                "{nonce}"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "clipboard (read by the display user): 860 characters; contains \"pickfit98b2ee\": yes (typed by the operator)",
+              "smoke_test": 2,
+              "actions": 19,
+              "replay": "actions",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-1.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-2.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-3.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-4.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-5.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-6.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-7.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-8.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-9.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-10.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-11.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-12.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-13.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-14.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-15.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-16.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-17.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-18.png",
+                "runs/verify/verify-sigil-20261102-070338-d42e/replay-8-3-op-19.png"
+              ]
+            }
+          ]
+        },
+        "features": [
+          {
+            "feature": "edit EPUB 2 and EPUB 3 books",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; Both Save As operations succeeded and unzipped OEBPS/Text/Section0001.xhtml contained the nonce (verified by unzip), but raw-zip contains check cannot see inside deflated EPUB."
+          },
+          {
+            "feature": "generate table of contents",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "edit ebook metadata",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: clipboard holds only the typed title copied from the dialog, not saved book metadata."
+          },
+          {
+            "feature": "validate EPUB, CSS and XHTML",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; Tools > Well-Formed Check EPUB showed 'No problems found!'."
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -314,5 +509,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:46:48+08:00",
-  "updated_at": "2026-11-01T17:11:04+08:00"
+  "updated_at": "2026-11-02T07:36:19.321100+08:00"
 }

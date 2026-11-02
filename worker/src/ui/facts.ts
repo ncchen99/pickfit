@@ -5,8 +5,6 @@
 import type { Arch, Entry, GuiEvidence, InstallGuide, OS } from '../catalog.ts';
 import { operatedText } from '../evidence.ts';
 
-export { boxExtras } from '../evidence.ts';
-
 export const OS_NAME: Record<OS, string> = { macos: 'macOS', linux: 'Linux', windows: 'Windows' };
 export const DAY = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 export const SHORT_DAY = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });

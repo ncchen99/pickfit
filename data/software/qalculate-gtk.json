@@ -49,18 +49,37 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "other",
+      "basis": "replayed",
+      "run_id": "verify-qalculate-gtk-20261102-012803-ee30",
+      "method": "binary",
       "steps": [
         {
-          "command": "flatpak install flathub io.github.Qalculate",
-          "purpose": null
+          "command": "mkdir -p /home/sbx/apps/debs",
+          "purpose": "Create apps directory"
+        },
+        {
+          "command": "apt-get download libqalculate-data libqalculate23 qalculate-gtk",
+          "purpose": "Download qalculate debs"
+        },
+        {
+          "command": "dpkg-deb -x libqalculate-data_5.5.2-1_all.deb /home/sbx/apps",
+          "purpose": "Extract data deb"
+        },
+        {
+          "command": "dpkg-deb -x libqalculate23_5.5.2-1+b1_amd64.deb /home/sbx/apps",
+          "purpose": "Extract lib deb"
+        },
+        {
+          "command": "dpkg-deb -x qalculate-gtk_5.5.1-1_amd64.deb /home/sbx/apps",
+          "purpose": "Extract gtk deb"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "flatpak run io.github.Qalculate"
+      "check": {
+        "command": "LD_LIBRARY_PATH=/home/sbx/apps/usr/lib/x86_64-linux-gnu /home/sbx/apps/usr/bin/qalculate-gtk --version",
+        "expected_signal": "5.5.1"
+      },
+      "first_task": "LD_LIBRARY_PATH=/home/sbx/apps/usr/lib/x86_64-linux-gnu /home/sbx/apps/usr/bin/qalculate-gtk"
     },
     "windows": null
   },
@@ -77,10 +96,137 @@
     "url": "https://github.com/Qalculate/qalculate-gtk/releases/tag/v5.13.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T01:30:45.887884+08:00",
+    "runs": [
+      {
+        "id": "verify-qalculate-gtk-20261102-012803-ee30",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:242bd3411e2e",
+        "checked_at": "2026-11-02T01:30:45.887884+08:00",
+        "tool_version": "5.5.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p /home/sbx/apps/debs",
+            "purpose": "Create apps directory"
+          },
+          {
+            "command": "apt-get download libqalculate-data libqalculate23 qalculate-gtk",
+            "purpose": "Download qalculate debs"
+          },
+          {
+            "command": "dpkg-deb -x libqalculate-data_5.5.2-1_all.deb /home/sbx/apps",
+            "purpose": "Extract data deb"
+          },
+          {
+            "command": "dpkg-deb -x libqalculate23_5.5.2-1+b1_amd64.deb /home/sbx/apps",
+            "purpose": "Extract lib deb"
+          },
+          {
+            "command": "dpkg-deb -x qalculate-gtk_5.5.1-1_amd64.deb /home/sbx/apps",
+            "purpose": "Extract gtk deb"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "LD_LIBRARY_PATH=/home/sbx/apps/usr/lib/x86_64-linux-gnu /home/sbx/apps/usr/bin/qalculate-gtk --version",
+            "expected_signal": "5.5.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "5.5.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "LD_LIBRARY_PATH=/home/sbx/apps/usr/lib/x86_64-linux-gnu /home/sbx/apps/usr/bin/qalculate-gtk",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak install flathub io.github.Qalculate",
+            "actually_needed": "Flatpak 5.13.0 installs OK but window fails: Gtk ERROR glycin-svg loader sandbox exits (box has no user namespaces); used native Debian debs extracted to ~/apps instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "resulting executable is named qalculate-gtk",
+            "actually_needed": "Run as LD_LIBRARY_PATH=/home/sbx/apps/usr/lib/x86_64-linux-gnu /home/sbx/apps/usr/bin/qalculate-gtk; still warns Failed to load global definitions (compiled /usr/share path) but window opens",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows the --version command outputting 5.5.1. / The screenshot shows Qalculate! calculator main working screen with expression prompt, mode dropdowns, and full keypad.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-qalculate-gtk-20261102-012803-ee30/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-qalculate-gtk-20261102-012803-ee30/check-1-cmd15.judged.png",
+            "runs/verify/verify-qalculate-gtk-20261102-012803-ee30/replay-16-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.101728,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "LD_LIBRARY_PATH=/home/sbx/apps/usr/lib/x86_64-linux-gnu /home/sbx/apps/usr/bin/qalculate-gtk",
+          "window_title": "Qalculate!",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "unit calculation and conversion",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "perform symbolic calculations",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "plot functions and graphs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "convert currencies",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -321,5 +467,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:43+08:00",
-  "updated_at": "2026-11-02T01:22:09+08:00"
+  "updated_at": "2026-11-02T01:30:45.890662+08:00"
 }
