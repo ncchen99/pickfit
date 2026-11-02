@@ -223,8 +223,21 @@ def _video(**over: Any) -> dict[str, Any]:
     return data | over
 
 
-def _with_video(value: dict[str, Any]) -> SoftwareRecord:
+def _plain_concessio() -> dict[str, Any]:
+    """concessio's record without the clip data/ may already carry on its run."""
     data = json.loads(CONCESSIO.read_text(encoding="utf-8"))
+    for run in data["verification"]["runs"]:
+        run.pop("video", None)
+    return data
+
+
+def _copy_concessio(data_dir: Path) -> None:
+    (data_dir / "concessio.json").write_text(json.dumps(_plain_concessio(), ensure_ascii=False, indent=2) + "\n",
+                                             encoding="utf-8")
+
+
+def _with_video(value: dict[str, Any]) -> SoftwareRecord:
+    data = _plain_concessio()
     data["verification"]["runs"][0]["video"] = value
     return SoftwareRecord.model_validate(data)
 
@@ -233,7 +246,7 @@ def _with_video(value: dict[str, Any]) -> SoftwareRecord:
 def test_a_runs_video_shows_only_what_the_run_checked():
     rec = _with_video(_video())
     assert rec.verification.runs[0].video.raw[0].smoke_test == 2
-    plain = json.loads(CONCESSIO.read_text(encoding="utf-8"))
+    plain = _plain_concessio()
     assert "video" not in SoftwareRecord.model_validate(plain).model_dump(mode="json")["verification"]["runs"][0]
     with pytest.raises(ValueError, match="only features this run checked"):
         _with_video(_video(features=["open a file to read its permissions"]))
@@ -405,13 +418,13 @@ def _saved_clip(tmp_path: Path, **over: Any) -> Path:
 def test_a_reviewed_clip_is_written_onto_its_run_and_nothing_else(tmp_path: Path):
     data = tmp_path / "data"
     data.mkdir()
-    shutil.copy(CONCESSIO, data / "concessio.json")
+    _copy_concessio(data)
     clip = video.load_clip(_saved_clip(tmp_path))
     assert video.write_back(clip, data, videos=tmp_path / "videos").startswith("written")
     rec = SoftwareRecord.model_validate_json((data / "concessio.json").read_text(encoding="utf-8"))
     run = rec.verification.runs[0]
     assert run.video.clip == "c.mp4" and [r.smoke_test for r in run.video.raw] == [2, 3]
-    before = json.loads(CONCESSIO.read_text(encoding="utf-8"))
+    before = _plain_concessio()
     after = json.loads((data / "concessio.json").read_text(encoding="utf-8"))
     del after["verification"]["runs"][0]["video"]
     assert {k: v for k, v in after.items() if k != "updated_at"} == {k: v for k, v in before.items() if k != "updated_at"}
@@ -421,7 +434,7 @@ def test_a_reviewed_clip_is_written_onto_its_run_and_nothing_else(tmp_path: Path
 def test_a_flagged_or_altered_clip_is_never_written(tmp_path: Path):
     data = tmp_path / "data"
     data.mkdir()
-    shutil.copy(CONCESSIO, data / "concessio.json")
+    _copy_concessio(data)
     original = (data / "concessio.json").read_text(encoding="utf-8")
     flagged = video.load_clip(_saved_clip(tmp_path, flags=["segment 2 'x': not seen"], passed_only={
         "clip": "c.passed-only.mp4", "clip_sha256": hashlib.sha256(b"c.passed-only.mp4" * 50).hexdigest(),
@@ -437,7 +450,7 @@ def test_a_flagged_or_altered_clip_is_never_written(tmp_path: Path):
 def test_a_passed_only_cut_carries_only_its_recordings(tmp_path: Path):
     data = tmp_path / "data"
     data.mkdir()
-    shutil.copy(CONCESSIO, data / "concessio.json")
+    _copy_concessio(data)
     clip = video.load_clip(_saved_clip(tmp_path, flags=["segment 4 'y': not seen"], passed_only={
         "clip": "c.passed-only.mp4", "clip_sha256": hashlib.sha256(b"c.passed-only.mp4" * 50).hexdigest(),
         "seconds": 30.0, "features": ["convert between symbolic and numeric permissions"],
