@@ -310,7 +310,6 @@ def events_of(op: dict[str, Any], changes: list[tuple[float, float]], duration: 
 class Segment(BaseModel):
     first: int = Field(description="The number of the event this segment starts with.")
     last: int = Field(description="The number of the last event this segment shows (first, for one event).")
-    feature: str = Field(description="The feature id this segment shows (F1, F2, ...).")
     caption: str = Field(description="At most 70 characters: what the user does or sees here, in plain words.")
     result_visible: bool = Field(description="The result pickfit checked is on screen in this segment.")
     faster: bool = Field(description="Play at 2x: only for a stretch where the screen barely changes.")
@@ -427,6 +426,23 @@ def shorten(caption: str) -> str:
     return caption
 
 
+def screen_text(path: Path, start: float, end: float) -> str:
+    """What pickfit's own OCR (the host's Vision framework, marks.py) reads on a segment's middle and last frames;
+    empty where there is no OCR. A caption may name what the screen shows, not only what pickfit typed."""
+    from pickfit.verify import marks
+
+    tool = marks.ocr_tool()
+    if tool is None:
+        return ""
+    texts = []
+    for at in ((start + end) / 2, max(start, end - 0.3)):
+        try:
+            texts += [m.text for m in marks.text_marks(recording.png_frame(path, at), tool)]
+        except Exception:  # no frame there, or the OCR failed: the caption just gets no help from the screen
+            continue
+    return "\n".join(texts)
+
+
 def logged_caption(events: list[Event]) -> str | None:
     """A caption from pickfit's own log of the actions among `events` (None: it did nothing then)."""
     words = []
@@ -491,9 +507,10 @@ def span(events: list[Event], first: int, last: int, duration: float, result: bo
     return round(start, 2), round(min(end, duration), 2)
 
 
-def checked_cuts(answer: EditList, raw: int, duration: float, events: list[Event], features: dict[str, str],
-                 evidence: dict[str, str]) -> tuple[list[Cut], list[str]]:
-    """The model's segments as pickfit cuts them, keeping its rules, and why the others went (features: id -> label).
+def checked_cuts(answer: EditList, raw: int, duration: float, events: list[Event], label: str, evidence: str,
+                 on_screen: Any = lambda start, end: "") -> tuple[list[Cut], list[str]]:
+    """The model's segments of one recording as pickfit cuts them, keeping its rules, and why the others went. Each
+    recording is one operation, so every segment shows its feature (`label`, the record's, never the model's word).
 
     Times come from the events (pickfit's log and its own change points), never from the model. A caption that
     breaks a rule is cut to its first clause that fits; failing that, it becomes pickfit's own log of what it did
@@ -507,9 +524,6 @@ def checked_cuts(answer: EditList, raw: int, duration: float, events: list[Event
         if not 1 <= seg.first <= seg.last <= len(events):
             dropped.append(f"{name}: not events of this recording")
             continue
-        if seg.feature not in features:
-            dropped.append(f"{name}: feature {seg.feature!r} is not one pickfit checked")
-            continue
         if seg.first <= last_event:
             dropped.append(f"{name}: overlaps the segment before")
             continue
@@ -518,10 +532,11 @@ def checked_cuts(answer: EditList, raw: int, duration: float, events: list[Event
         if end - start < MIN_SEGMENT_S:
             dropped.append(f"{name}: shorter than {MIN_SEGMENT_S} s")
             continue
-        label = features[seg.feature]
         given = " ".join(seg.caption.split())
         caption, note = shorten(given), ""
-        problem = caption_problem(caption, evidence[seg.feature])
+        problem = caption_problem(caption, evidence)
+        if problem and problem != "too long":  # maybe the screen shows it: pickfit's OCR of the segment's frames
+            problem = caption_problem(caption, evidence + "\n" + on_screen(start, end))
         if problem:
             logged = logged_caption(events[seg.first - 1:seg.last])
             if logged is None and not seg.result_visible:
@@ -541,15 +556,13 @@ def _video_part(path: Path) -> dict[str, Any]:
         path.read_bytes()).decode()}}
 
 
-def ask_edit(path: Path, duration: float, name: str, op: dict[str, Any], events: list[Event],
-             features: dict[str, str], scope: dict[str, Any], log: Any = print, recordings: int = 1
-             ) -> tuple[EditList | None, float, str]:
+def ask_edit(path: Path, duration: float, name: str, op: dict[str, Any], events: list[Event], label: str,
+             scope: dict[str, Any], log: Any = print, recordings: int = 1) -> tuple[EditList | None, float, str]:
     check = op.get("check") or {}
-    listed = "\n".join(f"{fid}: {label}" for fid, label in features.items())
     timeline = "\n".join(f"{e.number}. {_clock(e.t)} {e.what}" for e in events)
     result = op.get("result") or {}
     text = (f"App: {name}. Recording: {duration:.1f} s.\n"
-            f"Feature pickfit checked (id: label):\n{listed}\n"
+            f"Feature pickfit checked: {label}\n"
             f"Goal pickfit gave its operator: {fill(op.get('goal') or '', op.get('nonce') or '')}\n"
             f"Check: {check.get('kind')} {json.dumps([fill(t, op.get('nonce') or '') for t in check.get('expected') or []], ensure_ascii=False)}"
             f" -> {result.get('line', '')}\n"
@@ -597,7 +610,7 @@ def review_cuts(pieces: list[Path], cuts: list[Cut], scope: dict[str, Any], log:
         cost += c
         length = cut.seconds
         inside = seen is not None and seen.seen and -0.25 <= seen.first_seen_s <= length + 0.25
-        rows.append({"caption": cut.caption, "seen": bool(seen and seen.seen), "first_seen_s":
+        rows.append({"caption": cut.caption, "ok": inside, "seen": bool(seen and seen.seen), "first_seen_s":
                      seen.first_seen_s if seen else None, "segment_s": round(length, 2), "why": seen.why if seen else ""})
         if not inside:
             why = "no answer" if seen is None else (seen.why if not seen.seen else
@@ -777,6 +790,7 @@ class ClipResult:
     answers: list[dict[str, Any]] = field(default_factory=list)  # the model's edit lists, as it gave them
     events: list[dict[str, Any]] = field(default_factory=list)  # each recording's events, as the model saw them
     crops: list[list[int] | None] = field(default_factory=list)  # the part of each recording the clip shows
+    passed_only: dict[str, Any] | None = None  # a clip of only the recordings whose segments all passed the review
     dropped: list[str] = field(default_factory=list)
     review: list[dict[str, Any]] = field(default_factory=list)
     flags: list[str] = field(default_factory=list)
@@ -855,7 +869,6 @@ def _make_clip(video_dir: Path, data_dir: Path, log: Any, earlier: dict[str, Any
     mac = meta["os"] == "macos"
     for k, (path, duration, op, theirs) in enumerate(raws, start=1):
         label = feature_of(run, theirs)
-        features = {"F1": label}
         name = f"{stem}-raw-{k}.mp4"
         shutil.copy2(path, dest / name)
         out.raw.append({"file": name, "sha256": op["video"]["sha256"], "seconds": duration,
@@ -866,13 +879,14 @@ def _make_clip(video_dir: Path, data_dir: Path, log: Any, earlier: dict[str, Any
             answer, cost, error = EditList.model_validate({k: v for k, v in earlier[name].items() if k != "raw"}), 0.0, ""
             log(f"  edit · {path.name} · the model's earlier edit list, reused")
         else:
-            answer, cost, error = ask_edit(path, duration, rec.name, op, events, features, scope, log, len(raws))
+            answer, cost, error = ask_edit(path, duration, rec.name, op, events, label, scope, log, len(raws))
         out.cost_usd += cost
         if answer is None:
             out.flags.append(f"{name}: the edit list was not valid JSON ({error[:120]})")
             continue
         out.answers.append({"raw": name, **answer.model_dump()})
-        mine, dropped = checked_cuts(answer, k - 1, duration, events, features, {"F1": evidence_text(op, label)})
+        mine, dropped = checked_cuts(answer, k - 1, duration, events, label, evidence_text(op, label),
+                                     lambda a, b, path=path: screen_text(path, a, b))
         out.dropped += [f"{name} {d}" for d in dropped]
         if not any(c.result_visible for c in mine):
             out.flags.append(f"{name}: no segment shows the checked result of {label!r}")
@@ -892,47 +906,70 @@ def _make_clip(video_dir: Path, data_dir: Path, log: Any, earlier: dict[str, Any
     date = day.strftime("%Y-%m-%d")
     with tempfile.TemporaryDirectory(prefix="pickfit-video-") as tmp:
         work = Path(tmp)
-        plain, at = [], 0.0
+        plain = []
         for i, cut in enumerate(cuts):
             piece = work / f"plain-{i}.mp4"
             render_piece(raws[cut.raw][0], cut, crops[cut.raw], screen, None, piece)
             plain.append(piece)
-            at += cut.seconds
         out.review, flags, cost = review_cuts(plain, cuts, scope, log)
         out.flags += flags
         out.cost_usd += cost
-        names = ", ".join(r["file"] for r in out.raw)
-        first = card_png(f"Recorded by pickfit in a sandbox on {date}",
-                         [f"pickfit operated {rec.name} and checked:",
-                          *[f"- {r['feature']}: passed" for r in out.raw],
-                          "Muse Spark Open picked these segments from the unedited recordings; captions say only what "
-                          "pickfit's checks recorded."],
-                         [f"Unedited recordings: {names}", f"{'macOS VM (tart)' if meta['os'] == 'macos' else 'Linux sandbox (Modal gVisor, Xvfb)'}"
-                          f" · the app's UI belongs to its authors"])
-        last = card_png("The full, unedited recordings", [f"{r['file']} ({r['seconds']:.0f} s)" for r in out.raw],
-                        [f"sha256 {r['sha256']}" for r in out.raw] + [f"run {run.id} · recorded in {video_dir.name}"])
-        pieces = []
-        for name, png in (("first", first), ("last", last)):
-            (work / f"{name}.png").write_bytes(png)
-            render_card(work / f"{name}.png", CARD_S, work / f"{name}.mp4")
-        pieces.append(work / "first.mp4")
-        for i, cut in enumerate(cuts):
-            raw_name = out.raw[cut.raw]["file"]
-            label = (f"Recorded by pickfit · {date} · {raw_name} {_clock(cut.start)}-{_clock(cut.end)}"
-                     + (" · 2x speed" if cut.faster else ""))
-            (work / f"ov-{i}.png").write_bytes(overlay_png(label, cut.caption))
-            piece = work / f"cap-{i}.mp4"
-            render_piece(raws[cut.raw][0], cut, crops[cut.raw], screen, work / f"ov-{i}.png", piece)
-            pieces.append(piece)
-        pieces.append(work / "last.mp4")
-        clip_name = f"{stem}{'.flagged' if out.flags else ''}.mp4"
-        comment = "pickfit verification video; raw: " + "; ".join(f"{r['file']} sha256 {r['sha256']}" for r in out.raw)
-        concat(pieces, dest / clip_name, comment)
-    out.clip = clip_name
-    out.clip_sha256 = recording.sha256_file(dest / clip_name)
-    out.seconds = recording.probe_seconds(dest / clip_name) or round(at + 2 * CARD_S, 2)
-    out.features = list(dict.fromkeys(c.feature for c in cuts))
+        common = dict(name=rec.name, date=date, os=meta["os"], run=run.id, recording_run=video_dir.name, raws=raws,
+                      crops=crops, screen=screen, work=work)
+        out.clip = f"{stem}{'.flagged' if out.flags else ''}.mp4"
+        out.seconds = render_clip(cuts, out.raw, dest / out.clip, **common)
+        out.clip_sha256 = recording.sha256_file(dest / out.clip)
+        out.features = list(dict.fromkeys(c.feature for c in cuts))
+        # A recording whose segments all passed the review stands on its own: one clip of only those, for a person
+        # to weigh against the flagged one (a recording with a refused segment is left out whole, and said so).
+        refused = {cut.raw for cut, row in zip(cuts, out.review) if not row["ok"]}
+        kept = [c for c in cuts if c.raw not in refused]
+        if refused and kept and not [f for f in out.flags if not f.startswith("segment ")]:
+            left = [out.raw[k]["feature"] for k in sorted(refused)]
+            name = f"{stem}.passed-only.mp4"
+            seconds = render_clip(kept, out.raw, dest / name, left_out=left, **common)
+            out.passed_only = {"clip": name, "clip_sha256": recording.sha256_file(dest / name), "seconds": seconds,
+                               "features": list(dict.fromkeys(c.feature for c in kept)), "left_out": left}
     return out
+
+
+def render_clip(cuts: list[Cut], raw_rows: list[dict[str, Any]], dest: Path, *, name: str, date: str, os: str,
+                run: str, recording_run: str, raws: list[Any], crops: list[Any], screen: tuple[int, int], work: Path,
+                left_out: list[str] = ()) -> float:
+    """The clip: the first card, each segment with its label and caption, the last card; returns its length."""
+    used = sorted({c.raw for c in cuts})
+    rows = [raw_rows[k] for k in used]
+    names = ", ".join(r["file"] for r in rows)
+    shown = list(dict.fromkeys(c.feature for c in cuts))
+    tag = dest.stem.replace(".", "-")
+    first = card_png(f"Recorded by pickfit in a sandbox on {date}",
+                     [f"pickfit operated {name} and checked:", *[f"- {f}: passed" for f in shown],
+                      *([f"Not shown (its segments did not pass pickfit's review): {', '.join(left_out)}"]
+                        if left_out else []),
+                      "Muse Spark Open picked these segments from the unedited recordings; captions say only what "
+                      "pickfit's checks recorded."],
+                     [f"Unedited recordings: {names}",
+                      f"{'macOS VM (tart)' if os == 'macos' else 'Linux sandbox (Modal gVisor, Xvfb)'}"
+                      " · the app's UI belongs to its authors"])
+    last = card_png("The full, unedited recordings", [f"{r['file']} ({r['seconds']:.0f} s)" for r in rows],
+                    [f"sha256 {r['sha256']}" for r in rows] + [f"run {run} · recorded in {recording_run}"])
+    pieces = []
+    for card, png in (("first", first), ("last", last)):
+        (work / f"{tag}-{card}.png").write_bytes(png)
+        render_card(work / f"{tag}-{card}.png", CARD_S, work / f"{tag}-{card}.mp4")
+    pieces.append(work / f"{tag}-first.mp4")
+    for i, cut in enumerate(cuts):
+        raw_name = raw_rows[cut.raw]["file"]
+        label = (f"Recorded by pickfit · {date} · {raw_name} {_clock(cut.start)}-{_clock(cut.end)}"
+                 + (" · 2x speed" if cut.faster else ""))
+        (work / f"{tag}-ov-{i}.png").write_bytes(overlay_png(label, cut.caption))
+        piece = work / f"{tag}-cap-{i}.mp4"
+        render_piece(raws[cut.raw][0], cut, crops[cut.raw], screen, work / f"{tag}-ov-{i}.png", piece)
+        pieces.append(piece)
+    pieces.append(work / f"{tag}-last.mp4")
+    comment = "pickfit verification video; raw: " + "; ".join(f"{r['file']} sha256 {r['sha256']}" for r in rows)
+    concat(pieces, dest, comment)
+    return recording.probe_seconds(dest) or round(sum(c.seconds for c in cuts) + 2 * CARD_S, 2)
 
 
 def run_video(clip: ClipResult) -> RunVideo:
