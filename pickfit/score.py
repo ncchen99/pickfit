@@ -63,8 +63,8 @@ have a repository, since what a user meets is the site, not the code:
   points 2..5) land at about 20..50, so treasure still means good and not famous.
 
 How easy a GUI or web app is to use (pickfit/usability.py, record field `usability`) enters quality under two
-formulas, used only while EASE_SCORED is on (it stays off until the ease.v1 pilot passes the calibration in
-docs/usability-pilot.md and the coordinating session says go):
+formulas, used only while EASE_SCORED is on. It is off: the ease.v1 pilot failed the calibration in
+docs/usability-pilot.md twice (11/2), so usability is shown, not scored:
 
 - gui.v1, a desktop_app with a GUI run: sandbox_verification 25, usability 30, install_docs 15, maintenance 8,
   engineering_hygiene 4, responsiveness 8, usage_outcomes 10+ (its extra weight comes out of the four in SHRINKABLE).
@@ -130,8 +130,9 @@ FORMULA_VERSION = "b3.v5"
 # are counted: a tagged pitfall's kind decides.
 REFRESHABLE_FROM = frozenset({"b3.v4"})
 WEB_FORMULA_VERSION = "web.v1"
-# Usability in quality (pickfit/usability.py). Off until the ease.v1 pilot passes docs/usability-pilot.md and the
-# coordinating session says go; turning it on moves records to these formulas at the next refresh_scores.
+# Usability in quality (pickfit/usability.py). Off: the ease.v1 pilot failed its calibration twice (11/2,
+# docs/usability-pilot.md section 6), so usability is shown, not scored. Turning it on would move records to these
+# formulas at the next refresh_scores.
 EASE_SCORED = False
 GUI_FORMULA_VERSION = "gui.v1"
 WEB2_FORMULA_VERSION = "web.v2"

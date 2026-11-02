@@ -57,8 +57,32 @@ def spearman(xs: list[float], ys: list[float]) -> float | None:
     return round(cov / var, 3) if var else None
 
 
+def _raw_items(call: str, answer: dict[str, Any]) -> dict[str, Any]:
+    """A sample's raw answers by name: scores (ready, and ease.v1's holistic scores) and r1's check answers."""
+    def checks(prefix: str, group: dict[str, Any]) -> dict[str, Any]:
+        return {f"{prefix}.{name}": c["ok"] for name, c in group.items()}
+
+    if call == "first_look":
+        out = {"ready": answer["ready"]["score"]}
+        if "comfortable" in answer:
+            out["comfortable"] = answer["comfortable"]["score"]
+        else:
+            out |= checks("comfortable", answer["comfort"])
+        return out
+    out = {}
+    for op in answer["operations"]:
+        for item in ("findable", "responsive"):
+            group = op[item]
+            if "score" in group:
+                out[f"{op['operation']}.{item}"] = group["score"]
+            else:
+                out |= checks(f"{op['operation']}.{item}", group)
+    return out
+
+
 def self_agreement(results: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    """How often muse-spark-1.3's two samples gave the same raw score (before pickfit's checks), per dimension."""
+    """How often muse-spark-1.3's two samples gave the same raw answer (before pickfit's checks): scores, or r1's
+    yes/no checks, where both samples answered."""
     same = within = pairs = 0
     for result in results.values():
         by_call: dict[str, list[dict[str, Any]]] = {}
@@ -68,19 +92,14 @@ def self_agreement(results: dict[str, dict[str, Any]]) -> dict[str, Any]:
         for call, answers in by_call.items():
             if len(answers) < 2:
                 continue
-            a, b = answers[:2]
-            if call == "first_look":
-                items = [(a[k]["score"], b[k]["score"]) for k in ("ready", "comfortable")]
-            else:
-                bo = {o["operation"]: o for o in b["operations"]}
-                items = [(o[k]["score"], bo[o["operation"]][k]["score"]) for o in a["operations"]
-                         if o["operation"] in bo for k in ("findable", "responsive")]
-            for x, y in items:
+            a, b = (_raw_items(call, x) for x in answers[:2])
+            for key in a.keys() & b.keys():
+                x, y = a[key], b[key]
                 if x is None or y is None:
                     continue
                 pairs += 1
                 same += x == y
-                within += abs(x - y) <= 1
+                within += abs(int(x) - int(y)) <= 1
     return {"pairs": pairs, "same": round(same / pairs, 3) if pairs else None,
             "within_one": round(within / pairs, 3) if pairs else None}
 
