@@ -70,7 +70,7 @@ test('a tool page shows how far each verified run got, its install steps, and th
   assert.match(html, /<h1>Fixture LLM Runner<\/h1>/);
   assert.ok(html.includes('id="install-macos"') && html.includes('id="install-linux"'), 'one install card per verified OS');
   assert.equal(html.split('<div class="progress-row">').length - 1, 2, 'one progress row per verified OS');
-  assert.match(html, /<li class="stage stage-done"[^>]*><span class="stage-bar"><\/span><span class="stage-label">.*Installs<\/span><\/li>/);
+  assert.match(html, /<li class="prog-stage prog-done"[^>]*><span class="prog-bar"><\/span><span class="prog-label">.*Installs<\/span><\/li>/);
   assert.match(html, /Tested on macOS and Linux/);
   assert.match(html, /<details class="block tested"><summary><h2>How pickfit tested it<\/h2>/);
   // Each run card names its system once, in the heading, with the OS mark.

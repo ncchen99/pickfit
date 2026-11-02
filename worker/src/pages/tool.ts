@@ -138,8 +138,8 @@ function stagesFor(entry: Entry, g: InstallGuide): Stage[] {
 function stageRow(stages: Stage[]): string {
   const mark: Record<StageState, IconName> = { done: 'check', open: 'circle-dashed', warn: 'triangle-alert' };
   return (
-    `<ol class="stages">` +
-    stages.map((s) => `<li class="stage stage-${s.state}" data-tip="${esc(s.tip)}"><span class="stage-bar"></span><span class="stage-label">${icon(mark[s.state])}${esc(s.label)}</span></li>`).join('') +
+    `<ol class="prog-stages">` +
+    stages.map((s) => `<li class="prog-stage prog-${s.state}" data-tip="${esc(s.tip)}"><span class="prog-bar"></span><span class="prog-label">${icon(mark[s.state])}${esc(s.label)}</span></li>`).join('') +
     `</ol>`
   );
 }
