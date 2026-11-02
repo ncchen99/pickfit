@@ -31,10 +31,10 @@ python3 ../_shared/zh_script.py --dict-dir $OPENCC ratio samples/simplified/P*.t
 
 | 項目 | 結果 |
 |---|---|
-| Claude 模型完整 ID | |
-| temperature | 0 |
-| samples/good 四題的判定（預期全部 true） | |
-| samples/offtopic P2 的判定（預期 false） | |
+| Claude 模型完整 ID | `claude-opus-5-5`，effort high（2026-11-02 補做的校準，在任何 q11 實跑之前；和 C4 評分者同設定） |
+| temperature | 0（Opus 5.5 不接受 temperature；固定的是模型 ID 與 effort，同 C4） |
+| samples/good 四題的判定（預期全部 true） | 全部 true（`eval/results/l2/q11-calibration/`） |
+| samples/offtopic P2 的判定（預期 false） | false |
 
 ```sh
 python3 score_replies.py --write-judge-requests /tmp/cal.jsonl samples/good samples/offtopic

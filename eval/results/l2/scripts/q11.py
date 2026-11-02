@@ -38,7 +38,7 @@ PINS = {i["id"]: i for i in json.loads((ROOT / "eval/fixtures/pins.json").read_t
 if GROUP == "control":
     INSTALL = """curl -fL -o ~/Downloads/Ollama.dmg https://ollama.com/download/Ollama.dmg
 hdiutil attach -nobrowse -mountpoint /tmp/ollama-dmg ~/Downloads/Ollama.dmg && cp -R /tmp/ollama-dmg/Ollama.app /Applications/ && hdiutil detach /tmp/ollama-dmg
-open -a Ollama"""
+open /Applications/Ollama.app"""
     FIRST_RUN = "ollama run hf.co/phate334/Llama-3-Taiwan-8B-Instruct-Q4_K_M-GGUF"
 else:
     INSTALL = """brew install ollama          # 安裝 Ollama
@@ -66,6 +66,28 @@ with VM(f"q11-{GROUP}", OUT, [], name=clone_name(OUT), keep=PHASE != "score") as
         vm.sh(zsh(f"setopt interactivecomments; cd ~ && OUT={R}; . {R}/lib.zsh; run_lines install {R}/install.lines; all_ok install && echo INSTALL-OK || echo INSTALL-FAIL"),
               "L2-1 install lines (one zsh; # starts a comment, as in bash)", timeout=3600)
         vm.sh(DIAG, "after install: apps in the session, ollama on PATH, processes", timeout=300)
+    elif PHASE == "reopen":  # control only: install 3 was `open -a Ollama`, run before LaunchServices knew the copied app
+        vm.sh('pkill -x "Setup Assistant"; sleep 2; pgrep -x "Setup Assistant" || echo closed',
+              "the new account's first-login Setup Assistant closed (part of making the account, CHECKLIST)")
+        vm.sh(zsh("cd ~ && open /Applications/Ollama.app; echo open exit $?"), "install 3 again as the double-click: open /Applications/Ollama.app")
+        vm.sh(DIAG, "after opening: apps in the session, ollama on PATH, processes", timeout=300)
+    elif PHASE == "gui-default":  # control only: the app's first launch shows an authorization dialog (SecurityAgent)
+        # to install its command line tool; a person types the password and presses OK. Nobody can click in the
+        # headless guest, so the grader does what that dialog does (the CLI link), closes the dialog, reopens the app.
+        vm.sh("ls -l /Applications/Ollama.app/Contents/Resources/ | grep -i ollama; lsappinfo info -only name `lsappinfo front`",
+              "the app's CLI binary; the window in front")
+        vm.sh("sudo mkdir -p /usr/local/bin && sudo ln -s /Applications/Ollama.app/Contents/Resources/ollama /usr/local/bin/ollama && ls -l /usr/local/bin/ollama",
+              "grader does the authorization dialog's default (CLI link in /usr/local/bin)")
+        vm.sh('pkill -x SecurityAgent; sleep 3; pgrep -x SecurityAgent || echo dialog-gone; osascript -e \'quit app "Ollama"\'; sleep 5; '
+              'open /Applications/Ollama.app; echo reopen exit $?', "dialog closed, app quit and opened again")
+        vm.sh(DIAG, "after reopening: apps in the session, ollama on PATH, processes", timeout=300)
+        vm.sh(zsh("ollama --version; curl -s http://127.0.0.1:11434/api/version"), "CLI and server answer")
+    elif PHASE == "gui-default2":  # the dialog runs as a system user: close it with sudo, restart the app
+        vm.sh("ps -axo user,pid,command | grep [S]ecurityAgent; sudo pkill -x SecurityAgent; sleep 5; pgrep -x SecurityAgent || echo dialog-gone",
+              "authorization dialog closed (sudo)")
+        vm.sh("pkill -x Ollama; sleep 5; pgrep -x Ollama || echo app-quit; open /Applications/Ollama.app; echo reopen exit $?", "app restarted")
+        vm.sh(DIAG, "after restarting: apps in the session, ollama on PATH, processes", timeout=300)
+        vm.sh(zsh("ollama --version; curl -s http://127.0.0.1:11434/api/version"), "CLI and server answer")
     elif PHASE == "model":
         if FIRST_RUN:
             vm.sh(f"cd ~ && printf '/bye\\n' | script -q {R}/first-run.txt /bin/zsh -ilc {json.dumps(FIRST_RUN)}; echo first-run exit $?; "

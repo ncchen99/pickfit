@@ -221,6 +221,29 @@
 - q11 的虛擬機給 16 GB（題目寫的記憶體），先停掉其他虛擬機。q11、q12 需要 GPU：先在客體裡確認 Metal 可用，不可用就停下回報。斷網的檢查在客體裡關掉網路服務。
 - q08（Colima）要在 macOS 客體裡再開虛擬機：只有 `tart run --nested` 對 macOS 客體真的可用時才跑；不行就兩組都記「L2 未實跑」並寫原因。念誠不要在他自己的 Mac 上裝再移除 Docker。
 - 不在念誠自己的 macOS 帳號上跑任何答案的步驟。
+- 協調 session 11/2 轉述的決定：可以在客體磁碟下載（全在丟棄式 clone 裡）；OrbStack 裡沒有東西在跑時可以結束它，Mac L2 做完再打開（11/2 16:24 結束，當時 orb list 與 docker ps 都是空的）；補做的校準照提案（下面）；q08 的 L2 跑不了時，加一份「每個答案和官方文件的差異」盲評筆記（不是 L2）。
+
+#### 閘門（一台丟棄式 clone，跑任何答案之前；`l2/mac-gate/gate.json`）
+
+- 基底映像：`ghcr.io/cirruslabs/macos-tahoe-base@sha256:4aaa751f…`（本機已有；客體 macOS 26.6.2）。沒用 `pickfit-macos-26`：那是 pickfit 自己驗證用的強化映像（非管理者 sbx 帳號、調高 ulimit），不中立，也不像一般 Mac。
+- 巢狀虛擬化：`tart run --nested` 被 tart 拒絕（「macOS virtual machines do not support nested virtualization」），客體 `kern.hv_support` 是 0。所以 **q08 兩組都記「L2 未實跑」**：Colima 要用 Apple 的虛擬化框架開 Linux VM，在 macOS 客體裡做不到；念誠不要在自己的 Mac 上裝再移除 Docker。
+- Metal：客體裡 MLX 看得到「Apple Paravirtual device」，GPU 上的矩陣乘法跑得出來。
+
+#### 補做的校準（在任何 q11、q12 實跑之前，兩組相同；協調 session 同意）
+
+- q11 L2-3 盲評：`claude-opus-5-5`，effort high（C4 評分者的設定；Opus 5.5 不接受 temperature）。用 `samples/` 校準：good 四題全 true、offtopic 的 P2 false，和預期相同（`l2/q11-calibration/`）。
+- q12 測試模型：`needs.json` 第一個候選 `mlx-community/Qwen2.5-1.5B-Instruct-4bit`，revision `8b403126…`（在閘門 clone 裡跑 `pin_model.py`，模型檔留在 VM 裡；`model_pin.*` commit 進 `fixtures/q12/`）。openai client 固定 3.42.1（PyPI 當時最新，11/1 上架）。
+- q16 的 L2-5、L2-7 仍記「未實跑」：發現沒校準時它的輸出已經存在。
+
+#### 做法（`eval/runner/mac_vm.py`、`l2/scripts/mac_baseline.sh`、`_mac_common.py`、`q11.py`、`q12.py`）
+
+- 每題每組：從上述 digest clone 一台新的（16 GB、8 vCPU、無畫面），跑完停機並刪除。指令經 Tart Guest Agent（vsock）送進客體，所以客體斷網時仍控制得到。
+- 起始環境（照 CHECKLIST 在 VM 裡做）：映像自己的 `/opt/homebrew`（有很多預裝套件）與 `/etc/paths.d/homebrew` 移到旁邊；新開一個管理者帳號 `evaluser`，自動登入（密碼在客體裡隨機產生、不印出）；用 Homebrew 官方安裝程式裝一份空的 Homebrew（`NONINTERACTIVE=1`，沒有「按 Enter 繼續」），照安裝程式最後的提示把 `brew shellenv` 那行加進 `~/.zprofile`；preflight 要 PASS；拍 before 快照。之後所有步驟都以 `evaluser` 在它自己的圖形登入工作階段裡、用 `zsh -il`（終端機視窗的 shell）執行。
+- 和親手做的差異（兩組相同）：`evaluser` 的 sudo 不用密碼（人會在終端機的 sudo 提示輸入）；新帳號第一次登入的設定助理用映像管理者的設定略過（屬於開帳號）；沒有人看螢幕，所以每個關鍵步驟後記下工作階段裡的 app 清單（`lsappinfo`），有對話框就記下並寫明評分者做了什麼。
+- zsh 的 `interactivecomments` 在評分者的 shell 打開，讓行尾的 `# ...` 是註解（和 Linux 上的 bash 一樣）；zsh 互動模式的預設會把它當成指令的參數。
+- 答案給多個安裝選項時，照抽取首選時記下的安裝方式（9.1 C2「含指定的安裝方式」）；沒有就用第一個（和 Linux 題相同）。標成「選用」的步驟不跑。
+- q11 問題的方式：答案的第一種用法 `ollama run tw`，每題一次新的執行、把凍結的題目貼進去（stdin）。答案的 Modelfile 設 temperature 0.6、Ollama 文件沒有可以固定 seed 的環境變數或設定檔，所以 P1–P5 跑 3 次、2 次過算過。記憶體量測（footprint_watch）從第一行安裝前到最後一個回覆後；重算時排除 Tart Guest Agent（以測試帳號身分、從非系統路徑執行）。
+- 評分者自己的操作失誤（答案不變，第一次保留）：q11 對照組第 1 次（`q11-control-attempt1-setupassistant/`）：關掉新帳號的設定助理會讓那個帳號登出，記憶體量測因此中斷，整台重來；同一次裡評分者用 `open -a Ollama` 代替「打開」，LaunchServices 還沒登記剛複製的 app 而失敗，重做時改成 `open /Applications/Ollama.app`（等於在 Finder 雙擊）。
 
 ### 盲測偏好前的揭露（補充）
 

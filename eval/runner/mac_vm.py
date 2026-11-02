@@ -100,6 +100,9 @@ class VM:
             raise RuntimeError("baseline part 1 failed")
         self.reboot()
         rc, out = self.sh("whoami; stat -f %Su /dev/console; ls /opt", "baseline: logged-in user after reboot")
+        _, sa = self.sh('sleep 20; pgrep -x "Setup Assistant" || echo none', "no first-login Setup Assistant in the session")
+        if "none" not in sa:
+            raise RuntimeError("Setup Assistant is showing; closing it ends the session")
         if out.split()[:2] != ["evaluser", "evaluser"] or "homebrew" in out.split()[2:]:
             raise RuntimeError(f"baseline check failed: {out!r}")
 

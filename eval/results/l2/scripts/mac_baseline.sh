@@ -30,12 +30,10 @@ os.chmod("/etc/kcpassword", 0o600)'
 unset PW
 sudo defaults write /Library/Preferences/com.apple.loginwindow autoLoginUser "$U"
 sudo createhomedir -c -u "$U" > /dev/null
-# skip the first-login assistant panes (they are part of making the account, not of the answer's steps)
-for k in DidSeeCloudSetup DidSeeSiriSetup DidSeePrivacy DidSeeScreenTime DidSeeAppearanceSetup DidSeeTouchIDSetup \
-         DidSeeAccessibility DidSeeIntelligence DidSeeActivationLock DidSeeTermsOfAddress; do
-  sudo -u "$U" defaults write com.apple.SetupAssistant "$k" -bool true
-done
-sudo -u "$U" defaults write com.apple.SetupAssistant SkipFirstLoginOptimization -bool true
+# skip the first-login assistant (part of making the account, not of the answer's steps): the user starts with the
+# image admin's Setup Assistant settings (which panes were seen, for this macOS build), imported before its first login
+sudo cp /Users/admin/Library/Preferences/com.apple.SetupAssistant.plist /tmp/sa.plist && sudo chmod 644 /tmp/sa.plist
+sudo -u "$U" defaults import com.apple.SetupAssistant /tmp/sa.plist
 sudo mv /opt/homebrew "$ASIDE/homebrew"
 sudo mv /etc/paths.d/homebrew "$ASIDE/paths.d-homebrew"
 sync
