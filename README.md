@@ -48,3 +48,30 @@
   - 網頁只留下 2–3 張截圖（載入後、操作前後），證據太少。
   - 有操作的 9 款分數都在約 74–100，分不出高下。
 - **現在的替代**：工具頁的操作影片依功能分段（目前 8 款桌面 App 有），讓人自己看介面判斷。
+
+## 驗證環境的限制與之後的方向
+
+pickfit 在隔離的環境裡驗證：Linux 用 Modal 的沙盒（gVisor；網頁 App 與部分桌面 App 用有自己核心的 microVM），Mac 用 tart（Apple 的 Virtualization.framework），Windows 用 VirtualBox。這些環境和一般人的電腦不一樣，所以有些功能在裡面測不了，不代表軟體有問題。
+
+- **環境造成的問題只記「未驗證」，不記「失敗」**：驗證 agent 判斷是環境限制時，寫成未驗證並記下原因（例如 `needs_gpu`、`needs_hardware`、`needs_display`、`needs_service`）。整筆工具的「失敗」只能來自人工驗證或人工檢查發布的檔案。環境不足的代價是覆蓋率，不會冤枉軟體。
+- **目前的限制**：
+  - Linux：gVisor 沙盒裡沒有 root、不能載入核心模組、不能跑 Docker；虛擬畫面是 1280×800、沒有視窗管理員，也沒有一般桌面的檔案對話框、開網址的預設程式和 Wayland。GPU（NVIDIA T4 等）只有 gVisor 拿得到，microVM 不行。麥克風有 pickfit 自己的模擬（`pickfit/verify/audio.py`：播放新產生的詞，檢查 App 是否收到）；攝影機沒有模擬。
+  - Mac：tart 的 GPU 是虛擬的（Metal 可用，但回報的功能比實機少），沒有攝影機；為了隔離，聲音也關掉。
+  - Windows：VirtualBox 沒有真正的 GPU；為了隔離，3D、聲音和 USB 都關掉。
+- **資料**（2026-11-03，193 款桌面 App 中沒檢查到的功能，依每個功能記錄的原因統計；原因寫 `other` 的依註記文字粗分）：
+
+  | 原因 | Linux | Mac |
+  |---|---|---|
+  | 沒有試（那次只跑到安裝） | 169 | 17 |
+  | 環境：缺背景服務或桌面元件、缺硬體或 GPU、畫面、資源不夠 | 63 | 21 |
+  | 操作的 agent 步數用完或繞圈 | 13 | 2 |
+  | 需要帳號 | 13 | 3 |
+  | 其他或原因不明 | 32 | 28 |
+
+  最多的是根本沒試，這要多跑操作，不用換硬體。試了沒過的裡面，環境是最大的原因；其中真的缺硬體的（`needs_hardware`、`needs_gpu`）Linux 18、Mac 3，其餘多是缺背景服務、桌面元件或資源。
+- **研究上的做法**：電腦操作 agent 的基準（[OSWorld](https://api.emergentmind.com/topics/osworld-and-windowsagentarena)、Windows Agent Arena、macOSWorld、[MacArena](https://huggingface.co/papers/2606.06560.md)）也都跑在 VM 裡，接受同樣的限制；GPU、麥克風、攝影機都要真的，通常要靠真機。
+- **之後的方向**（賽後；比賽期間沒有做）：
+  - Linux：改用有 NVIDIA GPU 的完整雲端 VM（例如 AWS G5/G6），裝真正的桌面（視窗管理員、檔案對話框、預設程式、PipeWire），用 [Amazon DCV](https://docs.aws.amazon.com/dcv/latest/adminguide/servers.html) 的虛擬螢幕（最高 4K），畫面改成 1920×1080。完整 VM 能裝虛擬攝影機與麥克風的驅動；每次檢查從快照重開，OSWorld 也是這樣做。
+  - Windows：從 VirtualBox 改成雲端 GPU VM：AWS 加 DCV（Windows 版支援攝影機與錄音），或 Azure、[Windows 365 GPU Cloud PC](https://learn.microsoft.com/windows-365/enterprise/gpu-cloud-pc)。
+  - Mac：大部分仍用 tart；需要完整 GPU 或真實螢幕的 App 改到 [AWS EC2 Mac](https://aws.amazon.com/ec2/instance-types/mac/faqs/)（實體 Mac mini／Mac Studio；DCV 支援 4K、60 FPS 與聲音輸出，沒有麥克風輸入）。
+  - 實體機房，只用來複核：Mac mini、有顯示卡的 Windows PC、Linux PC，各接一台 [PiKVM V4](https://docs.pikvm.org/camera/)（擷取真實畫面、模擬鍵盤滑鼠，也能模擬成 USB 攝影機與麥克風）。只有「只因環境而沒驗證」的 App 才送去重跑。
