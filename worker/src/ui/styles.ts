@@ -17,8 +17,8 @@ const TOKENS = `
 --lift-2:0 2px 4px rgb(23 40 28/.08),0 18px 36px -16px rgb(23 40 28/.36);
 --lift-3:0 4px 10px rgb(10 25 15/.14),0 30px 60px -20px rgb(10 25 15/.5);
 --r-card:14px;--r-ctl:10px;
---display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
---sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+--display:"Bricolage Grotesque",ui-sans-serif,system-ui,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
 --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
 --t-display:clamp(2.5rem,5.2vw,4.4rem);--t-title:clamp(1.6rem,2.6vw,2.2rem);--t-head:1.25rem;--t-lead:1.15rem;--t-small:.875rem;
 --ease-out:cubic-bezier(.16,1,.3,1);--ease-io:cubic-bezier(.65,0,.35,1);
@@ -94,6 +94,9 @@ repeating-linear-gradient(90deg,var(--on-mat-2) 0 1.5px,transparent 1.5px 40px) 
 .nav a:hover,.menu-nav a:hover{color:var(--on-mat);background:rgb(244 241 222/.08)}
 .nav a[aria-current=page],.menu-nav a[aria-current=page]{color:var(--on-mat);background:rgb(244 241 222/.14)}
 .count{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--tape);color:var(--tape-ink);font:700 .75rem/20px var(--display);text-align:center}
+.lang-switch{display:inline-flex;align-items:center;gap:6px;text-decoration:none;padding:7px 12px;border-radius:999px;border:1px solid rgb(244 241 222/.28);font:600 .9rem/1 var(--display);color:var(--on-mat);white-space:nowrap}
+.lang-switch:hover{background:rgb(244 241 222/.08)}
+.top-end{display:flex;align-items:center;gap:8px}
 .menu{display:none;position:relative}
 .menu summary{list-style:none;cursor:pointer;padding:10px;border-radius:var(--r-ctl);color:var(--on-mat)}
 .menu summary::-webkit-details-marker{display:none}

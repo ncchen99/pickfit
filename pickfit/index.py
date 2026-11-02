@@ -279,5 +279,13 @@ def build_index(data_dir: Path = DEFAULT_DATA_DIR, now: datetime | None = None) 
 
 
 def write_index(index: dict[str, Any], out: Path = DEFAULT_OUT) -> None:
+    """The index, and beside it the web page's zh-TW sentences for the same entries (zh-TW.json)."""
+    from pickfit.i18n import LANG, i18n_dir, worker_translations
+
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(index, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    data_dir = Path(index["data_dir"])
+    if not data_dir.is_absolute():
+        data_dir = REPO_ROOT / data_dir
+    translations = worker_translations(index, i18n_dir(data_dir))
+    (out.parent / f"{LANG}.json").write_text(json.dumps(translations, ensure_ascii=False) + "\n", encoding="utf-8")

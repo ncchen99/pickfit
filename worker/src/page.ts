@@ -11,6 +11,7 @@
 import { bestGuide, isVerified, isWebApp, verifiedOn, verifiedOnUserSystem, webCheck, type Arch, type Catalog, type Entry, type InstallGuide, type OS } from './catalog.ts';
 import type { FindOutput, PickOut } from './find.ts';
 import { fitNote } from './fit.ts';
+import { isZh, L, withLang } from './i18n.ts';
 import { PIPE_TO_SHELL, type InstallOutput } from './install.ts';
 import { compareTable } from './pages/compare.ts';
 import { day, guiSentence, howRan, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system, webLevelLabel } from './ui/facts.ts';
@@ -95,13 +96,18 @@ export function catalogShowcase(catalog: Catalog, recentCount = 3): Showcase {
 
 /** "pickfit installed it in a fresh Linux x86_64 sandbox and replayed the steps from scratch on 29 Oct 2026." */
 export function ranSentence(v: PickOut['verification']): string {
-  if (!v.os) return 'pickfit has no recorded run of its install steps.';
+  if (!v.os) return L('pickfit has no recorded run of its install steps.', 'pickfit 沒有這款工具安裝步驟的執行紀錄。');
   const when = v.checked_at ? ` on ${day(v.checked_at)}` : '';
+  // Chinese puts the date before the place.
+  const whenZh = v.checked_at ? `於 ${day(v.checked_at)} ` : '';
   const where = system(v.os, v.arch);
-  if (v.method === 'human') return `pickfit installed it by hand on ${where}${when}.`;
+  if (v.method === 'human') return L(`pickfit installed it by hand on ${where}${when}.`, `pickfit ${whenZh}在 ${where} 上手動安裝了它。`);
   return v.replayed
-    ? `pickfit installed it in a fresh ${where} sandbox and replayed the steps from scratch${when}.`
-    : `pickfit installed it in a ${where} sandbox${when}.`;
+    ? L(
+        `pickfit installed it in a fresh ${where} sandbox and replayed the steps from scratch${when}.`,
+        `pickfit ${whenZh}在全新的 ${where} 沙盒中安裝了它，並從頭重跑了一次步驟。`,
+      )
+    : L(`pickfit installed it in a ${where} sandbox${when}.`, `pickfit ${whenZh}在 ${where} 沙盒中安裝了它。`);
 }
 
 /** The "your system" line: verified_on_user_os in words, including when it is not true. */
@@ -110,8 +116,8 @@ export function yourSystem(v: PickOut['verification'], form: FormValues): { stat
     return {
       state: 'yes',
       text: form.arch
-        ? `Verified on your system: it ran on ${system(v.os, v.arch)}.`
-        : `Verified on your OS: it ran on ${system(v.os, v.arch)}.`,
+        ? L(`Verified on your system: it ran on ${system(v.os, v.arch)}.`, `已在你的系統上驗證：它在 ${system(v.os, v.arch)} 上執行過。`)
+        : L(`Verified on your OS: it ran on ${system(v.os, v.arch)}.`, `已在你的作業系統上驗證：它在 ${system(v.os, v.arch)} 上執行過。`),
     };
   }
   if (v.verified_on_user_os === false) {
@@ -119,11 +125,20 @@ export function yourSystem(v: PickOut['verification'], form: FormValues): { stat
       state: 'no',
       text:
         v.os === form.os && form.arch
-          ? `Not verified on your system: it ran on ${system(v.os, v.arch)}, not ${form.arch}.`
-          : `Not verified on your system: it ran on ${system(v.os, v.arch)}, and pickfit hasn’t run it on ${osName(form.os || null)} yet.`,
+          ? L(
+              `Not verified on your system: it ran on ${system(v.os, v.arch)}, not ${form.arch}.`,
+              `未在你的系統上驗證：它在 ${system(v.os, v.arch)} 上執行過，而不是 ${form.arch}。`,
+            )
+          : L(
+              `Not verified on your system: it ran on ${system(v.os, v.arch)}, and pickfit hasn’t run it on ${osName(form.os || null)} yet.`,
+              `未在你的系統上驗證：它在 ${system(v.os, v.arch)} 上執行過，pickfit 還沒在 ${osName(form.os || null)} 上執行過它。`,
+            ),
     };
   }
-  return { state: 'unknown', text: 'Choose your OS above to see whether it ran on your system.' };
+  return {
+    state: 'unknown',
+    text: L('Choose your OS above to see whether it ran on your system.', '在上方選擇你的作業系統，就能看到它是否在你的系統上執行過。'),
+  };
 }
 
 const CHECK = '<svg class="check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.6l3 3 6.6-7.2"/></svg>';
@@ -134,15 +149,21 @@ export const levelLine = (label: string, ok: boolean, mark?: IconName) =>
 function facts(pick: PickOut): string {
   const items: string[] = [];
   const item = (mark: string, text: string) => `<li class="rf">${mark}${text}</li>`;
-  if (pick.open_source === true) items.push(item(icon('scroll-text'), pick.license ? `Open source (${esc(pick.license)})` : 'Open source'));
-  if (pick.open_source === false) items.push(item(icon('scroll-text'), 'Not open source'));
+  if (pick.open_source === true)
+    items.push(
+      item(
+        icon('scroll-text'),
+        pick.license ? L(`Open source (${esc(pick.license)})`, `開源（${esc(pick.license)}）`) : L('Open source', '開源'),
+      ),
+    );
+  if (pick.open_source === false) items.push(item(icon('scroll-text'), L('Not open source', '非開源')));
   // A web app's own facts (where data goes, which OS) are in its test record.
   const where = pick.web_app ? '' : PROCESSING[pick.processing];
   if (where) items.push(item(icon('laptop'), esc(where)));
-  if (pick.web_app) items.push(item(icon('globe'), 'In any modern browser'));
+  if (pick.web_app) items.push(item(icon('globe'), L('In any modern browser', '可在任何現代瀏覽器中使用')));
   else if (pick.platforms.length) {
     const names = listOf(pick.platforms.map((os) => osName(os)));
-    items.push(`<li class="rf">${osList(pick.platforms, { tone: 'quiet', say: `Claims to run on ${names}` })}</li>`);
+    items.push(`<li class="rf">${osList(pick.platforms, { tone: 'quiet', say: L(`Claims to run on ${names}`, `宣稱可在 ${names} 上執行`) })}</li>`);
   }
   return items.length ? `<ul class="run-facts">${items.join('')}</ul>` : '';
 }
@@ -155,15 +176,23 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
   const match = guide.applies_to_user_system.match;
   if (match === 'other_os' && form.os) {
     parts.push(
-      `<p class="caution">These steps ran on ${esc(system(v.os, v.arch))}. pickfit hasn’t run them on ${esc(osName(form.os))}, so expect differences.</p>`,
+      `<p class="caution">${L(
+        `These steps ran on ${esc(system(v.os, v.arch))}. pickfit hasn’t run them on ${esc(osName(form.os))}, so expect differences.`,
+        `這些步驟是在 ${esc(system(v.os, v.arch))} 上執行的。pickfit 還沒在 ${esc(osName(form.os))} 上執行過，可能會有差異。`,
+      )}</p>`,
     );
   } else if (match === 'same_os_other_arch' && form.arch) {
-    parts.push(`<p class="caution">These steps ran on ${esc(system(v.os, v.arch))}, not ${esc(form.arch)}. A download may need the other build.</p>`);
+    parts.push(
+      `<p class="caution">${L(
+        `These steps ran on ${esc(system(v.os, v.arch))}, not ${esc(form.arch)}. A download may need the other build.`,
+        `這些步驟是在 ${esc(system(v.os, v.arch))} 上執行的，而不是 ${esc(form.arch)}。下載時可能需要另一個版本。`,
+      )}</p>`,
+    );
   }
   const steps = guide.steps.map((step) => {
     const notes: string[] = [];
-    if (step.needs_sudo) notes.push('Uses sudo.');
-    if (PIPE_TO_SHELL.test(step.command)) notes.push('Runs a downloaded script: read it before you run it.');
+    if (step.needs_sudo) notes.push(L('Uses sudo.', '需要 sudo。'));
+    if (PIPE_TO_SHELL.test(step.command)) notes.push(L('Runs a downloaded script: read it before you run it.', '會執行下載的腳本：執行前請先閱讀。'));
     return (
       `<li>${step.purpose ? `<p>${esc(step.purpose)}</p>` : ''}${command(step.command)}` +
       `${notes.length ? `<p class="caution small">${notes.join(' ')}</p>` : ''}</li>`
@@ -171,28 +200,34 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
   });
   parts.push(`<ol class="steps">${steps.join('')}</ol>`);
   if (guide.manual_steps.length) {
-    parts.push(`<h4>You do these yourself</h4><ul><li>${guide.manual_steps.map((s) => esc(s.title)).join('</li><li>')}</li></ul>`);
+    parts.push(`<h4>${L('You do these yourself', '這些需要你自己來')}</h4><ul><li>${guide.manual_steps.map((s) => esc(s.title)).join('</li><li>')}</li></ul>`);
   }
   if (guide.verify) {
     parts.push(
-      `<h4>Check that it works</h4>${command(guide.verify.command)}` +
-        `<p class="quiet small">The output should contain “${esc(guide.verify.expected_contains)}”.</p>`,
+      `<h4>${L('Check that it works', '確認它能正常運作')}</h4>${command(guide.verify.command)}` +
+        `<p class="quiet small">${L(
+          `The output should contain “${esc(guide.verify.expected_contains)}”.`,
+          `輸出應包含「${esc(guide.verify.expected_contains)}」。`,
+        )}</p>`,
     );
   }
   if (guide.first_task) {
     const setup = guide.first_task_setup.map((s) => command(s.command)).join('');
-    parts.push(`<h4>First thing to try</h4>${setup}${command(guide.first_task)}`);
+    parts.push(`<h4>${L('First thing to try', '先試試這個')}</h4>${setup}${command(guide.first_task)}`);
   }
   const cfg = guide.mcp_client_config;
   if (cfg) {
     const env = cfg.env.length
-      ? `<h4>You fill in</h4><ul>${cfg.env
-          .map((e) => `<li><code translate="no">${esc(e.name)}</code>${e.purpose ? `: ${esc(e.purpose)}` : ''}${e.required ? ' (required)' : ''}</li>`)
+      ? `<h4>${L('You fill in', '需要你填入')}</h4><ul>${cfg.env
+          .map(
+            (e) =>
+              `<li><code translate="no">${esc(e.name)}</code>${e.purpose ? L(`: ${esc(e.purpose)}`, `：${esc(e.purpose)}`) : ''}${e.required ? L(' (required)', '（必填）') : ''}</li>`,
+          )
           .join('')}</ul>`
       : '';
     parts.push(
-      `<h4>Add it to your agent</h4>${command(cfg.claude_code)}` +
-        `<details class="json"><summary class="small">JSON for Claude Desktop, Cursor and other clients</summary>${command(cfg.json)}</details>` +
+      `<h4>${L('Add it to your agent', '加到你的 agent')}</h4>${command(cfg.claude_code)}` +
+        `<details class="json"><summary class="small">${L('JSON for Claude Desktop, Cursor and other clients', '適用於 Claude Desktop、Cursor 等用戶端的 JSON')}</summary>${command(cfg.json)}</details>` +
         env +
         (cfg.note ? `<p class="quiet small">${esc(cfg.note)}</p>` : ''),
     );
@@ -200,13 +235,17 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
   const issues = readerIssues(guide.known_issues);
   if (issues.length) {
     parts.push(
-      `<h4>Where the README and reality differ</h4><ul class="issues">${issues
-        .map((i) => `<li><span class="quiet">README:</span> ${esc(i.readme_said)}<br><span class="quiet">What worked:</span> ${esc(i.actually_needed)}</li>`)
+      `<h4>${L('Where the README and reality differ', 'README 與實際情況不同的地方')}</h4><ul class="issues">${issues
+        .map(
+          (i) =>
+            `<li><span class="quiet">${L('README:', 'README：')}</span> ${esc(i.readme_said)}<br><span class="quiet">${L('What worked:', '實際可行的做法：')}</span> ${esc(i.actually_needed)}</li>`,
+        )
         .join('')}</ul>`,
     );
   }
+  const sysSpan = `<span class="sys">${v.os ? osMark(v.os) : ''}${esc(system(v.os, v.arch))}</span>`;
   return (
-    `<details class="install"${open ? ' open' : ''}><summary><span>${inRun ? 'Install steps' : `Install steps that worked on <span class="sys">${v.os ? osMark(v.os) : ''}${esc(system(v.os, v.arch))}</span>`}</span>${icon('chevron-down')}</summary>` +
+    `<details class="install"${open ? ' open' : ''}><summary><span>${inRun ? L('Install steps', '安裝步驟') : L(`Install steps that worked on ${sysSpan}`, `在 ${sysSpan} 上可行的安裝步驟`)}</span>${icon('chevron-down')}</summary>` +
     `<div class="install-body">${parts.join('')}</div></details>`
   );
 }
@@ -218,20 +257,25 @@ function record(pick: PickOut, guide: InstallOutput | undefined, form: FormValue
   const mcp = guide?.mcp_client_config ?? null;
   const shown = (tools: string[]) => tools.slice(0, 6).join(', ') + (tools.length > 6 ? ', …' : '');
   const mcpLine = mcp
-    ? `An MCP client handshake over ${mcp.transport === 'stdio' ? 'stdio' : 'HTTP'} listed its ${mcp.tool_count} tool${mcp.tool_count === 1 ? '' : 's'}` +
-      `${mcp.tools.length ? ` (${shown(mcp.tools)})` : ''}${mcp.called_tool ? `, and a call to ${mcp.called_tool} returned a result` : ''}.`
+    ? L(
+        `An MCP client handshake over ${mcp.transport === 'stdio' ? 'stdio' : 'HTTP'} listed its ${mcp.tool_count} tool${mcp.tool_count === 1 ? '' : 's'}`,
+        `透過 ${mcp.transport === 'stdio' ? 'stdio' : 'HTTP'} 的 MCP 用戶端交握列出了它的 ${mcp.tool_count} 個工具`,
+      ) +
+      (mcp.tools.length ? L(` (${shown(mcp.tools)})`, `（${shown(mcp.tools)}）`) : '') +
+      (mcp.called_tool ? L(`, and a call to ${mcp.called_tool} returned a result`, `，呼叫 ${mcp.called_tool} 也回傳了結果`) : '') +
+      L('.', '。')
     : '';
   // A GUI app's launch sentence already says whether the launch passed offline.
   const offline = v.gui ? null : guide?.verification.works_offline;
   return (
-    `<section class="record" aria-label="Test record">` +
-    `<p class="record-title">${icon('badge-check')}Test record</p>` +
+    `<section class="record" aria-label="${L('Test record', '測試紀錄')}">` +
+    `<p class="record-title">${icon('badge-check')}${L('Test record', '測試紀錄')}</p>` +
     levelLine(levelLabel(v.level, { gui: v.gui, mcp }), passed(v.gui), levelIcon(v.level, { gui: v.gui, mcp })) +
     (v.os ? runFacts(v, { offline, mine: v.verified_on_user_os, askedOffline: form.offline && !v.gui }) : `<p>${esc(ranSentence(v))}</p>`) +
     (mcpLine ? `<p>${esc(mcpLine)}</p>` : '') +
     (v.gui ? `<p>${esc(guiSentence(v.gui))}</p>` : '') +
     (mine.state === 'no' ? `<p class="mine mine-no">${esc(mine.text)}</p>` : mine.state === 'unknown' ? `<p class="small quiet">${esc(mine.text)}</p>` : '') +
-    `<details class="how"><summary>How we know</summary><p>${esc(pick.how_we_know)}</p></details>` +
+    `<details class="how"><summary>${L('How we know', '我們如何得知')}</summary><p>${esc(pick.how_we_know)}</p></details>` +
     `</section>`
   );
 }
@@ -264,15 +308,25 @@ function reasonMark(field: string, value: string): string {
   return icon(FIELD_MARK[field] ?? 'check');
 }
 
-const MATCH_LABEL = { good: 'Good match', partial: 'Partial match', weak: 'Weak match' } as const;
+const MATCH_LABEL = {
+  get good() {
+    return L('Good match', '高度符合');
+  },
+  get partial() {
+    return L('Partial match', '部分符合');
+  },
+  get weak() {
+    return L('Weak match', '略微符合');
+  },
+};
 const MATCH_TONE = { good: 'pass', partial: 'caution', weak: 'caution' } as const;
 
 /** Rules only: which of the request's words the profile mentions, and which it does not. */
 function matchCoverage(match: NonNullable<PickOut['match']>): string {
   const list = (words: string[]) => words.slice(0, 6).map((w) => `“${esc(w)}”`).join(', ');
   const parts = [
-    match.covers.length ? `Its profile mentions ${list(match.covers)}.` : '',
-    match.missing.length ? `It does not mention ${list(match.missing)}.` : '',
+    match.covers.length ? L(`Its profile mentions ${list(match.covers)}.`, `它的簡介提到了 ${list(match.covers)}。`) : '',
+    match.missing.length ? L(`It does not mention ${list(match.missing)}.`, `它沒有提到 ${list(match.missing)}。`) : '',
   ].filter(Boolean);
   return parts.length ? `<p class="coverage">${parts.join(' ')}</p>` : '';
 }
@@ -286,15 +340,21 @@ function glanceStrip(pick: PickOut, guide: InstallOutput | undefined, form: Form
   const where = system(v.os, v.arch);
   const cells: string[] = [];
   const sys = v.os ? { svg: osMark(v.os) } : 'monitor';
-  if (v.verified_on_user_os === true) cells.push(glance(sys, 'Your system', `Ran on ${esc(where)}`, 'pass'));
-  else if (v.verified_on_user_os === false) cells.push(glance(sys, 'Your system', `Ran on ${esc(where)} only`, 'caution'));
-  else cells.push(glance(sys, 'Ran on', v.os ? esc(where) : 'No run', 'plain'));
+  if (v.verified_on_user_os === true) cells.push(glance(sys, L('Your system', '你的系統'), L(`Ran on ${esc(where)}`, `在 ${esc(where)} 上執行過`), 'pass'));
+  else if (v.verified_on_user_os === false)
+    cells.push(glance(sys, L('Your system', '你的系統'), L(`Ran on ${esc(where)} only`, `只在 ${esc(where)} 上執行過`), 'caution'));
+  else cells.push(glance(sys, L('Ran on', '執行環境'), v.os ? esc(where) : L('No run', '尚未執行'), 'plain'));
   const off = guide?.verification.works_offline;
-  const offline = off === true ? '<small>Works offline</small>' : off === false && form.offline ? '<small>Needed the network</small>' : '';
+  const offline =
+    off === true
+      ? `<small>${L('Works offline', '可離線使用')}</small>`
+      : off === false && form.offline
+        ? `<small>${L('Needed the network', '需要網路')}</small>`
+        : '';
   const evidence = { gui: v.gui, mcp: guide?.mcp_client_config ?? null };
-  cells.push(glance(levelIcon(v.level, evidence), 'Proof', esc(levelLabel(v.level, evidence)) + offline, passed(v.gui) ? 'pass' : 'caution'));
-  if (guide && guide.steps.length) cells.push(glance('terminal', 'Setup', esc(setupWords(guide.steps.length, guide.manual_steps.length)), 'plain'));
-  cells.push(glance('tag', 'Price', esc(PRICE[pick.pricing]), pick.pricing === 'unknown' ? 'quiet' : 'plain'));
+  cells.push(glance(levelIcon(v.level, evidence), L('Proof', '證據'), esc(levelLabel(v.level, evidence)) + offline, passed(v.gui) ? 'pass' : 'caution'));
+  if (guide && guide.steps.length) cells.push(glance('terminal', L('Setup', '安裝'), esc(setupWords(guide.steps.length, guide.manual_steps.length)), 'plain'));
+  cells.push(glance('tag', L('Price', '價格'), esc(PRICE[pick.pricing]), pick.pricing === 'unknown' ? 'quiet' : 'plain'));
   return `<div class="glance t-glance">${cells.join('')}</div>`;
 }
 
@@ -303,7 +363,7 @@ function readmeFix(guide: InstallOutput): string {
   const issues = readerIssues(guide.known_issues);
   const fix = issues.find((i) => i.kind === 'readme_wrong') ?? issues[0];
   return fix
-    ? `<p class="t-fix">${icon('scissors')}<span><b>README fix:</b> ${esc(fix.actually_needed)}</span></p>`
+    ? `<p class="t-fix">${icon('scissors')}<span><b>${L('README fix:', 'README 修正：')}</b> ${esc(fix.actually_needed)}</span></p>`
     : '';
 }
 
@@ -314,9 +374,12 @@ function quickInstall(guide: InstallOutput | undefined, form: FormValues): strin
   const v = guide.verification;
   const elsewhere = guide.applies_to_user_system.match === 'other_os' && form.os;
   const more = guide.steps.length - 1 + guide.manual_steps.length;
+  const total = guide.steps.length + guide.manual_steps.length;
   return (
-    `<div class="t-install"><p class="t-install-label">${icon('terminal')}Install${elsewhere ? `, as it ran on ${esc(system(v.os, v.arch))}` : ''}` +
-    `${more ? `<span class="quiet"> · step 1 of ${guide.steps.length + guide.manual_steps.length}</span>` : ''}</p>${command(first.command)}` +
+    `<div class="t-install"><p class="t-install-label">${icon('terminal')}${L('Install', '安裝')}${
+      elsewhere ? L(`, as it ran on ${esc(system(v.os, v.arch))}`, `（在 ${esc(system(v.os, v.arch))} 上執行時的步驟）`) : ''
+    }` +
+    `${more ? `<span class="quiet">${L(` · step 1 of ${total}`, ` · 共 ${total} 步中的第 1 步`)}</span>` : ''}</p>${command(first.command)}` +
     readmeFix(guide) +
     `</div>`
   );
@@ -339,13 +402,13 @@ function webRecord(pick: PickOut, entry: Entry | undefined): string {
   const check = entry ? webCheck(entry) : null;
   if (!check || !entry) return '';
   return (
-    `<section class="record" aria-label="Test record">` +
-    `<p class="record-title">${icon('badge-check')}Test record</p>` +
+    `<section class="record" aria-label="${L('Test record', '測試紀錄')}">` +
+    `<p class="record-title">${icon('badge-check')}${L('Test record', '測試紀錄')}</p>` +
     levelLine(webLevelLabel(check), true) +
     `<p>${esc(webRanSentence(check))}</p>` +
     webFactList(entry) +
-    `<p class="mine mine-yes">${esc('Nothing to install: it opens in a browser on any OS.')}</p>` +
-    `<details class="how"><summary>How we know</summary><p>${esc(pick.how_we_know)}</p></details>` +
+    `<p class="mine mine-yes">${esc(L('Nothing to install: it opens in a browser on any OS.', '無需安裝：在任何作業系統的瀏覽器中都能開啟。'))}</p>` +
+    `<details class="how"><summary>${L('How we know', '我們如何得知')}</summary><p>${esc(pick.how_we_know)}</p></details>` +
     `</section>`
   );
 }
@@ -354,13 +417,13 @@ function webRecord(pick: PickOut, entry: Entry | undefined): string {
 function webGlance(pick: PickOut, entry: Entry | undefined): string {
   const check = entry ? webCheck(entry) : null;
   const web = pick.web_app!;
-  const offline = web.works_offline === 'verified' ? '<small>Works offline</small>' : '';
+  const offline = web.works_offline === 'verified' ? `<small>${L('Works offline', '可離線使用')}</small>` : '';
   return (
     `<div class="glance t-glance">` +
-    glance('globe', 'Runs in', 'Any browser', 'pass') +
-    glance('badge-check', 'Proof', (check ? esc(webLevelLabel(check)) : 'No run') + offline, check ? 'pass' : 'caution') +
-    glance('terminal', 'Setup', 'Nothing to install', 'plain') +
-    glance('tag', 'Price', esc(PRICE[pick.pricing]), pick.pricing === 'unknown' ? 'quiet' : 'plain') +
+    glance('globe', L('Runs in', '執行於'), L('Any browser', '任何瀏覽器'), 'pass') +
+    glance('badge-check', L('Proof', '證據'), (check ? esc(webLevelLabel(check)) : L('No run', '尚未執行')) + offline, check ? 'pass' : 'caution') +
+    glance('terminal', L('Setup', '安裝'), L('Nothing to install', '無需安裝'), 'plain') +
+    glance('tag', L('Price', '價格'), esc(PRICE[pick.pricing]), pick.pricing === 'unknown' ? 'quiet' : 'plain') +
     `</div>`
   );
 }
@@ -368,7 +431,7 @@ function webGlance(pick: PickOut, entry: Entry | undefined): string {
 /** The one action on a web app's ticket: open it. */
 function webOpen(pick: PickOut): string {
   const web = pick.web_app!;
-  const open = link(web.url, `${icon('external-link')}Open ${esc(pick.name)}`, 'btn btn-primary btn-sm');
+  const open = link(web.url, `${icon('external-link')}${L(`Open ${esc(pick.name)}`, `開啟 ${esc(pick.name)}`)}`, 'btn btn-primary btn-sm');
   return open
     ? `<div class="t-install"><p class="t-install-label">${icon('globe')}${esc(NO_INSTALL_LABEL)}</p><p class="t-open">${open}<span class="quiet small" translate="no">${esc(web.url)}</span></p></div>`
     : '';
@@ -382,18 +445,22 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
   const badges = [
     web ? badge('info', NO_INSTALL_LABEL, { icon: 'globe' }) : '',
     pick.match ? badge(MATCH_TONE[pick.match.quality], MATCH_LABEL[pick.match.quality], { cls: `match-${pick.match.quality}` }) : '',
-    best ? badge('free', 'Best free option', { icon: 'leaf' }) : '',
-    pick.scores.treasure ? badge('gem', 'Hidden gem', { icon: 'gem', pop: 'pop-gem' }) : '',
+    best ? badge('free', L('Best free option', '最佳免費選擇'), { icon: 'leaf' }) : '',
+    pick.scores.treasure ? badge('gem', L('Hidden gem', '寶藏'), { icon: 'gem', pop: 'pop-gem' }) : '',
   ].join('');
   // Each reason leads with the mark of the fact it rests on; the cited profile field opens from the claim.
   const why = pick.why
     .map(
       (r) =>
         `<li><span class="why-i">${reasonMark(r.field, r.value)}</span><details class="why-src"><summary>${esc(r.claim)}${icon('file-text')}</summary>` +
-        `<p class="cite">From its profile: <code>${esc(r.field)}</code> is “${esc(r.value)}”</p></details></li>`,
+        `<p class="cite">${L(
+          `From its profile: <code>${esc(r.field)}</code> is “${esc(r.value)}”`,
+          `出自它的簡介：<code>${esc(r.field)}</code> 為「${esc(r.value)}」`,
+        )}</p></details></li>`,
     )
     .join('');
-  const fitSaid = pick.match ? fitNote(pick.match) : null;
+  // Tradeoffs come from find_software in English, so the note they may repeat is compared in English.
+  const fitSaid = pick.match ? withLang('en', () => fitNote(pick.match!)) : null;
   const tradeoffs = pick.tradeoffs
     .filter((t) => !RAN_ELSEWHERE.test(t) && t !== fitSaid)
     .map((t) => `<li>${esc(t)}</li>`)
@@ -401,12 +468,14 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
   const guide = result.guides[pick.slug];
   const kind = entry ? kindTag(entry) : '';
   const links = [
-    web ? link(web.url, `${icon('external-link')}Open it`) : '',
-    link(pick.repo, `${icon('external-link')}Source code`),
-    pick.homepage && pick.homepage !== pick.repo && pick.homepage !== web?.url ? link(pick.homepage, `${icon('external-link')}Homepage`) : '',
-    link(pick.verification.os || web?.checked_at ? pick.evidence_url : null, `${icon('external-link')}Run record`),
+    web ? link(web.url, `${icon('external-link')}${L('Open it', '開啟')}`) : '',
+    link(pick.repo, `${icon('external-link')}${L('Source code', '原始碼')}`),
+    pick.homepage && pick.homepage !== pick.repo && pick.homepage !== web?.url
+      ? link(pick.homepage, `${icon('external-link')}${L('Homepage', '首頁')}`)
+      : '',
+    link(pick.verification.os || web?.checked_at ? pick.evidence_url : null, `${icon('external-link')}${L('Run record', '測試紀錄')}`),
   ].filter(Boolean);
-  const gemNote = pick.scores.treasure ? 'little known' : undefined;
+  const gemNote = pick.scores.treasure ? L('little known', '鮮為人知') : undefined;
   // At a glance: who it is, why it fits in one sentence, the verdict, and the command. The rest waits behind one expander.
   return (
     `<article class="pick" id="pick-${esc(pick.slug)}" aria-labelledby="name-${esc(pick.slug)}">` +
@@ -420,90 +489,142 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
     (web ? webGlance(pick, entry) : glanceStrip(pick, guide, form)) +
     SEAM +
     (web ? webOpen(pick) : quickInstall(guide, form)) +
-    `<details class="t-more"><summary>${icon('chevron-down')}Why it fits and how we know</summary><div class="t-more-body">` +
+    `<details class="t-more"><summary>${icon('chevron-down')}${L('Why it fits and how we know', '為什麼適合，以及我們如何得知')}</summary><div class="t-more-body">` +
     `<div class="t-body"><div class="t-claim">` +
     // On the rules path the fit sentence is the summary: say it once.
     (pick.fit === pick.summary ? '' : `<p class="summary">${esc(pick.summary)}</p>`) +
     (pick.match ? matchCoverage(pick.match) : '') +
-    (why ? `<h4>Why it fits</h4><ul class="why why-marks">${why}</ul>` : '') +
-    (tradeoffs ? `<h4>Tradeoffs</h4><ul class="tradeoffs">${tradeoffs}</ul>` : '') +
-    (pick.vs_well_known ? `<p class="vs"><span class="lead-in">Compared with better-known tools:</span> ${esc(pick.vs_well_known)}</p>` : '') +
+    (why ? `<h4>${L('Why it fits', '為什麼適合')}</h4><ul class="why why-marks">${why}</ul>` : '') +
+    (tradeoffs ? `<h4>${L('Tradeoffs', '取捨')}</h4><ul class="tradeoffs">${tradeoffs}</ul>` : '') +
+    (pick.vs_well_known
+      ? `<p class="vs"><span class="lead-in">${L('Compared with better-known tools:', '與較知名的工具相比：')}</span> ${esc(pick.vs_well_known)}</p>`
+      : '') +
     facts(pick) +
     `</div><div class="t-measure">` +
-    tape('Quality', pick.scores.quality, { pop: 'pop-quality' }) +
-    tape('Popularity', pick.scores.popularity, { pop: 'pop-popularity', tone: 'quiet', note: gemNote }) +
+    tape(L('Quality', '品質'), pick.scores.quality, { pop: 'pop-quality' }) +
+    tape(L('Popularity', '知名度'), pick.scores.popularity, { pop: 'pop-popularity', tone: 'quiet', note: gemNote }) +
     coverage(pick.features, { pop: 'pop-features' }) +
     `</div></div>` +
     (web ? webRecord(pick, entry) : record(pick, guide, form)) +
     (guide && !web ? installSection(guide, form, index === 0) : '') +
     (links.length ? `<p class="t-links">${links.join('')}</p>` : '') +
     `</div></details>` +
-    `<div class="t-foot"><a class="more" href="/tool/${esc(pick.slug)}">Full profile${icon('arrow-right')}</a><span class="grow"></span>${compareToggle(pick.slug, pick.name)}</div>` +
+    `<div class="t-foot"><a class="more" href="/tool/${esc(pick.slug)}">${L('Full profile', '完整介紹')}${icon('arrow-right')}</a><span class="grow"></span>${compareToggle(pick.slug, pick.name)}</div>` +
     `</article>`
   );
 }
 
-const BY_RULES = 'these results are ranked by rules (the words in your request, then no-install web apps among close fits, then verification on your OS, then the hidden-gem score) without Muse Spark';
+const BY_RULES = () =>
+  L(
+    'these results are ranked by rules (the words in your request, then no-install web apps among close fits, then verification on your OS, then the hidden-gem score) without Muse Spark',
+    '這些結果依規則排序（先看你需求中的字詞，再看相近結果中免安裝的網頁應用，接著是否在你的作業系統上驗證過，最後是寶藏分數），沒有使用 Muse Spark',
+  );
 const BUDGET: Record<BudgetStop | 'other', { title: string; text: string }> = {
-  web_daily: {
-    title: 'Model matching paused until 00:00 UTC',
-    text: `Today’s Meta spend, by this page and by agents together, has reached the share this page may use, so ${BY_RULES}.`,
+  get web_daily() {
+    return {
+      title: L('Model matching paused until 00:00 UTC', '模型比對暫停至 UTC 00:00'),
+      text: L(
+        `Today’s Meta spend, by this page and by agents together, has reached the share this page may use, so ${BY_RULES()}.`,
+        `今天這個頁面和 agent 合計的 Meta 花費已達本頁可用的額度，因此${BY_RULES()}。`,
+      ),
+    };
   },
-  total: {
-    title: 'Model matching is paused',
-    text: `pickfit’s overall budget for Meta model calls is used up, so ${BY_RULES}.`,
+  get total() {
+    return {
+      title: L('Model matching is paused', '模型比對已暫停'),
+      text: L(
+        `pickfit’s overall budget for Meta model calls is used up, so ${BY_RULES()}.`,
+        `pickfit 呼叫 Meta 模型的總預算已用完，因此${BY_RULES()}。`,
+      ),
+    };
   },
-  unavailable: {
-    title: 'Ranked without the model this time',
-    text: `pickfit couldn’t check its model budget, so it didn’t call Muse Spark: ${BY_RULES}. Search again in a minute.`,
+  get unavailable() {
+    return {
+      title: L('Ranked without the model this time', '這次未使用模型排序'),
+      text: L(
+        `pickfit couldn’t check its model budget, so it didn’t call Muse Spark: ${BY_RULES()}. Search again in a minute.`,
+        `pickfit 無法確認模型預算，所以沒有呼叫 Muse Spark：${BY_RULES()}。請過一分鐘再搜尋一次。`,
+      ),
+    };
   },
-  other: {
-    title: 'Model matching is paused for now',
-    text: `pickfit’s budget for Meta model calls is used up for now, so ${BY_RULES}.`,
+  get other() {
+    return {
+      title: L('Model matching is paused for now', '模型比對暫時停止'),
+      text: L(
+        `pickfit’s budget for Meta model calls is used up for now, so ${BY_RULES()}.`,
+        `pickfit 呼叫 Meta 模型的預算目前已用完，因此${BY_RULES()}。`,
+      ),
+    };
   },
 };
 
+// Every entry is a getter so its text follows the render's language (no_api_key and model_timeout included).
 const DEGRADED: Record<string, { title: string; text: string }> = {
-  budget_unavailable: {
-    title: 'Ranked without the model this time',
-    text: 'pickfit couldn’t check its model budget, so it didn’t call Muse Spark and ranked these by rules. Search again in a minute.',
+  get budget_unavailable() {
+    return {
+      title: L('Ranked without the model this time', '這次未使用模型排序'),
+      text: L(
+        'pickfit couldn’t check its model budget, so it didn’t call Muse Spark and ranked these by rules. Search again in a minute.',
+        'pickfit 無法確認模型預算，所以沒有呼叫 Muse Spark，改以規則排序。請過一分鐘再搜尋一次。',
+      ),
+    };
   },
-  model_off: {
-    title: 'Model matching is off on this server',
-    text: 'These results are ranked by rules: the words in your request, then no-install web apps among close fits, then verification on your OS, then the hidden-gem score.',
+  get model_off() {
+    return {
+      title: L('Model matching is off on this server', '這台伺服器未啟用模型比對'),
+      text: L(
+        'These results are ranked by rules: the words in your request, then no-install web apps among close fits, then verification on your OS, then the hidden-gem score.',
+        '這些結果依規則排序：先看你需求中的字詞，再看相近結果中免安裝的網頁應用，接著是否在你的作業系統上驗證過，最後是寶藏分數。',
+      ),
+    };
+  },
+  get no_api_key() {
+    return DEGRADED.model_off;
+  },
+  get model_timeout() {
+    return {
+      title: L('Ranked without the model this time', '這次未使用模型排序'),
+      text: L(
+        'Muse Spark didn’t answer in time, so these results are ranked by rules. Search again to retry.',
+        'Muse Spark 沒有及時回應，所以這些結果依規則排序。再搜尋一次即可重試。',
+      ),
+    };
   },
 };
-DEGRADED.no_api_key = DEGRADED.model_off;
-DEGRADED.model_timeout = {
-  title: 'Ranked without the model this time',
-  text: 'Muse Spark didn’t answer in time, so these results are ranked by rules. Search again to retry.',
-};
-const MODEL_FAILED = {
-  title: 'Ranked without the model this time',
-  text: 'Muse Spark didn’t return a usable answer, so these results are ranked by rules. Search again to retry.',
-};
+const MODEL_FAILED = () => ({
+  title: L('Ranked without the model this time', '這次未使用模型排序'),
+  text: L(
+    'Muse Spark didn’t return a usable answer, so these results are ranked by rules. Search again to retry.',
+    'Muse Spark 沒有回傳可用的答案，所以這些結果依規則排序。再搜尋一次即可重試。',
+  ),
+});
 
 /** The results heading says what came back, in words. */
 function resultsTitle(out: FindOutput): string {
   const n = out.picks.length;
-  if (n === 0) return 'Nothing fits yet';
+  if (n === 0) return L('Nothing fits yet', '目前沒有合適的工具');
   const tools = `${n} ${n === 1 ? 'tool' : 'tools'}`;
   if (out.matched_by === 'rules') {
-    if (out.match_quality === 'none') return 'No clear fit, ranked by rules';
-    if (out.match_quality === 'partial') return 'Partial fits, ranked by rules';
-    return `${tools} ranked by rules`;
+    if (out.match_quality === 'none') return L('No clear fit, ranked by rules', '沒有明確合適的，依規則排序');
+    if (out.match_quality === 'partial') return L('Partial fits, ranked by rules', '部分符合，依規則排序');
+    return L(`${tools} ranked by rules`, `${n} 款工具，依規則排序`);
   }
-  return `${tools} ${n === 1 ? 'fits' : 'fit'} your need`;
+  return L(`${tools} ${n === 1 ? 'fits' : 'fit'} your need`, `${n} 款工具符合你的需求`);
 }
 
 function matchLine(out: FindOutput): string {
   const n = out.picks.length;
-  const meet = `${out.considered} verified ${out.considered === 1 ? 'tool meets' : 'tools meet'} your conditions`;
-  if (out.matched_by === 'rules') return `${meet}; these are ranked by rules, without a model.`;
+  const meet = L(
+    `${out.considered} verified ${out.considered === 1 ? 'tool meets' : 'tools meet'} your conditions`,
+    `${out.considered} 款已驗證工具符合你的條件`,
+  );
+  if (out.matched_by === 'rules') return L(`${meet}; these are ranked by rules, without a model.`, `${meet}；以下依規則排序，未使用模型。`);
   // When more than the card limit meet them, coverage_note says how many the model compared.
   return (
-    `${meet}; Meta’s ${esc(out.matched_by)} ${n === 0 ? 'found none that fits' : `picked ${n === 1 ? 'one' : n}`}.` +
-    (n ? ' Code checked every reason against the tool’s profile.' : '')
+    L(
+      `${meet}; Meta’s ${esc(out.matched_by)} ${n === 0 ? 'found none that fits' : `picked ${n === 1 ? 'one' : n}`}.`,
+      `${meet}；Meta 的 ${esc(out.matched_by)} ${n === 0 ? '沒有找到合適的' : `挑出了 ${n} 款`}。`,
+    ) + (n ? L(' Code checked every reason against the tool’s profile.', '每個理由都已由程式對照工具的簡介檢查過。') : '')
   );
 }
 
@@ -526,22 +647,30 @@ export function renderResults(
   const said: string[] = [`<h2 class="results-title">${esc(resultsTitle(out))}</h2>`];
   if (out.considered > 0) said.push(`<p class="match-line">${matchLine(out)}</p>`);
   if (out.picks.length === 0) {
-    said.push(`<p class="match-line">${esc(out.coverage_note ?? 'pickfit covers developer CLI tools, local AI tools, MCP servers and some web apps today.')}</p>`);
+    said.push(
+      `<p class="match-line">${esc(
+        out.coverage_note ??
+          L(
+            'pickfit covers developer CLI tools, local AI tools, MCP servers and some web apps today.',
+            'pickfit 目前涵蓋開發者 CLI 工具、本機 AI 工具、MCP 伺服器和部分網頁應用。',
+          ),
+      )}</p>`,
+    );
   }
   // A partial or missing fit is said before the picks, not after them.
   const fitFirst = out.picks.length > 0 && (out.match_quality === 'partial' || out.match_quality === 'none') && out.coverage_note;
   const slugs = out.picks.map((p) => p.slug);
   const cmpHref = `/compare?tools=${slugs.map(encodeURIComponent).join(',')}${form.os ? `&amp;os=${form.os}` : ''}${form.arch ? `&amp;arch=${form.arch}` : ''}`;
   const tools = out.picks.length
-    ? `<div class="res-tools"><button type="button" class="btn btn-quiet btn-sm js-only" data-open-legend>${icon('circle-help')}How to read a ticket</button>` +
-      (out.picks.length > 1 ? `<a class="btn btn-quiet btn-sm" href="${cmpHref}">${icon('scale')}Compare these</a>` : '') +
+    ? `<div class="res-tools"><button type="button" class="btn btn-quiet btn-sm js-only" data-open-legend>${icon('circle-help')}${L('How to read a ticket', '如何看懂試穿單')}</button>` +
+      (out.picks.length > 1 ? `<a class="btn btn-quiet btn-sm" href="${cmpHref}">${icon('scale')}${L('Compare these', '比較這些')}</a>` : '') +
       `</div>`
     : '';
   // Everything else the search has to say goes in one quiet status list under Fitz: one Fitz per screen.
   const status: string[] = [];
   if (out.degraded) {
-    const d = out.degraded_reason === 'over_budget' ? BUDGET[opts.budget ?? 'other'] : (DEGRADED[out.degraded_reason ?? ''] ?? MODEL_FAILED);
-    status.push(`<li class="st st-busy" role="status">${icon('clock')}<span><strong>${esc(d.title)}.</strong> ${esc(d.text)}</span></li>`);
+    const d = out.degraded_reason === 'over_budget' ? BUDGET[opts.budget ?? 'other'] : (DEGRADED[out.degraded_reason ?? ''] ?? MODEL_FAILED());
+    status.push(`<li class="st st-busy" role="status">${icon('clock')}<span><strong>${esc(d.title)}${L('.', '。')}</strong> ${esc(d.text)}</span></li>`);
   }
   if (fitFirst) {
     const note = out.coverage_note!;
@@ -553,7 +682,9 @@ export function renderResults(
     );
   }
   if (out.clarifying_question) {
-    status.push(`<li class="st st-info">${icon('circle-help')}<span><strong>To narrow it down:</strong> ${esc(out.clarifying_question)} Set it above and search again.</span></li>`);
+    status.push(
+      `<li class="st st-info">${icon('circle-help')}<span><strong>${L('To narrow it down:', '想縮小範圍：')}</strong> ${esc(out.clarifying_question)}${L(' Set it above and search again.', ' 請在上方設定後再搜尋一次。')}</span></li>`,
+    );
   }
   const head =
     `<div class="res-head">${says(resultsFitz(out), said.join(''), { size: 104 })}${tools}</div>` +
@@ -561,8 +692,8 @@ export function renderResults(
   // "Built-in is enough" is said before anything is sold.
   if (out.no_install_option) {
     parts.push(
-      `<div class="aside ask-note">${fitz('surprised', 64)}<div><h3>You may not need to install anything</h3><p>${esc(out.no_install_option)}</p>` +
-        `<p class="quiet small">From Muse Spark’s general knowledge; pickfit hasn’t checked it.</p></div></div>`,
+      `<div class="aside ask-note">${fitz('surprised', 64)}<div><h3>${L('You may not need to install anything', '你可能不需要安裝任何東西')}</h3><p>${esc(out.no_install_option)}</p>` +
+        `<p class="quiet small">${L('From Muse Spark’s general knowledge; pickfit hasn’t checked it.', '來自 Muse Spark 的一般知識；pickfit 尚未檢查。')}</p></div></div>`,
     );
   }
   if (out.picks.length) {
@@ -571,7 +702,7 @@ export function renderResults(
     const entries = slugs.map((s) => catalog.bySlug.get(s)).filter((e): e is Entry => !!e);
     if (entries.length > 1) {
       parts.push(
-        `<details class="sbs"><summary>${icon('columns-3')}See these side by side</summary>` +
+        `<details class="sbs"><summary>${icon('columns-3')}${L('See these side by side', '並排比較')}</summary>` +
           compareTable(entries, { os: form.os || undefined, arch: form.arch || undefined, now: new Date(catalog.built_at) }) +
           `</details>`,
       );
@@ -581,10 +712,10 @@ export function renderResults(
   const freeWeb = free ? webCheck(free) : null;
   if (free && out.best_free && isWebApp(free)) {
     parts.push(
-      `<div class="aside best-free"><p><span class="lead-in">Best free option:</span> ` +
+      `<div class="aside best-free"><p><span class="lead-in">${L('Best free option:', '最佳免費選擇：')}</span> ` +
         `<a href="/tool/${esc(free.slug)}">${esc(free.name)}</a>. ${esc(out.best_free.reason)}</p>` +
         (freeWeb ? `<p class="quiet">${esc(webRanSentence(freeWeb))}</p>` : '') +
-        `<p class="mine mine-yes">${esc(NO_INSTALL_LABEL)}: it opens in a browser.</p></div>`,
+        `<p class="mine mine-yes">${esc(NO_INSTALL_LABEL)}${L(': it opens in a browser.', '：在瀏覽器中開啟即可。')}</p></div>`,
     );
   } else if (free && out.best_free) {
     const guide = bestGuide(free, form.os || undefined);
@@ -600,7 +731,7 @@ export function renderResults(
     };
     const mine = yourSystem(v, form);
     parts.push(
-      `<div class="aside best-free"><p><span class="lead-in">Best free option:</span> ` +
+      `<div class="aside best-free"><p><span class="lead-in">${L('Best free option:', '最佳免費選擇：')}</span> ` +
         `<a href="/tool/${esc(free.slug)}">${esc(free.name)}</a>. ${esc(out.best_free.reason)}</p>` +
         (v.os ? runFacts(v, { mine: v.verified_on_user_os }) : `<p class="quiet">${esc(ranSentence(v))}</p>`) +
         (mine.state === 'no' ? `<p class="mine mine-no">${esc(mine.text)}</p>` : '') +
@@ -610,9 +741,12 @@ export function renderResults(
   // Not verified: no stitches, no badge, no steps, no link. The missing record is the label.
   const wk = out.well_known_option;
   const outside = wk
-    ? `<aside class="outside" aria-label="Not verified by pickfit">` +
-      `<h3>Also consider ${esc(wk.name)}, not verified by pickfit</h3>${icon('circle-dashed')}` +
-      `<p class="unchecked">pickfit has not installed or tested it. There is no run record and no install guide.</p>` +
+    ? `<aside class="outside" aria-label="${L('Not verified by pickfit', '未經 pickfit 驗證')}">` +
+      `<h3>${L(`Also consider ${esc(wk.name)}, not verified by pickfit`, `也可以考慮 ${esc(wk.name)}（未經 pickfit 驗證）`)}</h3>${icon('circle-dashed')}` +
+      `<p class="unchecked">${L(
+        'pickfit has not installed or tested it. There is no run record and no install guide.',
+        'pickfit 沒有安裝或測試過它，因此沒有測試紀錄，也沒有安裝指南。',
+      )}</p>` +
       `<p>${esc(wk.why)}</p><p class="quiet small">${esc(wk.how_we_know)}</p></aside>`
     : '';
   if (outside && out.picks.length === 0) {
@@ -622,7 +756,8 @@ export function renderResults(
     parts.unshift(head);
     if (outside) parts.push(outside);
   }
-  if (opts.cached) parts.push('<p class="quiet small">Shown from the same search made in the last few minutes.</p>');
+  if (opts.cached)
+    parts.push(`<p class="quiet small">${L('Shown from the same search made in the last few minutes.', '顯示的是幾分鐘內相同搜尋的結果。')}</p>`);
   return parts.join('');
 }
 
@@ -640,38 +775,47 @@ export const EXAMPLES: [string, string][] = [
   ['Free up port 3000', 'See which process holds port 3000 and stop it'],
 ];
 
-const OS_CHOICES: [OS | '', string][] = [
-  ['', 'Any OS'],
+/** The same examples in zh-TW; EXAMPLES stays English for other modules. */
+const EXAMPLES_ZH: [string, string][] = [
+  ['離線把錄音轉成字幕', '把一整個資料夾的訪談錄音離線轉成字幕'],
+  ['檢查我的 MCP 設定', '在安裝 MCP 伺服器之前，檢查我的 MCP 伺服器設定有沒有危險的權限'],
+  ['給 agent 的程式碼地圖', '一個 MCP 伺服器，讓我的程式設計 agent 取得程式碼庫的地圖'],
+  ['釋放連接埠 3000', '查看哪個程序佔用了連接埠 3000，並停止它'],
+];
+const examples = (): [string, string][] => (isZh() ? EXAMPLES_ZH : EXAMPLES);
+
+const OS_CHOICES = (): [OS | '', string][] => [
+  ['', L('Any OS', '任何作業系統')],
   ['macos', 'macOS'],
   ['linux', 'Linux'],
   ['windows', 'Windows'],
 ];
-const ARCH_CHOICES: [Arch | '', string][] = [
-  ['', 'Any CPU'],
-  ['arm64', 'ARM64, Apple silicon'],
-  ['x86_64', 'x86-64, Intel or AMD'],
+const ARCH_CHOICES = (): [Arch | '', string][] => [
+  ['', L('Any CPU', '任何 CPU')],
+  ['arm64', L('ARM64, Apple silicon', 'ARM64（Apple silicon）')],
+  ['x86_64', L('x86-64, Intel or AMD', 'x86-64（Intel 或 AMD）')],
 ];
 
 /** The request: the need in the person's words, and their measurements. */
 export function searchForm(form: FormValues): string {
-  const os = OS_CHOICES.map(
+  const os = OS_CHOICES().map(
     ([v, text]) => `<label><input type="radio" name="os" value="${v}"${v === form.os ? ' checked' : ''}>${text}</label>`,
   ).join('');
-  const arch = ARCH_CHOICES.map(([v, text]) => `<option value="${v}"${v === form.arch ? ' selected' : ''}>${text}</option>`).join('');
+  const arch = ARCH_CHOICES().map(([v, text]) => `<option value="${v}"${v === form.arch ? ' selected' : ''}>${text}</option>`).join('');
   const tick = icon('check').replace('class="i', 'class="i chip-tick');
   return (
     `<form id="search" class="ask-card" method="post" action="/search#results">` +
-    `<div class="ask"><label for="need">I need</label>` +
+    `<div class="ask"><label for="need">${L('I need', '我需要')}</label>` +
     `<textarea id="need" name="need" rows="1" minlength="3" maxlength="500" required autocomplete="off" spellcheck="true" ` +
-    `placeholder="a free way to transcribe meeting recordings offline…">${esc(form.need)}</textarea></div>` +
-    `<div class="ask-meta"><div class="ask-opts"><span class="label" id="os-label">Runs on</span>` +
+    `placeholder="${L('a free way to transcribe meeting recordings offline…', '一個免費、可離線轉錄會議錄音的方法…')}">${esc(form.need)}</textarea></div>` +
+    `<div class="ask-meta"><div class="ask-opts"><span class="label" id="os-label">${L('Runs on', '執行環境')}</span>` +
     `<div class="seg" role="radiogroup" aria-labelledby="os-label">${os}</div>` +
-    `<select class="select" name="arch" aria-label="CPU architecture">${arch}</select>` +
-    `<label class="chip"><input type="checkbox" name="free_only" value="1"${form.free_only ? ' checked' : ''}>${tick}Free only</label>` +
-    `<label class="chip"><input type="checkbox" name="offline" value="1"${form.offline ? ' checked' : ''}>${tick}Works offline</label>` +
-    `<label class="chip"><input type="checkbox" name="private" value="1"${form.private ? ' checked' : ''}>${tick}Data stays on my device</label></div>` +
+    `<select class="select" name="arch" aria-label="${L('CPU architecture', 'CPU 架構')}">${arch}</select>` +
+    `<label class="chip"><input type="checkbox" name="free_only" value="1"${form.free_only ? ' checked' : ''}>${tick}${L('Free only', '只要免費')}</label>` +
+    `<label class="chip"><input type="checkbox" name="offline" value="1"${form.offline ? ' checked' : ''}>${tick}${L('Works offline', '可離線使用')}</label>` +
+    `<label class="chip"><input type="checkbox" name="private" value="1"${form.private ? ' checked' : ''}>${tick}${L('Data stays on my device', '資料留在我的裝置上')}</label></div>` +
     `<div class="ask-go"><span class="counter" data-counter aria-live="polite"></span>` +
-    `<button type="submit" class="btn btn-primary go"><span class="btn-label">Find my fit</span>${icon('arrow-right')}</button></div>` +
+    `<button type="submit" class="btn btn-primary go"><span class="btn-label">${L('Find my fit', '幫我找合身的')}</span>${icon('arrow-right')}</button></div>` +
     `</div></form>`
   );
 }
@@ -679,14 +823,18 @@ export function searchForm(form: FormValues): string {
 /** "How Fitz picks": the four steps, one line each; Fitz's own state shows what happens. */
 function stagesSection(): string {
   const stages: { name: string; who: FitzName; text: string }[] = [
-    { name: 'Read', who: 'thinking', text: 'Muse Spark reads the README and writes a profile.' },
-    { name: 'Try it on', who: 'testing', text: 'Installed in a fresh sandbox, then replayed from scratch.' },
-    { name: 'Match', who: 'searching', text: 'Your sentence meets every verified profile. Each reason is checked.' },
-    { name: 'Hand over', who: 'recommending', text: 'You get the commands that worked.' },
+    { name: L('Read', '閱讀'), who: 'thinking', text: L('Muse Spark reads the README and writes a profile.', 'Muse Spark 閱讀 README，並寫成一份簡介。') },
+    { name: L('Try it on', '試穿'), who: 'testing', text: L('Installed in a fresh sandbox, then replayed from scratch.', '在全新的沙盒中安裝，再從頭重跑一次。') },
+    {
+      name: L('Match', '比對'),
+      who: 'searching',
+      text: L('Your sentence meets every verified profile. Each reason is checked.', '你的描述會和每份已驗證的簡介比對，每個理由都經過檢查。'),
+    },
+    { name: L('Hand over', '交給你'), who: 'recommending', text: L('You get the commands that worked.', '你會拿到實際可行的指令。') },
   ];
   return (
     `<section id="how" class="sec wrap" aria-labelledby="how-title">` +
-    `<div class="sec-head"><h2 id="how-title">How Fitz picks a tool</h2><a class="more" href="/how">The whole method${icon('arrow-right')}</a></div>` +
+    `<div class="sec-head"><h2 id="how-title">${L('How Fitz picks a tool', 'Fitz 如何挑選工具')}</h2><a class="more" href="/how">${L('The whole method', '完整方法')}${icon('arrow-right')}</a></div>` +
     `<ol class="stages">${stages
       .map((s) => `<li class="stage"><div class="stage-fitz">${fitz(s.who, 130)}</div><h3>${esc(s.name)}</h3><p>${esc(s.text)}</p></li>`)
       .join('')}</ol></section>`
@@ -701,10 +849,10 @@ function freshSection(showcase: Showcase): string {
   const fixIssue = issue ? readerIssues(issue.guide.pitfalls)[0] : null;
   const fixCard =
     issue && fixIssue
-      ? `<figure class="fix-card"><p class="fix-kicker">${icon('scissors')}A README the run corrected</p>` +
+      ? `<figure class="fix-card"><p class="fix-kicker">${icon('scissors')}${L('A README the run corrected', '被測試修正的 README')}</p>` +
         `<h3><a href="/tool/${esc(issue.entry.slug)}">${esc(issue.entry.name)}</a></h3>` +
-        `<ul class="readme-vs"><li class="was"><b>README said</b><span>${esc(fixIssue.readme_said)}</span></li>` +
-        `<li class="now"><b>What worked</b><span>${esc(fixIssue.actually_needed)}</span></li></ul>` +
+        `<ul class="readme-vs"><li class="was"><b>${L('README said', 'README 寫的')}</b><span>${esc(fixIssue.readme_said)}</span></li>` +
+        `<li class="now"><b>${L('What worked', '實際可行的')}</b><span>${esc(fixIssue.actually_needed)}</span></li></ul>` +
         `<figcaption>${sysTag(issue.guide.run.os, issue.guide.run.arch)} · ${esc(day(issue.guide.run.checked_at))}</figcaption></figure>`
       : '';
   const rows = recent
@@ -712,7 +860,7 @@ function freshSection(showcase: Showcase): string {
       const r = guide.run;
       return (
         `<li class="run-row"><a class="name" href="/tool/${esc(entry.slug)}">${esc(entry.name)}</a>` +
-        (entry.scores?.treasure ? badge('gem', 'Hidden gem', { icon: 'gem' }) : '<span></span>') +
+        (entry.scores?.treasure ? badge('gem', L('Hidden gem', '寶藏'), { icon: 'gem' }) : '<span></span>') +
         `<p class="sum">${esc(entry.summary)}</p>` +
         `<p class="meta">${kindTag(entry)}<span>${sysTag(r.os, r.arch)} · ${esc(day(r.checked_at, SHORT_DAY))}</span></p></li>`
       );
@@ -720,25 +868,54 @@ function freshSection(showcase: Showcase): string {
     .join('');
   return (
     `<section id="recent" class="sec wrap home-only" aria-labelledby="recent-title">` +
-    `<div class="sec-head"><div><h2 id="recent-title">Fresh off the fitting table</h2>` +
-    `<p>${stats.replayed} of ${stats.listed} tools installed and replayed${stats.web ? `, and ${stats.web} web ${stats.web === 1 ? 'app' : 'apps'} used in a browser` : ''}. Only those are ever suggested.</p></div>` +
-    `<a class="more" href="/browse">Browse all ${stats.verified}${icon('arrow-right')}</a></div>` +
+    `<div class="sec-head"><div><h2 id="recent-title">${L('Fresh off the fitting table', '剛下試穿台')}</h2>` +
+    `<p>${L(
+      `${stats.replayed} of ${stats.listed} tools installed and replayed${stats.web ? `, and ${stats.web} web ${stats.web === 1 ? 'app' : 'apps'} used in a browser` : ''}. Only those are ever suggested.`,
+      `${stats.listed} 款工具中有 ${stats.replayed} 款已安裝並重跑${stats.web ? `，另有 ${stats.web} 款網頁應用在瀏覽器中實際使用過` : ''}。只有這些會被推薦。`,
+    )}</p></div>` +
+    `<a class="more" href="/browse">${L(`Browse all ${stats.verified}`, `瀏覽全部 ${stats.verified} 款`)}${icon('arrow-right')}</a></div>` +
     `<div class="fresh"><div>${fixCard}</div><ul class="runs-list">${rows}</ul></div></section>`
   );
 }
 
-const RULES: [Parameters<typeof icon>[0], string, string][] = [
-  ['shield-check', 'Tried on before it’s suggested', 'Only tools pickfit installed in a sandbox are ever suggested, with the steps that worked.'],
-  ['scale', 'Ranked by fit, not stars', 'Quality and popularity are scored apart. Nobody can pay to rank.'],
-  ['circle-dashed', 'Unverified is said out loud', 'A well-known option Fitz hasn’t run is marked as such: no stitches, no steps.'],
-  ['leaf', 'Built-in is enough, if it is', 'When you don’t need to install anything, Fitz says so first.'],
-  ['tag', 'No ads, no referral links', 'pickfit doesn’t make any of the software it suggests, and keeps no account of you.'],
+const RULES = (): [Parameters<typeof icon>[0], string, string][] => [
+  [
+    'shield-check',
+    L('Tried on before it’s suggested', '先試穿過才推薦'),
+    L(
+      'Only tools pickfit installed in a sandbox are ever suggested, with the steps that worked.',
+      '只有 pickfit 在沙盒中安裝過的工具才會被推薦，並附上實際可行的步驟。',
+    ),
+  ],
+  [
+    'scale',
+    L('Ranked by fit, not stars', '依合適程度排序，不看星數'),
+    L('Quality and popularity are scored apart. Nobody can pay to rank.', '品質和知名度分開計分。沒有人能付費買排名。'),
+  ],
+  [
+    'circle-dashed',
+    L('Unverified is said out loud', '未驗證就直說'),
+    L('A well-known option Fitz hasn’t run is marked as such: no stitches, no steps.', 'Fitz 沒執行過的知名選項會明確標示：沒有縫線，也沒有步驟。'),
+  ],
+  [
+    'leaf',
+    L('Built-in is enough, if it is', '內建夠用就說夠用'),
+    L('When you don’t need to install anything, Fitz says so first.', '如果你根本不需要安裝任何東西，Fitz 會先告訴你。'),
+  ],
+  [
+    'tag',
+    L('No ads, no referral links', '沒有廣告，沒有推薦連結'),
+    L(
+      'pickfit doesn’t make any of the software it suggests, and keeps no account of you.',
+      'pickfit 不開發它推薦的任何軟體，也不保存任何關於你的帳號資料。',
+    ),
+  ],
 ];
 
 export function rulesLabel(): string {
   return (
-    `<div class="label-tag"><ul class="rules" aria-label="Fitz’s rules">` +
-    RULES.map(([ico, title]) => `<li>${icon(ico)}<b>${esc(title)}</b></li>`).join('') +
+    `<div class="label-tag"><ul class="rules" aria-label="${L('Fitz’s rules', 'Fitz 的原則')}">` +
+    RULES().map(([ico, title]) => `<li>${icon(ico)}<b>${esc(title)}</b></li>`).join('') +
     `</ul></div>`
   );
 }
@@ -760,46 +937,72 @@ export function renderPage(input: PageInput): string {
   const served = input.results !== '';
   const main =
     `<section class="hero mat after-top" aria-labelledby="title"><div class="wrap hero-grid"><div>` +
-    `<h1 id="title">Software that <em>fits</em>, tried on first.</h1>` +
-    `<p class="lede">Describe the job. Get little-known tools pickfit has already installed and tested, with the commands that worked.</p>` +
+    `<h1 id="title">${L('Software that <em>fits</em>, tried on first.', '<em>合身</em>的軟體，先試穿過。')}</h1>` +
+    `<p class="lede">${L(
+      'Describe the job. Get little-known tools pickfit has already installed and tested, with the commands that worked.',
+      '描述你要做的事，就能拿到 pickfit 已經安裝並測試過、鮮為人知的工具，還有實際可行的指令。',
+    )}</p>` +
     `<div class="hero-form">${searchForm(form)}</div>` +
-    `<div class="tries js-only"><span class="label">Or try</span>${EXAMPLES.map(([label, need]) => `<button type="button" class="try" data-need="${esc(need)}" title="${esc(need)}">${esc(label)}</button>`).join('')}</div>` +
-    `<ul class="proof"><li>${icon('book-open')}<span><strong>${stats.listed}</strong> READMEs read</span></li>` +
-    `<li>${icon('shield-check')}<span><strong>${stats.replayed}</strong> installed and replayed in a sandbox</span></li>` +
-    (stats.web ? `<li>${icon('globe')}<span><strong>${stats.web}</strong> web ${stats.web === 1 ? 'app' : 'apps'} used in a browser</span></li>` : '') +
-    `<li>${icon('gem')}<span><strong>${stats.gems}</strong> hidden gems</span></li></ul>` +
+    `<div class="tries js-only"><span class="label">${L('Or try', '或試試')}</span>${examples()
+      .map(([label, need]) => `<button type="button" class="try" data-need="${esc(need)}" title="${esc(need)}">${esc(label)}</button>`)
+      .join('')}</div>` +
+    `<ul class="proof"><li>${icon('book-open')}<span>${L(`<strong>${stats.listed}</strong> READMEs read`, `已閱讀 <strong>${stats.listed}</strong> 份 README`)}</span></li>` +
+    `<li>${icon('shield-check')}<span>${L(
+      `<strong>${stats.replayed}</strong> installed and replayed in a sandbox`,
+      `<strong>${stats.replayed}</strong> 款在沙盒中安裝並重跑`,
+    )}</span></li>` +
+    (stats.web
+      ? `<li>${icon('globe')}<span>${L(
+          `<strong>${stats.web}</strong> web ${stats.web === 1 ? 'app' : 'apps'} used in a browser`,
+          `<strong>${stats.web}</strong> 款網頁應用在瀏覽器中實際使用過`,
+        )}</span></li>`
+      : '') +
+    `<li>${icon('gem')}<span>${L(`<strong>${stats.gems}</strong> hidden gems`, `<strong>${stats.gems}</strong> 款寶藏`)}</span></li></ul>` +
     `</div><div class="hero-fitz">${fitz('hello', 320, { eager: true })}</div></div>` +
     `<div class="ruler" aria-hidden="true"></div></section>` +
     `<p id="status" class="sr" aria-live="polite"></p>` +
-    `<section id="results" class="results wrap" tabindex="-1" aria-label="Results">${input.results}</section>` +
+    `<section id="results" class="results wrap" tabindex="-1" aria-label="${L('Results', '結果')}">${input.results}</section>` +
     `<div class="home-only">` +
     stagesSection() +
     freshSection(showcase) +
     `<section id="rules" class="sec wrap" aria-labelledby="rules-title"><div class="care"><div>` +
-    `<h2 id="rules-title">Fitz works for you, not for the tools.</h2>` +
-    `<p class="quiet">No ads, no paid placement, no cut from anyone.</p>` +
-    `<a class="more" href="/how#rules">Why you can trust a pick${icon('arrow-right')}</a></div>${rulesLabel()}</div></section>` +
+    `<h2 id="rules-title">${L('Fitz works for you, not for the tools.', 'Fitz 為你工作，不為工具工作。')}</h2>` +
+    `<p class="quiet">${L('No ads, no paid placement, no cut from anyone.', '沒有廣告、沒有付費置入，也不從任何人那裡抽成。')}</p>` +
+    `<a class="more" href="/how#rules">${L('Why you can trust a pick', '為什麼你可以信任這些推薦')}${icon('arrow-right')}</a></div>${rulesLabel()}</div></section>` +
     `<section id="agents" class="sec wrap" aria-labelledby="agents-title"><div class="agents-band mat"><div>` +
-    `<h2 id="agents-title">Same answers, in your agent.</h2>` +
-    `<p>The same picks over MCP, for Claude Code and any MCP client.</p>` +
+    `<h2 id="agents-title">${L('Same answers, in your agent.', '同樣的答案，也在你的 agent 裡。')}</h2>` +
+    `<p>${L('The same picks over MCP, for Claude Code and any MCP client.', '透過 MCP 提供同樣的推薦，適用於 Claude Code 和任何 MCP 用戶端。')}</p>` +
     command(`claude mcp add --transport http pickfit ${mcp}`) +
-    `</div><a class="btn btn-primary" href="/agents">${icon('bot')}Connect your agent</a></div></section>` +
+    `</div><a class="btn btn-primary" href="/agents">${icon('bot')}${L('Connect your agent', '連接你的 agent')}</a></div></section>` +
     `</div>` +
     `<template id="loading"><div class="loading" role="status">` +
     says(
       'searching',
-      `<h2>Measuring your request against ${stats.verified} verified tools…</h2>` +
-        `<ol><li>Keep the tools that meet your OS, price, offline and privacy conditions</li><li>Muse Spark reads every remaining profile and picks the best fits</li><li>Code checks each reason against the profile</li></ol>` +
-        `<p class="quiet small">Usually 5 to 15 seconds.</p><div class="unroll" aria-hidden="true"></div>`,
+      `<h2>${L(`Measuring your request against ${stats.verified} verified tools…`, `正在用 ${stats.verified} 款已驗證工具量測你的需求…`)}</h2>` +
+        `<ol><li>${L(
+          'Keep the tools that meet your OS, price, offline and privacy conditions',
+          '保留符合你的作業系統、價格、離線與隱私條件的工具',
+        )}</li><li>${L(
+          'Muse Spark reads every remaining profile and picks the best fits',
+          'Muse Spark 閱讀剩下的每份簡介，挑出最合適的',
+        )}</li><li>${L('Code checks each reason against the profile', '程式對照簡介檢查每個理由')}</li></ol>` +
+        `<p class="quiet small">${L('Usually 5 to 15 seconds.', '通常需要 5 到 15 秒。')}</p><div class="unroll" aria-hidden="true"></div>`,
       { size: 104 },
     ) +
     `<div class="skel" aria-hidden="true"><i></i><i></i><i></i><i></i></div><div class="skel" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div></template>` +
-    `<template id="offline">${notice('error', 'Couldn’t reach pickfit', 'Check your connection and search again.', 'test-failed')}</template>`;
+    `<template id="offline">${notice(
+      'error',
+      L('Couldn’t reach pickfit', '無法連上 pickfit'),
+      L('Check your connection and search again.', '請檢查網路連線後再搜尋一次。'),
+      'test-failed',
+    )}</template>`;
   return renderShell({
     nonce: input.nonce,
-    title: 'pickfit: software that fits, tried on first',
-    description:
+    title: L('pickfit: software that fits, tried on first', 'pickfit：合身的軟體，先試穿過'),
+    description: L(
       'Describe the job in one sentence. pickfit suggests lesser-known developer CLI tools, local AI tools, MCP servers and web apps it has tested itself, with the evidence and the steps that worked.',
+      '用一句話描述你要做的事。pickfit 會推薦它親自測試過、較少人知道的開發者 CLI 工具、本機 AI 工具、MCP 伺服器和網頁應用，並附上證據和實際可行的步驟。',
+    ),
     active: 'find',
     bodyClass: served ? 'is-results' : '',
     main,
@@ -808,9 +1011,11 @@ export function renderPage(input: PageInput): string {
 
 /** Used by the browse and tool pages: verified OSes as a short phrase. */
 export const verifiedOnWords = (entry: Entry) => {
-  if (isWebApp(entry)) return webCheck(entry) ? 'Checked in a browser, any OS' : 'Not verified yet';
+  if (isWebApp(entry))
+    return webCheck(entry) ? L('Checked in a browser, any OS', '已在瀏覽器中檢查，任何作業系統皆可') : L('Not verified yet', '尚未驗證');
   const oses = verifiedOn(entry);
-  return oses.length ? `Verified on ${listOf(oses.map((os) => osName(os)))}` : 'Not verified yet';
+  const names = listOf(oses.map((os) => osName(os)));
+  return oses.length ? L(`Verified on ${names}`, `已在 ${names} 上驗證`) : L('Not verified yet', '尚未驗證');
 };
 
 export { howRan, PRICE };
