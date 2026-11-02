@@ -43,3 +43,21 @@
 
 ## 試跑：q01、q02（B1：算正式的第 1 次）
 
+- 指令：`run.py run1 --until q02`，執行器 commit `384a1d2`（含 A3 紀錄）；`TMPDIR` 是系統的 `/var/folders/g7/…/T/`。
+- 開跑 2026-11-02 07:56:20，停在 q02 之後 08:03:16（`run1-paused.json`）。順序照 B1：q01 對照 → 實驗 → rules-only；q02 實驗 → 對照 → rules-only。
+
+| 題 | 組 | 開始 | 秒 | 回合 | 花費 | pickfit 呼叫 | 有效 |
+|---|---|---|---|---|---|---|---|
+| q01 | control | 07:56:20 | 101.3 | 13 | $0.248 | — | True |
+| q01 | experimental | 07:58:01 | 51.4 | 6 | $0.134 | find_software | True |
+| q01 | rules_only | 07:58:52 | 43.7 | 6 | $0.127 | find_software | True |
+| q02 | experimental | 07:59:36 | 80.2 | 7 | $0.136 | find_software | True |
+| q02 | control | 08:00:56 | 87.2 | 8 | $0.178 | — | True |
+| q02 | rules_only | 08:02:23 | 52.1 | 5 | $0.127 | find_software | True |
+
+- 合計 $0.950（Anthropic，結果訊息的 `total_cost_usd`）；B4 預估第 1 次 $9.50（上限 $30）。Meta：`pickfit-eval` 兩次配對 $0.0319（D1 `meta_budget`），`pickfit-eval-rules` $0。
+- B2 核對（`check --round run1`）：0 個設定問題；6 次的版本 2.1.304、模型 `claude-opus-5-5`、內建工具只有 WebFetch、WebSearch；實驗組與 rules-only 的 pickfit 都是 connected、工具清單正好 3 個；`permission_denials` 全空；argv 除了 MCP 設定檔與 `mcp__pickfit` 的允許項以外完全相同；同一題三組的 prompt sha256 相同。
+- 哪個部署回答：各次資料夾的 `mcp.json` 是設定；D1 事件是伺服器端的證據——實驗組的兩個 rec_id 只在 `pickfit-eval`（`matched_by` muse-spark-1.3、Meta 200），rules-only 的兩個只在 `pickfit-eval-rules`（`matched_by` rules、`degraded_reason` model_off），時間都落在該次執行之內。
+- D5（`d5_check.py --rounds run1`）：0 違反、34 筆主張找得到、0 無法檢查（`d5-run1.json`）。
+- 對照組的污染掃描：兩題對照組的 WebSearch／WebFetch 都沒有碰到 pickfit 的網址；`pickfit` 字樣只出現在 init 事件的工作目錄與記憶路徑（見下）。
+- **發現的問題（暫停，等念誠決定）**：暫存資料夾名稱是 `pickfit-eval-<題號>-<組別>-…`，Claude Code 把工作目錄與記憶路徑（在 HOME 底下）放進受測 agent 的上下文，所以三組的上下文各自含有「pickfit」與自己的組名。`324145f` 改成沒有前綴的 `mkdtemp()`，還沒用它跑任何一次。
