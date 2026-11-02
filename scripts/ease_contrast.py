@@ -17,6 +17,7 @@ under their own scope cap (META_CAP_USD). Results go to ~/.pickfit/usability/con
 
     uv run --with anthropic python scripts/ease_contrast.py run opus-p1 --slug orrery   # one app first
     uv run --with anthropic python scripts/ease_contrast.py run opus-p1
+    uv run python scripts/ease_contrast.py run wonder-p1 --slug concessio                 # Muse Wonder (section 8)
     uv run python scripts/ease_contrast.py table
 """
 
@@ -53,7 +54,18 @@ from scripts.ease_compare import compare
 
 REPO = Path(__file__).resolve().parents[1]
 CONTRAST_DIR = RESULTS_DIR / "contrast"
-CELLS = ("muse-p1", "opus-p1", "muse-p2", "opus-p2")
+# cell: (judge, prompt, effort). muse-p0 is round 1 (ease.v1, holistic scores), kept only to score it again.
+CELLS: dict[str, tuple[str, str, str]] = {
+    "muse-p1": ("muse", "p1", "low"), "opus-p1": ("opus", "p1", "low"),
+    "muse-p2": ("muse", "p2", "low"), "opus-p2": ("opus", "p2", "low"),
+    "wonder-p1": ("wonder", "p1", "low"), "wonder-p2": ("wonder", "p2", "low"),
+    "wonder-p1-high": ("wonder", "p1", "high"),
+}
+EARLIER = {"muse-p0": RESULTS_DIR / "ease.v1"}  # round 1, before r1
+WONDER = "muse-wonder-1.0"
+WONDER_CAP_USD = 10.0  # all Wonder cells together (section 8)
+WONDER_RUN_ID = "usability-wonder-2026-11-03"
+WONDER_MAX_TOKENS = 16_000
 OPUS = "claude-opus-5-5"
 OPUS_EFFORT = "low"  # muse-spark-1.3 runs at reasoning effort low too
 OPUS_MAX_TOKENS = 16_000
@@ -227,10 +239,14 @@ def run_cell(cell: str, slugs: list[str], log=lambda line: print(line, file=sys.
                 raise SystemExit(f"{src} is not an {P1.name} result")
             shutil.copy2(src, out_dir / src.name)
         return {"cell": cell, "copied": len(slugs)}
-    judge_name, prompt = cell.split("-")
+    judge_name, prompt, effort = CELLS[cell]
     variant = VARIANTS[prompt]
-    ask = (opus_ask(anthropic_ledger()) if judge_name == "opus"
-           else meta_ask("prod", META_CAP_USD, f"{RUN_ID}-{prompt}"))
+    if judge_name == "opus":
+        ask = opus_ask(anthropic_ledger())
+    elif judge_name == "wonder":
+        ask = meta_ask(WONDER, WONDER_CAP_USD, WONDER_RUN_ID, effort=effort, max_output_tokens=WONDER_MAX_TOKENS)
+    else:
+        ask = meta_ask("prod", META_CAP_USD, f"{RUN_ID}-{prompt}")
     finder = TextFinder()
     summary: dict[str, Any] = {"cell": cell, "cost_usd": 0.0, "done": [], "errors": {}}
     for slug in slugs:
@@ -250,8 +266,13 @@ def run_cell(cell: str, slugs: list[str], log=lambda line: print(line, file=sys.
     return summary
 
 
+def cell_dir(cell: str) -> Path:
+    return EARLIER.get(cell, CONTRAST_DIR / cell)
+
+
 def cell_numbers(cell: str) -> dict[str, Any]:
-    d = compare(results_dir=CONTRAST_DIR / cell)
+    d = compare(results_dir=cell_dir(cell))
+    no = d["no_opposites"]
     c = d["criteria"]
     dims = c["1_dimensions"]
     return {
@@ -262,6 +283,9 @@ def cell_numbers(cell: str) -> dict[str, Any]:
         "spearman": c["2_spearman"]["rho"], "spearman_n": c["2_spearman"]["n"],
         "probes": c["3_probes"]["scores"], "verdicts_two_apart": c["4_verdicts"]["two_apart"],
         "self_agreement": d["side"]["self_agreement"], "cost_usd": d["side"]["cost_usd"],
+        "no_opposites": {"passed": no["passed"],
+                         **{k: {"compared": v["compared"], "opposite": v["opposite"]}
+                            for k, v in no.items() if isinstance(v, dict)}},
     }
 
 
@@ -269,14 +293,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
     r = sub.add_parser("run")
-    r.add_argument("cell", choices=CELLS)
+    r.add_argument("cell", choices=list(CELLS))
     r.add_argument("--slug", action="append")
     sub.add_parser("table")
     args = parser.parse_args()
     if args.command == "run":
         print(json.dumps(run_cell(args.cell, args.slug or pilot_slugs(REPO)), ensure_ascii=False, indent=2))
     else:
-        print(json.dumps([cell_numbers(c) for c in CELLS if (CONTRAST_DIR / c).is_dir()], ensure_ascii=False, indent=2))
+        cells = [*EARLIER, *CELLS]
+        print(json.dumps([cell_numbers(c) for c in cells if cell_dir(c).is_dir()], ensure_ascii=False, indent=2))
     return 0
 
 

@@ -773,7 +773,8 @@ class Asked:
 type Ask = Callable[[dict[str, Any], type[BaseModel], str], Asked]
 
 
-def meta_ask(model: str = MODEL, cap_usd: float = STAGE_CAP_USD, run_id: str = STAGE_RUN_ID) -> Ask:
+def meta_ask(model: str = MODEL, cap_usd: float = STAGE_CAP_USD, run_id: str = STAGE_RUN_ID,
+             effort: str = REASONING_EFFORT, max_output_tokens: int = MAX_OUTPUT_TOKENS) -> Ask:
     """One call through call_meta under the stage's ledger scope; BudgetExceeded propagates."""
     from pickfit.meta import call_meta, resolve_model
 
@@ -782,7 +783,7 @@ def meta_ask(model: str = MODEL, cap_usd: float = STAGE_CAP_USD, run_id: str = S
     def ask(body: dict[str, Any], out: type[BaseModel], scope: str) -> Asked:
         try:
             result = call_meta("responses", body, stage=STAGE, public_data_only=True, model=resolved,
-                               max_output_tokens=MAX_OUTPUT_TOKENS, reasoning_effort=REASONING_EFFORT,
+                               max_output_tokens=max_output_tokens, reasoning_effort=effort,
                                scope=STAGE, scope_cap_usd=cap_usd, run_id=run_id, output_model=out, cache=False)
         except BudgetExceeded:
             raise

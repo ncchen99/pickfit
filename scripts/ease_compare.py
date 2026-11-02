@@ -1,5 +1,5 @@
 """Compare 念誠's blind ratings with pickfit's usability for the pilot, against the pass criteria committed first
-(docs/usability-pilot.md section 3).
+(docs/usability-pilot.md section 3) and his later "never the opposite" criterion (section 8, `no_opposites`).
 
 Reads data/calibration/ease-ratings.yaml, data/calibration/ease-pilot.json and the results in ~/.pickfit/usability.
 Refuses while the ratings are blank, so pickfit's scores are not shown before he has rated.
@@ -31,6 +31,42 @@ def human_verdict(overall: Any) -> str | None:
     if not isinstance(overall, int):
         return None
     return "easy" if overall >= 4 else "some_friction" if overall == 3 else "hard"
+
+
+POLARITY = {"easy": 1, "some_friction": 0, "hard": -1}  # pickfit's verdict: >=70, 40-69, <40
+
+
+def human_polarity(overall: Any) -> int | None:
+    """念誠's 1-5: 4-5 positive, 3 neutral, 1-2 negative (docs/usability-pilot.md section 8)."""
+    if not isinstance(overall, int):
+        return None
+    return 1 if overall >= 4 else 0 if overall == 3 else -1
+
+
+def dimension_level(score: Any) -> int | None:
+    """pickfit's 0-2 dimension (a mean of samples and operations) as a level for 'opposite': >=1.5 is 2, <=0.5 is 0."""
+    if score is None:
+        return None
+    return 2 if score >= 1.5 else 0 if score <= 0.5 else 1
+
+
+def opposites(results: dict[str, dict[str, Any]], ratings: dict[str, Any]) -> dict[str, Any]:
+    """念誠's criterion (section 8): pickfit may differ from him, but must not say the opposite. Overall: one side
+    positive, the other negative (pickfit's verdict against his 1-5). Dimension: 0 against 2. His cant_tell, and a
+    dimension or verdict pickfit did not give, are left out."""
+    rated = ratings["apps"]
+    pairs = [(s, POLARITY.get(r["verdict"] or ""), human_polarity(rated.get(s, {}).get("overall")))
+             for s, r in results.items()]
+    overall = [(s, p, h) for s, p, h in pairs if p is not None and h is not None]
+    out: dict[str, Any] = {"overall": {"compared": len(overall),
+                                       "opposite": [s for s, p, h in overall if p * h == -1]}}
+    for dim in WEIGHTS:
+        both = [(s, dimension_level(r["dimensions"][dim]["score"]), rated.get(s, {}).get(dim))
+                for s, r in results.items()]
+        both = [(s, p, h) for s, p, h in both if p is not None and isinstance(h, int)]
+        out[dim] = {"compared": len(both), "opposite": [s for s, p, h in both if {p, h} == {0, 2}]}
+    out["passed"] = not any(v["opposite"] for v in out.values() if isinstance(v, dict))
+    return out
 
 
 def ranks(values: list[float]) -> list[float]:
@@ -144,6 +180,7 @@ def compare(per_app: bool = False, results_dir: Path = RESULTS_DIR) -> dict[str,
                  "linux_vs_macos": "none of the 12 has a GUI run on both",
                  "cost_usd": round(sum(r["cost_usd"] for r in results.values()), 4)},
     }
+    out["no_opposites"] = opposites(results, ratings)
     c = out["criteria"]
     out["passed"] = all(d["passed"] for d in c["1_dimensions"].values()) and all(
         c[k]["passed"] for k in ("2_spearman", "3_probes", "4_verdicts"))
