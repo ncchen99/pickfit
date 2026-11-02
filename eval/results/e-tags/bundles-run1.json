@@ -1,0 +1,1197 @@
+[
+ {
+  "question": "q01",
+  "why_tagged": [
+   "experimental L1 not passed",
+   "experimental L2 run and failed"
+  ],
+  "agent_pick": "mcpshare",
+  "experimental_l1": "fail",
+  "l1_grader_checks": [
+   {
+    "check": "Tool exists publicly; docs state MCP config support for Claude Code, Codex CLI and Gemini CLI; free, no account",
+    "verdict": "unknown",
+    "reason": "No repository, README or license excerpt was provided, and I have no reliable knowledge that github.com/eggboy/mcpshare exists or which agents it supports."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "fail (`brew install uv` exit 127: the answer's install is for macOS with Homebrew; the dev image has neither)",
+   "2": "fail (install failed, C7)",
+   "3": "fail (install failed, C7)",
+   "4": "fail (install failed, C7)"
+  },
+  "control_pick": "no_fit",
+  "control_l1": "fail",
+  "control_l2": "fail",
+  "pickfit_calls": [
+   {
+    "tool": "find_software",
+    "input": {
+     "need": "CLI that keeps one central list of MCP servers and syncs it into Claude Code, Codex CLI and Gemini CLI config files, without touching other settings",
+     "os": "macos",
+     "budget": "free_only",
+     "must_run_locally": true,
+     "category": "dev_cli"
+    },
+    "is_error": false,
+    "picks": [],
+    "degraded": false,
+    "well_known": null,
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {
+   "cc-switch-cli": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   },
+   "mcpfold": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   },
+   "sync-agents-settings": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   }
+  },
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": null
+  }
+ },
+ {
+  "question": "q02",
+  "why_tagged": [
+   "experimental L1 not passed",
+   "experimental L2 run and failed"
+  ],
+  "agent_pick": "leakguard",
+  "experimental_l1": "fail",
+  "l1_grader_checks": [
+   {
+    "check": "Tool exists, has an OSI-approved license, and docs show stdin-to-stdout filter usage with built-in rules",
+    "verdict": "unknown",
+    "reason": "No repository, documentation or license excerpts were provided, and I cannot confirm that a crate named 'leakguard' exists on crates.io, what license it uses, or whether it filters stdin to stdout with built-in detection for cloud keys, Git tokens, emails and IPv4 addresses."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "pass (`sudo apt install cargo` with the default Y accepted, exit 0; `cargo install leakguard` exit 0)",
+   "2": "fail (the pipeline `cat app.log | leakguard > clean.log` exit 127: cargo installed to /root/.cargo/bin, which is not on PATH, and the answer never adds it; check_clean's `masking PASS` is only because clean.log is empty)",
+   "3": "fail (check_clean ITEM ordinary FAIL: empty output)",
+   "4": "pass (no egress attempt; the tool never ran)"
+  },
+  "control_pick": "leakguard",
+  "control_l1": "fail",
+  "control_l2": "fail",
+  "pickfit_calls": [
+   {
+    "tool": "find_software",
+    "input": {
+     "need": "command-line filter (stdin to stdout) that redacts API keys, tokens, email addresses and IP addresses from server logs before pasting into an AI chat, with built-in patterns so I don't write regexes",
+     "os": "linux",
+     "budget": "free_only",
+     "must_run_locally": true,
+     "category": "dev_cli"
+    },
+    "is_error": false,
+    "picks": [],
+    "degraded": false,
+    "well_known": null,
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {},
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": null
+  }
+ },
+ {
+  "question": "q03",
+  "why_tagged": [
+   "experimental L2 run and failed"
+  ],
+  "agent_pick": "DuckDB CLI",
+  "experimental_l1": "pass",
+  "l1_grader_checks": [
+   {
+    "check": "Tool exists, OSI-approved license, prebuilt Linux x86_64 binary or distro package",
+    "verdict": "pass",
+    "reason": "DuckDB is an existing MIT-licensed project whose GitHub releases ship a prebuilt Linux x86_64 CLI binary (duckdb_cli-linux-amd64.zip), so the stated install method exists."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "fail (base image: `wget` exit 127, `unzip` exit 127, `install` exit 1; Option A, the first given)",
+   "2": "fail (install failed, C7)",
+   "3": "fail (install failed, C7)"
+  },
+  "control_pick": "qsv",
+  "control_l1": "pass",
+  "control_l2": "fail",
+  "pickfit_calls": [
+   {
+    "tool": "find_software",
+    "input": {
+     "need": "Filter rows, select columns, and group-by counts on 2-5 GB CSV files from the terminal, correctly handling quoted fields with embedded commas and newlines; single binary or distro package, no Python/Java/Node runtime",
+     "os": "linux",
+     "budget": "free_only",
+     "category": "dev_cli",
+     "must_run_locally": true
+    },
+    "is_error": false,
+    "picks": [],
+    "degraded": false,
+    "well_known": "DuckDB",
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {
+   "DuckDB CLI": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   },
+   "qsv": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   }
+  },
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": null
+  }
+ },
+ {
+  "question": "q05",
+  "why_tagged": [
+   "experimental L2 run and failed"
+  ],
+  "agent_pick": "Docling",
+  "experimental_l1": "pass",
+  "l1_grader_checks": [
+   {
+    "check": "Tool exists; free/not subscription; docs list PDF and DOCX input, Markdown output, local mode with no cloud API",
+    "verdict": "pass",
+    "reason": "Docling (IBM, docling-project) is MIT-licensed, installs via `pip install docling`, and its docs list PDF and DOCX among supported inputs with Markdown export, running locally on CPU with no cloud API."
+   },
+   {
+    "check": "One tool handles both PDF and DOCX",
+    "verdict": "pass",
+    "reason": "The single `docling` CLI and DocumentConverter accept both PDF and DOCX files and convert them to Markdown."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "fail (`python3 -m venv ~/.venvs/docling` exit 1: no python3-venv; later lines fail the same way)",
+   "2": "fail (install failed, C7)",
+   "3": "fail (install failed, C7)",
+   "4": "fail (install failed, C7)",
+   "5": "fail (install failed, C7)"
+  },
+  "control_pick": "Docling",
+  "control_l1": "pass",
+  "control_l2": "fail",
+  "pickfit_calls": [
+   {
+    "tool": "find_alternatives",
+    "input": {
+     "current_software": "pandoc",
+     "pain_points": "不能讀 PDF；需要 PDF 和 Word 都轉成 Markdown 給 AI 讀，PDF 表格要保留成表格，標題層級要正確",
+     "os": "linux",
+     "must_run_locally": true,
+     "budget": "free_or_paid",
+     "must_keep": [
+      "Word (docx) to Markdown",
+      "PDF to Markdown with tables",
+      "correct heading levels",
+      "CPU only, no GPU",
+      "terminal CLI"
+     ]
+    },
+    "is_error": false,
+    "picks": [],
+    "degraded": false,
+    "well_known": "MarkItDown",
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {
+   "Docling": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   }
+  },
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": null
+  }
+ },
+ {
+  "question": "q06",
+  "why_tagged": [
+   "experimental L2 run and failed"
+  ],
+  "agent_pick": "@ivotoby/openapi-mcp-server",
+  "experimental_l1": "pass",
+  "l1_grader_checks": [
+   {
+    "check": "Tool exists, OSI license, docs show OpenAPI 3 input producing a runnable MCP server, no account or hosted service",
+    "verdict": "pass",
+    "reason": "@ivotoby/openapi-mcp-server (repo ivo-toby/mcp-openapi-server) is MIT-licensed, and its README shows it run via npx with --openapi-spec/OPENAPI_SPEC_PATH and --api-base-url/API_BASE_URL, serving MCP over stdio or HTTP locally with no account."
+   },
+   {
+    "check": "No hand-written server or handler code required",
+    "verdict": "pass",
+    "reason": "The documented CLI usage generates MCP tools directly from the spec and forwards calls to the configured base URL; the optional library mode is not required."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "fail (`node --version` exit 127, then the answer's `brew install node` exit 127)",
+   "2": "fail (install failed, C7; the session also could not start npx)",
+   "3": "fail (install failed, C7)",
+   "4": "fail (install failed, C7)"
+  },
+  "control_pick": "@ivotoby/openapi-mcp-server",
+  "control_l1": "pass",
+  "control_l2": "fail",
+  "pickfit_calls": [
+   {
+    "tool": "find_software",
+    "input": {
+     "need": "Turn an OpenAPI 3 spec into a working MCP server run locally, forwarding AI agent tool calls to our internal REST API base URL, no hand-written server code, no hosted service or account",
+     "os": "macos",
+     "budget": "free_only",
+     "must_run_locally": true,
+     "category": "mcp_server"
+    },
+    "is_error": false,
+    "picks": [],
+    "degraded": false,
+    "well_known": "FastMCP",
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {
+   "@ivotoby/openapi-mcp-server": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   },
+   "AWS Labs openapi-mcp-server": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   },
+   "openapi-mcp-generator": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   }
+  },
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": null
+  }
+ },
+ {
+  "question": "q07",
+  "why_tagged": [
+   "experimental L2 run and failed"
+  ],
+  "agent_pick": "Bruno",
+  "experimental_l1": "pass",
+  "l1_grader_checks": [
+   {
+    "check": "Tool exists, license file shows OSI-approved license, features work without an account",
+    "verdict": "pass",
+    "reason": "Bruno (usebruno/bruno) is an existing offline-first API client whose repository LICENSE is MIT, an OSI-approved license; it stores collections as plain-text .bru files and runs them via the @usebruno/cli 'bru run' command without any account or sign-in."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "fail (`brew install --cask bruno` exit 127, `npm install -g @usebruno/cli` exit 127)",
+   "2": "fail (install failed, C7)",
+   "3": "fail (install failed, C7)",
+   "4": "fail (install failed, C7)",
+   "5": "fail (install failed, C7)"
+  },
+  "control_pick": "Bruno",
+  "control_l1": "pass",
+  "control_l2": "fail",
+  "pickfit_calls": [
+   {
+    "tool": "find_software",
+    "input": {
+     "need": "API client where requests are stored as plain-text files in a git repo that diff cleanly; CLI runs the same request files as tests with assertions in Linux CI, non-zero exit on failure; no account/sign-in",
+     "os": "macos",
+     "budget": "free_only",
+     "must_run_locally": true,
+     "category": "dev_cli"
+    },
+    "is_error": false,
+    "picks": [],
+    "degraded": false,
+    "well_known": "Hurl",
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {
+   "Bruno": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   },
+   "Hurl": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   }
+  },
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": null
+  }
+ },
+ {
+  "question": "q09",
+  "why_tagged": [
+   "experimental L2 run and failed"
+  ],
+  "agent_pick": "Beads (bd)",
+  "experimental_l1": "pass",
+  "l1_grader_checks": [
+   {
+    "check": "Tool exists, OSI license, in-project task storage, JSON output, macOS and Linux support",
+    "verdict": "pass",
+    "reason": "No evidence excerpts were supplied, so this rests on recall: Beads (github.com/steveyegge/beads) is MIT-licensed, keeps issues in a .beads/ directory inside the repo with a git-tracked JSONL file, has bd create/list/close commands with a --json flag, and ships builds for macOS and Linux. The given go install command needs an @latest suffix when run outside a Go module, which is a minor flaw rather than a non-existent install method."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "fail (method A `go install github.com/steveyegge/beads/cmd/bd@latest` exit 127: no Go in the dev image; methods B and C are prose without a command)",
+   "2": "fail (install failed, C7)",
+   "3": "fail (install failed, C7)",
+   "4": "fail (install failed, C7)",
+   "5": "fail (install failed, C7)"
+  },
+  "control_pick": "Backlog.md",
+  "control_l1": "fail",
+  "control_l2": "fail",
+  "pickfit_calls": [
+   {
+    "tool": "find_software",
+    "input": {
+     "need": "CLI task/issue tracker storing tasks as plain text files inside the git repo, so humans and coding agents (Claude Code, Codex) can add, list, close tasks; list output as JSON for agents",
+     "budget": "free_only",
+     "must_run_locally": true,
+     "category": "dev_cli",
+     "os": "macos"
+    },
+    "is_error": false,
+    "picks": [],
+    "degraded": false,
+    "well_known": null,
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {
+   "Beads (bd)": {
+    "in_data": null,
+    "in_candidates": {
+     "full_name": "gastownhall/beads",
+     "rule_label": "tool",
+     "prescreen": "ok",
+     "prescreen_result": null
+    },
+    "returned_by_pickfit": false
+   }
+  },
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": {
+    "full_name": "gastownhall/beads",
+    "rule_label": "tool",
+    "prescreen": "ok",
+    "prescreen_result": null
+   }
+  }
+ },
+ {
+  "question": "q10",
+  "why_tagged": [
+   "experimental L2 run and failed",
+   "lost to control on L2"
+  ],
+  "agent_pick": "built-in: git diff --word-diff with --word-diff-regex [answer A0061]",
+  "experimental_l1": "pass",
+  "l1_grader_checks": [
+   {
+    "check": "Primary answer says no additional diff tool is required; third-party tools only optional",
+    "verdict": "pass",
+    "reason": "The answer opens with '不用另外裝工具，git 內建的 --word-diff 就可以' and offers delta only under '第三步（可選）', saying the built-in --word-diff-regex method remains the most reliable."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "pass (only git; settings exit 0; output check ok)",
+   "2": "pass (spans 己 / 已 with the one-off command)",
+   "3": "pass",
+   "4": "fail (after `git config --global diff.markdown.wordRegex ...`, `*.md diff=markdown` and `alias.wd`, the everyday `git wd` marks the whole 216-character line: the custom regex did not take effect under the `markdown` driver name)",
+   "5": "pass (color)"
+  },
+  "control_pick": "built-in: git diff --color-words with custom wordRegex [answer A0005]",
+  "control_l1": "pass",
+  "control_l2": "pass",
+  "pickfit_calls": [
+   {
+    "tool": "find_software",
+    "input": {
+     "need": "word-level / character-level git diff for long-line Markdown prose in Chinese (CJK), highlight changed characters instead of whole line",
+     "os": "linux",
+     "category": "dev_cli",
+     "budget": "free_only"
+    },
+    "is_error": false,
+    "picks": [],
+    "degraded": false,
+    "well_known": null,
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {
+   "built-in: git diff --color-words with custom word regex [answer A0092]": {
+    "in_data": null,
+    "in_candidates": null,
+    "note": "built-in way, not a tool record",
+    "returned_by_pickfit": false
+   },
+   "built-in: git diff --color-words with custom word regex [answer A0179]": {
+    "in_data": null,
+    "in_candidates": null,
+    "note": "built-in way, not a tool record",
+    "returned_by_pickfit": false
+   },
+   "built-in: git diff --color-words with custom wordRegex (diff.zh.wordRegex + .gitattributes) [answer A0135]": {
+    "in_data": null,
+    "in_candidates": null,
+    "note": "built-in way, not a tool record",
+    "returned_by_pickfit": false
+   },
+   "built-in: git diff --color-words with custom wordRegex [answer A0005]": {
+    "in_data": null,
+    "in_candidates": null,
+    "note": "built-in way, not a tool record",
+    "returned_by_pickfit": false
+   },
+   "built-in: git diff --word-diff with --word-diff-regex [answer A0061]": {
+    "in_data": null,
+    "in_candidates": null,
+    "note": "built-in way, not a tool record",
+    "returned_by_pickfit": false
+   },
+   "built-in: git diff --word-diff with --word-diff-regex [answer A0124]": {
+    "in_data": null,
+    "in_candidates": null,
+    "note": "built-in way, not a tool record",
+    "returned_by_pickfit": false
+   },
+   "built-in: git diff --word-diff with custom word-diff-regex [answer A0041]": {
+    "in_data": null,
+    "in_candidates": null,
+    "note": "built-in way, not a tool record",
+    "returned_by_pickfit": false
+   },
+   "built-in: git diff --word-diff with wordRegex [answer A0024]": {
+    "in_data": null,
+    "in_candidates": null,
+    "note": "built-in way, not a tool record",
+    "returned_by_pickfit": false
+   },
+   "built-in: git diff --word-diff=color --word-diff-regex [answer A0116]": {
+    "in_data": null,
+    "in_candidates": null,
+    "note": "built-in way, not a tool record",
+    "returned_by_pickfit": false
+   }
+  },
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": null,
+   "note": "built-in way, not a tool record"
+  }
+ },
+ {
+  "question": "q11",
+  "why_tagged": [
+   "experimental L1 not passed",
+   "experimental L2 run and failed"
+  ],
+  "agent_pick": "Ollama + Llama-Breeze2-8B-Instruct",
+  "experimental_l1": "fail",
+  "l1_grader_checks": [
+   {
+    "check": "The runner and the model exist and are free; the model license permits free personal use",
+    "verdict": "pass",
+    "reason": "Ollama is a free, MIT-licensed runner with an existing Homebrew formula, and MediaTek Research published Llama-Breeze2-8B-Instruct on Hugging Face under the Llama 3 community license, which permits free personal use."
+   },
+   {
+    "check": "Model files download with no login, token or gated-access approval",
+    "verdict": "unknown",
+    "reason": "No evidence settles whether the MediaTek-Research Hugging Face repo is gated, or whether a pullable Ollama/GGUF build exists for this custom-architecture model, so a token-free download cannot be confirmed."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "fail under C7 (install line 4 `ollama pull hf.co/DevQuasar-9/…` exit 1: 'could not connect to ollama server'; it ran in the same second as `brew services start ollama` (11:29:56 guest UTC), and the server was up at 11:29:57: a race, as when the block is pasted at once). Observed otherwise: every step in the terminal, no app; summed peak footprint 5.04 GiB (three parts: 0.21, 4.70, 5.04 GiB) < 12 GiB",
+   "2": "fail under C7. Observed: 2 of 3 runs pass (run 1 P1 still generating after 24 min, a repetition loop, over the 10-minute limit; every other prompt answered in time, guest network services off, offline check PASS)",
+   "3": "fail under C7. Observed: fail, 1 of 3 runs (run 1 P1: the loop, '、一個量杯' 561 times, judge false; run 3 P1: judge false; run 2 passes)",
+   "4": "fail under C7. Observed: pass (ratio 1.0 in all 3 runs)",
+   "5": "fail under C7. Observed: pass (runs 1 and 2 map by line order, 8 of 8; run 3 is one comma-separated line, 8 of 8 by hand mapping)"
+  },
+  "control_pick": "Ollama + Llama-3-Taiwan-8B-Instruct",
+  "control_l1": "fail",
+  "control_l2": "fail",
+  "pickfit_calls": [
+   {
+    "tool": "find_software",
+    "input": {
+     "need": "在終端機離線跑本機中文 LLM，回答繁體中文、台灣用語，不要簡體字；免費、免註冊帳號",
+     "os": "macos",
+     "arch": "arm64",
+     "budget": "free_only",
+     "must_run_locally": true,
+     "category": "local_ai"
+    },
+    "is_error": false,
+    "picks": [
+     "Camelid",
+     "Xyntetik Runner"
+    ],
+    "degraded": false,
+    "well_known": null,
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [
+   "Camelid",
+   "Xyntetik Runner"
+  ],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {
+   "Ollama + Qwen3 8B": {
+    "in_data": null,
+    "in_candidates": {
+     "full_name": "ollama/ollama",
+     "rule_label": null,
+     "prescreen": null,
+     "prescreen_result": null
+    },
+    "returned_by_pickfit": false
+   }
+  },
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": {
+    "full_name": "ollama/ollama",
+    "rule_label": null,
+    "prescreen": null,
+    "prescreen_result": null
+   }
+  }
+ },
+ {
+  "question": "q12",
+  "why_tagged": [
+   "experimental L2 run and failed"
+  ],
+  "agent_pick": "mlx-lm",
+  "experimental_l1": "pass",
+  "l1_grader_checks": [
+   {
+    "check": "The tool exists, has an OSI-approved license, and documents MLX as its backend",
+    "verdict": "pass",
+    "reason": "mlx-lm is Apple's ml-explore/mlx-lm package, published on PyPI under the MIT license and documented as running LLMs on Apple silicon with MLX; it ships console scripts such as mlx_lm.server, so 'uv tool install mlx-lm' is a valid install method."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "pass (preflight PASS; `brew install uv` and `uv tool install mlx-lm` exit 0; no app or cask added)",
+   "2": "fail (the answer's quick test `mlx_lm.generate …` exit 127 and `mlx_lm.server --model mlx-community/Qwen2.5-1.5B-Instruct-4bit --port 8080`: `command not found`; uv put the commands in ~/.local/bin, which is not on PATH, and printed that warning; the answer does not add it)",
+   "3": "fail (no server: APIConnectionError)",
+   "4": "fail (no server: APIConnectionError)",
+   "5": "fail (no server; offline check run as written)",
+   "6": "pass (scan_transcript: 0 lines to review; no login or account prompt)"
+  },
+  "control_pick": "mlx-lm",
+  "control_l1": "pass",
+  "control_l2": "fail",
+  "pickfit_calls": [
+   {
+    "tool": "find_software",
+    "input": {
+     "need": "Run local LLMs with Apple MLX framework from the terminal behind a local OpenAI-compatible server with streaming; load MLX models from Hugging Face or a local folder",
+     "os": "macos",
+     "arch": "arm64",
+     "budget": "free_only",
+     "must_run_locally": true,
+     "category": "local_ai"
+    },
+    "is_error": false,
+    "picks": [],
+    "degraded": false,
+    "well_known": "mlx-lm",
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {
+   "mlx-lm": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   }
+  },
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": null
+  }
+ },
+ {
+  "question": "q13",
+  "why_tagged": [
+   "experimental L2 run and failed"
+  ],
+  "agent_pick": "llama.cpp llama-server",
+  "experimental_l1": "pass",
+  "l1_grader_checks": [
+   {
+    "check": "Server exists, is open source, docs show CPU-only operation, OpenAI-compatible chat completions endpoint, and a parallel/batching setting",
+    "verdict": "pass",
+    "reason": "llama.cpp is MIT-licensed and its official GitHub releases include prebuilt CPU-only Linux x64 binaries. The llama-server README documents an OpenAI-compatible /v1/chat/completions endpoint and the -np/--parallel slots option with continuous batching. It also documents loading a GGUF directly via -m <path>."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "fail (downloaded and extracted llama-b12032-bin-ubuntu-x64.tar.gz as the prose says; `llama-server --version` exit 127: error while loading shared libraries: libgomp.so.1, not in the dev image and not installed by the answer)",
+   "2": "fail (install failed, C7)",
+   "3": "fail (install failed, C7)",
+   "4": "fail (install failed, C7)"
+  },
+  "control_pick": "llama.cpp llama-server",
+  "control_l1": "pass",
+  "control_l2": "fail",
+  "pickfit_calls": [
+   {
+    "tool": "find_alternatives",
+    "input": {
+     "__unparsedToolInput": {
+      "raw": "{\"current_software\": \"Ollama\", \"pain_points\": \"Slows to a crawl when ~10 teammates send concurrent requests on a CPU-only server; I don't want my existing GGUF files copied into Ollama's model store\", \"must_keep\": load GGUF files directly from a path, \"must_keep\": OpenAI-compatible API, \"must_keep\": efficient concurrent requests on CPU, \"os\": \"linux\", \"budget\": \"free_only\", \"must_run_locally\": true, \"category\": \"local_ai\"}",
+      "len": 426
+     }
+    },
+    "is_error": true,
+    "picks": null,
+    "degraded": null,
+    "well_known": null,
+    "text_if_unparsed": "<tool_use_error>InputValidationError: mcp__pickfit__find_alternatives was called with input that could not be parsed as JSON.\nYou sent (first 200 of 426 bytes): {\"current_software\": \"Ollama\", \"pain_points\": \"Slows to a crawl when ~10 teammates send concurrent requests on a CPU-only server; I don't w"
+   },
+   {
+    "tool": "find_alternatives",
+    "input": {
+     "current_software": "Ollama",
+     "pain_points": "Slows to a crawl when ~10 teammates send concurrent requests on a CPU-only server; I don't want my existing GGUF files copied into Ollama's model store",
+     "must_keep": [
+      "load GGUF files directly from a path",
+      "OpenAI-compatible API",
+      "efficient concurrent requests on CPU"
+     ],
+     "os": "linux",
+     "budget": "free_only",
+     "must_run_locally": true,
+     "category": "local_ai"
+    },
+    "is_error": false,
+    "picks": [
+     "Xyntetik Runner",
+     "SunnyNet"
+    ],
+    "degraded": false,
+    "well_known": null,
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [
+   "SunnyNet",
+   "Xyntetik Runner"
+  ],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {
+   "llama.cpp llama-server": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   }
+  },
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": null
+  }
+ },
+ {
+  "question": "q14",
+  "why_tagged": [
+   "experimental L1 not passed",
+   "experimental L2 run and failed"
+  ],
+  "agent_pick": "Xinference",
+  "experimental_l1": "fail",
+  "l1_grader_checks": [
+   {
+    "check": "Server and models exist; OSI license; docs show embedding and rerank endpoints; answer names models with commercial-use licenses",
+    "verdict": "unknown",
+    "reason": "Xinference exists under Apache-2.0, its docs show OpenAI-compatible /v1/embeddings and a /v1/rerank endpoint, and the xprobe/xinference Docker image exists, but the item does not say which embedding and rerank models the answer named, so their existence and commercial-use licenses cannot be confirmed."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "fail (`docker run ...` exit 127: no Docker)",
+   "2": "fail (install failed, C7)",
+   "3": "fail (install failed, C7)",
+   "4": "fail (install failed, C7)",
+   "5": "fail (install failed, C7)"
+  },
+  "control_pick": "Infinity",
+  "control_l1": "fail",
+  "control_l2": "fail",
+  "pickfit_calls": [
+   {
+    "tool": "find_software",
+    "input": {
+     "need": "Local open-source server exposing OpenAI-compatible /v1/embeddings and a rerank endpoint on CPU-only Linux with 8GB RAM, multilingual English+Chinese models with commercial-friendly licenses, for RAG",
+     "os": "linux",
+     "must_run_locally": true,
+     "budget": "free_only",
+     "category": "local_ai"
+    },
+    "is_error": false,
+    "picks": [],
+    "degraded": false,
+    "well_known": "Hugging Face Text Embeddings Inference",
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {},
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": null
+  }
+ },
+ {
+  "question": "q15",
+  "why_tagged": [
+   "experimental L2 run and failed"
+  ],
+  "agent_pick": "whisper.cpp",
+  "experimental_l1": "pass",
+  "l1_grader_checks": [
+   {
+    "check": "Tool and model exist, are free, tool has OSI-approved license",
+    "verdict": "pass",
+    "reason": "whisper.cpp (ggml-org/whisper.cpp on GitHub) is an existing, MIT-licensed, free project that is commonly built from source with CMake/make, and its ggml Whisper models are free downloads derived from OpenAI's MIT-licensed Whisper weights."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "pass (install exit 0 in one shell; warmup exit 0 with an SRT; check_no_torch exit 0)",
+   "2": "fail (Run A, B and C each stopped at the 600 s limit, exit 124: no SRT)",
+   "3": "fail (no SRT)",
+   "4": "fail (no SRT)",
+   "5": "fail (Run A timed out at 600 s; baseline openai-whisper small 32.6 s)",
+   "6": "fail (probes blocked before and after, egress report pass, but Run B exit 124, and the item needs exit 0)"
+  },
+  "control_pick": "whisper.cpp",
+  "control_l1": "pass",
+  "control_l2": "fail",
+  "pickfit_calls": [
+   {
+    "tool": "find_alternatives",
+    "input": {
+     "current_software": "openai-whisper",
+     "pain_points": "在沒有 GPU 的 Linux 筆電上很慢、要裝好幾 GB 的 PyTorch、中文常輸出簡體字",
+     "os": "linux",
+     "budget": "free_only",
+     "must_run_locally": true,
+     "must_keep": [
+      "中文語音轉文字",
+      "輸出 SRT 字幕含時間軸",
+      "CPU 執行"
+     ],
+     "category": "any"
+    },
+    "is_error": false,
+    "picks": [
+     "babelscribe"
+    ],
+    "degraded": false,
+    "well_known": null,
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [
+   "babelscribe"
+  ],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {
+   "faster-whisper (whisper-ctranslate2) + OpenCC": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   },
+   "whisper.cpp": {
+    "in_data": null,
+    "in_candidates": {
+     "full_name": "ggml-org/whisper.cpp",
+     "rule_label": "tool",
+     "prescreen": "ok",
+     "prescreen_result": null
+    },
+    "returned_by_pickfit": false
+   }
+  },
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": {
+    "full_name": "ggml-org/whisper.cpp",
+    "rule_label": "tool",
+    "prescreen": "ok",
+    "prescreen_result": null
+   }
+  }
+ },
+ {
+  "question": "q16",
+  "why_tagged": [
+   "experimental L2 run and failed"
+  ],
+  "agent_pick": "llama.cpp llama-server + EuroLLM-9B-Instruct + the answer's glue script",
+  "experimental_l1": "pass",
+  "l1_grader_checks": [
+   {
+    "check": "Every component exists and is free of charge, and the model's license permits internal company use",
+    "verdict": "pass",
+    "reason": "llama.cpp (with llama-server) is a real MIT-licensed project, EuroLLM-9B-Instruct is published by utter-project on Hugging Face under Apache-2.0, which permits internal commercial use, and the glue script is the answer's own code at no cost (its behavior is judged elsewhere)."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "pass (`sudo apt install build-essential cmake git libcurl4-openssl-dev python3` with the default accepted, clone, `cmake -B build && cmake --build build --config Release -j`: all exit 0)",
+   "2": "fail (the server cannot load the model: `get_repo_commit: error: HTTPS is not supported. Please rebuild with ...` — the build the answer gives has no HTTPS support for -hf, so the model never downloads; the script then gets connection refused; the egress report itself is pass)",
+   "3": "fail (no output files)",
+   "4": "fail (no output)",
+   "5": "fail (no output; the pinned language identifier was also never chosen in calibration.md)",
+   "6": "fail (no output)",
+   "7": "fail (no output; the meaning judge was also never chosen)"
+  },
+  "control_pick": "mdpo + Ollama + liaad/Tradutor + the answer's glue script",
+  "control_l1": "fail",
+  "control_l2": "fail",
+  "pickfit_calls": [
+   {
+    "tool": "find_software",
+    "input": {
+     "need": "Batch-translate a folder of English Markdown docs into European Portuguese (pt-PT, not Brazilian) from the terminal, preserving fenced code blocks and URLs untouched",
+     "os": "linux",
+     "budget": "free_only",
+     "must_run_locally": true,
+     "arch": "x86_64"
+    },
+    "is_error": false,
+    "picks": [
+     "HilbertRaum"
+    ],
+    "degraded": false,
+    "well_known": null,
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [
+   "HilbertRaum"
+  ],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {
+   "Ollama + EuroLLM-9B-Instruct + the answer's glue script": {
+    "in_data": null,
+    "in_candidates": {
+     "full_name": "ollama/ollama",
+     "rule_label": null,
+     "prescreen": null,
+     "prescreen_result": null
+    },
+    "returned_by_pickfit": false
+   },
+   "Ollama + TranslateGemma 12B + the answer's glue script": {
+    "in_data": null,
+    "in_candidates": {
+     "full_name": "ollama/ollama",
+     "rule_label": null,
+     "prescreen": null,
+     "prescreen_result": null
+    },
+    "returned_by_pickfit": false
+   },
+   "llama.cpp llama-server + EuroLLM-9B-Instruct + the answer's glue script": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   },
+   "llama.cpp llama-server + Qwen2.5-7B-Instruct + the answer's glue script": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   },
+   "mdpo + llama.cpp + EuroLLM-9B-Instruct + the answer's glue script": {
+    "in_data": null,
+    "in_candidates": {
+     "full_name": "neurall/llama.cpp",
+     "rule_label": "rejected",
+     "prescreen": null,
+     "prescreen_result": null
+    },
+    "returned_by_pickfit": false
+   }
+  },
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": null
+  }
+ },
+ {
+  "question": "q17",
+  "why_tagged": [
+   "experimental L2 run and failed"
+  ],
+  "agent_pick": "aichat",
+  "experimental_l1": "pass",
+  "l1_grader_checks": [
+   {
+    "check": "The tool exists, has an OSI-approved license, and documents an offline local-model mode that indexes Markdown and PDF",
+    "verdict": "pass",
+    "reason": "aichat (sigoden/aichat) is a real Rust CLI dual-licensed MIT/Apache-2.0 and published on crates.io, so `cargo install aichat` works; its docs describe local providers such as Ollama for both chat and embedding models, and a built-in RAG feature that ingests local files, with Markdown read as text and PDFs read through a configured loader (pdftotext)."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "fail (`less ollama-install.sh && sh ollama-install.sh` exit 127: no less in the dev image, so Ollama is never installed; `ollama pull` exit 127; `cargo install aichat` exit 127)",
+   "2": "fail (install failed, C7)",
+   "3": "fail (install failed, C7)",
+   "4": "fail (install failed, C7)"
+  },
+  "control_pick": "aichat",
+  "control_l1": "pass",
+  "control_l2": "fail",
+  "pickfit_calls": [
+   {
+    "tool": "find_software",
+    "input": {
+     "need": "Ask plain-English questions about ~2,000 markdown notes and some PDFs from the terminal, fully offline, with answers citing which note or PDF each answer came from (local RAG over documents)",
+     "os": "linux",
+     "arch": "x86_64",
+     "budget": "free_only",
+     "must_run_locally": true,
+     "category": "local_ai"
+    },
+    "is_error": false,
+    "picks": [
+     "HilbertRaum",
+     "Unlimited Context",
+     "Camelid"
+    ],
+    "degraded": false,
+    "well_known": null,
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [
+   "Camelid",
+   "HilbertRaum",
+   "Unlimited Context"
+  ],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {
+   "aichat": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   }
+  },
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": null
+  }
+ },
+ {
+  "question": "q18",
+  "why_tagged": [
+   "experimental L2 run and failed"
+  ],
+  "agent_pick": "ollmcp",
+  "experimental_l1": "pass",
+  "l1_grader_checks": [
+   {
+    "check": "Client exists, OSI-approved license, docs show stdio MCP server and local Ollama endpoint configuration",
+    "verdict": "pass",
+    "reason": "ollmcp (jonigl/mcp-client-for-ollama) is an MIT-licensed Python TUI published on PyPI as 'ollmcp', so 'uv tool install ollmcp' is a valid install. Its README documents stdio MCP servers via --mcp-server script paths or a Claude-style JSON 'mcpServers' config, and a configurable local Ollama host (default http://localhost:11434)."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "fail (`uv tool install --upgrade ollmcp` exit 127: no uv)",
+   "2": "fail (install failed, C7)",
+   "3": "fail (install failed, C7)",
+   "4": "fail (install failed, C7)"
+  },
+  "control_pick": "ollmcp",
+  "control_l1": "pass",
+  "control_l2": "fail",
+  "pickfit_calls": [
+   {
+    "tool": "find_software",
+    "input": {
+     "need": "terminal chat client that connects local Ollama models to stdio MCP servers as tools (filesystem server, custom stdio server), no cloud account",
+     "os": "linux",
+     "budget": "free_only",
+     "must_run_locally": true,
+     "category": "local_ai"
+    },
+    "is_error": false,
+    "picks": [
+     "MAZHARMIK/python-ai-agent-ollama"
+    ],
+    "degraded": false,
+    "well_known": null,
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [
+   "MAZHARMIK/python-ai-agent-ollama"
+  ],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {
+   "ollmcp": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   }
+  },
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": null
+  }
+ },
+ {
+  "question": "q19",
+  "why_tagged": [
+   "experimental L2 run and failed"
+  ],
+  "agent_pick": "Aider",
+  "experimental_l1": "pass",
+  "l1_grader_checks": [
+   {
+    "check": "Agent exists, OSI license, docs show custom OpenAI-compatible base URL and telemetry opt-out",
+    "verdict": "pass",
+    "reason": "Aider is an existing terminal coding agent under Apache-2.0 that edits files in the repo; its docs cover OpenAI-compatible endpoints via --openai-api-base / OPENAI_API_BASE and describe opt-in analytics that can be permanently disabled with --analytics-disable; to my knowledge Homebrew-core ships an 'aider' formula, though no install evidence was supplied."
+   }
+  ],
+  "experimental_l2": "fail",
+  "experimental_l2_items": {
+   "1": "fail (`brew install aider` exit 127: the first method)",
+   "2": "fail (install failed, C7)",
+   "3": "fail (install failed, C7)",
+   "4": "fail (install failed, C7)"
+  },
+  "control_pick": "Aider",
+  "control_l1": "pass",
+  "control_l2": "fail",
+  "pickfit_calls": [
+   {
+    "tool": "find_software",
+    "input": {
+     "need": "Terminal coding agent that reads and edits files in a repo, uses a self-hosted model via an OpenAI-compatible endpoint, no vendor account/login, no telemetry, open source",
+     "os": "macos",
+     "budget": "free_only",
+     "must_run_locally": true,
+     "category": "dev_cli"
+    },
+    "is_error": false,
+    "picks": [
+     "Nedster",
+     "orangu"
+    ],
+    "degraded": false,
+    "well_known": null,
+    "text_if_unparsed": null
+   }
+  ],
+  "pickfit_returned_picks": [
+   "Nedster",
+   "orangu"
+  ],
+  "agent_pick_returned_by_pickfit": false,
+  "agent_used_get_install_guide": false,
+  "reference_tools": {
+   "Aider": {
+    "in_data": null,
+    "in_candidates": null,
+    "returned_by_pickfit": false
+   }
+  },
+  "agent_pick_lookup": {
+   "in_data": null,
+   "in_candidates": null
+  }
+ }
+]
