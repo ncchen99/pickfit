@@ -112,4 +112,21 @@
 4. **模型**：Meta 的 credits 留給線上的 Worker。初篩與抽取用 Muse Spark Open（Baseten，`meta-models/muse-spark-open-1026`，比賽提供的 key）；驗證 agent 用 Muse Spark Open（Modal Shared Endpoint，帳本的 `modal-llm` 預算；Baseten 預算不夠時也用這個）。每筆紀錄記下各段用的模型。Modal 沙盒花費上限 $25。
 5. **指令**：`pickfit discover --stars 301..5000 --cap 150`，在全新的 `runs/pipeline.db` 上跑（只有這一批的候選）。每條查詢與時間記在 `runs/traces/github-<日期>.jsonl` 與 `queries` 表；取到的 150 筆（順序、查詢、名次、星數）跑完後 commit 到 `docs/discovery/github-well-known-v1.json`。
 
-結果在跑完後補在下面。
+### 結果（2026-11-02 19:00 台北）
+
+| 步驟 | 數量 | 模型 | 花費 |
+|---|---|---|---|
+| 36 條查詢的命中（含重複） | 1,642（mcp 459、cli 250、mcp-server 172、terminal 124…） | — | $0（36 次搜尋） |
+| 輪流取樣 | 150（dev_cli 48、local_ai 79、mcp_server 23；各查詢最多取到第 8 名；5 個已經有紀錄的跳過） | — | $0 |
+| 規則 | 過 139（tool 115、uncertain 24）；擋 11（不是軟體 8、沒有安裝或用法 2、疑似釣魚 1） | — | $0 |
+| 初篩 | 留 132、拒 7；複查 15（矛盾 2、kind other 5、固定 5% 抽樣 8） | Spark Open（Baseten）；複查 muse-spark-1.3 | $0.60 ＋ Meta $0.13 |
+| 抽取 | 可用 123；9 筆兩次都輸出超過上限（Spark Open 已知的重複輸出） | Spark Open（Baseten） | $3.35 |
+| 寫成紀錄 | 55；沒寫 68（類別 other 20、kind other 21、函式庫 14、kind 不明 8、模型或資料集 3、框架 1、schema 不過 1） | — | $0 |
+| 沙盒驗證（Modal gVisor） | 跑 36（CLI 26、虛擬螢幕的桌面 App 10）：**通過 24**（function 13、service 4、install 7），沒過 12 | agent Spark Open（Baseten）；判讀 muse-spark-1.3 | $4.09 ＋ Meta $0.28；沙盒約 $0.49 |
+| 沒跑的 19 筆 | 只能在 Apple Silicon 或 macOS 7、只有 Windows 2、需要 GPU 的桌面 App 3、Linux 沙盒沒有可跑的安裝方式 6、瀏覽器擴充 1 | — | — |
+| 計分（`b3.v5`） | 55 筆 | 文件 rubric muse-spark-1.3 | Meta $1.03 |
+
+- 知名度分數 69–98（中位數 84.6；既有紀錄的中位數 46.2），**沒有一筆算寶藏**（寶藏要求知名度 ≤45），所以網頁不會標「Hidden gem」。
+- 合計：Baseten $8.04、Meta $1.44（初篩複查、判讀、計分）、`modal-llm` $0、Modal 沙盒約 $0.49（批次的估算）。
+- 寫成紀錄的比例（55／123＝45%）比 `muse-spark-1.3` 抽取低很多（以前約 80%）：Spark Open 常把類別或 kind 填成 other 或空白，和 10/31 的比對結果一致。沒寫的照規則不補。
+- 目錄：列出的紀錄 856 → 911，install 以上 610 → 634。
