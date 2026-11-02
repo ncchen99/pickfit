@@ -28,8 +28,8 @@ own record "already listed". D1 follows each step: reading -> verifying ->
 Refused before any model call: URLs that are not a GitHub repository, test
 fixtures, private or missing repositories, repositories already in
 data/software (they get the existing record's status) or taken by another
-submission (also one still in flight), repositories above the discovery star
-range, and whatever the rules reject.
+submission (also one still in flight), and whatever the rules reject. Any star
+count is taken: pickfit lists any software, not only lesser-known tools.
 
 Limits: at most SUBMIT_HOURLY_CAP submissions start per rolling hour (the cap
 the Worker applies to intake, from wrangler.jsonc); a submission starts only
@@ -57,7 +57,7 @@ from pathlib import Path
 from typing import Any
 
 from pickfit.d1 import D1Error, Database, sql, timestamp
-from pickfit.discover.github import WELL_KNOWN_STARS, normalize_repo
+from pickfit.discover.github import normalize_repo
 from pickfit.discover.rules import RULES_VERSION, classify
 from pickfit.discover.store import PipelineDB, repo_key
 from pickfit.ledger import TAIPEI, BudgetExceeded, Ledger, taipei_now
@@ -68,8 +68,6 @@ from pickfit.verify.task import VerifyTask
 MODEL = "muse-spark-1.3"
 EXTRACT_EFFORT = "minimal"
 COVERED = LISTED_CATEGORIES  # dev_cli, local_ai, mcp_server
-# Submissions take what the catalog holds (rule github-well-known.v1), not discovery's 5..300 default.
-SUBMIT_STAR_MAX = int(WELL_KNOWN_STARS.split("..")[1])
 DEFAULT_INTERVAL_S = 60
 DEFAULT_CONCURRENCY = 2
 DEFAULT_MAX_USD = 5.0
@@ -509,9 +507,6 @@ class Watcher:
         repo = normalize_repo(item)
         job.full_name, job.repo_id = repo["full_name"], repo_key(item["id"])
         self._refuse_known(job)
-        stars = repo.get("stargazers_count") or 0
-        if stars > SUBMIT_STAR_MAX:
-            raise Rejected(f"pickfit lists mostly lesser-known tools (at most {SUBMIT_STAR_MAX} GitHub stars); this one has {stars}.")
 
         with self._stage(job, "github"):
             details = self.steps.github.details(repo)

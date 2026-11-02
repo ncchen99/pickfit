@@ -184,20 +184,20 @@ def test_a_website_submission_waits_for_the_web_pipeline(env: dict[str, Any]) ->
     assert submission(env["d1"], "sub_1")["status"] == "queued" and pipeline.calls == []
 
 
-def test_private_famous_and_rule_rejected_repositories(env: dict[str, Any]) -> None:
+def test_private_and_rule_rejected_repositories_at_any_star_count(env: dict[str, Any]) -> None:
     repos = {"someone/secret": repo_item(8, "someone/secret", private=True),
-             "someone/famous": repo_item(9, "someone/famous", stars=5_001),
+             "someone/famous": repo_item(9, "someone/famous", stars=50_000),
              "someone/readme-only": repo_item(10, "someone/readme-only", stars=1_200)}
     details = {name: DETAILS for name in repos}
     details["someone/readme-only"] = {**DETAILS, "files": ["README.md", "docs/guide.md"]}
+    details["someone/famous"] = details["someone/readme-only"]  # past the star count, to the rules
     for i, name in enumerate(repos, 1):
         submit(env["d1"], f"sub_{i}", f"https://github.com/{name}", at=f"2026-10-30T10:00:0{i}.000Z")
     pipeline = Pipeline(env["tmp"], repos=repos, details=details)
     run_once(env, pipeline, concurrency=3)
     reasons = {sid: submission(env["d1"], sid)["reason"] for sid in ("sub_1", "sub_2", "sub_3")}
     assert "private repository" in reasons["sub_1"]
-    assert "(at most 5000 GitHub stars); this one has 5001" in reasons["sub_2"]
-    assert reasons["sub_3"] == "Did not pass pickfit's rules (readme_only)."
+    assert reasons["sub_2"] == reasons["sub_3"] == "Did not pass pickfit's rules (readme_only)."
     assert pipeline.calls == []
 
 
