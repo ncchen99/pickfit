@@ -1,4 +1,4 @@
-// pickfit MCP server: https://pickfit-mcp.ncchen99.workers.dev/mcp. Local: `npm run dev` (see README.md).
+// pickfit MCP server: https://pickfit.app/mcp (also https://pickfit-mcp.ncchen99.workers.dev/mcp). Local: `npm run dev` (see README.md).
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "pickfit-mcp",
@@ -6,6 +6,11 @@
   // The web page's static files: Fitz (copied from brand/mascot by `npm run sync:assets`) and the font.
   "assets": { "directory": "./public" },
   "compatibility_date": "2026-10-01",
+  // pickfit.app (bought 11/2, zone on this Cloudflare account); workers.dev stays on for existing MCP clients.
+  "routes": [{ "pattern": "pickfit.app", "custom_domain": true }],
+  // Declaring routes turns workers.dev off unless it is set explicitly.
+  "workers_dev": true,
+  "preview_urls": true,
   "d1_databases": [
     {
       "binding": "DB",
@@ -22,7 +27,7 @@
     "META_TIMEOUT_MS": "25000",
     "SUBMIT_HOURLY_CAP": "20",
     "TOOLS": "all",
-    "ALLOWED_HOSTS": "pickfit-mcp.ncchen99.workers.dev",
+    "ALLOWED_HOSTS": "pickfit.app,pickfit-mcp.ncchen99.workers.dev",
     // The product web page (src/web.ts): it stops calling Meta at $2 of the $3 daily cap, leaving $1 for agents.
     "WEB_SEARCH": "on",
     "WEB_DAILY_CAP_USD": "2"
@@ -67,7 +72,9 @@
       // Its own namespace, so no counter is shared with the public server or the other arm.
       "ratelimits": [
         { "name": "WEB_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 6, "period": 60 } }
-      ]
+      ],
+      // routes are inherited from the top level; this keeps pickfit.app on the public server only.
+      "routes": []
     },
     // The rules-only arm: same tools and data, no model call (caps at 0 as a second guard).
     "eval-rules": {
@@ -96,7 +103,9 @@
       // Its own namespace, so no counter is shared with the public server or the other arm.
       "ratelimits": [
         { "name": "WEB_RATE_LIMITER", "namespace_id": "1003", "simple": { "limit": 6, "period": 60 } }
-      ]
+      ],
+      // routes are inherited from the top level; this keeps pickfit.app on the public server only.
+      "routes": []
     }
   }
 }
