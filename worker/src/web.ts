@@ -337,10 +337,10 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
           () =>
             renderNotice(
               'busy',
-              L('Busy: too many searches from here', '忙碌中：這個連線的搜尋次數太多了'),
+              L('Busy: too many searches from here', '搜尋太頻繁了'),
               L(
                 'Each search asks a Meta model, so pickfit limits how often one connection can search. Try again in a minute.',
-                '每次搜尋都會詢問 Meta 的模型，所以 pickfit 會限制同一個連線的搜尋頻率。請一分鐘後再試。',
+                '每次搜尋都會呼叫 Meta 的模型，所以 pickfit 會限制同一連線的搜尋次數。請一分鐘後再試。',
               ),
             ),
           429,
@@ -355,7 +355,7 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
           () =>
             renderNotice(
               'busy',
-              L('Busy: pickfit is answering other searches', '忙碌中：pickfit 正在回答其他搜尋'),
+              L('Busy: pickfit is answering other searches', '忙碌中：pickfit 正在處理其他搜尋'),
               L('A few searches are running right now. Try again in a few seconds.', '目前有幾個搜尋正在進行，請幾秒後再試。'),
             ),
           503,

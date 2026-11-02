@@ -27,18 +27,18 @@ export function day(iso: string | null, format = DAY): string {
 /** What the verification level proves, as a short headline. */
 export const LEVEL_LABEL: Record<string, string> = {
   get install() { return L('Installs and starts', '可安裝並啟動'); },
-  get function() { return L('Its main function works', '主要功能可正常運作'); },
+  get function() { return L('Its main function works', '主要功能可用'); },
   get service() { return L('Its service answers requests', '服務能回應請求'); },
   get inference() { return L('It produces model output', '能產生模型輸出'); },
 };
 
 const SCREEN_LABEL: Record<GuiEvidence['screen'], string> = {
-  get main_ui() { return L('It opens to its main screen', '開啟後進入主畫面'); },
-  get first_run() { return L('It opens to its first-run screen', '開啟後進入首次使用畫面'); },
-  get sign_in_wall() { return L('It opens to a sign-in screen', '開啟後停在登入畫面'); },
+  get main_ui() { return L('It opens to its main screen', '能開到主畫面'); },
+  get first_run() { return L('It opens to its first-run screen', '能開到首次設定畫面'); },
+  get sign_in_wall() { return L('It opens to a sign-in screen', '停在登入畫面'); },
   get crash_or_error() { return L('It showed an error on launch', '啟動時顯示錯誤'); },
-  get blank_or_loading() { return L('Its window stayed blank', '視窗一直是空白'); },
-  get other() { return L('It opened a window', '有開啟視窗'); },
+  get blank_or_loading() { return L('Its window stayed blank', '視窗一片空白'); },
+  get other() { return L('It opened a window', '能開啟視窗'); },
 };
 const SCREEN_SEEN: Record<GuiEvidence['screen'], string> = {
   get main_ui() { return L('its main screen rendered', '它的主畫面已正常顯示'); },
@@ -51,14 +51,14 @@ const SCREEN_SEEN: Record<GuiEvidence['screen'], string> = {
 
 /** What a run proves, by its evidence: a GUI app's screen, an MCP server's handshake, or the level. */
 export function levelLabel(level: string, evidence: { gui?: GuiEvidence | null; mcp?: { called_tool: string | null } | null } = {}): string {
-  if (evidence.gui && operatedText(evidence.gui)) return L('A feature worked when operated', '實際操作時功能可正常運作');
-  if (evidence.gui) return SCREEN_LABEL[evidence.gui.screen] ?? L('It opened a window', '有開啟視窗');
-  if (evidence.mcp) return evidence.mcp.called_tool ? L('An MCP client called one of its tools', 'MCP 用戶端呼叫了它的一個工具') : L('An MCP client connects and lists its tools', 'MCP 用戶端可連線並列出它的工具');
+  if (evidence.gui && operatedText(evidence.gui)) return L('A feature worked when operated', '實際操作，功能可用');
+  if (evidence.gui) return SCREEN_LABEL[evidence.gui.screen] ?? L('It opened a window', '能開啟視窗');
+  if (evidence.mcp) return evidence.mcp.called_tool ? L('An MCP client called one of its tools', 'MCP 用戶端成功呼叫工具') : L('An MCP client connects and lists its tools', 'MCP 用戶端能連上並列出工具');
   return LEVEL_LABEL[level] ?? level;
 }
 
 /** What a web app's browser run proves, as a headline. */
-export const webLevelLabel = (check: WebCheck) => (check.level === 'function' ? L('It worked when used in a browser', '在瀏覽器中使用時可正常運作') : L('It opens to its main screen', '開啟後進入主畫面'));
+export const webLevelLabel = (check: WebCheck) => (check.level === 'function' ? L('It worked when used in a browser', '瀏覽器實測可用') : L('It opens to its main screen', '能開到主畫面'));
 
 /** The check mark is for runs that passed; a GUI app that showed an error or a blank window gets none. */
 export const passed = (gui?: GuiEvidence | null) => !gui || gui.screen === 'main_ui' || gui.screen === 'first_run';
@@ -69,12 +69,12 @@ export function guiSentence(gui: GuiEvidence): string {
   return (
     L(
       `pickfit launched it on a virtual display (${gui.display}), and a separate model reading a screenshot of its window judged that ${SCREEN_SEEN[gui.screen]}. `,
-      `pickfit 在虛擬顯示器（${gui.display}）上啟動它，另一個模型讀取其視窗的螢幕截圖後判斷${SCREEN_SEEN[gui.screen]}。`,
+      `pickfit 在虛擬顯示器（${gui.display}）上啟動它，再由另一個模型看視窗截圖判斷：${SCREEN_SEEN[gui.screen]}。`,
     ) +
     (operated
       ? L(`${operated[0].toUpperCase()}${operated.slice(1)}.`, `${operated[0].toUpperCase()}${operated.slice(1)}。`)
-      : L('That shows it installs and starts; pickfit did not use any of its features.', '這表示它可安裝並啟動；pickfit 沒有使用它的任何功能。')) +
-    `${gui.launch_offline ? L(' The launch passed again with the network off.', '關閉網路後再次啟動也通過。') : ''}`
+      : L('That shows it installs and starts; pickfit did not use any of its features.', '這證明它能安裝並啟動；pickfit 沒有操作它的任何功能。')) +
+    `${gui.launch_offline ? L(' The launch passed again with the network off.', '斷網後再次啟動也通過。') : ''}`
   );
 }
 
@@ -114,7 +114,7 @@ export function kindLine(entry: Pick<Entry, 'kind' | 'category'>): string {
 
 export const PRICE: Record<string, string> = {
   get free() { return L('Free', '免費'); },
-  get freemium() { return L('Free tier, paid plans', '有免費方案，另有付費方案'); },
+  get freemium() { return L('Free tier, paid plans', '免費／付費方案'); },
   get paid() { return L('Paid', '付費'); },
   get unknown() { return L('Price not stated', '未標示價格'); },
 };
@@ -134,7 +134,7 @@ export function howRan(run: InstallGuide['run']): string {
     ? L(`Installed by hand on ${system(run.os, run.arch)}`, `在 ${system(run.os, run.arch)} 上手動安裝`)
     : L(
         `Installed in a fresh ${system(run.os, run.arch)} sandbox${run.replayed ? ', replayed from scratch' : ''}`,
-        `在全新的 ${system(run.os, run.arch)} 沙盒中安裝${run.replayed ? '，並從頭重播' : ''}`,
+        `在全新的 ${system(run.os, run.arch)} 沙盒中安裝${run.replayed ? '，並從頭重跑' : ''}`,
       );
 }
 
