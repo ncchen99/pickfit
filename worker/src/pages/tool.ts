@@ -1,22 +1,23 @@
 /**
- * One tool, everything pickfit knows about it, so nobody has to open the
- * README to decide: the profile Muse Spark wrote, every run on every OS with
- * its steps, the features checked one by one, and the scores. Read from the
- * catalog only; nothing here calls a model. A tool without a run says so and
- * shows no steps.
+ * One tool, for a person deciding whether to use it: what it looks like (pickfit's clip of it running,
+ * with chapters when the clip has them), how far pickfit got with it, what it does (each advertised
+ * feature, ticked when a run checked it, with how to use it), and how to install it. How pickfit tested
+ * it sits folded at the bottom, for anyone who wants the evidence. Read from the catalog only; nothing
+ * here calls a model. The plain feature titles, steps and open hint come from the record's usage_guide,
+ * which names the model that wrote them.
  */
-import { bestGuide, isVerified, isWebApp, OSES, verifiedOn, webCheck, type Catalog, type Entry, type OS, type RunVideo } from '../catalog.ts';
-import { featuresOut } from '../features.ts';
+import { bestGuide, isVerified, isWebApp, OSES, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo } from '../catalog.ts';
+import { featuresOut, type FeaturesOut } from '../features.ts';
 import { L } from '../i18n.ts';
-import { installGuide } from '../install.ts';
+import { installGuide, type InstallOutput } from '../install.ts';
 import { EMPTY_FORM, installSection, levelLine, webFactList } from '../page.ts';
 import { day, guiSentence, KIND, KIND_PLURAL, levelLabel, OS_NAME, PRICE, PROCESSING, passed, webLevelLabel } from '../ui/facts.ts';
 import { esc, link, listOf, safeUrl } from '../ui/html.ts';
-import { icon, osMark } from '../ui/icons.ts';
-import { age, badge, compareToggle, coverage, fitz, kindTag, levelIcon, osList, runFacts, SEAM, tape, type FitzName } from '../ui/kit.ts';
+import { icon, osMark, type IconName } from '../ui/icons.ts';
+import { age, badge, compareToggle, coverage, fitz, kindTag, levelIcon, osList, runFacts, tape, type FitzName } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 import { posterOf, videoPath } from '../video.ts';
-import { NO_INSTALL_LABEL, webRanSentence } from '../webapp.ts';
+import { NO_INSTALL_LABEL, noInstallLabel, webRanSentence } from '../webapp.ts';
 
 const MATURITY: Record<string, string> = {
   get stable() { return L('Stable', '穩定版'); },
@@ -46,23 +47,24 @@ function factSheet(entry: Entry, now: Date): string {
     : verifiedOn(entry).length
       ? osList(verifiedOn(entry), { tone: 'pass' })
       : `<span class="no">${L('Not verified yet', '尚未驗證')}</span>`;
-  const runsLabel = L('Runs', '執行方式');
+  const runsLabel = L('Runs', '執行位置');
   const lastReleaseLabel = L('Last release', '最新版本');
   const rows: [string, string][] = [
     [L('Kind', '類型'), kindTag(entry)],
     [L('Verified on', '已驗證於'), verifiedCell],
     web
-      ? [L('Runs in', '執行環境'), L('Any modern browser, nothing to install', '任何現代瀏覽器，無須安裝')]
+      ? [L('Runs in', '執行環境'), L('Any modern browser, nothing to install', '任何現代瀏覽器，免安裝')]
       : [L('Claims to run on', '宣稱支援'), entry.platforms.length ? osList(entry.platforms, { tone: 'quiet' }) : unknown],
     [L('Price', '價格'), entry.pricing ? esc(PRICE[entry.pricing]) + (entry.pricing_note ? `<div class="small quiet">${esc(entry.pricing_note)}</div>` : '') : unknown],
     [runsLabel, entry.processing ? esc(PROCESSING[entry.processing]) : unknown],
-    [L('Licence', '授權'), entry.license ? `<code>${esc(entry.license)}</code>${entry.open_source ? ` <span class="small quiet">${L('open source', '開放原始碼')}</span>` : ''}` : unknown],
+    [L('Licence', '授權'), entry.license ? `<code>${esc(entry.license)}</code>${entry.open_source ? ` <span class="small quiet">${L('open source', '開源')}</span>` : ''}` : unknown],
     [lastReleaseLabel, entry.last_release ? `${esc(day(entry.last_release))} <span class="small quiet">(${esc(age(entry.last_release, now) ?? '')})</span>` : unknown],
   ].filter(([k]) => !web || (k !== runsLabel && k !== lastReleaseLabel)) as [string, string][];
   if (entry.maturity) rows.push([L('Maturity', '成熟度'), esc(MATURITY[entry.maturity] ?? entry.maturity)]);
   return `<dl class="facts-dl">${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join('')}</dl>`;
 }
 
+/** What the README says you need first; nothing when it lists nothing. */
 function prerequisites(entry: Entry): string {
   const p = entry.prerequisites;
   const items: string[] = [];
@@ -75,18 +77,210 @@ function prerequisites(entry: Entry): string {
     items.push(L(`System packages: ${list}`, `系統套件：${list}`));
   }
   if (p.gpu === 'required') items.push(L('A GPU is required', '需要 GPU'));
-  else if (p.gpu === 'optional') items.push(L('A GPU is optional', 'GPU 為選用'));
+  else if (p.gpu === 'optional') items.push(L('A GPU is optional', '可選用 GPU'));
   if (p.min_ram_gb) items.push(L(`At least ${p.min_ram_gb} GB of RAM`, `至少 ${p.min_ram_gb} GB 記憶體`));
-  if (p.apple_silicon_only) items.push(L('Apple silicon only', '僅支援 Apple silicon'));
+  if (p.apple_silicon_only) items.push(L('Apple silicon only', '僅支援 Apple 晶片'));
   if (p.network === 'required') items.push(L('Needs the network', '需要網路'));
   if (p.api_keys.length) {
     const list = p.api_keys.map(esc).join(', ');
     items.push(L(`Keys or accounts: ${list}`, `金鑰或帳號：${list}`));
   }
-  return items.length
-    ? `<ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul>`
-    : `<p class="quiet">${L('The README lists nothing you need first.', 'README 沒有列出需要先準備的東西。')}</p>`;
+  return items.length ? `<div class="prereq"><h3>${L('You need first', '需要先準備')}</h3><ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul></div>` : '';
 }
+
+// ---------------------------------------------------------------- the clip, with chapters
+
+/** The first run with a clip: install guides first (they are what a reader follows), then other passed runs. */
+function firstVideo(entry: Entry): RunVideo | null {
+  const runs = [...OSES.flatMap((os) => (entry.install[os] ? [entry.install[os].run] : [])), ...entry.verification.passed_runs];
+  return runs.find((r) => r.video)?.video ?? null;
+}
+
+/** usage_guide's plain title for a feature, if it has one. */
+const guideTitle = (entry: Entry, feature: string) => entry.usage_guide?.features.find((f) => f.feature === feature)?.title ?? null;
+
+/** The clip opened at a time (a media fragment), so a chapter link works without the page script too. */
+const atTime = (slug: string, video: RunVideo, s: number) => `${videoPath(slug, video.clip)}#t=${s}`;
+
+/** m:ss for a time in seconds. */
+export const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+export interface Chapter {
+  start: number;
+  end: number;
+  title: string;
+}
+
+/** The clip's chapters for the page: a feature's plain title when there is one, fixed words for the two cards. */
+export function chaptersOf(entry: Entry, video: RunVideo): Chapter[] {
+  const list = [...(video.chapters ?? [])].filter((c) => c.start_s >= 0 && c.start_s < video.seconds).sort((a, b) => a.start_s - b.start_s);
+  return list.map((c, i) => ({
+    start: c.start_s,
+    end: i + 1 < list.length ? list[i + 1].start_s : video.seconds,
+    title: c.feature
+      ? (guideTitle(entry, c.feature) ?? c.title)
+      : i === 0
+        ? L('Recorded by pickfit', 'pickfit 錄製')
+        : L('Unedited recordings', '原始錄影'),
+  }));
+}
+
+/**
+ * The app itself, first: pickfit's own clip of it running. With chapters, the page script swaps the native
+ * controls for a seek bar cut into the chapters (data-player), and the list under the clip jumps to each one.
+ * Without the script, or without chapters, it is the browser's own player.
+ */
+function showcase(entry: Entry): string {
+  const video = firstVideo(entry);
+  if (!video) return '';
+  const slug = entry.slug;
+  const chapters = chaptersOf(entry, video);
+  const seconds = Math.round(video.seconds);
+  const player = chapters.length
+    ? `<div class="player-bar" data-bar hidden>` +
+      `<button type="button" class="player-btn" data-play aria-label="${L('Play', '播放')}" data-label-play="${L('Play', '播放')}" data-label-pause="${L('Pause', '暫停')}">${icon('play')}${icon('pause')}</button>` +
+      `<div class="chap-track" data-track role="slider" tabindex="0" aria-label="${L('Seek by chapter', '依段落跳轉')}" aria-valuemin="0" aria-valuemax="${seconds}" aria-valuenow="0">` +
+      chapters
+        .map((c) => `<span class="chap-seg" data-start="${c.start}" data-end="${c.end}" data-title="${esc(c.title)}"><span class="chap-fill"></span></span>`)
+        .join('') +
+      `<span class="chap-tip" data-tip-box hidden></span></div>` +
+      `<span class="player-time" data-time>0:00 / ${clock(video.seconds)}</span>` +
+      `<button type="button" class="player-btn" data-mute aria-label="${L('Mute', '靜音')}">${icon('volume-2')}${icon('volume-x')}</button>` +
+      `<button type="button" class="player-btn" data-full aria-label="${L('Full screen', '全螢幕')}">${icon('maximize')}</button>` +
+      `</div>`
+    : '';
+  const list = chapters.length
+    ? `<ol class="chapters" aria-label="${L('Chapters', '段落')}">` +
+      chapters
+        .map((c, i) => `<li><a href="${esc(atTime(slug, video, c.start))}" data-seek="${c.start}"${i === 0 ? ' aria-current="true"' : ''}><span class="chap-time">${clock(c.start)}</span><span class="chap-title">${esc(c.title)}</span></a></li>`)
+        .join('') +
+      `</ol>`
+    : '';
+  return (
+    `<figure class="showcase"${chapters.length ? ' data-player' : ''}>` +
+    `<div class="player">` +
+    `<video controls preload="metadata" playsinline poster="${esc(videoPath(slug, posterOf(video.clip)))}" aria-describedby="showcase-cap">` +
+    `<source src="${esc(videoPath(slug, video.clip))}" type="video/mp4">` +
+    `<a href="${esc(videoPath(slug, video.clip))}">${L('Download the clip', '下載影片')}</a></video>` +
+    player +
+    `</div>` +
+    `<figcaption id="showcase-cap">${L(
+      `${esc(entry.name)} running, recorded by pickfit on ${esc(day(video.recorded_at))} · ${seconds} s`,
+      `${esc(entry.name)} 實際執行，由 pickfit 於 ${esc(day(video.recorded_at))} 錄製 · ${seconds} 秒`,
+    )}</figcaption>` +
+    list +
+    `</figure>`
+  );
+}
+
+// ---------------------------------------------------------------- how far pickfit got
+
+type StageState = 'done' | 'open' | 'warn';
+interface Stage {
+  label: string;
+  state: StageState;
+  tip: string;
+}
+
+const featuresWork = (checked: number, total: number) => L(`${checked} of ${total} features work`, `${total} 項功能中 ${checked} 項可用`);
+
+/** A run's progress in four stages a reader can scan: installed, started, used, offline. */
+function stagesFor(entry: Entry, g: InstallGuide): Stage[] {
+  const r = g.run;
+  const gui = r.gui ?? null;
+  const f = featuresOut(entry, g);
+  const total = f.checked.length + f.not_checked.length;
+  const deep = r.level !== 'install' || f.checked.length > 0;
+  const started: Stage = gui
+    ? passed(gui)
+      ? {
+          label: gui.screen === 'main_ui' ? L('Opens', '可以開啟') : L('Opens to its setup screen', '開啟後進入設定畫面'),
+          state: 'done',
+          tip: L('Its window came up on a clean machine', '在乾淨的機器上能開出視窗'),
+        }
+      : { label: L('Window shows a problem', '視窗顯示異常'), state: 'warn', tip: L('Its window showed an error or stayed blank', '視窗出現錯誤或一直空白') }
+    : g.mcp
+      ? { label: L('Connects', '可以連線'), state: 'done', tip: L('An MCP client connected and listed its tools', 'MCP 用戶端連上並列出它的工具') }
+      : { label: L('Starts', '可以啟動'), state: 'done', tip: L('It ran on a clean machine', '在乾淨的機器上能執行') };
+  const used: Stage =
+    f.recorded && total
+      ? { label: featuresWork(f.checked.length, total), state: f.checked.length ? 'done' : 'open', tip: L('Features pickfit used and checked', 'pickfit 實際用過並檢查的功能') }
+      : deep
+        ? {
+            label: g.mcp
+              ? L('A tool call works', '工具呼叫可用')
+              : r.level === 'inference'
+                ? L('Produces output', '能產生輸出')
+                : r.level === 'service'
+                  ? L('Answers requests', '能回應請求')
+                  : L('Main function works', '主要功能可用'),
+            state: 'done',
+            tip: L('pickfit used it, not just started it', 'pickfit 實際用過，不只是啟動'),
+          }
+        : { label: L('Not used yet', '還沒實際使用'), state: 'open', tip: L('pickfit started it but did not use a feature', 'pickfit 啟動了它，但沒有使用功能') };
+  const offline = gui ? gui.launch_offline : g.works_offline;
+  const net: Stage =
+    offline === true
+      ? { label: L('Works offline', '可離線使用'), state: 'done', tip: L('It passed again with the network off', '關掉網路後再次通過') }
+      : offline === false
+        ? { label: L('Needs the network', '需要網路'), state: 'open', tip: L('It needed the network to work', '它需要網路才能運作') }
+        : { label: L('Offline not checked', '未檢查離線'), state: 'open', tip: L('pickfit did not try it without the network', 'pickfit 沒有在無網路下試過') };
+  return [{ label: L('Installs', '可以安裝'), state: 'done', tip: L('Its install steps worked on a clean machine', '安裝步驟在乾淨的機器上可行') }, started, used, net];
+}
+
+function stageRow(stages: Stage[]): string {
+  const mark: Record<StageState, IconName> = { done: 'check', open: 'circle-dashed', warn: 'triangle-alert' };
+  return (
+    `<ol class="prog-stages">` +
+    stages.map((s) => `<li class="prog-stage prog-${s.state}" data-tip="${esc(s.tip)}"><span class="prog-bar"></span><span class="prog-label">${icon(mark[s.state])}${esc(s.label)}</span></li>`).join('') +
+    `</ol>`
+  );
+}
+
+const progressTitle = () => `<h2 id="progress-title">${L('How far pickfit got', 'pickfit 測到哪裡')}</h2>`;
+
+/** One row per verified system, and the systems the project claims that pickfit has not tried. */
+function progress(entry: Entry): string {
+  if (isWebApp(entry)) {
+    const check = webCheck(entry);
+    if (!check) return '';
+    const f = featuresOut(entry, null);
+    const total = f.checked.length + f.not_checked.length;
+    const stages: Stage[] = [
+      { label: L('Opens in a browser', '可在瀏覽器開啟'), state: 'done', tip: L('Its main screen loaded in pickfit’s browser', '主畫面在 pickfit 的瀏覽器中載入') },
+      total
+        ? { label: featuresWork(f.checked.length, total), state: f.checked.length ? 'done' : 'open', tip: L('Features pickfit used and checked', 'pickfit 實際用過並檢查的功能') }
+        : check.level === 'function'
+          ? { label: L('Used in a browser', '已在瀏覽器中使用'), state: 'done', tip: webLevelLabel(check) }
+          : { label: L('Not used yet', '還沒實際使用'), state: 'open', tip: webLevelLabel(check) },
+    ];
+    return `<section class="block progress" aria-labelledby="progress-title">${progressTitle()}${stageRow(stages)}</section>`;
+  }
+  const oses = OSES.filter((os) => entry.install[os]);
+  if (!oses.length) {
+    return (
+      `<section class="block" aria-labelledby="progress-title">${progressTitle()}` +
+      `<div class="empty">${fitz('thinking', 80)}<div><p>` +
+      L(
+        `<b>pickfit hasn’t verified ${esc(entry.name)} yet</b>, so it gives no install steps and never suggests it.`,
+        `<b>pickfit 還沒驗證過 ${esc(entry.name)}</b>，所以不提供安裝步驟，也不會推薦它。`,
+      ) +
+      `</p><p class="quiet">${entry.verification.level === 'failed' ? L('A verification run did not pass. ', '有一次驗證測試沒通過。') : ''}${L('What follows comes from its README only.', '以下只依據它的 README。')}</p></div></div></section>`
+    );
+  }
+  const rows = oses.map((os) => {
+    const g = entry.install[os]!;
+    return `<div class="progress-row"><p class="progress-sys">${osMark(os)}${esc(OS_NAME[os])}${g.run.arch ? ` <span class="arch">${esc(g.run.arch)}</span>` : ''}</p>${stageRow(stagesFor(entry, g))}</div>`;
+  });
+  const untried = entry.platforms.filter((os) => !entry.install[os]);
+  const names = esc(listOf(untried.map((os) => OS_NAME[os])));
+  const note = untried.length
+    ? `<p class="small quiet">${L(`${names}: the project says it runs there; pickfit hasn’t tried it.`, `${names}：專案說支援，但 pickfit 還沒試過。`)}</p>`
+    : '';
+  return `<section class="block progress" aria-labelledby="progress-title">${progressTitle()}${rows.join('')}${note}</section>`;
+}
+
+// ---------------------------------------------------------------- what it does
 
 /** features.ts writes "<reason>: <the run's note>"; a person needs only the note when there is one. */
 const featureWhy = (detail: string) => {
@@ -99,135 +293,198 @@ const notRecorded = (entry: Entry, ran: boolean) =>
   ran
     ? L(
         'This run came before pickfit checked features one by one, so these come from the README only.',
-        '這次執行早於 pickfit 逐項檢查功能，所以這些只來自 README。',
+        '這次測試早於 pickfit 開始逐項檢查功能，所以以下只依據 README。',
       )
     : L(
         `pickfit hasn’t run it yet, so these come from ${isWebApp(entry) ? 'its own site' : 'the README'} only.`,
-        `pickfit 還沒執行過它，所以這些只來自${isWebApp(entry) ? '它自己的網站' : ' README'}。`,
+        `pickfit 還沒測過它，所以以下只依據${isWebApp(entry) ? '它自己的網站' : ' README'}。`,
       );
 
-/** Every advertised feature with what the run did about it. */
-function featureList(entry: Entry): string {
-  const guide = bestGuide(entry);
-  const f = featuresOut(entry, guide);
-  if (!f.checked.length && !f.not_checked.length) return '';
-  const items = [
-    ...f.checked.map(
-      (c) => `<li class="feat-ok">${icon('check')}<div>${esc(c.feature)}<details class="feat-check"><summary>${L('Checked', '已檢查')}</summary><code>${esc(c.check)}</code></details></div></li>`,
-    ),
-    ...f.not_checked.map((n) => {
-      const failed = n.reason === 'test_failed';
-      return `<li class="${failed ? 'feat-fail' : 'feat-open'}">${icon(failed ? 'x' : 'circle-dashed')}<div>${esc(n.feature)}<small>${failed ? L('Failed: ', '失敗：') : L('Not checked: ', '未檢查：')}${esc(featureWhy(n.detail))}</small></div></li>`;
-    }),
-  ];
-  return (
-    `<section class="block" aria-labelledby="features-title"><h2 id="features-title">${L('What it does, feature by feature', '逐項功能說明')}</h2>` +
-    (f.recorded ? '' : `<p class="quiet">${notRecorded(entry, guide !== null || webCheck(entry) !== null)}</p>`) +
-    `<ul class="feat-list">${items.join('')}</ul></section>`
-  );
+/** Where to watch one feature: its chapter in the clip, else the raw recording that shows it. */
+function featureClip(entry: Entry, feature: string): string {
+  const video = firstVideo(entry);
+  if (!video) return '';
+  const chapter = video.chapters?.find((c) => c.feature === feature);
+  if (chapter) {
+    return `<a class="watch" href="${esc(atTime(entry.slug, video, chapter.start_s))}" data-seek="${chapter.start_s}">${icon('play')}${L(`Watch it at ${clock(chapter.start_s)}`, `從 ${clock(chapter.start_s)} 開始看`)}</a>`;
+  }
+  const at = video.features.indexOf(feature);
+  const raw = at < 0 ? undefined : video.raw.find((r) => r.feature_index === at);
+  return raw
+    ? `<a class="watch" href="${esc(videoPath(entry.slug, raw.file))}">${icon('play')}${L(`Watch it (${Math.round(raw.seconds)} s)`, `觀看（${Math.round(raw.seconds)} 秒）`)}</a>`
+    : '';
 }
 
-/** A web app: open it, and what pickfit's browser saw when it did. */
+/** `code` spans in generated steps; everything else escaped. */
+const stepText = (s: string) => esc(s).replace(/`([^`]+)`/g, '<code translate="no">$1</code>');
+
+function featureList(entry: Entry, f: FeaturesOut): string {
+  const guide = entry.usage_guide ?? null;
+  const titles = new Map((guide?.features ?? []).map((g) => [g.feature, g]));
+  const title = (feature: string) => esc(titles.get(feature)?.title ?? feature.charAt(0).toUpperCase() + feature.slice(1));
+  const items = [
+    ...f.checked.map(({ feature }) => {
+      const steps = titles.get(feature)?.steps ?? [];
+      const clip = featureClip(entry, feature);
+      const how =
+        steps.length || clip
+          ? `<details class="how-to"><summary>${L('How to use it', '怎麼使用')}</summary>${steps.length ? `<ol>${steps.map((s) => `<li>${stepText(s)}</li>`).join('')}</ol>` : ''}${clip}</details>`
+          : '';
+      return `<li class="feat-ok">${icon('check')}<div><span class="feat-title">${title(feature)}</span> <span class="feat-tag">${L('Tested', '已測試')}</span>${how}</div></li>`;
+    }),
+    ...f.not_checked.map((n) => {
+      const failed = n.reason === 'test_failed';
+      return (
+        `<li class="${failed ? 'feat-fail' : 'feat-open'}">${icon(failed ? 'x' : 'circle-dashed')}<div><span class="feat-title">${title(n.feature)}</span>` +
+        `<small>${failed ? L('Its test failed: ', '測試失敗：') : L('Not tested: ', '未測試：')}${esc(featureWhy(n.detail))}</small></div></li>`
+      );
+    }),
+  ];
+  if (!items.length) return '';
+  const ran = bestGuide(entry) !== null || webCheck(entry) !== null;
+  const from = f.recorded ? '' : `<p class="quiet">${notRecorded(entry, ran)}</p>`;
+  const by = guide
+    ? `<p class="small quiet">${L(`Feature names and steps written by ${esc(guide.model)} from what pickfit’s run did.`, `功能名稱與步驟由 ${esc(guide.model)} 根據 pickfit 的測試內容撰寫。`)}</p>`
+    : '';
+  return `${from}<ul class="feat-list">${items.join('')}</ul>${by}`;
+}
+
+function about(entry: Entry, f: FeaturesOut): string {
+  const parts = [
+    entry.why_worth_it ? `<p class="fit">${esc(entry.why_worth_it)}</p>` : '',
+    featureList(entry, f),
+    entry.use_cases.length ? `<h3>${L('Good for', '適合用來')}</h3><ul class="uses">${entry.use_cases.map((u) => `<li>${esc(u)}</li>`).join('')}</ul>` : '',
+    entry.alternatives_to.length ? `<p><span class="lead-in">${L('An alternative to', '可替代')}</span> ${esc(listOf(entry.alternatives_to))}${L('.', '。')}</p>` : '',
+  ].join('');
+  return parts ? `<section class="block" aria-labelledby="about-title"><h2 id="about-title">${L('What it does', '它能做什麼')}</h2>${parts}</section>` : '';
+}
+
+// ---------------------------------------------------------------- install
+
+/** The guide as a reader follows it: README mistakes only, no trailing stderr redirect, and for a GUI app where to find it instead of a shell command. */
+function readerGuide(out: InstallOutput, hint: string | null, gui: boolean): InstallOutput {
+  return {
+    ...out,
+    steps: out.steps.map((s) => ({ ...s, command: s.command.replace(/\s+2>&1$/, '') })),
+    known_issues: out.known_issues.filter((k) => k.kind === 'readme_wrong' || !k.kind),
+    first_task: gui && hint ? null : out.first_task,
+    first_task_setup: gui && hint ? [] : out.first_task_setup,
+  };
+}
+
+const installTitle = (en: string, zh: string) => `<h2 id="install-title">${L(en, zh)}</h2>`;
+
+function install(catalog: Catalog, entry: Entry): string {
+  if (isWebApp(entry) && entry.web) return webRun(entry);
+  const oses = OSES.filter((os) => entry.install[os]);
+  if (!oses.length) {
+    const needs = prerequisites(entry);
+    return needs ? `<section class="block" aria-labelledby="install-title">${installTitle('Install', '安裝')}${needs}</section>` : '';
+  }
+  const hint = entry.usage_guide?.open_hint ?? null;
+  const cards = oses.map((os: OS, i) => {
+    const g = entry.install[os]!;
+    const out = readerGuide(installGuide(catalog, { slug: entry.slug, os }), hint, !!g.run.gui);
+    return (
+      `<article class="run-card" id="install-${os}"><div class="run-head"><h3>${osMark(os)}${esc(OS_NAME[os])}${g.run.arch ? ` <span class="arch">${esc(g.run.arch)}</span>` : ''}</h3></div>` +
+      installSection(out, { ...EMPTY_FORM, os }, i === 0, true) +
+      (hint ? `<p class="open-hint">${icon('arrow-right')}<span>${stepText(hint)}</span></p>` : '') +
+      `</article>`
+    );
+  });
+  return `<section class="block" aria-labelledby="install-title">${installTitle('Install', '安裝')}${prerequisites(entry)}${cards.join('')}</section>`;
+}
+
+/** A web app: open it, and the facts a person weighs before typing anything in. */
 function webRun(entry: Entry): string {
   const check = webCheck(entry);
   const url = entry.web!.url;
   const open = link(url, `${icon('external-link')}${L(`Open ${esc(entry.name)}`, `開啟 ${esc(entry.name)}`)}`, 'btn btn-primary btn-sm');
   if (!check) {
     return (
-      `<section class="block" aria-labelledby="runs-title"><h2 id="runs-title">${L('Open it', '開啟')}</h2>` +
+      `<section class="block" aria-labelledby="install-title">${installTitle('Open it', '開啟')}` +
       `<div class="empty">${fitz('thinking', 80)}<div><p>` +
       L(
         `<b>pickfit hasn’t checked ${esc(entry.name)} in its browser yet</b>, so it never suggests it.`,
-        `<b>pickfit 還沒在瀏覽器中檢查過 ${esc(entry.name)}</b>，所以從不推薦它。`,
+        `<b>pickfit 還沒在瀏覽器中檢查過 ${esc(entry.name)}</b>，所以不會推薦它。`,
       ) +
-      `</p>` +
-      `<p class="quiet">${L('The profile above comes from its own site only.', '上方的介紹只來自它自己的網站。')}</p></div></div></section>`
+      `</p><p class="quiet">${L('The profile above comes from its own site only.', '上方簡介只依據它自己的網站。')}</p></div></div></section>`
     );
   }
-  const evidence = safeUrl(check.evidence_url);
   return (
-    `<section class="block" aria-labelledby="runs-title"><h2 id="runs-title">${L('Open it', '開啟')}</h2>` +
-    `<article class="run-card" id="run-web"><div class="run-head"><h3>${esc(NO_INSTALL_LABEL)}</h3>` +
-    `<span class="badges">${badge('pass', L('Checked in a browser', '已在瀏覽器中檢查'), { icon: 'check' })}</span></div>` +
-    SEAM +
-    levelLine(webLevelLabel(check), true) +
-    `<p>${esc(webRanSentence(check))}</p>` +
+    `<section class="block" aria-labelledby="install-title">${installTitle('Open it', '開啟')}` +
+    `<article class="run-card" id="run-web"><div class="run-head"><h3>${esc(noInstallLabel())}</h3></div>` +
     webFactList(entry) +
     (open ? `<p class="t-open">${open}<span class="quiet small" translate="no">${esc(url)}</span></p>` : '') +
-    (evidence ? `<p>${link(evidence, `${icon('external-link')} ${L('Run record', '測試紀錄')}`)}</p>` : '') +
     `</article></section>`
   );
 }
 
-/** A run's clip: pickfit's own recording, the line that says what it is, and the raw recordings it was cut from. */
-function runVideo(slug: string, runId: string, video: RunVideo): string {
-  const id = `video-${runId}`;
-  const seconds = Math.round(video.seconds);
+// ---------------------------------------------------------------- how pickfit tested it
+
+function rawList(slug: string, video: RunVideo): string {
   const raw = video.raw
-    .map(
-      (r) =>
-        `<li><a href="${esc(videoPath(slug, r.file))}" download>${esc(r.file)}</a> <span class="quiet">${L(`(${Math.round(r.seconds)} s)`, `（${Math.round(r.seconds)} 秒）`)}</span>` +
-        `<br><span class="quiet small">sha256</span> <code class="hash" translate="no">${esc(r.sha256)}</code></li>`,
-    )
+    .map((r) => {
+      const shows = r.feature_index != null ? video.features[r.feature_index] : null;
+      return (
+        `<li><a href="${esc(videoPath(slug, r.file))}" download>${esc(r.file)}</a> <span class="quiet">${L(`(${Math.round(r.seconds)} s)`, `（${Math.round(r.seconds)} 秒）`)}${shows ? ` ${esc(shows)}` : ''}</span>` +
+        `<br><span class="quiet small">sha256</span> <code class="hash" translate="no">${esc(r.sha256)}</code></li>`
+      );
+    })
     .join('');
   return (
-    `<figure class="run-video">` +
-    `<video controls preload="metadata" playsinline poster="${esc(videoPath(slug, posterOf(video.clip)))}" aria-describedby="${esc(id)}">` +
-    `<source src="${esc(videoPath(slug, video.clip))}" type="video/mp4">` +
-    `<a href="${esc(videoPath(slug, video.clip))}">${L('Download the clip', '下載影片')}</a></video>` +
-    `<figcaption id="${esc(id)}">${L(
-      `Recorded by pickfit in a sandbox on ${esc(day(video.recorded_at))} · ${seconds} s · shows ${esc(listOf(video.features))}.`,
-      `由 pickfit 於 ${esc(day(video.recorded_at))} 在沙盒中錄製 · ${seconds} 秒 · 展示 ${esc(listOf(video.features))}。`,
-    )}</figcaption>` +
-    `<details class="raw"><summary class="small">${L(`Unedited recordings (${video.raw.length})`, `未剪輯的錄影（${video.raw.length}）`)}</summary><ul class="small">${raw}</ul></details>` +
-    `</figure>`
+    `<p class="small">${L('Clip', '影片')} <code class="hash" translate="no">${esc(video.clip)}</code>, sha256 <code class="hash" translate="no">${esc(video.clip_sha256)}</code>. ` +
+    `${L('It was cut from these unedited recordings:', '剪輯自以下原始錄影：')}</p><ul class="small raw-list">${raw}</ul>`
   );
 }
 
-/** One run per verified OS: the record, then the steps that worked there. */
-function runs(catalog: Catalog, entry: Entry): string {
-  if (isWebApp(entry) && entry.web) return webRun(entry);
-  const oses = OSES.filter((os) => entry.install[os]);
-  if (!oses.length) {
-    return (
-      `<section class="block" aria-labelledby="runs-title"><h2 id="runs-title">${L('Install', '安裝')}</h2>` +
-      `<div class="empty">${fitz('thinking', 80)}<div><p>` +
-      L(
-        `<b>pickfit hasn’t verified ${esc(entry.name)} yet</b>, so it gives no install steps and never suggests it.`,
-        `<b>pickfit 還沒驗證過 ${esc(entry.name)}</b>，所以不提供安裝步驟，也從不推薦它。`,
-      ) +
-      `</p>` +
-      `<p class="quiet">${entry.verification.level === 'failed' ? L('A verification run did not pass. ', '有一次驗證執行未通過。') : ''}${L('The profile above comes from its README only.', '上方的介紹只來自它的 README。')}</p></div></div></section>`
-    );
+/** Everything a skeptic wants and a user doesn't: where each run ran, who looked, the raw recordings, the sandbox-only differences. */
+function tested(catalog: Catalog, entry: Entry): string {
+  const parts: string[] = [];
+  const recordLink = (url: string | null) => (url ? `<p>${link(url, `${icon('external-link')} ${L('Run record', '測試紀錄')}`)}</p>` : '');
+  if (isWebApp(entry)) {
+    const check = webCheck(entry);
+    if (!check) return '';
+    parts.push(levelLine(webLevelLabel(check), true) + `<p>${esc(webRanSentence(check))}</p>` + recordLink(safeUrl(check.evidence_url)));
   }
-  const cards = oses.map((os: OS, i) => {
+  for (const os of OSES.filter((o) => entry.install[o])) {
     const g = entry.install[os]!;
-    const out = installGuide(catalog, { slug: entry.slug, os });
     const r = g.run;
     const evidence = { gui: r.gui, mcp: g.mcp };
-    const recordUrl = safeUrl(r.evidence_url);
+    const box = installGuide(catalog, { slug: entry.slug, os }).known_issues.filter((k) => k.kind && k.kind !== 'readme_wrong');
     let mcpLine = '';
     if (g.mcp) {
       const transport = g.mcp.transport === 'stdio' ? 'stdio' : 'HTTP';
       mcpLine = `<p>${L(
         `An MCP client handshake over ${transport} listed ${g.mcp.tool_count} tool${g.mcp.tool_count === 1 ? '' : 's'}${g.mcp.called_tool ? `, and a call to <code>${esc(g.mcp.called_tool)}</code> returned a result` : ''}.`,
-        `透過 ${transport} 進行的 MCP 用戶端握手列出了 ${g.mcp.tool_count} 個工具${g.mcp.called_tool ? `，呼叫 <code>${esc(g.mcp.called_tool)}</code> 也回傳了結果` : ''}。`,
+        `MCP 用戶端透過 ${transport} 連線，列出 ${g.mcp.tool_count} 個工具${g.mcp.called_tool ? `，呼叫 <code>${esc(g.mcp.called_tool)}</code> 也回傳了結果` : ''}。`,
       )}</p>`;
     }
-    return (
-      `<article class="run-card" id="run-${os}"><div class="run-head"><h3>${osMark(os)}${esc(OS_NAME[os])}${r.arch ? ` <span class="arch">${esc(r.arch)}</span>` : ''}</h3></div>` +
-      SEAM +
-      levelLine(levelLabel(r.level, evidence), passed(r.gui), levelIcon(r.level, evidence)) +
-      runFacts(r, { offline: r.gui ? null : g.works_offline, named: true }) +
-      (r.gui ? `<p>${esc(guiSentence(r.gui))}</p>` : '') +
-      (r.video ? runVideo(entry.slug, r.id, r.video) : '') +
-      mcpLine +
-      (recordUrl ? `<p>${link(recordUrl, `${icon('external-link')} ${L('Run record', '測試紀錄')}`)}</p>` : '') +
-      installSection(out, { ...EMPTY_FORM, os }, i === 0, true) +
-      `</article>`
+    parts.push(
+      `<div class="tested-run"><h3>${osMark(os)}${esc(OS_NAME[os])}${r.arch ? ` <span class="arch">${esc(r.arch)}</span>` : ''}</h3>` +
+        levelLine(levelLabel(r.level, evidence), passed(r.gui), levelIcon(r.level, evidence)) +
+        runFacts(r, { offline: r.gui ? null : g.works_offline, named: true }) +
+        (r.gui ? `<p>${esc(guiSentence(r.gui))}</p>` : '') +
+        mcpLine +
+        (r.video ? rawList(entry.slug, r.video) : '') +
+        (box.length
+          ? `<h4>${L('Differences the test machine hit', '測試機器遇到的差異')}</h4><ul class="issues">${box
+              .map((i) => `<li><span class="quiet">README:</span> ${esc(i.readme_said)}<br><span class="quiet">${L('In the test:', '測試中：')}</span> ${esc(i.actually_needed)}</li>`)
+              .join('')}</ul>`
+          : '') +
+        recordLink(safeUrl(r.evidence_url)) +
+        `</div>`,
     );
-  });
-  return `<section class="block" aria-labelledby="runs-title"><h2 id="runs-title">${L('Install steps that worked', '可行的安裝步驟')}</h2>${cards.join('')}</section>`;
+  }
+  if (!parts.length) return '';
+  return (
+    `<details class="block tested"><summary><h2>${L('How pickfit tested it', 'pickfit 怎麼測的')}</h2>${icon('chevron-down')}</summary>` +
+    `<p class="quiet">${L(
+      'Each run starts from a clean machine, follows the steps above, and checks the result itself.',
+      '每次測試都從乾淨的機器開始，照上面的步驟執行，並自行檢查結果。',
+    )} <a href="/how">${L('How pickfit verifies', 'pickfit 怎麼驗證')}</a></p>` +
+    `${parts.join('')}</details>`
+  );
 }
 
 /** The kind a profile sits under in Browse: web apps have their own shelf. */
@@ -242,33 +499,22 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
   const features = featuresOut(entry, guide);
   const verified = isVerified(entry);
   const web = isWebApp(entry) ? webCheck(entry) : null;
+  const on = listOf(verifiedOn(entry).map((os) => OS_NAME[os]));
   const badges = [
-    web ? badge('info', NO_INSTALL_LABEL, { icon: 'globe' }) : '',
+    web ? badge('info', L(NO_INSTALL_LABEL, '免安裝'), { icon: 'globe' }) : '',
     web
-      ? badge('pass', L(`Verified: ${webLevelLabel(web)}`, `已驗證：${webLevelLabel(web)}`), { icon: levelIcon(web.level) })
-      : verified && guide
-        ? badge(
-            'pass',
-            L(
-              `Verified: ${levelLabel(guide.run.level, { gui: guide.run.gui, mcp: guide.mcp })}`,
-              `已驗證：${levelLabel(guide.run.level, { gui: guide.run.gui, mcp: guide.mcp })}`,
-            ),
-            { icon: levelIcon(guide.run.level, { gui: guide.run.gui, mcp: guide.mcp }) },
-          )
+      ? badge('pass', L('Tested in a browser', '已在瀏覽器實測'), { icon: 'badge-check' })
+      : verified && on
+        ? badge('pass', L(`Tested on ${on}`, `已在 ${on} 上測試`), { icon: 'badge-check' })
         : badge('quiet', L('Not verified yet', '尚未驗證'), { icon: 'circle-dashed' }),
     entry.scores?.treasure ? badge('gem', L('Hidden gem', '寶藏'), { icon: 'gem', pop: 'pop-gem' }) : '',
   ].join('');
   const webUrl = entry.web?.url ?? null;
   const links = [
     webUrl ? link(webUrl, `${icon('external-link')}${L('Open it', '開啟')}`, 'btn btn-on-mat btn-sm') : '',
+    !web && OSES.some((os) => entry.install[os]) ? `<a class="btn btn-on-mat btn-sm" href="#install-title">${icon('arrow-right')}${L('Install', '安裝')}</a>` : '',
     link(entry.repo_url, `${icon('external-link')}${L('Source code', '原始碼')}`, 'btn btn-on-mat btn-sm'),
     entry.homepage && entry.homepage !== entry.repo_url && entry.homepage !== webUrl ? link(entry.homepage, `${icon('external-link')}${L('Homepage', '首頁')}`, 'btn btn-on-mat btn-sm') : '',
-  ].join('');
-  const about = [
-    entry.why_worth_it ? `<p class="fit">${esc(entry.why_worth_it)}</p>` : '',
-    entry.use_cases.length ? `<h3>${L('Good for', '適合用來')}</h3><ul class="uses">${entry.use_cases.map((u) => `<li>${esc(u)}</li>`).join('')}</ul>` : '',
-    entry.alternatives_to.length ? `<p><span class="lead-in">${L('An alternative to', '可替代')}</span> ${esc(listOf(entry.alternatives_to))}${L('.', '。')}</p>` : '',
-    isWebApp(entry) ? '' : `<h3>${L('Before you install', '安裝之前')}</h3>${prerequisites(entry)}`,
   ].join('');
   const sources = entry.sources
     .map((s) => safeUrl(s))
@@ -282,20 +528,22 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
     `<p class="badges">${badges}</p><p class="badges">${links}${verified ? compareToggle(entry.slug, entry.name) : ''}</p></div>` +
     `${fitz(faceFor(entry), 150, { eager: true })}</div></div><div class="ruler" aria-hidden="true"></div></section>` +
     `<div class="wrap layout"><div>` +
-    `<section class="block" aria-labelledby="about-title"><h2 id="about-title">${L('What it is', '這是什麼')}</h2>${about}</section>` +
-    runs(catalog, entry) +
-    featureList(entry) +
+    showcase(entry) +
+    progress(entry) +
+    about(entry, features) +
+    install(catalog, entry) +
+    tested(catalog, entry) +
     `</div><aside class="side" aria-label="${L('At a glance', '一覽')}">` +
     `<div class="panel"><h2>${L('At a glance', '一覽')}</h2>${factSheet(entry, now)}<div class="t-measure panel-measure">` +
     tape(L('Quality', '品質'), entry.scores?.quality ?? null, { pop: 'pop-quality' }) +
     tape(L('Popularity', '知名度'), entry.scores?.popularity ?? null, { pop: 'pop-popularity', tone: 'quiet' }) +
     coverage(features, { pop: 'pop-features' }) +
-    `</div><p class="small quiet">${L('Scored apart; ranked by neither.', '分開評分，排序不依任一項。')} <a href="/how#scores">${L('How scores work', '評分方式')}</a></p></div>` +
-    (sources ? `<details class="panel sources"><summary>${L('Sources', '來源')}</summary><ul class="small">${sources}</ul><p class="small quiet">${L('Every field in the profile cites one of these.', '介紹中的每個欄位都引用其中一個來源。')}</p></details>` : '') +
+    `</div><p class="small quiet">${L('Scored apart; ranked by neither.', '兩項分開計分，排序不看分數。')} <a href="/how#scores">${L('How scores work', '評分方式')}</a></p></div>` +
+    (sources ? `<details class="panel sources"><summary>${L('Sources', '來源')}</summary><ul class="small">${sources}</ul><p class="small quiet">${L('Every field in the profile cites one of these.', '簡介裡的每個欄位都引用下列其中一個來源。')}</p></details>` : '') +
     `</aside></div>`;
   return renderShell({
     nonce,
-    title: `${entry.name}: ${web ? L('checked in a browser', '已在瀏覽器中檢查') : verified ? L('verified install steps', '已驗證的安裝步驟') : L('profile', '介紹')} · pickfit`,
+    title: `${entry.name}: ${web ? L('checked in a browser', '瀏覽器實測') : verified ? L('verified install steps', '已驗證的安裝步驟') : L('profile', '簡介')} · pickfit`,
     description: entry.summary,
     active: 'browse',
     main,

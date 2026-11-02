@@ -1,0 +1,552 @@
+{
+  "schema_version": "software.v1",
+  "slug": "gmgn-skills",
+  "repo_id": "gh:1179404554",
+  "name": "GMGN Agent Skills",
+  "summary": "Agent skills and CLI to query crypto tokens, wallets and market data and execute on-chain trades.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "api",
+    "cli-tool",
+    "crypto",
+    "gmgn",
+    "memecoin",
+    "trading"
+  ],
+  "use_cases": [
+    "show trending tokens on Solana",
+    "check if a token is safe to buy",
+    "show wallet holdings on SOL",
+    "buy a token with SOL",
+    "show K-line and volume for a token"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "query real-time trending token rankings",
+    "execute market limit and stop-loss orders",
+    "analyze wallet holdings P&L and history",
+    "fetch real-time K-line market data"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://gmgn.ai/ai",
+  "repo": {
+    "url": "https://github.com/GMGNAI/gmgn-skills",
+    "full_name": "GMGNAI/gmgn-skills",
+    "created_at": "2026-03-12T01:57:18Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "GMGN API key from https://gmgn.ai/ai"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-gmgn-skills-20261102-185440-dd8b",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g gmgn-cli 2>&1",
+          "purpose": "install gmgn-cli globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "gmgn-cli --version",
+        "expected_signal": "1.7.1"
+      },
+      "first_task": "GMGN_API_KEY=gmgn_solbscbaseethmonadtron gmgn-cli market trending --chain sol --interval 1h --limit 3"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": null,
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:55:38.568110+08:00",
+    "runs": [
+      {
+        "id": "verify-gmgn-skills-20261102-185440-dd8b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:55:38.568110+08:00",
+        "tool_version": "1.7.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g gmgn-cli 2>&1",
+            "purpose": "install gmgn-cli globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "gmgn-cli --version",
+            "expected_signal": "1.7.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.7.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "GMGN_API_KEY=gmgn_solbscbaseethmonadtron gmgn-cli market trending --chain sol --interval 1h --limit 3",
+            "expected_signal": "\"message\": \"success\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"message\": \"success\",",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "GMGN_API_KEY=gmgn_solbscbaseethmonadtron gmgn-cli market kline --chain sol --address So11111111111111111111111111111111111111112 --resolution 1h --raw",
+            "expected_signal": "\"open\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"list\":[{\"time\":1793257200000,\"open\":\"99.97372369\",\"close\":\"99.6637555\",\"high\":\"100.90817356\",\"low\":\"98.65495675\",\"volume\":\"12100532.54072701\",\"source\":\"\",\"amount\":\"121292.67929082\"},{\"time\":1793260800000,\"open\":\"99.6637555\",\"close\":\"100.12593342\",\"high\":\"101.01010101\",\"low\":\"99.018733273\",\"volume…",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "GMGN_API_KEY=gmgn_solbscbaseethmonadtron gmgn-cli portfolio stats --chain sol --wallet 4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R",
+            "expected_signal": "\"wallet_address\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"wallet_address\": \"4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R\",",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "gmgn-cli market kline --limit example implied",
+            "actually_needed": "kline requires --resolution not --limit/--interval; use --resolution 1h",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "portfolio holdings works with demo key",
+            "actually_needed": "portfolio holdings requires GMGN_PRIVATE_KEY; use portfolio stats for read-only demo",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show successful outputs: trending returns message success, kline returns open/high/low data, and --version prints 1.7.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-gmgn-skills-20261102-185440-dd8b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-gmgn-skills-20261102-185440-dd8b/check-1-cmd11.judged.png",
+            "runs/verify/verify-gmgn-skills-20261102-185440-dd8b/check-2-cmd12.judged.png",
+            "runs/verify/verify-gmgn-skills-20261102-185440-dd8b/check-3-cmd10.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.065966,
+        "features": [
+          {
+            "feature": "query real-time trending token rankings",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "execute market limit and stop-loss orders",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "limit/stop-loss swap requires bound API key and private key"
+          },
+          {
+            "feature": "analyze wallet holdings P&L and history",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "fetch real-time K-line market data",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-02T19:44:20+08:00",
+    "quality": {
+      "total": 69.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.6,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.6,
+      "signals": {
+        "stars": 638,
+        "monthly_downloads": 45967,
+        "forks": 112,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 235,
+      "packages": [
+        "npm:gmgn-cli"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.51
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T19:44:20.304038+08:00",
+      "sources_sha": "0658de8a27020aabfb3ca6d4032d789fbf1c1f1a412531f13b19efb50739825e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "GMGN OpenAPI skills for AI Agent — query tokens, wallets, and market data, and execute on-chain trades across Solana, BSC, and Base."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Built for AI agents to query and trade multi-chain Meme tokens at high speed in real time."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "**Prerequisites:** Before installing, create your API Key at **https://gmgn.ai/ai**"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npx skills add GMGNAI/gmgn-skills"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "If JSON output appears, the CLI is installed correctly."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "echo 'GMGN_API_KEY=<user_api_key>' > ~/.config/gmgn/.env"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "**Troubleshooting — 401 / 403 errors:** If the command fails with `401` or `403`"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "execute on-chain trades across Solana, BSC, and Base."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/GMGNAI/gmgn-skills",
+      "fetched_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/GMGNAI/gmgn-skills/blob/main/Readme.md",
+      "fetched_at": "2026-11-02T17:28:17+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "topics: ai-agents, api, cli-tool, crypto, gmgn, memecoin, trading",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "npm install -g gmgn-cli",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "topics: ai-agents, api, cli-tool, crypto, gmgn, memecoin, trading",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "GMGN OpenAPI skills for AI Agent — query tokens, wallets, and market data, and execute on-chain trades across Solana, BSC, and Base.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "GMGN Agent Skills",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Data across SOL / BSC / Base / ETH is live on every query.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "Apply for your own API key at **https://gmgn.ai/ai** — required for all actual use (read-only and swap).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Show me the trending tokens on Solana in the last 1 hour.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "is <token_address> safe to buy on solana?",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "show my wallet holdings on SOL",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "buy 0.1 SOL of <token_address>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "show 24h K-line and volume for <token_address>",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "you can use AI agents to query real-time trending token rankings across multiple chains",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Market orders, limit orders, take-profit / stop-loss strategy orders",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Analyze any wallet: real-time holdings, realized / unrealized P&L, win rate",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Fetch real-time K-line / OHLCV data for any token (1m / 5m / 15m / 1h / 4h / 1d)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Apply for your own API key at **https://gmgn.ai/ai** — required for all actual use (read-only and swap).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:36+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-02T17:27:57+08:00",
+  "updated_at": "2026-11-02T19:44:20+08:00"
+}

@@ -20,6 +20,8 @@ LANG = "zh-TW"
 PROSE_KEYS = frozenset({
     "summary", "why_worth_it", "use_cases", "features", "feature", "note", "purpose",
     "manual_steps", "actually_needed", "goal", "observed", "pricing_note", "data_sent_note", "api_keys",
+    # usage_guide's plain feature titles, how-to steps and open hint; a video chapter's title.
+    "title", "open_hint", "steps",
 })
 CODE = re.compile(r"[a-z0-9_]+")
 # Subtrees that hold commands, outputs or ids: never walked (same idea as KEEP in worker/src/i18n.ts).

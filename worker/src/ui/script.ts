@@ -69,7 +69,7 @@ export const script = () => `
       busy = true;
       go.disabled = true;
       go.setAttribute('aria-busy', 'true');
-      label.textContent = ${J('Measuring', '測量中')};
+      label.textContent = ${J('Measuring', '量身中')};
       status.textContent = ${J('Searching', '搜尋中')};
       out.setAttribute('aria-busy', 'true');
       out.replaceChildren($('#loading').content.cloneNode(true));
@@ -92,7 +92,7 @@ export const script = () => `
         busy = false;
         go.disabled = false;
         go.removeAttribute('aria-busy');
-        label.textContent = ${J('Find my fit', '找出最適合的')};
+        label.textContent = ${J('Find my fit', '幫我找合身的')};
         out.removeAttribute('aria-busy');
         out.focus({ preventScroll: true });
       }
@@ -117,7 +117,7 @@ export const script = () => `
     try {
       await navigator.clipboard.writeText(text);
       b.classList.add('done'); span.textContent = ${J('Copied', '已複製')}; toast(${J('Copied to the clipboard', '已複製到剪貼簿')});
-    } catch { span.textContent = ${J('Select to copy', '請選取後複製')}; }
+    } catch { span.textContent = ${J('Select to copy', '請選取文字後複製')}; }
     setTimeout(() => { b.classList.remove('done'); span.textContent = ${J('Copy', '複製')}; }, 1800);
   });
 
@@ -162,7 +162,7 @@ export const script = () => `
     if (!c) return;
     let items = read();
     if (c.checked) {
-      if (items.length >= MAX) { c.checked = false; toast(${J('Compare holds ', '比較最多 ')} + MAX + ${J(' tools. Remove one first.', ' 款工具，請先移除一款。')}); return; }
+      if (items.length >= MAX) { c.checked = false; toast(${J('Compare holds ', '最多比較 ')} + MAX + ${J(' tools. Remove one first.', ' 款工具，請先移除一款。')}); return; }
       if (!items.some((i) => i.slug === c.dataset.compare)) items.push({ slug: c.dataset.compare, name: c.dataset.name });
       toast(c.dataset.name + ${J(' added to compare', ' 已加入比較')});
     } else {
@@ -235,6 +235,96 @@ export const script = () => `
       if (shownCount) shownCount.textContent = String(n);
       if (grid) grid.classList.toggle('filtering', q.length > 0);
       if (empty) empty.hidden = n > 0;
+    });
+  }
+
+  // ---------------------------------------------------------------- the clip's chapter player
+  // Server-rendered as the browser's own player plus a hidden bar; with chapters, the bar takes over:
+  // one segment per chapter, its name on hover and while dragging, arrow keys and Page Up/Down to move.
+  const clockOf = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
+  for (const fig of $$('[data-player]')) {
+    const video = $('video', fig);
+    const track = $('[data-track]', fig);
+    const tip = $('[data-tip-box]', fig);
+    const time = $('[data-time]', fig);
+    const play = $('[data-play]', fig);
+    const items = $$('.chapters [data-seek]', fig);
+    const segs = $$('.chap-seg', track).map((el) => ({ el, start: +el.dataset.start, end: +el.dataset.end, title: el.dataset.title, fill: $('.chap-fill', el) }));
+    if (!video || !segs.length) continue;
+    for (const s of segs) s.el.style.flexGrow = String(Math.max(s.end - s.start, 0.1));
+    video.controls = false;
+    $('[data-bar]', fig).hidden = false;
+    const total = () => (isFinite(video.duration) && video.duration > 0 ? video.duration : segs[segs.length - 1].end);
+    const at = (t) => { let cur = segs[0]; for (const s of segs) if (t >= s.start) cur = s; return cur; };
+    const paint = () => {
+      const t = video.currentTime;
+      const cur = at(t);
+      for (const s of segs) s.fill.style.transform = 'scaleX(' + Math.min(1, Math.max(0, (t - s.start) / (s.end - s.start))) + ')';
+      time.textContent = clockOf(t) + ' / ' + clockOf(total());
+      track.setAttribute('aria-valuenow', String(Math.round(t)));
+      track.setAttribute('aria-valuetext', clockOf(t) + ', ' + cur.title);
+      items.forEach((b, i) => (segs[i] === cur ? b.setAttribute('aria-current', 'true') : b.removeAttribute('aria-current')));
+      play.classList.toggle('is-playing', !video.paused);
+      play.setAttribute('aria-label', video.paused ? play.dataset.labelPlay : play.dataset.labelPause);
+    };
+    const seek = (t) => { video.currentTime = Math.max(0, Math.min(total() - 0.05, t)); paint(); };
+    // Segments have gaps between them, so a point maps to time through the segment it is over.
+    const timeAt = (x) => {
+      for (const s of segs) {
+        const r = s.el.getBoundingClientRect();
+        if (x <= r.right + 1.5) return s.start + Math.min(1, Math.max(0, (x - r.left) / r.width)) * (s.end - s.start);
+      }
+      return total();
+    };
+    const showTip = (x) => {
+      const t = timeAt(x);
+      const r = track.getBoundingClientRect();
+      tip.textContent = at(t).title + ' · ' + clockOf(t);
+      tip.hidden = false;
+      tip.style.left = Math.min(Math.max(x - r.left, 60), r.width - 60) + 'px';
+    };
+    let dragging = false;
+    track.addEventListener('pointerdown', (e) => { dragging = true; track.setPointerCapture(e.pointerId); seek(timeAt(e.clientX)); showTip(e.clientX); });
+    track.addEventListener('pointermove', (e) => { showTip(e.clientX); if (dragging) seek(timeAt(e.clientX)); });
+    const stop = (e) => { dragging = false; if (e.pointerType !== 'mouse') tip.hidden = true; };
+    track.addEventListener('pointerup', stop);
+    track.addEventListener('pointercancel', stop);
+    track.addEventListener('pointerleave', () => { if (!dragging) tip.hidden = true; });
+    const toggle = () => (video.paused ? video.play() : video.pause());
+    track.addEventListener('keydown', (e) => {
+      const t = video.currentTime;
+      const i = segs.indexOf(at(t));
+      const to = {
+        ArrowRight: t + 5, ArrowUp: t + 5, ArrowLeft: t - 5, ArrowDown: t - 5, Home: 0, End: total(),
+        PageDown: segs[i + 1] ? segs[i + 1].start : total(),
+        PageUp: t - segs[i].start > 2 ? segs[i].start : (segs[i - 1] || segs[0]).start,
+      };
+      if (e.key in to) { e.preventDefault(); seek(to[e.key]); }
+      else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); }
+    });
+    play.addEventListener('click', toggle);
+    video.addEventListener('click', toggle);
+    $('[data-mute]', fig).addEventListener('click', (e) => { video.muted = !video.muted; e.currentTarget.classList.toggle('is-muted', video.muted); });
+    $('[data-full]', fig).addEventListener('click', () => {
+      const box = $('.player', fig);
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (box.requestFullscreen) box.requestFullscreen();
+      else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+    });
+    for (const ev of ['timeupdate', 'play', 'pause', 'loadedmetadata', 'seeked']) video.addEventListener(ev, paint);
+    paint();
+  }
+  // The chapter list and each feature's "Watch it at" are links to the clip at that time; with the
+  // script they play it in the page instead.
+  for (const b of $$('[data-seek]')) {
+    b.addEventListener('click', (e) => {
+      const fig = $('[data-player]');
+      const video = fig && $('video', fig);
+      if (!video) return;
+      e.preventDefault();
+      video.currentTime = +b.dataset.seek;
+      video.play();
+      fig.scrollIntoView({ block: 'nearest', behavior: still() ? 'auto' : 'smooth' });
     });
   }
 

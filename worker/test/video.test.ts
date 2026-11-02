@@ -74,8 +74,8 @@ function bucket(files: Record<string, Uint8Array>) {
 const BYTES = Uint8Array.from({ length: 100 }, (_, i) => i);
 const FILES = { [`${SLUG}/${CLIP}`]: BYTES, [`${SLUG}/${RAW}`]: BYTES, [`${SLUG}/${CLIP.replace('.mp4', '.jpg')}`]: BYTES.slice(0, 10) };
 
-function site(videos: R2Bucket | undefined) {
-  const worker = makeWorker(index(), { now: () => new Date('2026-11-02T12:00:00Z') });
+function site(videos: R2Bucket | undefined, data: unknown = index()) {
+  const worker = makeWorker(data as any, { now: () => new Date('2026-11-02T12:00:00Z') });
   const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
   const env = { DB: makeD1().db, ...(videos ? { VIDEOS: videos } : {}) } as Env;
   return (path: string, init: RequestInit = {}) => worker.fetch(new Request(`http://127.0.0.1:8787${path}`, init), env, ctx);
@@ -139,18 +139,72 @@ test('without the VIDEOS binding, or with the file not uploaded yet, /video/ is 
   assert.equal((await site(undefined)('/tool/fixture-json-query', { headers: { accept: 'text/html' } })).status, 200);
 });
 
-test('the tool page plays the clip with its poster, says what it is, and links the raw recordings with their sha256', async () => {
+test('the tool page plays the clip first with its poster, and links the raw recordings with their sha256', async () => {
   const res = await site(undefined)(`/tool/${SLUG}`, { headers: { accept: 'text/html' } });
   const html = await res.text();
   assert.match(res.headers.get('content-security-policy') ?? '', /media-src 'self'/);
-  assert.match(html, new RegExp(`<video controls preload="metadata" playsinline poster="/video/${SLUG}/${CLIP.replace('.mp4', '.jpg')}" aria-describedby="video-[^"]+">`));
+  assert.match(html, new RegExp(`<video controls preload="metadata" playsinline poster="/video/${SLUG}/${CLIP.replace('.mp4', '.jpg')}" aria-describedby="showcase-cap">`));
   assert.match(html, new RegExp(`<source src="/video/${SLUG}/${CLIP}" type="video/mp4">`));
-  assert.match(html, /Recorded by pickfit in a sandbox on 2 Nov 2026 · 20 s · shows chat with a local model\./);
+  assert.match(html, /Fixture Chat TUI running, recorded by pickfit on 2 Nov 2026 · 20 s/);
+  assert.ok(html.indexOf('<figure class="showcase">') < html.indexOf('id="progress-title"'), 'the clip comes before everything else');
   assert.match(html, new RegExp(`href="/video/${SLUG}/${RAW}" download>${RAW}</a>`));
   assert.ok(html.includes('b'.repeat(64)));
   // Other tools have no video element.
   const other = await (await site(undefined)('/tool/fixture-json-query', { headers: { accept: 'text/html' } })).text();
   assert.ok(!other.includes('<video'));
+});
+
+/** The index with chapters on the clip: an opening card, the feature, a closing card (as the video step writes them). */
+function chaptered(): unknown {
+  const data = index() as any;
+  const entry = data.entries.find((e: any) => e.slug === SLUG);
+  entry.usage_guide = {
+    model: 'fixture-model', generated_at: '2026-11-02T12:00:00Z', run_id: entry.install.linux.run.id, open_hint: null,
+    features: [{ feature: 'chat with a local model', title: 'Chat with a model on your machine', steps: [] }],
+  };
+  const chapters = [
+    { start_s: 0, title: 'Recorded by pickfit', feature: null },
+    { start_s: 3.5, title: 'chat with a local model', feature: 'chat with a local model' },
+    { start_s: 17, title: 'Unedited recordings', feature: null },
+  ];
+  entry.features = ['chat with a local model'];
+  entry.install.linux.features = [
+    { feature: 'chat with a local model', status: 'checked', reason: null, failure: null, note: null, checks: [{ command: 'fixture-chat-tui --once hi', passed: true }] },
+  ];
+  entry.install.linux.run.video = { ...VIDEO, chapters };
+  for (const run of entry.verification.passed_runs) if (run.id === entry.install.linux.run.id) run.video = { ...VIDEO, chapters };
+  return data;
+}
+
+test('a clip with chapters gets a seek bar cut into them and a chapter list, named in plain words', async () => {
+  const html = await (await site(undefined, chaptered())(`/tool/${SLUG}`, { headers: { accept: 'text/html' } })).text();
+  assert.match(html, /<figure class="showcase" data-player>/);
+  // The native player stays in the page for anyone without the script; the bar starts hidden.
+  assert.match(html, /<video controls preload="metadata"/);
+  assert.match(html, /<div class="player-bar" data-bar hidden>/);
+  assert.match(html, /role="slider" tabindex="0" aria-label="Seek by chapter" aria-valuemin="0" aria-valuemax="20"/);
+  const segs = [...html.matchAll(/<span class="chap-seg" data-start="([\d.]+)" data-end="([\d.]+)" data-title="([^"]+)">/g)].map((m) => m.slice(1));
+  assert.deepEqual(segs, [
+    ['0', '3.5', 'Recorded by pickfit'],
+    ['3.5', '17', 'Chat with a model on your machine'],
+    ['17', '20.25', 'Unedited recordings'],
+  ]);
+  // Each chapter is a link to the clip at its time, so it works without the page script too.
+  assert.ok(html.includes(`<ol class="chapters" aria-label="Chapters"><li><a href="/video/${SLUG}/${CLIP}#t=0" data-seek="0" aria-current="true"><span class="chap-time">0:00</span><span class="chap-title">Recorded by pickfit</span></a>`));
+  assert.ok(html.includes(`<a href="/video/${SLUG}/${CLIP}#t=3.5" data-seek="3.5"><span class="chap-time">0:03</span><span class="chap-title">Chat with a model on your machine</span></a>`));
+  assert.ok(!html.includes('<button type="button" data-seek'), 'no control that needs the script to do anything');
+  // The feature's "how to use it" jumps to its chapter.
+  assert.match(html, new RegExp(`<a class="watch" href="/video/${SLUG}/${CLIP}#t=3.5" data-seek="3.5">.*?Watch it at 0:03</a>`));
+  // In Chinese the two cards use fixed words.
+  const zh = await (await site(undefined, chaptered())(`/tool/${SLUG}?lang=zh-TW`, { headers: { accept: 'text/html' } })).text();
+  assert.match(zh, /data-title="pickfit 錄製"/);
+  assert.match(zh, /data-title="原始錄影"/);
+});
+
+test('a clip without chapters keeps the browser’s own player and no chapter list', async () => {
+  const html = await (await site(undefined)(`/tool/${SLUG}`, { headers: { accept: 'text/html' } })).text();
+  assert.match(html, /<figure class="showcase"><div class="player"><video controls/);
+  assert.ok(!html.includes('<figure class="showcase" data-player>') && !html.includes('class="chapters"') && !html.includes('class="chap-seg"'));
 });
 
 async function guide(videos: R2Bucket | undefined) {

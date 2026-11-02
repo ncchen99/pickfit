@@ -44,6 +44,43 @@
     "replay runs as signed receipts"
   ],
   "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-02T13:16:08.669096Z",
+    "run_id": "verify-xyntetik-runner-20261031-013940-4634",
+    "open_hint": "Run `./runner --info caps` to see what the engine supports on your machine.",
+    "features": [
+      {
+        "feature": "serve models via OpenAI-compatible API",
+        "title": "Serve a model through an OpenAI-compatible API",
+        "steps": [
+          "Start the server with `./runner -m <model.gguf> --serve --port 8080`.",
+          "Send a chat request with `curl -s http://127.0.0.1:8080/v1/chat/completions -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"<your text>\"}],\"temperature\":0,\"max_tokens\":1"
+        ]
+      },
+      {
+        "feature": "train LoRA through quantized weights",
+        "title": "Train a LoRA adapter through quantized weights",
+        "steps": [
+          "Write training examples to a JSONL file, one {\"prompt\": ..., \"completion\": ...} object per line.",
+          "Run `./runner train <data.jsonl> -m <model.gguf> --steps 2 --lora-rank 4 --out <adapter.gguf>`."
+        ]
+      },
+      {
+        "feature": "complete tool calls past token limit",
+        "title": "Finish tool calls past the token limit",
+        "steps": []
+      },
+      {
+        "feature": "replay runs as signed receipts",
+        "title": "Record a run as a signed receipt and replay it",
+        "steps": [
+          "Record a run with `./runner -m <model.gguf> -p \"<your text>\" -s 42 --record <receipt.json>`.",
+          "Check it with `./runner -m <model.gguf> --verify <receipt.json>` and look for VERIFIED."
+        ]
+      }
+    ]
+  },
   "homepage": "https://xyntetik.com",
   "repo": {
     "url": "https://github.com/Joakimpalm-Zen/xyntetik-runner",

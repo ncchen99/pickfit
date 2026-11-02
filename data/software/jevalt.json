@@ -38,6 +38,40 @@
     "return unknown option with reasoning traces"
   ],
   "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-02T13:13:30.096215Z",
+    "run_id": "verify-jevalt-20261101-163415-6a0e",
+    "open_hint": null,
+    "features": [
+      {
+        "feature": "choose between options and return probabilities",
+        "title": "Choose between options and get probabilities",
+        "steps": [
+          "In Python, create a `DecisionEngine` from `jevalt.engine` with a backend and model name.",
+          "Call `predict` with a `state` text and a `questions` entry of type `choice`, with `instructions` and `criteria` for each option.",
+          "Read `choice` and `probabilities` under `answers` in the result."
+        ]
+      },
+      {
+        "feature": "return calibrated probabilities for question types",
+        "title": "Get calibrated probabilities for each question type",
+        "steps": [
+          "In the `questions` passed to `predict`, set `type` to `choice`, `score` or `noul`.",
+          "For `score`, give `criteria` as a list of levels. For `noul`, give a single criterion.",
+          "Read the `probabilities`, `score` or `noul` value for each question under `answers`."
+        ]
+      },
+      {
+        "feature": "return unknown option with reasoning traces",
+        "title": "Get an unknown option with reasoning traces",
+        "steps": [
+          "Add `\"abstain\": True` and `\"reasoning\": \"on\"` to the request passed to `predict`.",
+          "Read `unknown` and `reasoning` for each question under `answers` in the result."
+        ]
+      }
+    ]
+  },
   "homepage": "https://jevalt.mertkayacs.com",
   "repo": {
     "url": "https://github.com/mertkayacs/jevalt",

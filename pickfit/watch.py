@@ -57,7 +57,7 @@ from pathlib import Path
 from typing import Any
 
 from pickfit.d1 import D1Error, Database, sql, timestamp
-from pickfit.discover.github import STARS, normalize_repo
+from pickfit.discover.github import WELL_KNOWN_STARS, normalize_repo
 from pickfit.discover.rules import RULES_VERSION, classify
 from pickfit.discover.store import PipelineDB, repo_key
 from pickfit.ledger import TAIPEI, BudgetExceeded, Ledger, taipei_now
@@ -68,7 +68,8 @@ from pickfit.verify.task import VerifyTask
 MODEL = "muse-spark-1.3"
 EXTRACT_EFFORT = "minimal"
 COVERED = LISTED_CATEGORIES  # dev_cli, local_ai, mcp_server
-STAR_MAX = int(STARS.split("..")[1])  # discovery's upper bound: pickfit lists lesser-known tools
+# Submissions take what the catalog holds (rule github-well-known.v1), not discovery's 5..300 default.
+SUBMIT_STAR_MAX = int(WELL_KNOWN_STARS.split("..")[1])
 DEFAULT_INTERVAL_S = 60
 DEFAULT_CONCURRENCY = 2
 DEFAULT_MAX_USD = 5.0
@@ -509,8 +510,8 @@ class Watcher:
         job.full_name, job.repo_id = repo["full_name"], repo_key(item["id"])
         self._refuse_known(job)
         stars = repo.get("stargazers_count") or 0
-        if stars > STAR_MAX:
-            raise Rejected(f"pickfit lists lesser-known tools (at most {STAR_MAX} GitHub stars); this one has {stars}.")
+        if stars > SUBMIT_STAR_MAX:
+            raise Rejected(f"pickfit lists mostly lesser-known tools (at most {SUBMIT_STAR_MAX} GitHub stars); this one has {stars}.")
 
         with self._stage(job, "github"):
             details = self.steps.github.details(repo)
@@ -735,7 +736,9 @@ class Watcher:
         deploy = self._publish_fn or publish
         with self._git_lock:
             began = time.monotonic()
-            code = deploy(self.s.data_dir, self.s.worker_dir, out=log)
+            # The real publish also translates the new record's page sentences into zh-TW (pickfit/translate.py).
+            extra = {} if self._publish_fn else {"translate": True}
+            code = deploy(self.s.data_dir, self.s.worker_dir, out=log, **extra)
             took = round(time.monotonic() - began, 1)
         if code != 0:
             for job in jobs:

@@ -240,7 +240,7 @@ test('without the model there is no well-known option; with no candidates the no
   );
   assert.equal(h.requests.length, 0);
   assert.equal(none.well_known_option, null);
-  assert.match(none.coverage_note ?? '', /No verified tool.*lists only lesser-known tools, so a well-known one may still fit\./);
+  assert.match(none.coverage_note ?? '', /No verified tool.*desktop GUI apps.*lists mostly lesser-known tools, so a well-known one may still fit\./);
 });
 
 test('a rejected answer degrades to rules, and the log still says which tool the model named', async () => {

@@ -76,7 +76,7 @@ function card(entry: Entry, i: number): string {
     (verified ? '<div class="seam" aria-hidden="true"></div>' : '') +
     `<div class="row">` +
     (web
-      ? badge('pass', L('Checked in a browser, any OS', '已在瀏覽器中檢查，任何作業系統皆可'), { marks: icon('globe'), title: webLevelLabel(web) })
+      ? badge('pass', L('Checked in a browser, any OS', '已在瀏覽器實測，不限系統'), { marks: icon('globe'), title: webLevelLabel(web) })
       : verified
         ? badge('pass', L(`Verified on ${osList}`, `已在 ${osList} 驗證`), {
             marks: oses.map(osMark).join(''),
@@ -108,16 +108,16 @@ export function renderBrowse(catalog: Catalog, params: URLSearchParams, nonce: s
     `<form class="filters" method="get" action="/browse" role="search" aria-label="${L('Filter the catalog', '篩選目錄')}">` +
     `<label class="find-in">${icon('search')}<span class="sr">${L('Filter these tools', '篩選這些工具')}</span><input type="search" data-filter placeholder="${L('Filter by name or task', '依名稱或任務篩選')}" autocomplete="off"></label>` +
     `<fieldset><legend>${L('Kind', '類型')}</legend><div class="chips">${chipLink(!q.kind, href(q, { kind: '' }), L('All', '全部'))}${KINDS.map((k) => chipLink(q.kind === k, href(q, { kind: k }), KIND_PLURAL[k], icon(kindIcon(k)))).join('')}</div></fieldset>` +
-    `<fieldset><legend>${L('Verified on', '驗證平台')}</legend><div class="chips">${chipLink(!q.os, href(q, { os: '' }), L('Any OS', '任何作業系統'))}${OSES.map((o) => chipLink(q.os === o, href(q, { os: o }), OS_NAME[o], osMark(o))).join('')}</div></fieldset>` +
+    `<fieldset><legend>${L('Verified on', '已驗證於')}</legend><div class="chips">${chipLink(!q.os, href(q, { os: '' }), L('Any OS', '不限'))}${OSES.map((o) => chipLink(q.os === o, href(q, { os: o }), OS_NAME[o], osMark(o))).join('')}</div></fieldset>` +
     `<details class="more-filters"${q.gem || q.all || q.sort !== 'gems' ? ' open' : ''}><summary>${L('More filters', '更多篩選')}</summary>` +
-    `<fieldset><legend>${L('Show', '顯示')}</legend><div class="chips">${chipLink(q.gem, href(q, { gem: !q.gem }), L('Hidden gems only', '只看寶藏'))}${chipLink(q.all, href(q, { all: !q.all }), L(`Include ${unverified} not yet verified`, `包含 ${unverified} 款尚未驗證的工具`))}</div></fieldset>` +
+    `<fieldset><legend>${L('Show', '顯示')}</legend><div class="chips">${chipLink(q.gem, href(q, { gem: !q.gem }), L('Hidden gems only', '只看寶藏'))}${chipLink(q.all, href(q, { all: !q.all }), L(`Include ${unverified} not yet verified`, `含 ${unverified} 款未驗證工具`))}</div></fieldset>` +
     `<fieldset><legend>${L('Order', '排序')}</legend><div class="chips">${chipLink(q.sort === 'gems', href(q, { sort: 'gems' }), L('Hidden gems first', '寶藏優先'))}${chipLink(q.sort === 'newest', href(q, { sort: 'newest' }), L('Newest runs', '最新測試'))}${chipLink(q.sort === 'name', href(q, { sort: 'name' }), L('A to Z', 'A 到 Z'))}</div></fieldset></details>` +
     `</form>`;
   const kindPart = q.kind ? ` · ${esc(KIND_PLURAL[q.kind])}` : '';
   const osPart = q.os ? L(` · verified on ${esc(OS_NAME[q.os])}`, ` · 已在 ${esc(OS_NAME[q.os])} 驗證`) : '';
   const main =
     `<section class="head mat after-top"><div class="wrap head-row"><div><h1>${L('Browse verified tools', '瀏覽已驗證的工具')}</h1>` +
-    `<p class="lede">${L('Every tool here was installed by pickfit in a fresh sandbox; every web app was opened and used in a sandboxed browser.', '這裡的每款工具都由 pickfit 在全新的沙盒中安裝過；每個網頁應用都在沙盒瀏覽器中開啟並實際使用過。')}</p></div>` +
+    `<p class="lede">${L('Every tool here was installed by pickfit in a fresh sandbox; every web app was opened and used in a sandboxed browser.', '這裡每款工具都由 pickfit 在全新沙盒裡裝過；網頁應用則在沙盒瀏覽器裡實際用過。')}</p></div>` +
     `${fitz('idle', 150, { eager: true })}</div><div class="ruler" aria-hidden="true"></div></section>` +
     `<div class="wrap layout layout-browse"><aside class="side side-left">${filters}</aside><div>` +
     `<p class="cat-count">${L(

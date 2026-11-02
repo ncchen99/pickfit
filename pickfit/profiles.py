@@ -436,7 +436,7 @@ def build_record(candidate: dict[str, Any], extraction: dict[str, Any], *, slug:
 def _keep_verified_work(data: dict[str, Any], existing: dict[str, Any]) -> None:
     """Carry over what verification and scoring wrote; extraction does not own those fields."""
     data["first_seen_at"] = existing.get("first_seen_at") or data["first_seen_at"]
-    for key in ("verification", "scores", "outcomes", "why_worth_it", "status", "status_reason"):
+    for key in ("verification", "scores", "outcomes", "why_worth_it", "usage_guide", "status", "status_reason"):
         if existing.get(key) is not None:
             data[key] = existing[key]
     for os_name, guide in (existing.get("install") or {}).items():

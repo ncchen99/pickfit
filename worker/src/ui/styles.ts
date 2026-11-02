@@ -600,6 +600,63 @@ body.is-results .home-only{display:none}
 .run-video figcaption{margin-top:8px;font-size:var(--t-small);color:var(--ink-2);max-width:720px}
 .run-video .raw ul{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:6px}
 .run-video .hash{overflow-wrap:anywhere;word-break:break-all;font-size:.8rem}
+.showcase{margin:0 0 40px}
+.showcase video{display:block;width:100%;height:auto;border-radius:var(--r-card);background:#000;box-shadow:var(--lift-1)}
+.showcase figcaption{margin-top:8px;font-size:var(--t-small);color:var(--ink-2)}
+.player{border-radius:var(--r-card);overflow:hidden;background:#000;box-shadow:var(--lift-1)}
+.player video{border-radius:0;box-shadow:none}
+.player:fullscreen{display:flex;flex-direction:column;justify-content:center}
+.player:fullscreen video{flex:1;min-height:0;object-fit:contain}
+.player-bar{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#0b0f0c;color:#f4f1de}
+.player-bar[hidden]{display:none}
+.player-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border:0;border-radius:8px;background:none;color:inherit;cursor:pointer;flex:none}
+.player-btn:hover{background:rgba(244,241,222,.12)}
+.player-btn .i{width:20px;height:20px}
+.player-btn .i+.i,.player-btn.is-playing .i:first-child,.player-btn.is-muted .i:first-child{display:none}
+.player-btn.is-playing .i+.i,.player-btn.is-muted .i+.i{display:inline}
+.chap-track{position:relative;flex:1;min-width:0;display:flex;gap:3px;align-items:center;height:28px;cursor:pointer;touch-action:none}
+.chap-seg{position:relative;flex:1 1 0;min-width:4px;height:6px;border-radius:2px;background:rgba(244,241,222,.28);overflow:hidden;transition:height .12s}
+.chap-track:hover .chap-seg,.chap-track:focus-visible .chap-seg{height:10px}
+.chap-fill{position:absolute;inset:0;background:var(--tape);transform-origin:left center;transform:scaleX(0)}
+.chap-tip{position:absolute;bottom:30px;transform:translateX(-50%);padding:4px 8px;border-radius:6px;background:var(--tag);color:var(--ink);font-size:.8rem;white-space:nowrap;box-shadow:var(--lift-1);pointer-events:none}
+.player-time{font-size:.85rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.chapters{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:2px}
+.chapters a{display:flex;gap:12px;align-items:baseline;padding:8px 10px;border-radius:var(--r-ctl);color:var(--ink);text-decoration:none}
+.chapters a:hover{background:var(--sunk)}
+.chapters a[aria-current]{background:var(--tag);box-shadow:var(--lift-1);font-weight:600}
+.chap-time{min-width:3.2em;color:var(--ink-2);font-variant-numeric:tabular-nums}
+@media (max-width:520px){.player-time{display:none}.player-bar{gap:4px;padding:4px 6px}}
+.progress-row{margin-bottom:14px}
+.progress-sys{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-weight:600}
+.progress-sys .arch{font-weight:500;color:var(--ink-2);font-size:.9rem}
+.prog-stages{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px 8px;max-width:none}
+.prog-stage{display:flex;flex-direction:column;gap:8px;font-size:.9rem;text-align:left;margin:0}
+.prog-bar{display:block;height:8px;border-radius:4px;background:var(--rule)}
+.prog-done .prog-bar{background:var(--pass)}
+.prog-warn .prog-bar{background:var(--caution)}
+.prog-label{display:flex;align-items:flex-start;gap:6px;color:var(--ink-2)}
+.prog-done .prog-label{color:var(--ink)}
+.prog-label .i{flex:none;width:16px;height:16px;margin-top:2px}
+.prog-done .prog-label .i{color:var(--pass)}.prog-warn .prog-label .i{color:var(--caution)}
+.feat-title{font-weight:600}
+.feat-tag{font-size:.75rem;font-weight:600;color:var(--pass);margin-left:4px}
+.how-to{margin-top:6px}
+.how-to summary{font-size:var(--t-small);color:var(--ink-2);cursor:pointer}
+.how-to ol{margin:8px 0 4px;padding-left:20px;font-size:.95rem}
+.how-to li{margin-bottom:4px}
+.watch{display:inline-flex;align-items:center;gap:6px;font-size:var(--t-small);margin-top:4px}
+.watch .i{width:14px;height:14px}
+.open-hint{display:flex;gap:8px;align-items:flex-start;margin:14px 0 0}
+.open-hint .i{flex:none;margin-top:3px;color:var(--pass)}
+.prereq{margin-bottom:16px}
+.tested>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none}
+.tested>summary::-webkit-details-marker{display:none}
+.tested>summary h2{font-size:1.25rem;margin:0}
+.tested[open]>summary .i{transform:rotate(180deg)}
+.tested-run{padding:16px 0;border-top:1px solid var(--rule)}
+.tested-run h3{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+.raw-list{list-style:none;padding:0;display:grid;gap:6px}
+.raw-list .hash,.tested .hash{overflow-wrap:anywhere;word-break:break-all;font-size:.8rem}
 .run-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:center}
 .run-head h3{display:flex;align-items:center;gap:10px;font-size:1.25rem}
 .run-head .arch{font:500 .9rem/1 var(--sans);color:var(--ink-2)}
@@ -764,3 +821,24 @@ body.is-results .hero-fitz{display:none}
 `;
 
 export const CSS = TOKENS + BASE + COMPONENTS + RESULTS + PAGES + MOTION + RESPONSIVE;
+
+/**
+ * Added after CSS on the zh-TW pages only (shell.ts), so the English page is untouched. Chinese needs
+ * more leading, no negative tracking (it crowds the glyphs), no breaks inside short labels, and wraps
+ * that avoid a lone character on the last line; a line that opens with 「 drops its half-width blank.
+ */
+export const CSS_ZH = `
+body{line-height:1.7;line-break:strict}
+h1,h2,h3,h4{letter-spacing:0;text-spacing-trim:trim-start}
+h1{letter-spacing:-.01em;line-height:1.18}
+h2{line-height:1.3}
+p,li,dd,summary,.lede,.st span{text-wrap:pretty}
+.gl-value{text-wrap:balance}
+.ask label,.ask textarea,.fit{letter-spacing:0}
+.fit{line-height:1.5}
+.nav a,.menu-nav a,.seg label,.chip,.btn,.res-tools .btn,.tries a,.proof li{white-space:nowrap}
+.stage>p{max-width:15em;text-wrap:balance}
+.record-title{letter-spacing:.02em}
+.label-tag h3{letter-spacing:.04em}
+@media (hover:hover){.cat-card .chip-compare:hover::after{content:"比較"}}
+`;

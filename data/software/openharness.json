@@ -1,0 +1,557 @@
+{
+  "schema_version": "software.v1",
+  "slug": "openharness",
+  "repo_id": "gh:1322671404",
+  "name": "openharness",
+  "summary": "Command center to run and manage multiple coding agents across local and remote machines in one window.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "desktop_app",
+  "audience": null,
+  "maturity": null,
+  "tags": [
+    "3d-modeling",
+    "agent-framework",
+    "agent-harness",
+    "ai-agents",
+    "cad",
+    "claude-code",
+    "codex",
+    "coding-agents",
+    "developer-tools",
+    "esp32"
+  ],
+  "use_cases": [
+    "run multiple coding agents side by side on different machines",
+    "link laptop, home server and GPU box without SSH keys or port forwarding",
+    "build across disciplines with domain harnesses for CAD, circuits, robots, games and music"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "run Claude Code, Codex, Cursor and others side by side in tmux panes",
+    "link multiple machines with password-based WebRTC/relay connection",
+    "keyboard-first navigation with remappable keys and quick harness finder",
+    "end-to-end encrypted relay forwarding ciphertext without keys"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://www.autonomous.ai/harness",
+  "repo": {
+    "url": "https://github.com/autonomous-ai/openharness",
+    "full_name": "autonomous-ai/openharness",
+    "created_at": "2026-08-04T07:53:15Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://harness.autonomous.ai/cli/install.sh | bash",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "harness login"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-openharness-20261102-175216-6cac",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://cdn.autonomous.ai/harness/desktop/install.sh -o /tmp/desktop-install.sh",
+          "purpose": "download desktop installer script"
+        },
+        {
+          "command": "bash /tmp/desktop-install.sh",
+          "purpose": "install Harness desktop AppImage via desktop installer"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "/home/sbx/.local/opt/Harness.AppImage --appimage-extract-and-run"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://harness.autonomous.ai/cli/install.sh | bash",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "harness login"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.3.90_web",
+    "published_at": "2026-11-02T09:01:53Z",
+    "url": "https://github.com/autonomous-ai/openharness/releases/tag/v1.3.90_web"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:59:26.068104+08:00",
+    "runs": [
+      {
+        "id": "verify-openharness-20261102-175216-6cac",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T17:59:26.068104+08:00",
+        "tool_version": "1.3.50",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://cdn.autonomous.ai/harness/desktop/install.sh -o /tmp/desktop-install.sh",
+            "purpose": "download desktop installer script"
+          },
+          {
+            "command": "bash /tmp/desktop-install.sh",
+            "purpose": "install Harness desktop AppImage via desktop installer"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "/home/sbx/.local/opt/Harness.AppImage --appimage-extract-and-run",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://harness.autonomous.ai/cli/install.sh | bash installs the tool",
+            "actually_needed": "Desktop app uses separate installer at https://cdn.autonomous.ai/harness/desktop/install.sh which downloads Harness.AppImage to ~/.local/opt/",
+            "kind": "note"
+          },
+          {
+            "readme_said": "AppImage runs directly",
+            "actually_needed": "Must run with --appimage-extract-and-run due to missing FUSE/fusermount in sandbox",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The Harness app displays a 'Getting started' onboarding card asking to install required tools to get the computer ready.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-openharness-20261102-175216-6cac/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-openharness-20261102-175216-6cac/replay-12-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.213113,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "/home/sbx/.local/opt/Harness.AppImage --appimage-extract-and-run",
+          "window_title": "Harness",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "run Claude Code, Codex, Cursor and others side by side in tmux panes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Running agents side-by-side requires logged-in account and installed agent CLIs (Claude/Codex etc.)"
+          },
+          {
+            "feature": "link multiple machines with password-based WebRTC/relay connection",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Linking machines requires harness login and second machine with password WebRTC/relay"
+          },
+          {
+            "feature": "keyboard-first navigation with remappable keys and quick harness finder",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Keyboard navigation finder requires signed-in workspace with harnesses; setup overlay blocks terminal"
+          },
+          {
+            "feature": "end-to-end encrypted relay forwarding ciphertext without keys",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "E2E encrypted relay requires authenticated daemon and relay connection"
+          }
+        ]
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-02T18:24:15+08:00",
+    "quality": {
+      "total": 68.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 73.7,
+      "signals": {
+        "stars": 1408,
+        "monthly_downloads": null,
+        "forks": 134,
+        "dependents": null,
+        "release_downloads": 25,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 90,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 17.96
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:24:15.053132+08:00",
+      "sources_sha": "8d054a93ba38a1f9a5ed8fe157fcae77cd9e39f8a4e362578bf41291d975e8e4",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "The ultimate harness for coding agents and beyond."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Built the way developers work"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Needs Node.js 20+, tmux, Xcode and Flutter 3.47+ / Dart 3.13+:"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "curl -fsSL https://harness.autonomous.ai/cli/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "harness login"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Link each one with a password."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[MIT license](LICENSE); upstream tools keep their own."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/autonomous-ai/openharness",
+      "fetched_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/autonomous-ai/openharness/blob/main/README.md",
+      "fetched_at": "2026-11-02T17:28:53+08:00"
+    },
+    {
+      "id": "release:v1.3.90_web",
+      "kind": "release",
+      "url": "https://github.com/autonomous-ai/openharness/releases/tag/v1.3.90_web",
+      "fetched_at": "2026-11-02T17:28:53+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A native app, not Electron. Close it and your agents keep working.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:31:56+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "The ultimate harness for coding agents and beyond. All your agents. All your machines. One command center.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:31:56+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "github_api",
+      "quote": "name: autonomous-ai/openharness",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:31:56+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "[Download the app](https://harness.autonomous.ai/desktop?utm_source=github&utm_medium=readme)** for macOS or Linux.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:31:56+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.3.90_web",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:28:53+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Every agent, side by side\n\nClaude Code, Codex, Cursor, OpenCode, Devin, Amp, Copilot and seven more.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:31:56+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Your laptop, home server and GPU box in one window. Link each one with a password.\nNo SSH keys. No Tailscale. No port forwarding.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:31:56+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "github_api",
+      "quote": "Start with code, then follow your curiosity and build across disciplines: CAD, circuits, robots, games and music.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:31:56+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Claude Code, Codex, Cursor, OpenCode, Devin, Amp, Copilot and seven more.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:31:56+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Your laptop, home server and GPU box in one window. Link each one with a password.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:31:56+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "⌘P finds any harness on any machine. ⇧⌘I jumps to the harness waiting on you. ⌘D splits. Every key remaps.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:31:56+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Code, keys and keystrokes are sealed on your machine. The relay forwards bytes it can't read.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:31:56+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://harness.autonomous.ai/cli/install.sh | bash",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:31:56+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://harness.autonomous.ai/cli/install.sh | bash",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:31:56+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://harness.autonomous.ai/cli/install.sh | bash",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:31:56+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-02T17:27:57+08:00",
+  "updated_at": "2026-11-02T18:24:15+08:00"
+}

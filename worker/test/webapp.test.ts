@@ -191,7 +191,8 @@ test('page: the tool page of a web app, browse and compare', async () => {
     (await worker.fetch(new Request(`http://127.0.0.1:8787${path}`, { headers: { accept: 'text/html' } }), { DB: d1.db, MODEL_API_KEY: 'k' } as Env, ctx)).text();
   const tool = await get(`/tool/${SLUG}`);
   assert.match(tool, /<h1>Fixture Web Sketch<\/h1>/);
-  assert.match(tool, /Verified: It worked when used in a browser/);
+  assert.match(tool, /Tested in a browser/);
+  assert.match(tool, /It worked when used in a browser/);
   assert.match(tool, /href="\/browse\?kind=web_app">Web apps</);
   assert.match(tool, /id="run-web"/);
   assert.match(tool, /Open Fixture Web Sketch/);
