@@ -291,3 +291,9 @@
 ### 盲測偏好前的揭露（補充）
 
 - 本 session 在跑 L2 與評分時，過程中的訊息寫出了部分檢查結果（例如 L2 各題哪一組過、模型評分者的通過數）。念誠可以直接看到這個 session；如果他在交出偏好表單前讀了這些訊息，該題的偏好就不是盲的。之後本 session 的訊息不再寫任何結果，結果只寫進 repo 與給協調 session 的筆記。
+
+## 定稿（2026-11-02 深夜）
+
+- 全部結果在 `eval/results/final/report.md`（`final.py` 產生 `results.json`、`answers-l1.json`）；E 的標記與證據包在 `eval/results/e-tags/`（Claude 為準、Muse 描述；空回應的分類在 `empty-responses.json`）。
+- L1 照 README 9.4 用 Claude 評分者；`unknown` 算不過，另列「若 `unknown` 都算過」的描述數字，不改任何計數。
+- q11 實驗組的 race 算不算，照協調 session 的安排，在念誠看到結果後再問；兩種算法的 L2 結果都是不過。
