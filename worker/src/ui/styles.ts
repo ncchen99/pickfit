@@ -769,8 +769,9 @@ body.has-tray{padding-bottom:72px}
 .cmp-table th[scope=col]:has(.cmp-remove){padding-right:44px}
 .cmp-remove[data-tip]:hover::after{bottom:auto;top:calc(100% + 4px);left:auto;right:0}
 .cmp-remove:hover{background:var(--sunk);color:var(--ink)}
-.cmp-same{margin-top:20px;padding:18px 22px;border-radius:var(--r-card);background:color-mix(in srgb,var(--sunk) 55%,var(--tag))}
-.cmp-same-title{font:700 .95rem/1.2 var(--display);margin:0 0 8px}
+.cmp-table thead td{background:var(--sunk);position:sticky;top:0}
+.cmp-table .same td{color:var(--ink-2)}
+.same-tag{display:inline-block;margin-left:10px;padding:2px 9px;border-radius:999px;background:var(--sunk);color:var(--ink-2);font:600 .75rem/1.5 var(--display);vertical-align:1px}
 .yes{color:var(--pass);font-weight:600}.no{color:var(--caution);font-weight:600}
 .yes .i,.no .i{margin-right:6px;vertical-align:-.2em}
 .run-line{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:2px}
