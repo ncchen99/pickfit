@@ -5,7 +5,7 @@
  */
 import { bestGuide, isWebApp, webCheck, type Arch, type Catalog, type Entry, type GuiEvidence, type OS } from './catalog.ts';
 import { checkIn, webCheckIn, type CheckIn } from './checkin.ts';
-import { ranSentence } from './evidence.ts';
+import { ranSentence, videoOut, videoSentence } from './evidence.ts';
 import { featureSentence, featuresOut, type FeaturesOut } from './features.ts';
 import { newId, REC_ID } from './events.ts';
 import { clientConfig, type McpClientConfig } from './mcpconfig.ts';
@@ -44,6 +44,8 @@ export interface InstallOutput {
     works_offline: boolean | null;
     /** A GUI app's launch as pickfit saw it (level stays install); null for anything else. */
     gui: GuiEvidence | null;
+    /** A clip pickfit recorded of this run: its URL, length and the checked features it shows; null when none. */
+    video?: { url: string; seconds: number; shows: string[]; recorded_at: string } | null;
   };
   applies_to_user_system: {
     match: 'exact' | 'same_os_other_arch' | 'other_os' | 'none';
@@ -123,7 +125,7 @@ function webGuide(entry: Entry, input: InstallInput, now: Date): InstallOutput {
   };
 }
 
-export function installGuide(catalog: Catalog, input: InstallInput, now = new Date()): InstallOutput {
+export function installGuide(catalog: Catalog, input: InstallInput, now = new Date(), videoBase: string | null = null): InstallOutput {
   const entry = catalog.bySlug.get(input.slug);
   if (!entry) {
     throw new UnknownSlugError(`Unknown slug "${input.slug}". Call find_software first and use a slug it returned.`);
@@ -155,8 +157,9 @@ export function installGuide(catalog: Catalog, input: InstallInput, now = new Da
   }));
   const features = featuresOut(entry, guide);
   const covered = featureSentence(features);
+  const clip = guide ? videoSentence(entry.slug, guide.run.video, videoBase) : null;
   const howWeKnow = guide
-    ? `${ranSentence(guide)} These are the recorded steps of that run; no model wrote or changed them.${covered ? ` ${covered}` : ''}`
+    ? `${ranSentence(guide)} These are the recorded steps of that run; no model wrote or changed them.${covered ? ` ${covered}` : ''}${clip ? ` ${clip}` : ''}`
     : `pickfit has not run ${entry.name}'s install steps on any system yet.`;
   const warnings: string[] = [];
   if (steps.some((s) => PIPE_TO_SHELL.test(s.command))) {
@@ -186,6 +189,7 @@ export function installGuide(catalog: Catalog, input: InstallInput, now = new Da
       evidence_url: run?.evidence_url ?? null,
       works_offline: guide?.works_offline ?? null,
       gui: run?.gui ?? null,
+      video: videoOut(entry.slug, run?.video, videoBase),
     },
     applies_to_user_system: { match, note },
     steps,

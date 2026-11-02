@@ -86,12 +86,15 @@ const webApp = z
   .nullable()
   .describe('A hosted web app: open the URL, nothing to install. null for software to install');
 
-/** A GUI app's launch as pickfit saw it; the level stays install (a launch is not a feature test). */
-const gui = z
+/** A GUI app's run as pickfit saw it: a launch supports install; action_checked (a listed feature checked) supports function. */
+export const gui = z
   .object({
     tier: z
-      .enum(['window', 'ui_rendered'])
-      .describe("window = a window of the app's own process opened; ui_rendered = a separate model saw the app's own UI drawn"),
+      .enum(['window', 'ui_rendered', 'action_checked'])
+      .describe(
+        "window = a window of the app's own process opened; ui_rendered = a separate model saw the app's own UI drawn; " +
+          "action_checked = also, pickfit operated the app and checked a listed feature's result",
+      ),
     screen: z
       .enum(['main_ui', 'first_run', 'sign_in_wall', 'crash_or_error', 'blank_or_loading', 'other'])
       .describe("What that model saw in a screenshot of the app's own windows"),
@@ -261,6 +264,11 @@ const installOutput = z.object({
       .nullable()
       .describe('true = its checks passed again with the network off after install; false = they needed the network; null = not checked'),
     gui: gui,
+    video: z
+      .object({ url: z.string(), seconds: z.number().int(), shows: z.array(z.string()), recorded_at: z.string() })
+      .nullable()
+      .optional()
+      .describe('A short clip pickfit recorded of this run operating the app, and the checked features it shows'),
   }),
   applies_to_user_system: z.object({
     match: z.enum(['exact', 'same_os_other_arch', 'other_os', 'none']),
@@ -440,9 +448,9 @@ export function buildServer(deps: Deps): McpServer {
     {
       title: 'Get a verified install guide',
       description:
-        'Use after the user picks a tool from find_software or find_alternatives. Returns install steps pickfit actually ran (replayed in a fresh sandbox, or done by hand), with the OS, date and evidence, ' +
+        'Use after the user picks a tool from find_software or find_alternatives. Returns install steps pickfit actually ran (replayed in a fresh sandbox, or by hand), with the OS, date and evidence (verification.video: a short clip of the run, if any), ' +
         'the steps only the user can do (permissions, accounts), a command to verify the install and a first task to try. ' +
-        'For an MCP server, mcp_client_config gives the `claude mcp add` line and the mcpServers JSON for the launch command pickfit started, with placeholders for keys the user must supply. ' +
+        'For an MCP server, mcp_client_config gives the `claude mcp add` line and the mcpServers JSON for the launch command pickfit started, with placeholders for user keys. ' +
         'Show each command to the user before running it, and ask before any step that needs sudo or pipes a script into a shell. ' +
         'If applies_to_user_system.match is not "exact", tell the user the steps were checked on a different system. ' +
         'For a web app (web_app set) there are no steps: give the user its URL and the facts pickfit checked.' +
@@ -456,7 +464,7 @@ export function buildServer(deps: Deps): McpServer {
     async (args) => {
       try {
         const now = deps.now();
-        const out = installGuide(deps.catalog, args, now);
+        const out = installGuide(deps.catalog, args, now, deps.videoBase ?? null);
         // The read-only deployment has no report_outcome to check in with.
         if (readonly) out.check_in = null;
         deps.waitUntil(

@@ -1,10 +1,15 @@
+import { L } from '../i18n.ts';
+
+/** A visible client-side string as a JS string literal, in the render's language. */
+const J = (en: string, zh: string): string => JSON.stringify(L(en, zh));
+
 /**
  * The page script. Everything works without it (the form posts, links link);
  * it adds results in place, copy buttons, the compare tray (kept in this
  * browser's localStorage only), popover placement, the legend dialog and the
  * browse filter. Event delegation, so fragments inserted later just work.
  */
-export const SCRIPT = `
+export const script = () => `
 (() => {
   const root = document.documentElement;
   root.classList.add('js');
@@ -20,6 +25,13 @@ export const SCRIPT = `
     toasts.append(t);
     setTimeout(() => t.remove(), 2600);
   };
+
+  // ---------------------------------------------------------------- language: keep this page's other query parameters
+  for (const a of $$('a[data-lang]')) {
+    const q = new URLSearchParams(location.search);
+    q.set('lang', a.dataset.lang);
+    a.href = location.pathname + '?' + q + location.hash;
+  }
 
   // ---------------------------------------------------------------- search
   const form = $('#search');
@@ -57,8 +69,8 @@ export const SCRIPT = `
       busy = true;
       go.disabled = true;
       go.setAttribute('aria-busy', 'true');
-      label.textContent = 'Measuring';
-      status.textContent = 'Searching';
+      label.textContent = ${J('Measuring', '量身中')};
+      status.textContent = ${J('Searching', '搜尋中')};
       out.setAttribute('aria-busy', 'true');
       out.replaceChildren($('#loading').content.cloneNode(true));
       if (!document.body.classList.contains('is-results')) {
@@ -71,16 +83,16 @@ export const SCRIPT = `
         if (!(res.headers.get('content-type') || '').startsWith('text/html') || res.status >= 500) throw new Error(String(res.status));
         out.innerHTML = await res.text();
         const n = $$('.pick', out).length;
-        status.textContent = n ? n + (n === 1 ? ' result' : ' results') : 'No results';
+        status.textContent = n ? n + (n === 1 ? ${J(' result', ' 個結果')} : ${J(' results', ' 個結果')}) : ${J('No results', '沒有結果')};
         syncChecks();
       } catch {
         out.replaceChildren($('#offline').content.cloneNode(true));
-        status.textContent = 'Search failed';
+        status.textContent = ${J('Search failed', '搜尋失敗')};
       } finally {
         busy = false;
         go.disabled = false;
         go.removeAttribute('aria-busy');
-        label.textContent = 'Find my fit';
+        label.textContent = ${J('Find my fit', '幫我找合身的')};
         out.removeAttribute('aria-busy');
         out.focus({ preventScroll: true });
       }
@@ -104,9 +116,9 @@ export const SCRIPT = `
     const span = b.querySelector('span');
     try {
       await navigator.clipboard.writeText(text);
-      b.classList.add('done'); span.textContent = 'Copied'; toast('Copied to the clipboard');
-    } catch { span.textContent = 'Select to copy'; }
-    setTimeout(() => { b.classList.remove('done'); span.textContent = 'Copy'; }, 1800);
+      b.classList.add('done'); span.textContent = ${J('Copied', '已複製')}; toast(${J('Copied to the clipboard', '已複製到剪貼簿')});
+    } catch { span.textContent = ${J('Select to copy', '請選取文字後複製')}; }
+    setTimeout(() => { b.classList.remove('done'); span.textContent = ${J('Copy', '複製')}; }, 1800);
   });
 
   // ---------------------------------------------------------------- compare tray
@@ -135,12 +147,12 @@ export const SCRIPT = `
       const li = document.createElement('li');
       li.textContent = i.name;
       const x = document.createElement('button');
-      x.type = 'button'; x.dataset.trayRemove = i.slug; x.setAttribute('aria-label', 'Remove ' + i.name);
+      x.type = 'button'; x.dataset.trayRemove = i.slug; x.setAttribute('aria-label', ${J('Remove ', '移除 ')} + i.name);
       x.innerHTML = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
       li.append(x);
       return li;
     }));
-    note.textContent = items.length < 2 ? 'Add one more to compare' : items.length + ' of ' + MAX;
+    note.textContent = items.length < 2 ? ${J('Add one more to compare', '再加一款即可比較')} : items.length + ${J(' of ', ' / ')} + MAX;
     goCmp.href = href(items);
     goCmp.setAttribute('aria-disabled', String(items.length < 2));
     syncChecks();
@@ -150,9 +162,9 @@ export const SCRIPT = `
     if (!c) return;
     let items = read();
     if (c.checked) {
-      if (items.length >= MAX) { c.checked = false; toast('Compare holds ' + MAX + ' tools. Remove one first.'); return; }
+      if (items.length >= MAX) { c.checked = false; toast(${J('Compare holds ', '最多比較 ')} + MAX + ${J(' tools. Remove one first.', ' 款工具，請先移除一款。')}); return; }
       if (!items.some((i) => i.slug === c.dataset.compare)) items.push({ slug: c.dataset.compare, name: c.dataset.name });
-      toast(c.dataset.name + ' added to compare');
+      toast(c.dataset.name + ${J(' added to compare', ' 已加入比較')});
     } else {
       items = items.filter((i) => i.slug !== c.dataset.compare);
     }
@@ -163,7 +175,7 @@ export const SCRIPT = `
     if (x) { write(read().filter((i) => i.slug !== x.dataset.trayRemove)); render(); return; }
     if (e.target.closest('[data-tray-clear]')) { write([]); render(); return; }
     const g = e.target.closest('[data-tray-go]');
-    if (g && read().length < 2) { e.preventDefault(); toast('Pick at least two tools to compare'); }
+    if (g && read().length < 2) { e.preventDefault(); toast(${J('Pick at least two tools to compare', '請至少選兩款工具來比較')}); }
   });
   // The compare page says what it shows; keep the tray in step with it.
   const shown = $('[data-compare-shown]');
@@ -204,7 +216,7 @@ export const SCRIPT = `
       const later = $$('.cat-card.later', grid);
       later.slice(0, 30).forEach((c) => c.classList.remove('later'));
       const left = later.length - 30;
-      if (left > 0) more.textContent = 'Show ' + Math.min(30, left) + ' more'; else more.parentElement.remove();
+      if (left > 0) more.textContent = ${J('Show ', '再顯示 ')} + Math.min(30, left) + ${J(' more', ' 款')}; else more.parentElement.remove();
     });
   }
   const filter = $('[data-filter]');

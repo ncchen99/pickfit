@@ -25,6 +25,7 @@ import type { Catalog } from './catalog.ts';
 import { settings, webSettings, type Env } from './env.ts';
 import { findSoftware, type Deps } from './find.ts';
 import { estimateCostUsd } from './meta.ts';
+import { L, langCookie, localizedCatalog, pickLang, translateWith, withLang, type Lang, type Translations } from './i18n.ts';
 import { installGuide, type InstallOutput } from './install.ts';
 import { catalogShowcase, EMPTY_FORM, renderNotice, renderPage, renderResults, type BudgetStop, type FormValues, type SearchResult } from './page.ts';
 import { renderBrowse } from './pages/browse.ts';
@@ -32,6 +33,7 @@ import { renderCompare } from './pages/compare.ts';
 import { renderAgents, renderHow, renderNotFound } from './pages/info.ts';
 import { renderTool } from './pages/tool.ts';
 import { findInput } from './server.ts';
+import { osName } from './ui/facts.ts';
 import { SLUG } from './ui/html.ts';
 
 /** Searches per visitor per minute; wrangler.jsonc's WEB_RATE_LIMITER uses the same number. */
@@ -56,6 +58,8 @@ export interface WebOptions {
   /** Test hook: replaces global fetch for the Meta call. */
   fetch?: typeof fetch;
   now?: () => Date;
+  /** The zh-TW sentences of each tool (generated/zh-TW.json); without them the zh-TW page shows the data in English. */
+  translations?: Translations;
 }
 
 const OS_VALUES = new Set(['macos', 'linux', 'windows']);
@@ -133,7 +137,7 @@ async function sha256(text: string): Promise<string> {
 function csp(nonce: string | null): string {
   const inline = nonce ? `'nonce-${nonce}'` : `'none'`;
   // Fitz, the icons and the font are this Worker's own static assets (worker/public/assets).
-  return `default-src 'none'; script-src ${inline}; style-src ${inline}; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'`;
+  return `default-src 'none'; script-src ${inline}; style-src ${inline}; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'`;
 }
 
 function html(body: string, status: number, nonce: string | null, extra: Record<string, string> = {}): Response {
@@ -142,6 +146,8 @@ function html(body: string, status: number, nonce: string | null, extra: Record<
     headers: {
       'content-type': 'text/html; charset=utf-8',
       'cache-control': 'no-store',
+      // The language comes from ?lang=, the cookie or Accept-Language (i18n.ts).
+      vary: 'Accept, Cookie, Accept-Language',
       'content-security-policy': csp(nonce),
       'x-content-type-options': 'nosniff',
       'referrer-policy': 'no-referrer',
@@ -160,8 +166,54 @@ interface Searched {
 }
 const wantsHtml = (request: Request) => (request.headers.get('accept') ?? '').includes('text/html');
 
+const ZH_CLAIM: Record<string, string> = {
+  'No install: it opens in a browser': '免安裝：用瀏覽器就能開啟',
+  'pickfit opened it in a browser and checked it': 'pickfit 已在瀏覽器中開啟並檢查過',
+  'Works offline once loaded (checked)': '載入後可離線使用（已檢查）',
+  'What you type stayed on your device in pickfit’s check': '在 pickfit 的檢查中，你輸入的內容都留在你的裝置上',
+  'Free to use': '免費使用',
+  'Install steps were run and checked by pickfit': '安裝步驟已由 pickfit 執行並檢查',
+  'Runs on your machine without a cloud service': '在你的電腦上執行，不需要雲端服務',
+};
+
+/** The rules path's reasons (rules.ts templateReasons) in zh-TW; a model-written reason returns null and stays as written. */
+export function zhRuleClaim(claim: string, map: Record<string, string> | undefined): string | null {
+  if (ZH_CLAIM[claim]) return ZH_CLAIM[claim];
+  const useCase = /^Use case: (.+)$/s.exec(claim);
+  if (useCase) return `用途：${map?.[useCase[1]] ?? useCase[1]}`;
+  const ranOn = /^Install steps were run and checked on (macos|linux|windows)$/.exec(claim);
+  if (ranOn) return `安裝步驟已在 ${osName(ranOn[1] as 'macos')} 上執行並檢查`;
+  return null;
+}
+
 export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
   const showcase = catalogShowcase(catalog);
+  // The zh-TW pages read a copy of the catalog with each tool's sentences in Chinese; search always runs on `catalog`.
+  const translations = options.translations ?? {};
+  let zh: { catalog: Catalog; showcase: ReturnType<typeof catalogShowcase> } | null = null;
+  const view = (lang: Lang) => {
+    if (lang === 'en') return { catalog, showcase };
+    if (!zh) {
+      const localized = localizedCatalog(catalog, translations);
+      zh = { catalog: localized, showcase: catalogShowcase(localized) };
+    }
+    return zh;
+  };
+  /** One search's picks and guides with their tools' sentences in the page's language. */
+  const localizeResult = (result: SearchResult, lang: Lang): SearchResult =>
+    lang === 'en'
+      ? result
+      : {
+          out: {
+            ...result.out,
+            picks: result.out.picks.map((pick) => {
+              const map = translations[pick.slug];
+              const why = pick.why.map((reason) => ({ ...reason, claim: zhRuleClaim(reason.claim, map) ?? reason.claim }));
+              return translateWith(map, { ...pick, why });
+            }),
+          },
+          guides: Object.fromEntries(Object.entries(result.guides).map(([slug, guide]) => [slug, translateWith(translations[slug], guide)])),
+        };
   const now = options.now ?? (() => new Date());
   const cache = new Map<string, { at: number; result: SearchResult }>();
   /** Searches running now, by the same key as the cache: an identical one waits for this result. */
@@ -170,9 +222,10 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
   /** Without the rate limiting binding: request times per hashed visitor key, this isolate only. */
   const recent = new Map<string, number[]>();
 
-  function page(origin: string, form: FormValues, results: string, status = 200, extra: Record<string, string> = {}): Response {
+  function page(lang: Lang, origin: string, form: FormValues, results: string, status = 200, extra: Record<string, string> = {}): Response {
     const nonce = newNonce();
-    return html(renderPage({ nonce, origin, showcase, form, results }), status, nonce, extra);
+    const body = withLang(lang, () => renderPage({ nonce, origin, showcase: view(lang).showcase, form, results }));
+    return html(body, status, nonce, extra);
   }
 
   async function allow(request: Request, env: Env): Promise<boolean> {
@@ -217,21 +270,38 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
     if (!host.ok || !origin.ok) return new Response('Forbidden', { status: 403 });
 
     const fragment = request.headers.get('x-pickfit-fragment') === '1';
-    const respond = (form: FormValues, body: string, status = 200, extra: Record<string, string> = {}) =>
-      fragment ? html(body, status, null, extra) : page(url.origin, form, body, status, extra);
+    const { lang } = pickLang(request);
+    const shown = view(lang).catalog;
+    /** `body` renders in the page's language; it must be synchronous (i18n.ts). */
+    const respond = (form: FormValues, body: () => string, status = 200, extra: Record<string, string> = {}) => {
+      const rendered = withLang(lang, body);
+      return fragment ? html(rendered, status, null, extra) : page(lang, url.origin, form, rendered, status, extra);
+    };
+    const results = (result: SearchResult, form: FormValues, opts: Parameters<typeof renderResults>[3]) => () =>
+      renderResults(localizeResult(result, lang), form, shown, opts);
 
     const text = await readBody(request, BODY_MAX_BYTES);
     if (text === null) {
-      return respond(EMPTY_FORM, renderNotice('error', 'That request is too long', `Describe what you need in up to ${NEED_MAX} characters.`), 413);
+      return respond(
+        EMPTY_FORM,
+        () => renderNotice('error', L('That request is too long', '需求太長了'), L(`Describe what you need in up to ${NEED_MAX} characters.`, `請用 ${NEED_MAX} 字以內描述你的需求。`)),
+        413,
+      );
     }
     const form = formFrom(new URLSearchParams(text));
     const chars = [...form.need].length;
     const parsed = findInput.safeParse(toFindArgs(form));
     if (chars < NEED_MIN || chars > NEED_MAX || !parsed.success) {
-      const said = chars > NEED_MAX ? `That is ${COUNT.format(chars)} characters. ` : '';
       return respond(
         form,
-        renderNotice('error', 'Describe what you need', `${said}Write ${NEED_MIN} to ${NEED_MAX} characters about the job you want done, then search again.`),
+        () => {
+          const said = chars > NEED_MAX ? L(`That is ${COUNT.format(chars)} characters. `, `目前是 ${COUNT.format(chars)} 字。`) : '';
+          return renderNotice(
+            'error',
+            L('Describe what you need', '描述你的需求'),
+            L(`${said}Write ${NEED_MIN} to ${NEED_MAX} characters about the job you want done, then search again.`, `${said}請用 ${NEED_MIN} 到 ${NEED_MAX} 字描述你想完成的工作，再搜尋一次。`),
+          );
+        },
         400,
       );
     }
@@ -242,14 +312,14 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
       const hit = cache.get(key);
       if (hit && t - hit.at < CACHE_TTL_MS) {
         console.log(JSON.stringify({ event: 'web_search', cached: true, picks: hit.result.out.picks.length }));
-        return respond(form, renderResults(hit.result, form, catalog, { cached: true }));
+        return respond(form, results(hit.result, form, { cached: true }));
       }
       const same = running.get(key);
       if (!same) break;
       const shared = await same;
       if (shared) {
         console.log(JSON.stringify({ event: 'web_search', shared: true, picks: shared.result.out.picks.length }));
-        return respond(form, renderResults(shared.result, form, catalog, { budget: shared.budget }));
+        return respond(form, results(shared.result, form, { budget: shared.budget }));
       }
       // The search this one waited for was refused (rate limit or busy): try for itself.
     }
@@ -264,7 +334,15 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
         console.log(JSON.stringify({ event: 'web_rate_limited' }));
         return respond(
           form,
-          renderNotice('busy', 'Busy: too many searches from here', 'Each search asks a Meta model, so pickfit limits how often one connection can search. Try again in a minute.'),
+          () =>
+            renderNotice(
+              'busy',
+              L('Busy: too many searches from here', '搜尋太頻繁了'),
+              L(
+                'Each search asks a Meta model, so pickfit limits how often one connection can search. Try again in a minute.',
+                '每次搜尋都會呼叫 Meta 的模型，所以 pickfit 會限制同一連線的搜尋次數。請一分鐘後再試。',
+              ),
+            ),
           429,
           { 'retry-after': '60' },
         );
@@ -274,7 +352,12 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
         console.log(JSON.stringify({ event: 'web_busy', in_flight: inFlight }));
         return respond(
           form,
-          renderNotice('busy', 'Busy: pickfit is answering other searches', 'A few searches are running right now. Try again in a few seconds.'),
+          () =>
+            renderNotice(
+              'busy',
+              L('Busy: pickfit is answering other searches', '忙碌中：pickfit 正在處理其他搜尋'),
+              L('A few searches are running right now. Try again in a few seconds.', '目前有幾個搜尋正在進行，請幾秒後再試。'),
+            ),
           503,
           { 'retry-after': '10' },
         );
@@ -299,7 +382,7 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
       for (const [k, v] of cache) if (cache.size > CACHE_MAX || t - v.at >= CACHE_TTL_MS) cache.delete(k);
     }
     console.log(JSON.stringify({ event: 'web_search', cached: false, picks: result.out.picks.length, degraded_reason: result.out.degraded_reason }));
-    return respond(form, renderResults(result, form, catalog, { budget }));
+    return respond(form, results(result, form, { budget }));
   }
 
   /** One search: reserve the worst-case cost, run find_software, release the hold. */
@@ -347,28 +430,35 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
     async fetch(request: Request, env: Env, ctx: ExecutionContext, hosts: string[]): Promise<Response | null> {
       if (!webSettings(env).enabled) return null;
       const url = new URL(request.url);
+      const { lang, remember } = pickLang(request);
+      // ?lang= is remembered for the next pages (and for searches, which post without it).
+      const keep: Record<string, string> = remember ? { 'set-cookie': langCookie(lang) } : {};
+      const shown = view(lang).catalog;
+      const render = (body: (nonce: string) => string, status = 200) => {
+        const nonce = newNonce();
+        return html(withLang(lang, () => body(nonce)), status, nonce, keep);
+      };
       if (url.pathname === '/') {
         if (request.method !== 'GET' || !wantsHtml(request)) return null;
-        return page(url.origin, EMPTY_FORM, '', 200, { vary: 'Accept' });
+        return page(lang, url.origin, EMPTY_FORM, '', 200, keep);
       }
       if (url.pathname !== '/search') {
         // The catalog pages: read from the bundled index only, no model call and no D1.
         if (request.method !== 'GET' && request.method !== 'HEAD') return null;
-        const nonce = newNonce();
         const tool = /^\/tool\/([^/]+)\/?$/.exec(url.pathname);
         if (tool) {
           const slug = decodeURIComponent(tool[1]).toLowerCase();
-          const entry = SLUG.test(slug) ? catalog.bySlug.get(slug) : undefined;
-          return entry ? html(renderTool(catalog, entry, nonce), 200, nonce) : html(renderNotFound(nonce), 404, nonce);
+          const entry = SLUG.test(slug) ? shown.bySlug.get(slug) : undefined;
+          return entry ? render((nonce) => renderTool(shown, entry, nonce)) : render((nonce) => renderNotFound(nonce), 404);
         }
-        if (url.pathname === '/browse') return html(renderBrowse(catalog, url.searchParams, nonce), 200, nonce);
-        if (url.pathname === '/compare') return html(renderCompare(catalog, url.searchParams, nonce), 200, nonce);
-        if (url.pathname === '/how') return html(renderHow(catalog, nonce), 200, nonce);
-        if (url.pathname === '/agents') return html(renderAgents(url.origin, nonce), 200, nonce);
+        if (url.pathname === '/browse') return render((nonce) => renderBrowse(shown, url.searchParams, nonce));
+        if (url.pathname === '/compare') return render((nonce) => renderCompare(shown, url.searchParams, nonce));
+        if (url.pathname === '/how') return render((nonce) => renderHow(shown, nonce));
+        if (url.pathname === '/agents') return render((nonce) => renderAgents(url.origin, nonce));
         // Anything else a browser asks for gets the not-found page; other clients keep the plain 404.
-        return wantsHtml(request) ? html(renderNotFound(nonce), 404, nonce) : null;
+        return wantsHtml(request) ? render((nonce) => renderNotFound(nonce), 404) : null;
       }
-      if (request.method === 'GET') return new Response(null, { status: 303, headers: { location: '/' } });
+      if (request.method === 'GET') return new Response(null, { status: 303, headers: { location: '/', ...keep } });
       if (request.method !== 'POST') return new Response('Method not allowed', { status: 405, headers: { allow: 'POST' } });
       return search(request, env, ctx, hosts);
     },

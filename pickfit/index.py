@@ -138,6 +138,16 @@ def _web(record: SoftwareRecord) -> dict[str, Any] | None:
     return {"url": record.web.url, "check": check}
 
 
+def _video(run: VerificationRun) -> dict[str, Any] | None:
+    """A run's verification clip and the raw recordings it was cut from (files the Worker serves from R2 at
+    /video/<slug>/<file>; the poster is the clip's name with .jpg)."""
+    v = run.video
+    if v is None:
+        return None
+    return {"clip": v.clip, "clip_sha256": v.clip_sha256, "seconds": v.seconds, "recorded_at": _iso(v.recorded_at),
+            "features": list(v.features), "raw": [{"file": r.file, "sha256": r.sha256, "seconds": r.seconds} for r in v.raw]}
+
+
 def _run_summary(run: VerificationRun) -> dict[str, Any]:
     return {
         "id": run.id,
@@ -153,6 +163,7 @@ def _run_summary(run: VerificationRun) -> dict[str, Any]:
         "gui": _gui(run),
         "gpu": run.gpu,
         "microphone": run.microphone,
+        "video": _video(run),
     }
 
 
@@ -268,5 +279,13 @@ def build_index(data_dir: Path = DEFAULT_DATA_DIR, now: datetime | None = None) 
 
 
 def write_index(index: dict[str, Any], out: Path = DEFAULT_OUT) -> None:
+    """The index, and beside it the web page's zh-TW sentences for the same entries (zh-TW.json)."""
+    from pickfit.i18n import LANG, i18n_dir, worker_translations
+
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(index, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    data_dir = Path(index["data_dir"])
+    if not data_dir.is_absolute():
+        data_dir = REPO_ROOT / data_dir
+    translations = worker_translations(index, i18n_dir(data_dir))
+    (out.parent / f"{LANG}.json").write_text(json.dumps(translations, ensure_ascii=False) + "\n", encoding="utf-8")

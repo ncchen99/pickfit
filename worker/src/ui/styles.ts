@@ -17,8 +17,8 @@ const TOKENS = `
 --lift-2:0 2px 4px rgb(23 40 28/.08),0 18px 36px -16px rgb(23 40 28/.36);
 --lift-3:0 4px 10px rgb(10 25 15/.14),0 30px 60px -20px rgb(10 25 15/.5);
 --r-card:14px;--r-ctl:10px;
---display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
---sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+--display:"Bricolage Grotesque",ui-sans-serif,system-ui,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
 --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
 --t-display:clamp(2.5rem,5.2vw,4.4rem);--t-title:clamp(1.6rem,2.6vw,2.2rem);--t-head:1.25rem;--t-lead:1.15rem;--t-small:.875rem;
 --ease-out:cubic-bezier(.16,1,.3,1);--ease-io:cubic-bezier(.65,0,.35,1);
@@ -94,6 +94,9 @@ repeating-linear-gradient(90deg,var(--on-mat-2) 0 1.5px,transparent 1.5px 40px) 
 .nav a:hover,.menu-nav a:hover{color:var(--on-mat);background:rgb(244 241 222/.08)}
 .nav a[aria-current=page],.menu-nav a[aria-current=page]{color:var(--on-mat);background:rgb(244 241 222/.14)}
 .count{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--tape);color:var(--tape-ink);font:700 .75rem/20px var(--display);text-align:center}
+.lang-switch{display:inline-flex;align-items:center;gap:6px;text-decoration:none;padding:7px 12px;border-radius:999px;border:1px solid rgb(244 241 222/.28);font:600 .9rem/1 var(--display);color:var(--on-mat);white-space:nowrap}
+.lang-switch:hover{background:rgb(244 241 222/.08)}
+.top-end{display:flex;align-items:center;gap:8px}
 .menu{display:none;position:relative}
 .menu summary{list-style:none;cursor:pointer;padding:10px;border-radius:var(--r-ctl);color:var(--on-mat)}
 .menu summary::-webkit-details-marker{display:none}
@@ -592,6 +595,11 @@ body.is-results .home-only{display:none}
 .uses{columns:2;column-gap:32px}.uses li{break-inside:avoid;margin-bottom:6px}
 .run-card{background:var(--tag);border-radius:var(--r-card);padding:22px 24px;box-shadow:var(--lift-1);margin-bottom:20px}
 .run-card .install{background:color-mix(in srgb,var(--sunk) 55%,var(--tag))}
+.run-video{margin:14px 0 16px}
+.run-video video{display:block;width:100%;max-width:720px;height:auto;border-radius:var(--r-ctl);background:#000}
+.run-video figcaption{margin-top:8px;font-size:var(--t-small);color:var(--ink-2);max-width:720px}
+.run-video .raw ul{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:6px}
+.run-video .hash{overflow-wrap:anywhere;word-break:break-all;font-size:.8rem}
 .run-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:center}
 .run-head h3{display:flex;align-items:center;gap:10px;font-size:1.25rem}
 .run-head .arch{font:500 .9rem/1 var(--sans);color:var(--ink-2)}
@@ -756,3 +764,24 @@ body.is-results .hero-fitz{display:none}
 `;
 
 export const CSS = TOKENS + BASE + COMPONENTS + RESULTS + PAGES + MOTION + RESPONSIVE;
+
+/**
+ * Added after CSS on the zh-TW pages only (shell.ts), so the English page is untouched. Chinese needs
+ * more leading, no negative tracking (it crowds the glyphs), no breaks inside short labels, and wraps
+ * that avoid a lone character on the last line; a line that opens with 「 drops its half-width blank.
+ */
+export const CSS_ZH = `
+body{line-height:1.7;line-break:strict}
+h1,h2,h3,h4{letter-spacing:0;text-spacing-trim:trim-start}
+h1{letter-spacing:-.01em;line-height:1.18}
+h2{line-height:1.3}
+p,li,dd,summary,.lede,.st span{text-wrap:pretty}
+.gl-value{text-wrap:balance}
+.ask label,.ask textarea,.fit{letter-spacing:0}
+.fit{line-height:1.5}
+.nav a,.menu-nav a,.seg label,.chip,.btn,.res-tools .btn,.tries a,.proof li{white-space:nowrap}
+.stage>p{max-width:15em;text-wrap:balance}
+.record-title{letter-spacing:.02em}
+.label-tag h3{letter-spacing:.04em}
+@media (hover:hover){.cat-card .chip-compare:hover::after{content:"比較"}}
+`;

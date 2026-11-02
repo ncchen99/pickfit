@@ -71,7 +71,8 @@ test('GET / is the page for a browser; anything else still gets the JSON health 
   const page = await s.send(new Request('http://127.0.0.1:8787/', { headers: { accept: 'text/html,application/xhtml+xml,*/*;q=0.8' } }));
   assert.equal(page.status, 200);
   assert.match(page.headers.get('content-type')!, /^text\/html/);
-  assert.equal(page.headers.get('vary'), 'Accept');
+  // The page also varies by its language (i18n.ts: cookie, then Accept-Language).
+  assert.equal(page.headers.get('vary'), 'Accept, Cookie, Accept-Language');
   const html = await page.text();
   assert.match(html, /<form id="search"[^>]*method="post" action="\/search#results"/);
   assert.match(html, /claude mcp add --transport http pickfit http:\/\/127\.0\.0\.1:8787\/mcp/);

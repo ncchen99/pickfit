@@ -1,0 +1,1880 @@
+{
+  "n": 1,
+  "target": {
+    "slug": "hako-code",
+    "stratum": "dev_cli",
+    "category": "dev_cli",
+    "level": "service",
+    "os": "linux"
+  },
+  "arguments": {
+    "need": "I want an AI helper in my terminal that can read my project, edit files and run commands, but I'm tired of tools that drag in Python or Node and a pile of packages. Ideally it's a single small binary I can compile myself with just a C compiler. It has to keep working with no internet by running a model stored on my own machine, and it should ask me before every file change or shell command. Open source is a must.",
+    "os": "linux"
+  },
+  "used_attempt": 2,
+  "attempts": [
+    {
+      "at": "2026-11-02T17:11:22+08:00",
+      "latency_s": 24.8,
+      "http_status": 200,
+      "ledger_row": 43088,
+      "is_error": false,
+      "find": {
+        "rec_id": "rec_6e06852af4d14589996baebb32b9a0b9",
+        "matched_by": "rules",
+        "degraded": true,
+        "degraded_reason": "model_incomplete",
+        "model_attempts": 1,
+        "model_http_status": null,
+        "considered": 494,
+        "picks": [
+          {
+            "slug": "hazzel",
+            "name": "Hazzel",
+            "summary": "Terminal coding agent that shows diffs for approval before editing files.",
+            "fit": "Terminal coding agent that shows diffs for approval before editing files.",
+            "why": [
+              {
+                "claim": "Install steps were run and checked on linux",
+                "field": "verified_on",
+                "value": "linux x86_64: sandbox install, replayed from scratch, function check passed, 2026-11-01"
+              },
+              {
+                "claim": "Use case: review staged git changes",
+                "field": "use_cases",
+                "value": "review staged git changes"
+              },
+              {
+                "claim": "Free to use",
+                "field": "pricing",
+                "value": "free"
+              }
+            ],
+            "tradeoffs": [
+              "Weak match: its profile mentions edit but not read, tired, drag, python, node."
+            ],
+            "vs_well_known": null,
+            "platforms": [],
+            "pricing": "free",
+            "processing": "hybrid",
+            "open_source": true,
+            "license": "Apache-2.0",
+            "verification": {
+              "level": "function",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-11-01T16:21:32.983114+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [
+                {
+                  "feature": "Review and commit git changes",
+                  "check": "printf \"/status\\n/exit\\n\" | hazzel 2>&1"
+                }
+              ],
+              "not_checked": [
+                {
+                  "feature": "Edit files with diff approval",
+                  "reason": "needs_account",
+                  "detail": "needs an account or API key, which the sandbox does not have: Edit with diff approval requires LLM provider key (GROQ_API_KEY etc.)"
+                },
+                {
+                  "feature": "Undo agent edits selectively",
+                  "reason": "needs_account",
+                  "detail": "needs an account or API key, which the sandbox does not have: Selective /undo /redo requires prior agent edits which need LLM key"
+                },
+                {
+                  "feature": "Run sandboxed shell commands",
+                  "reason": "needs_account",
+                  "detail": "needs an account or API key, which the sandbox does not have: Sandboxed shell commands are dispatched via LLM; cannot trigger without API key"
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; a smoke test of its main function passed. The run exercised 1 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 78/100 and popularity 81/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, verification on your OS, treasure score) among 494 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 77.9,
+              "popularity": 81.4,
+              "treasure": false
+            },
+            "repo": "https://github.com/mukundzha/hazzel",
+            "homepage": "https://agenthazzel.vercel.app",
+            "match": {
+              "quality": "weak",
+              "covers": [
+                "edit"
+              ],
+              "missing": [
+                "read",
+                "tired",
+                "drag",
+                "python",
+                "node",
+                "packages",
+                "single",
+                "binary",
+                "compile",
+                "compiler",
+                "keep",
+                "working",
+                "machine",
+                "ask"
+              ]
+            }
+          },
+          {
+            "slug": "flashagent",
+            "name": "FlashAgent",
+            "summary": "Terminal coding agent that uses local or cloud models to read, edit, and run code.",
+            "fit": "Terminal coding agent that uses local or cloud models to read, edit, and run code.",
+            "why": [
+              {
+                "claim": "Install steps were run and checked on linux",
+                "field": "verified_on",
+                "value": "linux x86_64: sandbox install, replayed from scratch, function check passed, 2026-10-30"
+              },
+              {
+                "claim": "Use case: test whether configured model can call tools",
+                "field": "use_cases",
+                "value": "test whether configured model can call tools"
+              }
+            ],
+            "tradeoffs": [
+              "Weak match: its profile mentions read, edit but not tired, drag, python, node, packages."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "macos",
+              "linux",
+              "windows"
+            ],
+            "pricing": "unknown",
+            "processing": "hybrid",
+            "open_source": true,
+            "license": "MIT",
+            "verification": {
+              "level": "function",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-10-31T03:22:43.682808+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [],
+              "not_checked": [
+                {
+                  "feature": "code in terminal with local models",
+                  "reason": "needs_service",
+                  "detail": "needs an outside service or server pickfit does not run: needs a local model server with a tool-capable model; box has none"
+                },
+                {
+                  "feature": "connect to local model servers",
+                  "reason": "needs_service",
+                  "detail": "needs an outside service or server pickfit does not run: needs LM Studio/Ollama/llama.cpp/vLLM running; box has none"
+                },
+                {
+                  "feature": "test whether models can call tools",
+                  "reason": "not_shown",
+                  "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Output shows connection errors and 0/20 incomplete, explicitly stating this is not the model's score."
+                },
+                {
+                  "feature": "run tasks autonomously end to end",
+                  "reason": "needs_service",
+                  "detail": "needs an outside service or server pickfit does not run: needs a model to drive autonomous run; box has none"
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 96/100 and popularity 21/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, verification on your OS, treasure score) among 494 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 96.1,
+              "popularity": 21,
+              "treasure": true
+            },
+            "repo": "https://github.com/flashback7766/FlashAgent",
+            "homepage": "https://github.com/flashback7766/FlashAgent",
+            "match": {
+              "quality": "weak",
+              "covers": [
+                "read",
+                "edit"
+              ],
+              "missing": [
+                "tired",
+                "drag",
+                "python",
+                "node",
+                "packages",
+                "single",
+                "binary",
+                "compile",
+                "compiler",
+                "keep",
+                "working",
+                "machine",
+                "ask"
+              ]
+            }
+          },
+          {
+            "slug": "open-jet",
+            "name": "OpenJet",
+            "summary": "Offline coding agent that sets up and runs local models on your own GPU.",
+            "fit": "Offline coding agent that sets up and runs local models on your own GPU.",
+            "why": [
+              {
+                "claim": "Install steps were run and checked on linux",
+                "field": "verified_on",
+                "value": "linux x86_64: sandbox install, replayed from scratch, function check passed, 2026-10-30"
+              },
+              {
+                "claim": "Use case: run a coding agent in the terminal",
+                "field": "use_cases",
+                "value": "run a coding agent in the terminal"
+              },
+              {
+                "claim": "Runs on your machine without a cloud service",
+                "field": "processing",
+                "value": "local"
+              }
+            ],
+            "tradeoffs": [
+              "Weak match: its profile mentions read, edit, python but not tired, drag, node, packages, single."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "linux"
+            ],
+            "pricing": "unknown",
+            "processing": "local",
+            "open_source": true,
+            "license": "AGPL-3.0",
+            "verification": {
+              "level": "function",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-10-31T01:41:55.541066+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [],
+              "not_checked": [
+                {
+                  "feature": "run coding agent in terminal",
+                  "reason": "not_shown",
+                  "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Outputs show only status config and a setup failure, not a coding agent task being performed."
+                },
+                {
+                  "feature": "run four coding agents on one GPU",
+                  "reason": "needs_gpu",
+                  "detail": "needs a GPU, which the sandbox does not have: needs RTX 3090/4090/5090 24GB + CUDA megakernel build + 17GB model"
+                },
+                {
+                  "feature": "plan with frontier model, code locally",
+                  "reason": "needs_account",
+                  "detail": "needs an account or API key, which the sandbox does not have: needs ChatGPT subscription via Codex or OpenRouter key"
+                },
+                {
+                  "feature": "embed local model in Python app",
+                  "reason": "not_shown",
+                  "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Outputs show only model recommendation text, not an actual local model embedded or running in an app."
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 87/100 and popularity 72/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, verification on your OS, treasure score) among 494 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 86.9,
+              "popularity": 72.4,
+              "treasure": false
+            },
+            "repo": "https://github.com/L-Forster/open-jet",
+            "homepage": "https://www.openjet.dev/",
+            "match": {
+              "quality": "weak",
+              "covers": [
+                "read",
+                "edit",
+                "python"
+              ],
+              "missing": [
+                "tired",
+                "drag",
+                "node",
+                "packages",
+                "single",
+                "binary",
+                "compile",
+                "compiler",
+                "keep",
+                "working",
+                "machine",
+                "ask"
+              ]
+            }
+          }
+        ],
+        "best_free": {
+          "slug": "hazzel",
+          "reason": "The highest-ranked free tool by rules."
+        },
+        "no_install_option": null,
+        "well_known_option": null,
+        "clarifying_question": null,
+        "coverage_note": "pickfit has no verified tool that clearly does this job. Judging by their profiles, the listed tools are the closest it has, but none of them mentions tired, drag, node, packages, single; each pick's match says what it covers. pickfit lists only lesser-known tools, so a well-known one may still fit. 494 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores.",
+        "match_quality": "none"
+      },
+      "raw": {
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"rec_id\":\"rec_6e06852af4d14589996baebb32b9a0b9\",\"matched_by\":\"rules\",\"degraded\":true,\"degraded_reason\":\"model_incomplete\",\"model_attempts\":1,\"model_http_status\":null,\"considered\":494,\"picks\":[{\"slug\":\"hazzel\",\"name\":\"Hazzel\",\"summary\":\"Terminal coding agent that shows diffs for approval before editing files.\",\"fit\":\"Terminal coding agent that shows diffs for approval before editing files.\",\"why\":[{\"claim\":\"Install steps were run and checked on linux\",\"field\":\"verified_on\",\"value\":\"linux x86_64: sandbox install, replayed from scratch, function check passed, 2026-11-01\"},{\"claim\":\"Use case: review staged git changes\",\"field\":\"use_cases\",\"value\":\"review staged git changes\"},{\"claim\":\"Free to use\",\"field\":\"pricing\",\"value\":\"free\"}],\"tradeoffs\":[\"Weak match: its profile mentions edit but not read, tired, drag, python, node.\"],\"vs_well_known\":null,\"platforms\":[],\"pricing\":\"free\",\"processing\":\"hybrid\",\"open_source\":true,\"license\":\"Apache-2.0\",\"verification\":{\"level\":\"function\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-11-01T16:21:32.983114+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[{\"feature\":\"Review and commit git changes\",\"check\":\"printf \\\"/status\\\\n/exit\\\\n\\\" | hazzel 2>&1\"}],\"not_checked\":[{\"feature\":\"Edit files with diff approval\",\"reason\":\"needs_account\",\"detail\":\"needs an account or API key, which the sandbox does not have: Edit with diff approval requires LLM provider key (GROQ_API_KEY etc.)\"},{\"feature\":\"Undo agent edits selectively\",\"reason\":\"needs_account\",\"detail\":\"needs an account or API key, which the sandbox does not have: Selective /undo /redo requires prior agent edits which need LLM key\"},{\"feature\":\"Run sandboxed shell commands\",\"reason\":\"needs_account\",\"detail\":\"needs an account or API key, which the sandbox does not have: Sandboxed shell commands are dispatched via LLM; cannot trigger without API key\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; a smoke test of its main function passed. The run exercised 1 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 78/100 and popularity 81/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, verification on your OS, treasure score) among 494 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.\",\"evidence_url\":null,\"scores\":{\"quality\":77.9,\"popularity\":81.4,\"treasure\":false},\"repo\":\"https://github.com/mukundzha/hazzel\",\"homepage\":\"https://agenthazzel.vercel.app\",\"match\":{\"quality\":\"weak\",\"covers\":[\"edit\"],\"missing\":[\"read\",\"tired\",\"drag\",\"python\",\"node\",\"packages\",\"single\",\"binary\",\"compile\",\"compiler\",\"keep\",\"working\",\"machine\",\"ask\"]}},{\"slug\":\"flashagent\",\"name\":\"FlashAgent\",\"summary\":\"Terminal coding agent that uses local or cloud models to read, edit, and run code.\",\"fit\":\"Terminal coding agent that uses local or cloud models to read, edit, and run code.\",\"why\":[{\"claim\":\"Install steps were run and checked on linux\",\"field\":\"verified_on\",\"value\":\"linux x86_64: sandbox install, replayed from scratch, function check passed, 2026-10-30\"},{\"claim\":\"Use case: test whether configured model can call tools\",\"field\":\"use_cases\",\"value\":\"test whether configured model can call tools\"}],\"tradeoffs\":[\"Weak match: its profile mentions read, edit but not tired, drag, python, node, packages.\"],\"vs_well_known\":null,\"platforms\":[\"macos\",\"linux\",\"windows\"],\"pricing\":\"unknown\",\"processing\":\"hybrid\",\"open_source\":true,\"license\":\"MIT\",\"verification\":{\"level\":\"function\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-10-31T03:22:43.682808+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[],\"not_checked\":[{\"feature\":\"code in terminal with local models\",\"reason\":\"needs_service\",\"detail\":\"needs an outside service or server pickfit does not run: needs a local model server with a tool-capable model; box has none\"},{\"feature\":\"connect to local model servers\",\"reason\":\"needs_service\",\"detail\":\"needs an outside service or server pickfit does not run: needs LM Studio/Ollama/llama.cpp/vLLM running; box has none\"},{\"feature\":\"test whether models can call tools\",\"reason\":\"not_shown\",\"detail\":\"a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Output shows connection errors and 0/20 incomplete, explicitly stating this is not the model's score.\"},{\"feature\":\"run tasks autonomously end to end\",\"reason\":\"needs_service\",\"detail\":\"needs an outside service or server pickfit does not run: needs a model to drive autonomous run; box has none\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 96/100 and popularity 21/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, verification on your OS, treasure score) among 494 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.\",\"evidence_url\":null,\"scores\":{\"quality\":96.1,\"popularity\":21,\"treasure\":true},\"repo\":\"https://github.com/flashback7766/FlashAgent\",\"homepage\":\"https://github.com/flashback7766/FlashAgent\",\"match\":{\"quality\":\"weak\",\"covers\":[\"read\",\"edit\"],\"missing\":[\"tired\",\"drag\",\"python\",\"node\",\"packages\",\"single\",\"binary\",\"compile\",\"compiler\",\"keep\",\"working\",\"machine\",\"ask\"]}},{\"slug\":\"open-jet\",\"name\":\"OpenJet\",\"summary\":\"Offline coding agent that sets up and runs local models on your own GPU.\",\"fit\":\"Offline coding agent that sets up and runs local models on your own GPU.\",\"why\":[{\"claim\":\"Install steps were run and checked on linux\",\"field\":\"verified_on\",\"value\":\"linux x86_64: sandbox install, replayed from scratch, function check passed, 2026-10-30\"},{\"claim\":\"Use case: run a coding agent in the terminal\",\"field\":\"use_cases\",\"value\":\"run a coding agent in the terminal\"},{\"claim\":\"Runs on your machine without a cloud service\",\"field\":\"processing\",\"value\":\"local\"}],\"tradeoffs\":[\"Weak match: its profile mentions read, edit, python but not tired, drag, node, packages, single.\"],\"vs_well_known\":null,\"platforms\":[\"linux\"],\"pricing\":\"unknown\",\"processing\":\"local\",\"open_source\":true,\"license\":\"AGPL-3.0\",\"verification\":{\"level\":\"function\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-10-31T01:41:55.541066+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[],\"not_checked\":[{\"feature\":\"run coding agent in terminal\",\"reason\":\"not_shown\",\"detail\":\"a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Outputs show only status config and a setup failure, not a coding agent task being performed.\"},{\"feature\":\"run four coding agents on one GPU\",\"reason\":\"needs_gpu\",\"detail\":\"needs a GPU, which the sandbox does not have: needs RTX 3090/4090/5090 24GB + CUDA megakernel build + 17GB model\"},{\"feature\":\"plan with frontier model, code locally\",\"reason\":\"needs_account\",\"detail\":\"needs an account or API key, which the sandbox does not have: needs ChatGPT subscription via Codex or OpenRouter key\"},{\"feature\":\"embed local model in Python app\",\"reason\":\"not_shown\",\"detail\":\"a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Outputs show only model recommendation text, not an actual local model embedded or running in an app.\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 87/100 and popularity 72/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, verification on your OS, treasure score) among 494 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.\",\"evidence_url\":null,\"scores\":{\"quality\":86.9,\"popularity\":72.4,\"treasure\":false},\"repo\":\"https://github.com/L-Forster/open-jet\",\"homepage\":\"https://www.openjet.dev/\",\"match\":{\"quality\":\"weak\",\"covers\":[\"read\",\"edit\",\"python\"],\"missing\":[\"tired\",\"drag\",\"node\",\"packages\",\"single\",\"binary\",\"compile\",\"compiler\",\"keep\",\"working\",\"machine\",\"ask\"]}}],\"best_free\":{\"slug\":\"hazzel\",\"reason\":\"The highest-ranked free tool by rules.\"},\"no_install_option\":null,\"well_known_option\":null,\"clarifying_question\":null,\"coverage_note\":\"pickfit has no verified tool that clearly does this job. Judging by their profiles, the listed tools are the closest it has, but none of them mentions tired, drag, node, packages, single; each pick's match says what it covers. pickfit lists only lesser-known tools, so a well-known one may still fit. 494 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores.\",\"match_quality\":\"none\"}"
+            }
+          ],
+          "structuredContent": {
+            "rec_id": "rec_6e06852af4d14589996baebb32b9a0b9",
+            "matched_by": "rules",
+            "degraded": true,
+            "degraded_reason": "model_incomplete",
+            "model_attempts": 1,
+            "model_http_status": null,
+            "considered": 494,
+            "picks": [
+              {
+                "slug": "hazzel",
+                "name": "Hazzel",
+                "summary": "Terminal coding agent that shows diffs for approval before editing files.",
+                "fit": "Terminal coding agent that shows diffs for approval before editing files.",
+                "why": [
+                  {
+                    "claim": "Install steps were run and checked on linux",
+                    "field": "verified_on",
+                    "value": "linux x86_64: sandbox install, replayed from scratch, function check passed, 2026-11-01"
+                  },
+                  {
+                    "claim": "Use case: review staged git changes",
+                    "field": "use_cases",
+                    "value": "review staged git changes"
+                  },
+                  {
+                    "claim": "Free to use",
+                    "field": "pricing",
+                    "value": "free"
+                  }
+                ],
+                "tradeoffs": [
+                  "Weak match: its profile mentions edit but not read, tired, drag, python, node."
+                ],
+                "vs_well_known": null,
+                "platforms": [],
+                "pricing": "free",
+                "processing": "hybrid",
+                "open_source": true,
+                "license": "Apache-2.0",
+                "verification": {
+                  "level": "function",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-11-01T16:21:32.983114+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [
+                    {
+                      "feature": "Review and commit git changes",
+                      "check": "printf \"/status\\n/exit\\n\" | hazzel 2>&1"
+                    }
+                  ],
+                  "not_checked": [
+                    {
+                      "feature": "Edit files with diff approval",
+                      "reason": "needs_account",
+                      "detail": "needs an account or API key, which the sandbox does not have: Edit with diff approval requires LLM provider key (GROQ_API_KEY etc.)"
+                    },
+                    {
+                      "feature": "Undo agent edits selectively",
+                      "reason": "needs_account",
+                      "detail": "needs an account or API key, which the sandbox does not have: Selective /undo /redo requires prior agent edits which need LLM key"
+                    },
+                    {
+                      "feature": "Run sandboxed shell commands",
+                      "reason": "needs_account",
+                      "detail": "needs an account or API key, which the sandbox does not have: Sandboxed shell commands are dispatched via LLM; cannot trigger without API key"
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; a smoke test of its main function passed. The run exercised 1 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 78/100 and popularity 81/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, verification on your OS, treasure score) among 494 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 77.9,
+                  "popularity": 81.4,
+                  "treasure": false
+                },
+                "repo": "https://github.com/mukundzha/hazzel",
+                "homepage": "https://agenthazzel.vercel.app",
+                "match": {
+                  "quality": "weak",
+                  "covers": [
+                    "edit"
+                  ],
+                  "missing": [
+                    "read",
+                    "tired",
+                    "drag",
+                    "python",
+                    "node",
+                    "packages",
+                    "single",
+                    "binary",
+                    "compile",
+                    "compiler",
+                    "keep",
+                    "working",
+                    "machine",
+                    "ask"
+                  ]
+                }
+              },
+              {
+                "slug": "flashagent",
+                "name": "FlashAgent",
+                "summary": "Terminal coding agent that uses local or cloud models to read, edit, and run code.",
+                "fit": "Terminal coding agent that uses local or cloud models to read, edit, and run code.",
+                "why": [
+                  {
+                    "claim": "Install steps were run and checked on linux",
+                    "field": "verified_on",
+                    "value": "linux x86_64: sandbox install, replayed from scratch, function check passed, 2026-10-30"
+                  },
+                  {
+                    "claim": "Use case: test whether configured model can call tools",
+                    "field": "use_cases",
+                    "value": "test whether configured model can call tools"
+                  }
+                ],
+                "tradeoffs": [
+                  "Weak match: its profile mentions read, edit but not tired, drag, python, node, packages."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "macos",
+                  "linux",
+                  "windows"
+                ],
+                "pricing": "unknown",
+                "processing": "hybrid",
+                "open_source": true,
+                "license": "MIT",
+                "verification": {
+                  "level": "function",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-10-31T03:22:43.682808+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [],
+                  "not_checked": [
+                    {
+                      "feature": "code in terminal with local models",
+                      "reason": "needs_service",
+                      "detail": "needs an outside service or server pickfit does not run: needs a local model server with a tool-capable model; box has none"
+                    },
+                    {
+                      "feature": "connect to local model servers",
+                      "reason": "needs_service",
+                      "detail": "needs an outside service or server pickfit does not run: needs LM Studio/Ollama/llama.cpp/vLLM running; box has none"
+                    },
+                    {
+                      "feature": "test whether models can call tools",
+                      "reason": "not_shown",
+                      "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Output shows connection errors and 0/20 incomplete, explicitly stating this is not the model's score."
+                    },
+                    {
+                      "feature": "run tasks autonomously end to end",
+                      "reason": "needs_service",
+                      "detail": "needs an outside service or server pickfit does not run: needs a model to drive autonomous run; box has none"
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 96/100 and popularity 21/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, verification on your OS, treasure score) among 494 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 96.1,
+                  "popularity": 21,
+                  "treasure": true
+                },
+                "repo": "https://github.com/flashback7766/FlashAgent",
+                "homepage": "https://github.com/flashback7766/FlashAgent",
+                "match": {
+                  "quality": "weak",
+                  "covers": [
+                    "read",
+                    "edit"
+                  ],
+                  "missing": [
+                    "tired",
+                    "drag",
+                    "python",
+                    "node",
+                    "packages",
+                    "single",
+                    "binary",
+                    "compile",
+                    "compiler",
+                    "keep",
+                    "working",
+                    "machine",
+                    "ask"
+                  ]
+                }
+              },
+              {
+                "slug": "open-jet",
+                "name": "OpenJet",
+                "summary": "Offline coding agent that sets up and runs local models on your own GPU.",
+                "fit": "Offline coding agent that sets up and runs local models on your own GPU.",
+                "why": [
+                  {
+                    "claim": "Install steps were run and checked on linux",
+                    "field": "verified_on",
+                    "value": "linux x86_64: sandbox install, replayed from scratch, function check passed, 2026-10-30"
+                  },
+                  {
+                    "claim": "Use case: run a coding agent in the terminal",
+                    "field": "use_cases",
+                    "value": "run a coding agent in the terminal"
+                  },
+                  {
+                    "claim": "Runs on your machine without a cloud service",
+                    "field": "processing",
+                    "value": "local"
+                  }
+                ],
+                "tradeoffs": [
+                  "Weak match: its profile mentions read, edit, python but not tired, drag, node, packages, single."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "linux"
+                ],
+                "pricing": "unknown",
+                "processing": "local",
+                "open_source": true,
+                "license": "AGPL-3.0",
+                "verification": {
+                  "level": "function",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-10-31T01:41:55.541066+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [],
+                  "not_checked": [
+                    {
+                      "feature": "run coding agent in terminal",
+                      "reason": "not_shown",
+                      "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Outputs show only status config and a setup failure, not a coding agent task being performed."
+                    },
+                    {
+                      "feature": "run four coding agents on one GPU",
+                      "reason": "needs_gpu",
+                      "detail": "needs a GPU, which the sandbox does not have: needs RTX 3090/4090/5090 24GB + CUDA megakernel build + 17GB model"
+                    },
+                    {
+                      "feature": "plan with frontier model, code locally",
+                      "reason": "needs_account",
+                      "detail": "needs an account or API key, which the sandbox does not have: needs ChatGPT subscription via Codex or OpenRouter key"
+                    },
+                    {
+                      "feature": "embed local model in Python app",
+                      "reason": "not_shown",
+                      "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Outputs show only model recommendation text, not an actual local model embedded or running in an app."
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 87/100 and popularity 72/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, verification on your OS, treasure score) among 494 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 86.9,
+                  "popularity": 72.4,
+                  "treasure": false
+                },
+                "repo": "https://github.com/L-Forster/open-jet",
+                "homepage": "https://www.openjet.dev/",
+                "match": {
+                  "quality": "weak",
+                  "covers": [
+                    "read",
+                    "edit",
+                    "python"
+                  ],
+                  "missing": [
+                    "tired",
+                    "drag",
+                    "node",
+                    "packages",
+                    "single",
+                    "binary",
+                    "compile",
+                    "compiler",
+                    "keep",
+                    "working",
+                    "machine",
+                    "ask"
+                  ]
+                }
+              }
+            ],
+            "best_free": {
+              "slug": "hazzel",
+              "reason": "The highest-ranked free tool by rules."
+            },
+            "no_install_option": null,
+            "well_known_option": null,
+            "clarifying_question": null,
+            "coverage_note": "pickfit has no verified tool that clearly does this job. Judging by their profiles, the listed tools are the closest it has, but none of them mentions tired, drag, node, packages, single; each pick's match says what it covers. pickfit lists only lesser-known tools, so a well-known one may still fit. 494 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores.",
+            "match_quality": "none"
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 1
+      }
+    },
+    {
+      "at": "2026-11-02T17:12:26+08:00",
+      "latency_s": 4.0,
+      "http_status": 200,
+      "ledger_row": 43089,
+      "is_error": false,
+      "find": {
+        "rec_id": "rec_df5efe7920564d7baa361bd4be68406c",
+        "matched_by": "rules",
+        "degraded": true,
+        "degraded_reason": "model_http",
+        "model_attempts": 2,
+        "model_http_status": 404,
+        "considered": 591,
+        "picks": [
+          {
+            "slug": "croft",
+            "name": "croft",
+            "summary": "VS Code-style three-pane IDE that runs inside the terminal as a single Rust binary.",
+            "fit": "VS Code-style three-pane IDE that runs inside the terminal as a single Rust binary.",
+            "why": [
+              {
+                "claim": "Install steps were run and checked on linux",
+                "field": "verified_on",
+                "value": "linux x86_64: sandbox install, replayed from scratch, install check passed, 2026-11-01"
+              },
+              {
+                "claim": "Use case: edit code with LSP completion, hover and go-to-definition",
+                "field": "use_cases",
+                "value": "edit code with LSP completion, hover and go-to-definition"
+              }
+            ],
+            "tradeoffs": [
+              "Weak match: its profile mentions edit, python, single, binary but not read, tired, drag, node, packages."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "macos",
+              "linux"
+            ],
+            "pricing": "unknown",
+            "processing": "unknown",
+            "open_source": true,
+            "license": "MIT",
+            "verification": {
+              "level": "install",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-11-01T11:45:56.286650+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [],
+              "not_checked": [
+                {
+                  "feature": "use VS Code-style three-pane workspace in terminal",
+                  "reason": "needs_display",
+                  "detail": "needs a display, GUI or browser: Three-pane TUI workspace requires interactive terminal UI, cannot be exercised headlessly"
+                },
+                {
+                  "feature": "edit code with LSP completion and navigation",
+                  "reason": "needs_display",
+                  "detail": "needs a display, GUI or browser: LSP editing requires interactive editor session"
+                },
+                {
+                  "feature": "use integrated terminal with splits and history",
+                  "reason": "needs_display",
+                  "detail": "needs a display, GUI or browser: Integrated terminal with splits requires interactive TUI"
+                },
+                {
+                  "feature": "debug Python, JavaScript, Rust, C and C++",
+                  "reason": "needs_display",
+                  "detail": "needs a display, GUI or browser: DAP debugging requires interactive debug session with language runtimes"
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; the install finished and the tool started. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 53/100 and popularity 75/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, a web app first among close fits, verification on your OS, treasure score) among 591 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 53.2,
+              "popularity": 75.2,
+              "treasure": false
+            },
+            "repo": "https://github.com/vitali87/croft",
+            "homepage": null,
+            "web_app": null,
+            "match": {
+              "quality": "weak",
+              "covers": [
+                "edit",
+                "python",
+                "single",
+                "binary"
+              ],
+              "missing": [
+                "read",
+                "tired",
+                "drag",
+                "node",
+                "packages",
+                "compile",
+                "compiler",
+                "keep",
+                "working",
+                "machine",
+                "ask"
+              ]
+            }
+          },
+          {
+            "slug": "mcp-read-file-server",
+            "name": "文件操作 MCP Server（加密软件环境明文读写）",
+            "summary": "MCP server that reads and writes plaintext via Node.js fs for encrypted-disk environments.",
+            "fit": "MCP server that reads and writes plaintext via Node.js fs for encrypted-disk environments.",
+            "why": [
+              {
+                "claim": "Install steps were run and checked on linux",
+                "field": "verified_on",
+                "value": "linux x86_64: sandbox install, replayed from scratch, service check passed, 2026-10-30"
+              },
+              {
+                "claim": "Use case: read a single file as plaintext",
+                "field": "use_cases",
+                "value": "read a single file as plaintext"
+              },
+              {
+                "claim": "Runs on your machine without a cloud service",
+                "field": "processing",
+                "value": "local"
+              }
+            ],
+            "tradeoffs": [
+              "Weak match: its profile mentions read, edit, node, single but not tired, drag, python, packages, binary."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "macos",
+              "linux",
+              "windows"
+            ],
+            "pricing": "unknown",
+            "processing": "local",
+            "open_source": true,
+            "license": "MIT",
+            "verification": {
+              "level": "service",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-10-31T02:52:32.481562+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [
+                {
+                  "feature": "read encrypted files as plaintext",
+                  "check": "python3 ~/.pickfit/mcp_probe.py --call read_file --args '{\"path\":\"/home/sbx/work/probe_hello.txt\"}' -- mcp-read-file-server"
+                },
+                {
+                  "feature": "write files with transactional safety",
+                  "check": "python3 ~/.pickfit/mcp_probe.py --call write_file --args '{\"path\":\"/home/sbx/work/probe_write.txt\",\"content\":\"write test 123\\n\"}' -- mcp-read-file-server"
+                },
+                {
+                  "feature": "edit files with precise replacement",
+                  "check": "python3 ~/.pickfit/mcp_probe.py --call edit_file --args '{\"path\":\"/home/sbx/work/probe_edit.txt\",\"oldString\":\"original line two to replace\",\"newString\":\"edited line two OK\"}' -- mcp-read-file-server"
+                },
+                {
+                  "feature": "search file contents recursively",
+                  "check": "python3 ~/.pickfit/mcp_probe.py --call search_files --args '{\"path\":\"/home/sbx/work\",\"pattern\":\"searchme-xyz-123\"}' -- mcp-read-file-server"
+                }
+              ],
+              "not_checked": []
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; an MCP client handshake over stdio listed its 18 tools with the network off, and a call to read_file returned a result. The run exercised 4 of the 4 main features its README advertises. Quality 96/100 and popularity 44/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, a web app first among close fits, verification on your OS, treasure score) among 591 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 96.1,
+              "popularity": 44.3,
+              "treasure": true
+            },
+            "repo": "https://github.com/hebulin/mcp-read-file-server",
+            "homepage": null,
+            "web_app": null,
+            "match": {
+              "quality": "weak",
+              "covers": [
+                "read",
+                "edit",
+                "node",
+                "single"
+              ],
+              "missing": [
+                "tired",
+                "drag",
+                "python",
+                "packages",
+                "binary",
+                "compile",
+                "compiler",
+                "keep",
+                "working",
+                "machine",
+                "ask"
+              ]
+            }
+          },
+          {
+            "slug": "prometheus",
+            "name": "Prometheus",
+            "summary": "AI agent daemon that runs on owned hardware and keeps working after you close the laptop.",
+            "fit": "AI agent daemon that runs on owned hardware and keeps working after you close the laptop.",
+            "why": [
+              {
+                "claim": "Install steps were run and checked on linux",
+                "field": "verified_on",
+                "value": "linux x86_64: sandbox install, replayed from scratch, service check passed, 2026-10-30"
+              },
+              {
+                "claim": "Use case: chat in the CLI",
+                "field": "use_cases",
+                "value": "chat in the CLI"
+              }
+            ],
+            "tradeoffs": [
+              "Weak match: its profile mentions keep, working but not read, edit, tired, drag, python."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "macos",
+              "linux"
+            ],
+            "pricing": "unknown",
+            "processing": "hybrid",
+            "open_source": true,
+            "license": "MIT",
+            "verification": {
+              "level": "service",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-10-31T00:55:09.989538+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": false,
+              "checked": [],
+              "not_checked": [
+                {
+                  "feature": "run as daemon on owned hardware",
+                  "reason": "not_recorded",
+                  "detail": "pickfit verified this tool before it checked features one by one"
+                },
+                {
+                  "feature": "run scheduled and background tasks",
+                  "reason": "not_recorded",
+                  "detail": "pickfit verified this tool before it checked features one by one"
+                },
+                {
+                  "feature": "message you on Telegram when tasks finish",
+                  "reason": "not_recorded",
+                  "detail": "pickfit verified this tool before it checked features one by one"
+                },
+                {
+                  "feature": "use local inference servers for models",
+                  "reason": "not_recorded",
+                  "detail": "pickfit verified this tool before it checked features one by one"
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; its service answered a test request. Quality 83/100 and popularity 43/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, a web app first among close fits, verification on your OS, treasure score) among 591 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 83.3,
+              "popularity": 43,
+              "treasure": true
+            },
+            "repo": "https://github.com/OAraLabs/Prometheus",
+            "homepage": "https://oara.ai/prometheus",
+            "web_app": null,
+            "match": {
+              "quality": "weak",
+              "covers": [
+                "keep",
+                "working"
+              ],
+              "missing": [
+                "read",
+                "edit",
+                "tired",
+                "drag",
+                "python",
+                "node",
+                "packages",
+                "single",
+                "binary",
+                "compile",
+                "compiler",
+                "machine",
+                "ask"
+              ]
+            }
+          }
+        ],
+        "best_free": {
+          "slug": "openhire",
+          "reason": "The highest-ranked free tool by rules."
+        },
+        "no_install_option": null,
+        "well_known_option": null,
+        "clarifying_question": null,
+        "coverage_note": "pickfit has no verified tool that clearly does this job. Judging by their profiles, the listed tools are the closest it has, but none of them mentions tired, drag, packages, compile, compiler; each pick's match says what it covers. pickfit lists only lesser-known tools, so a well-known one may still fit. 591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores.",
+        "match_quality": "none"
+      },
+      "raw": {
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"rec_id\":\"rec_df5efe7920564d7baa361bd4be68406c\",\"matched_by\":\"rules\",\"degraded\":true,\"degraded_reason\":\"model_http\",\"model_attempts\":2,\"model_http_status\":404,\"considered\":591,\"picks\":[{\"slug\":\"croft\",\"name\":\"croft\",\"summary\":\"VS Code-style three-pane IDE that runs inside the terminal as a single Rust binary.\",\"fit\":\"VS Code-style three-pane IDE that runs inside the terminal as a single Rust binary.\",\"why\":[{\"claim\":\"Install steps were run and checked on linux\",\"field\":\"verified_on\",\"value\":\"linux x86_64: sandbox install, replayed from scratch, install check passed, 2026-11-01\"},{\"claim\":\"Use case: edit code with LSP completion, hover and go-to-definition\",\"field\":\"use_cases\",\"value\":\"edit code with LSP completion, hover and go-to-definition\"}],\"tradeoffs\":[\"Weak match: its profile mentions edit, python, single, binary but not read, tired, drag, node, packages.\"],\"vs_well_known\":null,\"platforms\":[\"macos\",\"linux\"],\"pricing\":\"unknown\",\"processing\":\"unknown\",\"open_source\":true,\"license\":\"MIT\",\"verification\":{\"level\":\"install\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-11-01T11:45:56.286650+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[],\"not_checked\":[{\"feature\":\"use VS Code-style three-pane workspace in terminal\",\"reason\":\"needs_display\",\"detail\":\"needs a display, GUI or browser: Three-pane TUI workspace requires interactive terminal UI, cannot be exercised headlessly\"},{\"feature\":\"edit code with LSP completion and navigation\",\"reason\":\"needs_display\",\"detail\":\"needs a display, GUI or browser: LSP editing requires interactive editor session\"},{\"feature\":\"use integrated terminal with splits and history\",\"reason\":\"needs_display\",\"detail\":\"needs a display, GUI or browser: Integrated terminal with splits requires interactive TUI\"},{\"feature\":\"debug Python, JavaScript, Rust, C and C++\",\"reason\":\"needs_display\",\"detail\":\"needs a display, GUI or browser: DAP debugging requires interactive debug session with language runtimes\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; the install finished and the tool started. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 53/100 and popularity 75/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, a web app first among close fits, verification on your OS, treasure score) among 591 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.\",\"evidence_url\":null,\"scores\":{\"quality\":53.2,\"popularity\":75.2,\"treasure\":false},\"repo\":\"https://github.com/vitali87/croft\",\"homepage\":null,\"web_app\":null,\"match\":{\"quality\":\"weak\",\"covers\":[\"edit\",\"python\",\"single\",\"binary\"],\"missing\":[\"read\",\"tired\",\"drag\",\"node\",\"packages\",\"compile\",\"compiler\",\"keep\",\"working\",\"machine\",\"ask\"]}},{\"slug\":\"mcp-read-file-server\",\"name\":\"文件操作 MCP Server（加密软件环境明文读写）\",\"summary\":\"MCP server that reads and writes plaintext via Node.js fs for encrypted-disk environments.\",\"fit\":\"MCP server that reads and writes plaintext via Node.js fs for encrypted-disk environments.\",\"why\":[{\"claim\":\"Install steps were run and checked on linux\",\"field\":\"verified_on\",\"value\":\"linux x86_64: sandbox install, replayed from scratch, service check passed, 2026-10-30\"},{\"claim\":\"Use case: read a single file as plaintext\",\"field\":\"use_cases\",\"value\":\"read a single file as plaintext\"},{\"claim\":\"Runs on your machine without a cloud service\",\"field\":\"processing\",\"value\":\"local\"}],\"tradeoffs\":[\"Weak match: its profile mentions read, edit, node, single but not tired, drag, python, packages, binary.\"],\"vs_well_known\":null,\"platforms\":[\"macos\",\"linux\",\"windows\"],\"pricing\":\"unknown\",\"processing\":\"local\",\"open_source\":true,\"license\":\"MIT\",\"verification\":{\"level\":\"service\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-10-31T02:52:32.481562+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[{\"feature\":\"read encrypted files as plaintext\",\"check\":\"python3 ~/.pickfit/mcp_probe.py --call read_file --args '{\\\"path\\\":\\\"/home/sbx/work/probe_hello.txt\\\"}' -- mcp-read-file-server\"},{\"feature\":\"write files with transactional safety\",\"check\":\"python3 ~/.pickfit/mcp_probe.py --call write_file --args '{\\\"path\\\":\\\"/home/sbx/work/probe_write.txt\\\",\\\"content\\\":\\\"write test 123\\\\n\\\"}' -- mcp-read-file-server\"},{\"feature\":\"edit files with precise replacement\",\"check\":\"python3 ~/.pickfit/mcp_probe.py --call edit_file --args '{\\\"path\\\":\\\"/home/sbx/work/probe_edit.txt\\\",\\\"oldString\\\":\\\"original line two to replace\\\",\\\"newString\\\":\\\"edited line two OK\\\"}' -- mcp-read-file-server\"},{\"feature\":\"search file contents recursively\",\"check\":\"python3 ~/.pickfit/mcp_probe.py --call search_files --args '{\\\"path\\\":\\\"/home/sbx/work\\\",\\\"pattern\\\":\\\"searchme-xyz-123\\\"}' -- mcp-read-file-server\"}],\"not_checked\":[]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; an MCP client handshake over stdio listed its 18 tools with the network off, and a call to read_file returned a result. The run exercised 4 of the 4 main features its README advertises. Quality 96/100 and popularity 44/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, a web app first among close fits, verification on your OS, treasure score) among 591 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.\",\"evidence_url\":null,\"scores\":{\"quality\":96.1,\"popularity\":44.3,\"treasure\":true},\"repo\":\"https://github.com/hebulin/mcp-read-file-server\",\"homepage\":null,\"web_app\":null,\"match\":{\"quality\":\"weak\",\"covers\":[\"read\",\"edit\",\"node\",\"single\"],\"missing\":[\"tired\",\"drag\",\"python\",\"packages\",\"binary\",\"compile\",\"compiler\",\"keep\",\"working\",\"machine\",\"ask\"]}},{\"slug\":\"prometheus\",\"name\":\"Prometheus\",\"summary\":\"AI agent daemon that runs on owned hardware and keeps working after you close the laptop.\",\"fit\":\"AI agent daemon that runs on owned hardware and keeps working after you close the laptop.\",\"why\":[{\"claim\":\"Install steps were run and checked on linux\",\"field\":\"verified_on\",\"value\":\"linux x86_64: sandbox install, replayed from scratch, service check passed, 2026-10-30\"},{\"claim\":\"Use case: chat in the CLI\",\"field\":\"use_cases\",\"value\":\"chat in the CLI\"}],\"tradeoffs\":[\"Weak match: its profile mentions keep, working but not read, edit, tired, drag, python.\"],\"vs_well_known\":null,\"platforms\":[\"macos\",\"linux\"],\"pricing\":\"unknown\",\"processing\":\"hybrid\",\"open_source\":true,\"license\":\"MIT\",\"verification\":{\"level\":\"service\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-10-31T00:55:09.989538+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":false,\"checked\":[],\"not_checked\":[{\"feature\":\"run as daemon on owned hardware\",\"reason\":\"not_recorded\",\"detail\":\"pickfit verified this tool before it checked features one by one\"},{\"feature\":\"run scheduled and background tasks\",\"reason\":\"not_recorded\",\"detail\":\"pickfit verified this tool before it checked features one by one\"},{\"feature\":\"message you on Telegram when tasks finish\",\"reason\":\"not_recorded\",\"detail\":\"pickfit verified this tool before it checked features one by one\"},{\"feature\":\"use local inference servers for models\",\"reason\":\"not_recorded\",\"detail\":\"pickfit verified this tool before it checked features one by one\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; its service answered a test request. Quality 83/100 and popularity 43/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, a web app first among close fits, verification on your OS, treasure score) among 591 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.\",\"evidence_url\":null,\"scores\":{\"quality\":83.3,\"popularity\":43,\"treasure\":true},\"repo\":\"https://github.com/OAraLabs/Prometheus\",\"homepage\":\"https://oara.ai/prometheus\",\"web_app\":null,\"match\":{\"quality\":\"weak\",\"covers\":[\"keep\",\"working\"],\"missing\":[\"read\",\"edit\",\"tired\",\"drag\",\"python\",\"node\",\"packages\",\"single\",\"binary\",\"compile\",\"compiler\",\"machine\",\"ask\"]}}],\"best_free\":{\"slug\":\"openhire\",\"reason\":\"The highest-ranked free tool by rules.\"},\"no_install_option\":null,\"well_known_option\":null,\"clarifying_question\":null,\"coverage_note\":\"pickfit has no verified tool that clearly does this job. Judging by their profiles, the listed tools are the closest it has, but none of them mentions tired, drag, packages, compile, compiler; each pick's match says what it covers. pickfit lists only lesser-known tools, so a well-known one may still fit. 591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores.\",\"match_quality\":\"none\"}"
+            }
+          ],
+          "structuredContent": {
+            "rec_id": "rec_df5efe7920564d7baa361bd4be68406c",
+            "matched_by": "rules",
+            "degraded": true,
+            "degraded_reason": "model_http",
+            "model_attempts": 2,
+            "model_http_status": 404,
+            "considered": 591,
+            "picks": [
+              {
+                "slug": "croft",
+                "name": "croft",
+                "summary": "VS Code-style three-pane IDE that runs inside the terminal as a single Rust binary.",
+                "fit": "VS Code-style three-pane IDE that runs inside the terminal as a single Rust binary.",
+                "why": [
+                  {
+                    "claim": "Install steps were run and checked on linux",
+                    "field": "verified_on",
+                    "value": "linux x86_64: sandbox install, replayed from scratch, install check passed, 2026-11-01"
+                  },
+                  {
+                    "claim": "Use case: edit code with LSP completion, hover and go-to-definition",
+                    "field": "use_cases",
+                    "value": "edit code with LSP completion, hover and go-to-definition"
+                  }
+                ],
+                "tradeoffs": [
+                  "Weak match: its profile mentions edit, python, single, binary but not read, tired, drag, node, packages."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "macos",
+                  "linux"
+                ],
+                "pricing": "unknown",
+                "processing": "unknown",
+                "open_source": true,
+                "license": "MIT",
+                "verification": {
+                  "level": "install",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-11-01T11:45:56.286650+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [],
+                  "not_checked": [
+                    {
+                      "feature": "use VS Code-style three-pane workspace in terminal",
+                      "reason": "needs_display",
+                      "detail": "needs a display, GUI or browser: Three-pane TUI workspace requires interactive terminal UI, cannot be exercised headlessly"
+                    },
+                    {
+                      "feature": "edit code with LSP completion and navigation",
+                      "reason": "needs_display",
+                      "detail": "needs a display, GUI or browser: LSP editing requires interactive editor session"
+                    },
+                    {
+                      "feature": "use integrated terminal with splits and history",
+                      "reason": "needs_display",
+                      "detail": "needs a display, GUI or browser: Integrated terminal with splits requires interactive TUI"
+                    },
+                    {
+                      "feature": "debug Python, JavaScript, Rust, C and C++",
+                      "reason": "needs_display",
+                      "detail": "needs a display, GUI or browser: DAP debugging requires interactive debug session with language runtimes"
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; the install finished and the tool started. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 53/100 and popularity 75/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, a web app first among close fits, verification on your OS, treasure score) among 591 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 53.2,
+                  "popularity": 75.2,
+                  "treasure": false
+                },
+                "repo": "https://github.com/vitali87/croft",
+                "homepage": null,
+                "web_app": null,
+                "match": {
+                  "quality": "weak",
+                  "covers": [
+                    "edit",
+                    "python",
+                    "single",
+                    "binary"
+                  ],
+                  "missing": [
+                    "read",
+                    "tired",
+                    "drag",
+                    "node",
+                    "packages",
+                    "compile",
+                    "compiler",
+                    "keep",
+                    "working",
+                    "machine",
+                    "ask"
+                  ]
+                }
+              },
+              {
+                "slug": "mcp-read-file-server",
+                "name": "文件操作 MCP Server（加密软件环境明文读写）",
+                "summary": "MCP server that reads and writes plaintext via Node.js fs for encrypted-disk environments.",
+                "fit": "MCP server that reads and writes plaintext via Node.js fs for encrypted-disk environments.",
+                "why": [
+                  {
+                    "claim": "Install steps were run and checked on linux",
+                    "field": "verified_on",
+                    "value": "linux x86_64: sandbox install, replayed from scratch, service check passed, 2026-10-30"
+                  },
+                  {
+                    "claim": "Use case: read a single file as plaintext",
+                    "field": "use_cases",
+                    "value": "read a single file as plaintext"
+                  },
+                  {
+                    "claim": "Runs on your machine without a cloud service",
+                    "field": "processing",
+                    "value": "local"
+                  }
+                ],
+                "tradeoffs": [
+                  "Weak match: its profile mentions read, edit, node, single but not tired, drag, python, packages, binary."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "macos",
+                  "linux",
+                  "windows"
+                ],
+                "pricing": "unknown",
+                "processing": "local",
+                "open_source": true,
+                "license": "MIT",
+                "verification": {
+                  "level": "service",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-10-31T02:52:32.481562+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [
+                    {
+                      "feature": "read encrypted files as plaintext",
+                      "check": "python3 ~/.pickfit/mcp_probe.py --call read_file --args '{\"path\":\"/home/sbx/work/probe_hello.txt\"}' -- mcp-read-file-server"
+                    },
+                    {
+                      "feature": "write files with transactional safety",
+                      "check": "python3 ~/.pickfit/mcp_probe.py --call write_file --args '{\"path\":\"/home/sbx/work/probe_write.txt\",\"content\":\"write test 123\\n\"}' -- mcp-read-file-server"
+                    },
+                    {
+                      "feature": "edit files with precise replacement",
+                      "check": "python3 ~/.pickfit/mcp_probe.py --call edit_file --args '{\"path\":\"/home/sbx/work/probe_edit.txt\",\"oldString\":\"original line two to replace\",\"newString\":\"edited line two OK\"}' -- mcp-read-file-server"
+                    },
+                    {
+                      "feature": "search file contents recursively",
+                      "check": "python3 ~/.pickfit/mcp_probe.py --call search_files --args '{\"path\":\"/home/sbx/work\",\"pattern\":\"searchme-xyz-123\"}' -- mcp-read-file-server"
+                    }
+                  ],
+                  "not_checked": []
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; an MCP client handshake over stdio listed its 18 tools with the network off, and a call to read_file returned a result. The run exercised 4 of the 4 main features its README advertises. Quality 96/100 and popularity 44/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, a web app first among close fits, verification on your OS, treasure score) among 591 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 96.1,
+                  "popularity": 44.3,
+                  "treasure": true
+                },
+                "repo": "https://github.com/hebulin/mcp-read-file-server",
+                "homepage": null,
+                "web_app": null,
+                "match": {
+                  "quality": "weak",
+                  "covers": [
+                    "read",
+                    "edit",
+                    "node",
+                    "single"
+                  ],
+                  "missing": [
+                    "tired",
+                    "drag",
+                    "python",
+                    "packages",
+                    "binary",
+                    "compile",
+                    "compiler",
+                    "keep",
+                    "working",
+                    "machine",
+                    "ask"
+                  ]
+                }
+              },
+              {
+                "slug": "prometheus",
+                "name": "Prometheus",
+                "summary": "AI agent daemon that runs on owned hardware and keeps working after you close the laptop.",
+                "fit": "AI agent daemon that runs on owned hardware and keeps working after you close the laptop.",
+                "why": [
+                  {
+                    "claim": "Install steps were run and checked on linux",
+                    "field": "verified_on",
+                    "value": "linux x86_64: sandbox install, replayed from scratch, service check passed, 2026-10-30"
+                  },
+                  {
+                    "claim": "Use case: chat in the CLI",
+                    "field": "use_cases",
+                    "value": "chat in the CLI"
+                  }
+                ],
+                "tradeoffs": [
+                  "Weak match: its profile mentions keep, working but not read, edit, tired, drag, python."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "macos",
+                  "linux"
+                ],
+                "pricing": "unknown",
+                "processing": "hybrid",
+                "open_source": true,
+                "license": "MIT",
+                "verification": {
+                  "level": "service",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-10-31T00:55:09.989538+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": false,
+                  "checked": [],
+                  "not_checked": [
+                    {
+                      "feature": "run as daemon on owned hardware",
+                      "reason": "not_recorded",
+                      "detail": "pickfit verified this tool before it checked features one by one"
+                    },
+                    {
+                      "feature": "run scheduled and background tasks",
+                      "reason": "not_recorded",
+                      "detail": "pickfit verified this tool before it checked features one by one"
+                    },
+                    {
+                      "feature": "message you on Telegram when tasks finish",
+                      "reason": "not_recorded",
+                      "detail": "pickfit verified this tool before it checked features one by one"
+                    },
+                    {
+                      "feature": "use local inference servers for models",
+                      "reason": "not_recorded",
+                      "detail": "pickfit verified this tool before it checked features one by one"
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; its service answered a test request. Quality 83/100 and popularity 43/100 are scored separately (formula b3.v5). Ranked by rules (request keywords, a web app first among close fits, verification on your OS, treasure score) among 591 tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 83.3,
+                  "popularity": 43,
+                  "treasure": true
+                },
+                "repo": "https://github.com/OAraLabs/Prometheus",
+                "homepage": "https://oara.ai/prometheus",
+                "web_app": null,
+                "match": {
+                  "quality": "weak",
+                  "covers": [
+                    "keep",
+                    "working"
+                  ],
+                  "missing": [
+                    "read",
+                    "edit",
+                    "tired",
+                    "drag",
+                    "python",
+                    "node",
+                    "packages",
+                    "single",
+                    "binary",
+                    "compile",
+                    "compiler",
+                    "machine",
+                    "ask"
+                  ]
+                }
+              }
+            ],
+            "best_free": {
+              "slug": "openhire",
+              "reason": "The highest-ranked free tool by rules."
+            },
+            "no_install_option": null,
+            "well_known_option": null,
+            "clarifying_question": null,
+            "coverage_note": "pickfit has no verified tool that clearly does this job. Judging by their profiles, the listed tools are the closest it has, but none of them mentions tired, drag, packages, compile, compiler; each pick's match says what it covers. pickfit lists only lesser-known tools, so a well-known one may still fit. 591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores.",
+            "match_quality": "none"
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 1
+      }
+    },
+    {
+      "at": "2026-11-02T17:16:00+08:00",
+      "latency_s": 17.3,
+      "http_status": 200,
+      "ledger_row": 43092,
+      "is_error": false,
+      "find": {
+        "rec_id": "rec_35c8324abced4142a67ead9245d2ba12",
+        "matched_by": "muse-spark-1.3",
+        "degraded": false,
+        "degraded_reason": null,
+        "model_attempts": 1,
+        "model_http_status": null,
+        "considered": 591,
+        "picks": [
+          {
+            "slug": "camelid",
+            "name": "Camelid",
+            "summary": "Rust app for offline chat, file work, and coding with GGUF models via desktop, browser, and terminal.",
+            "fit": "It is an offline coding helper with reviewed edits that runs on Linux as a binary.",
+            "why": [
+              {
+                "claim": "works offline with local files and coding",
+                "field": "summary",
+                "value": "Rust app for offline chat, file work, and coding with GGUF models via desktop, browser, and terminal."
+              },
+              {
+                "claim": "codes in a local project with reviewed edits",
+                "field": "use_cases",
+                "value": "code in a local project with reviewed edits"
+              },
+              {
+                "claim": "it is free",
+                "field": "pricing",
+                "value": "free"
+              }
+            ],
+            "tradeoffs": [
+              "Card does not say it builds with only a C compiler, so the single tiny C binary wish is unmet.",
+              "Pickfit did not verify reviewed code edits, it lists Code in chat with reviewed edits as other.",
+              "Card kind is desktop_app, so terminal use may be less direct than a pure CLI agent."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "macos",
+              "linux",
+              "windows"
+            ],
+            "pricing": "free",
+            "processing": "local",
+            "open_source": true,
+            "license": "MIT",
+            "verification": {
+              "level": "install",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-11-01T23:55:28.019133+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [
+                {
+                  "feature": "Chat with supported GGUF models locally",
+                  "check": "curl -s http://127.0.0.1:8181/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\": \"Gemma-3-270M-It\", \"messages\": [{\"role\": \"user\", \"content\": \"Say hello in five words.\"}], \"max_tokens\": 16, \"temperature\": 0}'"
+                },
+                {
+                  "feature": "Use OpenAI-compatible API",
+                  "check": "curl -fsSL http://127.0.0.1:8181/v1/health"
+                }
+              ],
+              "not_checked": [
+                {
+                  "feature": "Browse and preview generated files",
+                  "reason": "other",
+                  "detail": "not checked: needs desktop/browser file preview UI; no Linux desktop bundle, engine-only verification"
+                },
+                {
+                  "feature": "Code in chat with reviewed edits",
+                  "reason": "other",
+                  "detail": "not checked: needs Code session with certified tool-capable model and desktop/browser UI"
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-vm) and replayed the steps from scratch on 2026-11-01; the install finished and the tool started. The run exercised 2 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 68/100 and popularity 82/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 67.7,
+              "popularity": 82.3,
+              "treasure": false
+            },
+            "repo": "https://github.com/timtoole02/Camelid",
+            "homepage": null,
+            "web_app": null
+          },
+          {
+            "slug": "apogee",
+            "name": "apogee",
+            "summary": "Terminal AI coding agent that uses local LLMs or OpenAI-compatible APIs.",
+            "fit": "It is a terminal agent for local models that reads code and edits files on Linux.",
+            "why": [
+              {
+                "claim": "uses local LLMs in the terminal",
+                "field": "summary",
+                "value": "Terminal AI coding agent that uses local LLMs or OpenAI-compatible APIs."
+              },
+              {
+                "claim": "reads code and edits files via terminal agent",
+                "field": "use_cases",
+                "value": "read code and edit files via terminal agent"
+              },
+              {
+                "claim": "installs as a binary without Python or Node runtimes listed",
+                "field": "install_method_user_os",
+                "value": "binary"
+              }
+            ],
+            "tradeoffs": [
+              "Maturity is alpha, so stability is uncertain for daily work.",
+              "Pickfit lists reading, editing and running commands as needs_service, so offline approval behavior was not verified.",
+              "Card does not say it builds with only a C compiler or asks before every change."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "windows",
+              "macos",
+              "linux"
+            ],
+            "pricing": "unknown",
+            "processing": "hybrid",
+            "open_source": true,
+            "license": "MIT",
+            "verification": {
+              "level": "function",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-10-31T02:03:48.566546+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [],
+              "not_checked": [
+                {
+                  "feature": "read code, edit files and run commands",
+                  "reason": "needs_service",
+                  "detail": "needs an outside service or server pickfit does not run: needs reachable LLM to drive read/edit/run loop"
+                },
+                {
+                  "feature": "use local models and cloud APIs",
+                  "reason": "needs_service",
+                  "detail": "needs an outside service or server pickfit does not run: needs reachable local model server or cloud API key; probe only attempted discovery"
+                },
+                {
+                  "feature": "delegate work to parallel sub-agents",
+                  "reason": "needs_service",
+                  "detail": "needs an outside service or server pickfit does not run: needs reachable LLM to delegate sub-agents"
+                },
+                {
+                  "feature": "extend agent with MCP servers",
+                  "reason": "needs_service",
+                  "detail": "needs an outside service or server pickfit does not run: needs reachable LLM plus MCP server config"
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 91/100 and popularity 32/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 90.5,
+              "popularity": 31.9,
+              "treasure": true
+            },
+            "repo": "https://github.com/airiclenz/apogee",
+            "homepage": "https://airiclenz.com",
+            "web_app": null
+          },
+          {
+            "slug": "lcode",
+            "name": "lcode",
+            "summary": "Local terminal coding agent that explores repos, edits files, and runs commands.",
+            "fit": "It is a local terminal agent that explores repos, edits files and runs commands.",
+            "why": [
+              {
+                "claim": "explores repos, edits files and runs commands locally",
+                "field": "summary",
+                "value": "Local terminal coding agent that explores repos, edits files, and runs commands."
+              },
+              {
+                "claim": "processing stays on the local machine",
+                "field": "processing",
+                "value": "local"
+              },
+              {
+                "claim": "it is open source under MIT",
+                "field": "license",
+                "value": "MIT"
+              }
+            ],
+            "tradeoffs": [
+              "Installs via uv, not a single C-compiled binary, so the no Python pile wish is unmet.",
+              "Pickfit lists writing, editing and running as needs_gpu and did not verify confirmation before changes.",
+              "Local-model use may need a GPU and model downloads not detailed on the card."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "linux",
+              "macos"
+            ],
+            "pricing": "unknown",
+            "processing": "local",
+            "open_source": true,
+            "license": "MIT",
+            "verification": {
+              "level": "function",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-10-31T03:29:45.204471+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [],
+              "not_checked": [
+                {
+                  "feature": "run entirely on local machine with open-weight models",
+                  "reason": "needs_gpu",
+                  "detail": "needs a GPU, which the sandbox does not have: Smallest catalog model is 3.4 GB; box is CPU-only with 2 GB RAM and no Ollama (lcode doctor)."
+                },
+                {
+                  "feature": "talk to repository in terminal",
+                  "reason": "needs_gpu",
+                  "detail": "needs a GPU, which the sandbox does not have: Requires a running Ollama model; none fits/runs on this CPU-only 2 GB box."
+                },
+                {
+                  "feature": "write and edit files",
+                  "reason": "needs_gpu",
+                  "detail": "needs a GPU, which the sandbox does not have: Requires a running Ollama model; none fits/runs on this CPU-only 2 GB box."
+                },
+                {
+                  "feature": "run scripts and tests",
+                  "reason": "needs_gpu",
+                  "detail": "needs a GPU, which the sandbox does not have: Requires a running Ollama model; none fits/runs on this CPU-only 2 GB box."
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 90/100 and popularity 42/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 90.2,
+              "popularity": 42.4,
+              "treasure": true
+            },
+            "repo": "https://github.com/nasser1941/lcode",
+            "homepage": "https://nasser1941.github.io/lcode/",
+            "web_app": null
+          }
+        ],
+        "best_free": {
+          "slug": "camelid",
+          "reason": "It is free and runs coding work offline with reviewed edits on Linux."
+        },
+        "no_install_option": null,
+        "well_known_option": null,
+        "clarifying_question": null,
+        "coverage_note": "591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores."
+      },
+      "raw": {
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"rec_id\":\"rec_35c8324abced4142a67ead9245d2ba12\",\"matched_by\":\"muse-spark-1.3\",\"degraded\":false,\"degraded_reason\":null,\"model_attempts\":1,\"model_http_status\":null,\"considered\":591,\"picks\":[{\"slug\":\"camelid\",\"name\":\"Camelid\",\"summary\":\"Rust app for offline chat, file work, and coding with GGUF models via desktop, browser, and terminal.\",\"fit\":\"It is an offline coding helper with reviewed edits that runs on Linux as a binary.\",\"why\":[{\"claim\":\"works offline with local files and coding\",\"field\":\"summary\",\"value\":\"Rust app for offline chat, file work, and coding with GGUF models via desktop, browser, and terminal.\"},{\"claim\":\"codes in a local project with reviewed edits\",\"field\":\"use_cases\",\"value\":\"code in a local project with reviewed edits\"},{\"claim\":\"it is free\",\"field\":\"pricing\",\"value\":\"free\"}],\"tradeoffs\":[\"Card does not say it builds with only a C compiler, so the single tiny C binary wish is unmet.\",\"Pickfit did not verify reviewed code edits, it lists Code in chat with reviewed edits as other.\",\"Card kind is desktop_app, so terminal use may be less direct than a pure CLI agent.\"],\"vs_well_known\":null,\"platforms\":[\"macos\",\"linux\",\"windows\"],\"pricing\":\"free\",\"processing\":\"local\",\"open_source\":true,\"license\":\"MIT\",\"verification\":{\"level\":\"install\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-11-01T23:55:28.019133+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[{\"feature\":\"Chat with supported GGUF models locally\",\"check\":\"curl -s http://127.0.0.1:8181/v1/chat/completions -H \\\"Content-Type: application/json\\\" -d '{\\\"model\\\": \\\"Gemma-3-270M-It\\\", \\\"messages\\\": [{\\\"role\\\": \\\"user\\\", \\\"content\\\": \\\"Say hello in five words.\\\"}], \\\"max_tokens\\\": 16, \\\"temperature\\\": 0}'\"},{\"feature\":\"Use OpenAI-compatible API\",\"check\":\"curl -fsSL http://127.0.0.1:8181/v1/health\"}],\"not_checked\":[{\"feature\":\"Browse and preview generated files\",\"reason\":\"other\",\"detail\":\"not checked: needs desktop/browser file preview UI; no Linux desktop bundle, engine-only verification\"},{\"feature\":\"Code in chat with reviewed edits\",\"reason\":\"other\",\"detail\":\"not checked: needs Code session with certified tool-capable model and desktop/browser UI\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-vm) and replayed the steps from scratch on 2026-11-01; the install finished and the tool started. The run exercised 2 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 68/100 and popularity 82/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":67.7,\"popularity\":82.3,\"treasure\":false},\"repo\":\"https://github.com/timtoole02/Camelid\",\"homepage\":null,\"web_app\":null},{\"slug\":\"apogee\",\"name\":\"apogee\",\"summary\":\"Terminal AI coding agent that uses local LLMs or OpenAI-compatible APIs.\",\"fit\":\"It is a terminal agent for local models that reads code and edits files on Linux.\",\"why\":[{\"claim\":\"uses local LLMs in the terminal\",\"field\":\"summary\",\"value\":\"Terminal AI coding agent that uses local LLMs or OpenAI-compatible APIs.\"},{\"claim\":\"reads code and edits files via terminal agent\",\"field\":\"use_cases\",\"value\":\"read code and edit files via terminal agent\"},{\"claim\":\"installs as a binary without Python or Node runtimes listed\",\"field\":\"install_method_user_os\",\"value\":\"binary\"}],\"tradeoffs\":[\"Maturity is alpha, so stability is uncertain for daily work.\",\"Pickfit lists reading, editing and running commands as needs_service, so offline approval behavior was not verified.\",\"Card does not say it builds with only a C compiler or asks before every change.\"],\"vs_well_known\":null,\"platforms\":[\"windows\",\"macos\",\"linux\"],\"pricing\":\"unknown\",\"processing\":\"hybrid\",\"open_source\":true,\"license\":\"MIT\",\"verification\":{\"level\":\"function\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-10-31T02:03:48.566546+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[],\"not_checked\":[{\"feature\":\"read code, edit files and run commands\",\"reason\":\"needs_service\",\"detail\":\"needs an outside service or server pickfit does not run: needs reachable LLM to drive read/edit/run loop\"},{\"feature\":\"use local models and cloud APIs\",\"reason\":\"needs_service\",\"detail\":\"needs an outside service or server pickfit does not run: needs reachable local model server or cloud API key; probe only attempted discovery\"},{\"feature\":\"delegate work to parallel sub-agents\",\"reason\":\"needs_service\",\"detail\":\"needs an outside service or server pickfit does not run: needs reachable LLM to delegate sub-agents\"},{\"feature\":\"extend agent with MCP servers\",\"reason\":\"needs_service\",\"detail\":\"needs an outside service or server pickfit does not run: needs reachable LLM plus MCP server config\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 91/100 and popularity 32/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":90.5,\"popularity\":31.9,\"treasure\":true},\"repo\":\"https://github.com/airiclenz/apogee\",\"homepage\":\"https://airiclenz.com\",\"web_app\":null},{\"slug\":\"lcode\",\"name\":\"lcode\",\"summary\":\"Local terminal coding agent that explores repos, edits files, and runs commands.\",\"fit\":\"It is a local terminal agent that explores repos, edits files and runs commands.\",\"why\":[{\"claim\":\"explores repos, edits files and runs commands locally\",\"field\":\"summary\",\"value\":\"Local terminal coding agent that explores repos, edits files, and runs commands.\"},{\"claim\":\"processing stays on the local machine\",\"field\":\"processing\",\"value\":\"local\"},{\"claim\":\"it is open source under MIT\",\"field\":\"license\",\"value\":\"MIT\"}],\"tradeoffs\":[\"Installs via uv, not a single C-compiled binary, so the no Python pile wish is unmet.\",\"Pickfit lists writing, editing and running as needs_gpu and did not verify confirmation before changes.\",\"Local-model use may need a GPU and model downloads not detailed on the card.\"],\"vs_well_known\":null,\"platforms\":[\"linux\",\"macos\"],\"pricing\":\"unknown\",\"processing\":\"local\",\"open_source\":true,\"license\":\"MIT\",\"verification\":{\"level\":\"function\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-10-31T03:29:45.204471+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[],\"not_checked\":[{\"feature\":\"run entirely on local machine with open-weight models\",\"reason\":\"needs_gpu\",\"detail\":\"needs a GPU, which the sandbox does not have: Smallest catalog model is 3.4 GB; box is CPU-only with 2 GB RAM and no Ollama (lcode doctor).\"},{\"feature\":\"talk to repository in terminal\",\"reason\":\"needs_gpu\",\"detail\":\"needs a GPU, which the sandbox does not have: Requires a running Ollama model; none fits/runs on this CPU-only 2 GB box.\"},{\"feature\":\"write and edit files\",\"reason\":\"needs_gpu\",\"detail\":\"needs a GPU, which the sandbox does not have: Requires a running Ollama model; none fits/runs on this CPU-only 2 GB box.\"},{\"feature\":\"run scripts and tests\",\"reason\":\"needs_gpu\",\"detail\":\"needs a GPU, which the sandbox does not have: Requires a running Ollama model; none fits/runs on this CPU-only 2 GB box.\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 90/100 and popularity 42/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":90.2,\"popularity\":42.4,\"treasure\":true},\"repo\":\"https://github.com/nasser1941/lcode\",\"homepage\":\"https://nasser1941.github.io/lcode/\",\"web_app\":null}],\"best_free\":{\"slug\":\"camelid\",\"reason\":\"It is free and runs coding work offline with reviewed edits on Linux.\"},\"no_install_option\":null,\"well_known_option\":null,\"clarifying_question\":null,\"coverage_note\":\"591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores.\"}"
+            }
+          ],
+          "structuredContent": {
+            "rec_id": "rec_35c8324abced4142a67ead9245d2ba12",
+            "matched_by": "muse-spark-1.3",
+            "degraded": false,
+            "degraded_reason": null,
+            "model_attempts": 1,
+            "model_http_status": null,
+            "considered": 591,
+            "picks": [
+              {
+                "slug": "camelid",
+                "name": "Camelid",
+                "summary": "Rust app for offline chat, file work, and coding with GGUF models via desktop, browser, and terminal.",
+                "fit": "It is an offline coding helper with reviewed edits that runs on Linux as a binary.",
+                "why": [
+                  {
+                    "claim": "works offline with local files and coding",
+                    "field": "summary",
+                    "value": "Rust app for offline chat, file work, and coding with GGUF models via desktop, browser, and terminal."
+                  },
+                  {
+                    "claim": "codes in a local project with reviewed edits",
+                    "field": "use_cases",
+                    "value": "code in a local project with reviewed edits"
+                  },
+                  {
+                    "claim": "it is free",
+                    "field": "pricing",
+                    "value": "free"
+                  }
+                ],
+                "tradeoffs": [
+                  "Card does not say it builds with only a C compiler, so the single tiny C binary wish is unmet.",
+                  "Pickfit did not verify reviewed code edits, it lists Code in chat with reviewed edits as other.",
+                  "Card kind is desktop_app, so terminal use may be less direct than a pure CLI agent."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "macos",
+                  "linux",
+                  "windows"
+                ],
+                "pricing": "free",
+                "processing": "local",
+                "open_source": true,
+                "license": "MIT",
+                "verification": {
+                  "level": "install",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-11-01T23:55:28.019133+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [
+                    {
+                      "feature": "Chat with supported GGUF models locally",
+                      "check": "curl -s http://127.0.0.1:8181/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\": \"Gemma-3-270M-It\", \"messages\": [{\"role\": \"user\", \"content\": \"Say hello in five words.\"}], \"max_tokens\": 16, \"temperature\": 0}'"
+                    },
+                    {
+                      "feature": "Use OpenAI-compatible API",
+                      "check": "curl -fsSL http://127.0.0.1:8181/v1/health"
+                    }
+                  ],
+                  "not_checked": [
+                    {
+                      "feature": "Browse and preview generated files",
+                      "reason": "other",
+                      "detail": "not checked: needs desktop/browser file preview UI; no Linux desktop bundle, engine-only verification"
+                    },
+                    {
+                      "feature": "Code in chat with reviewed edits",
+                      "reason": "other",
+                      "detail": "not checked: needs Code session with certified tool-capable model and desktop/browser UI"
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-vm) and replayed the steps from scratch on 2026-11-01; the install finished and the tool started. The run exercised 2 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 68/100 and popularity 82/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 67.7,
+                  "popularity": 82.3,
+                  "treasure": false
+                },
+                "repo": "https://github.com/timtoole02/Camelid",
+                "homepage": null,
+                "web_app": null
+              },
+              {
+                "slug": "apogee",
+                "name": "apogee",
+                "summary": "Terminal AI coding agent that uses local LLMs or OpenAI-compatible APIs.",
+                "fit": "It is a terminal agent for local models that reads code and edits files on Linux.",
+                "why": [
+                  {
+                    "claim": "uses local LLMs in the terminal",
+                    "field": "summary",
+                    "value": "Terminal AI coding agent that uses local LLMs or OpenAI-compatible APIs."
+                  },
+                  {
+                    "claim": "reads code and edits files via terminal agent",
+                    "field": "use_cases",
+                    "value": "read code and edit files via terminal agent"
+                  },
+                  {
+                    "claim": "installs as a binary without Python or Node runtimes listed",
+                    "field": "install_method_user_os",
+                    "value": "binary"
+                  }
+                ],
+                "tradeoffs": [
+                  "Maturity is alpha, so stability is uncertain for daily work.",
+                  "Pickfit lists reading, editing and running commands as needs_service, so offline approval behavior was not verified.",
+                  "Card does not say it builds with only a C compiler or asks before every change."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "windows",
+                  "macos",
+                  "linux"
+                ],
+                "pricing": "unknown",
+                "processing": "hybrid",
+                "open_source": true,
+                "license": "MIT",
+                "verification": {
+                  "level": "function",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-10-31T02:03:48.566546+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [],
+                  "not_checked": [
+                    {
+                      "feature": "read code, edit files and run commands",
+                      "reason": "needs_service",
+                      "detail": "needs an outside service or server pickfit does not run: needs reachable LLM to drive read/edit/run loop"
+                    },
+                    {
+                      "feature": "use local models and cloud APIs",
+                      "reason": "needs_service",
+                      "detail": "needs an outside service or server pickfit does not run: needs reachable local model server or cloud API key; probe only attempted discovery"
+                    },
+                    {
+                      "feature": "delegate work to parallel sub-agents",
+                      "reason": "needs_service",
+                      "detail": "needs an outside service or server pickfit does not run: needs reachable LLM to delegate sub-agents"
+                    },
+                    {
+                      "feature": "extend agent with MCP servers",
+                      "reason": "needs_service",
+                      "detail": "needs an outside service or server pickfit does not run: needs reachable LLM plus MCP server config"
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 91/100 and popularity 32/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 90.5,
+                  "popularity": 31.9,
+                  "treasure": true
+                },
+                "repo": "https://github.com/airiclenz/apogee",
+                "homepage": "https://airiclenz.com",
+                "web_app": null
+              },
+              {
+                "slug": "lcode",
+                "name": "lcode",
+                "summary": "Local terminal coding agent that explores repos, edits files, and runs commands.",
+                "fit": "It is a local terminal agent that explores repos, edits files and runs commands.",
+                "why": [
+                  {
+                    "claim": "explores repos, edits files and runs commands locally",
+                    "field": "summary",
+                    "value": "Local terminal coding agent that explores repos, edits files, and runs commands."
+                  },
+                  {
+                    "claim": "processing stays on the local machine",
+                    "field": "processing",
+                    "value": "local"
+                  },
+                  {
+                    "claim": "it is open source under MIT",
+                    "field": "license",
+                    "value": "MIT"
+                  }
+                ],
+                "tradeoffs": [
+                  "Installs via uv, not a single C-compiled binary, so the no Python pile wish is unmet.",
+                  "Pickfit lists writing, editing and running as needs_gpu and did not verify confirmation before changes.",
+                  "Local-model use may need a GPU and model downloads not detailed on the card."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "linux",
+                  "macos"
+                ],
+                "pricing": "unknown",
+                "processing": "local",
+                "open_source": true,
+                "license": "MIT",
+                "verification": {
+                  "level": "function",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-10-31T03:29:45.204471+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [],
+                  "not_checked": [
+                    {
+                      "feature": "run entirely on local machine with open-weight models",
+                      "reason": "needs_gpu",
+                      "detail": "needs a GPU, which the sandbox does not have: Smallest catalog model is 3.4 GB; box is CPU-only with 2 GB RAM and no Ollama (lcode doctor)."
+                    },
+                    {
+                      "feature": "talk to repository in terminal",
+                      "reason": "needs_gpu",
+                      "detail": "needs a GPU, which the sandbox does not have: Requires a running Ollama model; none fits/runs on this CPU-only 2 GB box."
+                    },
+                    {
+                      "feature": "write and edit files",
+                      "reason": "needs_gpu",
+                      "detail": "needs a GPU, which the sandbox does not have: Requires a running Ollama model; none fits/runs on this CPU-only 2 GB box."
+                    },
+                    {
+                      "feature": "run scripts and tests",
+                      "reason": "needs_gpu",
+                      "detail": "needs a GPU, which the sandbox does not have: Requires a running Ollama model; none fits/runs on this CPU-only 2 GB box."
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 90/100 and popularity 42/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 90.2,
+                  "popularity": 42.4,
+                  "treasure": true
+                },
+                "repo": "https://github.com/nasser1941/lcode",
+                "homepage": "https://nasser1941.github.io/lcode/",
+                "web_app": null
+              }
+            ],
+            "best_free": {
+              "slug": "camelid",
+              "reason": "It is free and runs coding work offline with reviewed edits on Linux."
+            },
+            "no_install_option": null,
+            "well_known_option": null,
+            "clarifying_question": null,
+            "coverage_note": "591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores."
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 1
+      }
+    }
+  ]
+}

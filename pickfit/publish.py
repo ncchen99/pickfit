@@ -12,6 +12,12 @@ before anything is written, and any problem refuses the whole publish:
   ``--env NAME``, in its ``env.NAME`` section: wrangler does not inherit
   vars or D1 bindings into an environment).
 
+Before that, a top-level publish translates the web page's new or changed tool
+sentences into zh-TW (pickfit/translate.py: Muse Spark Open on Modal, at most
+TRANSLATE_MAX_USD) and commits only data/i18n/zh-TW; a failure is reported and
+the deploy goes on, with those sentences shown in English. Frozen deployments
+(``--env``) and ``--no-translate`` skip it.
+
 Then the index is written to worker/src/generated/index.json and
 ``npx wrangler deploy [--env NAME]`` runs in worker/. ``--dry-run`` runs every
 check and prints the plan, including the deployment's settings, without
@@ -172,6 +178,35 @@ def plan(
     return result
 
 
+TRANSLATE_MAX_USD = 1.0
+
+
+def translate_new(index: dict[str, Any], data_dir: Path, *, dry_run: bool, out=print) -> None:
+    """zh-TW for the sentences the page lacks, committed alone; never raises (the page falls back to English)."""
+    from pickfit.i18n import i18n_dir
+    from pickfit.translate import BATCH_CHARS, batches, missing, run
+
+    directory = i18n_dir(data_dir)
+    known, todo = missing(index["entries"], directory)
+    if not todo:
+        out("publish: zh-TW: every sentence is translated")
+        return
+    tools = len({slug for slug, _ in todo})
+    if dry_run:
+        out(f"publish: dry run; would translate {len(todo)} sentence(s) of {tools} tool(s) into zh-TW")
+        return
+    out(f"publish: zh-TW: translating {len(todo)} sentence(s) of {tools} tool(s) with Muse Spark Open")
+    try:
+        totals = run(batches(todo, BATCH_CHARS["open-modal"]), known, directory, max_usd=TRANSLATE_MAX_USD, out=out)
+        out(f"publish: zh-TW: {totals.sentences} translated, {totals.failed} request(s) failed, ${totals.usd:.2f}")
+        if totals.sentences:
+            subprocess.run(["git", "add", "--", str(directory)], cwd=REPO_ROOT, check=True)
+            subprocess.run(["git", "commit", "-q", "-m", f"Translate {totals.sentences} new page sentence(s) into zh-TW",
+                            "--", str(directory)], cwd=REPO_ROOT, check=True)
+    except Exception as err:  # noqa: BLE001 - translation is page copy: never block a deploy over it
+        out(f"publish: zh-TW: skipped ({type(err).__name__}: {str(err)[:200]}); those sentences show in English")
+
+
 def publish(
     data_dir: Path = DEFAULT_DATA_DIR,
     worker_dir: Path = DEFAULT_WORKER_DIR,
@@ -179,6 +214,7 @@ def publish(
     dry_run: bool = False,
     allow_dirty: bool = False,
     env: str | None = None,
+    translate: bool = False,
     out=print,
 ) -> int:
     p = plan(data_dir, worker_dir, allow_dirty, env)
@@ -196,6 +232,8 @@ def publish(
     )
     shown = ", ".join(f"{name}={p.vars.get(name, '(default)')}" for name in SHOWN_VARS)
     out(f"publish: {'env ' + env if env else 'top-level'} settings: {shown}")
+    if translate and env is None:
+        translate_new(p.index, data_dir, dry_run=dry_run, out=out)
     if dry_run:
         out(f"publish: dry run; would write {index_path}")
         out(f"publish: dry run; would run `{' '.join(command)}` in {worker_dir}")

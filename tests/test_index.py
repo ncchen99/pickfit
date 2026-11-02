@@ -233,3 +233,20 @@ def test_a_web_app_has_no_checked_facts_before_a_run_passed(data_dir: Path) -> N
     edit(data_dir / "fixture-web-sketch.json", not_loaded)
     sketch = {e["slug"]: e for e in build_index(data_dir).index["entries"]}["fixture-web-sketch"]
     assert sketch["web"] == {"url": "https://fixture-sketch.example.invalid/", "check": None}
+
+
+def test_a_runs_video_reaches_the_index_for_the_worker_to_serve(tmp_path: Path) -> None:
+    source = Path(__file__).resolve().parent.parent / "data" / "software" / "nip4.json"
+    if not source.exists():
+        pytest.skip("no record with a video in data/software")
+    data_dir = tmp_path / "software"
+    data_dir.mkdir()
+    shutil.copy(source, data_dir / "nip4.json")
+    [entry] = build_index(data_dir).index["entries"]
+    videos = [r["video"] for r in entry["verification"]["passed_runs"] if r["video"]]
+    assert videos, "nip4's run has a video"
+    video = videos[0]
+    assert set(video) == {"clip", "clip_sha256", "seconds", "recorded_at", "features", "raw"}
+    assert video["clip"].endswith(".mp4") and video["raw"] and set(video["raw"][0]) == {"file", "sha256", "seconds"}
+    linux = entry["install"]["linux"]["run"]
+    assert linux["video"] == video or linux["video"] is None

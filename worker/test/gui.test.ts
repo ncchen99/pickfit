@@ -1,10 +1,13 @@
 /** GUI apps: the evidence pickfit saw when it launched one reaches find_software and get_install_guide. */
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { test } from 'node:test';
 import { loadCatalog, type GuiEvidence } from '../src/catalog.ts';
 import { ranSentence } from '../src/evidence.ts';
 import { guiSentence, levelLabel } from '../src/ui/facts.ts';
 import { installGuide } from '../src/install.ts';
+import { gui } from '../src/server.ts';
 import { fixtureIndex } from './helpers.ts';
 
 export const GUI: GuiEvidence = {
@@ -73,4 +76,11 @@ test('an operated GUI app says which feature passed pickfit\'s own check, and it
   const tried: GuiEvidence = { ...operated, tier: 'ui_rendered', operations: [{ ...operated.operations![0], passed: false }] };
   assert.equal(levelLabel('install', { gui: tried }), 'It opens to its main screen');
   assert.match(guiSentence(tried), /pickfit did not use any of its features/);
+});
+
+test("the tools' output schema accepts every GUI tier a record can carry (a function-level GUI app broke find_software)", () => {
+  const py = readFileSync(join(import.meta.dirname, '..', '..', 'pickfit', 'schema.py'), 'utf8');
+  const tiers = [...py.match(/type GuiTier = Literal\[([^\]]*)\]/)![1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(tiers.includes('action_checked'));
+  for (const tier of tiers) assert.ok(gui.safeParse({ ...GUI, tier }).success, tier);
 });

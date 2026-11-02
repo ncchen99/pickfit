@@ -1,0 +1,526 @@
+{
+  "n": 8,
+  "target": {
+    "slug": "quill",
+    "stratum": "local_ai",
+    "category": "local_ai",
+    "level": "install",
+    "os": "macos"
+  },
+  "arguments": {
+    "need": "I want to talk instead of type and have my words land wherever my cursor is, in any app. I need the speech recognition to happen on my own machine rather than being shipped off to some server, and it has to be free and open source. Ideally there'd be a second shortcut that tidies up my rambling (drops the ums, fixes it when I correct myself mid-sentence) using a local model I run through Ollama, and shows me the cleaned text to approve before it gets pasted.",
+    "os": "macos"
+  },
+  "used_attempt": 0,
+  "attempts": [
+    {
+      "at": "2026-11-02T17:21:16+08:00",
+      "latency_s": 21.3,
+      "http_status": 200,
+      "ledger_row": 43105,
+      "is_error": false,
+      "find": {
+        "rec_id": "rec_117fe1bba3fe4105bf6e0018c31cf907",
+        "matched_by": "muse-spark-1.3",
+        "degraded": false,
+        "degraded_reason": null,
+        "model_attempts": 1,
+        "model_http_status": null,
+        "considered": 399,
+        "picks": [
+          {
+            "slug": "quill",
+            "name": "Quill",
+            "summary": "Free open-source voice dictation app with verbatim Dictation and LLM-polished Scribe voice input.",
+            "fit": "It directly matches the two-shortcut ask: verbatim dictation plus a cleaned reviewable draft for rambling speech.",
+            "why": [
+              {
+                "claim": "It provides verbatim dictation and LLM-polished voice input.",
+                "field": "summary",
+                "value": "Free open-source voice dictation app with verbatim Dictation and LLM-polished Scribe voice input."
+              },
+              {
+                "claim": "It cleans filler and self-corrections into a draft you can review.",
+                "field": "use_cases",
+                "value": "Clean spoken corrections and filler into a reviewable draft"
+              },
+              {
+                "claim": "It inserts dictation via hotkey.",
+                "field": "use_cases",
+                "value": "Dictate verbatim text insertion via hotkey"
+              },
+              {
+                "claim": "It runs on macOS.",
+                "field": "platforms",
+                "value": "macos"
+              }
+            ],
+            "tradeoffs": [
+              "Local LLM refinement was not verified in testing: refine dictation with local LLM (needs_hardware).",
+              "Prototype maturity and optional network use mean you should confirm offline Ollama behavior on your Mac.",
+              "Card does not name Ollama, so Ollama wiring may need manual setup."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "windows",
+              "macos"
+            ],
+            "pricing": "free",
+            "processing": "hybrid",
+            "open_source": true,
+            "license": "AGPL-3.0",
+            "verification": {
+              "level": "install",
+              "os": "macos",
+              "arch": "arm64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-11-01T19:22:50.583316+08:00",
+              "verified_on_user_os": true,
+              "gui": {
+                "tier": "ui_rendered",
+                "screen": "first_run",
+                "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+                "launch_offline": true
+              }
+            },
+            "features": {
+              "recorded": true,
+              "checked": [],
+              "not_checked": [
+                {
+                  "feature": "type exactly what you say",
+                  "reason": "needs_hardware",
+                  "detail": "needs hardware the sandbox lacks (a microphone, camera or device): Requires microphone capture and Accessibility insertion; no audio input exercised."
+                },
+                {
+                  "feature": "refine dictation with local LLM",
+                  "reason": "needs_hardware",
+                  "detail": "needs hardware the sandbox lacks (a microphone, camera or device): Requires microphone capture plus Ollama/compatible local LLM; neither exercised."
+                },
+                {
+                  "feature": "insert verbatim transcript on stop",
+                  "reason": "needs_hardware",
+                  "detail": "needs hardware the sandbox lacks (a microphone, camera or device): Requires hotkey-held dictation and Accessibility insertion; not exercised."
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh macos/arm64 sandbox (tart-vz) and replayed the steps from scratch on 2026-11-01; the app opened a window of its own on a virtual display (macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host) and a separate model, reading a screenshot of that window, judged that its first-run (setup) screen rendered, and the launch passed again with the network off. That shows it installs and starts; pickfit did not use any of its features. The run exercised 0 of the 3 main features its README advertises; see features for the ones it did not check and why. Quality 70/100 and popularity 27/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 399 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 70.2,
+              "popularity": 26.7,
+              "treasure": false
+            },
+            "repo": "https://github.com/AaravKashyap12/quill",
+            "homepage": "https://quilldictate.site",
+            "web_app": null
+          },
+          {
+            "slug": "dictate",
+            "name": "Dictate",
+            "summary": "Push-to-talk macOS dictation that transcribes speech locally and pastes cleaned text.",
+            "fit": "It is a macOS push-to-talk tool that transcribes locally and pastes cleaned text at the cursor.",
+            "why": [
+              {
+                "claim": "It transcribes locally on macOS and pastes cleaned text.",
+                "field": "summary",
+                "value": "Push-to-talk macOS dictation that transcribes speech locally and pastes cleaned text."
+              },
+              {
+                "claim": "It dictates where your cursor is.",
+                "field": "use_cases",
+                "value": "dictate speech to text where the cursor is"
+              },
+              {
+                "claim": "It cleans grammar and punctuation locally.",
+                "field": "use_cases",
+                "value": "clean up transcription grammar and punctuation locally"
+              },
+              {
+                "claim": "It keeps processing on your machine.",
+                "field": "processing",
+                "value": "local"
+              }
+            ],
+            "tradeoffs": [
+              "Requires Apple Silicon, so it will not fit an Intel Mac.",
+              "Card does not mention Ollama or showing cleaned text for approval before pasting.",
+              "Needs Python 3.11+ runtime via uv install."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "macos"
+            ],
+            "pricing": "free",
+            "processing": "local",
+            "open_source": true,
+            "license": "MIT",
+            "verification": {
+              "level": "install",
+              "os": "macos",
+              "arch": "arm64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-11-01T19:39:21.879548+08:00",
+              "verified_on_user_os": true,
+              "gui": {
+                "tier": "ui_rendered",
+                "screen": "main_ui",
+                "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+                "launch_offline": true
+              }
+            },
+            "features": {
+              "recorded": false,
+              "checked": [],
+              "not_checked": []
+            },
+            "how_we_know": "pickfit installed it in a fresh macos/arm64 sandbox (tart-vz) and replayed the steps from scratch on 2026-11-01; the app opened a window of its own on a virtual display (macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host) and a separate model, reading a screenshot of that window, judged that its main screen rendered, and the launch passed again with the network off. That shows it installs and starts; pickfit did not use any of its features. Quality 71/100 and popularity 45/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 399 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 70.8,
+              "popularity": 44.7,
+              "treasure": false
+            },
+            "repo": "https://github.com/0xbrando/dictate",
+            "homepage": null,
+            "web_app": null
+          },
+          {
+            "slug": "whisper-local",
+            "name": "Whisper Local",
+            "summary": "Offline push-to-talk AI dictation that types speech at the cursor on Windows and macOS.",
+            "fit": "It is an offline push-to-talk dictation tool that types speech at the cursor and relates to Ollama.",
+            "why": [
+              {
+                "claim": "It types speech at the cursor in any app on macOS.",
+                "field": "summary",
+                "value": "Offline push-to-talk AI dictation that types speech at the cursor on Windows and macOS."
+              },
+              {
+                "claim": "It dictates in any application by hotkey.",
+                "field": "use_cases",
+                "value": "dictate text in any application via push-to-talk hotkey"
+              },
+              {
+                "claim": "It is linked to Ollama use.",
+                "field": "tags",
+                "value": "ollama"
+              },
+              {
+                "claim": "It keeps processing local.",
+                "field": "processing",
+                "value": "local"
+              }
+            ],
+            "tradeoffs": [
+              "Card does not describe a second cleanup shortcut or approval preview before pasting.",
+              "Card does not describe filler-word and self-correction handling.",
+              "Local model download and Python setup may take time and disk space."
+            ],
+            "vs_well_known": "Choose it over Wispr Flow when offline local free open-source dictation on your own Mac matters more than a hosted service.",
+            "platforms": [
+              "windows",
+              "macos"
+            ],
+            "pricing": "free",
+            "processing": "local",
+            "open_source": true,
+            "license": "MIT",
+            "verification": {
+              "level": "install",
+              "os": "macos",
+              "arch": "arm64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-11-01T19:46:50.278145+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": false,
+              "checked": [],
+              "not_checked": []
+            },
+            "how_we_know": "pickfit installed it in a fresh macos/arm64 sandbox (tart-vz) and replayed the steps from scratch on 2026-11-01; the install finished and the tool started. Quality 73/100 and popularity 86/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 399 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 73.2,
+              "popularity": 85.7,
+              "treasure": false
+            },
+            "repo": "https://github.com/drajb/whisper-local",
+            "homepage": "https://gekro.com",
+            "web_app": null
+          }
+        ],
+        "best_free": {
+          "slug": "quill",
+          "reason": "It is free and pairs verbatim dictation with an LLM-polished draft for review before insertion."
+        },
+        "no_install_option": null,
+        "well_known_option": null,
+        "clarifying_question": null,
+        "coverage_note": "399 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores."
+      },
+      "raw": {
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"rec_id\":\"rec_117fe1bba3fe4105bf6e0018c31cf907\",\"matched_by\":\"muse-spark-1.3\",\"degraded\":false,\"degraded_reason\":null,\"model_attempts\":1,\"model_http_status\":null,\"considered\":399,\"picks\":[{\"slug\":\"quill\",\"name\":\"Quill\",\"summary\":\"Free open-source voice dictation app with verbatim Dictation and LLM-polished Scribe voice input.\",\"fit\":\"It directly matches the two-shortcut ask: verbatim dictation plus a cleaned reviewable draft for rambling speech.\",\"why\":[{\"claim\":\"It provides verbatim dictation and LLM-polished voice input.\",\"field\":\"summary\",\"value\":\"Free open-source voice dictation app with verbatim Dictation and LLM-polished Scribe voice input.\"},{\"claim\":\"It cleans filler and self-corrections into a draft you can review.\",\"field\":\"use_cases\",\"value\":\"Clean spoken corrections and filler into a reviewable draft\"},{\"claim\":\"It inserts dictation via hotkey.\",\"field\":\"use_cases\",\"value\":\"Dictate verbatim text insertion via hotkey\"},{\"claim\":\"It runs on macOS.\",\"field\":\"platforms\",\"value\":\"macos\"}],\"tradeoffs\":[\"Local LLM refinement was not verified in testing: refine dictation with local LLM (needs_hardware).\",\"Prototype maturity and optional network use mean you should confirm offline Ollama behavior on your Mac.\",\"Card does not name Ollama, so Ollama wiring may need manual setup.\"],\"vs_well_known\":null,\"platforms\":[\"windows\",\"macos\"],\"pricing\":\"free\",\"processing\":\"hybrid\",\"open_source\":true,\"license\":\"AGPL-3.0\",\"verification\":{\"level\":\"install\",\"os\":\"macos\",\"arch\":\"arm64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-11-01T19:22:50.583316+08:00\",\"verified_on_user_os\":true,\"gui\":{\"tier\":\"ui_rendered\",\"screen\":\"first_run\",\"display\":\"macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host\",\"launch_offline\":true}},\"features\":{\"recorded\":true,\"checked\":[],\"not_checked\":[{\"feature\":\"type exactly what you say\",\"reason\":\"needs_hardware\",\"detail\":\"needs hardware the sandbox lacks (a microphone, camera or device): Requires microphone capture and Accessibility insertion; no audio input exercised.\"},{\"feature\":\"refine dictation with local LLM\",\"reason\":\"needs_hardware\",\"detail\":\"needs hardware the sandbox lacks (a microphone, camera or device): Requires microphone capture plus Ollama/compatible local LLM; neither exercised.\"},{\"feature\":\"insert verbatim transcript on stop\",\"reason\":\"needs_hardware\",\"detail\":\"needs hardware the sandbox lacks (a microphone, camera or device): Requires hotkey-held dictation and Accessibility insertion; not exercised.\"}]},\"how_we_know\":\"pickfit installed it in a fresh macos/arm64 sandbox (tart-vz) and replayed the steps from scratch on 2026-11-01; the app opened a window of its own on a virtual display (macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host) and a separate model, reading a screenshot of that window, judged that its first-run (setup) screen rendered, and the launch passed again with the network off. That shows it installs and starts; pickfit did not use any of its features. The run exercised 0 of the 3 main features its README advertises; see features for the ones it did not check and why. Quality 70/100 and popularity 27/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 399 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":70.2,\"popularity\":26.7,\"treasure\":false},\"repo\":\"https://github.com/AaravKashyap12/quill\",\"homepage\":\"https://quilldictate.site\",\"web_app\":null},{\"slug\":\"dictate\",\"name\":\"Dictate\",\"summary\":\"Push-to-talk macOS dictation that transcribes speech locally and pastes cleaned text.\",\"fit\":\"It is a macOS push-to-talk tool that transcribes locally and pastes cleaned text at the cursor.\",\"why\":[{\"claim\":\"It transcribes locally on macOS and pastes cleaned text.\",\"field\":\"summary\",\"value\":\"Push-to-talk macOS dictation that transcribes speech locally and pastes cleaned text.\"},{\"claim\":\"It dictates where your cursor is.\",\"field\":\"use_cases\",\"value\":\"dictate speech to text where the cursor is\"},{\"claim\":\"It cleans grammar and punctuation locally.\",\"field\":\"use_cases\",\"value\":\"clean up transcription grammar and punctuation locally\"},{\"claim\":\"It keeps processing on your machine.\",\"field\":\"processing\",\"value\":\"local\"}],\"tradeoffs\":[\"Requires Apple Silicon, so it will not fit an Intel Mac.\",\"Card does not mention Ollama or showing cleaned text for approval before pasting.\",\"Needs Python 3.11+ runtime via uv install.\"],\"vs_well_known\":null,\"platforms\":[\"macos\"],\"pricing\":\"free\",\"processing\":\"local\",\"open_source\":true,\"license\":\"MIT\",\"verification\":{\"level\":\"install\",\"os\":\"macos\",\"arch\":\"arm64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-11-01T19:39:21.879548+08:00\",\"verified_on_user_os\":true,\"gui\":{\"tier\":\"ui_rendered\",\"screen\":\"main_ui\",\"display\":\"macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host\",\"launch_offline\":true}},\"features\":{\"recorded\":false,\"checked\":[],\"not_checked\":[]},\"how_we_know\":\"pickfit installed it in a fresh macos/arm64 sandbox (tart-vz) and replayed the steps from scratch on 2026-11-01; the app opened a window of its own on a virtual display (macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host) and a separate model, reading a screenshot of that window, judged that its main screen rendered, and the launch passed again with the network off. That shows it installs and starts; pickfit did not use any of its features. Quality 71/100 and popularity 45/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 399 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":70.8,\"popularity\":44.7,\"treasure\":false},\"repo\":\"https://github.com/0xbrando/dictate\",\"homepage\":null,\"web_app\":null},{\"slug\":\"whisper-local\",\"name\":\"Whisper Local\",\"summary\":\"Offline push-to-talk AI dictation that types speech at the cursor on Windows and macOS.\",\"fit\":\"It is an offline push-to-talk dictation tool that types speech at the cursor and relates to Ollama.\",\"why\":[{\"claim\":\"It types speech at the cursor in any app on macOS.\",\"field\":\"summary\",\"value\":\"Offline push-to-talk AI dictation that types speech at the cursor on Windows and macOS.\"},{\"claim\":\"It dictates in any application by hotkey.\",\"field\":\"use_cases\",\"value\":\"dictate text in any application via push-to-talk hotkey\"},{\"claim\":\"It is linked to Ollama use.\",\"field\":\"tags\",\"value\":\"ollama\"},{\"claim\":\"It keeps processing local.\",\"field\":\"processing\",\"value\":\"local\"}],\"tradeoffs\":[\"Card does not describe a second cleanup shortcut or approval preview before pasting.\",\"Card does not describe filler-word and self-correction handling.\",\"Local model download and Python setup may take time and disk space.\"],\"vs_well_known\":\"Choose it over Wispr Flow when offline local free open-source dictation on your own Mac matters more than a hosted service.\",\"platforms\":[\"windows\",\"macos\"],\"pricing\":\"free\",\"processing\":\"local\",\"open_source\":true,\"license\":\"MIT\",\"verification\":{\"level\":\"install\",\"os\":\"macos\",\"arch\":\"arm64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-11-01T19:46:50.278145+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":false,\"checked\":[],\"not_checked\":[]},\"how_we_know\":\"pickfit installed it in a fresh macos/arm64 sandbox (tart-vz) and replayed the steps from scratch on 2026-11-01; the install finished and the tool started. Quality 73/100 and popularity 86/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 399 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":73.2,\"popularity\":85.7,\"treasure\":false},\"repo\":\"https://github.com/drajb/whisper-local\",\"homepage\":\"https://gekro.com\",\"web_app\":null}],\"best_free\":{\"slug\":\"quill\",\"reason\":\"It is free and pairs verbatim dictation with an LLM-polished draft for review before insertion.\"},\"no_install_option\":null,\"well_known_option\":null,\"clarifying_question\":null,\"coverage_note\":\"399 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores.\"}"
+            }
+          ],
+          "structuredContent": {
+            "rec_id": "rec_117fe1bba3fe4105bf6e0018c31cf907",
+            "matched_by": "muse-spark-1.3",
+            "degraded": false,
+            "degraded_reason": null,
+            "model_attempts": 1,
+            "model_http_status": null,
+            "considered": 399,
+            "picks": [
+              {
+                "slug": "quill",
+                "name": "Quill",
+                "summary": "Free open-source voice dictation app with verbatim Dictation and LLM-polished Scribe voice input.",
+                "fit": "It directly matches the two-shortcut ask: verbatim dictation plus a cleaned reviewable draft for rambling speech.",
+                "why": [
+                  {
+                    "claim": "It provides verbatim dictation and LLM-polished voice input.",
+                    "field": "summary",
+                    "value": "Free open-source voice dictation app with verbatim Dictation and LLM-polished Scribe voice input."
+                  },
+                  {
+                    "claim": "It cleans filler and self-corrections into a draft you can review.",
+                    "field": "use_cases",
+                    "value": "Clean spoken corrections and filler into a reviewable draft"
+                  },
+                  {
+                    "claim": "It inserts dictation via hotkey.",
+                    "field": "use_cases",
+                    "value": "Dictate verbatim text insertion via hotkey"
+                  },
+                  {
+                    "claim": "It runs on macOS.",
+                    "field": "platforms",
+                    "value": "macos"
+                  }
+                ],
+                "tradeoffs": [
+                  "Local LLM refinement was not verified in testing: refine dictation with local LLM (needs_hardware).",
+                  "Prototype maturity and optional network use mean you should confirm offline Ollama behavior on your Mac.",
+                  "Card does not name Ollama, so Ollama wiring may need manual setup."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "windows",
+                  "macos"
+                ],
+                "pricing": "free",
+                "processing": "hybrid",
+                "open_source": true,
+                "license": "AGPL-3.0",
+                "verification": {
+                  "level": "install",
+                  "os": "macos",
+                  "arch": "arm64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-11-01T19:22:50.583316+08:00",
+                  "verified_on_user_os": true,
+                  "gui": {
+                    "tier": "ui_rendered",
+                    "screen": "first_run",
+                    "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+                    "launch_offline": true
+                  }
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [],
+                  "not_checked": [
+                    {
+                      "feature": "type exactly what you say",
+                      "reason": "needs_hardware",
+                      "detail": "needs hardware the sandbox lacks (a microphone, camera or device): Requires microphone capture and Accessibility insertion; no audio input exercised."
+                    },
+                    {
+                      "feature": "refine dictation with local LLM",
+                      "reason": "needs_hardware",
+                      "detail": "needs hardware the sandbox lacks (a microphone, camera or device): Requires microphone capture plus Ollama/compatible local LLM; neither exercised."
+                    },
+                    {
+                      "feature": "insert verbatim transcript on stop",
+                      "reason": "needs_hardware",
+                      "detail": "needs hardware the sandbox lacks (a microphone, camera or device): Requires hotkey-held dictation and Accessibility insertion; not exercised."
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh macos/arm64 sandbox (tart-vz) and replayed the steps from scratch on 2026-11-01; the app opened a window of its own on a virtual display (macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host) and a separate model, reading a screenshot of that window, judged that its first-run (setup) screen rendered, and the launch passed again with the network off. That shows it installs and starts; pickfit did not use any of its features. The run exercised 0 of the 3 main features its README advertises; see features for the ones it did not check and why. Quality 70/100 and popularity 27/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 399 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 70.2,
+                  "popularity": 26.7,
+                  "treasure": false
+                },
+                "repo": "https://github.com/AaravKashyap12/quill",
+                "homepage": "https://quilldictate.site",
+                "web_app": null
+              },
+              {
+                "slug": "dictate",
+                "name": "Dictate",
+                "summary": "Push-to-talk macOS dictation that transcribes speech locally and pastes cleaned text.",
+                "fit": "It is a macOS push-to-talk tool that transcribes locally and pastes cleaned text at the cursor.",
+                "why": [
+                  {
+                    "claim": "It transcribes locally on macOS and pastes cleaned text.",
+                    "field": "summary",
+                    "value": "Push-to-talk macOS dictation that transcribes speech locally and pastes cleaned text."
+                  },
+                  {
+                    "claim": "It dictates where your cursor is.",
+                    "field": "use_cases",
+                    "value": "dictate speech to text where the cursor is"
+                  },
+                  {
+                    "claim": "It cleans grammar and punctuation locally.",
+                    "field": "use_cases",
+                    "value": "clean up transcription grammar and punctuation locally"
+                  },
+                  {
+                    "claim": "It keeps processing on your machine.",
+                    "field": "processing",
+                    "value": "local"
+                  }
+                ],
+                "tradeoffs": [
+                  "Requires Apple Silicon, so it will not fit an Intel Mac.",
+                  "Card does not mention Ollama or showing cleaned text for approval before pasting.",
+                  "Needs Python 3.11+ runtime via uv install."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "macos"
+                ],
+                "pricing": "free",
+                "processing": "local",
+                "open_source": true,
+                "license": "MIT",
+                "verification": {
+                  "level": "install",
+                  "os": "macos",
+                  "arch": "arm64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-11-01T19:39:21.879548+08:00",
+                  "verified_on_user_os": true,
+                  "gui": {
+                    "tier": "ui_rendered",
+                    "screen": "main_ui",
+                    "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+                    "launch_offline": true
+                  }
+                },
+                "features": {
+                  "recorded": false,
+                  "checked": [],
+                  "not_checked": []
+                },
+                "how_we_know": "pickfit installed it in a fresh macos/arm64 sandbox (tart-vz) and replayed the steps from scratch on 2026-11-01; the app opened a window of its own on a virtual display (macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host) and a separate model, reading a screenshot of that window, judged that its main screen rendered, and the launch passed again with the network off. That shows it installs and starts; pickfit did not use any of its features. Quality 71/100 and popularity 45/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 399 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 70.8,
+                  "popularity": 44.7,
+                  "treasure": false
+                },
+                "repo": "https://github.com/0xbrando/dictate",
+                "homepage": null,
+                "web_app": null
+              },
+              {
+                "slug": "whisper-local",
+                "name": "Whisper Local",
+                "summary": "Offline push-to-talk AI dictation that types speech at the cursor on Windows and macOS.",
+                "fit": "It is an offline push-to-talk dictation tool that types speech at the cursor and relates to Ollama.",
+                "why": [
+                  {
+                    "claim": "It types speech at the cursor in any app on macOS.",
+                    "field": "summary",
+                    "value": "Offline push-to-talk AI dictation that types speech at the cursor on Windows and macOS."
+                  },
+                  {
+                    "claim": "It dictates in any application by hotkey.",
+                    "field": "use_cases",
+                    "value": "dictate text in any application via push-to-talk hotkey"
+                  },
+                  {
+                    "claim": "It is linked to Ollama use.",
+                    "field": "tags",
+                    "value": "ollama"
+                  },
+                  {
+                    "claim": "It keeps processing local.",
+                    "field": "processing",
+                    "value": "local"
+                  }
+                ],
+                "tradeoffs": [
+                  "Card does not describe a second cleanup shortcut or approval preview before pasting.",
+                  "Card does not describe filler-word and self-correction handling.",
+                  "Local model download and Python setup may take time and disk space."
+                ],
+                "vs_well_known": "Choose it over Wispr Flow when offline local free open-source dictation on your own Mac matters more than a hosted service.",
+                "platforms": [
+                  "windows",
+                  "macos"
+                ],
+                "pricing": "free",
+                "processing": "local",
+                "open_source": true,
+                "license": "MIT",
+                "verification": {
+                  "level": "install",
+                  "os": "macos",
+                  "arch": "arm64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-11-01T19:46:50.278145+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": false,
+                  "checked": [],
+                  "not_checked": []
+                },
+                "how_we_know": "pickfit installed it in a fresh macos/arm64 sandbox (tart-vz) and replayed the steps from scratch on 2026-11-01; the install finished and the tool started. Quality 73/100 and popularity 86/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 399 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 73.2,
+                  "popularity": 85.7,
+                  "treasure": false
+                },
+                "repo": "https://github.com/drajb/whisper-local",
+                "homepage": "https://gekro.com",
+                "web_app": null
+              }
+            ],
+            "best_free": {
+              "slug": "quill",
+              "reason": "It is free and pairs verbatim dictation with an LLM-polished draft for review before insertion."
+            },
+            "no_install_option": null,
+            "well_known_option": null,
+            "clarifying_question": null,
+            "coverage_note": "399 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores."
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 1
+      }
+    }
+  ]
+}
