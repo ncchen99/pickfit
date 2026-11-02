@@ -89,7 +89,7 @@
       "method": "source",
       "steps": [
         {
-          "command": "git clone https://github.com/Natuworkguy/Flash flash-src && ls flash-src && cat flash-src/requirements.txt",
+          "command": "git clone https://github.com/Natuworkguy/Flash flash-src",
           "purpose": "Clone repo for pip install"
         },
         {
@@ -97,7 +97,7 @@
           "purpose": "Install deps via pip candidate 1"
         },
         {
-          "command": "python3 -m pip install ./flash-src && command -v flash && flash --version",
+          "command": "python3 -m pip install ./flash-src && flash --version",
           "purpose": "Install flash package so flash is on PATH"
         }
       ],
@@ -127,131 +127,6 @@
     "unverified_reason": null,
     "checked_at": "2026-11-01T19:31:57.298790+08:00",
     "runs": [
-      {
-        "id": "verify-flash-20261031-033844-f2ab",
-        "level": "function",
-        "unverified_reason": null,
-        "os": "linux",
-        "arch": "x86_64",
-        "method": "sandbox",
-        "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T03:41:14.157417+08:00",
-        "tool_version": "0.5.12",
-        "install_method": "source",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "git clone https://github.com/Natuworkguy/Flash flash-src && ls flash-src && cat flash-src/requirements.txt",
-            "purpose": "Clone repo for pip install"
-          },
-          {
-            "command": "python3 -m pip install -r flash-src/requirements.txt",
-            "purpose": "Install deps via pip candidate 1"
-          },
-          {
-            "command": "python3 -m pip install ./flash-src && command -v flash && flash --version",
-            "purpose": "Install flash package so flash is on PATH"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "flash --version",
-            "expected_signal": "Flash CLI v0.5.12",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "Flash CLI v0.5.12",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "flash --extension-list",
-            "expected_signal": "No extensions installed.",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "No extensions installed. /extension install github@owner/repo adds one.",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "printf '!echo hello_flash_test\\n/bye\\n' | flash",
-            "expected_signal": "hello_flash_test",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "❯ !echo hello_flash_test",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "python3 -c \"from flash.model3d import build_parts, to_glb, is_glb; parts=build_parts([{'shape':'box','size':[1,1,1]}]); data=to_glb(parts, title='chair-test'); print(len(data), is_glb(data)); open('/tmp/test_chair.glb','wb').write(data); print('wrote glb')\"",
-            "expected_signal": "wrote glb",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "wrote glb",
-            "setup": [],
-            "offline": true
-          }
-        ],
-        "pitfalls": [
-          {
-            "readme_said": "pip install -r requirements.txt then python3 run.py",
-            "actually_needed": "also run pip install ./flash-src to provide flash on PATH; requirements.txt alone only enables python3 run.py",
-            "kind": "note"
-          }
-        ],
-        "blocking_error": null,
-        "judge": {
-          "verdict": "working",
-          "observed": "Screenshots show the empty extensions message, the echoed hello_flash_test output, and the Flash CLI v0.5.12 version string.",
-          "model": "muse-spark-1.3"
-        },
-        "evidence": {
-          "trace_path": "runs/verify/verify-flash-20261031-033844-f2ab/report.json",
-          "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-flash-20261031-033844-f2ab/check-1-cmd6.judged.png",
-            "runs/verify/verify-flash-20261031-033844-f2ab/check-2-cmd7.judged.png",
-            "runs/verify/verify-flash-20261031-033844-f2ab/check-3-cmd5.judged.png"
-          ],
-          "evidence_url": null
-        },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.148644,
-        "features": [
-          {
-            "feature": "chat with local models in terminal",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_service",
-            "failure": null,
-            "note": "Needs Ollama server with pulled model; box has none"
-          },
-          {
-            "feature": "execute shell commands via AI",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_shown",
-            "failure": null,
-            "note": "its check passed, but the output does not show it: Output shows manual !echo with 'no model' and unset model, not AI using shell tool."
-          },
-          {
-            "feature": "build 3D models from prompts",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_shown",
-            "failure": null,
-            "note": "its check passed, but the output does not show it: Output shows direct build_parts/to_glb library call, not AI building from a prompt."
-          },
-          {
-            "feature": "talk to Flash by voice",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_hardware",
-            "failure": null,
-            "note": "Needs microphone plus Vosk/Piper downloads and PortAudio"
-          }
-        ]
-      },
       {
         "id": "verify-flash-20261101-183436-f01c",
         "level": "function",
@@ -379,6 +254,131 @@
             "reason": "needs_hardware",
             "failure": null,
             "note": "Voice mode needs microphone, audio output and Vosk/Piper models; headless VM has no audio hardware"
+          }
+        ]
+      },
+      {
+        "id": "verify-flash-20261031-033844-f2ab",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T03:41:14.157417+08:00",
+        "tool_version": "0.5.12",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/Natuworkguy/Flash flash-src",
+            "purpose": "Clone repo for pip install"
+          },
+          {
+            "command": "python3 -m pip install -r flash-src/requirements.txt",
+            "purpose": "Install deps via pip candidate 1"
+          },
+          {
+            "command": "python3 -m pip install ./flash-src && flash --version",
+            "purpose": "Install flash package so flash is on PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flash --version",
+            "expected_signal": "Flash CLI v0.5.12",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Flash CLI v0.5.12",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "flash --extension-list",
+            "expected_signal": "No extensions installed.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No extensions installed. /extension install github@owner/repo adds one.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "printf '!echo hello_flash_test\\n/bye\\n' | flash",
+            "expected_signal": "hello_flash_test",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "❯ !echo hello_flash_test",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 -c \"from flash.model3d import build_parts, to_glb, is_glb; parts=build_parts([{'shape':'box','size':[1,1,1]}]); data=to_glb(parts, title='chair-test'); print(len(data), is_glb(data)); open('/tmp/test_chair.glb','wb').write(data); print('wrote glb')\"",
+            "expected_signal": "wrote glb",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "wrote glb",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install -r requirements.txt then python3 run.py",
+            "actually_needed": "also run pip install ./flash-src to provide flash on PATH; requirements.txt alone only enables python3 run.py",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show the empty extensions message, the echoed hello_flash_test output, and the Flash CLI v0.5.12 version string.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-flash-20261031-033844-f2ab/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-flash-20261031-033844-f2ab/check-1-cmd6.judged.png",
+            "runs/verify/verify-flash-20261031-033844-f2ab/check-2-cmd7.judged.png",
+            "runs/verify/verify-flash-20261031-033844-f2ab/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.148644,
+        "features": [
+          {
+            "feature": "chat with local models in terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Needs Ollama server with pulled model; box has none"
+          },
+          {
+            "feature": "execute shell commands via AI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows manual !echo with 'no model' and unset model, not AI using shell tool."
+          },
+          {
+            "feature": "build 3D models from prompts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows direct build_parts/to_glb library call, not AI building from a prompt."
+          },
+          {
+            "feature": "talk to Flash by voice",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "Needs microphone plus Vosk/Piper downloads and PortAudio"
           }
         ]
       }
@@ -734,5 +734,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-01T19:31:57.301225+08:00"
+  "updated_at": "2026-11-01T23:02:54.657629+08:00"
 }

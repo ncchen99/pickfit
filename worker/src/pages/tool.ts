@@ -9,10 +9,10 @@ import { bestGuide, isVerified, isWebApp, OSES, verifiedOn, webCheck, type Catal
 import { featuresOut } from '../features.ts';
 import { installGuide } from '../install.ts';
 import { EMPTY_FORM, installSection, levelLine, webFactList } from '../page.ts';
-import { day, guiSentence, howRan, KIND, KIND_PLURAL, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, system, kindLine, webLevelLabel } from '../ui/facts.ts';
+import { day, guiSentence, KIND, KIND_PLURAL, levelLabel, OS_NAME, PRICE, PROCESSING, passed, webLevelLabel } from '../ui/facts.ts';
 import { esc, link, listOf, safeUrl } from '../ui/html.ts';
-import { icon } from '../ui/icons.ts';
-import { age, badge, compareToggle, coverage, fitz, SEAM, tape, type FitzName } from '../ui/kit.ts';
+import { icon, osMark } from '../ui/icons.ts';
+import { age, badge, compareToggle, coverage, fitz, kindTag, levelIcon, osList, runFacts, SEAM, tape, type FitzName } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 import { NO_INSTALL_LABEL, webRanSentence } from '../webapp.ts';
 
@@ -37,14 +37,14 @@ function factSheet(entry: Entry, now: Date): string {
       ? `In a browser, ${esc(day(check.checked_at))}`
       : '<span class="no">Not verified yet</span>'
     : verifiedOn(entry).length
-      ? esc(listOf(verifiedOn(entry).map((os) => osName(os))))
+      ? osList(verifiedOn(entry), { tone: 'pass' })
       : '<span class="no">Not verified yet</span>';
   const rows: [string, string][] = [
-    ['Kind', esc(kindLine(entry))],
+    ['Kind', kindTag(entry)],
     ['Verified on', verifiedCell],
     web
       ? ['Runs in', 'Any modern browser, nothing to install']
-      : ['Claims to run on', entry.platforms.length ? esc(listOf(entry.platforms.map((os) => osName(os)))) : unknown],
+      : ['Claims to run on', entry.platforms.length ? osList(entry.platforms, { tone: 'quiet' }) : unknown],
     ['Price', entry.pricing ? esc(PRICE[entry.pricing]) + (entry.pricing_note ? `<div class="small quiet">${esc(entry.pricing_note)}</div>` : '') : unknown],
     ['Runs', entry.processing ? esc(PROCESSING[entry.processing]) : unknown],
     ['Licence', entry.license ? `<code>${esc(entry.license)}</code>${entry.open_source ? ' <span class="small quiet">open source</span>' : ''}` : unknown],
@@ -145,22 +145,17 @@ function runs(catalog: Catalog, entry: Entry): string {
     const g = entry.install[os]!;
     const out = installGuide(catalog, { slug: entry.slug, os });
     const r = g.run;
-    const label = levelLabel(r.level, { gui: r.gui, mcp: g.mcp });
-    const extra = [
-      g.works_offline === true ? 'Its checks passed again with the network off.' : g.works_offline === false ? 'Its checks failed with the network off.' : '',
-      r.tool_version ? `Version ${r.tool_version}.` : '',
-    ].filter(Boolean);
-    const evidence = safeUrl(r.evidence_url);
+    const evidence = { gui: r.gui, mcp: g.mcp };
+    const recordUrl = safeUrl(r.evidence_url);
     return (
-      `<article class="run-card" id="run-${os}"><div class="run-head"><h3>${esc(OS_NAME[os])}</h3>` +
-      `<span class="badges">${badge('pass', `Ran on ${system(r.os, r.arch)}`, { icon: 'check' })}${r.replayed ? badge('info', 'Replayed from scratch', { icon: 'refresh-cw' }) : ''}</span></div>` +
+      `<article class="run-card" id="run-${os}"><div class="run-head"><h3>${osMark(os)}${esc(OS_NAME[os])}${r.arch ? ` <span class="arch">${esc(r.arch)}</span>` : ''}</h3></div>` +
       SEAM +
-      levelLine(label, passed(r.gui)) +
-      `<p>${esc(howRan(r))}, ${esc(day(r.checked_at))}. ${esc(extra.join(' '))}</p>` +
+      levelLine(levelLabel(r.level, evidence), passed(r.gui), levelIcon(r.level, evidence)) +
+      runFacts(r, { offline: r.gui ? null : g.works_offline, named: true }) +
       (r.gui ? `<p>${esc(guiSentence(r.gui))}</p>` : '') +
       (g.mcp ? `<p>An MCP client handshake over ${g.mcp.transport === 'stdio' ? 'stdio' : 'HTTP'} listed ${g.mcp.tool_count} tool${g.mcp.tool_count === 1 ? '' : 's'}${g.mcp.called_tool ? `, and a call to <code>${esc(g.mcp.called_tool)}</code> returned a result` : ''}.</p>` : '') +
-      (evidence ? `<p>${link(evidence, `${icon('external-link')} Run record`)}</p>` : '') +
-      installSection(out, { ...EMPTY_FORM, os }, i === 0) +
+      (recordUrl ? `<p>${link(recordUrl, `${icon('external-link')} Run record`)}</p>` : '') +
+      installSection(out, { ...EMPTY_FORM, os }, i === 0, true) +
       `</article>`
     );
   });
@@ -182,9 +177,9 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
   const badges = [
     web ? badge('info', NO_INSTALL_LABEL, { icon: 'globe' }) : '',
     web
-      ? badge('pass', `Verified: ${webLevelLabel(web)}`, { icon: 'badge-check' })
+      ? badge('pass', `Verified: ${webLevelLabel(web)}`, { icon: levelIcon(web.level) })
       : verified && guide
-        ? badge('pass', `Verified: ${levelLabel(guide.run.level, { gui: guide.run.gui, mcp: guide.mcp })}`, { icon: 'badge-check' })
+        ? badge('pass', `Verified: ${levelLabel(guide.run.level, { gui: guide.run.gui, mcp: guide.mcp })}`, { icon: levelIcon(guide.run.level, { gui: guide.run.gui, mcp: guide.mcp }) })
         : badge('quiet', 'Not verified yet', { icon: 'circle-dashed' }),
     entry.scores?.treasure ? badge('gem', 'Hidden gem', { icon: 'gem', pop: 'pop-gem' }) : '',
   ].join('');

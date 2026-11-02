@@ -66,23 +66,23 @@
       "method": "binary",
       "steps": [
         {
-          "command": "curl -L --fail -o /tmp/jdk.tar.gz \"https://api.adoptium.net/v3/binary/latest/25/ga/linux/x64/jdk/hotspot/normal/eclipse\" && ls -lh /tmp/jdk.tar.gz",
+          "command": "curl -L --fail -o /tmp/jdk.tar.gz \"https://api.adoptium.net/v3/binary/latest/25/ga/linux/x64/jdk/hotspot/normal/eclipse\"",
           "purpose": "download JDK 25 Temurin tarball via Adoptium API"
         },
         {
-          "command": "mkdir -p /tmp/jdk && tar -xzf /tmp/jdk.tar.gz -C /tmp/jdk --strip-components=1 && /tmp/jdk/bin/java -version && ls /tmp/jdk/bin/java",
+          "command": "mkdir -p /tmp/jdk && tar -xzf /tmp/jdk.tar.gz -C /tmp/jdk --strip-components=1 && /tmp/jdk/bin/java -version",
           "purpose": "extract JDK to /tmp/jdk and verify java -version"
         },
         {
-          "command": "curl -L --fail -o /tmp/kotlin-lib.zip \"https://github.com/aoreshkov/kotlin-lib-mcp/releases/download/v0.10.1/kotlin-lib-mcp-server-0.10.1.zip\" && ls -lh /tmp/kotlin-lib.zip && unzip -l /tmp/kotlin-lib.zip",
+          "command": "curl -L --fail -o /tmp/kotlin-lib.zip \"https://github.com/aoreshkov/kotlin-lib-mcp/releases/download/v0.10.1/kotlin-lib-mcp-server-0.10.1.zip\"",
           "purpose": "download kotlin-lib-mcp release zip v0.10.1 from GitHub"
         },
         {
-          "command": "mkdir -p $HOME/.local/bin\nunzip -q -o /tmp/kotlin-lib.zip -d /tmp\nls /tmp/kotlin-lib-mcp-server-0.10.1/bin/\nexport JAVA_HOME=/tmp/jdk && export PATH=$JAVA_HOME/bin:$PATH\n/tmp/kotlin-lib-mcp-server-0.10.1/bin/server --version\necho ---help---\n/tmp/kotlin-lib-mcp-server-0.10.1/bin/server --help 2>&1",
+          "command": "mkdir -p $HOME/.local/bin\nunzip -q -o /tmp/kotlin-lib.zip -d /tmp\nexport JAVA_HOME=/tmp/jdk && export PATH=$JAVA_HOME/bin:$PATH\n/tmp/kotlin-lib-mcp-server-0.10.1/bin/server --help 2>&1",
           "purpose": "unzip release zip to /tmp"
         },
         {
-          "command": "cat > $HOME/.local/bin/kotlin-lib-mcp-server <<'EOS'\n#!/bin/sh\nexport JAVA_HOME=/tmp/jdk\nexport PATH=\"$JAVA_HOME/bin:$PATH\"\nexec /tmp/kotlin-lib-mcp-server-0.10.1/bin/server \"$@\"\nEOS\nchmod +x $HOME/.local/bin/kotlin-lib-mcp-server\n$HOME/.local/bin/kotlin-lib-mcp-server --version 2>&1\necho EXIT:$?\n$HOME/.local/bin/kotlin-lib-mcp-server --help 2>&1",
+          "command": "cat > $HOME/.local/bin/kotlin-lib-mcp-server <<'EOS'\n#!/bin/sh\nexport JAVA_HOME=/tmp/jdk\nexport PATH=\"$JAVA_HOME/bin:$PATH\"\nexec /tmp/kotlin-lib-mcp-server-0.10.1/bin/server \"$@\"\nEOS\nchmod +x $HOME/.local/bin/kotlin-lib-mcp-server\n$HOME/.local/bin/kotlin-lib-mcp-server --help 2>&1",
           "purpose": "create wrapper script in ~/.local/bin that sets JAVA_HOME and execs server"
         }
       ],
@@ -127,23 +127,23 @@
         "replayed": true,
         "steps": [
           {
-            "command": "curl -L --fail -o /tmp/jdk.tar.gz \"https://api.adoptium.net/v3/binary/latest/25/ga/linux/x64/jdk/hotspot/normal/eclipse\" && ls -lh /tmp/jdk.tar.gz",
+            "command": "curl -L --fail -o /tmp/jdk.tar.gz \"https://api.adoptium.net/v3/binary/latest/25/ga/linux/x64/jdk/hotspot/normal/eclipse\"",
             "purpose": "download JDK 25 Temurin tarball via Adoptium API"
           },
           {
-            "command": "mkdir -p /tmp/jdk && tar -xzf /tmp/jdk.tar.gz -C /tmp/jdk --strip-components=1 && /tmp/jdk/bin/java -version && ls /tmp/jdk/bin/java",
+            "command": "mkdir -p /tmp/jdk && tar -xzf /tmp/jdk.tar.gz -C /tmp/jdk --strip-components=1 && /tmp/jdk/bin/java -version",
             "purpose": "extract JDK to /tmp/jdk and verify java -version"
           },
           {
-            "command": "curl -L --fail -o /tmp/kotlin-lib.zip \"https://github.com/aoreshkov/kotlin-lib-mcp/releases/download/v0.10.1/kotlin-lib-mcp-server-0.10.1.zip\" && ls -lh /tmp/kotlin-lib.zip && unzip -l /tmp/kotlin-lib.zip",
+            "command": "curl -L --fail -o /tmp/kotlin-lib.zip \"https://github.com/aoreshkov/kotlin-lib-mcp/releases/download/v0.10.1/kotlin-lib-mcp-server-0.10.1.zip\"",
             "purpose": "download kotlin-lib-mcp release zip v0.10.1 from GitHub"
           },
           {
-            "command": "mkdir -p $HOME/.local/bin\nunzip -q -o /tmp/kotlin-lib.zip -d /tmp\nls /tmp/kotlin-lib-mcp-server-0.10.1/bin/\nexport JAVA_HOME=/tmp/jdk && export PATH=$JAVA_HOME/bin:$PATH\n/tmp/kotlin-lib-mcp-server-0.10.1/bin/server --version\necho ---help---\n/tmp/kotlin-lib-mcp-server-0.10.1/bin/server --help 2>&1",
+            "command": "mkdir -p $HOME/.local/bin\nunzip -q -o /tmp/kotlin-lib.zip -d /tmp\nexport JAVA_HOME=/tmp/jdk && export PATH=$JAVA_HOME/bin:$PATH\n/tmp/kotlin-lib-mcp-server-0.10.1/bin/server --help 2>&1",
             "purpose": "unzip release zip to /tmp"
           },
           {
-            "command": "cat > $HOME/.local/bin/kotlin-lib-mcp-server <<'EOS'\n#!/bin/sh\nexport JAVA_HOME=/tmp/jdk\nexport PATH=\"$JAVA_HOME/bin:$PATH\"\nexec /tmp/kotlin-lib-mcp-server-0.10.1/bin/server \"$@\"\nEOS\nchmod +x $HOME/.local/bin/kotlin-lib-mcp-server\n$HOME/.local/bin/kotlin-lib-mcp-server --version 2>&1\necho EXIT:$?\n$HOME/.local/bin/kotlin-lib-mcp-server --help 2>&1",
+            "command": "cat > $HOME/.local/bin/kotlin-lib-mcp-server <<'EOS'\n#!/bin/sh\nexport JAVA_HOME=/tmp/jdk\nexport PATH=\"$JAVA_HOME/bin:$PATH\"\nexec /tmp/kotlin-lib-mcp-server-0.10.1/bin/server \"$@\"\nEOS\nchmod +x $HOME/.local/bin/kotlin-lib-mcp-server\n$HOME/.local/bin/kotlin-lib-mcp-server --help 2>&1",
             "purpose": "create wrapper script in ~/.local/bin that sets JAVA_HOME and execs server"
           }
         ],
@@ -868,5 +868,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:45+08:00",
-  "updated_at": "2026-11-01T16:19:48.232154+08:00"
+  "updated_at": "2026-11-01T17:40:57.250581+08:00"
 }

@@ -60,20 +60,25 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-thundertalk-20261101-185900-8bb1",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask realallensong/tap/thundertalk",
-          "purpose": null
+          "command": "brew install ffmpeg",
+          "purpose": "Install ffmpeg prerequisite"
+        },
+        {
+          "command": "brew install --cask --appdir=$HOME/Applications realallensong/tap/thundertalk",
+          "purpose": "Install ThunderTalk cask to ~/Applications"
         }
       ],
-      "manual_steps": [
-        "Grant Microphone and Accessibility access when prompted"
-      ],
-      "check": null,
-      "first_task": "\"$TT\" --cli status"
+      "manual_steps": [],
+      "check": {
+        "command": "TT=\"$HOME/Applications/ThunderTalk.app/Contents/MacOS/ThunderTalk\" && \"$TT\" --cli status",
+        "expected_signal": "\"cli_version\": 3"
+      },
+      "first_task": "open ~/Applications/ThunderTalk.app"
     },
     "linux": null,
     "windows": null
@@ -91,22 +96,118 @@
     "url": "https://github.com/realAllenSong/ThunderTalk/releases/tag/v1.12.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-01T19:17:49.087684+08:00",
+    "runs": [
+      {
+        "id": "verify-thundertalk-20261101-185900-8bb1",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@78f2945fd37d",
+        "checked_at": "2026-11-01T19:17:49.087684+08:00",
+        "tool_version": "1.12.0",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install ffmpeg",
+            "purpose": "Install ffmpeg prerequisite"
+          },
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications realallensong/tap/thundertalk",
+            "purpose": "Install ThunderTalk cask to ~/Applications"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "TT=\"$HOME/Applications/ThunderTalk.app/Contents/MacOS/ThunderTalk\" && \"$TT\" --cli status",
+            "expected_signal": "\"cli_version\": 3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"type\": \"result\", \"version\": \"1.12.0\", \"cli_version\": 3, \"capabilities\": [\"transcribe\", \"batch\", \"notes\", \"burn\", \"translate\", \"speak\", \"voices\", \"compose\", \"history\", \"models\"], \"asr\": {\"downloaded\": [\"apple-speech\"], \"dictation_model\": \"\", \"auto\": \"apple-speech\", \"models\": [{\"id\": \"qwen3-asr-06b…",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "TT=\"$HOME/Applications/ThunderTalk.app/Contents/MacOS/ThunderTalk\"; \"$TT\" --cli models list 2>/dev/null",
+            "expected_signal": "apple-speech",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"type\": \"result\", \"models\": [{\"id\": \"qwen3-asr-06b-mlx\", \"name\": \"Qwen3-ASR-0.6B\", \"kind\": \"asr\", \"ready\": false, \"compatible\": true, \"size_mb\": 1881}, {\"id\": \"qwen3-asr-06b-int8\", \"name\": \"Qwen3-ASR-0.6B\", \"kind\": \"asr\", \"ready\": false, \"compatible\": true, \"size_mb\": 879}, {\"id\": \"qwen3-asr-17b-m…",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "TT=\"$HOME/Applications/ThunderTalk.app/Contents/MacOS/ThunderTalk\"; \"$TT\" --cli voices list 2>/dev/null",
+            "expected_signal": "\"my_voices\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"type\": \"result\", \"voices\": [{\"id\": \"voxcpm2:warm-female-zh\", \"engine\": \"voxcpm2\", \"name\": \"温婉女声\", \"language\": \"chinese\", \"gender\": \"f\", \"ready\": false, \"description\": \"Asked for: a young woman, warm and gentle, soft relaxed Mandarin.\"}, {\"id\": \"voxcpm2:calm-male-zh\", \"engine\": \"voxcpm2\", \"name\": …",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/ThunderTalk.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask realallensong/tap/thundertalk and TT=/Applications/ThunderTalk.app/Contents/MacOS/ThunderTalk",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications realallensong/tap/thundertalk (app installed to ~/Applications/ThunderTalk.app, binary at ~/Applications/ThunderTalk.app/Contents/MacOS/ThunderTalk)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show status JSON with cli_version 3, models list containing apple-speech, and voices list containing my_voices, all exiting 0. / The app shows an onboarding setup screen introducing voice-to-text with 01/04 progress and download setup options.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-thundertalk-20261101-185900-8bb1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-thundertalk-20261101-185900-8bb1/check-1-cmd9.judged.png",
+            "runs/verify/verify-thundertalk-20261101-185900-8bb1/check-2-cmd4.judged.png",
+            "runs/verify/verify-thundertalk-20261101-185900-8bb1/check-3-cmd5.judged.png",
+            "runs/verify/verify-thundertalk-20261101-185900-8bb1/replay-6-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.110167,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open ~/Applications/ThunderTalk.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        }
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:11:27+08:00",
+    "computed_at": "2026-11-01T19:17:49+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 70.6,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.6,
           "weight": 40.0
         },
         "install_docs": {
@@ -147,7 +248,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 47.47
+      "value": 48.57
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -470,5 +571,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:18+08:00",
-  "updated_at": "2026-10-31T13:11:27+08:00"
+  "updated_at": "2026-11-01T19:17:49.097990+08:00"
 }

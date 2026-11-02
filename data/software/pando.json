@@ -79,24 +79,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-pando-20261031-031832-00a8",
+      "run_id": "verify-pando-20261101-225841-0ebd",
       "method": "script",
       "steps": [
         {
-          "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/mertkaradayi/pando/releases/latest/download/pando-cli-installer.sh -o /tmp/pando-installer.sh && ls -l /tmp/pando-installer.sh && wc -c /tmp/pando-installer.sh",
-          "purpose": "Download installer script"
+          "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/mertkaradayi/pando/releases/latest/download/pando-cli-installer.sh -o /tmp/pando-installer.sh",
+          "purpose": "download installer script"
         },
         {
-          "command": "sh /tmp/pando-installer.sh && ls -l ~/.local/bin/pando && ~/.local/bin/pando --version",
-          "purpose": "Run installer script, pando to ~/.local/bin"
+          "command": "sh /tmp/pando-installer.sh",
+          "purpose": "install pando via script"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "pando --version",
-        "expected_signal": "pando 0.11.1"
+        "command": "pando --version && pando --help",
+        "expected_signal": "pando 0.11.2"
       },
-      "first_task": "cd /tmp/pandotest/testrepo && pando doctor"
+      "first_task": "cd /tmp/testrepo && pando doctor"
     },
     "windows": null
   },
@@ -115,207 +115,8 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T19:31:51.667849+08:00",
+    "checked_at": "2026-11-01T23:00:12.783024+08:00",
     "runs": [
-      {
-        "id": "verify-pando-20261031-031832-00a8",
-        "level": "function",
-        "unverified_reason": null,
-        "os": "linux",
-        "arch": "x86_64",
-        "method": "sandbox",
-        "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T03:20:26.603423+08:00",
-        "tool_version": "pando 0.11.1",
-        "install_method": "script",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/mertkaradayi/pando/releases/latest/download/pando-cli-installer.sh -o /tmp/pando-installer.sh && ls -l /tmp/pando-installer.sh && wc -c /tmp/pando-installer.sh",
-            "purpose": "Download installer script"
-          },
-          {
-            "command": "sh /tmp/pando-installer.sh && ls -l ~/.local/bin/pando && ~/.local/bin/pando --version",
-            "purpose": "Run installer script, pando to ~/.local/bin"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "pando --version",
-            "expected_signal": "pando 0.11.1",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "pando 0.11.1",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "cd /tmp/pandotest/testrepo && pando doctor",
-            "expected_signal": "0 problems, 1 note",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "0 problems, 1 note",
-            "setup": [
-              {
-                "command": "rm -rf /tmp/pandotest && mkdir -p /tmp/pandotest && cd /tmp/pandotest && git init -q testrepo && cd testrepo && git config user.email \"test@test.com\" && git config user.name \"test\" && echo hello > README.txt && git add . && git commit -qm init && git branch -M main && echo puppet > app.txt && git add . && git commit -qm feat --no-verify 2>&1; git checkout -qb feat/checkout 2>&1; git checkout -q main 2>&1; git log --oneline --all && git branch -a && pwd",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "cd /tmp/pandotest/testrepo && pando ls",
-            "expected_signal": "no worktrees",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "no worktrees — `pando new <branch>` creates one",
-            "setup": [
-              {
-                "command": "rm -rf /tmp/pandotest && mkdir -p /tmp/pandotest && cd /tmp/pandotest && git init -q testrepo && cd testrepo && git config user.email \"test@test.com\" && git config user.name \"test\" && echo hello > README.txt && git add . && git commit -qm init && git branch -M main && echo puppet > app.txt && git add . && git commit -qm feat --no-verify 2>&1; git checkout -qb feat/checkout 2>&1; git checkout -q main 2>&1; git log --oneline --all && git branch -a && pwd",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "cd /tmp/pandotest/testrepo && pando status",
-            "expected_signal": "no worktrees",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "no worktrees — `pando new <branch>` creates one",
-            "setup": [
-              {
-                "command": "rm -rf /tmp/pandotest && mkdir -p /tmp/pandotest && cd /tmp/pandotest && git init -q testrepo && cd testrepo && git config user.email \"test@test.com\" && git config user.name \"test\" && echo hello > README.txt && git add . && git commit -qm init && git branch -M main && echo puppet > app.txt && git add . && git commit -qm feat --no-verify 2>&1; git checkout -qb feat/checkout 2>&1; git checkout -q main 2>&1; git log --oneline --all && git branch -a && pwd",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "cd /tmp/pandotest/testrepo && pando new feat/smoke-test && pando ls",
-            "expected_signal": "created feat+smoke-test",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "created feat+smoke-test at /home/sbx/.pando/projects/testrepo-10d48516/worktrees/feat+smoke-test",
-            "setup": [
-              {
-                "command": "rm -rf /tmp/pandotest && mkdir -p /tmp/pandotest && cd /tmp/pandotest && git init -q testrepo && cd testrepo && git config user.email \"test@test.com\" && git config user.name \"test\" && echo hello > README.txt && git add . && git commit -qm init && git branch -M main && echo puppet > app.txt && git add . && git commit -qm feat --no-verify 2>&1; git checkout -qb feat/checkout 2>&1; git checkout -q main 2>&1; git log --oneline --all && git branch -a && pwd",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "cd /tmp/pandotest/testrepo && pando rm feat/smoke-test && pando ls",
-            "expected_signal": "removed feat+smoke-test",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "removed feat+smoke-test",
-            "setup": [
-              {
-                "command": "rm -rf /tmp/pandotest && mkdir -p /tmp/pandotest && cd /tmp/pandotest && git init -q testrepo && cd testrepo && git config user.email \"test@test.com\" && git config user.name \"test\" && echo hello > README.txt && git add . && git commit -qm init && git branch -M main && echo puppet > app.txt && git add . && git commit -qm feat --no-verify 2>&1; git checkout -qb feat/checkout 2>&1; git checkout -q main 2>&1; git log --oneline --all && git branch -a && pwd",
-                "background": false,
-                "port": null
-              },
-              {
-                "command": "cd /tmp/pandotest/testrepo && pando new feat/smoke-test && pando ls",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "cd /tmp/pandodemo/demo && pando new feat/demo2 && pando start feat/demo2 --no-wait && sleep 5 && pando status",
-            "expected_signal": "started feat+demo2",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "started feat+demo2 — http://localhost:22400",
-            "setup": [
-              {
-                "command": "rm -rf /tmp/pandodemo && mkdir -p /tmp/pandodemo/demo && cd /tmp/pandodemo/demo && git init -q && git config user.email \"t@t.com\" && git config user.name \"t\" && cat > package.json <<'EOF'\n{\"name\": \"demo\", \"version\": \"1.0.0\", \"scripts\": {\"dev\": \"node server.js\"}}\nEOF\ncat > server.js <<'EOF'\nconst http = require('http');\nconst port = parseInt(process.env.PORT || process.env.WEB_PORT || '3000', 10);\nhttp.createServer((req, res) => { res.writeHead(200); res.end('hello from pando demo'); }).listen(port, () => console.log('listening on ' + port));\nEOF\ncat > .env.example <<'EOF'\nPORT=3000\nEOF\ngit add . && git commit -qm init && git branch -M main && pwd && ls -la",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          }
-        ],
-        "pitfalls": [
-          {
-            "readme_said": "pando start <name>: start its dev server",
-            "actually_needed": "a project with a detectable dev command (package.json scripts.dev plus PORT in .env.example was auto-detected as npm run dev); otherwise doctor reports 'nothing to run' and start has nothing to start",
-            "kind": "note"
-          },
-          {
-            "readme_said": "pando ls / pando status list the main checkout and worktrees",
-            "actually_needed": "with no worktrees they print: no worktrees — `pando new <branch>` creates one",
-            "kind": "note"
-          }
-        ],
-        "blocking_error": null,
-        "judge": {
-          "verdict": "working",
-          "observed": "Screenshots show pando doctor reporting 0 problems, 1 note, pando ls reporting no worktrees, and pando --version printing 0.11.1.",
-          "model": "muse-spark-1.3"
-        },
-        "evidence": {
-          "trace_path": "runs/verify/verify-pando-20261031-031832-00a8/report.json",
-          "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-pando-20261031-031832-00a8/check-1-cmd7.judged.png",
-            "runs/verify/verify-pando-20261031-031832-00a8/check-2-cmd8.judged.png",
-            "runs/verify/verify-pando-20261031-031832-00a8/check-3-cmd3.judged.png"
-          ],
-          "evidence_url": null
-        },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.131203,
-        "features": [
-          {
-            "feature": "create and remove git worktrees per branch",
-            "status": "checked",
-            "smoke_tests": [
-              4,
-              5
-            ],
-            "reason": null,
-            "failure": null,
-            "note": null
-          },
-          {
-            "feature": "run each worktree dev server on separate ports",
-            "status": "checked",
-            "smoke_tests": [
-              6
-            ],
-            "reason": null,
-            "failure": null,
-            "note": null
-          },
-          {
-            "feature": "give each worktree private service copies",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_container",
-            "failure": null,
-            "note": "pando doctor reports docker and docker compose not found; private copies need Docker with Compose"
-          },
-          {
-            "feature": "share running worktrees via public URL",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_service",
-            "failure": null,
-            "note": "pando doctor reports cloudflared not found; share needs a public tunnel URL via outside service"
-          }
-        ]
-      },
       {
         "id": "verify-pando-20261101-183010-02fc",
         "level": "function",
@@ -463,6 +264,194 @@
             "reason": "other",
             "failure": null,
             "note": "requires cloudflared for public tunnel; not installed per pando doctor"
+          }
+        ]
+      },
+      {
+        "id": "verify-pando-20261101-225841-0ebd",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T23:00:12.783024+08:00",
+        "tool_version": "0.11.2",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/mertkaradayi/pando/releases/latest/download/pando-cli-installer.sh -o /tmp/pando-installer.sh",
+            "purpose": "download installer script"
+          },
+          {
+            "command": "sh /tmp/pando-installer.sh",
+            "purpose": "install pando via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "pando --version && pando --help",
+            "expected_signal": "pando 0.11.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "pando 0.11.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/testrepo && pando doctor",
+            "expected_signal": "0 problems, 1 note",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0 problems, 1 note",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cd /tmp/testrepo && git init && git config user.email \"test@test.com\" && git config user.name \"test\" && echo \"hello\" > README.md && git add . && git commit -m \"init\" && echo \"done\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/testrepo && pando ls",
+            "expected_signal": "no worktrees",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no worktrees — `pando new <branch>` creates one",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cd /tmp/testrepo && git init && git config user.email \"test@test.com\" && git config user.name \"test\" && echo \"hello\" > README.md && git add . && git commit -m \"init\" && echo \"done\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/testrepo && pando status",
+            "expected_signal": "no worktrees",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no worktrees — `pando new <branch>` creates one",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cd /tmp/testrepo && git init && git config user.email \"test@test.com\" && git config user.name \"test\" && echo \"hello\" > README.md && git add . && git commit -m \"init\" && echo \"done\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/testrepo && pando new feat/test-branch && echo \"NEW_OK\" && ls -la ~/.pando/projects/testrepo-*/worktrees/ 2>&1 | head -n 20\npando ls\n",
+            "expected_signal": "created feat+test-branch",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "created feat+test-branch at /home/sbx/.pando/projects/testrepo-890f2598/worktrees/feat+test-branch",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cd /tmp/testrepo && git init && git config user.email \"test@test.com\" && git config user.name \"test\" && echo \"hello\" > README.md && git add . && git commit -m \"init\" && echo \"done\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/testrepo && pando rm feat/test-branch --yes && echo \"RM_OK\" && pando ls",
+            "expected_signal": "removed feat+test-branch",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "removed feat+test-branch",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testrepo && cd /tmp/testrepo && git init && git config user.email \"test@test.com\" && git config user.name \"test\" && echo \"hello\" > README.md && git add . && git commit -m \"init\" && echo \"done\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/testpando2 && pando start feat/a --no-wait && sleep 2 && pando status && pando logs feat/a",
+            "expected_signal": "started feat+a",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "started feat+a",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testpando2 && cd /tmp/testpando2 && git init && git config user.email \"a@a.com\" && git config user.name \"a\" && cat > pando.toml <<'EOF'\n[dev]\ncmd = \"python3 -m http.server 8000\"\nEOF\ncat pando.toml\necho \"hi\" > README.md\ngit add . && git commit -m init\npando doctor\n",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/testpando2 && pando new feat/a && pando ls && cat ~/.pando/projects/testpando2-*/pando.toml 2>&1 || echo \"no project toml\" ; ls ~/.pando/projects/testpando2-*/worktrees/feat+a/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show pando doctor reporting 0 problems, 1 note, pando ls reporting no worktrees, and pando --version reporting 0.11.2 with help.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-pando-20261101-225841-0ebd/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-pando-20261101-225841-0ebd/check-1-cmd5.judged.png",
+            "runs/verify/verify-pando-20261101-225841-0ebd/check-2-cmd6.judged.png",
+            "runs/verify/verify-pando-20261101-225841-0ebd/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.090791,
+        "features": [
+          {
+            "feature": "create and remove git worktrees per branch",
+            "status": "checked",
+            "smoke_tests": [
+              4,
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run each worktree dev server on separate ports",
+            "status": "checked",
+            "smoke_tests": [
+              6
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "give each worktree private service copies",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_container",
+            "failure": null,
+            "note": "requires Docker and compose file for isolated service copies, not available in box"
+          },
+          {
+            "feature": "share running worktrees via public URL",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "requires cloudflared and outside tunnel service"
           }
         ]
       }
@@ -810,5 +799,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:22+08:00",
-  "updated_at": "2026-11-01T19:31:51.669256+08:00"
+  "updated_at": "2026-11-01T23:02:55.390494+08:00"
 }

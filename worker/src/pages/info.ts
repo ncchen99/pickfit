@@ -4,7 +4,7 @@ import { catalogStats, rulesLabel } from '../page.ts';
 import { LEVEL_LABEL } from '../ui/facts.ts';
 import { esc } from '../ui/html.ts';
 import { icon } from '../ui/icons.ts';
-import { badge, command, fitz, tape } from '../ui/kit.ts';
+import { badge, command, fitz, levelIcon, marksLegend, tape } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 
 const head = (title: string, lede: string, who: Parameters<typeof fitz>[0]) =>
@@ -28,12 +28,13 @@ export function renderHow(catalog: Catalog, nonce: string): string {
     `<li><b>Try it on.</b> A verification agent installs the tool in a fresh sandbox (Linux in gVisor; some by hand on a real Mac), fixes what the README got wrong, checks the main features one by one, then replays the working steps in a brand-new sandbox. ${s.replayed} tools passed a replay.</li>` +
     `<li><b>Match.</b> Your sentence and every verified profile that meets your conditions go to Muse Spark in one call. Each reason it gives must name a profile field; code checks the value and drops any reason that doesn’t hold. If the model is unavailable, pickfit ranks by rules and says so.</li></ol>` +
     `<h2 id="levels">What “verified” proves</h2><p>A ticket says how far the run got. Higher is stronger evidence:</p>` +
-    `<ul class="levels">${levels.map(([k, t]) => `<li><b>${esc(LEVEL_LABEL[k])}</b>${esc(t)}</li>`).join('')}</ul>` +
-    `<p>A run says where it happened (OS and CPU) and when. “Verified on your OS” appears only when the steps ran on the system you chose; otherwise the ticket says where they did run.</p>` +
+    `<ul class="levels">${levels.map(([k, t]) => `<li><b><span class="level-i">${icon(levelIcon(k))}</span>${esc(LEVEL_LABEL[k])}</b>${esc(t)}</li>`).join('')}</ul>` +
+    `<p>A run says where it happened (OS and CPU) and when. Its OS mark is green when the steps ran on the system you chose; otherwise the ticket says in words where they did run.</p>` +
     `<h3 id="web">Web apps: no install, just open it</h3><p>A web app runs on its makers’ site, so there is nothing to install. pickfit opens it once in a sandboxed browser: it counts as installed when the page loads to its own main screen (not an error page, a parked domain or a sign-in wall), and as working when Muse Spark uses it for what it claims and pickfit checks the result itself. It never posts, mails, signs up or orders on a real site. The browser’s own records say whether an account was needed, whether ads showed, how many other sites the page contacted, and whether what pickfit typed in left the device. Only an installable web app (a PWA) that pickfit reloaded with the network off counts as working offline${s.web ? `. ${s.web} web ${s.web === 1 ? 'app' : 'apps'} passed so far` : ''}.</p>` +
     `<p>When a web app and a tool to install fit your need about equally, the web app comes first. A job that runs for long or in the background, ties into the system or works through many local files leans to the tool you install. If you ask for offline use or for your data to stay on your device, a web app qualifies only when its run showed exactly that.</p>` +
     `<h2 id="labels">What the labels mean</h2>` +
     `<h3>Stitching</h3><p>The rufous running stitch on a ticket separates the claim from the run record. pickfit draws it only under evidence from its own run. A tool pickfit has not run, such as a well-known option Fitz mentions from general knowledge, never gets stitches, a badge, steps or a link.</p>` +
+    `<h3 id="marks">Marks on a ticket</h3><p>Facts every ticket repeats are shown as marks, each named on hover and for screen readers:</p><dl class="legend">${marksLegend()}</dl>` +
     `<h3 id="scores">Quality and popularity</h3><div class="levels">${tape('Quality', 84)}${tape('Popularity', 22, { tone: 'quiet' })}</div>` +
     `<p>Two scores out of 100, computed apart. <b>Quality</b> is a weighted mean: the sandbox run (how far it got, how many install actions, how many README fixes it needed) 40%, how complete the install docs are 25% (Muse Spark grades them, quoting the README), maintenance 10%, issue responsiveness 10%, engineering hygiene 5%; reports from real use join as they accumulate. <b>Popularity</b> compares stars, forks, downloads and Hacker News points with other tools of the same kind. The example tapes above are illustrative.</p>` +
     `<p>A web app has no README to install from, so its quality is the browser run 50% (it loaded, or it worked when used) and what the browser saw 40% (no account needed, nothing you type sent off your device, no ads, works offline), with real use joining the same way. Its popularity is its GitHub stars, or the points of its Show HN post when it has no public code.</p>` +

@@ -86,7 +86,7 @@
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/tigercosmos/code-cortex-mcp/main/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
+          "command": "curl -fsSL https://raw.githubusercontent.com/tigercosmos/code-cortex-mcp/main/install.sh -o /tmp/install.sh",
           "purpose": "download install.sh"
         },
         {
@@ -133,210 +133,6 @@
     "unverified_reason": null,
     "checked_at": "2026-11-01T13:04:38.331889+08:00",
     "runs": [
-      {
-        "id": "verify-code-cortex-mcp-20261101-020603-0e18",
-        "level": "service",
-        "unverified_reason": null,
-        "os": "linux",
-        "arch": "x86_64",
-        "method": "sandbox",
-        "runner": "modal-gvisor",
-        "image": "pickfit-sbx:f56cd5b7aa53",
-        "checked_at": "2026-11-01T02:07:24.079607+08:00",
-        "tool_version": "0.23.0",
-        "install_method": "script",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "curl -fsSL https://raw.githubusercontent.com/tigercosmos/code-cortex-mcp/main/install.sh -o /tmp/install.sh && wc -l /tmp/install.sh && head -n 200 /tmp/install.sh",
-            "purpose": "download install.sh"
-          },
-          {
-            "command": "bash /tmp/install.sh --skip-config",
-            "purpose": "run install.sh --skip-config to install portable binary"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "code-cortex-mcp --version",
-            "expected_signal": "code-cortex-mcp 0.23.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "code-cortex-mcp 0.23.0",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- code-cortex-mcp",
-            "expected_signal": "handshake: ok",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "handshake: ok",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call index_repository --args '{\"repo_path\": \"/tmp/testproj\"}' -- code-cortex-mcp",
-            "expected_signal": "tools/call: ok",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "tools/call: ok tool=index_repository content=text text_chars=522",
-            "setup": [
-              {
-                "command": "mkdir -p /tmp/testproj && cat > /tmp/testproj/app.py <<'PY'\ndef hexStringToByteArray(s):\n    \"\"\"convert hex string to byte array\"\"\"\n    return bytes.fromhex(s)\n\ndef handleRequest(data):\n    b = hexStringToByteArray(data)\n    return b\n\ndef HandlerFunc(x):\n    return handleRequest(x)\n\nclass MyHandler:\n    def process(self, data):\n        return HandlerFunc(data)\nPY\ncat > /tmp/testproj/utils.py <<'PY'\ndef helper(a, b):\n    return a + b\n\ndef caller_of_helper():\n    return helper(1,2)\nPY\nls -R /tmp/testproj\n",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call inspect_symbol --args '{\"symbol\": \"hexStringToByteArray\", \"project\": \"tmp-testproj\"}' -- code-cortex-mcp",
-            "expected_signal": "tools/call: ok",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "tools/call: ok tool=inspect_symbol content=text text_chars=1077",
-            "setup": [
-              {
-                "command": "mkdir -p /tmp/testproj && cat > /tmp/testproj/app.py <<'PY'\ndef hexStringToByteArray(s):\n    \"\"\"convert hex string to byte array\"\"\"\n    return bytes.fromhex(s)\n\ndef handleRequest(data):\n    b = hexStringToByteArray(data)\n    return b\n\ndef HandlerFunc(x):\n    return handleRequest(x)\n\nclass MyHandler:\n    def process(self, data):\n        return HandlerFunc(data)\nPY\ncat > /tmp/testproj/utils.py <<'PY'\ndef helper(a, b):\n    return a + b\n\ndef caller_of_helper():\n    return helper(1,2)\nPY\nls -R /tmp/testproj\n",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call search_code --args '{\"pattern\": \"Handler\", \"project\": \"tmp-testproj\"}' -- code-cortex-mcp",
-            "expected_signal": "tools/call: ok",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "tools/call: ok tool=search_code content=text text_chars=697",
-            "setup": [
-              {
-                "command": "mkdir -p /tmp/testproj && cat > /tmp/testproj/app.py <<'PY'\ndef hexStringToByteArray(s):\n    \"\"\"convert hex string to byte array\"\"\"\n    return bytes.fromhex(s)\n\ndef handleRequest(data):\n    b = hexStringToByteArray(data)\n    return b\n\ndef HandlerFunc(x):\n    return handleRequest(x)\n\nclass MyHandler:\n    def process(self, data):\n        return HandlerFunc(data)\nPY\ncat > /tmp/testproj/utils.py <<'PY'\ndef helper(a, b):\n    return a + b\n\ndef caller_of_helper():\n    return helper(1,2)\nPY\nls -R /tmp/testproj\n",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          },
-          {
-            "command": "python3 ~/.pickfit/mcp_probe.py --call trace_path --args '{\"function_name\": \"helper\", \"project\": \"tmp-testproj\", \"direction\": \"inbound\", \"depth\": 3}' -- code-cortex-mcp",
-            "expected_signal": "tools/call: ok",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "tools/call: ok tool=trace_path content=text text_chars=600",
-            "setup": [
-              {
-                "command": "mkdir -p /tmp/testproj && cat > /tmp/testproj/app.py <<'PY'\ndef hexStringToByteArray(s):\n    \"\"\"convert hex string to byte array\"\"\"\n    return bytes.fromhex(s)\n\ndef handleRequest(data):\n    b = hexStringToByteArray(data)\n    return b\n\ndef HandlerFunc(x):\n    return handleRequest(x)\n\nclass MyHandler:\n    def process(self, data):\n        return HandlerFunc(data)\nPY\ncat > /tmp/testproj/utils.py <<'PY'\ndef helper(a, b):\n    return a + b\n\ndef caller_of_helper():\n    return helper(1,2)\nPY\nls -R /tmp/testproj\n",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": true
-          }
-        ],
-        "pitfalls": [
-          {
-            "readme_said": "curl -fsSL ... | bash installs and configures agents",
-            "actually_needed": "used --skip-config to avoid modifying Claude Code/Codex etc. configs in the box; still installs binary correctly",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "project argument optional, inferred from working directory",
-            "actually_needed": "MCP tool calls outside indexed directory require explicit \"project\" (e.g., tmp-testproj) else error",
-            "kind": "note"
-          }
-        ],
-        "blocking_error": null,
-        "judge": {
-          "verdict": "working",
-          "observed": "Screenshots show MCP handshake with 15 tools, successful index_repository call with nodes and edges, and version 0.23.0 output.",
-          "model": "muse-spark-1.3"
-        },
-        "evidence": {
-          "trace_path": "runs/verify/verify-code-cortex-mcp-20261101-020603-0e18/report.json",
-          "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-code-cortex-mcp-20261101-020603-0e18/check-1-cmd4.judged.png",
-            "runs/verify/verify-code-cortex-mcp-20261101-020603-0e18/check-2-cmd6.judged.png",
-            "runs/verify/verify-code-cortex-mcp-20261101-020603-0e18/check-3-cmd3.judged.png"
-          ],
-          "evidence_url": null
-        },
-        "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.079189,
-        "mcp": {
-          "transport": "stdio",
-          "launch": [
-            "code-cortex-mcp"
-          ],
-          "url": null,
-          "protocol_version": "2025-11-25",
-          "server_name": "code-cortex-mcp",
-          "server_version": "0.23.0",
-          "tools": [
-            "index_repository",
-            "search_graph",
-            "query_graph",
-            "trace_path",
-            "get_code_snippet",
-            "inspect_symbol",
-            "get_graph_schema",
-            "get_architecture",
-            "search_code",
-            "list_projects",
-            "delete_project",
-            "index_status",
-            "detect_changes",
-            "manage_adr",
-            "ingest_traces"
-          ],
-          "tool_count": 15,
-          "called_tool": "index_repository",
-          "offline": true
-        },
-        "features": [
-          {
-            "feature": "index codebase into queryable knowledge graph",
-            "status": "checked",
-            "smoke_tests": [
-              2
-            ],
-            "reason": null,
-            "failure": null,
-            "note": null
-          },
-          {
-            "feature": "trace call paths and data flow",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_shown",
-            "failure": null,
-            "note": "its check passed, but the output does not show it: Output shows unsupported/false validation flags with no visible path entries."
-          },
-          {
-            "feature": "inspect symbol definitions and callers",
-            "status": "checked",
-            "smoke_tests": [
-              3
-            ],
-            "reason": null,
-            "failure": null,
-            "note": null
-          },
-          {
-            "feature": "search code with graph-augmented grep",
-            "status": "checked",
-            "smoke_tests": [
-              4
-            ],
-            "reason": null,
-            "failure": null,
-            "note": null
-          }
-        ]
-      },
       {
         "id": "verify-code-cortex-mcp-20261101-130123-6625",
         "level": "service",
@@ -546,6 +342,210 @@
             "reason": "not_shown",
             "failure": null,
             "note": "its check passed, but the output does not show it: Output shows only ambiguous status with suggestions and no definition or callers."
+          },
+          {
+            "feature": "search code with graph-augmented grep",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      },
+      {
+        "id": "verify-code-cortex-mcp-20261101-020603-0e18",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T02:07:24.079607+08:00",
+        "tool_version": "0.23.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/tigercosmos/code-cortex-mcp/main/install.sh -o /tmp/install.sh",
+            "purpose": "download install.sh"
+          },
+          {
+            "command": "bash /tmp/install.sh --skip-config",
+            "purpose": "run install.sh --skip-config to install portable binary"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "code-cortex-mcp --version",
+            "expected_signal": "code-cortex-mcp 0.23.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "code-cortex-mcp 0.23.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- code-cortex-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call index_repository --args '{\"repo_path\": \"/tmp/testproj\"}' -- code-cortex-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=index_repository content=text text_chars=522",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testproj && cat > /tmp/testproj/app.py <<'PY'\ndef hexStringToByteArray(s):\n    \"\"\"convert hex string to byte array\"\"\"\n    return bytes.fromhex(s)\n\ndef handleRequest(data):\n    b = hexStringToByteArray(data)\n    return b\n\ndef HandlerFunc(x):\n    return handleRequest(x)\n\nclass MyHandler:\n    def process(self, data):\n        return HandlerFunc(data)\nPY\ncat > /tmp/testproj/utils.py <<'PY'\ndef helper(a, b):\n    return a + b\n\ndef caller_of_helper():\n    return helper(1,2)\nPY\nls -R /tmp/testproj\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call inspect_symbol --args '{\"symbol\": \"hexStringToByteArray\", \"project\": \"tmp-testproj\"}' -- code-cortex-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=inspect_symbol content=text text_chars=1077",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testproj && cat > /tmp/testproj/app.py <<'PY'\ndef hexStringToByteArray(s):\n    \"\"\"convert hex string to byte array\"\"\"\n    return bytes.fromhex(s)\n\ndef handleRequest(data):\n    b = hexStringToByteArray(data)\n    return b\n\ndef HandlerFunc(x):\n    return handleRequest(x)\n\nclass MyHandler:\n    def process(self, data):\n        return HandlerFunc(data)\nPY\ncat > /tmp/testproj/utils.py <<'PY'\ndef helper(a, b):\n    return a + b\n\ndef caller_of_helper():\n    return helper(1,2)\nPY\nls -R /tmp/testproj\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call search_code --args '{\"pattern\": \"Handler\", \"project\": \"tmp-testproj\"}' -- code-cortex-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search_code content=text text_chars=697",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testproj && cat > /tmp/testproj/app.py <<'PY'\ndef hexStringToByteArray(s):\n    \"\"\"convert hex string to byte array\"\"\"\n    return bytes.fromhex(s)\n\ndef handleRequest(data):\n    b = hexStringToByteArray(data)\n    return b\n\ndef HandlerFunc(x):\n    return handleRequest(x)\n\nclass MyHandler:\n    def process(self, data):\n        return HandlerFunc(data)\nPY\ncat > /tmp/testproj/utils.py <<'PY'\ndef helper(a, b):\n    return a + b\n\ndef caller_of_helper():\n    return helper(1,2)\nPY\nls -R /tmp/testproj\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call trace_path --args '{\"function_name\": \"helper\", \"project\": \"tmp-testproj\", \"direction\": \"inbound\", \"depth\": 3}' -- code-cortex-mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=trace_path content=text text_chars=600",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testproj && cat > /tmp/testproj/app.py <<'PY'\ndef hexStringToByteArray(s):\n    \"\"\"convert hex string to byte array\"\"\"\n    return bytes.fromhex(s)\n\ndef handleRequest(data):\n    b = hexStringToByteArray(data)\n    return b\n\ndef HandlerFunc(x):\n    return handleRequest(x)\n\nclass MyHandler:\n    def process(self, data):\n        return HandlerFunc(data)\nPY\ncat > /tmp/testproj/utils.py <<'PY'\ndef helper(a, b):\n    return a + b\n\ndef caller_of_helper():\n    return helper(1,2)\nPY\nls -R /tmp/testproj\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL ... | bash installs and configures agents",
+            "actually_needed": "used --skip-config to avoid modifying Claude Code/Codex etc. configs in the box; still installs binary correctly",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "project argument optional, inferred from working directory",
+            "actually_needed": "MCP tool calls outside indexed directory require explicit \"project\" (e.g., tmp-testproj) else error",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 15 tools, successful index_repository call with nodes and edges, and version 0.23.0 output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-code-cortex-mcp-20261101-020603-0e18/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-code-cortex-mcp-20261101-020603-0e18/check-1-cmd4.judged.png",
+            "runs/verify/verify-code-cortex-mcp-20261101-020603-0e18/check-2-cmd6.judged.png",
+            "runs/verify/verify-code-cortex-mcp-20261101-020603-0e18/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.079189,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "code-cortex-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "code-cortex-mcp",
+          "server_version": "0.23.0",
+          "tools": [
+            "index_repository",
+            "search_graph",
+            "query_graph",
+            "trace_path",
+            "get_code_snippet",
+            "inspect_symbol",
+            "get_graph_schema",
+            "get_architecture",
+            "search_code",
+            "list_projects",
+            "delete_project",
+            "index_status",
+            "detect_changes",
+            "manage_adr",
+            "ingest_traces"
+          ],
+          "tool_count": 15,
+          "called_tool": "index_repository",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "index codebase into queryable knowledge graph",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "trace call paths and data flow",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows unsupported/false validation flags with no visible path entries."
+          },
+          {
+            "feature": "inspect symbol definitions and callers",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
           },
           {
             "feature": "search code with graph-augmented grep",
@@ -1128,5 +1128,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:39:20+08:00",
-  "updated_at": "2026-11-01T16:23:27.029941+08:00"
+  "updated_at": "2026-11-01T23:02:54.479754+08:00"
 }

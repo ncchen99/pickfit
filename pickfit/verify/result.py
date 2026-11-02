@@ -397,7 +397,7 @@ def gui_check(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     title = max(windows, key=lambda w: w.get("width", 0) * w.get("height", 0)).get("title") if windows else None
     fitted = _clip(command, COMMAND_MAX)
     return GuiCheck(tier=tier, screen=screen, command=fitted or "-", window_title=_clip(title, 200),
-                    display=GUI_DISPLAY)
+                    display=launch.get("display") or GUI_DISPLAY)  # gui_mac's launches name their own display
 
 
 def _gui_result(stdout: str) -> str:

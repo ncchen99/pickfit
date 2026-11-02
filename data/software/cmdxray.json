@@ -58,10 +58,133 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T01:05:27.571841+08:00",
+    "runs": [
+      {
+        "id": "web-cmdxray-20261102-010527-daa4",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-vm-chromium",
+        "image": "pickfit-web:5ba46ffecfd8",
+        "checked_at": "2026-11-02T01:05:27.571841+08:00",
+        "tool_version": null,
+        "install_method": null,
+        "replayed": false,
+        "steps": [
+          {
+            "command": "open https://aurelio-nakamura.github.io/cmdxray/",
+            "purpose": "Open the app in a browser"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open https://aurelio-nakamura.github.io/cmdxray/",
+            "expected_signal": "the app's main screen",
+            "exit_code": null,
+            "passed": true,
+            "observed_excerpt": "The screenshot shows the cmdxray web app with a command input containing tar -xzvf archive.tar.gz and its annotated breakdown displayed below.",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "browser: Use break down shell command flags and get a visible result",
+            "expected_signal": "the result text appears on the page",
+            "exit_code": null,
+            "passed": true,
+            "observed_excerpt": "'search input for lines matching a pattern' appeared on the page; the judge saw the feature work: The command input changed from tar -xzvf archive.tar.gz to grep -rn pickfitaef837 src and the card below updated to annotate grep.",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows the cmdxray web app with a command input containing tar -xzvf archive.tar.gz and its annotated breakdown displayed below.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/web/cmdxray/web-cmdxray-20261102-010527-daa4/messages.jsonl",
+          "log_path": "runs/web/cmdxray/web-cmdxray-20261102-010527-daa4/harness.log",
+          "screenshot_paths": [
+            "runs/web/cmdxray/web-cmdxray-20261102-010527-daa4/install.png",
+            "runs/web/cmdxray/web-cmdxray-20261102-010527-daa4/after.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.2397,
+        "web": {
+          "url": "https://aurelio-nakamura.github.io/cmdxray/",
+          "final_url": "https://aurelio-nakamura.github.io/cmdxray/?cmd=tar+-xzvf+archive.tar.gz",
+          "screen": "main_ui",
+          "browser": "Chromium 156 headless via browser-use 0.13.14",
+          "account_needed": false,
+          "ads_seen": false,
+          "third_party_domains": 0,
+          "data_sent": "observed",
+          "data_sent_note": "What pickfit typed or chose reached aurelio-nakamura.github.io in a request.",
+          "pwa": false,
+          "offline": "not_tested",
+          "operations": [
+            {
+              "feature": "break down shell command flags",
+              "goal": "Use break down shell command flags and get a visible result",
+              "check": "page_text",
+              "expected": [
+                "search input for lines matching a pattern"
+              ],
+              "passed": true,
+              "observed": "'search input for lines matching a pattern' appeared on the page; the judge saw the feature work: The command input changed from tar -xzvf archive.tar.gz to grep -rn pickfitaef837 src and the card below updated to annotate grep.",
+              "smoke_test": 1,
+              "actions": 11,
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B"
+            }
+          ]
+        },
+        "features": [
+          {
+            "feature": "break down shell command flags",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "parse pipes and redirects",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "emit shareable SVG card",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "share breakdown via link",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
   },
   "web": {
     "url": "https://aurelio-nakamura.github.io/cmdxray/"
@@ -277,5 +400,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T23:44:58+08:00",
-  "updated_at": "2026-11-02T00:09:23+08:00"
+  "updated_at": "2026-11-02T01:09:35.505090+08:00"
 }

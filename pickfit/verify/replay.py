@@ -1,7 +1,8 @@
 """Replay: a fresh box reruns the recorded steps, with the smoke tests offline (P3.5).
 
 No model is involved. The plan comes from the log verdict: the cited steps and
-the checks that passed, each as the exact command the agent ran. In a new box:
+the checks that passed, each as the exact command the agent ran (in a bash box, a
+step without the looking around chained into it: install_command). In a new box:
 
 1. write the README and the sample files, as the agent had them;
 2. run the steps in order with the network on; stop at the first failure;
@@ -27,7 +28,7 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable, Sequence
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -43,6 +44,7 @@ from pickfit.verify.verdict import (
     ResolvedCheck,
     evaluate_check,
     gui_op_problems,
+    install_command,
     mcp_problems,
     supported_level,
 )
@@ -100,10 +102,14 @@ class ReplayPlan:
         return asdict(self)
 
 
-def plan_from(verdict: LogVerdict, commands: list[CommandRecord], rerun_failed: Sequence[int] = ()) -> ReplayPlan:
+def plan_from(verdict: LogVerdict, commands: list[CommandRecord], rerun_failed: Sequence[int] = (),
+              tidy_steps: bool = False) -> ReplayPlan:
     """The steps and the passing checks of a log verdict, as commands to rerun.
 
     rerun_failed: command ids of failed feature checks, rerun once after the checks.
+    tidy_steps: each run_command step without its looking around (install_command; bash boxes), so the
+    install guide, which takes the replayed steps, holds only what installs, and this replay shows it
+    is enough. Setups and checks run as the agent ran them: their output is what they show.
     """
     by_id = {c.command_id: c for c in commands if c.command_id is not None}
 
@@ -114,6 +120,10 @@ def plan_from(verdict: LogVerdict, commands: list[CommandRecord], rerun_failed: 
             operate = {"spec": c.operate["spec"], "actions": c.operate.get("actions") or [],
                        "model": c.operate.get("model")}
         return ReplayCommand(cid, c.tool, c.command, c.port, c.wait_s, c.seconds, operate)
+
+    def step(cid: int) -> ReplayCommand:
+        c = command(cid)
+        return replace(c, command=install_command(c.command)) if tidy_steps and c.tool == "run_command" else c
 
     checks = [c for c in verdict.checks if c.passed]
     check_ids = {c.command_id for c in checks}
@@ -130,7 +140,7 @@ def plan_from(verdict: LogVerdict, commands: list[CommandRecord], rerun_failed: 
                                   check.expected_signal if check else "", check.kind if check else "example"))
     failed_setups = sorted({s for f in failed for s in f.setup_ids} - set(setup_ids) - check_ids - steps)
     return ReplayPlan(
-        steps=tuple(command(i) for i in verdict.step_ids),
+        steps=tuple(step(i) for i in verdict.step_ids),
         setups=tuple(command(i) for i in setup_ids),
         checks=tuple(ReplayCheck(command(c.command_id), tuple(s for s in c.setup_ids if s not in steps),
                                  c.expected_exit_code, c.expected_signal, c.kind) for c in checks),
@@ -209,7 +219,8 @@ class Replayer:
                  operator: dict[str, Any] | None = None) -> None:
         self.box = box
         self.log = log
-        self.timeout = command_timeout_s
+        # A box that allows longer commands (a macOS GUI box: GUI_COMMAND_S) gives its install steps that long too.
+        self.timeout = max(command_timeout_s, getattr(getattr(box, "limits", None), "max_command_s", 0) or 0)
         self.evidence_dir = evidence_dir  # where launch_gui and operate_gui screenshots go
         self.operator = operator or {}  # operate_gui: run_operation's model, read_screen, scope and test seams
         self.launches = 0
@@ -249,7 +260,10 @@ class Replayer:
             ran.screenshot = str(path)
         return ran
 
-    def rerun(self, cmd: ReplayCommand, max_s: int | None = None) -> RanCommand:
+    def rerun(self, cmd: ReplayCommand, max_s: int | None = None, *, install: bool = False) -> RanCommand:
+        """install: an install step gets the full command time, not replay_timeout's: the agent's cited step can
+        have been quick only because a failed try before it filled a download cache (thundertalk 11/1: a cask
+        install recorded at 10 s needed over 70 s in the fresh box). It runs online, before any check."""
         if cmd.tool == "operate_gui":
             return self._operate(cmd)
         if cmd.tool == "launch_gui":
@@ -257,7 +271,9 @@ class Replayer:
                 raise BoxError("a GUI launch needs a box with a display")
             self.launches += 1
             tag = f"replay-{cmd.command_id}-{self.launches}"
-            result, shown, png = gui.launch(self.box, cmd.command, tag, cmd.wait_s or 30)
+            launch = getattr(self.box, "launch_gui", None)  # a box with its own display (TartBox) launches its way
+            result, shown, png = (launch(cmd.command, tag, cmd.wait_s or 30) if launch
+                                  else gui.launch(self.box, cmd.command, tag, cmd.wait_s or 30))
             ran = self._ran(cmd, result)
             ran.gui = shown.to_dict()
             if png and self.evidence_dir is not None:
@@ -271,7 +287,8 @@ class Replayer:
             result = self.box.exec(self.box.background(cmd.command, cmd.port, wait, f"replay-{cmd.command_id}"),
                                    wait + 15)
         else:
-            result = self.box.exec(cmd.command, min(self.timeout, replay_timeout(cmd.seconds), max_s or self.timeout))
+            limit = self.timeout if install else min(self.timeout, replay_timeout(cmd.seconds))
+            result = self.box.exec(cmd.command, min(limit, max_s or self.timeout))
         return self._ran(cmd, result)
 
     def _ran(self, cmd: ReplayCommand, result: ExecResult) -> RanCommand:
@@ -315,7 +332,7 @@ class Replayer:
             result.error = "no steps to replay"
             return
         for step in plan.steps:
-            ran = self.rerun(step)
+            ran = self.rerun(step, install=True)
             result.steps.append(ran)
             if not ran.ok:
                 result.error = f"step {step.command_id} exited {ran.exit_code}: {_one_line(step.command)}"

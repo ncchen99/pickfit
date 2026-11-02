@@ -98,6 +98,11 @@ def _display_name(task: VerifyTask) -> str:
     return str(name) if name else task.slug
 
 
+def _summary(task: VerifyTask) -> str | None:
+    summary = task.extraction.summary.value if task.extraction is not None else None
+    return str(summary) if summary else None
+
+
 def _kind(task: VerifyTask) -> str | None:
     return task.extraction.kind.value if task.extraction is not None else None
 
@@ -192,7 +197,8 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
         box_usd += confirm_box.usd_per_second() * phases["confirm_box_s"]
         _dump(evidence_dir / "confirm.json", {"plan": plan_failure.to_dict(), "result": confirm.to_dict()})
     if agent.verdict is not None and is_passed(agent.verdict.level):
-        plan = plan_from(agent.verdict, report.commands, rerun_failed=failed_ids(report.features))
+        plan = plan_from(agent.verdict, report.commands, rerun_failed=failed_ids(report.features),
+                         tidy_steps=getattr(box, "shell", "bash") == "bash")
         replay_box = make_box(run_id, "replay")
         box_began = time.monotonic()
         scope = dict(run_id=run_id, scope=f"verify:{task.slug}", scope_cap_usd=limits.scope_cap_usd)
@@ -218,7 +224,8 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
                 parts = [judge_checks(_display_name(task), replay.checks, evidence_dir, **judge_args)]
                 launched = judged_launch(replay.checks)
                 if launched is not None and launched.passed:  # a window without a readable screenshot cannot pass
-                    parts.append(judge_gui(_display_name(task), launched, evidence_dir, **judge_args) or JudgeResult(
+                    parts.append(judge_gui(_display_name(task), launched, evidence_dir, about=_summary(task),
+                                           **judge_args) or JudgeResult(
                         verdict="inconclusive", observed="the GUI launch left no screenshot to judge",
                         error_text=None, matches_expected_signal=False, model=resolve_model(judge_model)))
                 judge = merge([p for p in parts if p is not None])

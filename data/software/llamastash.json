@@ -75,20 +75,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-llamastash-20261031-014103-b485",
+      "run_id": "verify-llamastash-20261101-225119-7d0b",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL -o /tmp/install-llamastash.sh https://llamastash.dev/install.sh && wc -c /tmp/install-llamastash.sh && head -c 2000 /tmp/install-llamastash.sh",
-          "purpose": "download install script for reading"
+          "command": "curl -fsSL https://llamastash.dev/install.sh -o /tmp/install.sh",
+          "purpose": "download install.sh from llamastash.dev"
         },
         {
-          "command": "sh /tmp/install-llamastash.sh && llamastash --version",
-          "purpose": "run install script to ~/.local/bin"
-        },
-        {
-          "command": "llamastash init --recommended --only server --json",
-          "purpose": "non-interactive llama-server install via init --only server"
+          "command": "sh /tmp/install.sh",
+          "purpose": "run install.sh to install binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -128,33 +124,29 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T01:42:49.024443+08:00",
+    "checked_at": "2026-11-01T22:52:43.224334+08:00",
     "runs": [
       {
-        "id": "verify-llamastash-20261031-014103-b485",
+        "id": "verify-llamastash-20261101-225119-7d0b",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T01:42:49.024443+08:00",
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-01T22:52:43.224334+08:00",
         "tool_version": "0.10.1",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL -o /tmp/install-llamastash.sh https://llamastash.dev/install.sh && wc -c /tmp/install-llamastash.sh && head -c 2000 /tmp/install-llamastash.sh",
-            "purpose": "download install script for reading"
+            "command": "curl -fsSL https://llamastash.dev/install.sh -o /tmp/install.sh",
+            "purpose": "download install.sh from llamastash.dev"
           },
           {
-            "command": "sh /tmp/install-llamastash.sh && llamastash --version",
-            "purpose": "run install script to ~/.local/bin"
-          },
-          {
-            "command": "llamastash init --recommended --only server --json",
-            "purpose": "non-interactive llama-server install via init --only server"
+            "command": "sh /tmp/install.sh",
+            "purpose": "run install.sh to install binary to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -168,65 +160,76 @@
             "offline": true
           },
           {
+            "command": "llamastash list --no-colors",
+            "expected_signal": "(no models discovered)",
+            "exit_code": 65,
+            "passed": false,
+            "observed_excerpt": "✗ llama-server binary not found — point `--llama-server` / `LLAMASTASH_LLAMA_SERVER` at it, run `llamastash init` to install one, or `llamastash daemon start --force` to start without llama.cpp.",
+            "setup": [],
+            "offline": null
+          },
+          {
             "command": "llamastash completions bash",
-            "expected_signal": "complete -F _llamastash",
+            "expected_signal": "_llamastash",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "complete -F _llamastash -o nosort -o bashdefault -o default llamastash",
+            "observed_excerpt": "_llamastash() {",
             "setup": [],
             "offline": true
           },
           {
-            "command": "ls -l /home/sbx/.local/state/llamastash/llama-cpp/b12015/llama-b12015/llama-server && export LLAMASTASH_LLAMA_SERVER=/home/sbx/.local/state/llamastash/llama-cpp/b12015/llama-b12015/llama-server && llamastash list --model-path ~/models",
-            "expected_signal": "stories260K.gguf",
+            "command": "llamastash status --json",
+            "expected_signal": "\"listen\": \"127.0.0.1:11435\"",
+            "exit_code": 65,
+            "passed": false,
+            "observed_excerpt": "}",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "curl -s http://127.0.0.1:11435/v1/models",
+            "expected_signal": "\"object\":\"list\"",
+            "exit_code": 7,
+            "passed": false,
+            "observed_excerpt": "",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "llamastash --mouse-focus --render --render-size 80x24\n",
+            "expected_signal": "LlamaStash v0.10.1",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "stories260K.gguf models llama 0.3M F32 2048 1M chat",
-            "setup": [
-              {
-                "command": "mkdir -p ~/models && curl -fL -o ~/models/stories260K.gguf https://huggingface.co/ggml-org/test-model-stories260K/resolve/main/stories260K-f32.gguf && ls -l ~/models/ && curl -fsSL https://raw.githubusercontent.com/llamastash/llamastash/main/INSTALL.md | head -c 8000",
-                "background": false,
-                "port": null
-              }
-            ],
+            "observed_excerpt": "LlamaStash v0.10.1 P:pull · ?:help · ↹/⇧↹:panes · ↑↓:scroll · t:theme · q:quit",
+            "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -fsSL https://llamastash.dev/install.sh | sh",
-            "actually_needed": "download to /tmp/install-llamastash.sh, read it, then run sh /tmp/install-llamastash.sh",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "llamastash list works after init installs llama-server",
-            "actually_needed": "run llamastash init --recommended --only server --json to install llama-server, then pass --llama-server or LLAMASTASH_LLAMA_SERVER explicitly because --only server skips config wiring",
-            "kind": "readme_wrong"
-          },
-          {
-            "readme_said": "llamastash list",
-            "actually_needed": "llamastash list --model-path ~/models (also needs LLAMASTASH_LLAMA_SERVER set); plain llamastash list exits 65 with llama-server binary not found",
+            "readme_said": "llamastash list works directly after install",
+            "actually_needed": "requires llama-server or daemon started with --force; otherwise exits 65. Ran `llamastash daemon start --force` before list succeeded",
             "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show bash completions with complete -F _llamastash, model list containing stories260K.gguf, and version llamastash 0.10.1.",
+          "observed": "Screenshots show bash completions defining _llamastash, rendered TUI with LlamaStash v0.10.1 header, and version output llamastash 0.10.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-llamastash-20261031-014103-b485/report.json",
+          "trace_path": "runs/verify/verify-llamastash-20261101-225119-7d0b/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-llamastash-20261031-014103-b485/check-1-cmd5.judged.png",
-            "runs/verify/verify-llamastash-20261031-014103-b485/check-2-cmd11.judged.png",
-            "runs/verify/verify-llamastash-20261031-014103-b485/check-3-cmd3.judged.png"
+            "runs/verify/verify-llamastash-20261101-225119-7d0b/check-1-cmd9.judged.png",
+            "runs/verify/verify-llamastash-20261101-225119-7d0b/check-2-cmd12.judged.png",
+            "runs/verify/verify-llamastash-20261101-225119-7d0b/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.154325,
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.083873,
         "features": [
           {
             "feature": "Run any engine, any model via same proxy",
@@ -234,7 +237,7 @@
             "smoke_tests": [],
             "reason": "other",
             "failure": null,
-            "note": "its check did not pass in the log; proxy /v1/models lists stories260K, chat completion returned completion_tokens"
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
           },
           {
             "feature": "Run local LLMs with TUI and CLI",
@@ -242,7 +245,7 @@
             "smoke_tests": [],
             "reason": "not_shown",
             "failure": null,
-            "note": "its check passed, but the output does not show it: Output only lists stories260K.gguf via list, with no LLM run or generated text shown."
+            "note": "its check passed, but the output does not show it: TUI shows empty model list with zero running and completions only list options, no LLM run shown."
           },
           {
             "feature": "Expose OpenAI-compatible endpoint for models",
@@ -250,7 +253,7 @@
             "smoke_tests": [],
             "reason": "other",
             "failure": null,
-            "note": "its check did not pass in the log; OpenAI-compatible /v1/models and /v1/chat/completions answered on 11435"
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
           }
         ]
       }
@@ -258,15 +261,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-10-31T13:19:37+08:00",
+    "computed_at": "2026-11-01T22:52:43+08:00",
     "quality": {
-      "total": 66.6,
+      "total": 71.1,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.578,
+          "score": 0.68,
           "weight": 40.0
         },
         "install_docs": {
@@ -309,7 +312,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 8.46
+      "value": 9.03
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -632,5 +635,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-10-31T13:19:37+08:00"
+  "updated_at": "2026-11-01T22:52:43.225802+08:00"
 }

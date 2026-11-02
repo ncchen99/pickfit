@@ -90,7 +90,7 @@
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/amitkumardubey/praana/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
+          "command": "curl -fsSL https://raw.githubusercontent.com/amitkumardubey/praana/main/install.sh -o /tmp/install.sh",
           "purpose": "download install.sh for reading"
         },
         {
@@ -137,113 +137,6 @@
     "unverified_reason": null,
     "checked_at": "2026-11-01T12:40:47.510730+08:00",
     "runs": [
-      {
-        "id": "verify-praana-20261031-021639-a568",
-        "level": "function",
-        "unverified_reason": null,
-        "os": "linux",
-        "arch": "x86_64",
-        "method": "sandbox",
-        "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:17:31.054255+08:00",
-        "tool_version": "v0.16.0",
-        "install_method": "script",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "curl -fsSL https://raw.githubusercontent.com/amitkumardubey/praana/main/install.sh -o /tmp/install.sh && ls -l /tmp/install.sh && wc -c /tmp/install.sh",
-            "purpose": "download install.sh for reading"
-          },
-          {
-            "command": "bash /tmp/install.sh",
-            "purpose": "install praana via install.sh"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "praana --version",
-            "expected_signal": "PRAANA v0.16.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "PRAANA v0.16.0",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "praana doctor",
-            "expected_signal": "✓ native: available",
-            "exit_code": 1,
-            "passed": true,
-            "observed_excerpt": "✓ native: available (0.3.0, ping ok)",
-            "setup": [],
-            "offline": true
-          }
-        ],
-        "pitfalls": [
-          {
-            "readme_said": "curl -fsSL .../install.sh | bash installs praana into ~/.local/bin",
-            "actually_needed": "no extra step; ~/.local/bin is already first on PATH and install verified SHA256 and smoked --version by itself",
-            "kind": "tool_handled"
-          },
-          {
-            "readme_said": "Status v0.15.1",
-            "actually_needed": "installed PRAANA v0.16.0; README badge still says v0.15.1",
-            "kind": "note"
-          }
-        ],
-        "blocking_error": null,
-        "judge": {
-          "verdict": "working",
-          "observed": "Doctor shows native available with expected exit 1 and --version prints PRAANA v0.16.0.",
-          "model": "muse-spark-1.3"
-        },
-        "evidence": {
-          "trace_path": "runs/verify/verify-praana-20261031-021639-a568/report.json",
-          "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-praana-20261031-021639-a568/check-1-cmd5.judged.png",
-            "runs/verify/verify-praana-20261031-021639-a568/check-2-cmd4.judged.png"
-          ],
-          "evidence_url": null
-        },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.046074,
-        "features": [
-          {
-            "feature": "run long coding sessions in terminal",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "needs a provider API key to start a session"
-          },
-          {
-            "feature": "curate prompt context every turn",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "per-turn curation needs a running session with a model key"
-          },
-          {
-            "feature": "retain learnings across sessions locally",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "memory digest needs sessions with a model key"
-          },
-          {
-            "feature": "resume sessions via checkpoint replay",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "resume needs prior sessions with a model key"
-          }
-        ]
-      },
       {
         "id": "verify-praana-20261101-123734-ee74",
         "level": "function",
@@ -362,6 +255,113 @@
             "reason": "not_shown",
             "failure": null,
             "note": "its check passed, but the output does not show it: Output only lists resume help line, not an actual resumed session."
+          }
+        ]
+      },
+      {
+        "id": "verify-praana-20261031-021639-a568",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T02:17:31.054255+08:00",
+        "tool_version": "v0.16.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/amitkumardubey/praana/main/install.sh -o /tmp/install.sh",
+            "purpose": "download install.sh for reading"
+          },
+          {
+            "command": "bash /tmp/install.sh",
+            "purpose": "install praana via install.sh"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "praana --version",
+            "expected_signal": "PRAANA v0.16.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "PRAANA v0.16.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "praana doctor",
+            "expected_signal": "✓ native: available",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "✓ native: available (0.3.0, ping ok)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL .../install.sh | bash installs praana into ~/.local/bin",
+            "actually_needed": "no extra step; ~/.local/bin is already first on PATH and install verified SHA256 and smoked --version by itself",
+            "kind": "tool_handled"
+          },
+          {
+            "readme_said": "Status v0.15.1",
+            "actually_needed": "installed PRAANA v0.16.0; README badge still says v0.15.1",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Doctor shows native available with expected exit 1 and --version prints PRAANA v0.16.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-praana-20261031-021639-a568/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-praana-20261031-021639-a568/check-1-cmd5.judged.png",
+            "runs/verify/verify-praana-20261031-021639-a568/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.046074,
+        "features": [
+          {
+            "feature": "run long coding sessions in terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "needs a provider API key to start a session"
+          },
+          {
+            "feature": "curate prompt context every turn",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "per-turn curation needs a running session with a model key"
+          },
+          {
+            "feature": "retain learnings across sessions locally",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "memory digest needs sessions with a model key"
+          },
+          {
+            "feature": "resume sessions via checkpoint replay",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "resume needs prior sessions with a model key"
           }
         ]
       }
@@ -743,5 +743,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:15+08:00",
-  "updated_at": "2026-11-01T12:40:47.514307+08:00"
+  "updated_at": "2026-11-01T23:02:55.489456+08:00"
 }

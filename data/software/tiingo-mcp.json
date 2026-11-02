@@ -87,15 +87,15 @@
       "method": "script",
       "steps": [
         {
-          "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/major7apps/tiingo-mcp/releases/latest/download/tiingo-mcp-installer.sh -o /tmp/tiingo-mcp-installer.sh && ls -l /tmp/tiingo-mcp-installer.sh && head -c 2000 /tmp/tiingo-mcp-installer.sh",
+          "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/major7apps/tiingo-mcp/releases/latest/download/tiingo-mcp-installer.sh -o /tmp/tiingo-mcp-installer.sh",
           "purpose": "Download installer script"
         },
         {
-          "command": "sh /tmp/tiingo-mcp-installer.sh && ls -l ~/.cargo/bin/tiingo-mcp && ~/.cargo/bin/tiingo-mcp --version",
+          "command": "sh /tmp/tiingo-mcp-installer.sh && ~/.cargo/bin/tiingo-mcp --version",
           "purpose": "Run installer script"
         },
         {
-          "command": "mkdir -p ~/.local/bin && ln -sf ~/.cargo/bin/tiingo-mcp ~/.local/bin/tiingo-mcp && export PATH=\"$HOME/.local/bin:$PATH\" && which tiingo-mcp",
+          "command": "mkdir -p ~/.local/bin && ln -sf ~/.cargo/bin/tiingo-mcp ~/.local/bin/tiingo-mcp && export PATH=\"$HOME/.local/bin:$PATH\"",
           "purpose": "Link binary onto PATH"
         }
       ],
@@ -140,170 +140,6 @@
     "unverified_reason": null,
     "checked_at": "2026-11-01T16:59:59.966109+08:00",
     "runs": [
-      {
-        "id": "verify-tiingo-mcp-20261031-030654-0bdc",
-        "level": "function",
-        "unverified_reason": null,
-        "os": "linux",
-        "arch": "x86_64",
-        "method": "sandbox",
-        "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T03:07:33.345398+08:00",
-        "tool_version": "2.3.0",
-        "install_method": "script",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/major7apps/tiingo-mcp/releases/latest/download/tiingo-mcp-installer.sh -o /tmp/tiingo-mcp-installer.sh && ls -l /tmp/tiingo-mcp-installer.sh && head -c 2000 /tmp/tiingo-mcp-installer.sh",
-            "purpose": "Download installer script"
-          },
-          {
-            "command": "sh /tmp/tiingo-mcp-installer.sh && ls -l ~/.cargo/bin/tiingo-mcp && ~/.cargo/bin/tiingo-mcp --version",
-            "purpose": "Run installer script"
-          },
-          {
-            "command": "mkdir -p ~/.local/bin && ln -sf ~/.cargo/bin/tiingo-mcp ~/.local/bin/tiingo-mcp && export PATH=\"$HOME/.local/bin:$PATH\" && which tiingo-mcp",
-            "purpose": "Link binary onto PATH"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "tiingo-mcp --version",
-            "expected_signal": "tiingo-mcp 2.3.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "tiingo-mcp 2.3.0",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- tiingo-mcp",
-            "expected_signal": "handshake: ok",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "handshake: ok",
-            "setup": [],
-            "offline": true
-          }
-        ],
-        "pitfalls": [
-          {
-            "readme_said": "install script installs into Cargo binary directory and to follow instructions to update PATH",
-            "actually_needed": "installer placed binary in ~/.cargo/bin which is not on this box's PATH (starts with ~/.local/bin), so linked it to ~/.local/bin/tiingo-mcp",
-            "kind": "sandbox"
-          },
-          {
-            "readme_said": "curl installer script from releases/latest/download",
-            "actually_needed": "installer script downloads and verifies a prebuilt binary tarball at run time, which cannot be read as text",
-            "kind": "note"
-          }
-        ],
-        "blocking_error": null,
-        "judge": {
-          "verdict": "working",
-          "observed": "Screenshots show MCP probe listing 38 tools with handshake ok and version command printing tiingo-mcp 2.3.0.",
-          "model": "muse-spark-1.3"
-        },
-        "evidence": {
-          "trace_path": "runs/verify/verify-tiingo-mcp-20261031-030654-0bdc/report.json",
-          "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-tiingo-mcp-20261031-030654-0bdc/check-1-cmd5.judged.png",
-            "runs/verify/verify-tiingo-mcp-20261031-030654-0bdc/check-2-cmd4.judged.png"
-          ],
-          "evidence_url": null
-        },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.058277,
-        "mcp": {
-          "transport": "stdio",
-          "launch": [
-            "tiingo-mcp"
-          ],
-          "url": null,
-          "protocol_version": "2025-11-25",
-          "server_name": "Tiingo?MCP?Server",
-          "server_version": "2.3.0",
-          "tools": [
-            "get_boats_prices",
-            "get_boats_snapshot",
-            "get_bulk_eod_prices",
-            "get_company_meta",
-            "get_crypto_metadata",
-            "get_crypto_prices",
-            "get_crypto_quote",
-            "get_crypto_yield_metrics",
-            "get_crypto_yield_platforms",
-            "get_crypto_yield_pools",
-            "get_crypto_yield_ticks",
-            "get_daily_fundamentals",
-            "get_distributions_by_ex_date",
-            "get_dividend_yield",
-            "get_dividends",
-            "get_equity_intraday_prices",
-            "get_equity_realtime_snapshot",
-            "get_financial_statements",
-            "get_forex_prices",
-            "get_forex_quote",
-            "get_forex_quotes",
-            "get_fund_fee_metrics",
-            "get_fund_metadata",
-            "get_fundamentals_definitions",
-            "get_iex_market_snapshot",
-            "get_intraday_prices",
-            "get_news",
-            "get_realtime_price",
-            "get_splits",
-            "get_splits_by_ex_date",
-            "get_stock_metadata",
-            "get_stock_prices",
-            "get_ticker_metadata",
-            "poll_market_data_subscription",
-            "search_tiingo_assets",
-            "start_market_data_subscription",
-            "stop_market_data_subscription",
-            "update_market_data_subscription"
-          ],
-          "tool_count": 38,
-          "called_tool": null,
-          "offline": true
-        },
-        "features": [
-          {
-            "feature": "Get stock, forex and crypto prices",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "all price tools require TIINGO_API_KEY and live Tiingo service"
-          },
-          {
-            "feature": "Search financial news articles",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "get_news requires TIINGO_API_KEY and live Tiingo service"
-          },
-          {
-            "feature": "Get company fundamentals and financial statements",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "statement tools require TIINGO_API_KEY; even definitions call errored without key"
-          },
-          {
-            "feature": "Subscribe to live market data feeds",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_account",
-            "failure": null,
-            "note": "subscription tools require TIINGO_API_KEY and live websocket feeds"
-          }
-        ]
-      },
       {
         "id": "verify-tiingo-mcp-20261101-165430-43fd",
         "level": "function",
@@ -446,6 +282,170 @@
             "reason": "needs_account",
             "failure": null,
             "note": "start_market_data_subscription requires TIINGO_API_KEY"
+          }
+        ]
+      },
+      {
+        "id": "verify-tiingo-mcp-20261031-030654-0bdc",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T03:07:33.345398+08:00",
+        "tool_version": "2.3.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/major7apps/tiingo-mcp/releases/latest/download/tiingo-mcp-installer.sh -o /tmp/tiingo-mcp-installer.sh",
+            "purpose": "Download installer script"
+          },
+          {
+            "command": "sh /tmp/tiingo-mcp-installer.sh && ~/.cargo/bin/tiingo-mcp --version",
+            "purpose": "Run installer script"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && ln -sf ~/.cargo/bin/tiingo-mcp ~/.local/bin/tiingo-mcp && export PATH=\"$HOME/.local/bin:$PATH\"",
+            "purpose": "Link binary onto PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "tiingo-mcp --version",
+            "expected_signal": "tiingo-mcp 2.3.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tiingo-mcp 2.3.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- tiingo-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "install script installs into Cargo binary directory and to follow instructions to update PATH",
+            "actually_needed": "installer placed binary in ~/.cargo/bin which is not on this box's PATH (starts with ~/.local/bin), so linked it to ~/.local/bin/tiingo-mcp",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "curl installer script from releases/latest/download",
+            "actually_needed": "installer script downloads and verifies a prebuilt binary tarball at run time, which cannot be read as text",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP probe listing 38 tools with handshake ok and version command printing tiingo-mcp 2.3.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tiingo-mcp-20261031-030654-0bdc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tiingo-mcp-20261031-030654-0bdc/check-1-cmd5.judged.png",
+            "runs/verify/verify-tiingo-mcp-20261031-030654-0bdc/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.058277,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "tiingo-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "Tiingo?MCP?Server",
+          "server_version": "2.3.0",
+          "tools": [
+            "get_boats_prices",
+            "get_boats_snapshot",
+            "get_bulk_eod_prices",
+            "get_company_meta",
+            "get_crypto_metadata",
+            "get_crypto_prices",
+            "get_crypto_quote",
+            "get_crypto_yield_metrics",
+            "get_crypto_yield_platforms",
+            "get_crypto_yield_pools",
+            "get_crypto_yield_ticks",
+            "get_daily_fundamentals",
+            "get_distributions_by_ex_date",
+            "get_dividend_yield",
+            "get_dividends",
+            "get_equity_intraday_prices",
+            "get_equity_realtime_snapshot",
+            "get_financial_statements",
+            "get_forex_prices",
+            "get_forex_quote",
+            "get_forex_quotes",
+            "get_fund_fee_metrics",
+            "get_fund_metadata",
+            "get_fundamentals_definitions",
+            "get_iex_market_snapshot",
+            "get_intraday_prices",
+            "get_news",
+            "get_realtime_price",
+            "get_splits",
+            "get_splits_by_ex_date",
+            "get_stock_metadata",
+            "get_stock_prices",
+            "get_ticker_metadata",
+            "poll_market_data_subscription",
+            "search_tiingo_assets",
+            "start_market_data_subscription",
+            "stop_market_data_subscription",
+            "update_market_data_subscription"
+          ],
+          "tool_count": 38,
+          "called_tool": null,
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "Get stock, forex and crypto prices",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "all price tools require TIINGO_API_KEY and live Tiingo service"
+          },
+          {
+            "feature": "Search financial news articles",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "get_news requires TIINGO_API_KEY and live Tiingo service"
+          },
+          {
+            "feature": "Get company fundamentals and financial statements",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "statement tools require TIINGO_API_KEY; even definitions call errored without key"
+          },
+          {
+            "feature": "Subscribe to live market data feeds",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "subscription tools require TIINGO_API_KEY and live websocket feeds"
           }
         ]
       }
@@ -1093,5 +1093,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:34+08:00",
-  "updated_at": "2026-11-01T17:00:00.030658+08:00"
+  "updated_at": "2026-11-01T23:02:55.587441+08:00"
 }

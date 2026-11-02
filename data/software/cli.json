@@ -78,7 +78,7 @@
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh -o /tmp/ark-installer.sh && ls -l /tmp/ark-installer.sh && head -c 2000 /tmp/ark-installer.sh",
+          "command": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh -o /tmp/ark-installer.sh",
           "purpose": "download installer script only"
         },
         {
@@ -129,123 +129,6 @@
     "unverified_reason": null,
     "checked_at": "2026-11-01T13:36:06.351768+08:00",
     "runs": [
-      {
-        "id": "verify-cli-20261031-035507-5384",
-        "level": "function",
-        "unverified_reason": null,
-        "os": "linux",
-        "arch": "x86_64",
-        "method": "sandbox",
-        "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T03:56:03.648359+08:00",
-        "tool_version": "0.5.0",
-        "install_method": "script",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh -o /tmp/ark-installer.sh && ls -l /tmp/ark-installer.sh && head -c 2000 /tmp/ark-installer.sh",
-            "purpose": "download installer script only"
-          },
-          {
-            "command": "sh /tmp/ark-installer.sh",
-            "purpose": "run installer script"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "ark --version",
-            "expected_signal": "ark 0.5.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "ark 0.5.0",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "ark devices",
-            "expected_signal": "error[no-device]: no Arks found; discovery was incomplete",
-            "exit_code": 3,
-            "passed": true,
-            "observed_excerpt": "error[no-device]: no Arks found; discovery was incomplete",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "ark status",
-            "expected_signal": "error[no-device]: no Ark enclave found",
-            "exit_code": 3,
-            "passed": true,
-            "observed_excerpt": "error[no-device]: no Ark enclave found",
-            "setup": [],
-            "offline": true
-          }
-        ],
-        "pitfalls": [
-          {
-            "readme_said": "curl installer script | sh installs ark",
-            "actually_needed": "installer fetches compiled binary ark-0.5.0-linux-amd64 and LICENSES.txt at run time; binary cannot be read as text before running",
-            "kind": "note"
-          },
-          {
-            "readme_said": "On Linux, your user needs access to the Ark's USB device once via sudo tee udev rule",
-            "actually_needed": "skipped udev rule (requires sudo/root, not available); ark devices still runs and reports no-device with USB warning",
-            "kind": "sandbox"
-          }
-        ],
-        "blocking_error": null,
-        "judge": {
-          "verdict": "working",
-          "observed": "Screenshots show expected no-device errors for devices and status and version 0.5.0 output.",
-          "model": "muse-spark-1.3"
-        },
-        "evidence": {
-          "trace_path": "runs/verify/verify-cli-20261031-035507-5384/report.json",
-          "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-cli-20261031-035507-5384/check-1-cmd4.judged.png",
-            "runs/verify/verify-cli-20261031-035507-5384/check-2-cmd5.judged.png",
-            "runs/verify/verify-cli-20261031-035507-5384/check-3-cmd3.judged.png"
-          ],
-          "evidence_url": null
-        },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.040522,
-        "features": [
-          {
-            "feature": "run apps and print reports",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_hardware",
-            "failure": null,
-            "note": "needs paired unlocked Ark plus owner phone approval"
-          },
-          {
-            "feature": "upload variant calls to the Ark",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_hardware",
-            "failure": null,
-            "note": "needs paired unlocked Ark plus owner phone approval"
-          },
-          {
-            "feature": "download public data onto the Ark",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_hardware",
-            "failure": null,
-            "note": "needs paired unlocked Ark; README says data fetch needs Ark"
-          },
-          {
-            "feature": "list dataset slots and their state",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_hardware",
-            "failure": null,
-            "note": "needs paired unlocked Ark; README says data list needs paired unlocked Ark"
-          }
-        ]
-      },
       {
         "id": "verify-cli-20261101-133323-20e4",
         "level": "function",
@@ -354,6 +237,123 @@
             "reason": "needs_hardware",
             "failure": null,
             "note": "Needs Ark hardware to list slots; ark data list fails no-device"
+          }
+        ]
+      },
+      {
+        "id": "verify-cli-20261031-035507-5384",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:2649442dfa6d",
+        "checked_at": "2026-10-31T03:56:03.648359+08:00",
+        "tool_version": "0.5.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/dark-bio/cli/releases/latest/download/ark-installer.sh -o /tmp/ark-installer.sh",
+            "purpose": "download installer script only"
+          },
+          {
+            "command": "sh /tmp/ark-installer.sh",
+            "purpose": "run installer script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ark --version",
+            "expected_signal": "ark 0.5.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ark 0.5.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ark devices",
+            "expected_signal": "error[no-device]: no Arks found; discovery was incomplete",
+            "exit_code": 3,
+            "passed": true,
+            "observed_excerpt": "error[no-device]: no Arks found; discovery was incomplete",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ark status",
+            "expected_signal": "error[no-device]: no Ark enclave found",
+            "exit_code": 3,
+            "passed": true,
+            "observed_excerpt": "error[no-device]: no Ark enclave found",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl installer script | sh installs ark",
+            "actually_needed": "installer fetches compiled binary ark-0.5.0-linux-amd64 and LICENSES.txt at run time; binary cannot be read as text before running",
+            "kind": "note"
+          },
+          {
+            "readme_said": "On Linux, your user needs access to the Ark's USB device once via sudo tee udev rule",
+            "actually_needed": "skipped udev rule (requires sudo/root, not available); ark devices still runs and reports no-device with USB warning",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show expected no-device errors for devices and status and version 0.5.0 output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-cli-20261031-035507-5384/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-cli-20261031-035507-5384/check-1-cmd4.judged.png",
+            "runs/verify/verify-cli-20261031-035507-5384/check-2-cmd5.judged.png",
+            "runs/verify/verify-cli-20261031-035507-5384/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.040522,
+        "features": [
+          {
+            "feature": "run apps and print reports",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "needs paired unlocked Ark plus owner phone approval"
+          },
+          {
+            "feature": "upload variant calls to the Ark",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "needs paired unlocked Ark plus owner phone approval"
+          },
+          {
+            "feature": "download public data onto the Ark",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "needs paired unlocked Ark; README says data fetch needs Ark"
+          },
+          {
+            "feature": "list dataset slots and their state",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "needs paired unlocked Ark; README says data list needs paired unlocked Ark"
           }
         ]
       }
@@ -711,5 +711,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:39+08:00",
-  "updated_at": "2026-11-01T13:36:06.356562+08:00"
+  "updated_at": "2026-11-01T23:02:54.418876+08:00"
 }

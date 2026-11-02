@@ -66,6 +66,27 @@ def test_plan_takes_the_cited_steps_and_passing_checks_once():
     assert [(c.run.command_id, c.kind) for c in plan.checks] == [(2, "version"), (4, "example")]
 
 
+def test_a_bash_plan_replays_the_steps_without_their_looking_around():
+    log = [rec(1, "uv tool install graphtty 2>&1 | tail -5; ls ~/.local/bin; echo done", 0, "Installed graphtty"),
+           rec(2, "ls ~/.local/bin && graphtty --version", 0, "graphtty\ngraphtty 0.4.1"),
+           *LOG[2:4]]
+    finish = FinishArgs.model_validate({
+        "level": "function", "steps": [{"command_id": 1, "purpose": "install"}],
+        "smoke_tests": [{"command_id": 2, "setup_ids": [], "expected_exit_code": 0, "expected_signal": "0.4.1"},
+                        {"command_id": 4, "setup_ids": [3], "expected_exit_code": 0, "expected_signal": "──▶"}]})
+    v = log_verdict(finish, log)
+    tidy = plan_from(v, log, tidy_steps=True)
+    assert [s.command for s in tidy.steps] == ["uv tool install graphtty 2>&1"]
+    # Setups and checks run as the agent ran them; without tidy_steps (PowerShell boxes) so do the steps.
+    assert [c.run.command for c in tidy.checks] == ["ls ~/.local/bin && graphtty --version", "graphtty graph.json"]
+    assert [s.command for s in tidy.setups] == [LOG[2].command]
+    assert [s.command for s in plan_from(v, log).steps] == [log[0].command]
+    box = NetBox({"uv tool install": (0, "Installed graphtty", ""), "graphtty --version": (0, "graphtty 0.4.1", ""),
+                  "graphtty graph.json": (0, "a ──▶ b", "")})
+    result = Replayer(box, log=lambda line: None).run(tidy, TASK)
+    assert result.passed and [s.command for s in result.steps] == ["uv tool install graphtty 2>&1"]
+
+
 def test_steps_online_then_checks_offline():
     plan = plan_from(verdict([{"command_id": 2, "expected_signal": "0.4.1"},
                               {"command_id": 4, "setup_ids": [3], "expected_signal": "──▶"}]), LOG)
@@ -137,7 +158,7 @@ def test_rerun_timeouts_follow_the_recorded_time():
     plan = plan_from(verdict([{"command_id": 2, "expected_signal": "0.4.1"}]), LOG)
     box = box_for_log()
     Replayer(box, log=lambda s: None).run(plan, TASK)
-    assert [t for _, t in box.ran] == [60, 60]  # LOG records 0.1 s for each
+    assert [t for _, t in box.ran] == [600, 60]  # the install step gets the full time; the check 4 x 0.1 s + 30
 
 
 def test_steps_cited_as_setup_are_not_run_twice():

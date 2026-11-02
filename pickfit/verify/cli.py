@@ -6,6 +6,7 @@ import argparse
 import json
 
 LIFETIME_MARGIN_S = 120  # the box outlives the agent's time limit, so the last turn still has it
+MAC_GUI_AGENT_S = 45 * 60  # tart + display: room for a desktop app's long download (tart_box.GUI_COMMAND_S)
 TART_MAX_VMS = 2  # Apple's limit on macOS VMs running at once on one Mac
 # Display boxes: room for operate_gui (one per listed feature) after the install and the launch.
 GUI_LIMITS = {"max_turns": 32, "max_commands": 20, "max_seconds": 35 * 60, "scope_cap_usd": 0.80}
@@ -40,13 +41,16 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--mode", choices=["chain", "replay"], default=None,
                    help="carry history by previous_response_id (chain) or resend it (replay)")
     v.add_argument("--max-turns", type=int, default=None, help="turn limit (default 25)")
+    v.add_argument("--max-operations", type=int, default=None,
+                   help="--display: operate_gui calls per run (default 6); 0 checks install only")
     v.add_argument("--gpu", choices=["T4", "L4", "A10"], default=None,
                    help="Modal: give each box this NVIDIA GPU (for tools whose core job needs one)")
     v.add_argument("--runtime", choices=["gvisor", "vm"], default="gvisor",
                    help="Modal: gVisor (default) or a microVM; a VM also drops DNS while the network is off")
     v.add_argument("--display", action="store_true",
-                   help="Modal: a virtual display (Xvfb), launch_gui and operate_gui, so GUI apps can be launched, "
-                        "operated and checked (with more time and commands per app)")
+                   help="Modal: a virtual display (Xvfb); tart: a desktop seen over VNC (the GUI base). Adds "
+                        "launch_gui and operate_gui, so GUI apps can be launched, operated and checked (with more "
+                        "time and commands per app)")
     v.add_argument("--platform", default="linux/amd64", help="Docker platform (Modal runs x86_64)")
     v.add_argument("--keep-box", action="store_true", help="Docker: leave the agent's container running")
     v.add_argument("--write-back", action="store_true",
@@ -68,14 +72,17 @@ def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", 
     """(run_id, role) -> an unstarted box of the chosen runner."""
     from pickfit.verify.box import BoxLimits, DockerBox
 
-    if runner != "modal" and (runtime != "gvisor" or display):
-        raise ValueError("--runtime and --display need --runner modal")
+    if runner != "modal" and runtime != "gvisor":
+        raise ValueError("--runtime needs --runner modal")
+    if display and runner not in ("modal", "tart"):
+        raise ValueError("--display needs --runner modal or tart")
     if runner == "tart":
         if gpu:
             raise ValueError("--gpu needs --runner modal")
-        from pickfit.verify.tart_box import TartBox
+        from pickfit.verify.tart_box import GUI_COMMAND_S, TartBox
 
-        return lambda run_id, role: TartBox(limits=BoxLimits(lifetime_s=lifetime_s))
+        longer = {"max_command_s": GUI_COMMAND_S} if display else {}
+        return lambda run_id, role: TartBox(limits=BoxLimits(lifetime_s=lifetime_s, **longer), display=display)
     if runner == "vbox":
         if gpu:
             raise ValueError("--gpu needs --runner modal")
@@ -114,14 +121,17 @@ def run(args: argparse.Namespace) -> int:
         if args.runner != "tart":
             print("pickfit verify: --prepare-base needs --runner tart or vbox")
             return 2
-        from pickfit.verify.tart_box import prepare_base
+        from pickfit.verify.tart_box import prepare_base, prepare_gui_base
 
-        prepare_base()
+        prepare_gui_base() if args.display else prepare_base()
         return 0
     if args.rejudge_features:
         return _rejudge(args)
-    if (args.runtime != "gvisor" or args.display) and args.runner != "modal":
-        print("pickfit verify: --runtime and --display need --runner modal")
+    if args.runtime != "gvisor" and args.runner != "modal":
+        print("pickfit verify: --runtime needs --runner modal")
+        return 2
+    if args.display and args.runner not in ("modal", "tart"):
+        print("pickfit verify: --display needs --runner modal or tart")
         return 2
     if args.limits_test:
         from pickfit.verify.agent import _runs_dir
@@ -138,9 +148,13 @@ def run(args: argparse.Namespace) -> int:
         limits = replace(limits, **GUI_LIMITS)
     if args.max_turns:
         limits = replace(limits, max_turns=args.max_turns)
+    if args.max_operations is not None:
+        limits = replace(limits, max_operations=max(0, args.max_operations))
     if args.gpu and args.runner != "modal":
         print("pickfit verify: --gpu needs --runner modal")
         return 2
+    if args.runner == "tart" and args.display:
+        limits = replace(limits, max_seconds=max(limits.max_seconds, MAC_GUI_AGENT_S))
     make_box = box_factory(args.runner, int(limits.max_seconds) + LIFETIME_MARGIN_S, platform=args.platform,
                            gpu=args.gpu, runtime=args.runtime, display=args.display)
     if args.batch:

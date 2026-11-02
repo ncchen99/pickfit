@@ -4,8 +4,8 @@
  * response's CSP nonce; there are no inline style attributes.
  */
 import { esc } from './html.ts';
-import { icon } from './icons.ts';
-import { fitz, FITZ_BASE, ICON_32, popover } from './kit.ts';
+import { icon, OS_SPRITE } from './icons.ts';
+import { fitz, FITZ_BASE, ICON_32, marksLegend, popover } from './kit.ts';
 import { SCRIPT } from './script.ts';
 import { CSS } from './styles.ts';
 
@@ -68,6 +68,7 @@ const LEGEND = `<dialog class="sheet" id="legend" aria-labelledby="legend-title"
 <dl class="legend">
 <div><dt><span class="seam-sample" aria-hidden="true"></span>Stitching</dt><dd>pickfit installed this tool itself. Everything under the stitches comes from that run. A tool pickfit has not run never gets stitches.</dd></div>
 <div><dt><span class="badge badge-pass">${icon('check')}Verified on your OS</span></dt><dd>The install steps ran on the system you chose. “Ran on Linux only” means it has not been run on yours yet.</dd></div>
+${marksLegend()}
 <div><dt><span class="badge badge-gem">${icon('gem')}Hidden gem</span></dt><dd>High quality, little known: quality 80 or more, popularity 45 or less.</dd></div>
 <div><dt><span class="tape-sample" aria-hidden="true"></span>Quality and popularity</dt><dd>Two separate scores out of 100. Quality comes mostly from the sandbox run and the install docs; popularity from stars, downloads and Hacker News. Fitz ranks by fit, not by either.</dd></div>
 <div><dt><span class="cov-sample" aria-hidden="true"></span>Features checked</dt><dd>Of the main features the README advertises, how many the run actually exercised (green), and how many failed (red). Grey ones were not checked, and the ticket says why.</dd></div>
@@ -102,6 +103,7 @@ export function renderShell(input: ShellInput): string {
 </head>
 <body class="${esc(input.bodyClass ?? '')}"${input.tray === false ? ' data-tray="off"' : ''}>
 <a class="skip" href="#main">Skip to content</a>
+${OS_SPRITE}
 ${nav(input.active)}
 <main id="main">${input.main}</main>
 ${FOOTER}
