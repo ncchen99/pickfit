@@ -1,0 +1,170 @@
+[
+ {
+  "what": "copy fixtures",
+  "cmd": "sudo mkdir -p /Users/Shared/eval-fixtures && sudo tar -C /Users/Shared/eval-fixtures -xzf /tmp/fixtures.tgz && sudo chmod -R a+rX /Users/Shared/eval-fixtures",
+  "exit": 0,
+  "at": "2026-11-02T17:59:21+08:00",
+  "tail": ""
+ },
+ {
+  "what": "baseline part 1 (new user, image Homebrew aside)",
+  "cmd": "bash /tmp/mac_baseline.sh",
+  "exit": 0,
+  "at": "2026-11-02T17:59:26+08:00",
+  "tail": "baseline part 1 done: user evaluser (staff,everyone,localaccounts,_appserverusr,admin,_appserveradm,com.apple.sharepoint.group.1,_appstore,_lpadmin,_lpoperator,_developer,_analyticsusers,com.apple.access_ftp,com.apple.access_screensharing,com.apple.access_ssh,com.apple.access_remote_ae,com.apple.sharepoint.group.2), image Homebrew moved to /var/eval-image-aside\n"
+ },
+ {
+  "what": "shutdown from inside the guest (the agent goes away with it)",
+  "cmd": "sync; sudo shutdown -h now",
+  "exit": 1,
+  "at": "2026-11-02T17:59:27+08:00",
+  "tail": "sudo: shutdown: command not found\n"
+ },
+ {
+  "what": "baseline: logged-in user after reboot",
+  "cmd": "whoami; stat -f %Su /dev/console; ls /opt",
+  "exit": 0,
+  "at": "2026-11-02T18:05:00+08:00",
+  "tail": "evaluser\nevaluser\n"
+ },
+ {
+  "what": "no first-login Setup Assistant in the session",
+  "cmd": "sleep 20; pgrep -x \"Setup Assistant\" || echo none",
+  "exit": 0,
+  "at": "2026-11-02T18:05:20+08:00",
+  "tail": "none\n"
+ },
+ {
+  "what": "baseline part 2: empty Homebrew, official installer (NONINTERACTIVE: no RETURN prompt)",
+  "cmd": "curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o /tmp/brew-install.sh && shasum -a 256 /tmp/brew-install.sh && NONINTERACTIVE=1 /bin/bash /tmp/brew-install.sh > /tmp/brew-install.log 2>&1; rc=$?; tail -15 /tmp/brew-install.log; exit $rc",
+  "exit": 0,
+  "at": "2026-11-02T18:06:52+08:00",
+  "tail": "5f333bbe53bc490e51e7ccb1df8779b3dd6ee73a1a7379efda216edb08ccb148  /tmp/brew-install.sh\n  https://docs.brew.sh/Analytics\nNo analytics data has been sent yet (nor will any be during this install run).\n\n==> Homebrew is run entirely by unpaid volunteers. Please consider donating:\n  https://github.com/Homebrew/brew#donations\n\n==> Next steps:\n- Run these commands in your terminal to add Homebrew to your PATH:\n    echo >> /Users/evaluser/.zprofile\n    echo 'eval \"$(/opt/homebrew/bin/brew shellenv zsh)\"' >> /Users/evaluser/.zprofile\n    eval \"$(/opt/homebrew/bin/brew shellenv zsh)\"\n- Run brew help to get started\n- Further documentation:\n    https://docs.brew.sh\n\n"
+ },
+ {
+  "what": "baseline: the installer's next-steps line in ~/.zprofile (copied from its output)",
+  "cmd": "L=$(grep -o 'eval \"$(/opt/homebrew/bin/brew shellenv[^)]*)\"' /tmp/brew-install.log | head -1); [ -n \"$L\" ] && echo >> ~/.zprofile && echo \"$L\" >> ~/.zprofile && cat ~/.zprofile",
+  "exit": 0,
+  "at": "2026-11-02T18:06:53+08:00",
+  "tail": "\neval \"$(/opt/homebrew/bin/brew shellenv zsh)\"\n"
+ },
+ {
+  "what": "baseline: Homebrew and CLT versions",
+  "cmd": "/bin/zsh -il -c 'brew --version; brew list --formula | wc -l; brew list --cask | wc -l; xcode-select -p; pkgutil --pkg-info=com.apple.pkg.CLTools_Executables | grep version'",
+  "exit": 0,
+  "at": "2026-11-02T18:06:53+08:00",
+  "tail": "Homebrew 7.0.12\n       0\n       0\n/Library/Developer/CommandLineTools\nversion: 27.0.0.0.1788430756\n"
+ },
+ {
+  "what": "run folder",
+  "cmd": "sudo mkdir -p /Users/Shared/eval-runs/q12-experimental && sudo chown evaluser /Users/Shared/eval-runs/q12-experimental && cp /tmp/lib.zsh /Users/Shared/eval-runs/q12-experimental/lib.zsh",
+  "exit": 0,
+  "at": "2026-11-02T18:06:53+08:00",
+  "tail": ""
+ },
+ {
+  "what": "before snapshot",
+  "cmd": "sudo sh /Users/Shared/eval-fixtures/q11/mac/snapshot_state.sh /Users/Shared/eval-runs/q12-experimental before evaluser > /Users/Shared/eval-runs/q12-experimental/snapshot-before.log 2>&1; echo exit $?",
+  "exit": 0,
+  "at": "2026-11-02T18:06:54+08:00",
+  "tail": "exit 0\n"
+ },
+ {
+  "what": "preflight",
+  "cmd": "/bin/zsh -il -c 'sh /Users/Shared/eval-fixtures/q11/mac/preflight.sh /Users/Shared/eval-runs/q12-experimental/preflight.txt; echo preflight exit $?; tail -5 /Users/Shared/eval-runs/q12-experimental/preflight.txt'",
+  "exit": 0,
+  "at": "2026-11-02T18:06:55+08:00",
+  "tail": "== machine\n  date: 2026-11-02T10:06:54Z\n  macOS: 26.6.2 (25G83); arch: arm64\n  chip: Apple M5 (Virtual); memory: 8 GiB\n  developer tools: /Library/Developer/CommandLineTools\n== user\n  user: evaluser uid=502 home=/Users/evaluser\n  admin: yes\n  home created: 2026-11-02T09:59\n== home directory (must hold only what macOS creates for a new account)\n  ok\n== environment (names only)\n  no token, key, cache-location or offline variables set\n  PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/opt/homebrew/bin\n== large model-like files readable by this user (>= 100 MB)\n  none\n== package managers and runtimes on PATH\n  brew: /opt/homebrew/bin/brew\n  python3: /usr/bin/python3\n  pip3: /usr/bin/pip3\n  brew prefix: /opt/homebrew owner: evaluser\n  brew formulae: 0, casks: 0\n  /opt/homebrew exists, owner evaluser\n== listening TCP ports\n  none visible to this user\n== virtual machine bridges (stop all VMs before a run)\n  none\n\npreflight: PASS\npreflight exit 0\n  none visible to this user\n== virtual machine bridges (stop all VMs before a run)\n  none\n\npreflight: PASS\n"
+ },
+ {
+  "what": "grader venv outside the user's PATH (pinned standalone CPython 3.12.16, openai 3.42.1)",
+  "cmd": "sudo mkdir -p /var/eval-grader && cd /var/eval-grader && sudo curl -fsSL -o py.tgz 'https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.12.16%2B20261026-aarch64-apple-darwin-install_only.tar.gz' && echo 'fbf4afef53c2a6b72bb741bc06d5671a9dfaf87bd84e5aa73ac9b3d0d589f14e  py.tgz' | shasum -a 256 -c - && sudo tar xzf py.tgz && sudo rm -rf venv && sudo /var/eval-grader/python/bin/python3 -m venv /var/eval-grader/venv && sudo /var/eval-grader/venv/bin/python -m pip install -q openai==3.42.1 && /var/eval-grader/venv/bin/python -m pip freeze > /Users/Shared/eval-runs/q12-experimental/grader-requirements.lock; /var/eval-grader/venv/bin/python -V; shasum -a 256 /Users/Shared/eval-runs/q12-experimental/grader-requirements.lock; grep -i openai /Users/Shared/eval-runs/q12-experimental/grader-requirements.lock",
+  "exit": 0,
+  "at": "2026-11-02T18:07:10+08:00",
+  "tail": "py.tgz: OK\nWARNING: The directory '/Users/evaluser/Library/Caches/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\nPython 3.12.16\n9c9a02c8879d4f38e21945383121396ac242891596dddefab6e43f5e4ab340a8  /Users/Shared/eval-runs/q12-experimental/grader-requirements.lock\nopenai==3.42.1\n"
+ },
+ {
+  "what": "q12 selftest with the grader venv",
+  "cmd": "cd /Users/Shared/eval-fixtures/q12 && /var/eval-grader/venv/bin/python selftest.py 2>&1 | tail -3",
+  "exit": 0,
+  "at": "2026-11-02T18:07:18+08:00",
+  "tail": "model files: local-path copy intact, nothing new -> PASS         ok\n\nALL OK\n"
+ },
+ {
+  "what": "fixture model: latest revision still the pinned one?",
+  "cmd": "curl -s https://huggingface.co/api/models/mlx-community/Qwen2.5-1.5B-Instruct-4bit/revision/main | python3 -c 'import json,sys; print(json.load(sys.stdin)[\"sha\"])'; echo pinned 8b403126fc14f14cfc99bb4cfa72ecbc129ea677",
+  "exit": 0,
+  "at": "2026-11-02T18:07:19+08:00",
+  "tail": "8b403126fc14f14cfc99bb4cfa72ecbc129ea677\npinned 8b403126fc14f14cfc99bb4cfa72ecbc129ea677\n"
+ },
+ {
+  "what": "marker before the first install line",
+  "cmd": "touch /Users/Shared/eval-runs/q12-experimental/marker",
+  "exit": 1,
+  "at": "2026-11-02T18:07:19+08:00",
+  "tail": "touch: /Users/Shared/eval-runs/q12-experimental/marker: Permission denied\n"
+ },
+ {
+  "what": "L2-1 install lines (one zsh; # starts a comment, as in bash)",
+  "cmd": "/bin/zsh -il -c 'setopt interactivecomments; cd ~ && OUT=/Users/Shared/eval-runs/q12-experimental; . /Users/Shared/eval-runs/q12-experimental/lib.zsh; run_lines install /Users/Shared/eval-runs/q12-experimental/install.lines; all_ok install && echo INSTALL-OK || echo INSTALL-FAIL; cat /Users/Shared/eval-runs/q12-experimental/install-*.txt > /Users/Shared/eval-runs/q12-experimental/steps-transcript.txt'",
+  "exit": 0,
+  "at": "2026-11-02T18:08:08+08:00",
+  "tail": "== install 1: # Option A\ninstall 1 exit 0\n== install 2: brew install uv\ninstall 2 exit 0\n==> Caveats\nzsh completions have been installed to:\n  /opt/homebrew/share/zsh/site-functions\n== install 3: uv tool install mlx-lm\ninstall 3 exit 0\n + urllib3==2.6.3\nInstalled 16 executables: mlx_lm.awq, mlx_lm.benchmark, mlx_lm.cache_prompt, mlx_lm.chat, mlx_lm.convert, mlx_lm.dwq, mlx_lm.dynamic_quant, mlx_lm.evaluate, mlx_lm.fuse, mlx_lm.generate, mlx_lm.gptq, mlx_lm.lora, mlx_lm.manage, mlx_lm.perplexity, mlx_lm.server, mlx_lm.upload\nwarning: `/Users/evaluser/.local/bin` is not on your PATH. To use installed tools, run `export PATH=\"/Users/evaluser/.local/bin:$PATH\"` or `uv tool update-shell`.\n== install 4: mlx_lm.generate --model mlx-community/Qwen2.5-1.5B-Instruct-4bit --prompt \"Write a Python hello world\"\ninstall 4 exit 127\n(eval):1: command not found: mlx_lm.generate\nINSTALL-FAIL\n"
+ },
+ {
+  "what": "L2-2, L2-3, L2-4 server online and checks",
+  "cmd": "/bin/zsh -il -c 'cd ~ && ( mlx_lm.server --model mlx-community/Qwen2.5-1.5B-Instruct-4bit --port 8080 ) > /Users/Shared/eval-runs/q12-experimental/server-online-transcript.txt 2>&1 & SRV=$!; for i in $(seq 1 300); do lsof -nP -iTCP:8080 -sTCP:LISTEN > /dev/null 2>&1 && break; kill -0 $SRV 2> /dev/null || break; sleep 2; done; lsof -nP -iTCP -sTCP:LISTEN -a -u $USER > /Users/Shared/eval-runs/q12-experimental/listen-online.txt 2>&1; cat /Users/Shared/eval-runs/q12-experimental/listen-online.txt; python3 /Users/Shared/eval-fixtures/q12/check_model_files.py --marker /Users/Shared/eval-runs/q12-experimental/marker > /Users/Shared/eval-runs/q12-experimental/model-files.txt 2>&1; echo model-files exit $?; /var/eval-grader/venv/bin/python /Users/Shared/eval-fixtures/q12/client_check.py --base-url http://127.0.0.1:8080/v1 --model mlx-community/Qwen2.5-1.5B-Instruct-4bit --api-key sk-local --out /Users/Shared/eval-runs/q12-experimental/client-online.json > /Users/Shared/eval-runs/q12-experimental/client-online.txt 2>&1; echo client exit $?; kill $SRV; sleep 3; pkill -f mlx_lm.server; sleep 2; lsof -nP -iTCP:8080 -sTCP:LISTEN || echo port-closed'",
+  "exit": 0,
+  "at": "2026-11-02T18:08:15+08:00",
+  "tail": "model-files exit 1\nclient exit 1\nzsh:kill:1: kill 1888 failed: no such process\nport-closed\n"
+ },
+ {
+  "what": "L2-5 offline off",
+  "cmd": "sudo sh /Users/Shared/eval-fixtures/q11/mac/offline.sh off /Users/Shared/eval-runs/q12-experimental/net-state.txt 2>&1 | tail -2",
+  "exit": 0,
+  "at": "2026-11-02T18:08:21+08:00",
+  "tail": "/Users/Shared/eval-fixtures/q11/mac/offline.sh: line 40: ifconfig: command not found\noffline check: PASS\n"
+ },
+ {
+  "what": "L2-5 server restarted offline and checks",
+  "cmd": "/bin/zsh -il -c 'cd ~ && ( mlx_lm.server --model mlx-community/Qwen2.5-1.5B-Instruct-4bit --port 8080 ) > /Users/Shared/eval-runs/q12-experimental/server-offline-transcript.txt 2>&1 & SRV=$!; for i in $(seq 1 300); do lsof -nP -iTCP:8080 -sTCP:LISTEN > /dev/null 2>&1 && break; kill -0 $SRV 2> /dev/null || break; sleep 2; done; lsof -nP -iTCP -sTCP:LISTEN -a -u $USER > /Users/Shared/eval-runs/q12-experimental/listen-offline.txt 2>&1; cat /Users/Shared/eval-runs/q12-experimental/listen-offline.txt; /var/eval-grader/venv/bin/python /Users/Shared/eval-fixtures/q12/client_check.py --base-url http://127.0.0.1:8080/v1 --model mlx-community/Qwen2.5-1.5B-Instruct-4bit --api-key sk-local --out /Users/Shared/eval-runs/q12-experimental/client-offline.json > /Users/Shared/eval-runs/q12-experimental/client-offline.txt 2>&1; echo client exit $?; kill $SRV; sleep 3; pkill -f mlx_lm.server; sleep 2; lsof -nP -iTCP:8080 -sTCP:LISTEN || echo port-closed'",
+  "exit": 0,
+  "at": "2026-11-02T18:08:27+08:00",
+  "tail": "client exit 1\nzsh:kill:1: kill 1947 failed: no such process\nport-closed\n"
+ },
+ {
+  "what": "L2-5 offline check, then network on",
+  "cmd": "sh /Users/Shared/eval-fixtures/q11/mac/offline.sh check 2>&1 | tail -1; sudo sh /Users/Shared/eval-fixtures/q11/mac/offline.sh on /Users/Shared/eval-runs/q12-experimental/net-state.txt 2>&1 | tail -1",
+  "exit": 0,
+  "at": "2026-11-02T18:08:28+08:00",
+  "tail": "offline check: PASS\nnetwork services restored; Wi-Fi may take a few seconds to rejoin\n"
+ },
+ {
+  "what": "L2-6 transcript scan",
+  "cmd": "python3 /Users/Shared/eval-fixtures/q11/mac/scan_transcript.py /Users/Shared/eval-runs/q12-experimental/*transcript.txt > /Users/Shared/eval-runs/q12-experimental/scan-transcript.txt 2>&1; echo exit $?",
+  "exit": 0,
+  "at": "2026-11-02T18:08:28+08:00",
+  "tail": "exit 0\n"
+ },
+ {
+  "what": "L2-1 after snapshot and diff (GUI apps, casks)",
+  "cmd": "sudo sh /Users/Shared/eval-fixtures/q11/mac/snapshot_state.sh /Users/Shared/eval-runs/q12-experimental after evaluser > /Users/Shared/eval-runs/q12-experimental/snapshot-after.log 2>&1; python3 /Users/Shared/eval-fixtures/q11/mac/diff_state.py /Users/Shared/eval-runs/q12-experimental/before /Users/Shared/eval-runs/q12-experimental/after > /Users/Shared/eval-runs/q12-experimental/diff-before-after.md 2>&1; echo exit $?",
+  "exit": 0,
+  "at": "2026-11-02T18:08:32+08:00",
+  "tail": "exit 1\n"
+ },
+ {
+  "what": "pack run folder",
+  "cmd": "cd /Users/Shared/eval-runs/q12-experimental && tar czf /tmp/keep.tgz --exclude '*.gguf' --exclude 'models' . && ls -l /tmp/keep.tgz",
+  "exit": 0,
+  "at": "2026-11-02T18:08:32+08:00",
+  "tail": "-rw-r--r--  1 evaluser  wheel  16194 Nov  2 10:08 /tmp/keep.tgz\n"
+ },
+ {
+  "what": "guest version",
+  "cmd": "sw_vers -productVersion; sw_vers -buildVersion",
+  "exit": 0,
+  "at": "2026-11-02T18:08:32+08:00",
+  "tail": "26.6.2\n25G83\n"
+ }
+]
