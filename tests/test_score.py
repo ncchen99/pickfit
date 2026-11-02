@@ -873,3 +873,13 @@ def test_a_visual_check_score_must_follow_its_defects() -> None:
         tool = json.loads(CHAT_FIXTURE.read_text(encoding="utf-8"))
         tool["visual_check"] = visual(tool["verification"]["runs"][0]["id"], 2)
         SoftwareRecord.model_validate(tool)
+
+
+def test_rebuilding_a_profile_keeps_the_paid_visual_check_of_a_desktop_or_web_app() -> None:
+    from pickfit.profiles import _keep_verified_work
+
+    check = visual("run-1", 2)
+    for kind, kept in (("desktop_app", True), ("web_app", True), ("cli_tool", False)):
+        data = {"kind": kind, "first_seen_at": "x", "install": {}, "sources": [], "evidence": []}
+        _keep_verified_work(data, {"visual_check": check, "usability": {"version": "ease.v1"}})
+        assert ("visual_check" in data) is kept and ("usability" in data) is kept

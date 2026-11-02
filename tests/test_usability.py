@@ -487,3 +487,45 @@ def test_pickfit_visual_checks_once_writes_visual_check_and_skips_what_it_alread
     assert written.visual_check is not None and written.visual_check.score == 1
     assert written.visual_check.defects[0].kind == "raw_markup" and written.visual_check.effort == "medium"
     assert usability.main_visual(args) == 0 and calls == ["comfort"]  # same screens and prompt: no second call
+
+
+def test_a_defect_with_no_text_is_dropped_and_one_bad_app_does_not_stop_the_batch(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, bundle: Bundle) -> None:
+    import argparse
+
+    import pickfit.usability as usability
+    from pickfit.usability import check_comfort
+
+    dim, found, problems = check_comfort(comfort_answer(defect("broken_image", "major", 1, "  ")),
+                                         bundle.first_look_shots(), TextFinder(fake_ocr))
+    assert dim["score"] == 2 and found == [] and "no text" in problems[0]
+    data = tmp_path / "data"
+    data.mkdir()
+    for slug in ("app-a", "app-b"):
+        record = gui_record(tmp_path / "evidence") | {"slug": slug}
+        (data / f"{slug}.json").write_text(json.dumps(record), encoding="utf-8")
+    seen: list[str] = []
+
+    def judge_comfort(bundle: Bundle, ask: Any, finder: Any, log: Any) -> dict[str, Any]:
+        seen.append(bundle.slug)
+        if bundle.slug == "app-a":
+            raise RuntimeError("OCR failed")
+        return {"dimension": {"score": 2, "status": "scored"}, "defects": [], "problems": [], "cost_usd": 0.03,
+                "model": "muse-wonder-1.0", "raw": {"answer": {}}, "error": None}
+
+    monkeypatch.setattr(usability, "meta_ask", lambda *a, **k: None)
+    monkeypatch.setattr(usability, "judge_comfort", judge_comfort)
+    monkeypatch.setattr(usability, "RESULTS_DIR", tmp_path / "results")
+    monkeypatch.setattr(usability, "TextFinder", lambda: TextFinder(fake_ocr))
+    real_bundle_for = usability.bundle_for
+    monkeypatch.setattr(usability, "bundle_for", lambda raw: real_bundle_for(raw, tmp_path / "evidence"))
+    args = argparse.Namespace(slug=["app-a", "app-b"], pilot=False, all=False, data_dir=str(data), cap=1.0,
+                              force=False, write=True, dry_run=False, verbose=True)
+    assert usability.main_visual(args) == 1 and seen == ["app-a", "app-b"]
+    assert "visual_check" not in json.loads((data / "app-a.json").read_text())
+    written = json.loads((data / "app-b.json").read_text())
+    assert written["visual_check"]["score"] == 2 and list(written).index("visual_check") == list(written).index("scores") - 1
+    # A dry run never writes, even with --write and a saved result to reuse.
+    (data / "app-b.json").write_text(json.dumps(gui_record(tmp_path / "evidence") | {"slug": "app-b"}))
+    assert usability.main_visual(argparse.Namespace(**vars(args) | {"slug": ["app-b"], "dry_run": True})) == 0
+    assert "visual_check" not in json.loads((data / "app-b.json").read_text())

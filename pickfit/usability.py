@@ -980,10 +980,14 @@ def check_comfort(answer: ComfortAnswer, shots: list[Shot], finder: TextFinder) 
         if not 1 <= d.evidence.image <= len(shots):
             problems.append(f"{d.kind} dropped: image {d.evidence.image} does not exist")
             continue
+        if not d.evidence.quote.strip():
+            problems.append(f"{d.kind} dropped: no text on the screen to point at")
+            continue
         shot = shots[d.evidence.image - 1]
         how, _ = finder.find(d.evidence.quote, shot)
+        problem = " ".join(d.problem.split())[:300] or d.kind.replace("_", " ")
         defects.append({"item": "comfortable", "operation": None, "cause": d.cause, "kind": d.kind,
-                        "severity": d.severity, "problem": " ".join(d.problem.split())[:300],
+                        "severity": d.severity, "problem": problem,
                         "screenshot": shot.path.name, "box": _box(d.evidence.box), "quote": d.evidence.quote[:QUOTE_MAX],
                         "found_by": how or "unverified"})
     return {"score": comfort_score(defects), "status": "scored"}, defects, problems
@@ -1007,9 +1011,11 @@ def judge_comfort(bundle: Bundle, ask: Ask, finder: TextFinder, log: Callable[[s
 
 
 def comfort_inputs_sha(bundle: Bundle) -> str:
-    """sha256 over what the comfort inspector reads: its prompt, the screens' text and every image's sha256."""
+    """sha256 over what the comfort inspector reads: its prompt, the run, the screens' text and every image's sha256
+    (the run too, so a re-verified record is checked again even when its first screens look the same)."""
     parts = {"version": COMFORT_VERSION, "instructions": hashlib.sha256(COMFORT_INSTRUCTIONS.encode()).hexdigest(),
-             "text": first_look_text(bundle), "shots": [s.sha256 for s in bundle.first_look_shots()],
+             "run_id": bundle.run_id, "text": first_look_text(bundle),
+             "shots": [s.sha256 for s in bundle.first_look_shots()],
              "model": COMFORT_MODEL, "effort": COMFORT_EFFORT}
     return hashlib.sha256(json.dumps(parts, sort_keys=True).encode()).hexdigest()
 
@@ -1040,6 +1046,26 @@ def record_usability(result: dict[str, Any]) -> dict[str, Any]:
 # --- command line ------------------------------------------------------------------------------------------
 
 
+def write_visual_check(path: Path, check: dict[str, Any]) -> None:
+    """Add visual_check to the record file as it is now (read again just before writing), just before scores where
+    the schema puts it and leaving every other key where it was, bump updated_at, validate, and replace the file
+    atomically."""
+    from pickfit.schema import SoftwareRecord
+
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    raw.pop("visual_check", None)
+    anchor = next((k for k in ("scores", "outcomes", "sources", "evidence", "first_seen_at", "updated_at") if k in raw),
+                  None)
+    keys = list(raw)
+    at = keys.index(anchor) if anchor else len(keys)
+    raw = {k: raw[k] for k in keys[:at]} | {"visual_check": check} | {k: raw[k] for k in keys[at:]}
+    raw["updated_at"] = taipei_now().isoformat(timespec="seconds")
+    SoftwareRecord.model_validate(raw)
+    tmp = path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(raw, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(path)
+
+
 def main_visual(args: Any) -> int:
     """`pickfit visual` (wired in pickfit/cli.py): measurable visual defects for desktop and web apps (comfort.v1),
     one Muse Wonder call each; --write adds them to the record as visual_check, which `pickfit score --refresh` turns
@@ -1047,7 +1073,7 @@ def main_visual(args: Any) -> int:
     same prompt is not checked again."""
     from pickfit.env import REPO_ROOT
     from pickfit.profiles import DEFAULT_OUT
-    from pickfit.schema import SoftwareRecord, VisualCheck
+    from pickfit.schema import VisualCheck
 
     data_dir = Path(args.data_dir) if args.data_dir else DEFAULT_OUT
     if args.all:
@@ -1090,18 +1116,25 @@ def main_visual(args: Any) -> int:
             except BudgetExceeded as err:
                 summary["errors"][slug] = str(err)
                 break
+            except (RuntimeError, OSError, ValueError) as err:  # OCR or file trouble: this app only
+                summary["errors"][slug] = f"{type(err).__name__}: {str(err)[:200]}"
+                continue
             summary["cost_usd"] = round(summary["cost_usd"] + inspected["cost_usd"], 6)
+            (saved_dir / f"{slug}.answer.json").write_text(  # the paid answer, kept even if it does not validate
+                json.dumps(inspected["raw"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             if inspected["error"]:
                 summary["errors"][slug] = inspected["error"]
                 continue
-            check = VisualCheck.model_validate(visual_check(bundle, inspected)).model_dump(mode="json")
+            try:
+                check = VisualCheck.model_validate(visual_check(bundle, inspected)).model_dump(mode="json")
+            except ValueError as err:
+                summary["errors"][slug] = f"invalid check: {str(err)[:200]}"
+                continue
             saved.write_text(json.dumps(check, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             summary["checked"].append(slug)
         summary["scores"][slug] = check["score"]
-        if args.write:
-            raw["visual_check"] = check
-            SoftwareRecord.model_validate(raw)
-            path.write_text(json.dumps(raw, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        if args.write and not args.dry_run:
+            write_visual_check(path, check)
             summary["written"] += 1
     if args.dry_run:
         summary["estimated_usd"] = round(len(summary["checked"]) * VISUAL_COST_PER_APP, 2)

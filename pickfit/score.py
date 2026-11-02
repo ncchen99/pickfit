@@ -81,10 +81,10 @@ controls, bad wraps, low contrast, tiny text, raw markup, broken images, misalig
 first screens; never taste) enter quality as visual_quality = visual_check.score / 2 (no app defect 1.0, minor ones only
 0.5, any major 0), under two formulas used while VISUAL_SCORED is on (念誠 11/3, docs/usability-pilot.md section 10):
 
-- gui.v2, a desktop_app whose current passed GUI run has a visual check: sandbox_verification 35, visual_quality 15,
+- gui.v2, a desktop_app with a visual check of a passed GUI run still on the record: sandbox_verification 35, visual_quality 15,
   install_docs 20, maintenance 8, engineering_hygiene 4, responsiveness 8, usage_outcomes 10+ (as b3.v5, its extra
   weight comes out of the four in SHRINKABLE).
-- web.v3, a web_app whose current passed browser run has one: sandbox_verification 45, visual_quality 15,
+- web.v3, a web_app with one of a passed browser run still on the record: sandbox_verification 45, visual_quality 15,
   browser_facts 30, usage_outcomes 10+ (from browser_facts).
 
 A record with no visual check (or one that read a run the record no longer has) stays on b3.v5 or web.v1; the
@@ -880,8 +880,8 @@ def _web_quality(verification: Verification, outcomes: Outcomes, kind: str, arch
 
 
 def build_web_scores(record: SoftwareRecord, *, stars: int | None, hn: int | None, now: datetime) -> dict[str, Any]:
-    """The scores object for a web app (web.v1, or web.v2 with usability). Stars only with a repository; HN points
-    only without one."""
+    """The scores object for a web app (web.v1; web.v3 with a visual check; web.v2 with usability, off). Stars only with
+    a repository; HN points only without one."""
     archived = record.repo is not None and record.repo.archived
     version, quality = _web_quality(record.verification, record.outcomes, record.kind, archived, record.usability,
                                     record.visual_check)
