@@ -330,7 +330,9 @@ def run_once(config: dict[str, Any], question: dict[str, Any], group: str, rnd: 
              api_key: str, base: Path | None = None) -> dict[str, Any]:
     folder = attempt_dir(rnd, question["id"], group, attempt, base)
     folder.mkdir(parents=True, exist_ok=False)
-    scratch = Path(tempfile.mkdtemp(prefix=f"pickfit-eval-{question['id']}-{group}-"))
+    # A neutral name: Claude Code puts the working directory and the memory path (under HOME) in the
+    # agent's context, so a name with "pickfit", the question or the group would differ between groups.
+    scratch = Path(tempfile.mkdtemp())
     try:
         home, work = scratch / "home", scratch / "work"
         home.mkdir()

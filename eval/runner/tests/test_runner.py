@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import run  # noqa: E402
 
 FAKE = """#!{python}
-import json, sys, time, pathlib
+import json, os, sys, time, pathlib
 args = sys.argv[1:]
 here = pathlib.Path({here!r})
 mode = (here / "mode.txt").read_text().strip() if (here / "mode.txt").exists() else "ok"
@@ -29,7 +29,7 @@ mcp = json.loads(pathlib.Path(val("--mcp-config")).read_text())["mcpServers"]
 model = val("--model")
 prompt = args[-1]
 with (here / "calls.log").open("a") as log:
-    log.write(json.dumps({{"prompt": prompt[-12:], "mcp": sorted(mcp)}}) + "\\n")
+    log.write(json.dumps({{"prompt": prompt[-12:], "mcp": sorted(mcp), "cwd": os.getcwd(), "home": os.environ["HOME"]}}) + "\\n")
 if mode == "crash":
     sys.exit(3)
 if mode == "auth":
@@ -520,3 +520,14 @@ def test_each_attempt_keeps_the_mcp_server_it_was_given(tmp_path: Path) -> None:
         saved = json.loads((folder / "mcp.json").read_text())["mcpServers"]
         assert saved == meta["mcp_config"] == config["groups"][group]["mcp"]
         assert (url is None and saved == {}) or url in saved["pickfit"]["url"]
+
+
+def test_the_agent_sees_no_group_question_or_pickfit_in_its_paths(tmp_path: Path) -> None:
+    config = config_for(make_fake(tmp_path))
+    run.cmd_run1(None, config, QUESTIONS[:2], "k", tmp_path / "runs", quiet)
+    calls = [json.loads(line) for line in (tmp_path / "calls.log").read_text().splitlines()]
+    assert len(calls) == 6
+    for call in calls:
+        for path in (call["cwd"], call["home"]):
+            name = path.lower()
+            assert not any(word in name for word in ("pickfit", "control", "experimental", "rules", "q01", "q02")), path
