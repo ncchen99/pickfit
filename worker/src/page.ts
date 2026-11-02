@@ -644,14 +644,14 @@ const NOTE_ZH: [RegExp, (m: RegExpMatchArray) => string][] = (() => {
     return m ? `每款都只涵蓋一部分（排第一的沒有提到 ${words(m[1])}）` : null;
   };
   const each = '每款的符合度標示了它涵蓋哪些部分。';
-  const known = 'pickfit 只收錄較冷門的工具，知名工具仍可能適合你。';
+  const known = 'pickfit 收錄的多半是較冷門的工具，知名工具仍可能適合你。';
   return [
-    [/^No verified (tool|alternative) in pickfit meets these conditions\. Coverage today: .+? pickfit lists only lesser-known tools, so a well-known one may still fit\./,
-      (m) => `pickfit 沒有符合這些條件的已驗證${what(m[1])}。目前涵蓋開發者 CLI 工具、本機 AI／LLM 工具、MCP 伺服器和部分網頁應用。${known}`],
+    [/^No verified (tool|alternative) in pickfit meets these conditions\. Coverage today: .+? pickfit lists mostly lesser-known tools, so a well-known one may still fit\./,
+      (m) => `pickfit 沒有符合這些條件的已驗證${what(m[1])}。目前涵蓋開發者 CLI 工具、本機 AI／LLM 工具、MCP 伺服器、桌面 GUI 應用和部分網頁應用。${known}`],
     [/^None of the (\d+) verified tools that meet the conditions fits this request\./, (m) => `符合條件的 ${m[1]} 款已驗證工具中，沒有一款適合這個需求。`],
     [/^None of the listed (tool|alternative)s clearly does this job: judging by their profiles, (.+?)\. They are listed as the top-ranked \1s; each pick's match says what it covers\./,
       (m) => `列出的${what(m[1])}都不太能完成這件事：從簡介看，${miss(m[2]) ?? '\u0000'}。它們只是排名最前的${what(m[1])}；${each}`],
-    [/^pickfit has no verified (tool|alternative) that clearly does this job\. Judging by their profiles, the listed \1s are the closest it has, but (.+?); each pick's match says what it covers\. pickfit lists only lesser-known tools, so a well-known one may still fit\./,
+    [/^pickfit has no verified (tool|alternative) that clearly does this job\. Judging by their profiles, the listed \1s are the closest it has, but (.+?); each pick's match says what it covers\. pickfit lists mostly lesser-known tools, so a well-known one may still fit\./,
       (m) => `pickfit 沒有明顯能完成這件事的已驗證${what(m[1])}。從簡介看，列出的是最接近的，但${miss(m[2]) ?? '\u0000'}；${each}${known}`],
     [/^No listed (tool|alternative) covers the whole request(?:: the closest, (.+?), does not mention (.+?))?\. Each pick's match says what it covers\./,
       (m) => `沒有一款${what(m[1])}涵蓋你的全部需求${m[2] ? `：最接近的 ${m[2]} 沒有提到 ${words(m[3])}` : ''}。${each}`],
@@ -996,8 +996,8 @@ export function renderPage(input: PageInput): string {
     `<section class="hero mat after-top" aria-labelledby="title"><div class="wrap hero-grid"><div>` +
     `<h1 id="title">${L('Software that <em>fits</em>, tried on first.', '<em>合身</em>的軟體，先試穿過。')}</h1>` +
     `<p class="lede">${L(
-      'Describe the job. Get little-known tools pickfit has already installed and tested, with the commands that worked.',
-      '說出你要做的事，pickfit 會推薦它親自裝過、測過的冷門好工具，附上真的能用的指令。',
+      'Describe the job. Get tools pickfit has already installed and tested, mostly little-known ones, with the commands that worked.',
+      '說出你要做的事，pickfit 會推薦它親自裝過、測過的工具，多半是冷門好工具，附上真的能用的指令。',
     )}</p>` +
     `<div class="hero-form">${searchForm(form)}</div>` +
     `<div class="tries js-only"><span class="label">${L('Or try', '或試試')}</span>${examples()
@@ -1057,8 +1057,8 @@ export function renderPage(input: PageInput): string {
     nonce: input.nonce,
     title: L('pickfit: software that fits, tried on first', 'pickfit：合身的軟體，先試穿過'),
     description: L(
-      'Describe the job in one sentence. pickfit suggests lesser-known developer CLI tools, local AI tools, MCP servers and web apps it has tested itself, with the evidence and the steps that worked.',
-      '用一句話描述你要做的事。pickfit 會推薦它親自測試過、較少人知道的開發者 CLI 工具、本機 AI 工具、MCP 伺服器和網頁應用，並附上證據和實際可行的步驟。',
+      'Describe the job in one sentence. pickfit suggests developer CLI tools, local AI tools, MCP servers, desktop apps and web apps it has tested itself, mostly lesser-known ones, with the evidence and the steps that worked.',
+      '用一句話描述你要做的事。pickfit 會推薦它親自測試過的開發者 CLI 工具、本機 AI 工具、MCP 伺服器、桌面應用和網頁應用，多半是較少人知道的，並附上證據和實際可行的步驟。',
     ),
     active: 'find',
     bodyClass: served ? 'is-results' : '',

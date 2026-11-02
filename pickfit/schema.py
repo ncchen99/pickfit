@@ -864,6 +864,7 @@ class McpHandshake(_Model):
 # A video file's name: the files sit under ~/.pickfit/videos/<slug>/ until they are served (not in git).
 type VideoFile = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_][A-Za-z0-9_.-]*\.mp4$", max_length=120)]
 VIDEO_MAX_S = 180
+VIDEO_CHAPTER_TITLE_MAX = 80
 
 
 class VideoRaw(_Model):
@@ -874,6 +875,15 @@ class VideoRaw(_Model):
     sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     seconds: float = Field(gt=0)
     smoke_test: int = Field(ge=0, description="The operation's check: an index into the run's smoke_tests.")
+
+
+class VideoChapter(_Model):
+    """A chapter of a clip, for the player's progress bar: the first card, each feature's segments, the last card."""
+
+    start_s: float = Field(ge=0, description="Where the chapter starts in the clip, seconds.")
+    title: str = Field(min_length=1, max_length=VIDEO_CHAPTER_TITLE_MAX, description="English, for the progress bar.")
+    feature: Annotated[str, StringConstraints(min_length=1, max_length=FEATURE_MAX)] | None = Field(
+        description="The video.features entry the chapter shows; null for the first and last cards.")
 
 
 class RunVideo(_Model):
@@ -895,6 +905,28 @@ class RunVideo(_Model):
     model: str = Field(min_length=1, max_length=80, description="Who picked the segments and checked the captions.")
     features: list[Annotated[str, StringConstraints(min_length=1, max_length=FEATURE_MAX)]] = Field(
         min_length=1, max_length=FEATURES_MAX, description="The run's checked features the clip shows.")
+    chapters: list[VideoChapter] = Field(
+        default=[], max_length=FEATURES_MAX * 2 + 2, exclude_if=lambda value: not value,
+        description=("The clip's chapters in time order, covering it whole: the first card at 0, one chapter for each "
+                     "run of segments of one feature, the last card."))
+
+    @model_validator(mode="after")
+    def _check_chapters(self) -> RunVideo:
+        """Chapters start at 0, rise, end before the clip does, open and close on the cards, and name only the
+        clip's features, each at least once, never twice in a row."""
+        if not self.chapters:
+            return self
+        starts = [c.start_s for c in self.chapters]
+        if starts[0] != 0 or any(b <= a for a, b in zip(starts, starts[1:])) or starts[-1] >= self.seconds:
+            raise ValueError("chapters must start at 0 and rise, all before the clip ends")
+        inner = [c.feature for c in self.chapters[1:-1]]
+        if len(self.chapters) < 3 or self.chapters[0].feature is not None or self.chapters[-1].feature is not None:
+            raise ValueError("chapters open on the first card and close on the last (feature null), a feature between")
+        if None in inner or set(inner) != set(self.features):
+            raise ValueError("the chapters between the cards must name the clip's features, each at least once")
+        if any(a == b for a, b in zip(inner, inner[1:])):
+            raise ValueError("consecutive segments of one feature are one chapter")
+        return self
 
 
 # What the browser showed after the URL loaded: only main_ui supports a passed run.
@@ -1555,6 +1587,28 @@ class FieldEvidence(_Model):
         return self
 
 
+class FeatureGuide(_Model):
+    """One advertised feature as a person reads it: a plain title, and for a feature a run checked, how to use it."""
+
+    feature: str = Field(min_length=1, max_length=FEATURE_MAX, description="The feature exactly as in features.")
+    title: str = Field(min_length=1, max_length=80, description="The feature in plain words, sentence case.")
+    steps: list[Annotated[str, StringConstraints(min_length=1, max_length=200)]] = Field(
+        default=[], max_length=4,
+        description="How to use it, from what the run did; only for a feature run_id checked, else empty.")
+
+
+class UsageGuide(_Model):
+    """Reader-facing text written by a model from the record and the run behind its checked features
+    (pickfit/usage_guide.py). It adds words, never claims: a feature gets steps only when run_id checked it."""
+
+    model: str = Field(min_length=1, max_length=80, description="The model that wrote this text.")
+    generated_at: AwareDatetime
+    run_id: RunId | None = Field(description="The passed run the steps rest on; null when no run checked a feature.")
+    open_hint: str | None = Field(default=None, max_length=200,
+                                  description="How to start it once installed, in plain words (GUI apps: where it appears).")
+    features: list[FeatureGuide] = Field(default=[], max_length=FEATURES_MAX)
+
+
 class SoftwareRecord(_Model):
     """One software entry: the canonical file data/software/<slug>.json (software.v1)."""
 
@@ -1587,6 +1641,11 @@ class SoftwareRecord(_Model):
         ),
     )
     why_worth_it: str | None = Field(default=None, max_length=200)
+    usage_guide: UsageGuide | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="Plain feature titles and how-to steps for the tool page; generated text, see usage_guide.model.",
+    )
     homepage: WebUrl | None
     repo: Repo | None = Field(description="Null only for a hosted web app with no public repository ('web:' id).")
     platforms: list[OS] = Field(
@@ -1640,6 +1699,17 @@ class SoftwareRecord(_Model):
     def _check_usability(self) -> SoftwareRecord:
         if self.usability is not None and self.kind not in ("desktop_app", "web_app"):
             raise ValueError("usability belongs to kind desktop_app and web_app only")
+        return self
+
+    @model_validator(mode="after")
+    def _check_usage_guide(self) -> SoftwareRecord:
+        """A guide names each feature once. It is a snapshot of the record when it was written: a later
+        write-back that replaces its run, or new features, leaves it stale but valid; the index shows only
+        what still holds (pickfit.usage_guide.shown_guide)."""
+        if self.usage_guide is not None:
+            names = [f.feature for f in self.usage_guide.features]
+            if len(set(names)) != len(names):
+                raise ValueError("usage_guide.features must name each feature at most once")
         return self
 
     @model_validator(mode="after")

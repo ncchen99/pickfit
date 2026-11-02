@@ -43,10 +43,16 @@ def _discover(args: argparse.Namespace) -> int:
     except GitHubError as err:
         print(f"pickfit discover: {err}", file=sys.stderr)
         return 2
+    exclude = None
+    if args.cap is not None:
+        from pickfit.verify.result import DATA_DIR
+
+        # Repos that already have a record are not new candidates.
+        exclude = {json.loads(p.read_text()).get("repo_id") for p in DATA_DIR.glob("*.json")} - {None}
     funnel = run_discover(token=token, channel=args.channel, per_query=args.per_query,
                           pushed_days=args.pushed_days, days=args.days, categories=args.category,
                           skip_details=args.skip_details, max_rate_wait_s=args.max_rate_wait,
-                          pick_n=args.pick, seed=args.seed)
+                          pick_n=args.pick, seed=args.seed, stars=args.stars, cap=args.cap, exclude=exclude)
     print(json.dumps(funnel, ensure_ascii=False, indent=2))
     return 0
 
@@ -167,7 +173,7 @@ def _funnel(args: argparse.Namespace) -> int:
 
 
 def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
-    from pickfit.discover.github import PUSHED_DAYS, RATE_LIMIT_MAX_WAIT_S, TOPICS
+    from pickfit.discover.github import PUSHED_DAYS, RATE_LIMIT_MAX_WAIT_S, STARS, TOPICS
     from pickfit.discover.run import CHANNELS, DEFAULT_PER_QUERY, DEFAULT_SEED
     from pickfit.discover.showhn import DEFAULT_DAYS
     from pickfit.schema import LISTED_CATEGORIES
@@ -190,6 +196,11 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
                    help=f"github: only repos pushed in the last N days (default {PUSHED_DAYS})")
     d.add_argument("--category", action="append", choices=sorted(TOPICS),
                    help="limit to one category (repeatable; default all)")
+    d.add_argument("--stars", default=STARS,
+                   help=f"github: star band, e.g. 301..5000 for rule github-well-known.v1 (default {STARS})")
+    d.add_argument("--cap", type=int, default=None,
+                   help="github: keep only the first N new repos, round-robin by rank across the queries, "
+                        "skipping repos that already have a record (default: keep all)")
     d.add_argument("--skip-details", action="store_true",
                    help="only search; do not fetch README, releases or files")
     d.add_argument("--max-rate-wait", type=float, default=RATE_LIMIT_MAX_WAIT_S,

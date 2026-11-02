@@ -1,0 +1,511 @@
+{
+  "schema_version": "software.v1",
+  "slug": "senpi",
+  "repo_id": "gh:1174812893",
+  "name": "senpi",
+  "summary": "Opinionated fork of pi-mono providing a TypeScript coding-agent CLI with builtin extensions.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "prototype",
+  "tags": [
+    "agent",
+    "ai-agent",
+    "cli",
+    "coding-agent",
+    "llm",
+    "llm-tools",
+    "monorepo",
+    "multi-provider",
+    "pi-mono",
+    "senpi"
+  ],
+  "use_cases": [],
+  "alternatives_to": [],
+  "features": [
+    "enforce intent gate before tool use",
+    "track todos with todowrite tools",
+    "run provider-backed web search",
+    "fetch URL content as markdown"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/code-yeongyu/senpi",
+    "full_name": "code-yeongyu/senpi",
+    "created_at": "2026-03-06T21:45:11Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-senpi-20261102-185328-17a4",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @code-yeongyu/senpi@2026.11.2-1 --ignore-scripts 2>&1",
+          "purpose": "install senpi core @2026.11.2-1 via npm"
+        },
+        {
+          "command": "senpi install git:github.com/code-yeongyu/pi-ast-grep 2>&1",
+          "purpose": "senpi install pi-ast-grep extension (candidate 1)"
+        },
+        {
+          "command": "senpi install git:github.com/code-yeongyu/pi-lsp-client 2>&1",
+          "purpose": "senpi install pi-lsp-client extension (candidate 2)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "senpi --version",
+        "expected_signal": "2026.11.02-1"
+      },
+      "first_task": "grep -r \"Intent Gate\" ~/.local/lib/node_modules/@code-yeongyu/senpi/dist/core/dynamic-prompt/intent-gate.js"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v2026.11.02-1",
+    "published_at": "2026-11-02T03:25:58Z",
+    "url": "https://github.com/code-yeongyu/senpi/releases/tag/v2026.11.02-1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:55:59.619761+08:00",
+    "runs": [
+      {
+        "id": "verify-senpi-20261102-185328-17a4",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:55:59.619761+08:00",
+        "tool_version": "2026.11.02-1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @code-yeongyu/senpi@2026.11.2-1 --ignore-scripts 2>&1",
+            "purpose": "install senpi core @2026.11.2-1 via npm"
+          },
+          {
+            "command": "senpi install git:github.com/code-yeongyu/pi-ast-grep 2>&1",
+            "purpose": "senpi install pi-ast-grep extension (candidate 1)"
+          },
+          {
+            "command": "senpi install git:github.com/code-yeongyu/pi-lsp-client 2>&1",
+            "purpose": "senpi install pi-lsp-client extension (candidate 2)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "senpi --version",
+            "expected_signal": "2026.11.02-1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2026.11.02-1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "grep -r \"Intent Gate\" ~/.local/lib/node_modules/@code-yeongyu/senpi/dist/core/dynamic-prompt/intent-gate.js",
+            "expected_signal": "## Intent Gate",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "return `## Intent Gate",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "grep -r \"todowrite\" ~/.local/lib/node_modules/@code-yeongyu/senpi/dist/core/extensions/builtin/todotools/",
+            "expected_signal": "todowrite",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/home/sbx/.local/lib/node_modules/@code-yeongyu/senpi/dist/core/extensions/builtin/todotools/todo-storage.js: // Legacy todowrite persisted arbitrary status strings (e.g. \"blocked\").",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "grep -r \"web_search\" ~/.local/lib/node_modules/@code-yeongyu/senpi/dist/core/extensions/builtin/websearch/",
+            "expected_signal": "web_search",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/home/sbx/.local/lib/node_modules/@code-yeongyu/senpi/dist/core/extensions/builtin/websearch/websearch/providers/anthropic.js: const webSearchTool = { type: \"web_search_20250305\", name: \"web_search\", max_uses: 8 };",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "senpi requires Node >=24",
+            "actually_needed": "installs and runs on Node 22.23.4 with engine warnings, --version works",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "npm install @code-yeongyu/senpi resolves",
+            "actually_needed": "latest tag fails ETARGET for pi-agent-core dependency; must pin @2026.11.2-1",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show Intent Gate string, todowrite handling code, and senpi version 2026.11.02-1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-senpi-20261102-185328-17a4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-senpi-20261102-185328-17a4/check-1-cmd18.judged.png",
+            "runs/verify/verify-senpi-20261102-185328-17a4/check-2-cmd19.judged.png",
+            "runs/verify/verify-senpi-20261102-185328-17a4/check-3-cmd17.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.111405,
+        "features": [
+          {
+            "feature": "enforce intent gate before tool use",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows the string \"Intent Gate\" exists in source code, not a gate blocking tool use."
+          },
+          {
+            "feature": "track todos with todowrite tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows code mentions of todowrite, not a todo actually written or read."
+          },
+          {
+            "feature": "run provider-backed web search",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows web_search handling in source code, not a search actually run."
+          },
+          {
+            "feature": "fetch URL content as markdown",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; webfetch builtin directory listed in builtin extensions"
+          }
+        ]
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-02T19:44:20+08:00",
+    "quality": {
+      "total": 76.9,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 88.4,
+      "signals": {
+        "stars": 505,
+        "monthly_downloads": 121498,
+        "forks": 157,
+        "dependents": null,
+        "release_downloads": 195,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 240,
+      "packages": [
+        "npm:@code-yeongyu/senpi"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 8.92
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T19:44:20.304038+08:00",
+      "sources_sha": "b085cbf968d38a04b40529250f029898884f078f07bcf3429227ac68361bdd8a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "a TypeScript monorepo that rebrands pi-mono's coding agent as `senpi`"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "If you're migrating from [OMO (oh-my-openagent)](https://github.com/code-yeongyu/oh-my-openagent)"
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 0,
+          "quote": null
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "senpi install git:github.com/code-yeongyu/pi-ast-grep"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`disabledBuiltinExtensions` in `settings.json`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "`senpi update senpi` queries [`code-yeongyu/senpi`](https://github.com/code-yeongyu/senpi) releases, not upstream."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "pi-darwin-arm64.tar.gz, pi-darwin-x64.tar.gz, pi-linux-arm64.tar.gz, pi-linux-x64.tar.gz"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/code-yeongyu/senpi",
+      "fetched_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/code-yeongyu/senpi/blob/main/README.md",
+      "fetched_at": "2026-11-02T17:28:17+08:00"
+    },
+    {
+      "id": "release:v2026.11.02-1",
+      "kind": "release",
+      "url": "https://github.com/code-yeongyu/senpi/releases/tag/v2026.11.02-1",
+      "fetched_at": "2026-11-02T17:28:17+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Interactive coding agent CLI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:23+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "The installed executable remains `senpi`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:23+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Interactive coding agent CLI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:23+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "opinionated fork of badlogic/pi-mono with extension-first additions.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:23+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# senpi",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:23+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2026.11.02-1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:28:17+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "⚠️ **Experimental.** senpi is an opinionated, in-flight fork",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:23+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "every prompt opens with a forced intent gate before tool use.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:23+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "`todowrite` / `todoread` tools with branch-aware persistence",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:23+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Provider-backed `web_search` tool with config-gated activation",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:23+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "`webfetch` tool for URL content as markdown, text, or HTML",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:23+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-02T17:27:57+08:00",
+  "updated_at": "2026-11-02T19:44:20+08:00"
+}

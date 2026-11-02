@@ -1,0 +1,669 @@
+{
+  "schema_version": "software.v1",
+  "slug": "patent",
+  "repo_id": "gh:1254275643",
+  "name": "patent",
+  "summary": "Prior-art search CLI that checks a dev-tool idea against 19 registries, GitHub and Hacker News and ranks matches by semantic similarity.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "cli",
+    "command-line-tool",
+    "developer-tools",
+    "embeddings",
+    "llm",
+    "npm",
+    "ollama",
+    "package-search",
+    "prior-art"
+  ],
+  "use_cases": [
+    "Check if a dev tool idea already exists before building",
+    "Search package registries, GitHub and Hacker News by semantic similarity"
+  ],
+  "alternatives_to": [
+    "npm",
+    "pypi",
+    "crates.io",
+    "homebrew"
+  ],
+  "features": [
+    "Search 19 sources at once including package registries, GitHub and Hacker News",
+    "Rank matches by local semantic similarity using embeddings",
+    "Summarize landscape as Open, Crowded or Saturated verdict",
+    "Interactive TUI to browse, filter and open prior-art matches"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://crates.io/crates/patent",
+  "repo": {
+    "url": "https://github.com/r14dd/patent",
+    "full_name": "r14dd/patent",
+    "created_at": "2026-05-30T11:12:04Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "rust crate"
+    ],
+    "system_packages": [
+      "ollama"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/r14dd/patent/releases/latest/download/patent-installer.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "patent \"interactive cli to kill whatever's on a port\""
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-patent-20261102-174317-86ab",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL --proto '=https' --tlsv1.2 https://github.com/r14dd/patent/releases/latest/download/patent-installer.sh -o /tmp/patent-installer.sh",
+          "purpose": "download patent installer script"
+        },
+        {
+          "command": "sh /tmp/patent-installer.sh 2>&1",
+          "purpose": "run installer to ~/.cargo/bin"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && ln -sf ~/.cargo/bin/patent ~/.local/bin/patent && patent --version",
+          "purpose": "symlink binary to ~/.local/bin on PATH"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "patent --version 2>&1",
+        "expected_signal": "patent 0.14.1"
+      },
+      "first_task": "patent --list-sources 2>&1"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/r14dd/patent/releases/latest/download/patent-installer.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "patent \"interactive cli to kill whatever's on a port\""
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v0.14.1",
+    "published_at": "2026-10-10T20:29:30Z",
+    "url": "https://github.com/r14dd/patent/releases/tag/v0.14.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:44:40.701299+08:00",
+    "runs": [
+      {
+        "id": "verify-patent-20261102-174317-86ab",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:44:40.701299+08:00",
+        "tool_version": "0.14.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL --proto '=https' --tlsv1.2 https://github.com/r14dd/patent/releases/latest/download/patent-installer.sh -o /tmp/patent-installer.sh",
+            "purpose": "download patent installer script"
+          },
+          {
+            "command": "sh /tmp/patent-installer.sh 2>&1",
+            "purpose": "run installer to ~/.cargo/bin"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && ln -sf ~/.cargo/bin/patent ~/.local/bin/patent && patent --version",
+            "purpose": "symlink binary to ~/.local/bin on PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "patent --version 2>&1",
+            "expected_signal": "patent 0.14.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "patent 0.14.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "patent --list-sources 2>&1",
+            "expected_signal": "crates-io",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "crates-io crates.io",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "patent \"interactive cli to kill whatever's on a port\" --fast --json --keyword-only --limit 5 2>&1",
+            "expected_signal": "\"level\": \"crowded\"",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "\"level\": \"crowded\",",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "patent \"interactive cli to kill whatever's on a port\" --fast --json --limit 5 2>&1",
+            "expected_signal": "\"similarity\": 0.767189",
+            "exit_code": 2,
+            "passed": true,
+            "observed_excerpt": "\"similarity\": 0.767189,",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "installer installs to $CARGO_HOME/bin which is on PATH",
+            "actually_needed": "in this box PATH starts with ~/.local/bin only, so symlink from ~/.cargo/bin/patent to ~/.local/bin required",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "patent \"idea\" launches TUI and returns verdict",
+            "actually_needed": "non-interactive use needs --fast --json to avoid TUI and Ollama; exit code is verdict-dependent (0 Open, 1 Crowded, 2 Saturated) not 0",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show correct version, source list containing crates-io, and a successful prior-art search returning port-killer tools in JSON.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-patent-20261102-174317-86ab/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-patent-20261102-174317-86ab/check-1-cmd11.judged.png",
+            "runs/verify/verify-patent-20261102-174317-86ab/check-2-cmd8.judged.png",
+            "runs/verify/verify-patent-20261102-174317-86ab/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.077666,
+        "features": [
+          {
+            "feature": "Search 19 sources at once including package registries, GitHub and Hacker News",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Rank matches by local semantic similarity using embeddings",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Summarize landscape as Open, Crowded or Saturated verdict",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Outputs show only matches with similarity scores, no Open/Crowded/Saturated verdict visible."
+          },
+          {
+            "feature": "Interactive TUI to browse, filter and open prior-art matches",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "TUI requires interactive terminal; verified --help mentions interactive search TUI but cannot automate"
+          }
+        ]
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-02T18:24:15+08:00",
+    "quality": {
+      "total": 80.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.65,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 83.3,
+      "signals": {
+        "stars": 559,
+        "monthly_downloads": 96,
+        "forks": 22,
+        "dependents": null,
+        "release_downloads": 1034,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 155,
+      "packages": [
+        "crates:patent"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 13.49
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:24:15.053132+08:00",
+      "sources_sha": "49540842d971ba89d4cc0e3ecc83cee14e26e47975371516d2eafd6ac2d55701",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Before you build a dev tool, `patent` checks whether it already exists. One query fans out across 19 sources at once — package registries plus GitHub and Hacker News"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Before you build a dev tool, `patent` checks whether it already exists."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**glibc 2.38+** — both the prebuilt binaries and a from-source `cargo install` require glibc 2.38 or newer (Ubuntu 22.10+, Debian 13+, Fedora 38+)."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/r14dd/patent/releases/latest/download/patent-installer.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "patent \"interactive cli to kill whatever's on a port\""
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "**GitHub token** (optional) — set `GITHUB_TOKEN` to raise the search rate limit from 10 to 30 requests/minute."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Licensed under either of [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE) at your option."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/r14dd/patent",
+      "fetched_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/r14dd/patent/blob/main/README.md",
+      "fetched_at": "2026-11-02T17:28:41+08:00"
+    },
+    {
+      "id": "release:v0.14.1",
+      "kind": "release",
+      "url": "https://github.com/r14dd/patent/releases/tag/v0.14.1",
+      "fetched_at": "2026-11-02T17:28:41+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A prior-art search for your code ideas — has this dev tool already been shipped?",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Before you build a dev tool, `patent` checks whether it already exists.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "`patent` takes a plain-English dev-tool idea and searches 19 sources — package registries (crates.io, npm, PyPI, Homebrew, Packagist, Hex, and more) plus GitHub and Hacker News.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# patent",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "**macOS / Linux** — one command, no Rust needed:",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "From source** (requires Rust):",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "**Ollama** (optional) powers the LLM verdict — install from [ollama.com](https://ollama.com), then `ollama pull qwen3.5`.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.14.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:28:41+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Before you build a dev tool, `patent` checks whether it already exists. One query fans out across 19 sources at once",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Results are ranked by semantic similarity and summarised as **Open**, **Crowded**, or **Saturated**.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "package registries (crates.io, npm, PyPI, Homebrew, Packagist, Hex, and more)",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "package registries (crates.io, npm, PyPI, Homebrew, Packagist, Hex, and more)",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "package registries (crates.io, npm, PyPI, Homebrew, Packagist, Hex, and more)",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "package registries (crates.io, npm, PyPI, Homebrew, Packagist, Hex, and more)",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "`patent` takes a plain-English dev-tool idea and searches 19 sources — package registries (crates.io, npm, PyPI, Homebrew, Packagist, Hex, and more) plus GitHub and Hacker News.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "every match is embedded locally with [`fastembed`](https://github.com/Anush008/fastembed-rs) and ranked by cosine similarity to your idea.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "an LLM summarises the landscape into one of three levels, *floored* against the similarity data so it can never under-rate a populated space:",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Built With Ratatui",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/r14dd/patent/releases/latest/download/patent-installer.sh | sh",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/r14dd/patent/releases/latest/download/patent-installer.sh | sh",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/r14dd/patent/releases/latest/download/patent-installer.sh | sh",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Licensed under either of [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE) at your option.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "with `--api-base`, your search query is sent to that remote server to generate the verdict.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:09+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-02T17:27:57+08:00",
+  "updated_at": "2026-11-02T18:24:15+08:00"
+}

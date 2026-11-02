@@ -87,6 +87,10 @@ TOPICS: dict[str, tuple[str, ...]] = {
     "mcp_server": ("mcp-server", "model-context-protocol", "mcp", "mcp-servers", "mcp-tools", "fastmcp"),
 }
 STARS = "5..300"
+# Rule github-well-known.v1 (registered 2026-11-02, docs/source-terms.md): the same topics and
+# recency filters with this star band, to add better-known tools in the same categories. It
+# is an option (`pickfit discover --stars 301..5000 --cap 150`); the default stays STARS.
+WELL_KNOWN_STARS = "301..5000"
 PUSHED_DAYS = 14
 # Created this year, pushed recently, a few stars but not famous, not a fork, not archived.
 QUERY_TEMPLATE = ("{topics} created:>={created} pushed:>={pushed} stars:{stars} "
@@ -108,7 +112,7 @@ class Query:
 
 
 def build_queries(today: date, *, pushed_days: int = PUSHED_DAYS,
-                  categories: list[str] | None = None) -> list[Query]:
+                  categories: list[str] | None = None, stars: str = STARS) -> list[Query]:
     """The search queries for `today` (UTC date), with concrete dates filled in."""
     created = date(today.year, 1, 1).isoformat()
     pushed = (today - timedelta(days=pushed_days)).isoformat()
@@ -117,7 +121,7 @@ def build_queries(today: date, *, pushed_days: int = PUSHED_DAYS,
         raise ValueError(f"unknown categories {sorted(unknown)}; expected {sorted(TOPICS)}")
     return [Query(category, topic, QUERY_TEMPLATE.format(
                 topics=" ".join(f"topic:{t}" for t in topic.split("+")), created=created,
-                pushed=pushed, stars=STARS))
+                pushed=pushed, stars=stars))
             for category, topics in TOPICS.items() if categories is None or category in categories
             for topic in topics]
 

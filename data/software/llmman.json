@@ -1,0 +1,565 @@
+{
+  "schema_version": "software.v1",
+  "slug": "llmman",
+  "repo_id": "gh:1188371877",
+  "name": "llmman",
+  "summary": "Run any AI agent on any local or hosted model via a single CLI, with models stored as OCI images.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": null,
+  "maturity": null,
+  "tags": [
+    "claude-code",
+    "codex",
+    "llama-cpp",
+    "llm",
+    "mlx",
+    "oci",
+    "opencode",
+    "vllm"
+  ],
+  "use_cases": [
+    "run an AI coding agent on a local model",
+    "serve an Ollama/OpenAI/Anthropic-compatible inference endpoint",
+    "transfer models between registries as OCI images"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "launch any agent on any local or hosted model in one command",
+    "serve models via Ollama, OpenAI and Anthropic compatible APIs",
+    "transfer and sign OCI-native models between any registry without local copy",
+    "pool multiple machines into one aggregated inference endpoint"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://llmmanorg.github.io/",
+  "repo": {
+    "url": "https://github.com/llmmanorg/llmman",
+    "full_name": "llmmanorg/llmman",
+    "created_at": "2026-03-22T01:27:35Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://llmmanorg.github.io/install.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "llmman launch claude --model qwen3.8"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-llmman-20261102-174231-7765",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://llmmanorg.github.io/install.sh -o /tmp/install.sh",
+          "purpose": "download install script to /tmp/install.sh"
+        },
+        {
+          "command": "rm -f ~/.local/bin/llmman_placeholder\nLLMMAN_VERSION=v0.1.546 sh /tmp/install.sh",
+          "purpose": "install llmman v0.1.546 via LLMMAN_VERSION=v0.1.546 sh /tmp/install.sh"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "llmman --version",
+        "expected_signal": "llmman 0.1.546"
+      },
+      "first_task": "llmman launch 2>&1"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.1.609",
+    "published_at": "2026-11-01T23:17:26Z",
+    "url": "https://github.com/llmmanorg/llmman/releases/tag/v0.1.609"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:43:55.950283+08:00",
+    "runs": [
+      {
+        "id": "verify-llmman-20261102-174231-7765",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:43:55.950283+08:00",
+        "tool_version": "0.1.546 (fa27394)",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://llmmanorg.github.io/install.sh -o /tmp/install.sh",
+            "purpose": "download install script to /tmp/install.sh"
+          },
+          {
+            "command": "rm -f ~/.local/bin/llmman_placeholder\nLLMMAN_VERSION=v0.1.546 sh /tmp/install.sh",
+            "purpose": "install llmman v0.1.546 via LLMMAN_VERSION=v0.1.546 sh /tmp/install.sh"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "llmman --version",
+            "expected_signal": "llmman 0.1.546",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "llmman 0.1.546 (fa27394)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "llmman launch 2>&1",
+            "expected_signal": "Available integrations:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Available integrations:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:17434/v1/models | head -c 2000\necho \"---O--\"\ncurl -s http://127.0.0.1:17434/api/tags",
+            "expected_signal": "\"object\":\"list\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"data\":[],\"object\":\"list\"}---O--",
+            "setup": [
+              {
+                "command": "llmman serve",
+                "background": true,
+                "port": 17434
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "llmman transfer --help 2>&1",
+            "expected_signal": "Transfer an image directly",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Transfer an image directly from one location to another (e.g. HuggingFace to an OCI registry)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "llmman config get aggregation.peers 2>&1; echo --; llmman config set aggregation.peers localhost:17435 2>&1; llmman config get aggregation.peers 2>&1",
+            "expected_signal": "localhost:17435",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "localhost:17435",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://llmmanorg.github.io/install.sh | sh installs latest",
+            "actually_needed": "script defaults to brew if ~/.local/bin/llmman absent; without LLMMAN_VERSION it fails with 'brew: not found'; with LLMMAN_VERSION=latest the URL https://github.com/.../latest/download/... returns 404, need pinned version e.g. LLMMAN_VERSION=v0.1.546",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "llmman install via install.sh uses latest release URL",
+            "actually_needed": "Latest release asset exists as v0.1.546 but /latest/download redirect failed (404) in this environment; pinning version works",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show expected outputs: integrations list, empty models list JSON, and version 0.1.546.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-llmman-20261102-174231-7765/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-llmman-20261102-174231-7765/check-1-cmd8.judged.png",
+            "runs/verify/verify-llmman-20261102-174231-7765/check-2-cmd12.judged.png",
+            "runs/verify/verify-llmman-20261102-174231-7765/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.074855,
+        "features": [
+          {
+            "feature": "launch any agent on any local or hosted model in one command",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists integrations and usage, no agent was launched."
+          },
+          {
+            "feature": "serve models via Ollama, OpenAI and Anthropic compatible APIs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Both APIs returned empty lists with no models served."
+          },
+          {
+            "feature": "transfer and sign OCI-native models between any registry without local copy",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output is only --help usage text, no transfer was done."
+          },
+          {
+            "feature": "pool multiple machines into one aggregated inference endpoint",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows config set/get, no aggregated endpoint was shown."
+          }
+        ]
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-02T18:24:15+08:00",
+    "quality": {
+      "total": 75.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.68,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.875,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 87.5,
+      "signals": {
+        "stars": 578,
+        "monthly_downloads": 693,
+        "forks": 69,
+        "dependents": null,
+        "release_downloads": 2217,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 225,
+      "packages": [
+        "crates:llmman"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 9.46
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:24:15.053132+08:00",
+      "sources_sha": "33fd7b8133f26a9d9fc244486f2b6755f6a18f6bfca09c671fa94ec5a2d99653",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Run any agent on any model, models stored as OCI images"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "That is the shape air-gapped and compliance-bound environments need."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "cargo install llmman    # build from source; needs Go 1.27.3+ (and LLVM on Windows) as well as Rust"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://llmmanorg.github.io/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "llmman run unsloth/LTX-2.3-GGUF \"Draw a cat\"                              # Image saved to: draw-a-cat-<timestamp>.png"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export OPENROUTER_API_KEY=..."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "**Linux, macOS:**"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/llmmanorg/llmman",
+      "fetched_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/llmmanorg/llmman/blob/main/README.md",
+      "fetched_at": "2026-11-02T17:28:20+08:00"
+    },
+    {
+      "id": "release:v0.1.609",
+      "kind": "release",
+      "url": "https://github.com/llmmanorg/llmman/releases/tag/v0.1.609",
+      "fetched_at": "2026-11-02T17:28:20+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Models are OCI images, so moving one takes no tooling you don't already have:",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:44+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "<p align=\"center\"><b>Run any agent on any model.</b></p>",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:44+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">llmman</h1>",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:44+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.1.609",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:28:20+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Claude Code, Codex, OpenCode and friends, pointed at a model\nrunning on your own machine, or at any hosted provider, in one command.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:44+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "One endpoint on `127.0.0.1:17434` that speaks Ollama, OpenAI and Anthropic:",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:44+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "llmman transfer hf.co/unsloth/Qwen3.5-0.8B-GGUF docker.io/owner/model:latest",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:44+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Run any agent on any model.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:44+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "One endpoint on `127.0.0.1:17434` that speaks Ollama, OpenAI and Anthropic:",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:44+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Transfer an image directly from a source to a destination without adding it\nto your local store, e.g. HuggingFace straight to an OCI registry:",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:44+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Pool your machines.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:44+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://llmmanorg.github.io/install.sh | sh",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:44+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://llmmanorg.github.io/install.sh | sh",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:44+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-02T17:27:57+08:00",
+  "updated_at": "2026-11-02T18:24:15+08:00"
+}

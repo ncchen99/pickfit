@@ -451,6 +451,41 @@
       ],
       "type": "string"
     },
+    "FeatureGuide": {
+      "additionalProperties": false,
+      "description": "One advertised feature as a person reads it: a plain title, and for a feature a run checked, how to use it.",
+      "properties": {
+        "feature": {
+          "description": "The feature exactly as in features.",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "steps": {
+          "default": [],
+          "description": "How to use it, from what the run did; only for a feature run_id checked, else empty.",
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4,
+          "type": "array"
+        },
+        "title": {
+          "description": "The feature in plain words, sentence case.",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "feature",
+        "title"
+      ],
+      "title": "FeatureGuide",
+      "type": "object"
+    },
     "FeatureStatus": {
       "enum": [
         "checked",
@@ -1888,6 +1923,15 @@
       "additionalProperties": false,
       "description": "A short captioned clip of pickfit operating a GUI app to check its features (pickfit/verify/video.py).\n\nA fresh box replayed this run's steps and operations while pickfit recorded its own screen; Muse Spark Open\nwatched each recording with pickfit's action log and picked whole segments, kept in their order (a speed-up\nis labelled on screen), and then watched the cut and confirmed that each caption shows on screen. Captions\nclaim only checks that passed in this run and again in the recorded replay. The clip's first frame says it\nwas recorded by pickfit in a sandbox, and on what date; it names each raw recording and its sha256.",
       "properties": {
+        "chapters": {
+          "default": [],
+          "description": "The clip's chapters in time order, covering it whole: the first card at 0, one chapter for each run of segments of one feature, the last card.",
+          "items": {
+            "$ref": "#/$defs/VideoChapter"
+          },
+          "maxItems": 10,
+          "type": "array"
+        },
         "clip": {
           "$ref": "#/$defs/VideoFile"
         },
@@ -2378,6 +2422,61 @@
       "title": "Usability",
       "type": "object"
     },
+    "UsageGuide": {
+      "additionalProperties": false,
+      "description": "Reader-facing text written by a model from the record and the run behind its checked features\n(pickfit/usage_guide.py). It adds words, never claims: a feature gets steps only when run_id checked it.",
+      "properties": {
+        "features": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/FeatureGuide"
+          },
+          "maxItems": 4,
+          "type": "array"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "model": {
+          "description": "The model that wrote this text.",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "open_hint": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How to start it once installed, in plain words (GUI apps: where it appears)."
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RunId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The passed run the steps rest on; null when no run checked a feature."
+        }
+      },
+      "required": [
+        "model",
+        "generated_at",
+        "run_id"
+      ],
+      "title": "UsageGuide",
+      "type": "object"
+    },
     "Verification": {
       "additionalProperties": false,
       "description": "Summary over runs; keeps only the latest run per OS, arch and method.\n\nOlder runs live in git history. Write-back never replaces a passed run with one\nthat did not pass, and writes a failure only on an OS with no passed run.",
@@ -2703,6 +2802,43 @@
         "evidence"
       ],
       "title": "VerificationRun",
+      "type": "object"
+    },
+    "VideoChapter": {
+      "additionalProperties": false,
+      "description": "A chapter of a clip, for the player's progress bar: the first card, each feature's segments, the last card.",
+      "properties": {
+        "feature": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The video.features entry the chapter shows; null for the first and last cards."
+        },
+        "start_s": {
+          "description": "Where the chapter starts in the clip, seconds.",
+          "minimum": 0,
+          "type": "number"
+        },
+        "title": {
+          "description": "English, for the progress bar.",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "start_s",
+        "title",
+        "feature"
+      ],
+      "title": "VideoChapter",
       "type": "object"
     },
     "VideoFile": {
@@ -3234,6 +3370,18 @@
       ],
       "default": null,
       "description": "Only for kind desktop_app and web_app: how easy pickfit's AI operator found it (ease.v1)."
+    },
+    "usage_guide": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/UsageGuide"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Plain feature titles and how-to steps for the tool page; generated text, see usage_guide.model."
     },
     "use_cases": {
       "default": [],

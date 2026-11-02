@@ -1,0 +1,493 @@
+{
+  "schema_version": "software.v1",
+  "slug": "open-agent-hub",
+  "repo_id": "gh:1133238996",
+  "name": "open-agent-hub",
+  "summary": "CLI tool to link skills, agents, and commands into AI coding assistants.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agents",
+    "ai-agents",
+    "ai-skills",
+    "anthropic-skills",
+    "claude-code",
+    "cli-tool",
+    "context-engineering",
+    "full-stack",
+    "planning",
+    "skills"
+  ],
+  "use_cases": [],
+  "alternatives_to": [],
+  "features": [
+    "link skills agents commands to workspaces",
+    "list available skills agents commands",
+    "sync skills from upstream sources"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/guanyang/open-agent-hub",
+    "full_name": "guanyang/open-agent-hub",
+    "created_at": "2026-01-13T04:29:34Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-open-agent-hub-20261102-185039-65c2",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone https://github.com/guanyang/open-agent-hub.git ~/open-agent-hub 2>&1",
+          "purpose": "git clone https://github.com/guanyang/open-agent-hub.git ~/open-agent-hub"
+        },
+        {
+          "command": "cd ~/open-agent-hub && npm link 2>&1",
+          "purpose": "npm link registers oah/open-agent-hub aliases"
+        },
+        {
+          "command": "curl -L -o /tmp/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 2>&1 && chmod +x /tmp/jq && mkdir -p ~/.local/bin && cp /tmp/jq ~/.local/bin/jq && ~/.local/bin/jq --version 2>&1",
+          "purpose": "install jq to ~/.local/bin for oah sync dependency"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "which oah && oah --help 2>&1",
+        "expected_signal": "open-agent-hub 能力管理中心 CLI"
+      },
+      "first_task": "oah list 2>&1"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v3.0.1",
+    "published_at": "2026-06-24T07:13:56Z",
+    "url": "https://github.com/guanyang/open-agent-hub/releases/tag/v3.0.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:51:58.146945+08:00",
+    "runs": [
+      {
+        "id": "verify-open-agent-hub-20261102-185039-65c2",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:51:58.146945+08:00",
+        "tool_version": "1.0.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/guanyang/open-agent-hub.git ~/open-agent-hub 2>&1",
+            "purpose": "git clone https://github.com/guanyang/open-agent-hub.git ~/open-agent-hub"
+          },
+          {
+            "command": "cd ~/open-agent-hub && npm link 2>&1",
+            "purpose": "npm link registers oah/open-agent-hub aliases"
+          },
+          {
+            "command": "curl -L -o /tmp/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 2>&1 && chmod +x /tmp/jq && mkdir -p ~/.local/bin && cp /tmp/jq ~/.local/bin/jq && ~/.local/bin/jq --version 2>&1",
+            "purpose": "install jq to ~/.local/bin for oah sync dependency"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "which oah && oah --help 2>&1",
+            "expected_signal": "open-agent-hub 能力管理中心 CLI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[1mopen-agent-hub 能力管理中心 CLI (动态扫描版)\u001b[0m",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "oah list 2>&1",
+            "expected_signal": "SKILLS (104 个可用)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[36mcommit\u001b[0m, \u001b[36mreview\u001b[0m, \u001b[36mtest-tdd\u001b[0m",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "oah status 2>&1",
+            "expected_signal": "共 112 个组件，已激活 0 个",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[1m统计摘要:\u001b[0m 共 112 个组件，已激活 0 个。",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/oah-test-workspace && cd /tmp/oah-test-workspace && oah enable --path=/tmp/oah-test-target 2>&1 && echo \"---ENABLE_DONE---\" && ls -la /tmp/oah-test-target/ 2>&1 && ls -la /tmp/oah-test-target/skills 2>&1",
+            "expected_signal": "remotion-markup -> /home/sbx/open-agent-hub/skills/remotion-markup",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lrwxrwxrwx 1 sbx sbx 47 Nov 2 10:51 remotion-markup -> /home/sbx/open-agent-hub/skills/remotion-markup",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "oah sync works out of the box (zero-dependency)",
+            "actually_needed": "needs jq installed; without it oah sync exits with 'jq is required but not installed'",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "oah sync copies upstream skills",
+            "actually_needed": "script calls rsync which is missing on minimal Debian; it prints 'rsync: command not found' but still reports success",
+            "kind": "note"
+          },
+          {
+            "readme_said": "install step 3 runs jq",
+            "actually_needed": "nothing to change; a note: the box ran jq, downloaded, without reading it first, so pickfit did not inspect it",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show help title, 104 skills list, and 112-component status with 0 activated.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-open-agent-hub-20261102-185039-65c2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-open-agent-hub-20261102-185039-65c2/check-1-cmd5.judged.png",
+            "runs/verify/verify-open-agent-hub-20261102-185039-65c2/check-2-cmd6.judged.png",
+            "runs/verify/verify-open-agent-hub-20261102-185039-65c2/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.077367,
+        "features": [
+          {
+            "feature": "link skills agents commands to workspaces",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "list available skills agents commands",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "sync skills from upstream sources",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; oah sync completed after installing jq; synced 11 upstream sources"
+          }
+        ]
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-02T19:44:20+08:00",
+    "quality": {
+      "total": 64.4,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7225,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 76.9,
+      "signals": {
+        "stars": 985,
+        "monthly_downloads": null,
+        "forks": 164,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 293,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 14.88
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T19:44:20.304038+08:00",
+      "sources_sha": "ba2b0547977f595b76c9f9b3182e41859b90485a55845f6365da633823b0a38b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A lightweight, zero-dependency CLI tool to manage and activate capabilities for AI coding assistants (such as Claude Code, Cursor, Trae, etc.)."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "A lightweight, zero-dependency CLI tool to manage and activate capabilities for AI coding assistants (such as Claude Code, Cursor, Trae, etc.)."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npx skills@latest add guanyang/open-agent-hub"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "oah list"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "`-g, --global`: System global level activation (e.g., links into user home config folder, like `~/.claude/`)."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "This project is licensed under the [MIT License](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/guanyang/open-agent-hub",
+      "fetched_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/guanyang/open-agent-hub/blob/main/README.md",
+      "fetched_at": "2026-11-02T17:28:02+08:00"
+    },
+    {
+      "id": "release:v3.0.1",
+      "kind": "release",
+      "url": "https://github.com/guanyang/open-agent-hub/releases/tag/v3.0.1",
+      "fetched_at": "2026-11-02T17:28:02+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A lightweight, zero-dependency CLI tool to manage and activate capabilities",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:17+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "After linking, you can manage your local agent environments from anywhere:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:17+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A lightweight, zero-dependency CLI tool to manage and activate capabilities",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:17+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A lightweight, zero-dependency CLI tool to manage and activate capabilities for AI coding assistants (such as Claude Code, Cursor, Trae, etc.).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:17+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# open-agent-hub",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:17+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v3.0.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:28:02+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "you can link **Skills** (modular prompting), **Agents** (expert workflow roles), and **Commands**",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:17+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "# List all dynamically scanned Skills, Agents, and Commands",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:17+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "# Sync all configured sources",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:17+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-02T17:27:57+08:00",
+  "updated_at": "2026-11-02T19:44:20+08:00"
+}
