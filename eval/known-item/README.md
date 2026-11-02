@@ -119,7 +119,7 @@ P6 的題目是不看目錄寫的開放題。pickfit 輸了，分不出是「目
 
 （登記之後的修改只寫在這裡，附時間與原因。）
 
-- **11/2 17:20，任何執行之前**（和 `known_item.py` 同一個 commit）：
+- **11/2 17:07，任何執行之前**（和 `known_item.py` 同一個 commit）：
   1. README 全文不 commit。上游 README 是第三方的文字，授權各不相同，不轉載進 repo。改成 commit 出處（repo、commit SHA、路徑、字數、全文的 sha256），全文可以從那個 commit 原樣取回；執行時的全文快取在 repo 外的 `~/.pickfit/known-item/`。
   2. 寫題目的回覆格式不對（JSON 解析不了、硬條件不是 2–4 個）也算一次沒通過，照第 3 節重寫。
   3. Worker 回應是錯誤（HTTP 不是 200、`isError`、讀不出結果）時，比照降級重跑一次。
