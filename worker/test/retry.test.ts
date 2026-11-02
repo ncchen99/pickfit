@@ -208,3 +208,24 @@ test('isTransient and retryAfterMs', () => {
   assert.equal(retryAfterMs(h({ 'retry-after': 'Fri, 30 Oct 2026 12:00:04 GMT' }), now), 4000);
   assert.equal(retryAfterMs(h({ 'retry-after': 'soon' }), now), null);
 });
+
+test('META_VIA=openrouter sends the same request to OpenRouter, pinned to Meta, with the OpenRouter key', async () => {
+  const h = harness(() => ok(), { via: 'openrouter', apiKey: 'or-key' });
+  const out = await findSoftware(MAC_OFFLINE, h.deps);
+  assert.equal(out.matched_by, MATCH_MODEL);
+  const sent = h.requests.at(-1)!;
+  assert.equal(sent.url, 'https://openrouter.ai/api/v1/responses');
+  assert.equal(sent.body.model, 'meta/muse-spark-1.3');
+  assert.deepEqual(sent.body.provider, { order: ['meta'], allow_fallbacks: false, data_collection: 'deny' });
+  assert.equal(sent.body.store, false);
+  assert.equal(new Headers(sent.init.headers).get('authorization'), 'Bearer or-key');
+});
+
+test('on OpenRouter the cost is the one it reports, not the cached-token estimate', async () => {
+  const h = harness(() => metaResponse(answer(), { usage: { ...USAGE, cost: 0.0123 } }), { via: 'openrouter', apiKey: 'or-key' });
+  const out = await findSoftware(MAC_OFFLINE, h.deps);
+  assert.equal(out.matched_by, MATCH_MODEL);
+  await h.settle();
+  const spent = h.sqlite.prepare('SELECT SUM(cost_usd) AS usd FROM meta_budget').get() as { usd: number };
+  assert.ok(Math.abs(spent.usd - 0.0123) < 1e-9, String(spent.usd));
+});

@@ -80,6 +80,7 @@ export async function englishKeywords(text: string, deps: Deps, now: Date, timeo
   try {
     const result = await callMeta(settings.apiKey, body, {
       timeoutMs,
+      via: settings.via,
       fetch: deps.fetch,
       clock: () => deps.now().getTime(),
       sleep: deps.sleep,

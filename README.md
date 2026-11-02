@@ -14,6 +14,14 @@
 
 規則與做法見 [docs/hackathon-rules.md](docs/hackathon-rules.md)。
 
+## 經 OpenRouter 呼叫 Meta 模型（11/3 起）
+
+2026-11-03 04:21 起，Meta 的 API 對本團隊的金鑰回 402「billing_not_configured」（帳單驗證失敗），所以之後的 Meta 模型呼叫改經 [OpenRouter](https://openrouter.ai/meta) 送出：模型不變（`meta/muse-spark-1.3`、`meta/muse-wonder`），而且每個請求都指定只能由 Meta 提供，而且不能用會收集資料的端點（`provider: {order: ["meta"], allow_fallbacks: false, data_collection: "deny"}`），OpenRouter 不會改用別家的模型或供應商。OpenRouter 上的 Meta 端點沒有「零資料保留」選項，所以我們不宣稱零保留。
+
+- **怎麼切換**：Python 流程看 `PICKFIT_META_VIA=openrouter`（`pickfit/meta.py`，帳本另記一個 `openrouter` 預算，上限 $40：念誠在 OpenRouter 儲值 $50，留約 $10 給線上 Worker）；線上 Worker 看 `META_VIA`（`worker/wrangler.jsonc`）。改回 `meta` 就回到 Meta 的 API。
+- **紀錄怎麼寫**：資料裡的模型名稱仍是 Meta 的 id（例如 `muse-spark-1.3`），帳本那一筆的 provider 記成 `openrouter`。
+- **OpenRouter 沒有的**：contributor 方案在 OpenRouter 上沒有，改用 `muse-spark-1.3`、照它的價格計；SAM 3.1、Muse Image、Muse Voice Transcribe 不經 OpenRouter。
+
 ## 非 Meta 模型產生的內容
 
 產品的發現、抽取、驗證、配對與計分都用 Meta 模型。例外如下，每筆都在資料裡記下產生它的模型：

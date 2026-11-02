@@ -3,6 +3,10 @@ export interface Env {
   DB: D1Database;
   /** Meta Model API key. Missing means find_software ranks by rules. */
   MODEL_API_KEY?: string;
+  /** "meta" (default) or "openrouter": reach muse-spark-1.3 through OpenRouter, Meta as the only provider. */
+  META_VIA?: string;
+  /** OpenRouter API key, used when META_VIA is "openrouter". */
+  OPENROUTER_API_KEY?: string;
   /** "model" (default) or "off" to rank by rules without calling Meta. */
   MATCH_MODE?: string;
   META_DAILY_CAP_USD?: string;
@@ -27,9 +31,12 @@ export interface Env {
 }
 
 export type ToolSet = 'all' | 'readonly';
+export type MetaVia = 'meta' | 'openrouter';
 
 export interface Settings {
   modelEnabled: boolean;
+  /** Where the model calls go; apiKey is that route's key. */
+  via: MetaVia;
   apiKey: string | null;
   dailyCapUsd: number;
   totalCapUsd: number;
@@ -50,9 +57,12 @@ function toolSet(value: string | undefined): ToolSet {
 }
 
 export function settings(env: Env): Settings {
+  // Only "openrouter" leaves Meta's API, so a typo keeps the calls where they were.
+  const via: MetaVia = (env.META_VIA ?? '').trim().toLowerCase() === 'openrouter' ? 'openrouter' : 'meta';
   return {
     modelEnabled: (env.MATCH_MODE ?? 'model').trim().toLowerCase() !== 'off',
-    apiKey: env.MODEL_API_KEY?.trim() || null,
+    via,
+    apiKey: (via === 'openrouter' ? env.OPENROUTER_API_KEY : env.MODEL_API_KEY)?.trim() || null,
     dailyCapUsd: number(env.META_DAILY_CAP_USD, 3),
     totalCapUsd: number(env.META_TOTAL_CAP_USD, 40),
     timeoutMs: number(env.META_TIMEOUT_MS, 25_000),
