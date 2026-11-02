@@ -86,12 +86,15 @@ const webApp = z
   .nullable()
   .describe('A hosted web app: open the URL, nothing to install. null for software to install');
 
-/** A GUI app's launch as pickfit saw it; the level stays install (a launch is not a feature test). */
-const gui = z
+/** A GUI app's run as pickfit saw it: a launch supports install; action_checked (a listed feature checked) supports function. */
+export const gui = z
   .object({
     tier: z
-      .enum(['window', 'ui_rendered'])
-      .describe("window = a window of the app's own process opened; ui_rendered = a separate model saw the app's own UI drawn"),
+      .enum(['window', 'ui_rendered', 'action_checked'])
+      .describe(
+        "window = a window of the app's own process opened; ui_rendered = a separate model saw the app's own UI drawn; " +
+          "action_checked = also, pickfit operated the app and checked a listed feature's result",
+      ),
     screen: z
       .enum(['main_ui', 'first_run', 'sign_in_wall', 'crash_or_error', 'blank_or_loading', 'other'])
       .describe("What that model saw in a screenshot of the app's own windows"),
