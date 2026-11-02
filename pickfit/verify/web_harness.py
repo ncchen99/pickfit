@@ -13,6 +13,10 @@ Phases (the host decides between them):
 3. offline (PWAs only): the host cuts the network; the page is reloaded with the browser offline and the
    agent's recorded actions are replayed without a model.
 
+A recording visit (start["record"], for a verification video) instead records the page from before it loads
+(Chromium's own screencast, frames saved as JPEGs with their times) and replays a saved visit's actions without
+a model; every action is logged with its time and the box of the element it touched.
+
 Only standard library and browser-use (pinned in the image) are imported. Evidence goes to EVIDENCE.
 """
 
@@ -55,7 +59,11 @@ PUBLIC_FIELD_HINTS = ("nickname", "display name", "player name", "screen name", 
 CREDENTIAL_HINTS = ("password", "passwd", "email", "e-mail", "phone", "mobile", "card", "cvv", "cvc", "iban",
                     "username", "user name", "login", "otp", "one-time", "verification code", "ssn")
 
+FRAMES = EVIDENCE / "frames"
+FRAME_GAP_S = 0.2  # the screencast sends a frame on every paint; one in this many seconds is kept (a burst's last)
+
 _proto: Any = None  # the real stdout, set by main(); library prints go to stderr
+ACTION_LOG: list[dict[str, Any]] = []  # every action the tools ran, with its times and the element's box
 
 
 def send(message: dict[str, Any]) -> None:
@@ -325,9 +333,88 @@ def make_tools() -> Any:
                     return ActionResult(error=f"pickfit refuses this {name}: {why}. Do not sign up, log in, buy, "
                                               "book, post, share, chat, join public rooms or type personal data; "
                                               "use the site's tool on your own.")
-            return await super().act(action, browser_session, *args, **kwargs)
+            entry: dict[str, Any] = {"t0": time.time(), "actions": action.model_dump(exclude_unset=True)}
+            for params in entry["actions"].values():
+                if isinstance(params, dict) and params.get("index") is not None:
+                    entry["box"], entry["label"] = await element_box(browser_session, params["index"])
+            try:
+                return await super().act(action, browser_session, *args, **kwargs)
+            finally:
+                entry["t1"] = time.time()
+                ACTION_LOG.append(entry)
 
     return GuardedTools(exclude_actions=EXCLUDED_ACTIONS)
+
+
+async def element_box(browser_session: Any, index: int) -> tuple[list[float] | None, str]:
+    """The element's box in the viewport, [x, y, width, height] in CSS pixels (or None), and its own words."""
+    label = ""
+    try:
+        node = await browser_session.get_element_by_index(index)
+        if node is None:
+            return None, label
+        attrs = node.attributes or {}
+        label = " ".join((node.get_all_children_text(max_depth=3) or attrs.get("aria-label") or attrs.get("placeholder")
+                          or attrs.get("title") or "").split())[:60]
+        _, sid = await page_session(browser_session)
+        quads = (await browser_session.cdp_client.send.DOM.getContentQuads(
+            params={"backendNodeId": node.backend_node_id}, session_id=sid)).get("quads") or []
+        if not quads:
+            return None, label
+        xs, ys = quads[0][0::2], quads[0][1::2]
+        return [round(min(xs), 1), round(min(ys), 1), round(max(xs) - min(xs), 1), round(max(ys) - min(ys), 1)], label
+    except Exception as err:
+        log(f"element box: {type(err).__name__}: {err}")
+        return None, label
+
+
+class Screencast:
+    """The page as Chromium paints it (CDP Page.startScreencast): JPEG frames in FRAMES, their times in frames.json.
+
+    Chromium sends a frame on every paint; one per FRAME_GAP_S is kept, and the last of a burst always is."""
+
+    def __init__(self, session: Any) -> None:
+        self.session = session
+        self.frames: list[dict[str, Any]] = []
+        self.pending: tuple[float, str] | None = None
+        self.sid: str | None = None
+
+    async def start(self) -> None:
+        FRAMES.mkdir(parents=True, exist_ok=True)
+        _, self.sid = await page_session(self.session)
+        self.session.cdp_client.register.Page.screencastFrame(self.on_frame)
+        await self.session.cdp_client.send.Page.startScreencast(
+            params={"format": "jpeg", "quality": 80, "maxWidth": VIEWPORT[0], "maxHeight": VIEWPORT[1],
+                    "everyNthFrame": 1}, session_id=self.sid)
+
+    def on_frame(self, event: Any, session_id: str | None) -> None:
+        stamp = float((event.get("metadata") or {}).get("timestamp") or time.time())
+        if self.frames and stamp - self.frames[-1]["t"] < FRAME_GAP_S:
+            self.pending = (stamp, event["data"])
+        else:
+            if self.pending and (not self.frames or self.pending[0] > self.frames[-1]["t"]):
+                self.save(*self.pending)
+            self.pending = None
+            self.save(stamp, event["data"])
+        asyncio.ensure_future(self.session.cdp_client.send.Page.screencastFrameAck(
+            params={"sessionId": event["sessionId"]}, session_id=session_id))
+
+    def save(self, stamp: float, data: str) -> None:
+        name = f"f{len(self.frames):05d}.jpg"
+        (FRAMES / name).write_bytes(base64.b64decode(data))
+        self.frames.append({"t": stamp, "file": name})
+
+    async def stop(self) -> dict[str, Any]:
+        try:
+            await self.session.cdp_client.send.Page.stopScreencast(session_id=self.sid)
+        except Exception as err:
+            log(f"stop screencast: {type(err).__name__}: {err}")
+        if self.pending and (not self.frames or self.pending[0] > self.frames[-1]["t"]):
+            self.save(*self.pending)
+        self.pending = None
+        index = {"frames": self.frames, "stopped_at": time.time(), "viewport": list(VIEWPORT)}
+        (FRAMES / "frames.json").write_text(json.dumps(index))
+        return {"frames": len(self.frames), "first": self.frames[0]["t"] if self.frames else None}
 
 
 def click_refused(label: str, attributes: dict[str, Any]) -> str | None:
@@ -441,6 +528,50 @@ async def operate(session: Any, channel: Channel, task: str, start: dict[str, An
     }
 
 
+async def record(session: Any, channel: Channel, start: dict[str, Any], report: dict[str, Any]) -> None:
+    """A recording visit: the screencast runs from before the URL loads until pickfit has looked at the result; the
+    saved visit's actions are replayed without a model (as the offline phase does)."""
+    from browser_use import Agent
+
+    cast = Screencast(session)
+    await cast.start()
+    report["recording_started_at"] = time.time()
+    try:
+        page, _ = await page_session(session)
+        try:
+            await page.goto(start["url"])
+        except Exception as err:
+            report["navigation_error"] = str(err)[:300]
+        await settle(start.get("settle_s", 6))
+        install = await capture(session, "install", inline=True)
+        send({"type": "observe", "phase": "install", "state": install})
+        go = await channel.wait("continue")
+        if not go.get("replay"):
+            return
+        started = time.time()
+        replayer = Agent(task=go["task"], llm=StubLLM(), browser_session=session, tools=make_tools(),
+                         output_model_schema=outcome_model(), use_judge=False, enable_planning=False,
+                         directly_open_url=False, available_file_paths=start.get("sample_files") or None)
+        replay: dict[str, Any] = {}
+        try:
+            results = await replayer.load_and_rerun(start["history_path"], skip_failures=True,
+                                                    delay_between_actions=start["wait_between_actions"],
+                                                    max_step_interval=5.0, summary_llm=StubLLM(),
+                                                    ai_step_llm=StubLLM())
+            replay["errors"] = [r.error for r in results if getattr(r, "error", None)][:5]
+        except Exception as err:
+            replay["error"] = f"{type(err).__name__}: {err}"[:300]
+        await settle(3)  # the result stays on screen a little longer, for the clip
+        replay["after"] = await capture(session, "after", inline=True)
+        replay["downloads"] = downloads(started)
+        replay["actions"] = ACTION_LOG
+        send({"type": "observe", "phase": "replay", "before_text": install.get("text", ""),
+              "before_static": install.get("static_text", ""), "result": replay})
+        await channel.wait("continue")
+    finally:
+        report["recording"] = await cast.stop()
+
+
 async def run(channel: Channel) -> None:
     start = await channel.wait("start")
     for d in (EVIDENCE, DOWNLOADS):
@@ -453,6 +584,10 @@ async def run(channel: Channel) -> None:
     await session.start()
     report: dict[str, Any] = {"type": "done"}
     try:
+        if start.get("record"):
+            began = time.time()
+            await record(session, channel, start, report)
+            return
         began = time.time()
         page, _ = await page_session(session)
         try:
