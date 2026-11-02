@@ -65,7 +65,7 @@
 - 要做 motion 動畫。節奏可以快，但畫面不要太花。要讓評審看得出動畫有用心，有一些新穎的效果。
 - 配色、design system、吉祥物 Fitz 都照現在的品牌設定：
   - 品牌：[DESIGN.md](../../DESIGN.md) 與 [brand/mascot/README.md](../../brand/mascot/README.md)。
-  - 網頁：<https://pickfit-mcp.ncchen99.workers.dev/>。
+  - 網頁：<https://pickfit.app/>。
   - 調性：裁縫的試衣間，墨綠的裁切墊、黃色量尺、赭紅縫線，字體 Bricolage Grotesque。
   - Fitz 的配色不能改。
 - 參考的動畫 Skill：Emil Kowalski 的 **animate**（<https://open-design.ai/zh/skills/animate/>）。

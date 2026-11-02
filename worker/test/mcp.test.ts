@@ -247,3 +247,18 @@ test('other paths: health at /, 404 elsewhere', async () => {
   assert.deepEqual(Object.keys(await health.json()).sort(), ['data_sha256', 'entries', 'index_built_at', 'match_mode', 'mcp', 'name', 'tools']);
   assert.equal((await call(new Request('http://127.0.0.1:8787/other'))).status, 404);
 });
+
+test('browsers on the workers.dev host are sent to CANONICAL_HOST; /mcp and the JSON check stay', async () => {
+  const workersDev = 'pickfit-mcp.example.workers.dev';
+  const { call } = setup({ ALLOWED_HOSTS: `pickfit.app,${workersDev}`, CANONICAL_HOST: 'pickfit.app' });
+  const page = (host: string, path: string, accept = 'text/html') =>
+    call(new Request(`https://${host}${path}`, { headers: { accept } }));
+  const moved = await page(workersDev, '/browse?os=macos');
+  assert.equal(moved.status, 301);
+  assert.equal(moved.headers.get('location'), 'https://pickfit.app/browse?os=macos');
+  assert.equal((await page(workersDev, '/', 'application/json')).status, 200);
+  assert.notEqual((await page('pickfit.app', '/')).status, 301);
+  assert.notEqual((await page('127.0.0.1:8787', '/')).status, 301);
+  const list = { jsonrpc: '2.0', id: 1, method: 'tools/list' };
+  assert.equal((await call(rpc(list, { 'mcp-protocol-version': '2025-11-25' }, workersDev))).status, 200);
+});
