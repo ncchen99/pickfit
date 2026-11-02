@@ -33,8 +33,8 @@ Cost: 31 calls (29 + 2 tests) x $0.0025 = $0.078, within the $0.10 limit.
   text buttons ("Play", "Skip", "Open File") and menu items ("Save As...", "Window").
 
 ## Verdict
-Not worth adding now. It finds fewer than half of the icon targets (8/19), returns nothing for a third of
-them, and sometimes one confident box on the wrong control, which a "click the box centre" rule would follow
+Not worth adding now. It finds fewer than half of the icon targets (8/19), returns nothing for nearly half of
+them (9/19), and sometimes one confident box on the wrong control, which a "click the box centre" rule would follow
 blindly. In the GUI runs the operator's misses were not targeting (the zoomed view with the last click ringed
 lands its clicks); the failures came from the environment (no Flatpak file dialog, no URI handler) and goals.
 
