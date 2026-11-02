@@ -8,14 +8,14 @@ AI coding agents have made building software cheap, sparking an explosion of ind
 
 ## Try It
 
-- **Web App (Natural-Language Search & Catalog)**: `https://pickfit-mcp.ncchen99.workers.dev/`
+- **Web App (Natural-Language Search & Catalog)**: `https://pickfit.app/`
   - Also includes `/browse` (verified catalog), `/compare` (side-by-side comparison), `/how` (methodology & scoring), `/agents` (MCP setup), and `/tool/<slug>` (full per-tool profile and verification log).
-- **MCP Endpoint (Stateless Streamable HTTP)**: `https://pickfit-mcp.ncchen99.workers.dev/mcp`
+- **MCP Endpoint (Stateless Streamable HTTP)**: `https://pickfit.app/mcp`
 
 ### Add pickfit to Claude Code
 
 ```bash
-claude mcp add --transport http pickfit https://pickfit-mcp.ncchen99.workers.dev/mcp
+claude mcp add --transport http pickfit https://pickfit.app/mcp
 ```
 
 Or configure `mcpServers` in Claude Desktop, Cursor, or any MCP client:
@@ -25,7 +25,7 @@ Or configure `mcpServers` in Claude Desktop, Cursor, or any MCP client:
   "mcpServers": {
     "pickfit": {
       "type": "http",
-      "url": "https://pickfit-mcp.ncchen99.workers.dev/mcp"
+      "url": "https://pickfit.app/mcp"
     }
   }
 }
@@ -34,7 +34,7 @@ Or configure `mcpServers` in Claude Desktop, Cursor, or any MCP client:
 When running headless `claude` from a shell inside the Claude desktop app, clear inherited environment variables with `env -i`:
 
 ```bash
-echo '{"mcpServers":{"pickfit":{"type":"http","url":"https://pickfit-mcp.ncchen99.workers.dev/mcp","headers":{"X-Pickfit-Reporter":"dev"}}}}' > /tmp/pickfit-mcp.json
+echo '{"mcpServers":{"pickfit":{"type":"http","url":"https://pickfit.app/mcp","headers":{"X-Pickfit-Reporter":"dev"}}}}' > /tmp/pickfit-mcp.json
 env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=... claude -p "Find a free offline macOS CLI to audit my MCP config" \
   --strict-mcp-config --mcp-config /tmp/pickfit-mcp.json \
   --allowedTools "mcp__pickfit__find_software,mcp__pickfit__find_alternatives,mcp__pickfit__get_install_guide,mcp__pickfit__report_outcome,mcp__pickfit__submit_software"

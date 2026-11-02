@@ -16,6 +16,15 @@ function allowedHosts(env: Env): string[] {
   return [...localhostAllowedHostnames(), ...extra];
 }
 
+/** Browsers on another public host (the workers.dev name) go to CANONICAL_HOST; /mcp, the JSON check and clips stay put. */
+function canonicalRedirect(request: Request, url: URL, env: Env): Response | null {
+  const canonical = env.CANONICAL_HOST?.trim().toLowerCase();
+  if (!canonical || url.hostname === canonical || localhostAllowedHostnames().includes(url.hostname)) return null;
+  if (request.method !== 'GET' && request.method !== 'HEAD') return null;
+  if (url.pathname === '/mcp' || !(request.headers.get('accept') ?? '').includes('text/html')) return null;
+  return Response.redirect(`https://${canonical}${url.pathname}${url.search}`, 301);
+}
+
 function forbidden(message: string): Response {
   return Response.json({ jsonrpc: '2.0', id: null, error: { code: -32000, message } }, { status: 403 });
 }
@@ -34,6 +43,8 @@ export function makeWorker(indexData: unknown, options: WorkerOptions = {}) {
   return {
     async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
       const url = new URL(request.url);
+      const moved = canonicalRedirect(request, url, env);
+      if (moved) return moved;
       const video = await serveVideo(request, env.VIDEOS, catalog);
       if (video) return video;
       if (url.pathname !== '/mcp') {

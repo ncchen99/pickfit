@@ -10,6 +10,8 @@ export interface Env {
   META_TIMEOUT_MS?: string;
   /** Comma-separated extra Host names to accept, e.g. the workers.dev host. */
   ALLOWED_HOSTS?: string;
+  /** Public host name for people, e.g. pickfit.app: browser page requests on any other public host are redirected there. */
+  CANONICAL_HOST?: string;
   /** New submit_software submissions accepted per hour, across everyone. */
   SUBMIT_HOURLY_CAP?: string;
   /** "all" (default) or "readonly": find_software, find_alternatives and get_install_guide only. */
