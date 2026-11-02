@@ -365,3 +365,15 @@ def test_the_first_segment_starts_just_before_the_screen_shows_anything():
     events = video.events_of(OP, CHANGES, 20.0, first_shown=2.0)
     assert events[0].kind == "start" and events[0].t == 1.5 and "black until 2.0 s" in events[0].what
     assert video.span(events, 1, 1, 20.0, False)[0] == 1.5
+
+
+def test_an_opening_segment_ends_before_the_first_action_that_changed_the_screen():
+    label = "convert between symbolic and numeric permissions"
+    did = lambda start, end, points, following: start < 4.0
+    events = video.events_of(OP, CHANGES, 20.0, first_shown=1.0, changed=did)
+    answer = video.EditList(segments=[S(1, 3, "The app opens", faster=True)], notes="")
+    cuts, _ = video.checked_cuts(answer, 0, 20.0, events, label, video.evidence_text(OP, label))
+    cuts, notes = video.split_openings(cuts, events)
+    assert [(c.start, c.end, c.caption, c.needs_caption) for c in cuts] == [
+        (0.5, 2.65, "The app opens", False), (2.65, cuts[1].end, "Click", True)]
+    assert cuts[1].events[0] == 2 and notes
