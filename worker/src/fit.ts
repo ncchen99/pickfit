@@ -26,6 +26,7 @@
  * its profile covers and which it does not. No model call.
  */
 import { OSES, type Entry } from './catalog.ts';
+import { L, isZh } from './i18n.ts';
 import { EN_PHRASES, GENERIC_WORDS, NOT_THE_JOB_WORDS, ZH_PHRASES } from './lexicon.ts';
 import { dropNegated, relevanceIndex, terms, zhWords } from './relevance.ts';
 
@@ -61,7 +62,7 @@ const NOT_THE_JOB = new RegExp(`\\b(?:${NOT_THE_JOB_WORDS.join('|')})\\b`, 'gi')
 const REFERENCE = /\b(?:[Aa]lternatives?\s+(?:to|for)|[Ii]nstead\s+of|[Ss]imilar\s+to|[Rr]eplacements?\s+for)\s+(?:(?:my|the|a|an)\s+)?([A-Z][\w.+-]*)|(?:類似|取代|替代|像是|像)\s*([A-Za-z][\w.+-]*)/g;
 /** How a profile mentions a product it replaces: "jira-alternative", "an alternative to Notion". */
 const ALTERNATIVE = /\b([\w.+]+)[- ]alternatives?\b|\b(?:alternatives?\s+(?:to|for)|instead\s+of|similar\s+to|replacements?\s+for)\s+([\w.+-]+)/gi;
-const CJK = /[⺀-鿿豈-﫿]/;
+const CJK = /[⺀-鿿豈-﫿]/;
 /** "secret-project-xyz": a label for the person's own thing, not the job ("text-to-speech" is kept). */
 const LABEL = /\b(?![a-z0-9]+(?:-[a-z0-9]+)*-to-)[a-z0-9]+(?:-[a-z0-9]+){2,}\b/g;
 
@@ -196,12 +197,23 @@ export function fitOf(entry: Entry, job: Job): Fit {
 
 /** One sentence on what a partial or weak pick does and does not cover, from its profile; none for a good one. */
 export function fitNote(fit: Fit): string | null {
-  const list = (words: string[]) => words.slice(0, 5).join(', ');
-  if (fit.quality === 'partial') return `Covers part of the request: its profile mentions ${list(fit.covers)} but not ${list(fit.missing)}.`;
+  const list = (words: string[]) => words.slice(0, 5).join(isZh() ? '、' : ', ');
+  if (fit.quality === 'partial') {
+    return L(
+      `Covers part of the request: its profile mentions ${list(fit.covers)} but not ${list(fit.missing)}.`,
+      `部分符合需求：它的簡介提到 ${list(fit.covers)}，但沒有提到 ${list(fit.missing)}。`,
+    );
+  }
   if (fit.quality === 'weak') {
     return fit.covers.length
-      ? `Weak match: its profile mentions ${list(fit.covers)} but not ${list(fit.missing)}.`
-      : `Weak match: its profile mentions none of ${list(fit.missing)}.`;
+      ? L(
+          `Weak match: its profile mentions ${list(fit.covers)} but not ${list(fit.missing)}.`,
+          `符合度低：它的簡介提到 ${list(fit.covers)}，但沒有提到 ${list(fit.missing)}。`,
+        )
+      : L(
+          `Weak match: its profile mentions none of ${list(fit.missing)}.`,
+          `符合度低：它的簡介完全沒有提到 ${list(fit.missing)}。`,
+        );
   }
   return null;
 }

@@ -144,15 +144,22 @@ def _video(run: VerificationRun) -> dict[str, Any] | None:
     v = run.video
     if v is None:
         return None
-    return {"clip": v.clip, "clip_sha256": v.clip_sha256, "seconds": v.seconds, "recorded_at": _iso(v.recorded_at),
-            "features": list(v.features),
-            "raw": [{"file": r.file, "sha256": r.sha256, "seconds": r.seconds, "feature": _raw_feature(run, r.smoke_test)}
-                    for r in v.raw]}
+    out = {"clip": v.clip, "clip_sha256": v.clip_sha256, "seconds": v.seconds, "recorded_at": _iso(v.recorded_at),
+           "features": list(v.features),
+           "raw": [{"file": r.file, "sha256": r.sha256, "seconds": r.seconds,
+                    "feature_index": _raw_feature_index(run, list(v.features), r.smoke_test)} for r in v.raw]}
+    # Chapters (start_s, title, feature) come from the video step; passed through as they are.
+    chapters = getattr(v, "chapters", None)
+    if chapters:
+        out["chapters"] = [c if isinstance(c, dict) else c.model_dump(mode="json") for c in chapters]
+    return out
 
 
-def _raw_feature(run: VerificationRun, smoke_test: int) -> str | None:
-    """The checked feature a raw recording shows: the one whose passed check is that smoke test."""
-    return next((f.feature for f in run.features if f.status == "checked" and smoke_test in f.smoke_tests), None)
+def _raw_feature_index(run: VerificationRun, features: list[str], smoke_test: int) -> int | None:
+    """Which of the clip's features a raw recording shows (an index, so a translated page still matches it):
+    the checked feature whose passed check is that smoke test."""
+    name = next((f.feature for f in run.features if f.status == "checked" and smoke_test in f.smoke_tests), None)
+    return features.index(name) if name in features else None
 
 
 def _run_summary(run: VerificationRun) -> dict[str, Any]:
@@ -287,5 +294,13 @@ def build_index(data_dir: Path = DEFAULT_DATA_DIR, now: datetime | None = None) 
 
 
 def write_index(index: dict[str, Any], out: Path = DEFAULT_OUT) -> None:
+    """The index, and beside it the web page's zh-TW sentences for the same entries (zh-TW.json)."""
+    from pickfit.i18n import LANG, i18n_dir, worker_translations
+
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(index, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    data_dir = Path(index["data_dir"])
+    if not data_dir.is_absolute():
+        data_dir = REPO_ROOT / data_dir
+    translations = worker_translations(index, i18n_dir(data_dir))
+    (out.parent / f"{LANG}.json").write_text(json.dumps(translations, ensure_ascii=False) + "\n", encoding="utf-8")

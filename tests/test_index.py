@@ -247,7 +247,7 @@ def test_a_runs_video_reaches_the_index_for_the_worker_to_serve(tmp_path: Path) 
     assert videos, "nip4's run has a video"
     video = videos[0]
     assert set(video) == {"clip", "clip_sha256", "seconds", "recorded_at", "features", "raw"}
-    assert video["clip"].endswith(".mp4") and video["raw"] and set(video["raw"][0]) == {"file", "sha256", "seconds", "feature"}
-    assert all(r["feature"] in video["features"] or r["feature"] is None for r in video["raw"])
+    assert video["clip"].endswith(".mp4") and video["raw"] and set(video["raw"][0]) == {"file", "sha256", "seconds", "feature_index"}
+    assert all(r["feature_index"] is None or 0 <= r["feature_index"] < len(video["features"]) for r in video["raw"])
     linux = entry["install"]["linux"]["run"]
     assert linux["video"] == video or linux["video"] is None

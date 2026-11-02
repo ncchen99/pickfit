@@ -13,8 +13,17 @@ export interface RunVideo {
   recorded_at: string;
   /** The run's checked features the clip shows. */
   features: string[];
-  /** The unedited recordings the clip was cut from; feature: the checked feature each one shows (older indexes lack it). */
-  raw: { file: string; sha256: string; seconds: number; feature?: string | null }[];
+  /** The unedited recordings the clip was cut from; feature_index: which of `features` each one shows (older indexes lack it). */
+  raw: { file: string; sha256: string; seconds: number; feature_index?: number | null }[];
+  /** The clip's segments in time order, covering it from 0 s: an opening card, one per feature, a closing card (feature null on both cards). */
+  chapters?: VideoChapter[] | null;
+}
+
+export interface VideoChapter {
+  start_s: number;
+  title: string;
+  /** Exactly one of the clip's `features`; null for the opening and closing cards. */
+  feature: string | null;
 }
 
 export interface RunSummary {

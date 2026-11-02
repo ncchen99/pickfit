@@ -73,13 +73,14 @@ class BudgetExceeded(RuntimeError):
 
 def pipeline_daily_cap(day: date) -> float:
     """$3 a day before 2026-10-29 (validation), $25 from then on; $80 on 10/31, $45 on 11/1-11/2 and
-    $35 on 11/3 (plan section 2; 念誠 raised 11/3 for the web app category)."""
+    $50 on 11/3 (plan section 2; 念誠 raised 11/3 for the web app category, and again on 11/2 when he
+    raised the total)."""
     if day < date(2026, 10, 29):
         return 3.0
     if day == date(2026, 10, 31):
         return 80.0
     if day == date(2026, 11, 3):
-        return 35.0
+        return 50.0
     return 45.0 if date(2026, 11, 1) <= day <= date(2026, 11, 2) else 25.0
 
 
@@ -90,8 +91,9 @@ class Caps:
 
 
 # 念誠 raised the total from $120 to $160 on 11/1 for the web app category; past Meta's $150 of
-# credits is his call (plan section 2).
-PIPELINE_TOTAL_USD = 160.0
+# credits is his call (plan section 2). On 11/2 he allowed Meta up to $100 past the credits ($250 in
+# all) for the GUI and web work: $225 here, and the Worker's own caps ($15 live, $10 eval) the rest.
+PIPELINE_TOTAL_USD = 225.0
 PIPELINE_CAPS = Caps(total_usd=PIPELINE_TOTAL_USD, daily_usd=pipeline_daily_cap)
 
 
@@ -125,8 +127,9 @@ def baseten_daily_cap(day: date) -> float:
 BASETEN_CAPS = Caps(total_usd=100.0, daily_usd=baseten_daily_cap)
 # Muse Spark Open on the hackathon's Modal Shared Endpoint, paid from Modal credits: its own budget,
 # $30 in all and $20 a day (the coordinating session, 11/1); 念誠 raised it to $60 in all and $30 a day
-# on 11/2 (verification videos: Muse watches pickfit's screen recordings).
-MODAL_LLM_CAPS = Caps(total_usd=60.0, daily_usd=lambda day: 30.0)
+# on 11/2 (verification videos: Muse watches pickfit's screen recordings), then to $100 and $50 a day
+# the same evening (web recordings and GUI checks).
+MODAL_LLM_CAPS = Caps(total_usd=100.0, daily_usd=lambda day: 50.0)
 
 
 def taipei_now(clock: Callable[[], datetime] | None = None) -> datetime:

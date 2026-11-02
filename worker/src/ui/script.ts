@@ -1,10 +1,15 @@
+import { L } from '../i18n.ts';
+
+/** A visible client-side string as a JS string literal, in the render's language. */
+const J = (en: string, zh: string): string => JSON.stringify(L(en, zh));
+
 /**
  * The page script. Everything works without it (the form posts, links link);
  * it adds results in place, copy buttons, the compare tray (kept in this
  * browser's localStorage only), popover placement, the legend dialog and the
  * browse filter. Event delegation, so fragments inserted later just work.
  */
-export const SCRIPT = `
+export const script = () => `
 (() => {
   const root = document.documentElement;
   root.classList.add('js');
@@ -20,6 +25,13 @@ export const SCRIPT = `
     toasts.append(t);
     setTimeout(() => t.remove(), 2600);
   };
+
+  // ---------------------------------------------------------------- language: keep this page's other query parameters
+  for (const a of $$('a[data-lang]')) {
+    const q = new URLSearchParams(location.search);
+    q.set('lang', a.dataset.lang);
+    a.href = location.pathname + '?' + q + location.hash;
+  }
 
   // ---------------------------------------------------------------- search
   const form = $('#search');
@@ -57,8 +69,8 @@ export const SCRIPT = `
       busy = true;
       go.disabled = true;
       go.setAttribute('aria-busy', 'true');
-      label.textContent = 'Measuring';
-      status.textContent = 'Searching';
+      label.textContent = ${J('Measuring', '測量中')};
+      status.textContent = ${J('Searching', '搜尋中')};
       out.setAttribute('aria-busy', 'true');
       out.replaceChildren($('#loading').content.cloneNode(true));
       if (!document.body.classList.contains('is-results')) {
@@ -71,16 +83,16 @@ export const SCRIPT = `
         if (!(res.headers.get('content-type') || '').startsWith('text/html') || res.status >= 500) throw new Error(String(res.status));
         out.innerHTML = await res.text();
         const n = $$('.pick', out).length;
-        status.textContent = n ? n + (n === 1 ? ' result' : ' results') : 'No results';
+        status.textContent = n ? n + (n === 1 ? ${J(' result', ' 個結果')} : ${J(' results', ' 個結果')}) : ${J('No results', '沒有結果')};
         syncChecks();
       } catch {
         out.replaceChildren($('#offline').content.cloneNode(true));
-        status.textContent = 'Search failed';
+        status.textContent = ${J('Search failed', '搜尋失敗')};
       } finally {
         busy = false;
         go.disabled = false;
         go.removeAttribute('aria-busy');
-        label.textContent = 'Find my fit';
+        label.textContent = ${J('Find my fit', '找出最適合的')};
         out.removeAttribute('aria-busy');
         out.focus({ preventScroll: true });
       }
@@ -104,9 +116,9 @@ export const SCRIPT = `
     const span = b.querySelector('span');
     try {
       await navigator.clipboard.writeText(text);
-      b.classList.add('done'); span.textContent = 'Copied'; toast('Copied to the clipboard');
-    } catch { span.textContent = 'Select to copy'; }
-    setTimeout(() => { b.classList.remove('done'); span.textContent = 'Copy'; }, 1800);
+      b.classList.add('done'); span.textContent = ${J('Copied', '已複製')}; toast(${J('Copied to the clipboard', '已複製到剪貼簿')});
+    } catch { span.textContent = ${J('Select to copy', '請選取後複製')}; }
+    setTimeout(() => { b.classList.remove('done'); span.textContent = ${J('Copy', '複製')}; }, 1800);
   });
 
   // ---------------------------------------------------------------- compare tray
@@ -135,12 +147,12 @@ export const SCRIPT = `
       const li = document.createElement('li');
       li.textContent = i.name;
       const x = document.createElement('button');
-      x.type = 'button'; x.dataset.trayRemove = i.slug; x.setAttribute('aria-label', 'Remove ' + i.name);
+      x.type = 'button'; x.dataset.trayRemove = i.slug; x.setAttribute('aria-label', ${J('Remove ', '移除 ')} + i.name);
       x.innerHTML = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
       li.append(x);
       return li;
     }));
-    note.textContent = items.length < 2 ? 'Add one more to compare' : items.length + ' of ' + MAX;
+    note.textContent = items.length < 2 ? ${J('Add one more to compare', '再加一款即可比較')} : items.length + ${J(' of ', ' / ')} + MAX;
     goCmp.href = href(items);
     goCmp.setAttribute('aria-disabled', String(items.length < 2));
     syncChecks();
@@ -150,9 +162,9 @@ export const SCRIPT = `
     if (!c) return;
     let items = read();
     if (c.checked) {
-      if (items.length >= MAX) { c.checked = false; toast('Compare holds ' + MAX + ' tools. Remove one first.'); return; }
+      if (items.length >= MAX) { c.checked = false; toast(${J('Compare holds ', '比較最多 ')} + MAX + ${J(' tools. Remove one first.', ' 款工具，請先移除一款。')}); return; }
       if (!items.some((i) => i.slug === c.dataset.compare)) items.push({ slug: c.dataset.compare, name: c.dataset.name });
-      toast(c.dataset.name + ' added to compare');
+      toast(c.dataset.name + ${J(' added to compare', ' 已加入比較')});
     } else {
       items = items.filter((i) => i.slug !== c.dataset.compare);
     }
@@ -163,7 +175,7 @@ export const SCRIPT = `
     if (x) { write(read().filter((i) => i.slug !== x.dataset.trayRemove)); render(); return; }
     if (e.target.closest('[data-tray-clear]')) { write([]); render(); return; }
     const g = e.target.closest('[data-tray-go]');
-    if (g && read().length < 2) { e.preventDefault(); toast('Pick at least two tools to compare'); }
+    if (g && read().length < 2) { e.preventDefault(); toast(${J('Pick at least two tools to compare', '請至少選兩款工具來比較')}); }
   });
   // The compare page says what it shows; keep the tray in step with it.
   const shown = $('[data-compare-shown]');
@@ -204,7 +216,7 @@ export const SCRIPT = `
       const later = $$('.cat-card.later', grid);
       later.slice(0, 30).forEach((c) => c.classList.remove('later'));
       const left = later.length - 30;
-      if (left > 0) more.textContent = 'Show ' + Math.min(30, left) + ' more'; else more.parentElement.remove();
+      if (left > 0) more.textContent = ${J('Show ', '再顯示 ')} + Math.min(30, left) + ${J(' more', ' 款')}; else more.parentElement.remove();
     });
   }
   const filter = $('[data-filter]');
@@ -223,6 +235,94 @@ export const SCRIPT = `
       if (shownCount) shownCount.textContent = String(n);
       if (grid) grid.classList.toggle('filtering', q.length > 0);
       if (empty) empty.hidden = n > 0;
+    });
+  }
+
+  // ---------------------------------------------------------------- the clip's chapter player
+  // Server-rendered as the browser's own player plus a hidden bar; with chapters, the bar takes over:
+  // one segment per chapter, its name on hover and while dragging, arrow keys and Page Up/Down to move.
+  const clockOf = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
+  for (const fig of $$('[data-player]')) {
+    const video = $('video', fig);
+    const track = $('[data-track]', fig);
+    const tip = $('[data-tip-box]', fig);
+    const time = $('[data-time]', fig);
+    const play = $('[data-play]', fig);
+    const items = $$('.chapters [data-seek]', fig);
+    const segs = $$('.chap-seg', track).map((el) => ({ el, start: +el.dataset.start, end: +el.dataset.end, title: el.dataset.title, fill: $('.chap-fill', el) }));
+    if (!video || !segs.length) continue;
+    for (const s of segs) s.el.style.flexGrow = String(Math.max(s.end - s.start, 0.1));
+    video.controls = false;
+    $('[data-bar]', fig).hidden = false;
+    const total = () => (isFinite(video.duration) && video.duration > 0 ? video.duration : segs[segs.length - 1].end);
+    const at = (t) => { let cur = segs[0]; for (const s of segs) if (t >= s.start) cur = s; return cur; };
+    const paint = () => {
+      const t = video.currentTime;
+      const cur = at(t);
+      for (const s of segs) s.fill.style.transform = 'scaleX(' + Math.min(1, Math.max(0, (t - s.start) / (s.end - s.start))) + ')';
+      time.textContent = clockOf(t) + ' / ' + clockOf(total());
+      track.setAttribute('aria-valuenow', String(Math.round(t)));
+      track.setAttribute('aria-valuetext', clockOf(t) + ', ' + cur.title);
+      items.forEach((b, i) => (segs[i] === cur ? b.setAttribute('aria-current', 'true') : b.removeAttribute('aria-current')));
+      play.classList.toggle('is-playing', !video.paused);
+      play.setAttribute('aria-label', video.paused ? play.dataset.labelPlay : play.dataset.labelPause);
+    };
+    const seek = (t) => { video.currentTime = Math.max(0, Math.min(total() - 0.05, t)); paint(); };
+    // Segments have gaps between them, so a point maps to time through the segment it is over.
+    const timeAt = (x) => {
+      for (const s of segs) {
+        const r = s.el.getBoundingClientRect();
+        if (x <= r.right + 1.5) return s.start + Math.min(1, Math.max(0, (x - r.left) / r.width)) * (s.end - s.start);
+      }
+      return total();
+    };
+    const showTip = (x) => {
+      const t = timeAt(x);
+      const r = track.getBoundingClientRect();
+      tip.textContent = at(t).title + ' · ' + clockOf(t);
+      tip.hidden = false;
+      tip.style.left = Math.min(Math.max(x - r.left, 60), r.width - 60) + 'px';
+    };
+    let dragging = false;
+    track.addEventListener('pointerdown', (e) => { dragging = true; track.setPointerCapture(e.pointerId); seek(timeAt(e.clientX)); showTip(e.clientX); });
+    track.addEventListener('pointermove', (e) => { showTip(e.clientX); if (dragging) seek(timeAt(e.clientX)); });
+    const stop = (e) => { dragging = false; if (e.pointerType !== 'mouse') tip.hidden = true; };
+    track.addEventListener('pointerup', stop);
+    track.addEventListener('pointercancel', stop);
+    track.addEventListener('pointerleave', () => { if (!dragging) tip.hidden = true; });
+    const toggle = () => (video.paused ? video.play() : video.pause());
+    track.addEventListener('keydown', (e) => {
+      const t = video.currentTime;
+      const i = segs.indexOf(at(t));
+      const to = {
+        ArrowRight: t + 5, ArrowLeft: t - 5, Home: 0, End: total(),
+        PageDown: (segs[i + 1] || segs[i]).start,
+        PageUp: t - segs[i].start > 2 ? segs[i].start : (segs[i - 1] || segs[0]).start,
+      };
+      if (e.key in to) { e.preventDefault(); seek(to[e.key]); }
+      else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); }
+    });
+    play.addEventListener('click', toggle);
+    video.addEventListener('click', toggle);
+    $('[data-mute]', fig).addEventListener('click', (e) => { video.muted = !video.muted; e.currentTarget.classList.toggle('is-muted', video.muted); });
+    $('[data-full]', fig).addEventListener('click', () => {
+      const box = $('.player', fig);
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (box.requestFullscreen) box.requestFullscreen();
+      else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+    });
+    for (const ev of ['timeupdate', 'play', 'pause', 'loadedmetadata', 'seeked']) video.addEventListener(ev, paint);
+    paint();
+  }
+  // The chapter list and each feature's "Watch it at" jump into the clip.
+  for (const b of $$('[data-seek]')) {
+    b.addEventListener('click', () => {
+      const fig = $('[data-player]');
+      const video = fig && $('video', fig);
+      if (!video) return;
+      video.currentTime = +b.dataset.seek;
+      video.play();
+      fig.scrollIntoView({ block: 'nearest', behavior: still() ? 'auto' : 'smooth' });
     });
   }
 
