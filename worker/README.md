@@ -242,6 +242,8 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 
 ## 部署檢查清單
 
+**push 到 `main` 會自動部署**（`.github/workflows/worker.yml`）：建索引、typecheck、`npm test` 都過了，才套遠端 D1 migration（只有 `pickfit`）再跑 `pickfit publish --no-translate`。PR 只跑檢查不部署；評測 env 不會被部署。GitHub 需要 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID` 兩個 secret。CI 不翻譯新句子，要中文就在本機跑一次 `uv run pickfit publish`。下面是手動部署與第一次建置的步驟。
+
 **先決條件**：`data/software/` 有真的 profile 並已 commit（P2.6），而且念誠同意部署。下面的指令都在**主 checkout** 的 `worker/` 下跑（`.env` 在主 checkout 根目錄）。
 
 1. **建 D1**：`npx wrangler d1 create pickfit`，把輸出的 `database_id` 填進 `wrangler.jsonc`（取代全 0 的佔位），commit。
