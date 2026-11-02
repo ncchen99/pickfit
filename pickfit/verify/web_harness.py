@@ -64,6 +64,7 @@ FRAME_GAP_S = 0.2  # the screencast sends a frame on every paint; one in this ma
 
 _proto: Any = None  # the real stdout, set by main(); library prints go to stderr
 ACTION_LOG: list[dict[str, Any]] = []  # every action the tools ran, with its times and the element's box
+MIN_GAP_S = 0.0  # a recording visit's replay: at least this long between actions (the site's crawl delay)
 
 
 def send(message: dict[str, Any]) -> None:
@@ -333,6 +334,8 @@ def make_tools() -> Any:
                     return ActionResult(error=f"pickfit refuses this {name}: {why}. Do not sign up, log in, buy, "
                                               "book, post, share, chat, join public rooms or type personal data; "
                                               "use the site's tool on your own.")
+            if MIN_GAP_S and ACTION_LOG:  # a replay keeps the site's pace, however quick the first visit was
+                await asyncio.sleep(max(0.0, ACTION_LOG[-1]["t1"] + MIN_GAP_S - time.time()))
             entry: dict[str, Any] = {"t0": time.time(), "actions": action.model_dump(exclude_unset=True)}
             for params in entry["actions"].values():
                 if isinstance(params, dict) and params.get("index") is not None:
@@ -533,6 +536,8 @@ async def record(session: Any, channel: Channel, start: dict[str, Any], report: 
     saved visit's actions are replayed without a model (as the offline phase does)."""
     from browser_use import Agent
 
+    global MIN_GAP_S
+    MIN_GAP_S = float(start["wait_between_actions"])
     cast = Screencast(session)
     await cast.start()
     report["recording_started_at"] = time.time()
@@ -556,7 +561,8 @@ async def record(session: Any, channel: Channel, start: dict[str, Any], report: 
         try:
             results = await replayer.load_and_rerun(start["history_path"], skip_failures=True,
                                                     delay_between_actions=start["wait_between_actions"],
-                                                    max_step_interval=5.0, summary_llm=StubLLM(),
+                                                    max_step_interval=max(5.0, start["wait_between_actions"]),
+                                                    summary_llm=StubLLM(),
                                                     ai_step_llm=StubLLM())
             replay["errors"] = [r.error for r in results if getattr(r, "error", None)][:5]
         except Exception as err:

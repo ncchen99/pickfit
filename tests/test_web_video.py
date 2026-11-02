@@ -118,3 +118,104 @@ def test_a_web_runs_video_must_show_one_of_its_passed_operations():
     run["video"] = {**video, "raw": [{**video["raw"][0], "smoke_test": 0}]}  # the page load, not an operation
     with pytest.raises(ValueError, match="operation that passed"):
         SoftwareRecord.model_validate(data)
+
+
+def test_frames_json_is_the_vms_word_and_only_harness_names_and_a_bounded_end_are_used(tmp_path: Path):
+    (tmp_path / "f00000.jpg").write_bytes(b"x")
+    (tmp_path / "f00001.jpg").write_bytes(b"x")
+    index = {"frames": [{"t": 100.5, "file": "f00000.jpg"}, {"t": 101.0, "file": "../../etc/passwd"},
+                        {"t": 101.5, "file": "/etc/hosts"}, {"t": "soon", "file": "f00001.jpg"},
+                        {"t": 102.0, "file": "f00001.jpg"}, {"t": 103.0, "file": "f00002.jpg"}],
+             "stopped_at": 1e12, "viewport": [100000, "tall"]}
+    safe = web_video.safe_index(tmp_path, index, 100.0)
+    assert [f["file"] for f in safe["frames"]] == ["f00000.jpg", "f00001.jpg"]
+    assert safe["stopped_at"] == 100.0 + record.MAX_SECONDS and safe["viewport"] == [4096, 900]
+
+
+def _history(*names: str) -> dict[str, Any]:
+    return {"history": [{"model_output": {"action": [{n: {}}]}} for n in names] + [{"model_output": None}]}
+
+
+def test_every_page_action_of_the_first_visit_must_be_replayed():
+    history = _history("input", "click", "upload_file", "wait", "done")
+    steps = web_video.steps_of([
+        {"t0": 1.0, "t1": 2.0, "actions": {"input": {"index": 1, "text": "abc"}}, "box": [0, 0, 10, 10]},
+        {"t0": 3.0, "t1": 3.5, "actions": {"click": {"index": 2}}, "box": [0, 0, 10, 10]},
+        {"t0": 4.0, "t1": 4.5, "actions": {"upload_file": {"index": 3, "path": "/home/web/samples/sample.txt"}}}],
+        (1280, 900))
+    assert not web_video.history_actions(history) - web_video.replayed_actions(steps)
+    missing = web_video.history_actions(history) - web_video.replayed_actions(steps[:3])  # an input is two steps
+    assert dict(missing) == {"upload_file": 1}
+
+
+class _Verdict:
+    def __init__(self, shown: bool) -> None:
+        self.feature_shown, self.observed = shown, "the board shows a placed tile"
+
+    def model_dump(self) -> dict[str, Any]:
+        return {"feature_shown": self.feature_shown, "observed": self.observed}
+
+
+def _judge(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, shown: bool = True, errors: list[str] = (),
+           flows: list[dict[str, Any]] = (), steps: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    from pickfit.verify import web_verify as wv
+
+    monkeypatch.setattr(wv, "visual_change", lambda a, b: 0.12)
+    monkeypatch.setattr(wv, "screenshot_check", lambda check, *a, **k: (check, 0.0))
+    monkeypatch.setattr(wv, "judge_function", lambda *a, **k: (_Verdict(shown), 0.001))
+    (tmp_path / "flows.jsonl").write_text("".join(json.dumps(f) + "\n" for f in flows), encoding="utf-8")
+    steps = steps if steps is not None else [{"action": {"kind": "click", "x": 5, "y": 5}, "at": [1.0, 1.0]},
+                                             {"action": {"kind": "type", "text": "pickfitab12 note"}, "at": [1.0, 2.0]}]
+    outcome = {"result_kind": "text_on_page", "result_text": "Encoded!"}
+    after = {"text": "Your note is Encoded! now", "screenshot_jpeg_b64": "QQ=="}
+    return web_video.judge_replay(tmp_path, object(), outcome, ["pickfitab12 note"], "pickfitab12", _history("input"),
+                                  steps, {"after": after, "errors": list(errors)},
+                                  {"text": "Type a note", "screenshot_jpeg_b64": "QQ=="}, run_id="video-x", scope="video:x")
+
+
+def test_a_replay_passes_only_as_the_first_visit_did(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    good = _judge(tmp_path, monkeypatch)
+    assert good["passed"] and good["data_sent"] == "none" and good["why"] is None
+    assert not _judge(tmp_path, monkeypatch, shown=False)["passed"]  # the function judge, as on the first visit
+    failed = _judge(tmp_path, monkeypatch, errors=["No action to replay", "Element 7 not found"])
+    assert not failed["passed"] and "Element 7 not found" in failed["why"]
+    assert "did not run" in _judge(tmp_path, monkeypatch, steps=[])["why"]
+    sent = _judge(tmp_path, monkeypatch, flows=[{"url": "https://collector.example/c?q=pickfitab12%20note",
+                                                "host": "collector.example", "method": "GET", "allowed": True}])
+    assert sent["data_sent"] == "observed" and not sent["passed"]
+
+
+def test_nothing_is_replayed_on_a_sign_in_wall_or_terms_that_forbid_bots(monkeypatch: pytest.MonkeyPatch):
+    from pickfit.verify import web_verify as wv
+
+    class Page:
+        def __init__(self, screen: str) -> None:
+            self.screen = screen
+
+        def model_dump(self) -> dict[str, Any]:
+            return {"screen": self.screen}
+
+    target = wv.WebTarget(slug="s", name="S", url="https://s.example/", use_case="", features=[])
+    pre = wv.Preflight(allowed=True, reason=None, robots_status=404, robots_txt=None, crawl_delay=None)
+    state = {"url": "https://s.example/", "text": "Welcome " * 80, "links": [{"text": "Terms", "href": "/terms"}]}
+    monkeypatch.setattr(wv, "judge_page", lambda *a, **k: (Page("sign_in_wall"), 0.001))
+    ok, why, _, _ = web_video.check_install(target, state, pre, run_id="video-x", scope="video:x")
+    assert not ok and "sign_in_wall" in why
+    monkeypatch.setattr(wv, "judge_page", lambda *a, **k: (Page("main_ui"), 0.001))
+    monkeypatch.setattr(wv, "check_terms", lambda urls, *a, **k: (True, "No bots.", urls, 0.002))
+    ok, why, info, _ = web_video.check_install(target, state, pre, run_id="video-x", scope="video:x")
+    assert not ok and why == "the terms forbid automated access" and info["terms_rendered"]["checked"]
+
+
+def test_a_recording_visit_is_logged_as_the_sites_second(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    from pickfit.verify import web_verify as wv
+
+    other, mine = tmp_path / "other" / "runs", tmp_path / "mine" / "runs"
+    (other / "web").mkdir(parents=True)
+    (other / "web" / "visits.jsonl").write_text(json.dumps(
+        {"site": "s.example", "slug": "s", "run_id": "web-s-20261102-000000-0001", "at": "x", "revisit": None}) + "\n")
+    monkeypatch.setattr(web_video, "runs_roots", lambda: [mine, other])
+    monkeypatch.setattr(wv, "visits_path", lambda: mine / "web" / "visits.jsonl")
+    reason = web_video.log_revisit("s.example", "s", "video-s-20261102-220000-ab12", "web-s-20261102-010000-0002")
+    line = json.loads((mine / "web" / "visits.jsonl").read_text())
+    assert line["revisit"] == reason and reason.endswith("first visit web-s-20261102-000000-0001")
