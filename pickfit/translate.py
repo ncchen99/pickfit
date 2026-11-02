@@ -47,13 +47,14 @@ Rules:
 - Use full-width Chinese punctuation (，。：；（）) in Chinese sentences; keep punctuation inside code as is.
 - Short feature names and use cases stay short noun or verb phrases; do not add explanations or a trailing period the English lacks.
 - Translate meaning, not word by word; never add or drop facts. Keep a full stop (。) when the English sentence ends with a period, and none when it does not.
+- Write like Taiwanese product copy, as short as the English or shorter. A summary says what the tool is first, then what it does, with at most two 的 per sentence (not "用於…的…工具。"; write "輕量的網頁密碼管理工具，用來整理 Windows AD 帳密。"). In test notes, drop pronouns (其, 它) and the passive 被, and lead with the result.
 
 Terms from pickfit's test notes (they have fixed meanings):
-- "box", "the agent's box", "a fresh box" = the test sandbox: 沙盒, 代理的沙盒, 全新的沙盒 (not 機器, not 此環境).
+- "box", "the agent's box", "a fresh box" = the test sandbox: 沙盒, agent 的沙盒, 全新的沙盒 (not 機器, not 此環境).
 - "exercised" / "not exercised" = actually tried in the test / not tried: 實際測試過 / 沒有實際測試 (it never means the tool cannot run).
-- "check passed / did not pass", "smoke test", "replay" = 檢查通過／未通過, 冒煙測試, 重播 (re-running the recorded steps from scratch).
+- "check passed / did not pass", "smoke test", "replay" = 檢查通過／未通過, 冒煙測試, 重跑 (re-running the recorded steps from scratch; never 重播).
 - "too long for the record" = the check's output was too long to keep in the record, not that the record is too long.
-- transcribe = 轉錄 / 語音轉文字 (never 轉譯 or 翻譯); local = 本機 (not 本地); script = 腳本; prompt = 提示詞; agent = 代理程式 (AI agent: AI 代理); API key = API 金鑰; client = 用戶端 (not 客戶端); call / invoke = 呼叫 (not 調用).
+- transcribe = 轉錄 / 語音轉文字 (never 轉譯 or 翻譯); local = 本機 (not 本地); script = 腳本; prompt = 提示詞; agent, subagent, coding agent, AI agent stay in English (agent, subagent, coding agent, AI agent; never 代理); profile = 簡介; repo / repository = 儲存庫; open source = 開源; API key = API 金鑰; client = 用戶端 (not 客戶端); call / invoke = 呼叫 (not 調用).
 - Technical domain terms keep their field's established meaning (e.g. "variant calls" in genomics = 變異位點檢出結果; "open a circuit" = 斷開電路); when unsure, keep the English term.
 Return every item, with the same index."""
 
