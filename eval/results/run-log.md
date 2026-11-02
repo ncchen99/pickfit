@@ -245,6 +245,15 @@
 - q11 問題的方式：答案的第一種用法 `ollama run tw`，每題一次新的執行、把凍結的題目貼進去（stdin）。答案的 Modelfile 設 temperature 0.6、Ollama 文件沒有可以固定 seed 的環境變數或設定檔，所以 P1–P5 跑 3 次、2 次過算過。記憶體量測（footprint_watch）從第一行安裝前到最後一個回覆後；重算時排除 Tart Guest Agent（以測試帳號身分、從非系統路徑執行）。
 - 評分者自己的操作失誤（答案不變，第一次保留）：q11 對照組第 1 次（`q11-control-attempt1-setupassistant/`）：關掉新帳號的設定助理會讓那個帳號登出，記憶體量測因此中斷，整台重來；同一次裡評分者用 `open -a Ollama` 代替「打開」，LaunchServices 還沒登記剛複製的 app 而失敗，重做時改成 `open /Applications/Ollama.app`（等於在 Finder 雙擊）。
 
+### 凍結快照裡的產品錯誤：`gui.tier` 的輸出 schema（2026-11-02 協調 session 通報）
+
+- 錯誤：快照 `4e0dd4b` 的 `worker/src/server.ts:66`，zod 輸出 schema 的 `gui.tier` 只列 `['window', 'ui_rendered']`；驗到功能層級的 GUI 紀錄是 `action_checked`。回應裡只要有這種首選，`find_software`、`find_alternatives`、`get_install_guide` 都會輸出驗證失敗（`isError: true`，「Output validation error: … picks.N.verification.gui.tier: Invalid option」）。修正 5eb1f2c 在 `claude/hotfix-gui-tier`（未合併）；評測部署維持凍結。
+- 快照資料裡會觸發的紀錄（`gui.tier` = `action_checked`，10 筆）：breaktimer-app、concessio、itsypad-macos、neon-vision-editor、nip4、portfolio、qelectrotech-source-mirror、quran-companion、sigil、waywallen。
+- 有沒有影響評測：沒有。
+  - 所有 stream-json（run1–run3、haiku、bset、c6；作廢的不算）裡 pickfit 工具結果共 101 個：`find_software` 76 個、`find_alternatives` 25 個；沒有一個是「Output validation error」，也沒有一個提到上面 10 筆紀錄；`get_install_guide` 沒有被呼叫過。
+  - 兩個評測部署的 Worker 事件（D1 匯出，80＋20 筆）沒有任何 `error_excerpt`，`results` 也沒有那 10 筆的 slug。
+  - pickfit 工具結果裡的 5 個錯誤（run1 q13 實驗組、run1 q07 rules_only、run2 q13 實驗組、haiku q08、haiku q15 實驗組，都是 `find_alternatives`）是 Claude Code 端的 `InputValidationError`：agent 送出的參數不是合法 JSON，請求沒有到 pickfit。不是這個錯誤，也不算 E 的 `tool_error`（「pickfit 回傳錯誤」）；第 1 次的兩則在 E 標記時另行判斷。
+
 ### 偏好表單交回（第 1 次，2026-11-02 約 16:30）
 
 - `blind/prefer-run1/choices.json`：念誠的匯出檔原樣複製（sha256 `84586da7…`；檔內 `form_sha256` = `eae1ce18…`，和表單相同；20 題）。還沒解盲；L1 表單交回前，結果不給念誠。
