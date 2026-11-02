@@ -307,6 +307,23 @@ def _add_score_command(sub: argparse._SubParsersAction) -> None:
     s.set_defaults(func=main_score)
 
 
+def _add_usability_command(sub: argparse._SubParsersAction) -> None:
+    from pickfit.usability import MODEL, SAMPLES, STAGE_CAP_USD, main_usability
+
+    u = sub.add_parser("usability", help="how easy GUI and web apps are to use, from pickfit's own screenshots "
+                                         "(Muse Spark 1.3, paid; prints costs, never the scores)")
+    u.add_argument("--slug", action="append", help="judge this record (repeatable)")
+    u.add_argument("--pilot", action="store_true", help="judge the 12 apps in data/calibration/ease-pilot.json")
+    u.add_argument("--data-dir", default=None, help="records (default data/software)")
+    u.add_argument("--model", default=MODEL, help='"prod" (muse-spark-1.3, default) or a model id')
+    u.add_argument("--samples", type=int, default=SAMPLES, help="times each call is made")
+    u.add_argument("--cap", type=float, default=STAGE_CAP_USD, help="the stage's ledger cap in USD")
+    u.add_argument("--out", default=None, help="where results go (default ~/.pickfit/usability)")
+    u.add_argument("--write", action="store_true", help="also add each result to its record as `usability`")
+    u.add_argument("--dry-run", action="store_true", help="build the inputs and run OCR; no model call")
+    u.set_defaults(func=main_usability)
+
+
 # --- submissions and reported failures (P5.2, P5.3) ----------------------------------
 
 
@@ -521,6 +538,7 @@ def main(argv: list[str] | None = None) -> int:
 
     _add_pipeline_commands(sub)
     _add_score_command(sub)
+    _add_usability_command(sub)
     _add_queue_commands(sub)
     _add_outcomes_command(sub)
     _add_publish_command(sub)
