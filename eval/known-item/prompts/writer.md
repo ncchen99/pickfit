@@ -25,3 +25,9 @@ Retry note, appended to the user message on the second and third attempts (it ne
 <!-- RETRY START -->
 Your previous draft did not pass a check: it may have used the project's name or copied its description. Rewrite the request in the user's own words.
 <!-- RETRY END -->
+
+Length note, appended instead of the retry note when the previous draft's request was over 500 characters, the most find_software accepts (README change log, 11/2 17:18):
+
+<!-- LENGTH START -->
+Your previous draft was too long. Keep the request to at most 450 characters.
+<!-- LENGTH END -->

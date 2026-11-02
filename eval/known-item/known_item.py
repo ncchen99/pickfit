@@ -2,6 +2,7 @@
 
 Steps, run from the repo root in this order:
   uv run --with anthropic==2.3.0 python eval/known-item/known_item.py sample   # draw targets, fetch READMEs, write questions
+  uv run --with anthropic==2.3.0 python eval/known-item/known_item.py rewrite  # questions over find_software's 500 chars
   uv run --with anthropic==2.3.0 python eval/known-item/known_item.py run      # call the live Worker's find_software
   uv run --with anthropic==2.3.0 python eval/known-item/known_item.py cost     # settle Worker spend from its D1 events
   uv run --with anthropic==2.3.0 python eval/known-item/known_item.py l1       # blind L1 on top picks, then on targets
@@ -50,6 +51,7 @@ MAX_OUTPUT_TOKENS = 8000
 README_MAX_CHARS = 40_000
 README_MIN_CHARS = 400
 WRITER_ATTEMPTS = 3
+NEED_MAX_CHARS = 500  # find_software's limit on need (README change log, 11/2 17:18)
 # USD per million tokens (input, output, cached input): the table eval/runner/grade.py uses.
 PRICE = (4.00, 20.00, 0.20)
 WORKER_RESERVE_USD = 0.10
@@ -76,6 +78,7 @@ def section(path: Path, start: str, end: str) -> str:
 
 WRITER_PROMPT = section(HERE / "prompts" / "writer.md", "WRITER START", "WRITER END")
 RETRY_NOTE = section(HERE / "prompts" / "writer.md", "RETRY START", "RETRY END")
+LENGTH_NOTE = section(HERE / "prompts" / "writer.md", "LENGTH START", "LENGTH END")
 L1_PROMPT = section(HERE / "prompts" / "l1.md", "RUBRIC START", "RUBRIC END")
 
 WRITER_SCHEMA = {
@@ -259,7 +262,9 @@ def check_question(request: str, record: dict[str, Any]) -> dict[str, Any]:
              if re.search(r"(?<![a-z0-9])" + re.escape(t) + r"(?![a-z0-9])", body)]
     sources = [record.get("summary") or "", *(record.get("use_cases") or [])]
     shared = sorted({" ".join(g) for s in sources for g in grams(s) & grams(request)})
-    return {"name_hits": names, "shared_5grams": shared, "passed": not names and not shared}
+    too_long = len(request) > NEED_MAX_CHARS
+    return {"name_hits": names, "shared_5grams": shared, "too_long": too_long,
+            "passed": not names and not shared and not too_long}
 
 
 def well_formed(parsed: Any) -> bool:
@@ -271,9 +276,11 @@ def readme_message(readme: dict[str, Any]) -> str:
     return f"{readme['path']} at commit {readme['commit']}:\n\n{readme['text'][:README_MAX_CHARS]}"
 
 
-def write_question(record: dict[str, Any], readme: dict[str, Any], log: io.TextIOBase) -> dict[str, Any] | None:
-    for attempt in range(1, WRITER_ATTEMPTS + 1):
-        user = readme_message(readme) + ("" if attempt == 1 else "\n\n" + RETRY_NOTE)
+def write_question(record: dict[str, Any], readme: dict[str, Any], log: io.TextIOBase,
+                   first: int = 1, too_long: bool = False) -> dict[str, Any] | None:
+    for attempt in range(first, WRITER_ATTEMPTS + 1):
+        note = LENGTH_NOTE if too_long else RETRY_NOTE
+        user = readme_message(readme) + ("" if attempt == 1 else "\n\n" + note)
         reply = claude(WRITER_PROMPT, user, WRITER_EFFORT, WRITER_SCHEMA, "writer", record["slug"])
         parsed = reply["parsed"]
         check = (check_question(parsed["request"], record) if well_formed(parsed)
@@ -285,6 +292,7 @@ def write_question(record: dict[str, Any], readme: dict[str, Any], log: io.TextI
         print(f"  writer {record['slug']} attempt {attempt}: {'ok' if check['passed'] else check} ${reply['cost_usd']}")
         if check["passed"]:
             return row
+        too_long = bool(check.get("too_long"))
     return None
 
 
@@ -330,7 +338,30 @@ def step_sample() -> None:
 
 def accepted_questions() -> dict[str, dict[str, Any]]:
     rows = [json.loads(line) for line in QUESTIONS.read_text(encoding="utf-8").splitlines() if line.strip()]
-    return {r["slug"]: r for r in rows if r["check"]["passed"]}
+    return {r["slug"]: r for r in rows
+            if r["check"]["passed"] and len(r["reply"]["parsed"]["request"]) <= NEED_MAX_CHARS}
+
+
+def step_rewrite() -> None:
+    """Targets whose question find_software rejected as too long: rewrite with the length note."""
+    records = snapshot()
+    sample = json.loads(SAMPLE.read_text(encoding="utf-8"))
+    inputs = json.loads(INPUTS.read_text(encoding="utf-8"))
+    rows = [json.loads(line) for line in QUESTIONS.read_text(encoding="utf-8").splitlines() if line.strip()]
+    accepted = accepted_questions()
+    with QUESTIONS.open("a", encoding="utf-8") as log:
+        for target in sample["targets"]:
+            slug = target["slug"]
+            if slug in accepted:
+                continue
+            source = inputs[slug]
+            text = (CACHE / f"{source['repo'].replace('/', '__')}@{source['commit']}.txt").read_text(encoding="utf-8")
+            if hashlib.sha256(text.encode()).hexdigest() != source["sha256"]:
+                raise SystemExit(f"{slug}: cached README does not match inputs.json")
+            done = max(r["attempt"] for r in rows if r["slug"] == slug)
+            print(f"rewrite {slug} from attempt {done + 1}")
+            if write_question(records[slug], {**source, "text": text}, log, first=done + 1, too_long=True) is None:
+                print(f"  {slug}: no question passed; draw the next target in {target['stratum']} (README 2)")
 
 
 def call_find(need: str, os_name: str) -> dict[str, Any]:
@@ -552,7 +583,7 @@ def step_report() -> None:
     print("\n".join(out))
 
 
-STEPS = {"sample": step_sample, "run": step_run, "cost": step_cost, "l1": step_l1, "report": step_report}
+STEPS = {"sample": step_sample, "rewrite": step_rewrite, "run": step_run, "cost": step_cost, "l1": step_l1, "report": step_report}
 
 if __name__ == "__main__":
     if len(sys.argv) != 2 or sys.argv[1] not in STEPS:
