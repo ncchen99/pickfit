@@ -138,9 +138,10 @@ def budget_blocked(needs: list[tuple[str, Ledger | None, float]]) -> str | None:
 
 
 def queued(d1: Database, limit: int) -> list[dict[str, Any]]:
-    """Queued submissions, oldest first. The submitter's note is never read."""
+    """Queued repository submissions, oldest first. Website rows (a hosted web app) stay queued for the web
+    pipeline. The submitter's note is never read."""
     return d1.query(sql("SELECT id, url, submitted_at FROM submissions WHERE status = 'queued' "
-                        "ORDER BY submitted_at, id LIMIT ?1", limit))
+                        "AND url LIKE 'https://github.com/%' ORDER BY submitted_at, id LIMIT ?1", limit))
 
 
 def claim(d1: Database, submission_id: str, now: datetime) -> bool:

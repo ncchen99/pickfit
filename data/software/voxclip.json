@@ -81,16 +81,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-voxclip-20261031-034806-5bc3",
+      "run_id": "verify-voxclip-20261102-003443-4602",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/fmueller/voxclip/main/scripts/install-voxclip.sh -o install-voxclip.sh",
-          "purpose": "Download installer script for review"
+          "command": "curl -fsSL https://raw.githubusercontent.com/fmueller/voxclip/main/scripts/install-voxclip.sh -o /tmp/install-voxclip.sh",
+          "purpose": "Download installer script"
         },
         {
-          "command": "sh install-voxclip.sh",
-          "purpose": "Run installer script to install voxclip"
+          "command": "sh /tmp/install-voxclip.sh",
+          "purpose": "Install voxclip via official script"
         }
       ],
       "manual_steps": [],
@@ -117,29 +117,29 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-10-31T03:50:03.662689+08:00",
+    "checked_at": "2026-11-02T00:39:04.178061+08:00",
     "runs": [
       {
-        "id": "verify-voxclip-20261031-034806-5bc3",
+        "id": "verify-voxclip-20261102-003443-4602",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T03:50:03.662689+08:00",
+        "image": "pickfit-sbx-gui-audio:c71e5fdc57c5",
+        "checked_at": "2026-11-02T00:39:04.178061+08:00",
         "tool_version": "v1.1.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://raw.githubusercontent.com/fmueller/voxclip/main/scripts/install-voxclip.sh -o install-voxclip.sh",
-            "purpose": "Download installer script for review"
+            "command": "curl -fsSL https://raw.githubusercontent.com/fmueller/voxclip/main/scripts/install-voxclip.sh -o /tmp/install-voxclip.sh",
+            "purpose": "Download installer script"
           },
           {
-            "command": "sh install-voxclip.sh",
-            "purpose": "Run installer script to install voxclip"
+            "command": "sh /tmp/install-voxclip.sh",
+            "purpose": "Install voxclip via official script"
           }
         ],
         "smoke_tests": [
@@ -154,27 +154,46 @@
           },
           {
             "command": "voxclip devices",
-            "expected_signal": "== pw-record ==",
+            "expected_signal": "arecord",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "== pw-record ==",
+            "observed_excerpt": "== arecord ==",
             "setup": [],
             "offline": true
           },
           {
-            "command": "voxclip transcribe /tmp/sample.wav",
-            "expected_signal": "(siren wailing)",
+            "command": "voxclip record --duration 3s --immediate --no-progress --output /tmp/voxclip-test.wav && ls -l /tmp/voxclip-test.wav && file /tmp/voxclip-test.wav",
+            "expected_signal": "/tmp/voxclip-test.wav",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "(siren wailing)",
+            "observed_excerpt": "/tmp/voxclip-test.wav",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "voxclip --duration 12s --immediate --no-progress --language en",
+            "expected_signal": "mic check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mic result: the command's output holds the spoken words: \"diamond\": yes; \"camera\": yes; \"cookie\": yes",
             "setup": [
               {
                 "command": "voxclip setup",
                 "background": false,
                 "port": null
-              },
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "voxclip record --duration 12s --immediate --no-progress --output /tmp/voxclip-listen.wav && voxclip transcribe /tmp/voxclip-listen.wav --no-progress --language en",
+            "expected_signal": "mic check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mic result: the command's output holds the spoken words: \"spider\": yes; \"button\": yes; \"rainbow\": yes",
+            "setup": [
               {
-                "command": "python3 -c \"import wave, struct, math; sr=16000; dur=2.0; f=440.0; n=int(sr*dur); w=wave.open('/tmp/sample.wav','w'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr); w.writeframes(b''.join(struct.pack('<h', int(10000*math.sin(2*math.pi*f*i/sr))) for i in range(n))); w.close(); print('wrote /tmp/sample.wav')\"",
+                "command": "voxclip setup",
                 "background": false,
                 "port": null
               }
@@ -184,48 +203,43 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "Linux needs at least one of pw-record, arecord or ffmpeg to capture audio",
-            "actually_needed": "Install, version, devices and transcribe all worked with no recording backend present; devices reported all three backends as 'not available on PATH'. Recording features remain untestable without a backend/mic.",
+            "readme_said": "README does not mention recording stop message",
+            "actually_needed": "record succeeds with exit 0 but stderr always shows 'Aborted by signal Interrupt... arecord: pcm_read: read error: Interrupted system call' — this is normal stop, not a failure",
             "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show devices listing with pw-record header, transcription output containing (siren wailing), and version voxclip v1.1.0.",
+          "observed": "Screenshots show devices listing with arecord, successful 3s WAV recording verified by ls and file, and version v1.1.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-voxclip-20261031-034806-5bc3/report.json",
+          "trace_path": "runs/verify/verify-voxclip-20261102-003443-4602/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-voxclip-20261031-034806-5bc3/check-1-cmd4.judged.png",
-            "runs/verify/verify-voxclip-20261031-034806-5bc3/check-2-cmd7.judged.png",
-            "runs/verify/verify-voxclip-20261031-034806-5bc3/check-3-cmd3.judged.png"
+            "runs/verify/verify-voxclip-20261102-003443-4602/check-1-cmd4.judged.png",
+            "runs/verify/verify-voxclip-20261102-003443-4602/check-2-cmd10.judged.png",
+            "runs/verify/verify-voxclip-20261102-003443-4602/check-3-cmd3.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.067621,
+        "cost_usd": 0.109992,
+        "microphone": "simulated: a PulseAudio source playing fresh random words pickfit spoke with flite for each check",
         "features": [
           {
             "feature": "record, transcribe and copy to clipboard",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_hardware",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
             "failure": null,
-            "note": "Default flow needs microphone and clipboard; box has no backend or mic so not attempted."
+            "note": null
           },
           {
             "feature": "record audio to WAV",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "needs_hardware",
-            "failure": null,
-            "note": "voxclip record needs microphone/backend; box has no pw-record/arecord/ffmpeg so not attempted."
-          },
-          {
-            "feature": "transcribe existing audio files",
             "status": "checked",
             "smoke_tests": [
               2
@@ -235,12 +249,24 @@
             "note": null
           },
           {
-            "feature": "list recording devices and diagnostics",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_shown",
+            "feature": "transcribe existing audio files",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
             "failure": null,
-            "note": "its check passed, but the output does not show it: Output lists no devices, only shows all backends not available."
+            "note": null
+          },
+          {
+            "feature": "list recording devices and diagnostics",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
           }
         ]
       }
@@ -604,5 +630,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:18+08:00",
-  "updated_at": "2026-11-01T19:32:47.626145+08:00"
+  "updated_at": "2026-11-02T00:39:30.911236+08:00"
 }

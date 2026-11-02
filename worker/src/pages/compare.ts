@@ -5,9 +5,9 @@
  * features checked, highest quality score, newest release. Nothing else is
  * ranked.
  */
-import { bestGuide, nameKey, OSES, verifiedOn, type Arch, type Catalog, type Entry, type OS } from '../catalog.ts';
+import { bestGuide, isWebApp, nameKey, OSES, verifiedOn, webCheck, type Arch, type Catalog, type Entry, type OS } from '../catalog.ts';
 import { featuresOut } from '../features.ts';
-import { day, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, readerIssues, setupWords } from '../ui/facts.ts';
+import { day, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, webLevelLabel } from '../ui/facts.ts';
 import { esc, link, listOf, SLUG } from '../ui/html.ts';
 import { icon, type IconName } from '../ui/icons.ts';
 import { age, badge, coverage, fitz, kindTag, levelIcon, osList, sysTag, tape } from '../ui/kit.ts';
@@ -74,6 +74,8 @@ export function compareTable(entries: Entry[], opts: Opts): string {
     row(
       'Verified on',
       entries.map((e) => {
+        const web = webCheck(e);
+        if (web) return `<span class="yes">${icon('check')} In a browser, any OS</span>`;
         const oses = verifiedOn(e);
         if (!oses.length) return '<span class="no">Not verified yet</span>';
         const mine = opts.os ? oses.includes(opts.os) : null;
@@ -90,6 +92,8 @@ export function compareTable(entries: Entry[], opts: Opts): string {
       'Proof',
       entries.map((e, i) => {
         const g = guides[i];
+        const web = webCheck(e);
+        if (web) return `<span class="yes">${esc(webLevelLabel(web))}</span><div class="small quiet">In a browser, ${esc(day(web.checked_at))}</div>`;
         if (!g) return '<span class="unknown">no run</span>';
         const evidence = { gui: g.run.gui, mcp: g.mcp };
         const replayed = g.run.replayed ? ` · <span data-tip="Replayed from scratch">${icon('refresh-cw')}<span class="sr">replayed</span></span>` : '';
@@ -103,19 +107,24 @@ export function compareTable(entries: Entry[], opts: Opts): string {
   rows.push(
     row(
       'Works offline',
-      guides.map((g) =>
-        g?.works_offline === true
+      guides.map((g, i) => {
+        const offline = g?.works_offline ?? { verified: true, not_offline: false, not_tested: null }[webCheck(entries[i])?.offline ?? 'not_tested'];
+        return offline === true
           ? `<span class="yes">${icon('wifi-off')}Yes, checked</span>`
-          : g?.works_offline === false
+          : offline === false
             ? `<span class="no">${icon('wifi')}Needed the network</span>`
-            : '<span class="unknown">not checked</span>',
-      ),
+            : '<span class="unknown">not checked</span>';
+      }),
     ),
   );
 
   rows.push(group('Setup'));
   const stepCounts = guides.map((g) => (g && g.steps.length ? g.steps.length : null));
-  rows.push(row('Install', guides.map((g) => (g && g.steps.length ? `${esc(setupWords(g.steps.length, g.manual_steps.length))}<div class="small quiet">${esc(g.method)}</div>` : '<span class="unknown">no recorded steps</span>')), bestOf(stepCounts, true)));
+  const install = guides.map((g, i) => {
+    if (isWebApp(entries[i])) return '<span class="yes">Nothing to install, just open it</span>';
+    return g && g.steps.length ? `${esc(setupWords(g.steps.length, g.manual_steps.length))}<div class="small quiet">${esc(g.method)}</div>` : '<span class="unknown">no recorded steps</span>';
+  });
+  rows.push(row('Install', install, bestOf(stepCounts, true)));
   rows.push(
     row(
       'Needs first',
@@ -134,7 +143,7 @@ export function compareTable(entries: Entry[], opts: Opts): string {
       }),
     ),
   );
-  rows.push(row('README fixes', guides.map((g) => (g ? String(readerIssues(g.pitfalls).length) : '<span class="unknown">no run</span>'))));
+  rows.push(row('README fixes', guides.map((g, i) => (g ? String(readerIssues(g.pitfalls).length) : isWebApp(entries[i]) ? '<span class="quiet">no README to follow</span>' : '<span class="unknown">no run</span>'))));
 
   rows.push(group('Measures'));
   rows.push(row('Quality', entries.map((e) => tape('Quality', e.scores?.quality ?? null)), bestOf(entries.map((e) => e.scores?.quality ?? null))));
@@ -155,7 +164,11 @@ export function compareTable(entries: Entry[], opts: Opts): string {
   rows.push(
     row(
       'Links',
-      entries.map((e) => `<span class="cmp-links">${outLink(e.repo_url, 'code', 'Source code')}${e.homepage && e.homepage !== e.repo_url ? outLink(e.homepage, 'globe', 'Homepage') : ''}</span>`),
+      entries.map(
+        (e) =>
+          `<span class="cmp-links">${outLink(e.web?.url, 'external-link', 'Open it')}${outLink(e.repo_url, 'code', 'Source code')}` +
+          `${e.homepage && e.homepage !== e.repo_url && e.homepage !== e.web?.url ? outLink(e.homepage, 'globe', 'Homepage') : ''}</span>`,
+      ),
     ),
   );
 

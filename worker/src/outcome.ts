@@ -8,7 +8,7 @@
  * rec_id null. A failed install or first run with an error excerpt queues a
  * fresh sandbox re-run for that slug and OS. No model call.
  */
-import type { Catalog, OS } from './catalog.ts';
+import { isWebApp, type Catalog, type OS } from './catalog.ts';
 import { issuedRec, logEvent, newId, REC_TTL_DAYS, REC_TTL_LATER_DAYS, type Reporter } from './events.ts';
 import { scrubHead, scrubTail } from './scrub.ts';
 
@@ -169,7 +169,8 @@ export async function reportOutcome(input: OutcomeInput, deps: OutcomeDeps): Pro
   }
 
   let reverify: OutcomeOutput['reverify'] = 'none';
-  if (failed && recId && os && errorExcerpt) {
+  // A web app has no install steps to re-run; the stored report is there for its next browser check.
+  if (failed && recId && os && errorExcerpt && !isWebApp(deps.catalog.bySlug.get(input.slug)!)) {
     reverify = await queueReverify(deps.db, now, input.slug, os, input.stage, id);
   }
   return {

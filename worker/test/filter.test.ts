@@ -15,6 +15,7 @@ test('hard filters: Mac, free, offline', () => {
     'fixture-json-query',
     'fixture-llm-runner',
     'fixture-transcribe',
+    'fixture-web-sketch', // a PWA checked offline, nothing typed left the device
   ]);
 });
 
@@ -24,9 +25,9 @@ test('hard filters: category, OS claims and exclusions', () => {
     'fixture-llm-runner',
     'fixture-transcribe',
   ]);
-  assert.deepEqual(slugs({ os: 'windows' }), ['fixture-chat-tui', 'fixture-cloud-summarize', 'fixture-json-query']);
-  assert.deepEqual(slugs({ os: 'linux', exclude: ['fixture-json-query'] }).length, 5);
-  assert.deepEqual(slugs({ budget: 'free_or_paid' }).length, 6);
+  assert.deepEqual(slugs({ os: 'windows' }), ['fixture-chat-tui', 'fixture-cloud-summarize', 'fixture-json-query', 'fixture-web-sketch']);
+  assert.deepEqual(slugs({ os: 'linux', exclude: ['fixture-json-query'] }).length, 6);
+  assert.deepEqual(slugs({ budget: 'free_or_paid' }).length, 7);
   assert.deepEqual(slugs({ category: 'mcp_server' }), ['fixture-notes-mcp']);
   assert.deepEqual(slugs({ category: 'mcp_server', os: 'macos' }), []); // claims and runs are Linux only
 });

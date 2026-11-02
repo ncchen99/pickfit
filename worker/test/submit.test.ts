@@ -85,7 +85,9 @@ test('new submissions stop at the hourly cap; status checks still work', async (
   assert.equal((await submitSoftware({ url: 'https://github.com/a/three' }, later)).status, 'queued');
 });
 
-test('a non-GitHub URL is a tool error', async () => {
+test('a URL that is neither a GitHub repository nor a public https site is a tool error', async () => {
   const h = harness(null);
-  await assert.rejects(submitSoftware({ url: 'https://example.com/tool' }, deps(h)), /only GitHub repository URLs/);
+  for (const url of ['http://example.com/tool', 'https://gitlab.com/owner/repo', 'https://localhost/x', 'https://10.0.0.1/', 'https://github.com/topics/cli', 'ftp://example.com/']) {
+    await assert.rejects(submitSoftware({ url }, deps(h)), /GitHub repository URL.*or the https URL of a public web app/, url);
+  }
 });

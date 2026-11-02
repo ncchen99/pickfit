@@ -59,6 +59,15 @@ function guiText(guide: InstallGuide): string | null {
   );
 }
 
+/** What the sandbox had beyond the usual (a GPU, a simulated microphone), as a phrase; '' when nothing. */
+export function boxExtras(run: InstallGuide['run']): string {
+  const parts = [
+    run.gpu ? `a GPU (${run.gpu})` : '',
+    run.microphone ? 'a simulated microphone that played words pickfit spoke for each check' : '',
+  ].filter(Boolean);
+  return parts.join(' and ');
+}
+
 /**
  * A run's day as YYYY-MM-DD in UTC. checked_at carries the runner's own offset (a run at 01:45 +08:00 on
  * 31 Oct is 30 Oct in UTC), and the web page shows UTC days, so every text that dates a run uses this.
@@ -74,7 +83,7 @@ export function ranSentence(guide: InstallGuide): string {
   const runner = r.runner ? ` (${r.runner})` : '';
   const where =
     r.method === 'sandbox'
-      ? `installed it in a fresh ${r.os}/${r.arch} sandbox${runner} and replayed the steps from scratch`
+      ? `installed it in a fresh ${r.os}/${r.arch} sandbox${runner}${boxExtras(r) ? ` with ${boxExtras(r)}` : ''} and replayed the steps from scratch`
       : `installed it by hand on ${r.os}/${r.arch}${runner}`;
   return `pickfit ${where} on ${runDay(r.checked_at)}; ${mcpText(guide) ?? guiText(guide) ?? LEVEL_TEXT[r.level] ?? r.level}.`;
 }

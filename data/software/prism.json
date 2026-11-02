@@ -52,19 +52,20 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-prism-20261102-012510-806a",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak install flathub org.cutwire.Prism",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add Flathub user remote"
+        },
+        {
+          "command": "flatpak install --user -y flathub org.cutwire.Prism",
+          "purpose": "install Prism flatpak"
         }
       ],
-      "manual_steps": [
-        "approve Camera and microphone system prompt on macOS",
-        "enable Screen Recording permission then relaunch on macOS"
-      ],
+      "manual_steps": [],
       "check": null,
       "first_task": "flatpak run org.cutwire.Prism"
     },
@@ -83,10 +84,117 @@
     "url": "https://github.com/CutWire-Studios/Prism/releases/tag/v0.1.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T01:44:03.475250+08:00",
+    "runs": [
+      {
+        "id": "verify-prism-20261102-012510-806a",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui-audio:5c7d9880874a",
+        "checked_at": "2026-11-02T01:44:03.475250+08:00",
+        "tool_version": "0.1.2",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add Flathub user remote"
+          },
+          {
+            "command": "flatpak install --user -y flathub org.cutwire.Prism",
+            "purpose": "install Prism flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run org.cutwire.Prism",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak install flathub org.cutwire.Prism",
+            "actually_needed": "first add Flathub user remote: flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Media -> Add Element / Save Session and View -> Show Output via menus",
+            "actually_needed": "menus (Media, Add Element) render as solid black rectangles and portal file dialogs do not open here (no DBus portal/session); canvas/dock interaction blocked",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows CutWire Prism's live media control main interface with media bin, preview grid, and A/B deck control panel fully drawn.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-prism-20261102-012510-806a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-prism-20261102-012510-806a/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.364323,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "flatpak run org.cutwire.Prism",
+          "window_title": "CutWire Prism - Live Media Control",
+          "display": "Xvfb 1280x800x24, no window manager, GPU Tesla T4"
+        },
+        "gpu": "Tesla T4",
+        "microphone": "simulated: a PulseAudio source playing fresh random words pickfit spoke with flite for each check",
+        "features": [
+          {
+            "feature": "build visual node graph pipeline",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; Media menu renders as solid black rectangle; save dialog never opened"
+          },
+          {
+            "feature": "mix live A/B decks with crossfader",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; same black-menu rendering blocker; deck text never appeared"
+          },
+          {
+            "feature": "trigger multiple media source types",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "same menu/portal blocker would apply; not attempted to save time"
+          },
+          {
+            "feature": "output program via mirror, NDI, virtual camera",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "needs output/record dialog blocked by same issue; not attempted"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -335,5 +443,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:46+08:00",
-  "updated_at": "2026-11-02T01:06:44+08:00"
+  "updated_at": "2026-11-02T02:01:04.360064+08:00"
 }

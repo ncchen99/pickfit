@@ -2,7 +2,7 @@
  * Facts in words: how a run, a level, an OS or a price reads on the page. Shared
  * by every page so the same fact is always said the same way.
  */
-import type { Arch, Entry, GuiEvidence, InstallGuide, OS } from '../catalog.ts';
+import type { Arch, Entry, GuiEvidence, InstallGuide, OS, WebCheck } from '../catalog.ts';
 import { operatedText } from '../evidence.ts';
 
 export const OS_NAME: Record<OS, string> = { macos: 'macOS', linux: 'Linux', windows: 'Windows' };
@@ -50,6 +50,9 @@ export function levelLabel(level: string, evidence: { gui?: GuiEvidence | null; 
   return LEVEL_LABEL[level] ?? level;
 }
 
+/** What a web app's browser run proves, as a headline. */
+export const webLevelLabel = (check: WebCheck) => (check.level === 'function' ? 'It worked when used in a browser' : 'It opens to its main screen');
+
 /** The check mark is for runs that passed; a GUI app that showed an error or a blank window gets none. */
 export const passed = (gui?: GuiEvidence | null) => !gui || gui.screen === 'main_ui' || gui.screen === 'first_run';
 
@@ -66,7 +69,7 @@ export function guiSentence(gui: GuiEvidence): string {
 }
 
 export const KIND: Record<string, string> = { dev_cli: 'Developer CLI', local_ai: 'Local AI', mcp_server: 'MCP server', other: 'Other' };
-export const KIND_PLURAL: Record<string, string> = { dev_cli: 'Developer CLIs', local_ai: 'Local AI tools', mcp_server: 'MCP servers' };
+export const KIND_PLURAL: Record<string, string> = { dev_cli: 'Developer CLIs', local_ai: 'Local AI tools', mcp_server: 'MCP servers', web_app: 'Web apps' };
 
 /** The entry's own kind, in words (cli_tool, desktop_app, ...). */
 export const FORM: Record<string, string> = {
@@ -75,6 +78,7 @@ export const FORM: Record<string, string> = {
   desktop_app: 'desktop app',
   server_daemon: 'local server',
   self_hosted_web_app: 'self-hosted web app',
+  web_app: 'web app',
   mcp_server_or_agent_plugin: 'MCP server',
   library: 'library',
 };
@@ -82,7 +86,8 @@ export const formOf = (entry: Pick<Entry, 'kind'>) => FORM[entry.kind] ?? entry.
 
 /** "Local AI · command-line tool"; just "MCP server" when the two say the same thing. */
 export function kindLine(entry: Pick<Entry, 'kind' | 'category'>): string {
-  const kind = KIND[entry.category] ?? '';
+  // A web app outside the three categories is just a web app.
+  const kind = entry.kind === 'web_app' && entry.category === 'other' ? '' : (KIND[entry.category] ?? '');
   const form = formOf(entry);
   return kind.toLowerCase() === form.toLowerCase() || !kind ? form.charAt(0).toUpperCase() + form.slice(1) : `${kind} · ${form}`;
 }

@@ -93,6 +93,14 @@
       "title": "Check",
       "type": "object"
     },
+    "DataSent": {
+      "enum": [
+        "none",
+        "observed",
+        "unknown"
+      ],
+      "type": "string"
+    },
     "DocsRubric": {
       "additionalProperties": false,
       "description": "The model's rubric answer behind install_docs, kept so scores can be refreshed without a call.",
@@ -547,6 +555,11 @@
       ],
       "type": "string"
     },
+    "HostName": {
+      "maxLength": 253,
+      "pattern": "^[a-z0-9-]+(?:\\.[a-z0-9-]+)+$",
+      "type": "string"
+    },
     "HttpsUrl": {
       "maxLength": 2048,
       "pattern": "^https://[^\\s/?#]+[^\\s]*$",
@@ -746,6 +759,7 @@
         "tui",
         "desktop_app",
         "self_hosted_web_app",
+        "web_app",
         "server_daemon",
         "mcp_server_or_agent_plugin",
         "browser_extension",
@@ -1386,6 +1400,14 @@
       ],
       "type": "string"
     },
+    "PwaOffline": {
+      "enum": [
+        "verified",
+        "not_offline",
+        "not_tested"
+      ],
+      "type": "string"
+    },
     "Quality": {
       "additionalProperties": false,
       "properties": {
@@ -1477,8 +1499,20 @@
     },
     "QualityComponents": {
       "additionalProperties": false,
-      "description": "The six quality components of B.3 (nominal weights 35/20/15/10/10/10+).",
+      "description": "The six quality components of B.3 (nominal weights 35/20/15/10/10/10+).\n\nA hosted web app (formula web.v1, pickfit/score.py) adds browser_facts and gives the four components a\nREADME and a repository feed weight 0: it is opened, not installed. Other records never carry it.",
       "properties": {
+        "browser_facts": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/QualityComponent"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Web apps only: what the browser run saw (account, data sent, ads, offline)."
+        },
         "engineering_hygiene": {
           "$ref": "#/$defs/QualityComponent"
         },
@@ -1584,7 +1618,8 @@
       "type": "object"
     },
     "RepoId": {
-      "pattern": "^gh:[1-9][0-9]*$",
+      "maxLength": 200,
+      "pattern": "^(?:gh:[1-9][0-9]*|web:[a-z0-9.-]+(?:/[A-Za-z0-9._~-]+)*)$",
       "type": "string"
     },
     "RubricItem": {
@@ -1872,7 +1907,8 @@
         "hn",
         "submission",
         "sandbox",
-        "human"
+        "human",
+        "website"
       ],
       "type": "string"
     },
@@ -2097,6 +2133,19 @@
           "maxItems": 4,
           "type": "array"
         },
+        "gpu": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The GPU the box had, as its driver named it (e.g. Tesla T4); none: the box had no GPU."
+        },
         "gui": {
           "anyOf": [
             {
@@ -2168,6 +2217,19 @@
           ],
           "type": "string"
         },
+        "microphone": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The box's microphone: a simulated one that played words pickfit spoke for each check; none: the box had no audio input."
+        },
         "os": {
           "$ref": "#/$defs/OS"
         },
@@ -2231,6 +2293,18 @@
             }
           ],
           "default": null
+        },
+        "web": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WebCheck"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Hosted web apps: what the sandboxed browser saw; required for a passed run of one."
         }
       },
       "required": [
@@ -2246,6 +2320,250 @@
       ],
       "title": "VerificationRun",
       "type": "object"
+    },
+    "WebApp": {
+      "additionalProperties": false,
+      "description": "A hosted web app (kind web_app): where to open it. What a browser saw lives in verification.runs[].web.",
+      "properties": {
+        "url": {
+          "$ref": "#/$defs/HttpsUrl",
+          "description": "The address users open, as the sources give it."
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "title": "WebApp",
+      "type": "object"
+    },
+    "WebCheck": {
+      "additionalProperties": false,
+      "description": "What pickfit saw of a hosted web app (kind web_app) in a sandboxed browser.\n\nOne session per site, no replay: sites are real and each is visited once, slowly. install: the URL loaded\nto the app's own main screen (not an error page, a parked domain or a sign-in wall); function: also an\noperation passed pickfit's own check. The other facts are what the browser's own records showed.",
+      "properties": {
+        "account_needed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "An account or sign-in is needed for the core use; null when pickfit could not tell."
+        },
+        "ads_seen": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Ads on the page during the session; null when not looked at."
+        },
+        "browser": {
+          "description": "e.g. Chromium 131 headless via browser-use 0.9.",
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string"
+        },
+        "data_sent": {
+          "$ref": "#/$defs/DataSent",
+          "description": "none: pickfit typed data in or chose a file during an operation and no request carried it off the device; observed: a request did; unknown: not checked, or the requests could not tell."
+        },
+        "data_sent_note": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "pickfit's line on what it saw."
+        },
+        "final_url": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HttpsUrl"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Where it ended after redirects, when different."
+        },
+        "offline": {
+          "$ref": "#/$defs/PwaOffline",
+          "description": "verified: a PWA reloaded with the network off and still worked; only PWAs are tested."
+        },
+        "operations": {
+          "default": [],
+          "description": "Goals pickfit operated the site toward, and what its checks found.",
+          "items": {
+            "$ref": "#/$defs/WebOperation"
+          },
+          "maxItems": 8,
+          "type": "array"
+        },
+        "pwa": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Has a web app manifest and a service worker; null when not looked at."
+        },
+        "screen": {
+          "$ref": "#/$defs/WebScreen",
+          "description": "What the page showed once loaded."
+        },
+        "third_party_domains": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Distinct domains other than the site's own that the page contacted; null when not counted."
+        },
+        "third_party_hosts": {
+          "default": [],
+          "description": "Those hosts, as the browser saw them (at most 50).",
+          "items": {
+            "$ref": "#/$defs/HostName"
+          },
+          "maxItems": 50,
+          "type": "array"
+        },
+        "url": {
+          "$ref": "#/$defs/HttpsUrl",
+          "description": "The URL the browser opened."
+        }
+      },
+      "required": [
+        "url",
+        "screen",
+        "browser",
+        "account_needed",
+        "ads_seen",
+        "third_party_domains",
+        "data_sent",
+        "pwa",
+        "offline"
+      ],
+      "title": "WebCheck",
+      "type": "object"
+    },
+    "WebCheckKind": {
+      "enum": [
+        "page_text",
+        "element",
+        "url",
+        "download",
+        "clipboard"
+      ],
+      "type": "string"
+    },
+    "WebOperation": {
+      "additionalProperties": false,
+      "description": "One goal pickfit reached on a hosted web app through the page itself, in the run's one browser session.\n\nMuse Spark chose each action from the page (browser-use); pickfit checked the result itself: text on the\npage, an element, the URL, a downloaded file, the clipboard. Only side-effect-free operations (search,\nin-page tools, games): no form that posts, mails, signs up or orders. The goal and the expected text hold\n{nonce} where pickfit put a fresh word.",
+      "properties": {
+        "actions": {
+          "description": "Actions the operator took.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "check": {
+          "$ref": "#/$defs/WebCheckKind"
+        },
+        "expected": {
+          "default": [],
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4,
+          "type": "array"
+        },
+        "feature": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The listed feature it exercises."
+        },
+        "goal": {
+          "description": "What the operator was asked to do.",
+          "maxLength": 600,
+          "minLength": 1,
+          "type": "string"
+        },
+        "observed": {
+          "description": "pickfit's line about what the check found.",
+          "maxLength": 500,
+          "type": "string"
+        },
+        "operator_model": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "passed": {
+          "description": "pickfit's check, never the operator's word.",
+          "type": "boolean"
+        },
+        "smoke_test": {
+          "description": "Index into the run's smoke_tests: this operation's check.",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "goal",
+        "check",
+        "passed",
+        "observed",
+        "smoke_test",
+        "actions"
+      ],
+      "title": "WebOperation",
+      "type": "object"
+    },
+    "WebScreen": {
+      "enum": [
+        "main_ui",
+        "sign_in_wall",
+        "error_page",
+        "parked_or_gone",
+        "blank_or_loading",
+        "other"
+      ],
+      "type": "string"
     },
     "WebUrl": {
       "maxLength": 2048,
@@ -2408,11 +2726,19 @@
       ]
     },
     "repo": {
-      "$ref": "#/$defs/Repo"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Repo"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Null only for a hosted web app with no public repository ('web:' id)."
     },
     "repo_id": {
       "$ref": "#/$defs/RepoId",
-      "description": "Primary key: 'gh:' + GitHub numeric repository id."
+      "description": "Primary key: 'gh:' + GitHub numeric repository id; 'web:' + host and path for a web app with no repo."
     },
     "schema_version": {
       "const": "software.v1",
@@ -2487,6 +2813,18 @@
     },
     "verification": {
       "$ref": "#/$defs/Verification"
+    },
+    "web": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/WebApp"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Only for kind web_app: the URL to open."
     },
     "why_worth_it": {
       "anyOf": [

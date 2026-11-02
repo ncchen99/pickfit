@@ -11,8 +11,10 @@
  */
 import {
   bestGuide,
+  isWebApp,
   nameKey,
   verifiedOnUserSystem,
+  webCheck,
   type Arch,
   type Catalog,
   type Entry,
@@ -28,12 +30,13 @@ import type { Settings } from './env.ts';
 import { logEvent, logFailure, newId, type Reporter } from './events.ts';
 import { englishKeywords, EXPAND_TIMEOUT_MS, type Expansion } from './expand.ts';
 import { fitNote, fitOf, jobOf, type Fit, type MatchQuality } from './fit.ts';
-import { hardFilter, MAX_CARDS, replacesCurrent, type Conditions } from './filter.ts';
+import { hardFilter, MAX_CARDS, needsOffline, replacesCurrent, type Conditions } from './filter.ts';
 import { clip, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
 import { callMeta, estimateCostUsd, MATCH_MODEL, MetaCallError, requestBody } from './meta.ts';
 import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer, type ModelReason } from './prompt.ts';
 import { dropNegated, queryTerms, rulesRelevance, rulesTerms, termsAsSaid } from './relevance.ts';
-import { rankByRules, templateReasons } from './rules.ts';
+import { leansInstall, rankByRules, templateReasons } from './rules.ts';
+import { webAppOut, webRanSentence, type WebAppOut } from './webapp.ts';
 
 export interface FindInput extends Conditions {
   need: string;
@@ -92,8 +95,11 @@ export interface PickOut {
   how_we_know: string;
   evidence_url: string | null;
   scores: { quality: number | null; popularity: number | null; treasure: boolean };
-  repo: string;
+  /** null for a web app with no public repository. */
+  repo: string | null;
   homepage: string | null;
+  /** A hosted web app: the URL to open (nothing to install) and what pickfit's browser saw; null for anything else. */
+  web_app: WebAppOut | null;
   /** Rules only: how well the profile fits the request and which of its words it covers (fit.ts); absent when the model chose. */
   match?: Fit;
 }
@@ -126,7 +132,9 @@ export interface AlternativesOutput extends FindOutput {
 
 function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, considered: number): string {
   const parts: string[] = [];
+  const web = webCheck(entry);
   if (guide) parts.push(ranSentence(guide));
+  else if (web) parts.push(webRanSentence(web));
   const covered = featureSentence(featuresOut(entry, guide));
   if (covered) parts.push(covered);
   if (entry.scores) {
@@ -136,7 +144,7 @@ function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, 
   }
   parts.push(
     matchedBy === 'rules'
-      ? `Ranked by rules (request keywords, verification on your OS, treasure score) among ${considered} tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.`
+      ? `Ranked by rules (request keywords, a web app first among close fits, verification on your OS, treasure score) among ${considered} tools that passed the hard filters; no model was used. Fit is judged by which of the request's specific words the profile mentions.`
       : `Chosen by ${matchedBy} among ${considered} tools that passed pickfit's hard filters; code checked each reason against the profile.`,
   );
   return parts.join(' ');
@@ -146,7 +154,7 @@ function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, 
 function outsideHowWeKnow(matchedBy: string, cond: Conditions): string {
   const unchecked = ['its price'];
   if (cond.os) unchecked.push(`that it runs on ${cond.os}`);
-  if (cond.must_run_locally) unchecked.push('that it works offline');
+  if (needsOffline(cond)) unchecked.push('that it works offline');
   const last = unchecked.pop()!;
   const list = unchecked.length ? `${unchecked.join(', ')} or ${last}` : last;
   return (
@@ -164,7 +172,9 @@ function pickOut(
   considered: number,
 ): PickOut {
   const guide = bestGuide(entry, os);
-  const onUserOs = verifiedOnUserSystem(entry, os, arch);
+  const web = isWebApp(entry) ? webCheck(entry) : null;
+  // A web app opens in any browser: no install steps ran on any OS.
+  const onUserOs = isWebApp(entry) ? null : verifiedOnUserSystem(entry, os, arch);
   const tradeoffs = [...chosen.tradeoffs];
   if (os && !onUserOs && guide) {
     // Run on the user's OS but another CPU architecture, or on another OS.
@@ -193,18 +203,18 @@ function pickOut(
     open_source: entry.open_source,
     license: entry.license,
     verification: {
-      level: guide?.run.level ?? entry.verification.level,
+      level: guide?.run.level ?? web?.level ?? entry.verification.level,
       os: guide?.run.os ?? null,
       arch: guide?.run.arch ?? null,
-      method: guide?.run.method ?? null,
+      method: guide?.run.method ?? (web ? 'sandbox' : null),
       replayed: guide?.run.replayed ?? false,
-      checked_at: guide?.run.checked_at ?? null,
+      checked_at: guide?.run.checked_at ?? web?.checked_at ?? null,
       verified_on_user_os: onUserOs,
       gui: guide?.run.gui ?? null,
     },
     features: featuresOut(entry, guide),
     how_we_know: howWeKnow(entry, guide, matchedBy, considered),
-    evidence_url: guide?.run.evidence_url ?? null,
+    evidence_url: guide?.run.evidence_url ?? web?.evidence_url ?? null,
     scores: {
       quality: entry.scores?.quality ?? null,
       popularity: entry.scores?.popularity ?? null,
@@ -212,6 +222,7 @@ function pickOut(
     },
     repo: entry.repo_url,
     homepage: entry.homepage,
+    web_app: webAppOut(entry),
     ...(chosen.match ? { match: chosen.match } : {}),
   };
 }
@@ -300,7 +311,7 @@ function fromRules(
   corpus: Entry[],
 ): Choice {
   const os = req.conditions.os;
-  const ranked = rankByRules(candidates, relevance, os, req.currentTool);
+  const ranked = rankByRules(candidates, relevance, os, req.currentTool, leansInstall(req.rulesText));
   const top = ranked.slice(0, limit);
   const free = ranked.find((entry) => entry.pricing === 'free');
   const osSets = new Set(top.map((entry) => entry.platforms.slice().sort().join(',')));
@@ -489,7 +500,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   const notes: string[] = [];
   if (candidates.length === 0) {
     notes.push(
-      `No verified ${what} in pickfit meets these conditions. Coverage today: developer CLI tools, local AI/LLM tools and MCP servers. ` +
+      `No verified ${what} in pickfit meets these conditions. Coverage today: developer CLI tools, local AI/LLM tools, MCP servers and some web apps. ` +
         'pickfit lists only lesser-known tools, so a well-known one may still fit.',
     );
   } else if (choice.emptyByModel) {
@@ -550,6 +561,8 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
           arch: cond.arch ?? null,
           budget: cond.budget ?? null,
           must_run_locally: cond.must_run_locally ?? null,
+          ...(cond.offline !== undefined ? { offline: cond.offline } : {}),
+          ...(cond.data_stays_local !== undefined ? { data_stays_local: cond.data_stays_local } : {}),
           ui_language: cond.ui_language ?? null,
           limit,
         },
@@ -586,6 +599,9 @@ function sharedRequest(input: Conditions & { ui_language?: string }) {
     arch: input.arch ?? null,
     budget: input.budget ?? null,
     must_run_locally: input.must_run_locally ?? null,
+    // Only when given, so a request without them reads as before.
+    ...(input.offline !== undefined ? { offline: input.offline } : {}),
+    ...(input.data_stays_local !== undefined ? { data_stays_local: input.data_stays_local } : {}),
     ui_language: input.ui_language ?? null,
   };
 }
