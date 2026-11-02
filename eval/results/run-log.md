@@ -165,3 +165,14 @@
   - 「沒有工具符合」：q01 的 A0099、b09 的 A0019、A0023（兩則都先說找不到單一工具全部做到，再給「最接近的」組合）；照 C2 記 no_fit，要做 C6。
 - `blind.py l1-batch`：A 批 78 項（1 個答案沒有項目：no_fit）、B 批 18 項（2 個 no_fit）。給念誠的 `l1-form.csv` 在他交出偏好表單之後才給。
 - B 題組更正（`answers-B/picks-corrections.json`，2 筆）：b09 的 A0019、A0023 原記 no_fit；但 b09 自己的 [L1] 檢查寫明可以組合多個 server（「each part is named and the combination covers the same steps」），並要求沒有單一 server 全包時寫出缺哪些步驟，所以改記為組合首選（tool），重建 B 批：20 項、0 個沒有項目的答案（key `618d3516…`）。B 批在評分模型讀到之前就換好了。C6 只剩 q01（A0099）。
+
+### 模型評分者（C4 第二評分者、9.2 B 第三評分者）
+
+- `grade.py run`：Claude（`claude-opus-5-5`、effort high）與 Muse Spark Open（Baseten，temperature 0），同一份 `grader_l1.md`、同一批去識別資料；A 批 78 項、B 批 20 項，結果在 `grades/`。花費：評分上限 $20 用了 $4.30（含抽取首選 $2.70）；Baseten $5 用了 $0.90。只描述，以念誠的判定為準；在念誠交出偏好表單前不給他看。
+
+### L2（9.1 C7；Linux 題依題號，兩組第 1 次）
+
+- 執行：`calibrate_box.py --results eval/results/l2`（單一沙盒）與 `l2_boxes.py`（q04、q15、q16 的多沙盒流程），腳本在 `l2/scripts/`，每次的原始輸出在 `l2/<題>-<組>/`，判定與每個判斷在 `l2/l2-results.json`（評分者＝本 session 讀輸出後判；念誠的判定為準）。
+- 共同做法：答案的指令在同一個 shell 依序原樣執行、逐行記 exit code；安裝程式要讀 /dev/tty 或問 [Y/n] 時，在 pty 下按 Enter（第 5 節「接受預設值」）；答案只用文字描述的步驟（例如「到 releases 下載 … 解壓」），評分者用映像裡已有的工具照做並記下；`sudo` 在 dev image 沒有，凡答案用到 sudo 的題，評分環境先裝 sudo 套件（9.3 A 的替換，兩組相同）。
+- 量測失敗、重做（答案原文不變）：q02 實驗組第 1 次（apt 的 [Y/n] 沒給輸入而中止 → 改成接受預設值）；q04 對照組重做一次只為了留下錯誤訊息（結果相同）；q15 兩組、q16 實驗組第 1 次：評分者的逐行執行器漏掉檔案最後一行（檔尾沒有換行，`read` 讀不到）——q15 漏了模型下載（實驗組是 VAD 模型），q16 漏了 `cmake --build`；修好執行器後重做，第 1 次保留在 `*-attempt1-harness/`。q02–q14 的腳本都用 heredoc（檔尾有換行），不受影響。
+- 校準沒做完的題：q13 的凍結 GGUF 與唯讀儲存、q16 的語言辨識器（L2-5）與意義評分者（L2-7）在 calibration.md 都是空白。q13 兩組都在安裝就失敗，所以不影響；q16 的 L2-5、L2-7 記「未實跑（校準沒做）」，q16 因此不算「所有 [L2] 都跑完」的題（D3）。

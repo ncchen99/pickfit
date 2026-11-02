@@ -268,6 +268,124 @@
     "notes": []
    },
    "note": "calibration.md step 1 (the frozen GGUF and its read-only store) was never filled in; it did not matter because both installs failed (C7)"
+  },
+  "q14": {
+   "control": {
+    "pick": "Infinity (Docker image michaelf34/infinity:latest-cpu)",
+    "items": {
+     "1": "fail (`docker run ...` exit 127: no Docker in the dev image, and the answer's only install path is Docker)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   },
+   "experimental": {
+    "pick": "Xinference (Docker image xprobe/xinference:latest-cpu)",
+    "items": {
+     "1": "fail (`docker run ...` exit 127: no Docker)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q16": {
+   "control": {
+    "pick": "mdpo + Ollama + liaad/Tradutor + the answer's script",
+    "items": {
+     "1": "fail (`curl -fsSL https://ollama.com/install.sh | sh` exit 1 (`ERROR: This version requires zstd for extraction`; the dev image has no zstd), `ollama pull ...` exit 127, `python3 -m venv ~/mdtrans && . ~/mdtrans/bin/activate` exit 1 (no python3-venv), `pip install mdpo polib` exit 127)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)",
+     "6": "fail (install failed, C7)",
+     "7": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q17": {
+   "control": {
+    "pick": "aichat (with Ollama)",
+    "items": {
+     "1": "fail (`curl -fsSL https://ollama.com/install.sh | sh` exit 1: requires zstd, not in the dev image; both `ollama pull` exit 127)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   },
+   "experimental": {
+    "pick": "aichat (with Ollama)",
+    "items": {
+     "1": "fail (`less ollama-install.sh && sh ollama-install.sh` exit 127: no less in the dev image, so Ollama is never installed; `ollama pull` exit 127; `cargo install aichat` exit 127)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q18": {
+   "control": {
+    "pick": "ollmcp",
+    "items": {
+     "1": "fail (`pipx install ollmcp` exit 127: no pipx in the dev image)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": [
+     "the answer's `ollama pull` line not run (9.3 C.1: the fixed test model replaces it)"
+    ]
+   },
+   "experimental": {
+    "pick": "ollmcp",
+    "items": {
+     "1": "fail (`uv tool install --upgrade ollmcp` exit 127: no uv)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": [
+     "the answer's `ollama pull` line not run (9.3 C.1: the fixed test model replaces it)"
+    ]
+   }
+  },
+  "q19": {
+   "control": {
+    "pick": "Aider (option A: uv)",
+    "items": {
+     "1": "fail (`brew install uv` exit 127, `uv tool install --python 3.12 aider-chat` exit 127)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   },
+   "experimental": {
+    "pick": "Aider",
+    "items": {
+     "1": "fail (`brew install aider` exit 127: the first method)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
   }
  }
 }

@@ -1,0 +1,114 @@
+[
+ {
+  "box": "T",
+  "what": "copy fixtures",
+  "cmd": "mkdir -p /opt/eval/fixtures /opt/eval/state /opt/eval/xfer && tar -C /opt/eval/fixtures -xzf /tmp/fixtures.tgz",
+  "exit": 0,
+  "at": "2026-11-02T13:09:02+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "box check",
+  "cmd": "nproc; command -v nvidia-smi || echo no-gpu",
+  "exit": 0,
+  "at": "2026-11-02T13:09:03+08:00",
+  "tail": "4\nno-gpu\n"
+ },
+ {
+  "box": "T",
+  "what": "environment: sudo (9.3 A)",
+  "cmd": "apt-get update -qq > /dev/null && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq sudo > /dev/null",
+  "exit": 0,
+  "at": "2026-11-02T13:09:07+08:00",
+  "tail": "debconf: delaying package configuration, since apt-utils is not installed\n"
+ },
+ {
+  "box": "T",
+  "what": "L2-1 install (one shell)",
+  "cmd": "cd /work && OUT=/results; . /results/lib.sh; run_lines install /results/install.lines; all_ok install && echo INSTALL-OK || echo INSTALL-FAIL",
+  "exit": 0,
+  "at": "2026-11-02T13:09:48+08:00",
+  "tail": "== install 1: TTY:sudo apt install build-essential cmake git libcurl4-openssl-dev python3\ninstall 1 exit 0\nSetting up libheif-plugin-aomdec:amd64 (1.17.6-1ubuntu4.9) ...\r\nSetting up libheif-plugin-aomenc:amd64 (1.17.6-1ubuntu4.9) ...\r\nProcessing triggers for libc-bin (2.39-0ubuntu8.9) ...\r\n== install 2: git clone https://github.com/ggml-org/llama.cpp && cd llama.cpp\ninstall 2 exit 0\nCloning into 'llama.cpp'...\nINSTALL-OK\n"
+ },
+ {
+  "box": "T",
+  "what": "warmup (network open; model download)",
+  "cmd": "rm -rf /work/docs /work/docs-pt-PT && cp -r $F/q16/warmup /work/docs && Q16_RUN=warmup bash /results/run.sh; echo warmup exit $?; tail -5 /results/server-warmup.log; tail -5 /work/translate.log; ls -R /work/docs-pt-PT; rm -rf /work/docs /work/docs-pt-PT /work/translate.log",
+  "exit": 0,
+  "at": "2026-11-02T13:09:48+08:00",
+  "tail": "warmup exit 1\n/results/run.sh: line 2: ./build/bin/llama-server: No such file or directory\n    return self.do_open(http.client.HTTPConnection, req)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/urllib/request.py\", line 1347, in do_open\n    raise URLError(err)\nurllib.error.URLError: <urlopen error [Errno 111] Connection refused>\nls: cannot access '/work/docs-pt-PT': No such file or directory\n"
+ },
+ {
+  "box": "T",
+  "what": "input: docs",
+  "cmd": "rm -rf /work/docs && cp -r $F/q16/docs /work/docs",
+  "exit": 0,
+  "at": "2026-11-02T13:09:49+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "probe before",
+  "cmd": "python3 $SHARED/egress.py run --out /results/eg --block-network --label probe-before --no-trace -- python3 $SHARED/egress.py probe --json /results/probe-before.json; echo probe exit $?",
+  "exit": 0,
+  "at": "2026-11-02T13:09:50+08:00",
+  "tail": "egress: probe-before exit=0 timed_out=False 0.2s tracer_running=False trace=/results/eg/probe-before.strace\nprobe exit 0\n"
+ },
+ {
+  "box": "T",
+  "what": "translate 1 (blocked, traced)",
+  "cmd": "Q16_RUN=1 python3 $SHARED/egress.py run --out /results/eg --block-network --label translate-1 --timeout 1800 -- bash /results/run.sh; echo translate-1 exit $?; cat /results/eg/translate-1.json | head -c 600; tail -8 /work/translate.log",
+  "exit": 0,
+  "at": "2026-11-02T13:09:51+08:00",
+  "tail": "egress: translate-1 exit=1 timed_out=False 0.4s tracer_running=False trace=/results/eg/translate-1.strace\ntranslate-1 exit 1\n{\n  \"tool\": \"egress.py\",\n  \"label\": \"translate-1\",\n  \"command\": [\n    \"bash\",\n    \"/results/run.sh\"\n  ],\n  \"shell\": false,\n  \"cwd\": \"/\",\n  \"trace\": \"/results/eg/translate-1.strace\",\n  \"traced\": true,\n  \"block_network\": true,\n  \"timeout_s\": 1800.0,\n  \"self_addresses\": [],\n  \"strace\": \"/usr/bin/strace\",\n  \"stdout\": \"/results/eg/translate-1.stdout\",\n  \"stderr\": \"/results/eg/translate-1.stderr\",\n  \"started_at\": \"2026-11-02T05:09:50.624+00:00\",\n  \"started_epoch\": 1793596190.6247222,\n  \"tracer_pid\": 1626,\n  \"ended_at\": \"2026-11-02T05:09:51.030+00:00\",\n  \"ended_epoch\": 1793596191.03,\n  \"duration_s\":     result = func(*args)\n             ^^^^^^^^^^^\n  File \"/usr/lib/python3.12/urllib/request.py\", line 1373, in http_open\n    return self.do_open(http.client.HTTPConnection, req)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/urllib/request.py\", line 1347, in do_open\n    raise URLError(err)\nurllib.error.URLError: <urlopen error [Errno 111] Connection refused>\n"
+ },
+ {
+  "box": "T",
+  "what": "egress stop",
+  "cmd": "python3 $SHARED/egress.py stop --out /results/eg --kill",
+  "exit": 0,
+  "at": "2026-11-02T13:09:52+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "probe after",
+  "cmd": "python3 $SHARED/egress.py run --out /results/eg --block-network --label probe-after --no-trace -- python3 $SHARED/egress.py probe --json /results/probe-after.json; echo probe exit $?",
+  "exit": 0,
+  "at": "2026-11-02T13:09:53+08:00",
+  "tail": "egress: probe-after exit=0 timed_out=False 0.2s tracer_running=False trace=/results/eg/probe-after.strace\nprobe exit 0\n"
+ },
+ {
+  "box": "T",
+  "what": "L2-2 egress report",
+  "cmd": "python3 $SHARED/egress.py report --out /results/eg --labels translate-1 --json /results/egress.json; echo report exit $?",
+  "exit": 0,
+  "at": "2026-11-02T13:09:54+08:00",
+  "tail": "egress: PASS (no egress attempt in 1 trace(s))\nreport exit 0\n"
+ },
+ {
+  "box": "T",
+  "what": "keep output 1",
+  "cmd": "rm -rf /results/out-1 && cp -r /work/docs-pt-PT /results/out-1 && cp /work/translate.log /results/translate-1.log; ls -R /results/out-1",
+  "exit": 2,
+  "at": "2026-11-02T13:09:55+08:00",
+  "tail": "cp: cannot stat '/work/docs-pt-PT': No such file or directory\nls: cannot access '/results/out-1': No such file or directory\n"
+ },
+ {
+  "box": "T",
+  "what": "L2-3, L2-4, L2-6 md_check",
+  "cmd": "cd /results && python3 $F/q16/md_check.py --output out-1 --run-log eg/translate-1.json --out md-1.json; echo md_check exit $?; python3 -c \"import json; d=json.load(open('md-1.json')); print(json.dumps(d.get('items'), ensure_ascii=False))\"",
+  "exit": 0,
+  "at": "2026-11-02T13:09:56+08:00",
+  "tail": "md_check: {\"files_within_30_min\": false, \"structure\": false, \"no_verbatim_english\": false, \"variant\": false}\nmd_check exit 1\n{\"files_within_30_min\": false, \"structure\": false, \"no_verbatim_english\": false, \"variant\": false}\n"
+ },
+ {
+  "box": "T",
+  "what": "pack results",
+  "cmd": "cd /results && tar czf /tmp/keep.tgz install.lines run.sh steps.txt probe-before.json probe-after.json egress.json eg/translate-1.json md-1.json out-1 translate-1.log server-1.log server-warmup.log install-*.txt 2> /dev/null; ls -l /tmp/keep.tgz",
+  "exit": 0,
+  "at": "2026-11-02T13:09:56+08:00",
+  "tail": "-rw-r--r-- 1 root root 10635 Nov  2 05:09 /tmp/keep.tgz\n"
+ }
+]

@@ -4,7 +4,7 @@
 # input: the grader accepting the installer's default (section 5), for installers that read /dev/tty.
 run_lines() {  # $1 = label, $2 = file with one answer line per line
   local n=0 line rc
-  while IFS= read -r line <&3; do
+  while IFS= read -r line <&3 || [ -n "$line" ]; do  # also the last line when the file has no final newline
     [ -z "$line" ] && continue
     n=$((n+1))
     echo "== $1 $n: $line" | tee -a "$OUT/steps.txt"
