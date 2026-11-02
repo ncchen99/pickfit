@@ -161,6 +161,86 @@
     "l2": "fail",
     "notes": []
    }
+  },
+  "q07": {
+   "control": {
+    "pick": "Bruno (bru CLI)",
+    "items": {
+     "1": "fail (`brew install bruno` exit 127, `npm install -g @usebruno/cli` exit 127: no Homebrew, no Node.js in the dev image)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   },
+   "experimental": {
+    "pick": "Bruno (bru CLI)",
+    "items": {
+     "1": "fail (`brew install --cask bruno` exit 127, `npm install -g @usebruno/cli` exit 127)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q09": {
+   "control": {
+    "pick": "Backlog.md",
+    "items": {
+     "1": "fail (`brew install backlog-md` exit 127: the first install method given; no Homebrew in the dev image)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   },
+   "experimental": {
+    "pick": "Beads (bd)",
+    "items": {
+     "1": "fail (method A `go install github.com/steveyegge/beads/cmd/bd@latest` exit 127: no Go in the dev image; methods B and C are prose without a command)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q10": {
+   "control": {
+    "pick": "built-in: git diff --color-words with a custom word regex",
+    "items": {
+     "1": "pass (only git; .gitattributes and git config exit 0; output check ok)",
+     "2": "pass (spans 己 / 已)",
+     "3": "pass",
+     "4": "pass (`*.md diff=cjk` + `git config --global diff.cjk.wordRegex ...`, everyday `git diff --color-words`: same spans)",
+     "5": "pass (color)"
+    },
+    "l2": "pass",
+    "notes": [
+     "one-off command: `git diff --color-words='[A-Za-z0-9_]+|[^[:space:]]'`; the optional alias (step 3) not applied: the answer names `git diff --color-words` as the everyday command after step 2"
+    ]
+   },
+   "experimental": {
+    "pick": "built-in: git diff --word-diff=color with --word-diff-regex",
+    "items": {
+     "1": "pass (only git; settings exit 0; output check ok)",
+     "2": "pass (spans 己 / 已 with the one-off command)",
+     "3": "pass",
+     "4": "fail (after `git config --global diff.markdown.wordRegex ...`, `*.md diff=markdown` and `alias.wd`, the everyday `git wd` marks the whole 216-character line: the custom regex did not take effect under the `markdown` driver name)",
+     "5": "pass (color)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
   }
  }
 }
