@@ -648,14 +648,12 @@ body.is-results .home-only{display:none}
 .feat-fail .feat-state{background:var(--fail-soft);color:var(--fail);cursor:help}
 .feat-state:focus-visible{outline:3px solid var(--stitch);outline-offset:2px}
 .feat-state[data-tip]{position:relative}
-.feat-state[data-tip]:hover::after,.feat-state[data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;left:auto;right:0;bottom:calc(100% + 6px);z-index:3;padding:6px 9px;border-radius:6px;background:var(--ink);color:var(--paper);font:600 .78rem/1.3 var(--sans);width:max-content;max-width:260px;white-space:normal;pointer-events:none}
+.feat-state[data-tip]:hover::after,.feat-state[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:auto;right:0;bottom:calc(100% + 6px);z-index:3;padding:6px 9px;border-radius:6px;background:var(--ink);color:var(--paper);font:600 .78rem/1.3 var(--sans);width:max-content;max-width:260px;white-space:normal;pointer-events:none}
 .feat-open .feat-title{color:var(--ink-2)}
-@media (hover:hover){.feat-list small{display:none}}
 @media (hover:none){.feat-state[data-tip]{cursor:default}}
 .feat-check summary{font-size:var(--t-small);color:var(--pass);font-weight:600}
 .feat-check code{display:block;margin-top:6px;padding:8px 10px;border-radius:8px;background:var(--code);color:var(--code-ink);font-size:.8rem;overflow-x:auto;white-space:pre}
 .side a{overflow-wrap:anywhere}
-.feat-list small{display:block;color:var(--ink-2);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .uses{columns:2;column-gap:32px}.uses li{break-inside:avoid;margin-bottom:6px}
 .run-card{background:var(--tag);border-radius:var(--r-card);padding:22px 24px;box-shadow:var(--lift-1);margin-bottom:20px}
 .run-video{margin:14px 0 16px}

@@ -95,12 +95,12 @@ test('install steps come one stage at a time: install, then check, each with Bac
   assert.match(html, /data-goto="0">.*?Back: Install<\/button>/);
 });
 
-test('what it does: plain titles from the usage guide, steps only for a feature the run checked, and who wrote them', async () => {
+test('what it does: plain titles from the usage guide, steps only for a feature the run checked, why not only in a tooltip', async () => {
   const html = await (await site().get('/tool/fixture-llm-runner')).text();
   assert.match(html, /<li class="feat-ok"><div><span class="feat-title">Serve models over an OpenAI-style API<\/span><details class="how-to"><summary>How to use it<\/summary><ol><li>Run <code translate="no">fixture-llm-runner serve<\/code>\.<\/li>.*?<span class="feat-state">.*?Tested<\/span><\/li>/);
-  // An untested feature is greyed, with why in its mark's tooltip.
-  assert.match(html, /<li class="feat-open"><div><span class="feat-title">Download models from a registry<\/span><small>([^<]+)<\/small><\/div><span class="feat-state" tabindex="0" data-tip="\1">.*?Not tested<\/span><\/li>/);
-  assert.match(html, /Feature names and steps written by fixture-model from what pickfit’s run did\./);
+  // An untested feature is greyed, with why only in its mark's tooltip: no line under the title, no note on who wrote the list.
+  assert.match(html, /<li class="feat-open"><div><span class="feat-title">Download models from a registry<\/span><\/div><span class="feat-state" tabindex="0" data-tip="[^"]+">.*?Not tested<\/span><\/li>/);
+  assert.ok(!html.includes('written by'));
   // A tool without a guide still lists its features, under the README's own words.
   const plain = await (await site().get('/tool/fixture-transcribe')).text();
   assert.match(plain, /<span class="feat-title">Transcribe audio files offline<\/span>/);

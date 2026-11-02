@@ -333,13 +333,12 @@ function featureList(entry: Entry, f: FeaturesOut): string {
           : '';
       return `<li class="feat-ok"><div><span class="feat-title">${title(feature)}</span>${how}</div><span class="feat-state">${icon('check')}${L('Tested', '已測試')}</span></li>`;
     }),
-    // The feature is the row; whether pickfit tested it is the mark on the right, and why not is its tooltip
-    // (and a line under the title where there is no hover).
+    // The feature is the row; whether pickfit tested it is the mark on the right, and why not is only its tooltip.
     ...f.not_checked.map((n) => {
       const failed = n.reason === 'test_failed';
       const why = esc(featureWhy(n.detail));
       return (
-        `<li class="${failed ? 'feat-fail' : 'feat-open'}"><div><span class="feat-title">${title(n.feature)}</span><small>${why}</small></div>` +
+        `<li class="${failed ? 'feat-fail' : 'feat-open'}"><div><span class="feat-title">${title(n.feature)}</span></div>` +
         `<span class="feat-state" tabindex="0" data-tip="${why}">${icon(failed ? 'x' : 'circle-dashed')}${failed ? L('Test failed', '測試未通過') : L('Not tested', '未測試')}</span></li>`
       );
     }),
@@ -347,10 +346,7 @@ function featureList(entry: Entry, f: FeaturesOut): string {
   if (!items.length) return '';
   const ran = bestGuide(entry) !== null || webCheck(entry) !== null;
   const from = f.recorded ? '' : `<p class="quiet">${notRecorded(entry, ran)}</p>`;
-  const by = guide
-    ? `<p class="small quiet">${L(`Feature names and steps written by ${esc(guide.model)} from what pickfit’s run did.`, `功能名稱與步驟由 ${esc(guide.model)} 根據 pickfit 的測試內容撰寫。`)}</p>`
-    : '';
-  return `${from}<ul class="feat-list">${items.join('')}</ul>${by}`;
+  return `${from}<ul class="feat-list">${items.join('')}</ul>`;
 }
 
 function about(entry: Entry, f: FeaturesOut): string {
