@@ -822,3 +822,24 @@ body.is-results .hero-fitz{display:none}
 `;
 
 export const CSS = TOKENS + BASE + COMPONENTS + RESULTS + PAGES + MOTION + RESPONSIVE;
+
+/**
+ * Added after CSS on the zh-TW pages only (shell.ts), so the English page is untouched. Chinese needs
+ * more leading, no negative tracking (it crowds the glyphs), no breaks inside short labels, and wraps
+ * that avoid a lone character on the last line; a line that opens with 「 drops its half-width blank.
+ */
+export const CSS_ZH = `
+body{line-height:1.7;line-break:strict}
+h1,h2,h3,h4{letter-spacing:0;text-spacing-trim:trim-start}
+h1{letter-spacing:-.01em;line-height:1.18}
+h2{line-height:1.3}
+p,li,dd,summary,.lede,.st span{text-wrap:pretty}
+.gl-value{text-wrap:balance}
+.ask label,.ask textarea,.fit{letter-spacing:0}
+.fit{line-height:1.5}
+.nav a,.menu-nav a,.seg label,.chip,.btn,.res-tools .btn,.tries a,.proof li{white-space:nowrap}
+.stage>p{max-width:15em;text-wrap:balance}
+.record-title{letter-spacing:.02em}
+.label-tag h3{letter-spacing:.04em}
+@media (hover:hover){.cat-card .chip-compare:hover::after{content:"比較"}}
+`;

@@ -196,7 +196,7 @@ test('a clip with chapters gets a seek bar cut into them and a chapter list, nam
   // In Chinese the two cards use fixed words.
   const zh = await (await site(undefined, chaptered())(`/tool/${SLUG}?lang=zh-TW`, { headers: { accept: 'text/html' } })).text();
   assert.match(zh, /data-title="pickfit 錄製"/);
-  assert.match(zh, /data-title="未剪輯的原始錄影"/);
+  assert.match(zh, /data-title="原始錄影"/);
 });
 
 test('a clip without chapters keeps the browser’s own player and no chapter list', async () => {

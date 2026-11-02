@@ -145,7 +145,7 @@ export function runFacts(run: RunFacts, opts: { offline?: boolean | null; mine?:
           opts.mine === true
             ? L('Verified on your OS', '已在你的作業系統上驗證')
             : opts.mine === false
-              ? L('Not your OS', '不是你的作業系統')
+              ? L('Not your OS', '不是你的系統')
               : undefined,
         ),
     run.method === 'human'
@@ -157,15 +157,15 @@ export function runFacts(run: RunFacts, opts: { offline?: boolean | null; mine?:
           '',
           icon('mic'),
           L('Simulated microphone', '模擬麥克風'),
-          L('A simulated microphone played words pickfit spoke for each check', '每項檢查時，模擬麥克風會播放 pickfit 念出的字詞'),
+          L('A simulated microphone played words pickfit spoke for each check', '檢查時用模擬麥克風播放 pickfit 念的字詞'),
         )
       : '',
     opts.offline === true
-      ? item('', icon('wifi-off'), L('Works offline', '可離線使用'), L('Its checks passed again with the network off', '關閉網路後，檢查再次通過'))
+      ? item('', icon('wifi-off'), L('Works offline', '可離線使用'), L('Its checks passed again with the network off', '斷網後檢查仍通過'))
       : opts.offline === false
-        ? item('no', icon('wifi'), L('Needed the network', '需要網路'), L('Its checks failed with the network off', '關閉網路後，檢查失敗'))
+        ? item('no', icon('wifi'), L('Needed the network', '需要網路'), L('Its checks failed with the network off', '斷網後檢查失敗'))
         : opts.askedOffline
-          ? item('', icon('wifi'), L('Offline not checked', '未檢查離線使用'))
+          ? item('', icon('wifi'), L('Offline not checked', '未檢查能否離線'))
           : '',
     run.checked_at
       ? item('', icon('calendar'), `${L('<span class="sr">Checked on </span>', '<span class="sr">檢查於 </span>')}${esc(day(run.checked_at))}`)
@@ -183,10 +183,10 @@ export function marksLegend(): string {
   const lvl = (level: string, evidence = {}) => `<span class="level-i">${icon(levelIcon(level, evidence))}</span>`;
   return (
     row(
-      `<span class="mark-sample">${osList(['macos', 'linux', 'windows'], { tone: 'pass' })}</span>${L('Where it ran', '在哪裡執行')}`,
+      `<span class="mark-sample">${osList(['macos', 'linux', 'windows'], { tone: 'pass' })}</span>${L('Where it ran', '在哪裡測過')}`,
       L(
         'Green OS marks: pickfit ran the install steps there. Grey ones: the README says it runs there, and pickfit has not tried.',
-        '綠色的作業系統標記：pickfit 在那裡執行過安裝步驟。灰色的：README 說能在那裡執行，但 pickfit 還沒試過。',
+        '綠色系統標記：pickfit 在該系統跑過安裝步驟。灰色：README 說支援，但 pickfit 還沒試過。',
       ),
     ) +
     row(
@@ -200,7 +200,7 @@ export function marksLegend(): string {
       `<span class="mark-sample rf">${icon('refresh-cw')}${icon('hand')}${icon('wifi-off')}${icon('calendar')}</span>${L('About the run', '關於這次測試')}`,
       L(
         'Replayed from scratch in a new sandbox, or installed by hand; passed again with the network off; the day it ran.',
-        '在新的沙盒中從頭重跑，或手動安裝；關閉網路後再次通過；執行的日期。',
+        '在新沙盒裡從頭重跑，或手動安裝；斷網後仍通過；測試日期。',
       ),
     ) +
     row(
@@ -214,7 +214,7 @@ export function marksLegend(): string {
       `<span class="mark-sample rf">${icon('file-text')}</span>${L('Source of a reason', '理由的來源')}`,
       L(
         'Every reason a pick fits rests on one profile field. Open the reason to see the field and the value it relies on.',
-        '每個推薦理由都依據一個資料欄位。展開理由，就能看到它依據的欄位和值。',
+        '每個推薦理由都依據簡介裡的一個欄位。展開理由就能看到欄位和值。',
       ),
     )
   );

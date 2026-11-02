@@ -69,7 +69,7 @@ export const script = () => `
       busy = true;
       go.disabled = true;
       go.setAttribute('aria-busy', 'true');
-      label.textContent = ${J('Measuring', '測量中')};
+      label.textContent = ${J('Measuring', '量身中')};
       status.textContent = ${J('Searching', '搜尋中')};
       out.setAttribute('aria-busy', 'true');
       out.replaceChildren($('#loading').content.cloneNode(true));
@@ -92,7 +92,7 @@ export const script = () => `
         busy = false;
         go.disabled = false;
         go.removeAttribute('aria-busy');
-        label.textContent = ${J('Find my fit', '找出最適合的')};
+        label.textContent = ${J('Find my fit', '幫我找合身的')};
         out.removeAttribute('aria-busy');
         out.focus({ preventScroll: true });
       }
@@ -117,7 +117,7 @@ export const script = () => `
     try {
       await navigator.clipboard.writeText(text);
       b.classList.add('done'); span.textContent = ${J('Copied', '已複製')}; toast(${J('Copied to the clipboard', '已複製到剪貼簿')});
-    } catch { span.textContent = ${J('Select to copy', '請選取後複製')}; }
+    } catch { span.textContent = ${J('Select to copy', '請選取文字後複製')}; }
     setTimeout(() => { b.classList.remove('done'); span.textContent = ${J('Copy', '複製')}; }, 1800);
   });
 
@@ -162,7 +162,7 @@ export const script = () => `
     if (!c) return;
     let items = read();
     if (c.checked) {
-      if (items.length >= MAX) { c.checked = false; toast(${J('Compare holds ', '比較最多 ')} + MAX + ${J(' tools. Remove one first.', ' 款工具，請先移除一款。')}); return; }
+      if (items.length >= MAX) { c.checked = false; toast(${J('Compare holds ', '最多比較 ')} + MAX + ${J(' tools. Remove one first.', ' 款工具，請先移除一款。')}); return; }
       if (!items.some((i) => i.slug === c.dataset.compare)) items.push({ slug: c.dataset.compare, name: c.dataset.name });
       toast(c.dataset.name + ${J(' added to compare', ' 已加入比較')});
     } else {

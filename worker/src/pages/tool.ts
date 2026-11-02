@@ -17,7 +17,7 @@ import { icon, osMark, type IconName } from '../ui/icons.ts';
 import { age, badge, compareToggle, coverage, fitz, kindTag, levelIcon, osList, runFacts, tape, type FitzName } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 import { posterOf, videoPath } from '../video.ts';
-import { NO_INSTALL_LABEL, webRanSentence } from '../webapp.ts';
+import { NO_INSTALL_LABEL, noInstallLabel, webRanSentence } from '../webapp.ts';
 
 const MATURITY: Record<string, string> = {
   get stable() { return L('Stable', '穩定版'); },
@@ -47,17 +47,17 @@ function factSheet(entry: Entry, now: Date): string {
     : verifiedOn(entry).length
       ? osList(verifiedOn(entry), { tone: 'pass' })
       : `<span class="no">${L('Not verified yet', '尚未驗證')}</span>`;
-  const runsLabel = L('Runs', '執行方式');
+  const runsLabel = L('Runs', '執行位置');
   const lastReleaseLabel = L('Last release', '最新版本');
   const rows: [string, string][] = [
     [L('Kind', '類型'), kindTag(entry)],
     [L('Verified on', '已驗證於'), verifiedCell],
     web
-      ? [L('Runs in', '執行環境'), L('Any modern browser, nothing to install', '任何現代瀏覽器，無須安裝')]
+      ? [L('Runs in', '執行環境'), L('Any modern browser, nothing to install', '任何現代瀏覽器，免安裝')]
       : [L('Claims to run on', '宣稱支援'), entry.platforms.length ? osList(entry.platforms, { tone: 'quiet' }) : unknown],
     [L('Price', '價格'), entry.pricing ? esc(PRICE[entry.pricing]) + (entry.pricing_note ? `<div class="small quiet">${esc(entry.pricing_note)}</div>` : '') : unknown],
     [runsLabel, entry.processing ? esc(PROCESSING[entry.processing]) : unknown],
-    [L('Licence', '授權'), entry.license ? `<code>${esc(entry.license)}</code>${entry.open_source ? ` <span class="small quiet">${L('open source', '開放原始碼')}</span>` : ''}` : unknown],
+    [L('Licence', '授權'), entry.license ? `<code>${esc(entry.license)}</code>${entry.open_source ? ` <span class="small quiet">${L('open source', '開源')}</span>` : ''}` : unknown],
     [lastReleaseLabel, entry.last_release ? `${esc(day(entry.last_release))} <span class="small quiet">(${esc(age(entry.last_release, now) ?? '')})</span>` : unknown],
   ].filter(([k]) => !web || (k !== runsLabel && k !== lastReleaseLabel)) as [string, string][];
   if (entry.maturity) rows.push([L('Maturity', '成熟度'), esc(MATURITY[entry.maturity] ?? entry.maturity)]);
@@ -77,9 +77,9 @@ function prerequisites(entry: Entry): string {
     items.push(L(`System packages: ${list}`, `系統套件：${list}`));
   }
   if (p.gpu === 'required') items.push(L('A GPU is required', '需要 GPU'));
-  else if (p.gpu === 'optional') items.push(L('A GPU is optional', 'GPU 為選用'));
+  else if (p.gpu === 'optional') items.push(L('A GPU is optional', '可選用 GPU'));
   if (p.min_ram_gb) items.push(L(`At least ${p.min_ram_gb} GB of RAM`, `至少 ${p.min_ram_gb} GB 記憶體`));
-  if (p.apple_silicon_only) items.push(L('Apple silicon only', '僅支援 Apple silicon'));
+  if (p.apple_silicon_only) items.push(L('Apple silicon only', '僅支援 Apple 晶片'));
   if (p.network === 'required') items.push(L('Needs the network', '需要網路'));
   if (p.api_keys.length) {
     const list = p.api_keys.map(esc).join(', ');
@@ -118,7 +118,7 @@ export function chaptersOf(entry: Entry, video: RunVideo): Chapter[] {
       ? (guideTitle(entry, c.feature) ?? c.title)
       : i === 0
         ? L('Recorded by pickfit', 'pickfit 錄製')
-        : L('Unedited recordings', '未剪輯的原始錄影'),
+        : L('Unedited recordings', '原始錄影'),
   }));
 }
 
@@ -260,9 +260,9 @@ function progress(entry: Entry): string {
       `<div class="empty">${fitz('thinking', 80)}<div><p>` +
       L(
         `<b>pickfit hasn’t verified ${esc(entry.name)} yet</b>, so it gives no install steps and never suggests it.`,
-        `<b>pickfit 還沒驗證過 ${esc(entry.name)}</b>，所以不提供安裝步驟，也從不推薦它。`,
+        `<b>pickfit 還沒驗證過 ${esc(entry.name)}</b>，所以不提供安裝步驟，也不會推薦它。`,
       ) +
-      `</p><p class="quiet">${entry.verification.level === 'failed' ? L('A verification run did not pass. ', '有一次驗證執行未通過。') : ''}${L('What follows comes from its README only.', '以下內容只來自它的 README。')}</p></div></div></section>`
+      `</p><p class="quiet">${entry.verification.level === 'failed' ? L('A verification run did not pass. ', '有一次驗證測試沒通過。') : ''}${L('What follows comes from its README only.', '以下只依據它的 README。')}</p></div></div></section>`
     );
   }
   const rows = oses.map((os) => {
@@ -290,11 +290,11 @@ const notRecorded = (entry: Entry, ran: boolean) =>
   ran
     ? L(
         'This run came before pickfit checked features one by one, so these come from the README only.',
-        '這次執行早於 pickfit 逐項檢查功能，所以這些只來自 README。',
+        '這次測試早於 pickfit 開始逐項檢查功能，所以以下只依據 README。',
       )
     : L(
         `pickfit hasn’t run it yet, so these come from ${isWebApp(entry) ? 'its own site' : 'the README'} only.`,
-        `pickfit 還沒執行過它，所以這些只來自${isWebApp(entry) ? '它自己的網站' : ' README'}。`,
+        `pickfit 還沒測過它，所以以下只依據${isWebApp(entry) ? '它自己的網站' : ' README'}。`,
       );
 
 /** Where to watch one feature: its chapter in the clip, else the raw recording that shows it. */
@@ -403,14 +403,14 @@ function webRun(entry: Entry): string {
       `<div class="empty">${fitz('thinking', 80)}<div><p>` +
       L(
         `<b>pickfit hasn’t checked ${esc(entry.name)} in its browser yet</b>, so it never suggests it.`,
-        `<b>pickfit 還沒在瀏覽器中檢查過 ${esc(entry.name)}</b>，所以從不推薦它。`,
+        `<b>pickfit 還沒在瀏覽器中檢查過 ${esc(entry.name)}</b>，所以不會推薦它。`,
       ) +
-      `</p><p class="quiet">${L('The profile above comes from its own site only.', '上方的介紹只來自它自己的網站。')}</p></div></div></section>`
+      `</p><p class="quiet">${L('The profile above comes from its own site only.', '上方簡介只依據它自己的網站。')}</p></div></div></section>`
     );
   }
   return (
     `<section class="block" aria-labelledby="install-title">${installTitle('Open it', '開啟')}` +
-    `<article class="run-card" id="run-web"><div class="run-head"><h3>${esc(NO_INSTALL_LABEL)}</h3></div>` +
+    `<article class="run-card" id="run-web"><div class="run-head"><h3>${esc(noInstallLabel())}</h3></div>` +
     webFactList(entry) +
     (open ? `<p class="t-open">${open}<span class="quiet small" translate="no">${esc(url)}</span></p>` : '') +
     `</article></section>`
@@ -431,7 +431,7 @@ function rawList(slug: string, video: RunVideo): string {
     .join('');
   return (
     `<p class="small">${L('Clip', '影片')} <code class="hash" translate="no">${esc(video.clip)}</code>, sha256 <code class="hash" translate="no">${esc(video.clip_sha256)}</code>. ` +
-    `${L('It was cut from these unedited recordings:', '剪輯自以下未剪輯的錄影：')}</p><ul class="small raw-list">${raw}</ul>`
+    `${L('It was cut from these unedited recordings:', '剪輯自以下原始錄影：')}</p><ul class="small raw-list">${raw}</ul>`
   );
 }
 
@@ -454,7 +454,7 @@ function tested(catalog: Catalog, entry: Entry): string {
       const transport = g.mcp.transport === 'stdio' ? 'stdio' : 'HTTP';
       mcpLine = `<p>${L(
         `An MCP client handshake over ${transport} listed ${g.mcp.tool_count} tool${g.mcp.tool_count === 1 ? '' : 's'}${g.mcp.called_tool ? `, and a call to <code>${esc(g.mcp.called_tool)}</code> returned a result` : ''}.`,
-        `透過 ${transport} 進行的 MCP 用戶端握手列出了 ${g.mcp.tool_count} 個工具${g.mcp.called_tool ? `，呼叫 <code>${esc(g.mcp.called_tool)}</code> 也回傳了結果` : ''}。`,
+        `MCP 用戶端透過 ${transport} 連線，列出 ${g.mcp.tool_count} 個工具${g.mcp.called_tool ? `，呼叫 <code>${esc(g.mcp.called_tool)}</code> 也回傳了結果` : ''}。`,
       )}</p>`;
     }
     parts.push(
@@ -498,9 +498,9 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
   const web = isWebApp(entry) ? webCheck(entry) : null;
   const on = listOf(verifiedOn(entry).map((os) => OS_NAME[os]));
   const badges = [
-    web ? badge('info', NO_INSTALL_LABEL, { icon: 'globe' }) : '',
+    web ? badge('info', L(NO_INSTALL_LABEL, '免安裝'), { icon: 'globe' }) : '',
     web
-      ? badge('pass', L('Tested in a browser', '已在瀏覽器中測試'), { icon: 'badge-check' })
+      ? badge('pass', L('Tested in a browser', '已在瀏覽器實測'), { icon: 'badge-check' })
       : verified && on
         ? badge('pass', L(`Tested on ${on}`, `已在 ${on} 上測試`), { icon: 'badge-check' })
         : badge('quiet', L('Not verified yet', '尚未驗證'), { icon: 'circle-dashed' }),
@@ -535,12 +535,12 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
     tape(L('Quality', '品質'), entry.scores?.quality ?? null, { pop: 'pop-quality' }) +
     tape(L('Popularity', '知名度'), entry.scores?.popularity ?? null, { pop: 'pop-popularity', tone: 'quiet' }) +
     coverage(features, { pop: 'pop-features' }) +
-    `</div><p class="small quiet">${L('Scored apart; ranked by neither.', '分開評分，排序不依任一項。')} <a href="/how#scores">${L('How scores work', '評分方式')}</a></p></div>` +
-    (sources ? `<details class="panel sources"><summary>${L('Sources', '來源')}</summary><ul class="small">${sources}</ul><p class="small quiet">${L('Every field in the profile cites one of these.', '介紹中的每個欄位都引用其中一個來源。')}</p></details>` : '') +
+    `</div><p class="small quiet">${L('Scored apart; ranked by neither.', '兩項分開計分，排序不看分數。')} <a href="/how#scores">${L('How scores work', '評分方式')}</a></p></div>` +
+    (sources ? `<details class="panel sources"><summary>${L('Sources', '來源')}</summary><ul class="small">${sources}</ul><p class="small quiet">${L('Every field in the profile cites one of these.', '簡介裡的每個欄位都引用下列其中一個來源。')}</p></details>` : '') +
     `</aside></div>`;
   return renderShell({
     nonce,
-    title: `${entry.name}: ${web ? L('checked in a browser', '已在瀏覽器中檢查') : verified ? L('verified install steps', '已驗證的安裝步驟') : L('profile', '介紹')} · pickfit`,
+    title: `${entry.name}: ${web ? L('checked in a browser', '瀏覽器實測') : verified ? L('verified install steps', '已驗證的安裝步驟') : L('profile', '簡介')} · pickfit`,
     description: entry.summary,
     active: 'browse',
     main,
