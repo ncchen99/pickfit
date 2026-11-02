@@ -149,7 +149,8 @@ export function compareTable(entries: Entry[], opts: Opts): string {
           p.gpu === 'required' ? L('a GPU', 'GPU') : '',
           p.min_ram_gb ? L(`${p.min_ram_gb} GB RAM`, `${p.min_ram_gb} GB 記憶體`) : '',
           p.apple_silicon_only ? L('Apple silicon', 'Apple 晶片') : '',
-          ...p.api_keys.map((k) => L(`${k} (key)`, `${k}（金鑰）`)),
+          // A translated key often already says 金鑰; don't say it twice.
+          ...p.api_keys.map((k) => L(`${k} (key)`, /金鑰|key|token|帳號/i.test(k) ? k : `${k}（金鑰）`)),
           p.network === 'required' ? L('the network', '網路') : '',
         ].filter(Boolean);
         return needs.length ? esc(needs.join(isZh() ? '、' : ', ')) : `<span class="quiet">${L('Nothing listed', '未列出')}</span>`;

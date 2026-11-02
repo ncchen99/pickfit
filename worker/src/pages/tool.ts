@@ -16,7 +16,7 @@ import { icon, osMark } from '../ui/icons.ts';
 import { age, badge, compareToggle, coverage, fitz, kindTag, levelIcon, osList, runFacts, SEAM, tape, type FitzName } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 import { posterOf, videoPath } from '../video.ts';
-import { NO_INSTALL_LABEL, webRanSentence } from '../webapp.ts';
+import { NO_INSTALL_LABEL, noInstallLabel, webRanSentence } from '../webapp.ts';
 
 const MATURITY: Record<string, string> = {
   get stable() { return L('Stable', '穩定版'); },
@@ -147,8 +147,8 @@ function webRun(entry: Entry): string {
   const evidence = safeUrl(check.evidence_url);
   return (
     `<section class="block" aria-labelledby="runs-title"><h2 id="runs-title">${L('Open it', '開啟')}</h2>` +
-    `<article class="run-card" id="run-web"><div class="run-head"><h3>${esc(NO_INSTALL_LABEL)}</h3>` +
-    `<span class="badges">${badge('pass', L('Checked in a browser', '已在瀏覽器中檢查'), { icon: 'check' })}</span></div>` +
+    `<article class="run-card" id="run-web"><div class="run-head"><h3>${esc(noInstallLabel())}</h3>` +
+    `<span class="badges">${badge('pass', L('Checked in a browser', '已在瀏覽器實測'), { icon: 'check' })}</span></div>` +
     SEAM +
     levelLine(webLevelLabel(check), true) +
     `<p>${esc(webRanSentence(check))}</p>` +
@@ -243,7 +243,7 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
   const verified = isVerified(entry);
   const web = isWebApp(entry) ? webCheck(entry) : null;
   const badges = [
-    web ? badge('info', NO_INSTALL_LABEL, { icon: 'globe' }) : '',
+    web ? badge('info', L(NO_INSTALL_LABEL, '免安裝'), { icon: 'globe' }) : '',
     web
       ? badge('pass', L(`Verified: ${webLevelLabel(web)}`, `已驗證：${webLevelLabel(web)}`), { icon: levelIcon(web.level) })
       : verified && guide

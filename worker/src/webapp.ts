@@ -6,6 +6,8 @@ import { webCheck, type Entry, type WebCheck, type WebOperation } from './catalo
 import { L, isZh } from './i18n.ts';
 
 export const NO_INSTALL_LABEL = 'No install, just open it';
+/** The label as the page shows it; the MCP answers keep the English constant. */
+export const noInstallLabel = () => L(NO_INSTALL_LABEL, '免安裝，打開就能用');
 
 /** The web app half of a pick or a guide: where to open it and what pickfit's browser saw. */
 export interface WebAppOut {

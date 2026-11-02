@@ -19,7 +19,7 @@ import { esc, link, listOf } from './ui/html.ts';
 import { icon, osMark, type IconName } from './ui/icons.ts';
 import { badge, command, compareToggle, coverage, fitz, glance, kindTag, levelIcon, notice, osList, runFacts, says, SEAM, sysTag, tape, type FitzName } from './ui/kit.ts';
 import { renderShell } from './ui/shell.ts';
-import { NO_INSTALL_LABEL, webFacts, webRanSentence } from './webapp.ts';
+import { NO_INSTALL_LABEL, noInstallLabel, webFacts, webRanSentence } from './webapp.ts';
 
 export { esc, safeUrl } from './ui/html.ts';
 export { guiSentence, LEVEL_LABEL, levelLabel, osName } from './ui/facts.ts';
@@ -433,7 +433,7 @@ function webOpen(pick: PickOut): string {
   const web = pick.web_app!;
   const open = link(web.url, `${icon('external-link')}${L(`Open ${esc(pick.name)}`, `開啟 ${esc(pick.name)}`)}`, 'btn btn-primary btn-sm');
   return open
-    ? `<div class="t-install"><p class="t-install-label">${icon('globe')}${esc(NO_INSTALL_LABEL)}</p><p class="t-open">${open}<span class="quiet small" translate="no">${esc(web.url)}</span></p></div>`
+    ? `<div class="t-install"><p class="t-install-label">${icon('globe')}${esc(noInstallLabel())}</p><p class="t-open">${open}<span class="quiet small" translate="no">${esc(web.url)}</span></p></div>`
     : '';
 }
 
@@ -443,7 +443,7 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
   const best = out.best_free?.slug === pick.slug ? out.best_free : null;
   const web = pick.web_app;
   const badges = [
-    web ? badge('info', NO_INSTALL_LABEL, { icon: 'globe' }) : '',
+    web ? badge('info', L(NO_INSTALL_LABEL, '免安裝'), { icon: 'globe' }) : '',
     pick.match ? badge(MATCH_TONE[pick.match.quality], MATCH_LABEL[pick.match.quality], { cls: `match-${pick.match.quality}` }) : '',
     best ? badge('free', L('Best free option', '最佳免費選擇'), { icon: 'leaf' }) : '',
     pick.scores.treasure ? badge('gem', L('Hidden gem', '寶藏'), { icon: 'gem', pop: 'pop-gem' }) : '',
@@ -628,6 +628,60 @@ function matchLine(out: FindOutput): string {
   );
 }
 
+/**
+ * find_software's coverage_note stays English (the MCP answers carry it), so the zh page says the same
+ * sentences in Chinese. The patterns follow the notes find.ts writes; a note none of them reads whole
+ * is shown in English as before, never half translated.
+ */
+const NOTE_ZH: [RegExp, (m: RegExpMatchArray) => string][] = (() => {
+  const what = (w: string) => (w === 'alternative' ? '替代工具' : '工具');
+  const words = (s: string) => s.split(', ').join('、');
+  const miss = (s: string): string | null => {
+    if (s === 'none of them covers enough of the request') return '沒有一款涵蓋足夠的需求';
+    let m = /^none of them mentions (.+)$/.exec(s);
+    if (m) return `沒有一款提到 ${words(m[1])}`;
+    m = /^each mentions only part of it \(the top one does not mention (.+)\)$/.exec(s);
+    return m ? `每款都只涵蓋一部分（排第一的沒有提到 ${words(m[1])}）` : null;
+  };
+  const each = '每款的符合度標示了它涵蓋哪些部分。';
+  const known = 'pickfit 只收錄較冷門的工具，知名工具仍可能適合你。';
+  return [
+    [/^No verified (tool|alternative) in pickfit meets these conditions\. Coverage today: .+? pickfit lists only lesser-known tools, so a well-known one may still fit\./,
+      (m) => `pickfit 沒有符合這些條件的已驗證${what(m[1])}。目前涵蓋開發者 CLI 工具、本機 AI／LLM 工具、MCP 伺服器和部分網頁應用。${known}`],
+    [/^None of the (\d+) verified tools that meet the conditions fits this request\./, (m) => `符合條件的 ${m[1]} 款已驗證工具中，沒有一款適合這個需求。`],
+    [/^None of the listed (tool|alternative)s clearly does this job: judging by their profiles, (.+?)\. They are listed as the top-ranked \1s; each pick's match says what it covers\./,
+      (m) => `列出的${what(m[1])}都不太能完成這件事：從簡介看，${miss(m[2]) ?? '\u0000'}。它們只是排名最前的${what(m[1])}；${each}`],
+    [/^pickfit has no verified (tool|alternative) that clearly does this job\. Judging by their profiles, the listed \1s are the closest it has, but (.+?); each pick's match says what it covers\. pickfit lists only lesser-known tools, so a well-known one may still fit\./,
+      (m) => `pickfit 沒有明顯能完成這件事的已驗證${what(m[1])}。從簡介看，列出的是最接近的，但${miss(m[2]) ?? '\u0000'}；${each}${known}`],
+    [/^No listed (tool|alternative) covers the whole request(?:: the closest, (.+?), does not mention (.+?))?\. Each pick's match says what it covers\./,
+      (m) => `沒有一款${what(m[1])}涵蓋你的全部需求${m[2] ? `：最接近的 ${m[2]} 沒有提到 ${words(m[3])}` : ''}。${each}`],
+    [/^(\d+) tools met the conditions; the (\d+) compared were the (\d+) whose profiles best match the request's words and the (\d+) other tools with the highest treasure scores\./,
+      (m) => `有 ${m[1]} 款工具符合條件；比較的 ${m[2]} 款是簡介最符合需求字詞的 ${m[3]} 款，加上寶藏分數最高的另外 ${m[4]} 款。`],
+    [/^(\d+) tools met the conditions; no profile matched the request's words, so the (\d+) with the highest treasure scores were compared\./,
+      (m) => `有 ${m[1]} 款工具符合條件；沒有簡介符合需求字詞，所以比較的是寶藏分數最高的 ${m[2]} 款。`],
+  ];
+})();
+
+/** The coverage note in the page's language: each of its sentences in Chinese, or the English note whole. */
+function coverageNote(note: string): string {
+  if (!isZh()) return note;
+  const out: string[] = [];
+  let rest = note.trim();
+  while (rest) {
+    let said: string | null = null;
+    for (const [re, zh] of NOTE_ZH) {
+      const m = re.exec(rest);
+      if (!m) continue;
+      said = zh(m);
+      rest = rest.slice(m[0].length).trim();
+      break;
+    }
+    if (said === null || said.includes('\u0000')) return note;
+    out.push(said);
+  }
+  return out.join('');
+}
+
 /** Fitz's face for a result: it only looks pleased when it has verified picks that fit. */
 function resultsFitz(out: FindOutput): FitzName {
   if (out.picks.length === 0) return 'sorry';
@@ -649,7 +703,7 @@ export function renderResults(
   if (out.picks.length === 0) {
     said.push(
       `<p class="match-line">${esc(
-        out.coverage_note ??
+        (out.coverage_note ? coverageNote(out.coverage_note) : null) ??
           L(
             'pickfit covers developer CLI tools, local AI tools, MCP servers and some web apps today.',
             'pickfit 目前涵蓋開發者 CLI 工具、本機 AI 工具、MCP 伺服器和部分網頁應用。',
@@ -673,8 +727,11 @@ export function renderResults(
     status.push(`<li class="st st-busy" role="status">${icon('clock')}<span><strong>${esc(d.title)}${L('.', '。')}</strong> ${esc(d.text)}</span></li>`);
   }
   if (fitFirst) {
-    const note = out.coverage_note!;
-    const cut = note.indexOf('. ');
+    const note = coverageNote(out.coverage_note!);
+    // The first sentence is the summary; Chinese ends it with 。 and needs no space after it.
+    const zh = note !== out.coverage_note;
+    const cut = zh ? note.indexOf('。') : note.indexOf('. ');
+    const gap = zh ? 1 : 2;
     status.push(
       cut > 0 && cut < note.length - 2
         ? `<li class="st st-caution">${icon('triangle-alert')}<details><summary>${esc(note.slice(0, cut + 1))}</summary>${esc(note.slice(cut + 2))}</details></li>`
@@ -698,7 +755,7 @@ export function renderResults(
   }
   if (out.picks.length) {
     parts.push(`<div class="picks">${out.picks.map((pick, i) => pickHtml(pick, i, result, form, catalog)).join('')}</div>`);
-    if (out.coverage_note && !fitFirst) parts.push(`<p class="quiet small">${esc(out.coverage_note)}</p>`);
+    if (out.coverage_note && !fitFirst) parts.push(`<p class="quiet small">${esc(coverageNote(out.coverage_note))}</p>`);
     const entries = slugs.map((s) => catalog.bySlug.get(s)).filter((e): e is Entry => !!e);
     if (entries.length > 1) {
       parts.push(
@@ -715,7 +772,7 @@ export function renderResults(
       `<div class="aside best-free"><p><span class="lead-in">${L('Best free option:', '最佳免費選擇：')}</span> ` +
         `<a href="/tool/${esc(free.slug)}">${esc(free.name)}</a>. ${esc(out.best_free.reason)}</p>` +
         (freeWeb ? `<p class="quiet">${esc(webRanSentence(freeWeb))}</p>` : '') +
-        `<p class="mine mine-yes">${esc(NO_INSTALL_LABEL)}${L(': it opens in a browser.', '：在瀏覽器中開啟即可。')}</p></div>`,
+        `<p class="mine mine-yes">${esc(L(`${NO_INSTALL_LABEL}: it opens in a browser.`, '免安裝，用瀏覽器打開就能用。'))}</p></div>`,
     );
   } else if (free && out.best_free) {
     const guide = bestGuide(free, form.os || undefined);
