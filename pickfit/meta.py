@@ -40,6 +40,7 @@ from pydantic import BaseModel, ValidationError
 from pickfit.env import REPO_ROOT, get_env, require_env
 from pickfit.ledger import (
     BudgetExceeded,
+    OPENROUTER_CAPS,
     Ledger,
     baseten_ledger,
     default_ledger,
@@ -71,12 +72,13 @@ PROVIDERS: dict[str, Provider] = {
 
 # PICKFIT_META_VIA=openrouter sends every Meta-model call to OpenRouter instead of Meta's API (11/3: Meta answered
 # the team's key with 402 "billing_not_configured"). The model is the same and Meta serves it: OpenRouter may not
-# fall back to another provider. Records and the ledger keep Meta's model id; the ledger row's provider says
-# "openrouter". The contributor tier is not on OpenRouter, so it is served as muse-spark-1.3 at 1.3's price.
+# fall back to another provider, nor to one that collects data. Records and the ledger keep Meta's model id, and the
+# row's provider and budget say "openrouter". The contributor tier is not on OpenRouter, so muse-spark-1.3 serves it
+# and is what the records name.
 META_VIA = ("meta", "openrouter")
 OPENROUTER_MODELS = {"muse-spark-1.3": "meta/muse-spark-1.3", "muse-spark-1.3-contributor": "meta/muse-spark-1.3",
                      "muse-wonder-1.0": "meta/muse-wonder"}
-OPENROUTER_PIN = {"order": ["meta"], "allow_fallbacks": False}
+OPENROUTER_PIN = {"order": ["meta"], "allow_fallbacks": False, "data_collection": "deny"}
 
 # PICKFIT_MODE (default dev) picks the model when a Meta caller passes none.
 MODE_ALIASES = {"dev": "muse-spark-1.3-contributor", "prod": "muse-spark-1.3"}
@@ -108,7 +110,6 @@ PRICES: dict[tuple[str, str], Price] = {
     ("modal", MODAL_OPEN_MODEL): Price(input=1.25, output=4.25, cached=0.15),  # the coordinator's quote, 11/1
     # OpenRouter's list prices for Meta's models (11/3); its cached-input price is not listed, so cached is input.
     ("openrouter", "muse-spark-1.3"): Price(input=1.25, output=4.25),
-    ("openrouter", "muse-spark-1.3-contributor"): Price(input=1.25, output=4.25),
     ("openrouter", "muse-wonder-1.0"): Price(input=4.00, output=20.00),
 }
 WEB_SEARCH_USD = 2.50 / 1000
@@ -792,6 +793,8 @@ def call_meta(
     model = resolve_model(model, provider or "meta")
     provider, wire_model = route(provider or provider_for(model), model)
     _check_policy(provider, model, public_data_only, reasoning_effort, body, max_output_tokens)
+    if provider == "openrouter":
+        model = model.removesuffix("-contributor")  # the model that serves it (OPENROUTER_MODELS)
     price = price_for(provider, model)
     request = build_request(endpoint, wire_model, body, max_output_tokens, reasoning_effort)
     if provider == "openrouter":
@@ -810,6 +813,9 @@ def call_meta(
                           response_id=raw.get("id"), cache_hit=cache_hit, attempts=attempts,
                           request_hash=key, raw=raw, parsed=parsed, parse_error=parse_error, **read)
 
+    if provider == "openrouter" and ledger is not None and ledger.budget != "openrouter":
+        # A caller's Meta budget: the call now spends OpenRouter's balance, so its budget in the same file counts it.
+        ledger = Ledger(ledger.path, budget="openrouter", caps=OPENROUTER_CAPS)
     ledger = ledger or {"baseten": baseten_ledger, "modal": modal_llm_ledger,
                         "openrouter": openrouter_ledger}.get(provider, default_ledger)()
     use_cache = _cache_enabled(cache, model)

@@ -697,7 +697,7 @@ def test_meta_models_go_to_openrouter_pinned_to_meta_when_meta_via_says_so(tmp_p
                        max_output_tokens=1000, model="prod", reasoning_effort="max", client=server.client())
     sent = server.requests[0]
     assert sent["model"] == "meta/muse-spark-1.3" and sent["reasoning"]["effort"] == "max"
-    assert sent["provider"] == {"order": ["meta"], "allow_fallbacks": False}
+    assert sent["provider"] == {"order": ["meta"], "allow_fallbacks": False, "data_collection": "deny"}
     assert (result.provider, result.model) == ("openrouter", "muse-spark-1.3")  # records keep Meta's model id
     # OpenRouter lists no cached-input price, so the 1,000 cached tokens are charged at the input price.
     assert result.cost_usd == pytest.approx((2000 * 1.25 + 400 * 4.25) / 1e6)
@@ -727,4 +727,15 @@ def test_openrouter_route_maps_models_and_refuses_what_it_cannot_serve(ledger: L
     monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
     assert "openrouter.ai" in str(make_client("openrouter").base_url)
     book = ledger_mod.openrouter_ledger()
-    assert book.budget == "openrouter" and book.caps.total_usd == 50.0
+    assert book.budget == "openrouter" and book.caps.total_usd == 40.0
+
+
+def test_openrouter_bills_its_own_budget_even_when_the_caller_passes_a_meta_ledger(ledger: Ledger, monkeypatch):
+    monkeypatch.setenv("PICKFIT_META_VIA", "openrouter")
+    server = FakeServer(ok({**RESPONSES_OK, "model": "meta/muse-spark-1.3"}))
+    result = call(server, ledger, "responses", {"input": "README text", "store": False}, model="dev")
+    assert server.requests[0]["model"] == "meta/muse-spark-1.3"
+    assert result.model == "muse-spark-1.3"  # the dev alias's contributor tier is not on OpenRouter: 1.3 served it
+    with sqlite3.connect(ledger.path) as conn:
+        assert conn.execute("SELECT budget, provider, model FROM calls").fetchall() == [
+            ("openrouter", "openrouter", "muse-spark-1.3")]

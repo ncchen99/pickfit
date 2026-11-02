@@ -11,11 +11,12 @@ export const META_BASE_URL = 'https://api.meta.ai/v1';
 export const MATCH_MODEL = 'muse-spark-1.3';
 /**
  * META_VIA=openrouter (11/3: Meta's API answered the team's key with 402 billing errors): the same model through
- * OpenRouter's Responses API, with Meta as the only provider it may use. The request is otherwise unchanged.
+ * OpenRouter's Responses API, with Meta as the only provider it may use and none that collects data. The request
+ * is otherwise unchanged; the cost is what OpenRouter reports (it lists no cached-input price).
  */
 export const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 const OPENROUTER_MODEL = 'meta/muse-spark-1.3';
-const OPENROUTER_PIN = { order: ['meta'], allow_fallbacks: false };
+const OPENROUTER_PIN = { order: ['meta'], allow_fallbacks: false, data_collection: 'deny' };
 /** USD per 1M tokens for MATCH_MODEL (same table as pickfit/meta.py). */
 const PRICE = { input: 1.25, cached: 0.15, output: 4.25 };
 export const MAX_OUTPUT_TOKENS = 4000;
@@ -261,7 +262,8 @@ async function callOnce(
     });
   }
   const usage = readUsage(raw);
-  const cost = usage ? costUsd(usage) : estimateCostUsd(JSON.stringify(body).length, outputLimit(body));
+  const reported = via === 'openrouter' && typeof raw?.usage?.cost === 'number' ? raw.usage.cost : null;
+  const cost = reported ?? (usage ? costUsd(usage) : estimateCostUsd(JSON.stringify(body).length, outputLimit(body)));
   if (raw?.status !== 'completed') {
     throw new MetaCallError('incomplete', `response status ${raw?.status ?? 'missing'}`, { costUsd: cost, status });
   }
