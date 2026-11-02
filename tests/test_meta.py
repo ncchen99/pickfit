@@ -687,4 +687,4 @@ def test_muse_spark_open_on_modal_is_its_own_provider_and_budget(tmp_path, monke
     assert client.api_key == "wk-id.ws-secret" and "modal.direct" in str(client.base_url)
     monkeypatch.setenv("PICKFIT_LEDGER", str(tmp_path / "l.sqlite"))
     book = ledger_mod.modal_llm_ledger()
-    assert book.budget == "modal-llm" and book.caps.total_usd == 60.0
+    assert book.budget == "modal-llm" and book.caps.total_usd == 100.0
