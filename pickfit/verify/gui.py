@@ -51,10 +51,19 @@ if TYPE_CHECKING:
     from pickfit.verify.box import Box
 
 DISPLAY = ":99"
+
+
+def full_desktop(value: str | None) -> bool:
+    """PICKFIT_GUI_DESKTOP: unset (pickfit's usual display) or full; any other value is refused when read."""
+    if value not in (None, "", "full"):
+        raise ValueError(f"PICKFIT_GUI_DESKTOP must be unset or full, got {value!r}")
+    return value == "full"
+
+
 # A comparison only (scripts/gui_compare.py, arm A), off unless PICKFIT_GUI_DESKTOP=full: what desktop features'
 # notes said the display lacked. A 1920x1080 screen; the app started on its own session bus with the desktop
 # portal's GTK backend (the file chooser a Flatpak app asks for, and OpenURI); a default app for text files.
-FULL_DESKTOP = get_env("PICKFIT_GUI_DESKTOP") == "full"
+FULL_DESKTOP = full_desktop(get_env("PICKFIT_GUI_DESKTOP"))
 SCREEN = "1920x1080x24" if FULL_DESKTOP else "1280x800x24"
 SCREEN_W, SCREEN_H = (1920, 1080) if FULL_DESKTOP else (1280, 800)
 DISPLAY_NOTE = f"Xvfb {SCREEN}, no window manager, no GPU" + (", session bus and portal" if FULL_DESKTOP else "")

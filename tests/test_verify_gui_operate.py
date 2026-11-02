@@ -470,3 +470,12 @@ def test_pickfits_samples_are_real_files_of_their_kind():
         assert op.sample_file(kind).startswith(head), kind
     assert zipfile.ZipFile(io.BytesIO(op.sample_file("zip"))).namelist() == ["page01.png", "page02.png", "page03.png"]
     assert op.sample_file("png") == op.sample_file("png")  # the same bytes every time
+
+
+def test_the_comparison_flags_refuse_unknown_values_when_read():
+    assert op.operator_effort(None) == "low" and op.operator_effort("medium") == "medium"
+    with pytest.raises(ValueError, match="PICKFIT_OPERATOR_EFFORT must be one of"):
+        op.operator_effort("mediun")
+    assert gui.full_desktop(None) is False and gui.full_desktop("") is False and gui.full_desktop("full") is True
+    with pytest.raises(ValueError, match="PICKFIT_GUI_DESKTOP must be unset or full"):
+        gui.full_desktop("1")
