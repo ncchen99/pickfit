@@ -855,11 +855,12 @@ const ARCH_CHOICES = (): [Arch | '', string][] => [
 
 /** The request: the need in the person's words, and their measurements. */
 export function searchForm(form: FormValues): string {
+  // A system is its mark, named in a tooltip and to screen readers; "any" stays a word.
   const os = OS_CHOICES().map(
-    ([v, text]) => `<label><input type="radio" name="os" value="${v}"${v === form.os ? ' checked' : ''}>${text}</label>`,
+    ([v, text]) =>
+      `<label${v ? ` class="seg-icon" data-tip="${text}"` : ''}><input type="radio" name="os" value="${v}"${v === form.os ? ' checked' : ''}${v ? ` aria-label="${text}"` : ''}>${v ? osMark(v) : text}</label>`,
   ).join('');
   const arch = ARCH_CHOICES().map(([v, text]) => `<option value="${v}"${v === form.arch ? ' selected' : ''}>${text}</option>`).join('');
-  const tick = icon('check').replace('class="i', 'class="i chip-tick');
   return (
     `<form id="search" class="ask-card" method="post" action="/search#results">` +
     `<div class="ask"><label for="need">${L('I need', '我需要')}</label>` +
@@ -867,10 +868,10 @@ export function searchForm(form: FormValues): string {
     `placeholder="${L('a free way to transcribe meeting recordings offline…', '免費離線轉錄會議錄音…')}">${esc(form.need)}</textarea></div>` +
     `<div class="ask-meta"><div class="ask-opts"><span class="label" id="os-label">${L('Runs on', '執行環境')}</span>` +
     `<div class="seg" role="radiogroup" aria-labelledby="os-label">${os}</div>` +
-    `<select class="select" name="arch" aria-label="${L('CPU architecture', 'CPU 架構')}">${arch}</select>` +
-    `<label class="chip"><input type="checkbox" name="free_only" value="1"${form.free_only ? ' checked' : ''}>${tick}${L('Free only', '只看免費')}</label>` +
-    `<label class="chip"><input type="checkbox" name="offline" value="1"${form.offline ? ' checked' : ''}>${tick}${L('Works offline', '可離線使用')}</label>` +
-    `<label class="chip"><input type="checkbox" name="private" value="1"${form.private ? ' checked' : ''}>${tick}${L('Data stays on my device', '資料不離開裝置')}</label></div>` +
+    `<select class="select" name="arch" data-dropdown aria-label="${L('CPU architecture', 'CPU 架構')}">${arch}</select>` +
+    `<label class="chip"><input type="checkbox" name="free_only" value="1"${form.free_only ? ' checked' : ''}>${icon('leaf')}${L('Free', '免費')}</label>` +
+    `<label class="chip"><input type="checkbox" name="offline" value="1"${form.offline ? ' checked' : ''}>${icon('wifi-off')}${L('Works offline', '不需網路')}</label>` +
+    `<label class="chip"><input type="checkbox" name="private" value="1"${form.private ? ' checked' : ''}>${icon('laptop')}${L('Data stays local', '資料在本地')}</label></div>` +
     `<div class="ask-go"><span class="counter" data-counter aria-live="polite"></span>` +
     `<button type="submit" class="btn btn-primary go"><span class="btn-label">${L('Find my fit', '幫我找合身的')}</span>${icon('arrow-right')}</button></div>` +
     `</div></form>`

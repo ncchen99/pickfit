@@ -201,6 +201,220 @@ export const script = () => `
     p.style.top = (below ? r.bottom + 10 : Math.max(12, r.top - h - 10)) + 'px';
   }, true);
 
+  // ---------------------------------------------------------------- dropdowns
+  // A select marked data-dropdown keeps posting the form; the script hides it behind a button and a list
+  // drawn like the rest of the page. Arrow keys, Home/End, Enter or Space, Escape and typing a letter work.
+  const CHECK = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+  let ddCount = 0;
+  const place = (list, anchor) => {
+    list.classList.remove('up');
+    const r = anchor.getBoundingClientRect();
+    if (r.bottom + 6 + list.offsetHeight > innerHeight && r.top - 6 - list.offsetHeight > 0) list.classList.add('up');
+  };
+  const activate = (list, li) => {
+    for (const o of $$('li', list)) o.classList.toggle('active', o === li);
+    if (li) { list.setAttribute('aria-activedescendant', li.id); li.scrollIntoView({ block: 'nearest' }); }
+  };
+  for (const sel of $$('select[data-dropdown]')) {
+    const id = 'dd' + ++ddCount;
+    const box = document.createElement('div');
+    box.className = 'dd';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'select dd-btn';
+    btn.setAttribute('aria-haspopup', 'listbox');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-controls', id);
+    const name = document.createElement('span');
+    name.className = 'sr';
+    name.textContent = (sel.getAttribute('aria-label') || '') + ': ';
+    const shown = document.createElement('span');
+    btn.append(name, shown);
+    const list = document.createElement('ul');
+    list.className = 'dd-list';
+    list.id = id;
+    list.setAttribute('role', 'listbox');
+    list.setAttribute('aria-label', sel.getAttribute('aria-label') || '');
+    list.tabIndex = -1;
+    list.hidden = true;
+    const opts = [...sel.options].map((o, i) => {
+      const li = document.createElement('li');
+      li.id = id + '-' + i;
+      li.setAttribute('role', 'option');
+      li.dataset.value = o.value;
+      li.innerHTML = CHECK;
+      li.append(o.textContent);
+      list.append(li);
+      return li;
+    });
+    const sync = () => {
+      shown.textContent = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : '';
+      opts.forEach((li, i) => li.setAttribute('aria-selected', String(i === sel.selectedIndex)));
+    };
+    const open = () => {
+      list.hidden = false;
+      btn.setAttribute('aria-expanded', 'true');
+      place(list, btn);
+      activate(list, opts[sel.selectedIndex] || opts[0]);
+      list.focus();
+    };
+    const close = (refocus) => {
+      if (list.hidden) return;
+      list.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+      if (refocus) btn.focus();
+    };
+    const choose = (li) => {
+      const i = opts.indexOf(li);
+      if (i >= 0 && i !== sel.selectedIndex) { sel.selectedIndex = i; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+      sync();
+      close(true);
+    };
+    sel.hidden = true;
+    sel.tabIndex = -1;
+    sel.before(box);
+    box.append(sel, btn, list);
+    sync();
+    sel.form && sel.form.addEventListener('reset', () => setTimeout(sync));
+    btn.addEventListener('click', () => (list.hidden ? open() : close(true)));
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); open(); }
+    });
+    list.addEventListener('click', (e) => { const li = e.target.closest('li'); if (li) choose(li); });
+    list.addEventListener('mousemove', (e) => { const li = e.target.closest('li'); if (li && !li.classList.contains('active')) activate(list, li); });
+    list.addEventListener('keydown', (e) => {
+      const cur = opts.findIndex((li) => li.classList.contains('active'));
+      const to = { ArrowDown: Math.min(cur + 1, opts.length - 1), ArrowUp: Math.max(cur - 1, 0), Home: 0, End: opts.length - 1 }[e.key];
+      if (to !== undefined) { e.preventDefault(); activate(list, opts[to]); }
+      else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(opts[cur]); }
+      else if (e.key === 'Escape') { e.preventDefault(); close(true); }
+      else if (e.key === 'Tab') close(false);
+      else if (e.key.length === 1) {
+        const k = e.key.toLowerCase();
+        const hit = opts.find((li, i) => i > cur && li.textContent.toLowerCase().startsWith(k)) || opts.find((li) => li.textContent.toLowerCase().startsWith(k));
+        if (hit) activate(list, hit);
+      }
+    });
+    list.addEventListener('focusout', (e) => { if (!box.contains(e.relatedTarget)) close(false); });
+    document.addEventListener('pointerdown', (e) => { if (!box.contains(e.target)) close(false); });
+  }
+
+  // The compare page's name picker: an input that suggests verified tools as you type, from the
+  // server's datalist, in a list like the dropdown's. Picking one adds it.
+  for (const input of $$('input[data-combo]')) {
+    const data = input.list;
+    if (!data) continue;
+    const tools = [...data.options].map((o) => ({ slug: o.value, name: o.textContent }));
+    const id = 'combo' + ++ddCount;
+    input.removeAttribute('list');
+    data.remove();
+    const box = document.createElement('div');
+    box.className = 'combo';
+    input.before(box);
+    const list = document.createElement('ul');
+    list.className = 'dd-list';
+    list.id = id;
+    list.setAttribute('role', 'listbox');
+    list.hidden = true;
+    box.append(input, list);
+    input.setAttribute('role', 'combobox');
+    input.setAttribute('aria-autocomplete', 'list');
+    input.setAttribute('aria-expanded', 'false');
+    input.setAttribute('aria-controls', id);
+    let items = [];
+    const close = () => { list.hidden = true; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant'); };
+    const mark = (li) => {
+      for (const o of items) o.classList.toggle('active', o === li);
+      if (li) { input.setAttribute('aria-activedescendant', li.id); li.scrollIntoView({ block: 'nearest' }); }
+      else input.removeAttribute('aria-activedescendant');
+    };
+    const show = () => {
+      const q = input.value.trim().toLowerCase();
+      const hits = tools.filter((t) => !q || t.name.toLowerCase().includes(q) || t.slug.includes(q)).slice(0, 60);
+      items = hits.map((t, i) => {
+        const li = document.createElement('li');
+        li.id = id + '-' + i;
+        li.setAttribute('role', 'option');
+        li.dataset.name = t.name;
+        const at = q ? t.name.toLowerCase().indexOf(q) : -1;
+        if (at >= 0) {
+          const m = document.createElement('mark');
+          m.textContent = t.name.slice(at, at + q.length);
+          li.append(t.name.slice(0, at), m, t.name.slice(at + q.length));
+        } else li.textContent = t.name;
+        return li;
+      });
+      if (!items.length) {
+        const li = document.createElement('li');
+        li.className = 'dd-empty';
+        li.textContent = ${J('No verified tool by that name', '沒有這個名稱的已驗證工具')};
+        list.replaceChildren(li);
+      } else list.replaceChildren(...items);
+      list.hidden = false;
+      input.setAttribute('aria-expanded', 'true');
+      place(list, input);
+    };
+    const pick = (li) => {
+      input.value = li.dataset.name;
+      close();
+      if (input.form) input.form.requestSubmit();
+    };
+    input.addEventListener('input', () => { show(); mark(input.value.trim() ? items[0] : null); });
+    input.addEventListener('focus', show);
+    input.addEventListener('keydown', (e) => {
+      const cur = items.findIndex((li) => li.classList.contains('active'));
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (list.hidden) show();
+        if (items.length) mark(items[e.key === 'ArrowDown' ? Math.min(cur + 1, items.length - 1) : Math.max(cur - 1, 0)]);
+      } else if (e.key === 'Enter' && !list.hidden && cur >= 0) { e.preventDefault(); pick(items[cur]); }
+      else if (e.key === 'Escape' && !list.hidden) { e.preventDefault(); close(); }
+    });
+    // pointerdown, not click: the input keeps focus, so its blur doesn't close the list first.
+    list.addEventListener('pointerdown', (e) => { e.preventDefault(); const li = e.target.closest('li[role=option]'); if (li) pick(li); });
+    input.addEventListener('blur', close);
+  }
+
+  // ---------------------------------------------------------------- install steps per system
+  // Tabs, opened on the system this browser runs on when pickfit has steps for it.
+  const mySystem = (() => {
+    const p = ((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || '').toLowerCase();
+    if (/mac|iphone|ipad/.test(p)) return 'macos';
+    if (/win/.test(p)) return 'windows';
+    if (/linux|x11|cros/.test(p)) return 'linux';
+    return '';
+  })();
+  for (const bar of $$('[data-os-tabs]')) {
+    const tabs = $$('[role=tab]', bar);
+    const panel = (t) => document.getElementById(t.getAttribute('aria-controls'));
+    const show = (tab, focus) => {
+      for (const t of tabs) {
+        const on = t === tab;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        panel(t).hidden = !on;
+      }
+      if (focus) tab.focus();
+    };
+    const mine = tabs.find((t) => t.dataset.os === mySystem);
+    if (mine) {
+      const tag = document.createElement('span');
+      tag.className = 'os-mine';
+      tag.textContent = ${J('yours', '你的系統')};
+      mine.append(tag);
+    }
+    // A link to one system's steps (#install-linux) opens that tab.
+    const linked = tabs.find((t) => '#' + t.getAttribute('aria-controls') === location.hash);
+    bar.hidden = false;
+    show(linked || mine || tabs[0], false);
+    bar.addEventListener('click', (e) => { const t = e.target.closest('[role=tab]'); if (t) show(t, false); });
+    bar.addEventListener('keydown', (e) => {
+      const i = tabs.indexOf(document.activeElement);
+      const to = { ArrowRight: (i + 1) % tabs.length, ArrowLeft: (i - 1 + tabs.length) % tabs.length, Home: 0, End: tabs.length - 1 }[e.key];
+      if (to !== undefined) { e.preventDefault(); show(tabs[to], true); }
+    });
+  }
+
   // ---------------------------------------------------------------- legend dialog
   document.addEventListener('click', (e) => {
     if (!e.target.closest('[data-open-legend]')) return;

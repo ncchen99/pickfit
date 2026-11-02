@@ -330,13 +330,16 @@ function featureList(entry: Entry, f: FeaturesOut): string {
         steps.length || clip
           ? `<details class="how-to"><summary>${L('How to use it', '怎麼使用')}</summary>${steps.length ? `<ol>${steps.map((s) => `<li>${stepText(s)}</li>`).join('')}</ol>` : ''}${clip}</details>`
           : '';
-      return `<li class="feat-ok">${icon('check')}<div><span class="feat-title">${title(feature)}</span> <span class="feat-tag">${L('Tested', '已測試')}</span>${how}</div></li>`;
+      return `<li class="feat-ok"><div><span class="feat-title">${title(feature)}</span>${how}</div><span class="feat-state">${icon('check')}${L('Tested', '已測試')}</span></li>`;
     }),
+    // The feature is the row; whether pickfit tested it is the mark on the right, and why not is its tooltip
+    // (and a line under the title where there is no hover).
     ...f.not_checked.map((n) => {
       const failed = n.reason === 'test_failed';
+      const why = esc(featureWhy(n.detail));
       return (
-        `<li class="${failed ? 'feat-fail' : 'feat-open'}">${icon(failed ? 'x' : 'circle-dashed')}<div><span class="feat-title">${title(n.feature)}</span>` +
-        `<small>${failed ? L('Its test failed: ', '測試失敗：') : L('Not tested: ', '未測試：')}${esc(featureWhy(n.detail))}</small></div></li>`
+        `<li class="${failed ? 'feat-fail' : 'feat-open'}"><div><span class="feat-title">${title(n.feature)}</span><small>${why}</small></div>` +
+        `<span class="feat-state" tabindex="0" data-tip="${why}">${icon(failed ? 'x' : 'circle-dashed')}${failed ? L('Test failed', '測試未通過') : L('Not tested', '未測試')}</span></li>`
       );
     }),
   ];
@@ -382,17 +385,30 @@ function install(catalog: Catalog, entry: Entry): string {
     return needs ? `<section class="block" aria-labelledby="install-title">${installTitle('Install', '安裝')}${needs}</section>` : '';
   }
   const hint = entry.usage_guide?.open_hint ?? null;
+  const tabbed = oses.length > 1;
+  const sysLabel = (os: OS) => {
+    const arch = entry.install[os]!.run.arch;
+    return `${osMark(os)}${esc(OS_NAME[os])}${arch ? ` <span class="arch">${esc(arch)}</span>` : ''}`;
+  };
   const cards = oses.map((os: OS, i) => {
     const g = entry.install[os]!;
     const out = readerGuide(installGuide(catalog, { slug: entry.slug, os }), hint, !!g.run.gui);
     return (
-      `<article class="run-card" id="install-${os}"><div class="run-head"><h3>${osMark(os)}${esc(OS_NAME[os])}${g.run.arch ? ` <span class="arch">${esc(g.run.arch)}</span>` : ''}</h3></div>` +
-      installSection(out, { ...EMPTY_FORM, os }, i === 0, true) +
+      `<article class="run-card" id="install-${os}"${tabbed ? ` role="tabpanel" aria-labelledby="tab-${os}" data-os="${os}"` : ''}>` +
+      `<div class="run-head"><h3>${sysLabel(os)}</h3></div>` +
+      installSection(out, { ...EMPTY_FORM, os }, tabbed || i === 0, true) +
       (hint ? `<p class="open-hint">${icon('arrow-right')}<span>${stepText(hint)}</span></p>` : '') +
       `</article>`
     );
   });
-  return `<section class="block" aria-labelledby="install-title">${installTitle('Install', '安裝')}${prerequisites(entry)}${cards.join('')}</section>`;
+  // More than one system: tabs, which the page script shows and turns to the reader's own system.
+  // Without the script every card stays, one under the other.
+  const tabs = tabbed
+    ? `<div class="os-tabs" role="tablist" aria-label="${L('Your system', '你的系統')}" data-os-tabs hidden>` +
+      oses.map((os, i) => `<button type="button" role="tab" id="tab-${os}" aria-controls="install-${os}" aria-selected="${i === 0}" data-os="${os}"${i ? ' tabindex="-1"' : ''}>${sysLabel(os)}</button>`).join('') +
+      `</div>`
+    : '';
+  return `<section class="block" aria-labelledby="install-title">${installTitle('Install', '安裝')}${prerequisites(entry)}${tabs}${cards.join('')}</section>`;
 }
 
 /** A web app: open it, and the facts a person weighs before typing anything in. */
