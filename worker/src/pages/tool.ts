@@ -427,8 +427,11 @@ function webRun(entry: Entry): string {
   return (
     `<section class="block" aria-labelledby="install-title">${installTitle('Open it', '開啟')}` +
     `<article class="run-card" id="run-web"><div class="run-head"><h3>${esc(noInstallLabel())}</h3></div>` +
-    webFactList(entry) +
-    (open ? `<p class="t-open">${open}<span class="quiet small" translate="no">${esc(url)}</span></p>` : '') +
+    // Where it opens, as a browser's address bar with the one action at its end; then what pickfit's browser saw.
+    (open
+      ? `<div class="web-bar"><span class="web-addr">${icon('globe')}<span translate="no">${esc(url.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</span></span>${open}</div>`
+      : '') +
+    webFactList(entry, 'web-facts-grid') +
     `</article></section>`
   );
 }

@@ -437,6 +437,18 @@ const RESULTS = `
 .web-facts li{display:flex;gap:8px;align-items:flex-start;font-size:var(--t-small)}
 .web-facts .i{flex:none;width:16px;height:16px;margin-top:2px}
 .web-facts li:not(.yes):not(.no){color:var(--ink-2)}
+/* a web app's "open it" card: an address bar ending in the button, then the facts two to a row */
+.web-bar{display:flex;align-items:center;gap:12px;margin:16px 0 20px;padding:6px 6px 6px 16px;border-radius:999px;background:var(--sunk)}
+.web-addr{flex:1;min-width:0;display:flex;align-items:center;gap:10px;color:var(--ink-2);font:500 .92rem/1.3 var(--mono)}
+.web-addr .i{flex:none;width:18px;height:18px}
+.web-addr span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.web-bar .btn{flex:none;border-radius:999px}
+.web-facts-grid{grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:12px 24px;margin:0}
+.web-facts-grid li,.web-facts-grid li:not(.yes):not(.no){align-items:center;gap:10px;font:500 .95rem/1.35 var(--sans);color:var(--ink)}
+.web-facts-grid .i,.web-facts-grid .yes .i,.web-facts-grid .no .i{box-sizing:content-box;width:16px;height:16px;margin:0;padding:6px;border-radius:50%;background:var(--sunk);color:var(--ink-2)}
+.web-facts-grid .yes .i{background:var(--pass-soft);color:var(--pass)}
+.web-facts-grid .no .i{background:var(--caution-soft);color:var(--caution)}
+@media (max-width:520px){.web-bar{flex-direction:column;align-items:stretch;gap:8px;padding:12px;border-radius:var(--r-ctl)}.web-bar .btn{justify-content:center}}
 .t-more{margin-top:16px;border-radius:var(--r-ctl)}
 .t-more>summary{display:inline-flex;align-items:center;gap:8px;list-style:none;padding:8px 0;font:700 .95rem/1.3 var(--display);color:var(--ink-2)}
 .t-more>summary::-webkit-details-marker{display:none}

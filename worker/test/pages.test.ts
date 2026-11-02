@@ -182,3 +182,9 @@ test('the Fitz files the Worker serves are the ones brand/mascot/build.py wrote'
     assert.equal(readFileSync(join(served, rel), 'utf8'), readFileSync(join(brand, rel), 'utf8'), `${rel} differs: run npm run sync:assets`);
   }
 });
+
+test('a web app opens from an address bar that ends in the button, its facts two to a row below', async () => {
+  const html = await (await site().get('/tool/fixture-web-sketch')).text();
+  assert.match(html, /<div class="web-bar"><span class="web-addr"><svg[^>]*>.*?<\/svg><span translate="no">fixture-sketch\.example\.invalid<\/span><\/span><a [^>]*class="btn btn-primary btn-sm"/);
+  assert.match(html, /<ul class="web-facts web-facts-grid">/);
+});
