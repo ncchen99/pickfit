@@ -85,7 +85,7 @@ export function renderAgents(origin: string, nonce: string): string {
 export function renderNotFound(nonce: string): string {
   const main =
     `<section class="head mat after-top"><div class="wrap nf">${fitz('surprised', 160, { eager: true })}<h1>${L('This page doesn’t fit', '這個頁面不合身')}</h1>` +
-    `<p class="lede">${L('The address may be old, or the tool isn’t in pickfit’s catalog.', '這個網址可能已經過時，或是這款工具不在 pickfit 的目錄中。')}</p>` +
+    `<p class="lede">${L('The address may be old, or the tool isn’t in pickfit’s catalog', '這個網址可能已經過時，或是這款工具不在 pickfit 的目錄中')}</p>` +
     `<p class="badges"><a class="btn btn-primary" href="/">${icon('search')}${L('Find software', '搜尋軟體')}</a><a class="btn btn-on-mat" href="/browse">${L('Browse verified tools', '瀏覽已驗證工具')}</a></p></div>` +
     `<div class="ruler" aria-hidden="true"></div></section>`;
   return renderShell({ nonce, title: L('Not found · pickfit', '找不到頁面 · pickfit'), description: L('This page does not exist.', '這個頁面不存在。'), active: null, main });

@@ -1021,7 +1021,7 @@ export function renderPage(input: PageInput): string {
   const served = input.results !== '';
   const main =
     `<section class="hero mat after-top" aria-labelledby="title"><div class="wrap hero-grid"><div>` +
-    `<h1 id="title">${L('Software that <em>fits</em>, tried on first.', '<em>合身</em>的軟體，先試穿過。')}</h1>` +
+    `<h1 id="title">${L('Software that <em>fits</em>, tried on first', '<em>合身</em>的軟體，先試穿過')}</h1>` +
     `<p class="lede">${L(
       'Describe the job. Get tools pickfit has already installed and tested, mostly little-known ones, with the commands that worked.',
       '說出你要做的事，pickfit 會推薦它親自裝過、測過的工具，多半是冷門好工具，附上真的能用的指令。',
@@ -1050,12 +1050,12 @@ export function renderPage(input: PageInput): string {
     stagesSection() +
     freshSection(showcase) +
     `<section id="rules" class="sec wrap" aria-labelledby="rules-title"><div class="care"><div>` +
-    `<h2 id="rules-title">${L('Fitz works for you, not for the tools.', 'Fitz 站在你這邊，不替工具說話。')}</h2>` +
-    `<p class="quiet">${L('No ads, no paid placement, no cut from anyone.', '沒有廣告、沒有業配，也不跟任何人抽成。')}</p>` +
+    `<h2 id="rules-title">${L('Fitz works for you, not for the tools', 'Fitz 站在你這邊，不替工具說話')}</h2>` +
+    `<p class="quiet">${L('No ads, no paid placement, no cut from anyone', '沒有廣告、沒有業配，也不跟任何人抽成')}</p>` +
     `<a class="more" href="/how#rules">${L('Why you can trust a pick', '為什麼可以相信這些推薦')}${icon('arrow-right')}</a></div>${rulesLabel()}</div></section>` +
     `<section id="agents" class="sec wrap" aria-labelledby="agents-title"><div class="agents-band mat"><div>` +
-    `<h2 id="agents-title">${L('Same answers, in your agent.', '在你的 agent 裡，也有一樣的答案。')}</h2>` +
-    `<p>${L('The same picks over MCP, for Claude Code and any MCP client.', '透過 MCP 提供相同的推薦，Claude Code 和任何 MCP 用戶端都能用。')}</p>` +
+    `<h2 id="agents-title">${L('Same answers, in your agent', '在你的 agent 裡，也有一樣的答案')}</h2>` +
+    `<p>${L('The same picks over MCP, for Claude Code and any MCP client', '透過 MCP 提供相同的推薦，Claude Code 和任何 MCP 用戶端都能用')}</p>` +
     command(`claude mcp add --transport http pickfit ${mcp}`) +
     `</div><a class="btn btn-primary" href="/agents">${icon('bot')}${L('Connect your agent', '接上你的 agent')}</a></div></section>` +
     `</div>` +
