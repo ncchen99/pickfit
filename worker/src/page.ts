@@ -742,7 +742,7 @@ export function renderResults(
   const slugs = out.picks.map((p) => p.slug);
   const cmpHref = `/compare?tools=${slugs.map(encodeURIComponent).join(',')}${form.os ? `&amp;os=${form.os}` : ''}${form.arch ? `&amp;arch=${form.arch}` : ''}`;
   const tools = out.picks.length
-    ? `<div class="res-tools"><button type="button" class="btn btn-quiet btn-sm js-only" data-open-legend>${icon('circle-help')}${L('How to read a ticket', '怎麼看試穿單')}</button>` +
+    ? `<div class="res-tools"><button type="button" class="btn btn-quiet btn-sm js-only" data-open-legend>${icon('circle-help')}${L('How to read a tool card', '怎麼看工具卡')}</button>` +
       (out.picks.length > 1 ? `<a class="btn btn-quiet btn-sm" href="${cmpHref}">${icon('scale')}${L('Compare these', '比較這幾款')}</a>` : '') +
       `</div>`
     : '';
@@ -899,7 +899,7 @@ export function searchForm(form: FormValues): string {
     `<label class="chip"><input type="checkbox" name="offline" value="1"${form.offline ? ' checked' : ''}>${icon('wifi-off')}${L('Works offline', '不需網路')}</label>` +
     `<label class="chip"><input type="checkbox" name="private" value="1"${form.private ? ' checked' : ''}>${icon('laptop')}${L('Data stays local', '資料在本地')}</label></div>` +
     `<div class="ask-go"><span class="counter" data-counter aria-live="polite"></span>` +
-    `<button type="submit" class="btn btn-primary go"><span class="btn-label">${L('Find my fit', '幫我找合身的')}</span>${icon('arrow-right')}</button></div>` +
+    `<button type="submit" class="btn btn-primary go"><span class="btn-label">${L('Find tools', '幫我挑')}</span>${icon('arrow-right')}</button></div>` +
     `</div></form>`
   );
 }
@@ -908,17 +908,17 @@ export function searchForm(form: FormValues): string {
 function stagesSection(): string {
   const stages: { name: string; who: FitzName; text: string }[] = [
     { name: L('Read', '閱讀'), who: 'thinking', text: L('Muse Spark reads the README and writes a profile.', 'Muse Spark 讀 README，整理成簡介。') },
-    { name: L('Try it on', '試穿'), who: 'testing', text: L('Installed in a fresh sandbox, then replayed from scratch.', '在全新沙盒裡安裝，再從頭重跑一次。') },
+    { name: L('Install', '試裝'), who: 'testing', text: L('Installed in a fresh sandbox, then replayed from scratch.', '在全新沙盒裡安裝，再從頭重跑一次。') },
     {
       name: L('Match', '比對'),
       who: 'searching',
       text: L('Your sentence meets every verified profile. Each reason is checked.', '你的需求逐一比對已驗證的簡介，理由都會查核。'),
     },
-    { name: L('Hand over', '交給你'), who: 'recommending', text: L('You get the commands that worked.', '交給你真的能用的指令。') },
+    { name: L('Get the steps', '交給你'), who: 'recommending', text: L('You get the commands that worked.', '交給你真的能用的指令。') },
   ];
   return (
     `<section id="how" class="sec wrap" aria-labelledby="how-title">` +
-    `<div class="sec-head"><h2 id="how-title">${L('How Fitz picks a tool', 'Fitz 如何挑選工具')}</h2><a class="more" href="/how">${L('The whole method', '看完整方法')}${icon('arrow-right')}</a></div>` +
+    `<div class="sec-head"><h2 id="how-title">${L('How Fitz picks a tool', 'Fitz 怎麼幫你挑')}</h2><a class="more" href="/how">${L('See the full method', '看完整做法')}${icon('arrow-right')}</a></div>` +
     `<ol class="stages">${stages
       .map((s) => `<li class="stage"><div class="stage-fitz">${fitz(s.who, 130)}</div><h3>${esc(s.name)}</h3><p>${esc(s.text)}</p></li>`)
       .join('')}</ol></section>`
@@ -952,10 +952,10 @@ function freshSection(showcase: Showcase): string {
     .join('');
   return (
     `<section id="recent" class="sec wrap home-only" aria-labelledby="recent-title">` +
-    `<div class="sec-head"><div><h2 id="recent-title">${L('Fresh off the fitting table', '剛試穿完')}</h2>` +
+    `<div class="sec-head"><div><h2 id="recent-title">${L('Recently tested', '最近試過的工具')}</h2>` +
     `<p>${L(
-      `${stats.replayed} of ${stats.listed} tools installed and replayed${stats.web ? `, and ${stats.web} web ${stats.web === 1 ? 'app' : 'apps'} used in a browser` : ''}. Only those are ever suggested.`,
-      `${stats.listed} 款工具中，${stats.replayed} 款已實際安裝並重跑${stats.web ? `，另有 ${stats.web} 款網頁應用在瀏覽器裡實際用過` : ''}。pickfit 只推薦這些。`,
+      `Of ${stats.listed} tools, ${stats.replayed} have been installed and rerun${stats.web ? `, and ${stats.web} web ${stats.web === 1 ? 'app has' : 'apps have'} been used in a browser` : ''}. pickfit only suggests these.`,
+      `收錄的 ${stats.listed} 款工具裡，${stats.replayed} 款已經實際裝過、重跑過${stats.web ? `，另外 ${stats.web} 款網頁應用也在瀏覽器裡用過` : ''}。只有這些會被推薦。`,
     )}</p></div>` +
     `<a class="more" href="/browse">${L(`Browse all ${stats.verified}`, `瀏覽全部 ${stats.verified} 款`)}${icon('arrow-right')}</a></div>` +
     `<div class="fresh"><div>${fixCard}</div><ul class="runs-list">${rows}</ul></div></section>`
@@ -965,7 +965,7 @@ function freshSection(showcase: Showcase): string {
 const RULES = (): [Parameters<typeof icon>[0], string, string][] => [
   [
     'shield-check',
-    L('Tried on before it’s suggested', '先試穿過才推薦'),
+    L('Tested before it’s suggested', '試過才推薦'),
     L(
       'Only tools pickfit installed in a sandbox are ever suggested, with the steps that worked.',
       'pickfit 只推薦在沙盒裡裝過的工具，並附上真的可行的步驟。',
@@ -973,22 +973,22 @@ const RULES = (): [Parameters<typeof icon>[0], string, string][] => [
   ],
   [
     'scale',
-    L('Ranked by fit, not stars', '看合不合身，不看星數'),
+    L('Ranked by fit, not stars', '看適不適合你，不看星星數'),
     L('Quality and popularity are scored apart. Nobody can pay to rank.', '品質和知名度分開計分。沒有人能付費買排名。'),
   ],
   [
     'circle-dashed',
-    L('Unverified is said out loud', '未驗證就直說'),
+    L('Untested tools are labeled', '沒試過就老實說'),
     L('A well-known option Fitz hasn’t run is marked as such: no stitches, no steps.', 'Fitz 沒測過的知名工具會明白標出：沒有縫線，也沒有步驟。'),
   ],
   [
     'leaf',
-    L('Built-in is enough, if it is', '內建夠用就說夠用'),
+    L('Says when built-in tools will do', '內建的夠用，就不叫你裝'),
     L('When you don’t need to install anything, Fitz says so first.', '如果根本不用裝新東西，Fitz 會先說。'),
   ],
   [
     'tag',
-    L('No ads, no referral links', '沒有廣告，沒有推薦連結'),
+    L('No ads, no referral links', '沒有廣告，也沒有推薦連結'),
     L(
       'pickfit doesn’t make any of the software it suggests, and keeps no account of you.',
       'pickfit 推薦的軟體沒有一款是自家做的，也不需要你註冊。',
@@ -1021,10 +1021,10 @@ export function renderPage(input: PageInput): string {
   const served = input.results !== '';
   const main =
     `<section class="hero mat after-top" aria-labelledby="title"><div class="wrap hero-grid"><div>` +
-    `<h1 id="title">${L('Software that <em>fits</em>, tried on first.', '<em>合身</em>的軟體，先試穿過。')}</h1>` +
+    `<h1 id="title">${L('Every tool, <em>tested</em> first', '每款軟體，都先幫你<em>試過</em>')}</h1>` +
     `<p class="lede">${L(
-      'Describe the job. Get tools pickfit has already installed and tested, with the commands that worked.',
-      '說出你要做的事，pickfit 會推薦它親自裝過、測過的工具，附上真的能用的指令。',
+      'Tell pickfit what you want to do. It suggests tools it has already installed and tested, with commands that work.',
+      '說說你想做什麼，pickfit 會推薦它親自裝過、測過的工具，還附上實際跑得動的指令',
     )}</p>` +
     `<div class="hero-form">${searchForm(form)}</div>` +
     `<div class="tries js-only"><span class="label">${L('Or try', '或試試')}</span>${examples()
@@ -1050,19 +1050,19 @@ export function renderPage(input: PageInput): string {
     stagesSection() +
     freshSection(showcase) +
     `<section id="rules" class="sec wrap" aria-labelledby="rules-title"><div class="care"><div>` +
-    `<h2 id="rules-title">${L('Fitz works for you, not for the tools.', 'Fitz 站在你這邊，不替工具說話。')}</h2>` +
-    `<p class="quiet">${L('No ads, no paid placement, no cut from anyone.', '沒有廣告、沒有業配，也不跟任何人抽成。')}</p>` +
-    `<a class="more" href="/how#rules">${L('Why you can trust a pick', '為什麼可以相信這些推薦')}${icon('arrow-right')}</a></div>${rulesLabel()}</div></section>` +
+    `<h2 id="rules-title">${L('Fitz is on your side', 'Fitz 只站你這邊')}</h2>` +
+    `<p class="quiet">${L('No ads, no paid placement, no commissions', '不打廣告、不收業配，也不抽佣金')}</p>` +
+    `<a class="more" href="/how#rules">${L('Why you can trust a pick', '為什麼可以放心參考')}${icon('arrow-right')}</a></div>${rulesLabel()}</div></section>` +
     `<section id="agents" class="sec wrap" aria-labelledby="agents-title"><div class="agents-band mat"><div>` +
-    `<h2 id="agents-title">${L('Same answers, in your agent.', '在你的 agent 裡，也有一樣的答案。')}</h2>` +
-    `<p>${L('The same picks over MCP, for Claude Code and any MCP client.', '透過 MCP 提供相同的推薦，Claude Code 和任何 MCP 用戶端都能用。')}</p>` +
+    `<h2 id="agents-title">${L('Use it from your agent', '在 agent 裡也能用')}</h2>` +
+    `<p>${L('Connect over MCP and get the same suggestions in Claude Code or any other client', '接上 MCP，Claude Code 和其他用戶端都能拿到一樣的推薦')}</p>` +
     command(`claude mcp add --transport http pickfit ${mcp}`) +
     `</div><a class="btn btn-primary" href="/agents">${icon('bot')}${L('Connect your agent', '接上你的 agent')}</a></div></section>` +
     `</div>` +
     `<template id="loading"><div class="loading" role="status">` +
     says(
       'searching',
-      `<h2>${L(`Measuring your request against ${stats.verified} verified tools…`, `正在拿 ${stats.verified} 款已驗證工具幫你量身…`)}</h2>` +
+      `<h2>${L(`Checking ${stats.verified} verified tools for you…`, `正在從 ${stats.verified} 款驗證過的工具裡幫你挑…`)}</h2>` +
         `<ol><li>${L(
           'Keep the tools that meet your OS, price, offline and privacy conditions',
           '篩出符合你的系統、價格、離線與隱私條件的工具',
@@ -1082,7 +1082,7 @@ export function renderPage(input: PageInput): string {
     )}</template>`;
   return renderShell({
     nonce: input.nonce,
-    title: L('pickfit: software that fits, tried on first', 'pickfit：合身的軟體，先試穿過'),
+    title: L('pickfit: every tool, tested first', 'pickfit：每款軟體，都先幫你試過'),
     description: L(
       'Describe the job in one sentence. pickfit suggests developer CLI tools, local AI tools, MCP servers, desktop apps and web apps it has tested itself, including good ones few people know yet, with the evidence and the steps that worked.',
       '用一句話描述你要做的事。pickfit 會推薦它親自測試過的開發者 CLI 工具、本機 AI 工具、MCP 伺服器、桌面應用和網頁應用，也包括還少有人知道的好工具，並附上證據和實際可行的步驟。',

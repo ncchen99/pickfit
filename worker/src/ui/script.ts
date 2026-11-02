@@ -92,7 +92,7 @@ export const script = () => `
         busy = false;
         go.disabled = false;
         go.removeAttribute('aria-busy');
-        label.textContent = ${J('Find my fit', '幫我找合身的')};
+        label.textContent = ${J('Find tools', '幫我挑')};
         out.removeAttribute('aria-busy');
         out.focus({ preventScroll: true });
       }

@@ -339,7 +339,8 @@ button.badge{cursor:help}
 .sec{padding-top:var(--gap)}
 .sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:32px;flex-wrap:wrap}
 .sec-head h2{max-width:22ch}
-.sec-head p{margin:10px 0 0;color:var(--ink-2);font-size:var(--t-lead)}
+.sec-head>div{flex:1 1 0;min-width:min(100%,20rem)}
+.sec-head p{margin:10px 0 0;color:var(--ink-2);font-size:var(--t-lead);max-width:none}
 .more{display:inline-flex;align-items:center;gap:6px;font:700 1rem/1 var(--display);text-decoration:none;white-space:nowrap}
 .more:hover .i{transform:translateX(3px)}
 .more .i{transition:transform .2s var(--ease-out)}
@@ -588,7 +589,7 @@ body.is-results .home-only{display:none}
 .stage-fitz{height:150px;display:flex;align-items:flex-end;justify-content:center;position:relative;z-index:1}
 .stage-fitz .fitz{height:130px;width:auto;background:var(--paper);border-radius:50%;padding:0 6px}
 .stage h3{font-size:1.3rem}
-.stage>p{color:var(--ink-2);margin:0;max-width:24ch}
+.stage>p{color:var(--ink-2);margin:0;max-width:16em}
 .stage-ui{background:var(--tag);border-radius:var(--r-card);padding:14px 16px;box-shadow:var(--lift-1);font-size:var(--t-small);min-height:180px}
 .stage-ui .ui-title{font:700 .85rem/1.3 var(--display);color:var(--ink-2);margin-bottom:10px}
 .stage-ui dl{margin:0}.stage-ui dl div{display:grid;grid-template-columns:84px minmax(0,1fr);gap:8px;padding:3px 0}
