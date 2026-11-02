@@ -75,21 +75,21 @@
       "first_task": "mex hub"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-mex-20261102-174242-3f58",
       "method": "npm",
       "steps": [
         {
-          "command": "npx mex-agent@0.8.5 setup",
-          "purpose": null
+          "command": "npm install -g mex-agent@0.8.5",
+          "purpose": "install mex-agent@0.8.5 globally via npm"
         }
       ],
-      "manual_steps": [
-        "Run npx mex-agent@0.8.5 setup from the repository root, review the setup-file diff in Hub and choose Commit setup to create a local commit.",
-        "Build derived indexes in your checkout with npx mex-agent@0.8.5 graph rebuild and npx mex-agent@0.8.5 wiki rebuild-index then open Hub"
-      ],
-      "check": null,
-      "first_task": "mex hub"
+      "manual_steps": [],
+      "check": {
+        "command": "mex --version",
+        "expected_signal": "0.8.5"
+      },
+      "first_task": "mex hub --no-open --port 8765"
     },
     "windows": {
       "basis": "readme_claim",
@@ -122,10 +122,157 @@
     "url": "https://github.com/mex-memory/mex/releases/tag/v0.8.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:44:26.904779+08:00",
+    "runs": [
+      {
+        "id": "verify-mex-20261102-174242-3f58",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:44:26.904779+08:00",
+        "tool_version": "0.8.5",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g mex-agent@0.8.5",
+            "purpose": "install mex-agent@0.8.5 globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mex --version",
+            "expected_signal": "0.8.5",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.8.5",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/mextest && mex inbox --help",
+            "expected_signal": "Propose and review additions or corrections to project knowledge",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "/usr/bin/bash: line 1: cd: /tmp/mextest: No such file or directory",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "cd /tmp/mextest && mex relay --help",
+            "expected_signal": "Draft, publish, claim, and close repository-native team handoffs",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "/usr/bin/bash: line 1: cd: /tmp/mextest: No such file or directory",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "cd /tmp/mextest && mex wiki --help",
+            "expected_signal": "Knowledge-graph commands over the .mex wiki",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "/usr/bin/bash: line 1: cd: /tmp/mextest: No such file or directory",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "mex hub --no-open --port 8765",
+            "expected_signal": "Project Hub setup wizard running at http://127.0.0.1:8765",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Project Hub setup wizard running at http://127.0.0.1:8765",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8765/ | head -n 20\necho \"---CURL2---\"\ncurl -s http://127.0.0.1:8765/api/health 2>&1 | head -n 40\ncurl -s http://127.0.0.1:8765/api/config 2>&1",
+            "expected_signal": "MEX Project Hub",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<title>MEX Project Hub</title>",
+            "setup": [
+              {
+                "command": "mex hub --no-open --port 8765",
+                "background": true,
+                "port": 8765
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx mex-agent@0.8.5 setup completes setup then mex hub opens full Hub",
+            "actually_needed": "setup pauses after scaffold with exit 2 requiring population agent via `mex setup next --start` and manual Wiki population before Hub commit; fresh checkout only shows setup wizard with CSRF-protected API (401 without session)",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "mex hub example runs directly",
+            "actually_needed": "hub requires prior scaffold; without it it runs setup wizard on 127.0.0.1 with one-time token link and CSRF protection",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show Hub wizard starting on port 8765, Hub HTML serving with MEX Project Hub title, and version 0.8.5 printed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mex-20261102-174242-3f58/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mex-20261102-174242-3f58/check-1-cmd14.judged.png",
+            "runs/verify/verify-mex-20261102-174242-3f58/check-2-cmd15.judged.png",
+            "runs/verify/verify-mex-20261102-174242-3f58/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.088098,
+        "features": [
+          {
+            "feature": "store architecture, decisions and conventions as code-linked Wiki alongside code",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; wiki --help shows Wiki commands"
+          },
+          {
+            "feature": "explore and review memory in local Project Hub",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows Hub server started and empty HTML shell with APIs blocked by auth, not any memory explored or reviewed."
+          },
+          {
+            "feature": "propose and review knowledge additions via Inbox",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; inbox --help shows proposal workflow"
+          },
+          {
+            "feature": "create and share durable handoff Relays between teammates",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; relay --help shows draft/publish/acknowledge/close"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -360,5 +507,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T17:44:26.910206+08:00"
 }

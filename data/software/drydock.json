@@ -76,21 +76,21 @@
       "first_task": "drydock"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-drydock-20261102-173836-55e5",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install drydock",
-          "purpose": null
+          "command": "curl -fsSL https://github.com/yetidevworks/drydock/releases/download/v1.3.1/drydock-linux-x86_64.tar.gz -o /tmp/drydock.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/drydock.tar.gz -C /tmp && find /tmp -maxdepth 2 -name drydock -type f -exec cp {} ~/.local/bin/drydock \\; && chmod +x ~/.local/bin/drydock && ~/.local/bin/drydock --version",
+          "purpose": "download drydock-linux-x86_64 v1.3.1 and install to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "drydock",
-        "expected_signal": "drydock"
+        "command": "drydock --version",
+        "expected_signal": "drydock 1.3.1"
       },
-      "first_task": "drydock"
+      "first_task": "drydock list --root /tmp/fleet --json > /tmp/out2.json && cat /tmp/out2.json"
     },
     "windows": null
   },
@@ -107,10 +107,117 @@
     "url": "https://github.com/yetidevworks/drydock/releases/tag/v1.3.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:39:49.674903+08:00",
+    "runs": [
+      {
+        "id": "verify-drydock-20261102-173836-55e5",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:39:49.674903+08:00",
+        "tool_version": "1.3.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/yetidevworks/drydock/releases/download/v1.3.1/drydock-linux-x86_64.tar.gz -o /tmp/drydock.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/drydock.tar.gz -C /tmp && find /tmp -maxdepth 2 -name drydock -type f -exec cp {} ~/.local/bin/drydock \\; && chmod +x ~/.local/bin/drydock && ~/.local/bin/drydock --version",
+            "purpose": "download drydock-linux-x86_64 v1.3.1 and install to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "drydock --version",
+            "expected_signal": "drydock 1.3.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "drydock 1.3.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "drydock list --root /tmp/fleet --json > /tmp/out2.json && cat /tmp/out2.json",
+            "expected_signal": "\"unpushed\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"state\": \"unpushed\",",
+            "setup": [
+              {
+                "command": "cat <<'EOS' > /tmp/setup_repos.sh\n#!/bin/bash\nset -e\nrm -rf /tmp/fleet\nmkdir -p /tmp/fleet/group1\n# repo1: with remote and unpushed commits\nmkdir -p /tmp/remote.git\ngit init --bare /tmp/remote.git -q\n\n# repoA: clone, make commits, create side branch with unpushed\ngit clone /tmp/remote.git /tmp/fleet/group1/repoA -q\ngit -C /tmp/fleet/group1/repoA config user.email \"test@test.com\"\ngit -C /tmp/fleet/group1/repoA config user.name \"test\"\necho \"hello\" > /tmp/fleet/group1/repoA/file.txt\ngit -C /tmp/fleet/group1/repoA add . && git -C /tmp/fleet/group1/repoA commit -qm \"initial\"\ngit -C /tmp/fleet/group1/repoA push -q origin HEAD\n# unpushed commit on main\necho \"more\" >> /tmp/fleet/group1/repoA/file.txt\ngit -C /tmp/fleet/group1/repoA commit -am \"unpushed main\" -q\n# side branch with unpushed\ngit -C /tmp/fleet/group1/repoA checkout -b feature -q\necho \"feature\" > /tmp/fleet/group1/repoA/feature.txt\ngit -C /tmp/fleet/group1/repoA add . && git -C /tmp/fleet/group1/repoA commit -qm \"feature work\"\ngit -C /tmp/fleet/group1/repoA checkout master -q 2>&1 || git -C /tmp/fleet/group1/repoA checkout main -q\n\n# repoB: clean repo\ngit clone /tmp/remote.git /tmp/fleet/group1/repoB -q\ngit -C /tmp/fleet/group1/repoB config user.email \"test@test.com\"\ngit -C /tmp/fleet/group1/repoB config user.name \"test\"\necho \"repoB\" > /tmp/fleet/group1/repoB/readme.txt\ngit -C /tmp/fleet/group1/repoB add . && git -C /tmp/fleet/group1/repoB commit -qm \"repoB init\"\necho done\nEOS\nchmod +x /tmp/setup_repos.sh\n/tmp/setup_repos.sh\nls /tmp/fleet/group1/repoA/.git -d\ngit -C /tmp/fleet/group1/repoA log --all --oneline --graph",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "drydock list --cached --json --root /tmp/fleet > /tmp/cached2.json && cat /tmp/cached2.json",
+            "expected_signal": "\"path\": \"/tmp/fleet/group1/repoA\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"path\": \"/tmp/fleet/group1/repoA\",",
+            "setup": [
+              {
+                "command": "cat <<'EOS' > /tmp/setup_repos.sh\n#!/bin/bash\nset -e\nrm -rf /tmp/fleet\nmkdir -p /tmp/fleet/group1\n# repo1: with remote and unpushed commits\nmkdir -p /tmp/remote.git\ngit init --bare /tmp/remote.git -q\n\n# repoA: clone, make commits, create side branch with unpushed\ngit clone /tmp/remote.git /tmp/fleet/group1/repoA -q\ngit -C /tmp/fleet/group1/repoA config user.email \"test@test.com\"\ngit -C /tmp/fleet/group1/repoA config user.name \"test\"\necho \"hello\" > /tmp/fleet/group1/repoA/file.txt\ngit -C /tmp/fleet/group1/repoA add . && git -C /tmp/fleet/group1/repoA commit -qm \"initial\"\ngit -C /tmp/fleet/group1/repoA push -q origin HEAD\n# unpushed commit on main\necho \"more\" >> /tmp/fleet/group1/repoA/file.txt\ngit -C /tmp/fleet/group1/repoA commit -am \"unpushed main\" -q\n# side branch with unpushed\ngit -C /tmp/fleet/group1/repoA checkout -b feature -q\necho \"feature\" > /tmp/fleet/group1/repoA/feature.txt\ngit -C /tmp/fleet/group1/repoA add . && git -C /tmp/fleet/group1/repoA commit -qm \"feature work\"\ngit -C /tmp/fleet/group1/repoA checkout master -q 2>&1 || git -C /tmp/fleet/group1/repoA checkout main -q\n\n# repoB: clean repo\ngit clone /tmp/remote.git /tmp/fleet/group1/repoB -q\ngit -C /tmp/fleet/group1/repoB config user.email \"test@test.com\"\ngit -C /tmp/fleet/group1/repoB config user.name \"test\"\necho \"repoB\" > /tmp/fleet/group1/repoB/readme.txt\ngit -C /tmp/fleet/group1/repoB add . && git -C /tmp/fleet/group1/repoB commit -qm \"repoB init\"\necho done\nEOS\nchmod +x /tmp/setup_repos.sh\n/tmp/setup_repos.sh\nls /tmp/fleet/group1/repoA/.git -d\ngit -C /tmp/fleet/group1/repoA log --all --oneline --graph",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install drydock or make install from source (requires Rust)",
+            "actually_needed": "used prebuilt linux-x86_64 tarball from GitHub releases; no Rust toolchain needed",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show drydock list JSON reporting unpushed state, cached list JSON output, and version 1.3.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-drydock-20261102-173836-55e5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-drydock-20261102-173836-55e5/check-1-cmd12.judged.png",
+            "runs/verify/verify-drydock-20261102-173836-55e5/check-2-cmd13.judged.png",
+            "runs/verify/verify-drydock-20261102-173836-55e5/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.101855,
+        "features": [
+          {
+            "feature": "show unpushed commits across every local branch",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "browse live TUI table with filters, fuzzy search and detail history view",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Live TUI requires interactive terminal; --help confirms dashboard exists"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -361,5 +468,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T17:39:49.680149+08:00"
 }

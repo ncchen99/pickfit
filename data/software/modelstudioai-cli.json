@@ -76,17 +76,20 @@
       "first_task": null
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-modelstudioai-cli-20261102-174647-613f",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g bailian-cli",
-          "purpose": null
+          "purpose": "install bailian-cli via npm install -g"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "bl --version",
+        "expected_signal": "bl 2.7.2"
+      },
       "first_task": null
     },
     "windows": {
@@ -117,10 +120,135 @@
     "url": "https://github.com/modelstudioai/cli/releases/tag/v2.7.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:48:14.082458+08:00",
+    "runs": [
+      {
+        "id": "verify-modelstudioai-cli-20261102-174647-613f",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:48:14.082458+08:00",
+        "tool_version": "2.7.2",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g bailian-cli",
+            "purpose": "install bailian-cli via npm install -g"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "bl --version",
+            "expected_signal": "bl 2.7.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "bl 2.7.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "bl image generate --help",
+            "expected_signal": "Generate images",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Generate images (Qwen-Image / wan2.x)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "bl parsex --help",
+            "expected_signal": "parsex parse submit",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "parsex parse submit [API Key] Submit a ParseX document or media parsing task",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "bl app --help",
+            "expected_signal": "app call",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "app call [API Key] Call a Bailian application (agent or workflow)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "bl mcp connect --help",
+            "expected_signal": "Register a Bailian MCP server",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Register a Bailian MCP server in an Agent's native configuration",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm install -g bailian-cli",
+            "actually_needed": "works as documented with npm prefix ~/.local, no extra steps",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The terminal shows `bl --version` printing `bl 2.7.2` with exit code 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-modelstudioai-cli-20261102-174647-613f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-modelstudioai-cli-20261102-174647-613f/check-1-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.053834,
+        "features": [
+          {
+            "feature": "Full-modality generation across text, image, video and speech with editing",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; bl image generate --help shows generation flags and examples"
+          },
+          {
+            "feature": "Parse and analyze images, documents, audio and long videos",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; bl parsex --help shows parse/extract submit/result commands"
+          },
+          {
+            "feature": "Call Managed Agents, agents and workflows published on Aliyun Model Studio",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; bl app --help shows app call/list"
+          },
+          {
+            "feature": "Register Bailian MCP servers in Codex, Claude Code, Cursor and other agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; bl mcp connect --help shows registration for Codex, Claude Code, Cursor etc."
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -371,5 +499,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T17:48:14.088081+08:00"
 }

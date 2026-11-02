@@ -67,18 +67,25 @@
       "first_task": "llmman launch claude --model qwen3.8"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-llmman-20261102-174231-7765",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://llmmanorg.github.io/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://llmmanorg.github.io/install.sh -o /tmp/install.sh",
+          "purpose": "download install script to /tmp/install.sh"
+        },
+        {
+          "command": "rm -f ~/.local/bin/llmman_placeholder\nLLMMAN_VERSION=v0.1.546 sh /tmp/install.sh",
+          "purpose": "install llmman v0.1.546 via LLMMAN_VERSION=v0.1.546 sh /tmp/install.sh"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "llmman launch claude --model qwen3.8"
+      "check": {
+        "command": "llmman --version",
+        "expected_signal": "llmman 0.1.546"
+      },
+      "first_task": "llmman launch 2>&1"
     },
     "windows": null
   },
@@ -95,10 +102,152 @@
     "url": "https://github.com/llmmanorg/llmman/releases/tag/v0.1.609"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:43:55.950283+08:00",
+    "runs": [
+      {
+        "id": "verify-llmman-20261102-174231-7765",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:43:55.950283+08:00",
+        "tool_version": "0.1.546 (fa27394)",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://llmmanorg.github.io/install.sh -o /tmp/install.sh",
+            "purpose": "download install script to /tmp/install.sh"
+          },
+          {
+            "command": "rm -f ~/.local/bin/llmman_placeholder\nLLMMAN_VERSION=v0.1.546 sh /tmp/install.sh",
+            "purpose": "install llmman v0.1.546 via LLMMAN_VERSION=v0.1.546 sh /tmp/install.sh"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "llmman --version",
+            "expected_signal": "llmman 0.1.546",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "llmman 0.1.546 (fa27394)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "llmman launch 2>&1",
+            "expected_signal": "Available integrations:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Available integrations:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:17434/v1/models | head -c 2000\necho \"---O--\"\ncurl -s http://127.0.0.1:17434/api/tags",
+            "expected_signal": "\"object\":\"list\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"data\":[],\"object\":\"list\"}---O--",
+            "setup": [
+              {
+                "command": "llmman serve",
+                "background": true,
+                "port": 17434
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "llmman transfer --help 2>&1",
+            "expected_signal": "Transfer an image directly",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Transfer an image directly from one location to another (e.g. HuggingFace to an OCI registry)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "llmman config get aggregation.peers 2>&1; echo --; llmman config set aggregation.peers localhost:17435 2>&1; llmman config get aggregation.peers 2>&1",
+            "expected_signal": "localhost:17435",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "localhost:17435",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://llmmanorg.github.io/install.sh | sh installs latest",
+            "actually_needed": "script defaults to brew if ~/.local/bin/llmman absent; without LLMMAN_VERSION it fails with 'brew: not found'; with LLMMAN_VERSION=latest the URL https://github.com/.../latest/download/... returns 404, need pinned version e.g. LLMMAN_VERSION=v0.1.546",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "llmman install via install.sh uses latest release URL",
+            "actually_needed": "Latest release asset exists as v0.1.546 but /latest/download redirect failed (404) in this environment; pinning version works",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show expected outputs: integrations list, empty models list JSON, and version 0.1.546.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-llmman-20261102-174231-7765/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-llmman-20261102-174231-7765/check-1-cmd8.judged.png",
+            "runs/verify/verify-llmman-20261102-174231-7765/check-2-cmd12.judged.png",
+            "runs/verify/verify-llmman-20261102-174231-7765/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.074855,
+        "features": [
+          {
+            "feature": "launch any agent on any local or hosted model in one command",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists integrations and usage, no agent was launched."
+          },
+          {
+            "feature": "serve models via Ollama, OpenAI and Anthropic compatible APIs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Both APIs returned empty lists with no models served."
+          },
+          {
+            "feature": "transfer and sign OCI-native models between any registry without local copy",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output is only --help usage text, no transfer was done."
+          },
+          {
+            "feature": "pool multiple machines into one aggregated inference endpoint",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows config set/get, no aggregated endpoint was shown."
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -317,5 +466,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T17:43:55.959551+08:00"
 }

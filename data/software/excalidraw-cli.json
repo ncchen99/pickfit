@@ -73,18 +73,21 @@
       "first_task": "excalidraw-cli create --inline \"[A] -> [B]\" -o diagram.excalidraw"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-excalidraw-cli-20261102-174355-a27e",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g @swiftlysingh/excalidraw-cli",
-          "purpose": null
+          "purpose": "install via npm global"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "excalidraw-cli create --inline \"[A] -> [B]\" -o diagram.excalidraw"
+      "check": {
+        "command": "excalidraw-cli --version && excalidraw-cli --help",
+        "expected_signal": "1.5.0"
+      },
+      "first_task": "excalidraw-cli create --format dot --inline 'digraph { A [label=\"Start\"]; B [label=\"Process\"]; A -> B; }' -o /tmp/flow.excalidraw && echo \"DOT_OK\" && ls -lh /tmp/flow.excalidraw"
     },
     "windows": {
       "basis": "readme_claim",
@@ -114,10 +117,122 @@
     "url": "https://github.com/swiftlysingh/excalidraw-cli/releases/tag/v1.5.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:45:36.606485+08:00",
+    "runs": [
+      {
+        "id": "verify-excalidraw-cli-20261102-174355-a27e",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:45:36.606485+08:00",
+        "tool_version": "1.5.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @swiftlysingh/excalidraw-cli",
+            "purpose": "install via npm global"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "excalidraw-cli --version && excalidraw-cli --help",
+            "expected_signal": "1.5.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.5.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "excalidraw-cli create --format dot --inline 'digraph { A [label=\"Start\"]; B [label=\"Process\"]; A -> B; }' -o /tmp/flow.excalidraw && echo \"DOT_OK\" && ls -lh /tmp/flow.excalidraw",
+            "expected_signal": "DOT_OK",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "DOT_OK",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "node /tmp/test_api.mjs",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "at ModuleJob._link (node:internal/modules/esm/module_job:182:49) { code: 'ERR_MODULE_NOT_FOUND' } Node.js v22.23.4",
+            "setup": [
+              {
+                "command": "cat > /tmp/test_api.mjs <<'JS'\nimport { createFlowchartFromDSL, createFlowchartFromJSON, convertToSVG, convertToPNG } from '@swiftlysingh/excalidraw-cli';\nconst dsl = '(Start) -> [Process] -> (End)';\nconst json = await createFlowchartFromDSL(dsl);\nconsole.log('F4_DSL_OK', json.elements.length > 0 ? 'elements' : 'empty');\nconst json2 = await createFlowchartFromJSON({\n  nodes: [{ id: 'a', type: 'rectangle', label: 'Hello' }, { id: 'b', type: 'rectangle', label: 'World' }],\n  edges: [{ from: 'a', to: 'b' }]\n});\nconsole.log('F4_JSON_OK', json2.elements.length > 0 ? 'elements' : 'empty');\nconst svg = await convertToSVG(json, { padding: 20 });\nconsole.log('F4_SVG_OK', svg.includes('<svg') ? 'svg' : 'no-svg');\nJS\ncat /tmp/test_api.mjs",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show DOT creation succeeding with DOT_OK and file listing, and version 1.5.0 with help usage output.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-excalidraw-cli-20261102-174355-a27e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-excalidraw-cli-20261102-174355-a27e/check-1-cmd6.judged.png",
+            "runs/verify/verify-excalidraw-cli-20261102-174355-a27e/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.064039,
+        "features": [
+          {
+            "feature": "Create diagrams from text-based DSL, JSON API and Graphviz DOT",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Auto-layout diagrams using ELK.js with multiple flow directions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; create with @direction LR produced layout"
+          },
+          {
+            "feature": "Export diagrams to PNG and SVG with dark mode and custom backgrounds",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; convert to png and svg exported files"
+          },
+          {
+            "feature": "Programmatic API for integration into other tools and agent workflows",
+            "status": "test_failed",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "import from '@swiftlysingh/excalidraw-cli' threw ERR_MODULE_NOT_FOUND in this box"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -376,5 +491,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T17:45:36.609946+08:00"
 }

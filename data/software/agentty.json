@@ -63,18 +63,25 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-agentty-20261102-173726-be0d",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/agentty-org/agentty/master/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/agentty-org/agentty/master/install.sh -o /tmp/install.sh",
+          "purpose": "download install script"
+        },
+        {
+          "command": "sh /tmp/install.sh 2>&1\n",
+          "purpose": "install agentty via script"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "agentty"
+      "check": {
+        "command": "agentty --version\n",
+        "expected_signal": "agentty 0.9.40"
+      },
+      "first_task": "agentty diagnostics 2>&1\n"
     },
     "windows": {
       "basis": "readme_claim",
@@ -104,10 +111,153 @@
     "url": "https://github.com/agentty-org/agentty/releases/tag/v0.9.40"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:38:35.607488+08:00",
+    "runs": [
+      {
+        "id": "verify-agentty-20261102-173726-be0d",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:38:35.607488+08:00",
+        "tool_version": "0.9.40",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/agentty-org/agentty/master/install.sh -o /tmp/install.sh",
+            "purpose": "download install script"
+          },
+          {
+            "command": "sh /tmp/install.sh 2>&1\n",
+            "purpose": "install agentty via script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "agentty --version\n",
+            "expected_signal": "agentty 0.9.40",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "agentty 0.9.40",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "agentty diagnostics 2>&1\n",
+            "expected_signal": "diagnostics written",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "agentty 0.9.40 — diagnostics written",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cat /home/sbx/.agentty/logs/agentty-diagnostics.txt\n",
+            "expected_signal": "retrieval (embeddings)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "===== retrieval (embeddings) =====",
+            "setup": [
+              {
+                "command": "cat > /tmp/sample.py <<'PY'\ndef hello():\n    \"\"\"greet the world\"\"\"\n    return \"hello\"\nPY\necho \"created sample.py\" && ls -l /tmp/sample.py",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "agentty --help 2>&1\n",
+            "expected_signal": "LLM backend. anthropic",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "--provider P LLM backend. anthropic (default, OAuth/Pro/Max) or an",
+            "setup": [
+              {
+                "command": "cat > /tmp/sample.py <<'PY'\ndef hello():\n    \"\"\"greet the world\"\"\"\n    return \"hello\"\nPY\necho \"created sample.py\" && ls -l /tmp/sample.py",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "agentty run --help 2>&1\n",
+            "expected_signal": "landlock + cgroup2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "landlock + cgroup2, macOS uses seatbelt + rlimits). On",
+            "setup": [
+              {
+                "command": "cat > /tmp/sample.py <<'PY'\ndef hello():\n    \"\"\"greet the world\"\"\"\n    return \"hello\"\nPY\necho \"created sample.py\" && ls -l /tmp/sample.py",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show expected output: diagnostics written, diagnostics file with retrieval section, and version 0.9.40.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-agentty-20261102-173726-be0d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-agentty-20261102-173726-be0d/check-1-cmd5.judged.png",
+            "runs/verify/verify-agentty-20261102-173726-be0d/check-2-cmd13.judged.png",
+            "runs/verify/verify-agentty-20261102-173726-be0d/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.070941,
+        "features": [
+          {
+            "feature": "instant startup as single static binary",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; file shows statically linked ELF, startup 0.013s"
+          },
+          {
+            "feature": "local hybrid retrieval over code and docs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Log shows model missing and fallback to BM25 with only startup errors, no retrieval results."
+          },
+          {
+            "feature": "multi-provider model support with live switching",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output is only --help text listing providers, not live model use or switching."
+          },
+          {
+            "feature": "sandboxed shell execution and air-gapped mode",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output is only --help text about providers, with no sandboxed execution shown."
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -374,5 +524,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T17:38:35.616476+08:00"
 }

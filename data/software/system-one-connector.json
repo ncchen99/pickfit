@@ -102,9 +102,72 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_account",
+    "checked_at": "2026-11-02T17:47:31.511124+08:00",
+    "runs": [
+      {
+        "id": "verify-system-one-connector-20261102-174652-df73",
+        "level": "unverified",
+        "unverified_reason": "needs_account",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:47:31.511124+08:00",
+        "tool_version": "v0.4.13",
+        "install_method": "script",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/itsmostafa/system-one-connector/main/install.sh -o /tmp/install.sh && head -n 500 /tmp/install.sh",
+            "purpose": "download install.sh from GitHub"
+          },
+          {
+            "command": "sh /tmp/install.sh",
+            "purpose": "run install.sh to install evaluate binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "evaluate --version",
+            "expected_signal": "v0.4.13",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "v0.4.13",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/itsmostafa/system-one-connector/main/install.sh | sh",
+            "actually_needed": "download script first with curl -o /tmp/install.sh, inspect, then sh /tmp/install.sh",
+            "kind": "note"
+          },
+          {
+            "readme_said": "evaluate mcp starts MCP server",
+            "actually_needed": "requires TYPESAFE_API_KEY or OPENROUTER_API_KEY env; without it exits 'evaluate: set TYPESAFE_API_KEY ...' and probe closes stdout before initialize",
+            "kind": "note"
+          },
+          {
+            "readme_said": "any non-empty TYPESAFE_API_KEY works with custom TYPESAFE_BASE_URL",
+            "actually_needed": "with TYPESAFE_API_KEY=local TYPESAFE_BASE_URL=http://127.0.0.1:1 handshake passes (1 tool: evaluate), but tool calls need a real model backend",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-system-one-connector-20261102-174652-df73/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.05572
+      }
+    ]
   },
   "mcp": {
     "transports": [],
@@ -425,5 +488,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T17:47:31.513277+08:00"
 }

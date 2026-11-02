@@ -83,21 +83,33 @@
       "first_task": "./build/aoci --version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "source",
+      "basis": "replayed",
+      "run_id": "verify-aoci-code-20261102-173854-0347",
+      "method": "binary",
       "steps": [
         {
-          "command": "cd aoci-code",
-          "purpose": null
+          "command": "curl -fsSL https://go.dev/dl/go1.23.6.linux-amd64.tar.gz -o /tmp/go.tar.gz",
+          "purpose": "download Go 1.23.6 tarball"
+        },
+        {
+          "command": "mkdir -p $HOME/.local/go && tar -xzf /tmp/go.tar.gz -C $HOME/.local/go --strip-components=1 && mkdir -p $HOME/.local/bin && ln -sf $HOME/.local/go/bin/go $HOME/.local/bin/go",
+          "purpose": "extract Go to ~/.local/go and link to ~/.local/bin"
+        },
+        {
+          "command": "git clone https://github.com/aoci-spec/aoci-code.git",
+          "purpose": "git clone aoci-code"
+        },
+        {
+          "command": "cd aoci-code && mkdir -p build && CGO_ENABLED=0 go build -o build/aoci ./cmd/aoci && ./build/aoci --version",
+          "purpose": "mkdir -p build && CGO_ENABLED=0 go build -o build/aoci ./cmd/aoci"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "./build/aoci --version",
-        "expected_signal": "0.1.0-rc23"
+        "command": "cd aoci-code && mkdir -p build && CGO_ENABLED=0 go build -o build/aoci ./cmd/aoci && ./build/aoci --version",
+        "expected_signal": "aoci version dev"
       },
-      "first_task": "./build/aoci --version"
+      "first_task": "mkdir -p /tmp/testrepo && cd /tmp/testrepo && git init -q && git config user.email \"a@a.com\" && git config user.name \"a\" && echo \"hello\" > README.md && git add . && git commit -qm init && AOCI=/home/sbx/work/aoci-code/build/aoci\n\n# F1: init + scan delivers codebase context\n$AOCI --repo /tmp/testrepo"
     },
     "windows": {
       "basis": "readme_claim",
@@ -126,10 +138,139 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:42:31.549548+08:00",
+    "runs": [
+      {
+        "id": "verify-aoci-code-20261102-173854-0347",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:42:31.549548+08:00",
+        "tool_version": "dev",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://go.dev/dl/go1.23.6.linux-amd64.tar.gz -o /tmp/go.tar.gz",
+            "purpose": "download Go 1.23.6 tarball"
+          },
+          {
+            "command": "mkdir -p $HOME/.local/go && tar -xzf /tmp/go.tar.gz -C $HOME/.local/go --strip-components=1 && mkdir -p $HOME/.local/bin && ln -sf $HOME/.local/go/bin/go $HOME/.local/bin/go",
+            "purpose": "extract Go to ~/.local/go and link to ~/.local/bin"
+          },
+          {
+            "command": "git clone https://github.com/aoci-spec/aoci-code.git",
+            "purpose": "git clone aoci-code"
+          },
+          {
+            "command": "cd aoci-code && mkdir -p build && CGO_ENABLED=0 go build -o build/aoci ./cmd/aoci && ./build/aoci --version",
+            "purpose": "mkdir -p build && CGO_ENABLED=0 go build -o build/aoci ./cmd/aoci"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd aoci-code && mkdir -p build && CGO_ENABLED=0 go build -o build/aoci ./cmd/aoci && ./build/aoci --version",
+            "expected_signal": "aoci version dev",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "aoci version dev (commit none, built unknown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/testrepo && cd /tmp/testrepo && git init -q && git config user.email \"a@a.com\" && git config user.name \"a\" && echo \"hello\" > README.md && git add . && git commit -qm init && AOCI=/home/sbx/work/aoci-code/build/aoci\n\n# F1: init + scan delivers codebase context\n$AOCI --repo /tmp/testrepo init --locale en-US --agent codex\ncat /tmp/testrepo/aoci.txt\n$AOCI --repo /tmp/testrepo scan\ncat /tmp/testrepo/aoci.code.txt | head -20\n$AOCI --repo /tmp/testrepo status",
+            "expected_signal": "AOCI initialization complete",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "AOCI initialization complete @ /tmp/testrepo",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "AOCI=/home/sbx/work/aoci-code/build/aoci\n$AOCI --repo /tmp/testrepo check --json | head -c 2000\n$AOCI --repo /tmp/testrepo verify --json",
+            "expected_signal": "code_missing",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "\"code\": \"code_missing\",",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "/home/sbx/work/aoci-code/build/aoci database --help\n/home/sbx/work/aoci-code/build/aoci index --help\n/home/sbx/work/aoci-code/build/aoci status --help",
+            "expected_signal": "Configure and inspect PostgreSQL, MySQL",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "source Configure and inspect PostgreSQL, MySQL, or openGauss sources",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "prerequisites: go, make - make build",
+            "actually_needed": "make not present in box; built directly with CGO_ENABLED=0 go build -o build/aoci ./cmd/aoci",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "./build/aoci --version shows 0.1.0-rc23",
+            "actually_needed": "source build without LDFLAGS reports dev (commit none, built unknown)",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show init creating manifests and establishing a 7-file baseline, check/verify reporting code_missing findings, and --version printing aoci version dev.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-aoci-code-20261102-173854-0347/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-aoci-code-20261102-173854-0347/check-1-cmd9.judged.png",
+            "runs/verify/verify-aoci-code-20261102-173854-0347/check-2-cmd15.judged.png",
+            "runs/verify/verify-aoci-code-20261102-173854-0347/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.098854,
+        "features": [
+          {
+            "feature": "delivers whole codebase and database schema context to agents before they act",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows Index Entries 0 and empty volume with no codebase content delivered."
+          },
+          {
+            "feature": "detects code changes and guides agents to update affected index entries",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "supports MySQL and PostgreSQL table-level indexing alongside code",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; aoci database source help lists PostgreSQL, MySQL, openGauss support"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -396,5 +537,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T17:42:31.569505+08:00"
 }

@@ -75,18 +75,21 @@
       "first_task": "linecast weather"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-linecast-20261102-173949-8032",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install linecast",
-          "purpose": null
+          "command": "uv tool install linecast --verbose 2>&1",
+          "purpose": "install linecast via uv tool"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "linecast weather"
+      "check": {
+        "command": "linecast --help",
+        "expected_signal": "usage: linecast <command> [options]"
+      },
+      "first_task": "linecast weather --json"
     },
     "windows": {
       "basis": "readme_claim",
@@ -116,10 +119,139 @@
     "url": "https://github.com/ashuttl/linecast/releases/tag/v2.11.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:40:53.562999+08:00",
+    "runs": [
+      {
+        "id": "verify-linecast-20261102-173949-8032",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:40:53.562999+08:00",
+        "tool_version": "2.11.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install linecast --verbose 2>&1",
+            "purpose": "install linecast via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "linecast --help",
+            "expected_signal": "usage: linecast <command> [options]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: linecast <command> [options]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "linecast weather --json",
+            "expected_signal": "\"daily\":",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "st\", \"wind_speed\": 4.5, \"wind_gusts\": 6.3, \"wind_direction\": 340, \"humidity\": 85, \"dew_point\": 48.1, \"uv_index\": 0.0, \"cloud_cover\": 100}, {\"time\": \"2026-11-06T08:00\", \"temperature\": 55.7, \"feels_like\": 53.7, \"precipitation_probability\": 42, \"precipitation\": 0.0, \"snowfall\": 0.0, \"weather_code\": 3,…",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "linecast sunshine --json",
+            "expected_signal": "\"sunrise\":",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"schema\": 1, \"location\": \"Loudoun County, Virginia\", \"timezone\": \"Etc/UTC\", \"fetched_at\": \"2026-11-02T09:40\", \"sunrise\": \"2026-11-02T11:38\", \"sunset\": \"2026-11-02T22:07\", \"tomorrow_sunrise\": \"2026-11-03T11:39\", \"tomorrow_sunset\": \"2026-11-03T22:06\", \"solar_noon\": \"2026-11-02T16:53\", \"day_length_se…",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "linecast moon --json",
+            "expected_signal": "\"phase\": \"Waning Crescent\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"schema\": 1, \"location\": \"Loudoun County, Virginia\", \"timezone\": \"Etc/UTC\", \"fetched_at\": \"2026-11-02T09:40\", \"phase\": \"Waning Crescent\", \"icon\": \"◔\", \"illumination\": 43.9, \"waxing\": false, \"age_days\": 22.7, \"events\": [{\"kind\": \"set\", \"time\": \"2026-11-02T18:47\"}, {\"kind\": \"rise\", \"time\": \"2026-11-…",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "linecast sky --json",
+            "expected_signal": "\"bright_stars\":",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"schema_version\": 1, \"generated_at\": \"2026-11-02T09:40\", \"timezone\": \"Etc/UTC\", \"location\": {\"lat\": 39.0376, \"lng\": -77.4158, \"name\": \"Loudoun County, Virginia\"}, \"view\": {\"azimuth\": 121.8, \"altitude\": 42.5, \"field_of_view\": 110.0}, \"sun\": {\"altitude\": -23.3, \"azimuth\": 90.6, \"compass\": \"E\", \"up\":…",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show weather JSON containing daily forecast, sunshine JSON containing sunrise times, and help text with usage and commands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-linecast-20261102-173949-8032/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-linecast-20261102-173949-8032/check-1-cmd7.judged.png",
+            "runs/verify/verify-linecast-20261102-173949-8032/check-2-cmd8.judged.png",
+            "runs/verify/verify-linecast-20261102-173949-8032/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.058725,
+        "features": [
+          {
+            "feature": "display weather forecasts, alerts and past weather month/year views",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "show sun path, daylight hours and yearly sunshine chart",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "show moon phase, rise/set times and interactive month calendar",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "render planetarium of stars, constellations, planets and Milky Way",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -386,5 +518,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T17:40:53.566512+08:00"
 }

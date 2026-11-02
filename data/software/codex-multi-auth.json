@@ -75,17 +75,20 @@
       "first_task": "codex-multi-auth status"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-codex-multi-auth-20261102-173726-a6cb",
       "method": "npm",
       "steps": [
         {
           "command": "npm i -g codex-multi-auth",
-          "purpose": null
+          "purpose": "npm i -g codex-multi-auth"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "which codex-multi-auth && which codex-ma && which codex-multi-auth-codex && which mcodex && codex-multi-auth --version",
+        "expected_signal": "2.25.0"
+      },
       "first_task": "codex-multi-auth status"
     },
     "windows": {
@@ -116,10 +119,153 @@
     "url": "https://github.com/ndycode/codex-multi-auth/releases/tag/v2.25.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:38:36.143944+08:00",
+    "runs": [
+      {
+        "id": "verify-codex-multi-auth-20261102-173726-a6cb",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:38:36.143944+08:00",
+        "tool_version": "2.25.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm i -g codex-multi-auth",
+            "purpose": "npm i -g codex-multi-auth"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "which codex-multi-auth && which codex-ma && which codex-multi-auth-codex && which mcodex && codex-multi-auth --version",
+            "expected_signal": "2.25.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2.25.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "codex-multi-auth status",
+            "expected_signal": "Codex Multi-Auth status",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Codex Multi-Auth status",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "codex-multi-auth forecast --live",
+            "expected_signal": "No accounts configured.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No accounts configured.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "codex-multi-auth rotation status",
+            "expected_signal": "Runtime rotation proxy: enabled",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Runtime rotation proxy: enabled",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "codex-multi-auth check",
+            "expected_signal": "No accounts configured.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No accounts configured.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "codex-multi-auth doctor --json",
+            "expected_signal": "\"command\": \"doctor\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"command\": \"doctor\",",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "codex-multi-auth report --json --cached-only",
+            "expected_signal": "\"command\": \"report\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"command\": \"report\",",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show status output, no-accounts forecast message, and all binaries present with version 2.25.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-codex-multi-auth-20261102-173726-a6cb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-codex-multi-auth-20261102-173726-a6cb/check-1-cmd5.judged.png",
+            "runs/verify/verify-codex-multi-auth-20261102-173726-a6cb/check-2-cmd6.judged.png",
+            "runs/verify/verify-codex-multi-auth-20261102-173726-a6cb/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.052408,
+        "features": [
+          {
+            "feature": "Maintain named pool of ChatGPT OAuth accounts with per-project pools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows 0 total accounts and empty storage with no pool maintained."
+          },
+          {
+            "feature": "Switch, pin and quota-aware selection of active account",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only 'No accounts configured' with no switch or selection performed."
+          },
+          {
+            "feature": "Runtime rotation via loopback-only proxy forwarding Responses API traffic",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows proxy marked enabled but helper not running and no traffic forwarded."
+          },
+          {
+            "feature": "Diagnostics, health checks, quota forecasts and repair tools",
+            "status": "checked",
+            "smoke_tests": [
+              4,
+              5,
+              6
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -394,5 +540,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T17:38:36.150033+08:00"
 }

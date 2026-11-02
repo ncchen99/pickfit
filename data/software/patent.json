@@ -80,18 +80,29 @@
       "first_task": "patent \"interactive cli to kill whatever's on a port\""
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "binary",
+      "basis": "replayed",
+      "run_id": "verify-patent-20261102-174317-86ab",
+      "method": "script",
       "steps": [
         {
-          "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/r14dd/patent/releases/latest/download/patent-installer.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL --proto '=https' --tlsv1.2 https://github.com/r14dd/patent/releases/latest/download/patent-installer.sh -o /tmp/patent-installer.sh",
+          "purpose": "download patent installer script"
+        },
+        {
+          "command": "sh /tmp/patent-installer.sh 2>&1",
+          "purpose": "run installer to ~/.cargo/bin"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && ln -sf ~/.cargo/bin/patent ~/.local/bin/patent && patent --version",
+          "purpose": "symlink binary to ~/.local/bin on PATH"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "patent \"interactive cli to kill whatever's on a port\""
+      "check": {
+        "command": "patent --version 2>&1",
+        "expected_signal": "patent 0.14.1"
+      },
+      "first_task": "patent --list-sources 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -121,10 +132,146 @@
     "url": "https://github.com/r14dd/patent/releases/tag/v0.14.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:44:40.701299+08:00",
+    "runs": [
+      {
+        "id": "verify-patent-20261102-174317-86ab",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:44:40.701299+08:00",
+        "tool_version": "0.14.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL --proto '=https' --tlsv1.2 https://github.com/r14dd/patent/releases/latest/download/patent-installer.sh -o /tmp/patent-installer.sh",
+            "purpose": "download patent installer script"
+          },
+          {
+            "command": "sh /tmp/patent-installer.sh 2>&1",
+            "purpose": "run installer to ~/.cargo/bin"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && ln -sf ~/.cargo/bin/patent ~/.local/bin/patent && patent --version",
+            "purpose": "symlink binary to ~/.local/bin on PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "patent --version 2>&1",
+            "expected_signal": "patent 0.14.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "patent 0.14.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "patent --list-sources 2>&1",
+            "expected_signal": "crates-io",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "crates-io crates.io",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "patent \"interactive cli to kill whatever's on a port\" --fast --json --keyword-only --limit 5 2>&1",
+            "expected_signal": "\"level\": \"crowded\"",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "\"level\": \"crowded\",",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "patent \"interactive cli to kill whatever's on a port\" --fast --json --limit 5 2>&1",
+            "expected_signal": "\"similarity\": 0.767189",
+            "exit_code": 2,
+            "passed": true,
+            "observed_excerpt": "\"similarity\": 0.767189,",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "installer installs to $CARGO_HOME/bin which is on PATH",
+            "actually_needed": "in this box PATH starts with ~/.local/bin only, so symlink from ~/.cargo/bin/patent to ~/.local/bin required",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "patent \"idea\" launches TUI and returns verdict",
+            "actually_needed": "non-interactive use needs --fast --json to avoid TUI and Ollama; exit code is verdict-dependent (0 Open, 1 Crowded, 2 Saturated) not 0",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show correct version, source list containing crates-io, and a successful prior-art search returning port-killer tools in JSON.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-patent-20261102-174317-86ab/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-patent-20261102-174317-86ab/check-1-cmd11.judged.png",
+            "runs/verify/verify-patent-20261102-174317-86ab/check-2-cmd8.judged.png",
+            "runs/verify/verify-patent-20261102-174317-86ab/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.077666,
+        "features": [
+          {
+            "feature": "Search 19 sources at once including package registries, GitHub and Hacker News",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Rank matches by local semantic similarity using embeddings",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Summarize landscape as Open, Crowded or Saturated verdict",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Outputs show only matches with similarity scores, no Open/Crowded/Saturated verdict visible."
+          },
+          {
+            "feature": "Interactive TUI to browse, filter and open prior-art matches",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "TUI requires interactive terminal; verified --help mentions interactive search TUI but cannot automate"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -423,5 +570,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T17:44:40.706415+08:00"
 }

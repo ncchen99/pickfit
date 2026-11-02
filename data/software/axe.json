@@ -64,20 +64,21 @@
       "first_task": "axe config init"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "go",
+      "basis": "replayed",
+      "run_id": "verify-axe-20261102-174102-0b20",
+      "method": "binary",
       "steps": [
         {
-          "command": "go install github.com/jrswab/axe@latest",
-          "purpose": null
+          "command": "curl -fsSL -o /tmp/axe.tar.gz https://github.com/jrswab/axe/releases/download/v1.11.0/axe_1.11.0_linux_amd64.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/axe.tar.gz -C /tmp && cp /tmp/axe ~/.local/bin/axe && chmod +x ~/.local/bin/axe && ~/.local/bin/axe version",
+          "purpose": "download pre-built linux_amd64 binary from GitHub releases and install to ~/.local/bin"
         }
       ],
-      "manual_steps": [
-        "Initialize config directory before first use"
-      ],
-      "check": null,
-      "first_task": "axe config init"
+      "manual_steps": [],
+      "check": {
+        "command": "axe version",
+        "expected_signal": "axe version 1.11.0"
+      },
+      "first_task": "axe version"
     },
     "windows": {
       "basis": "readme_claim",
@@ -109,10 +110,169 @@
     "url": "https://github.com/jrswab/axe/releases/tag/v1.11.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:43:03.724439+08:00",
+    "runs": [
+      {
+        "id": "verify-axe-20261102-174102-0b20",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:43:03.724439+08:00",
+        "tool_version": "1.11.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/axe.tar.gz https://github.com/jrswab/axe/releases/download/v1.11.0/axe_1.11.0_linux_amd64.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/axe.tar.gz -C /tmp && cp /tmp/axe ~/.local/bin/axe && chmod +x ~/.local/bin/axe && ~/.local/bin/axe version",
+            "purpose": "download pre-built linux_amd64 binary from GitHub releases and install to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "axe version",
+            "expected_signal": "axe version 1.11.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "axe version 1.11.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "axe agents list",
+            "expected_signal": "mcp-test - MCP test agent",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mcp-test - MCP test agent",
+            "setup": [
+              {
+                "command": "cat > /tmp/setup_agents.sh <<'EOS'\nset -e\n# F1 agent via scaffold\naxe agents init my-agent\ncat $(axe config path)/agents/my-agent.toml\necho \"---F1 scaffold done---\"\n\n# Create explicit test agent for F2 with minimal config\nmkdir -p $(axe config path)/agents\ncat > $(axe config path)/agents/test-pipe.toml <<'TOML'\nname = \"test-pipe\"\ndescription = \"Test pipe agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You are helpful.\"\nmax_turns = 5\nTOML\n\n# F3 parent + sub agent\ncat > $(axe config path)/agents/sub-child.toml <<'TOML'\nname = \"sub-child\"\ndescription = \"child agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You are a child.\"\nTOML\n\ncat > $(axe config path)/agents/parent-agent.toml <<'TOML'\nname = \"parent-agent\"\ndescription = \"parent that delegates\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You delegate.\"\nsub_agents = [\"sub-child\"]\n\n[sub_agents_config]\nmax_depth = 3\nparallel = true\ntimeout = 30\nTOML\n\n# F4 MCP agent\ncat > $(axe config path)/agents/mcp-test.toml <<'TOML'\nname = \"mcp-test\"\ndescription = \"MCP test agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You use MCP tools.\"\n\n[[mcp_servers]]\nname = \"my-tools\"\nurl = \"https://example.com/sse\"\ntransport = \"sse\"\n\n[[mcp_servers]]\nname = \"http-tools\"\nurl = \"https://example.com/mcp\"\ntransport = \"streamable-http\"\nTOML\n\necho \"setup complete\"\nls -l $(axe config path)/agents/\nEOS\nchmod +x /tmp/setup_agents.sh\n/tmp/setup_agents.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "axe agents show test-pipe",
+            "expected_signal": "Model: openai/gpt-4o-mini",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Model: openai/gpt-4o-mini",
+            "setup": [
+              {
+                "command": "cat > /tmp/setup_agents.sh <<'EOS'\nset -e\n# F1 agent via scaffold\naxe agents init my-agent\ncat $(axe config path)/agents/my-agent.toml\necho \"---F1 scaffold done---\"\n\n# Create explicit test agent for F2 with minimal config\nmkdir -p $(axe config path)/agents\ncat > $(axe config path)/agents/test-pipe.toml <<'TOML'\nname = \"test-pipe\"\ndescription = \"Test pipe agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You are helpful.\"\nmax_turns = 5\nTOML\n\n# F3 parent + sub agent\ncat > $(axe config path)/agents/sub-child.toml <<'TOML'\nname = \"sub-child\"\ndescription = \"child agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You are a child.\"\nTOML\n\ncat > $(axe config path)/agents/parent-agent.toml <<'TOML'\nname = \"parent-agent\"\ndescription = \"parent that delegates\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You delegate.\"\nsub_agents = [\"sub-child\"]\n\n[sub_agents_config]\nmax_depth = 3\nparallel = true\ntimeout = 30\nTOML\n\n# F4 MCP agent\ncat > $(axe config path)/agents/mcp-test.toml <<'TOML'\nname = \"mcp-test\"\ndescription = \"MCP test agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You use MCP tools.\"\n\n[[mcp_servers]]\nname = \"my-tools\"\nurl = \"https://example.com/sse\"\ntransport = \"sse\"\n\n[[mcp_servers]]\nname = \"http-tools\"\nurl = \"https://example.com/mcp\"\ntransport = \"streamable-http\"\nTOML\n\necho \"setup complete\"\nls -l $(axe config path)/agents/\nEOS\nchmod +x /tmp/setup_agents.sh\n/tmp/setup_agents.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "echo \"hello from pipe\" | axe run test-pipe --dry-run",
+            "expected_signal": "hello from pipe",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hello from pipe",
+            "setup": [
+              {
+                "command": "cat > /tmp/setup_agents.sh <<'EOS'\nset -e\n# F1 agent via scaffold\naxe agents init my-agent\ncat $(axe config path)/agents/my-agent.toml\necho \"---F1 scaffold done---\"\n\n# Create explicit test agent for F2 with minimal config\nmkdir -p $(axe config path)/agents\ncat > $(axe config path)/agents/test-pipe.toml <<'TOML'\nname = \"test-pipe\"\ndescription = \"Test pipe agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You are helpful.\"\nmax_turns = 5\nTOML\n\n# F3 parent + sub agent\ncat > $(axe config path)/agents/sub-child.toml <<'TOML'\nname = \"sub-child\"\ndescription = \"child agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You are a child.\"\nTOML\n\ncat > $(axe config path)/agents/parent-agent.toml <<'TOML'\nname = \"parent-agent\"\ndescription = \"parent that delegates\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You delegate.\"\nsub_agents = [\"sub-child\"]\n\n[sub_agents_config]\nmax_depth = 3\nparallel = true\ntimeout = 30\nTOML\n\n# F4 MCP agent\ncat > $(axe config path)/agents/mcp-test.toml <<'TOML'\nname = \"mcp-test\"\ndescription = \"MCP test agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You use MCP tools.\"\n\n[[mcp_servers]]\nname = \"my-tools\"\nurl = \"https://example.com/sse\"\ntransport = \"sse\"\n\n[[mcp_servers]]\nname = \"http-tools\"\nurl = \"https://example.com/mcp\"\ntransport = \"streamable-http\"\nTOML\n\necho \"setup complete\"\nls -l $(axe config path)/agents/\nEOS\nchmod +x /tmp/setup_agents.sh\n/tmp/setup_agents.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "axe agents show parent-agent",
+            "expected_signal": "Sub-Agents: sub-child",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Sub-Agents: sub-child",
+            "setup": [
+              {
+                "command": "cat > /tmp/setup_agents.sh <<'EOS'\nset -e\n# F1 agent via scaffold\naxe agents init my-agent\ncat $(axe config path)/agents/my-agent.toml\necho \"---F1 scaffold done---\"\n\n# Create explicit test agent for F2 with minimal config\nmkdir -p $(axe config path)/agents\ncat > $(axe config path)/agents/test-pipe.toml <<'TOML'\nname = \"test-pipe\"\ndescription = \"Test pipe agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You are helpful.\"\nmax_turns = 5\nTOML\n\n# F3 parent + sub agent\ncat > $(axe config path)/agents/sub-child.toml <<'TOML'\nname = \"sub-child\"\ndescription = \"child agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You are a child.\"\nTOML\n\ncat > $(axe config path)/agents/parent-agent.toml <<'TOML'\nname = \"parent-agent\"\ndescription = \"parent that delegates\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You delegate.\"\nsub_agents = [\"sub-child\"]\n\n[sub_agents_config]\nmax_depth = 3\nparallel = true\ntimeout = 30\nTOML\n\n# F4 MCP agent\ncat > $(axe config path)/agents/mcp-test.toml <<'TOML'\nname = \"mcp-test\"\ndescription = \"MCP test agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You use MCP tools.\"\n\n[[mcp_servers]]\nname = \"my-tools\"\nurl = \"https://example.com/sse\"\ntransport = \"sse\"\n\n[[mcp_servers]]\nname = \"http-tools\"\nurl = \"https://example.com/mcp\"\ntransport = \"streamable-http\"\nTOML\n\necho \"setup complete\"\nls -l $(axe config path)/agents/\nEOS\nchmod +x /tmp/setup_agents.sh\n/tmp/setup_agents.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Requires Go 1.25+ and go install / go build",
+            "actually_needed": "Box has no Go toolchain; installed pre-built binary axe_1.11.0_linux_amd64.tar.gz from GitHub Releases instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "axe run <agent> --dry-run shows resolved context without calling LLM",
+            "actually_needed": "With [[mcp_servers]] or sub_agents configured, axe run --dry-run attempts MCP connections / sub-agent resolution and hangs until timeout (observed 10-15s timeout, exit 124/137); axe agents show still validates TOML",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show axe listing agents including mcp-test, showing test-pipe details with model openai/gpt-4o-mini, and reporting version 1.11.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-axe-20261102-174102-0b20/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-axe-20261102-174102-0b20/check-1-cmd7.judged.png",
+            "runs/verify/verify-axe-20261102-174102-0b20/check-2-cmd8.judged.png",
+            "runs/verify/verify-axe-20261102-174102-0b20/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.068736,
+        "features": [
+          {
+            "feature": "Define focused LLM agents in TOML with model, prompt, skills and context",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Run agents from terminal, pipes, git hooks or cron",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output is only a dry-run preview, not an actual agent result from piped input."
+          },
+          {
+            "feature": "Delegate tasks to sub-agents with depth limiting and parallel execution",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists parent-agent config, no sub-agent delegation was executed."
+          },
+          {
+            "feature": "Connect to external MCP servers for additional tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists an agent name, with no MCP server connection or tools shown."
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -315,5 +475,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T17:43:03.744401+08:00"
 }

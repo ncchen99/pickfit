@@ -68,18 +68,21 @@
       "first_task": "tokless"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-tokless-20261102-174053-702b",
+      "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/HoangP8/tokless/main/scripts/install.sh | bash",
-          "purpose": null
+          "command": "mkdir -p ~/.local/bin && tmp=$(mktemp) && curl -fSL --progress-bar -o \"$tmp\" https://github.com/HoangP8/tokless/releases/latest/download/tokless-linux-x64 && chmod +x \"$tmp\" && install -m 0755 \"$tmp\" ~/.local/bin/tokless; rm -f \"$tmp\"",
+          "purpose": "download tokless-linux-x64 from releases and install to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "tokless"
+      "check": {
+        "command": "tokless --version",
+        "expected_signal": "1.0.10"
+      },
+      "first_task": "tokless doctor 2>&1"
     },
     "windows": null
   },
@@ -96,10 +99,155 @@
     "url": "https://github.com/HoangP8/tokless/releases/tag/v1.0.10"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:42:42.428662+08:00",
+    "runs": [
+      {
+        "id": "verify-tokless-20261102-174053-702b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:42:42.428662+08:00",
+        "tool_version": "1.0.10",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin && tmp=$(mktemp) && curl -fSL --progress-bar -o \"$tmp\" https://github.com/HoangP8/tokless/releases/latest/download/tokless-linux-x64 && chmod +x \"$tmp\" && install -m 0755 \"$tmp\" ~/.local/bin/tokless; rm -f \"$tmp\"",
+            "purpose": "download tokless-linux-x64 from releases and install to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "tokless --version",
+            "expected_signal": "1.0.10",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.0.10",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tokless doctor 2>&1",
+            "expected_signal": "tokless doctor",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tokless doctor health check",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tokless --dry-run 2>&1",
+            "expected_signal": "Non-interactive shell and no compatible agents detected",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "| ! Non-interactive shell and no compatible agents detected — nothing to wire.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tokless --tools rtk --dry-run 2>&1",
+            "expected_signal": "RTK",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": ". RTK — checking",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tokless --tools headroom --dry-run 2>&1",
+            "expected_signal": "Headroom",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "| v Headroom [████████████████] 100%",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tokless --tools codegraph --dry-run 2>&1",
+            "expected_signal": "CodeGraph",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": ". CodeGraph — checking",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "tokless --tools projectmem --dry-run 2>&1",
+            "expected_signal": "ProjectMem",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "| v ProjectMem [████████████████] 100%",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL .../install.sh | bash runs installer interactively",
+            "actually_needed": "script checks /dev/tty and runs tokless interactively, which hangs in non-interactive box; manually downloaded binary from releases/latest/download/tokless-linux-x64 and installed to ~/.local/bin instead",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show tokless doctor health report, dry-run non-interactive warning, and version 1.0.10 all exiting 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tokless-20261102-174053-702b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tokless-20261102-174053-702b/check-1-cmd11.judged.png",
+            "runs/verify/verify-tokless-20261102-174053-702b/check-2-cmd12.judged.png",
+            "runs/verify/verify-tokless-20261102-174053-702b/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.071235,
+        "features": [
+          {
+            "feature": "rewrites and compresses command output before it reaches the harness",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only reports a dry-run check ending in nothing to wire, not compressed output."
+          },
+          {
+            "feature": "local HTTP proxy that compresses large prompts and routes BYOK model traffic",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only reports a dry-run check ending in nothing to wire, not proxy traffic."
+          },
+          {
+            "feature": "indexed code graph for source, call paths and impact analysis",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only reports a dry-run check ending in nothing to wire, not a code graph."
+          },
+          {
+            "feature": "per-project memory capturing issues, attempts, fixes and decisions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only reports a dry-run check ending in nothing to wire, not stored memory."
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -302,5 +450,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T17:42:42.434837+08:00"
 }
