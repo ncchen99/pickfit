@@ -145,3 +145,22 @@
 - 第一次 after 快照（12:29:33）把本 session 還沒 commit 的 `eval/results/` 結果檔記成問題（`uncommitted changes`；比對本身 0 差異）；那份放在 repo 外。結果 commit（`7db57b1`）之後重做：記錄時間 2026-11-02T12:31:05+08:00，problems []。
 - `compare`：**0 差異**。pickfit commit `4e0dd4b`、eval/ 以外的 tree `1ab18b47…` 與 commit 相同；served data `acb3891c…`（768 筆）；實驗組 deployment `418c4c68…`／version `bb5215d3…`（model、readonly）、rules-only `0714f636…`／`fe7b37fa…`（off、readonly），兩邊的 `/` 都回同一個 `data_sha256` 與 `index_built_at`；候選庫合併雜湊 `007054d8…`、漏斗 `55753da7…`；evidence manifest `d0626a8e…`；Claude Code 2.1.304、執行檔 sha256 `b9ac5374…`；config、questions、questions-b 的雜湊都沒變。
 - 評測執行到這裡結束：2026-11-02 09:46:58（重跑的 q01）到 12:26:31（B 題組最後一格）；作廢的試跑另在 07:56:20–08:03:16。評分（C4、9.2 B 的第三評分者）、E 的輸因標記、L2 還沒做。
+
+## 評分（9.1 C、E，9.2 B）
+
+### 盲測偏好之前念誠已經看到的東西（第 5 節要求在看到任何檢查結果前選；照實揭露）
+
+- 本 session 的報告（念誠在這個 session 直接看得到）：試跑與重跑的 q01、q02 各組首選（q01 對照組 sync-agents-settings、實驗組與 rules-only mcpshare；q02 三組都是 leakguard；作廢的試跑是 q01 對照 cc-switch-cli、實驗與 rules-only sync-agents-settings，q02 對照 ferret-scan、實驗與 rules-only leakguard）；實驗組回 0 個推薦的次數（run1 12/19、各輪合計 51/77）；D5 的違反內容（jevalt、b11、b12）；Meta 404 降級的題號。q01 的盲測偏好因此不是完全盲的；q02 兩組首選相同。
+- 協調 session 在 12:3x 轉告念誠「pickfit 的模型組 77 次裡 51 次沒有推薦；rules-only 每次都有」，並說評分會算出其中幾次是正確的「沒有工具符合」。之後所有評分、L1、空答案的細分都先不給念誠，直到他交出偏好表單。
+- 沒有任何 L1、L2、L3 的判定在偏好表單之前給念誠。
+
+### 去識別的答案與首選（9.1 C2、C4）
+
+- `blind.py prefer --round run1` → `blind/prefer-run1/`（20 對；form sha256 `eae1ce18…`、key sha256 `dadccead…`）。`blind.py answers --rounds run1 run2 run3 haiku` → `blind/answers-A/`（180 個答案，key `b451a4a8…`）；`--rounds bset` → `blind/answers-B/`（24 個，key `f25faaad…`）。seed 照 9.3 F.2（20261102）。
+- 首選的抽取：`extract_picks.py`（新增）——去識別、打亂後的答案逐一送給評分模型（`claude-opus-5-5`，effort low，固定的指示寫在檔頭，回覆存在 `picks-extract.jsonl`），只記錄答案推薦什麼、不判對錯；花費算進評分上限（`grading-spend.json`，A、B 共 $2.70）。抽取的原樣存成 `picks-extracted.csv`。
+- 人工修正（`answers-A/picks-corrections.json`，55 筆；B 題組沒有改）：
+  - 同一工具的寫法統一（例如 SOPS／SOPS + age、llama-server (llama.cpp)／llama.cpp llama-server、Infinity v2／Infinity、aichat 的各種寫法），讓同一個首選合成一項；安裝方式不合併（例如 brew install sops 與 brew install sops age、Bruno 的 cask 與 formula、Infinity 的兩個 Docker 映像名稱各自一項）。
+  - q11、q16 的 [L1] 檢查的是模型（q11：模型可免登入下載、授權；q16：模型授權），所以首選寫成「執行器＋模型」：抽取只寫 Ollama 的 5 筆 q11 依答案原文補上模型；q16 的題目條件寫明「答案原文給的 50 行內的膠水程式算 setup 的一部分」，所以 q16 的 9 筆一律記為 tool（執行器＋模型＋答案的膠水程式），包括抽取記為 custom_script 的 3 筆。
+  - q10、q20 的 [L3] 看的是整個答案怎麼說（C4：只能從答案原文判斷的項目逐一評），所以每個答案各自一項（首選後面加 `[answer Axxxx]`，答案編號不透露組別），並把該答案去識別的原文附在那一項的 evidence 裡給評分模型（`l1-A/l1-batch.jsonl` 產生後加上，sha256 `157ef2ba…`）。
+  - 「沒有工具符合」：q01 的 A0099、b09 的 A0019、A0023（兩則都先說找不到單一工具全部做到，再給「最接近的」組合）；照 C2 記 no_fit，要做 C6。
+- `blind.py l1-batch`：A 批 78 項（1 個答案沒有項目：no_fit）、B 批 18 項（2 個 no_fit）。給念誠的 `l1-form.csv` 在他交出偏好表單之後才給。

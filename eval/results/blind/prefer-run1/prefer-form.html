@@ -1,0 +1,3111 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blind preference</title><style>
+:root { --bg: #fff; --fg: #1d1d1f; --muted: #6e6e73; --line: #d2d2d7; --panel: #f5f5f7; }
+@media (prefers-color-scheme: dark) { :root { --bg: #1d1d1f; --fg: #f5f5f7; --muted: #a1a1a6; --line: #424245; --panel: #2c2c2e; } }
+body { background: var(--bg); color: var(--fg); font: 15px/1.5 -apple-system, system-ui, sans-serif; margin: 0 auto; max-width: 1400px; padding: 16px; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } @media (max-width: 800px) { .pair { grid-template-columns: 1fr; } }
+pre { white-space: pre-wrap; background: var(--panel); border: 1px solid var(--line); padding: 10px; border-radius: 6px; max-height: 70vh; overflow: auto; }
+.prompt { color: var(--muted); } section { border-bottom: 1px solid var(--line); padding-bottom: 16px; }
+fieldset { border: 0; padding: 8px 0; } button { font-size: 16px; padding: 8px 16px; }
+</style></head><body>
+<h1>Blind preference</h1><p>For each question choose A, B or tie and give one sentence why, before seeing any check result (eval/README.md section 5). Do not open prefer-key.json until done.</p>
+<p>form sha256 <code>eae1ce18f04612bc21ca9a04fc72d35e8d59073b915efd05f78759fddd9dabe7</code> · key sha256 <code>dadccead62bce5124be54b87591e53456e4502543852c6657caaa29c7c43ad83</code> · seed 20261102 (prefer:run1: 5124031740516539136)</p>
+
+<section id="q01"><h2>1. q01</h2><p class="prompt">I use Claude Code, Codex CLI and Gemini CLI on the same laptop, and every time I add an MCP server I have to hand-edit three config files in three different formats. Is there a free command-line tool that keeps one list of my MCP servers and syncs it into all three agents&#x27; configs? It should run locally with no account and leave my other settings alone.</p>
+<div class="pair"><div><h3>A</h3><pre>I couldn&#x27;t find a single well-established tool that does exactly this. The closest fit is **sync-agents-settings**. It treats Claude Code&#x27;s own config as your one list and copies those servers into Gemini CLI and Codex CLI, leaving their other settings alone. I&#x27;ve only read the READMEs and haven&#x27;t run any of these tools. All of them are small projects with few stars, so skim the code before you let one write to your configs.
+
+**My assumptions:** you want your user-wide configs synced (`~/.claude.json`, `~/.gemini/settings.json`, `~/.codex/config.toml`) rather than per-project files, and you have Node.js installed.
+
+## Main recommendation: sync-agents-settings
+
+[Leoyang183/sync-agents-settings](https://github.com/Leoyang183/sync-agents-settings), MIT license, runs locally, no account.
+
+**Why it fits:**
+- You keep adding servers the usual way (`claude mcp add …`), and Claude Code&#x27;s config becomes the master list.
+- It writes Gemini&#x27;s JSON and Codex&#x27;s TOML for you. HTTP/SSE servers are converted to a `url` entry for Codex.
+- The README says existing settings stay intact (for example, a Gemini theme). It also backs up each file to `~/.sync-agents-backup/&lt;timestamp&gt;/` before writing.
+- It has `--dry-run`, `diff` and `doctor` (checks for drift and parse errors), and it skips any agent that isn&#x27;t installed.
+
+**Limitations:**
+- **It only adds servers.** It never overwrites a server that already exists in a target, and the README doesn&#x27;t document any way to remove servers. If you change or delete a server in Claude Code, you&#x27;ll still need to fix it by hand in the other two, or try its `reconcile` command, whose exact behaviour I couldn&#x27;t confirm.
+- The README only shows one `--target` per `sync` command.
+
+**Install (needs Node 18+):**
+```bash
+npm install -g sync-agents-settings
+# or run it without installing: npx sync-agents-settings &lt;command&gt;
+```
+
+**First run:**
+```bash
+sync-agents list                         # servers it found in Claude Code
+sync-agents diff --target gemini codex   # how the others differ
+sync-agents sync --target gemini --dry-run
+sync-agents sync --target codex --dry-run
+sync-agents sync --target gemini         # write for real (backs up first)
+sync-agents sync --target codex
+sync-agents doctor --target gemini codex # check for drift or parse errors
+```
+After that, each time you add a server: `claude mcp add …`, then run the two `sync` commands again.
+
+## Alternatives
+
+| Tool | Why you might pick it | Drawback |
+|---|---|---|
+| [mcpport](https://github.com/Abdalkaderdev/mcpport) (`npm i -g mcpport`, Node 22+) | Covers Claude Code, Codex, Gemini CLI and Cursor. `sync` only previews unless you add `--apply`. Keeps unrelated keys, and keeps comments in Codex&#x27;s TOML. Makes timestamped backups. | No separate master file: you sync from one agent to another, e.g. `mcpport sync claude gemini --apply`. 0 stars. |
+| [EnjoyableWork/mcp-sync](https://github.com/EnjoyableWork/mcp-sync) (`brew install EnjoyableWork/tap/mcp-sync`) | Has its own master file (`~/.config/mcp-sync/config.json`), keeps other settings, never deletes servers on its own. | Its documented targets are Codex, Claude Desktop, Cursor, Windsurf, VS Code and Kiro. **It doesn&#x27;t list Claude Code or Gemini CLI.** |
+| [mcp-config-manager](https://github.com/holstein13/mcp-config-manager) (Python) | Built for Claude, Gemini and Codex, with enable/disable and backups. | The Codex path in its README is `~/.codex.json`, not `config.toml`, which suggests it&#x27;s out of date for current Codex. Its installer is `curl \| bash`. It doesn&#x27;t say whether it keeps other settings. |
+| [mcp-sync (Rust)](https://docs.rs/crate/mcp-sync/latest/source/README.md) | Master `mcp.yaml`, `--dry-run`, `--clean` to remove servers that aren&#x27;t in the master file. | Doesn&#x27;t support Gemini CLI. |
+| [Ruler](https://github.com/intellectronica/ruler) (~3k stars) | The most established tool here. Its `ruler.toml` keeps one MCP list for Claude, Codex and Gemini. | **Per-project only.** It never writes MCP config outside the project folder, so it doesn&#x27;t fit if you want user-wide settings. |
+
+**Bottom line:** use sync-agents-settings if you&#x27;re happy for Claude Code to hold the master list. Try mcpport if you&#x27;d rather see a preview before every write and want Codex&#x27;s TOML comments kept. Use Ruler only if you manage MCP servers per project. Whichever you choose, back up the three config files yourself before the first real sync.
+
+Sources:
+- [sync-agents-settings](https://github.com/Leoyang183/sync-agents-settings)
+- [mcpport](https://github.com/Abdalkaderdev/mcpport)
+- [EnjoyableWork/mcp-sync](https://github.com/EnjoyableWork/mcp-sync)
+- [holstein13/mcp-config-manager](https://github.com/holstein13/mcp-config-manager)
+- [mcp-sync (docs.rs)](https://docs.rs/crate/mcp-sync/latest/source/README.md)
+- [intellectronica/ruler](https://github.com/intellectronica/ruler)
+- [ejfn/mcp-sync](https://github.com/ejfn/mcp-sync) (appeared in search, but the repo returned 404)</pre></div><div><h3>B</h3><pre>I recommend **mcpshare**. It&#x27;s free and open source, runs locally with no account, and supports Claude Code, Codex CLI and Gemini CLI. It&#x27;s the closest match to what you asked for: you keep one master list of MCP servers, and `mcpshare sync` writes it into each agent&#x27;s config in that agent&#x27;s own format. According to its README, it replaces only the MCP section of each file, so your other settings stay. That includes Claude&#x27;s state in `~/.claude.json`, Gemini&#x27;s other settings, and the non-MCP sections of Codex&#x27;s TOML file. It skips config files it can&#x27;t parse instead of overwriting them.
+
+**Things to know before you use it**
+- [source], the tool-recommendation service I checked, had tested none of these tools. My information comes from a web search and each project&#x27;s README. I haven&#x27;t run any of them.
+- mcpshare is a small, young project: about 19 commits, no tagged releases, and no license shown on its GitHub page. It has **no dry-run or backup option**, so back up your configs before your first sync.
+- It has no `add` command. To add a server, you edit the master `mcp.json` file and then run `sync`.
+
+## Install (macOS)
+It&#x27;s a Python tool installed with `uv`. I&#x27;m assuming you have Homebrew.
+```bash
+brew install uv                                            # skip if you already have uv
+uv tool install git+https://github.com/eggboy/mcpshare.git
+mcpshare --help                                            # check that it installed
+```
+Upgrade later with `uv tool upgrade mcpshare`.
+
+## First run
+1. **Back up your current configs:**
+   ```bash
+   mkdir -p ~/mcp-backup
+   cp ~/.claude.json ~/.gemini/settings.json ~/.codex/config.toml ~/mcp-backup/
+   ```
+2. **Create mcpshare&#x27;s config:** `mcpshare init` creates `~/.config/mcpshare/config.yaml` and the folder for the master list.
+3. **Edit `config.yaml`.** By default it imports existing servers from VS Code and Copilot, so point it at the agents you use instead. The README names the keys `source`, `init-source`, `mode` and `targets`, with a `path` for each target. I&#x27;m guessing at the exact layout, so compare it with the file `init` creates:
+   ```yaml
+   init-source: [claude]        # import your existing servers from Claude Code
+   targets:
+     claude: { path: ~/.claude }
+     codex:  { path: ~/.codex }
+     gemini: { path: ~/.gemini }
+   ```
+4. **Import your current servers:** `mcpshare pull` copies them into the master `mcp.json` and doesn&#x27;t write to any agent&#x27;s config.
+5. **Check before writing:** `mcpshare status` shows the master servers, the targets and any disabled servers.
+6. **Sync:** `mcpshare sync`. Then compare each file with your backup, for example `diff ~/mcp-backup/config.toml ~/.codex/config.toml`, to confirm only the MCP sections changed.
+7. **From now on:** add the server to the master `mcp.json` and run `mcpshare sync`. To turn a server off for one agent, use `mcpshare disable --servers &lt;name&gt; --ide gemini`.
+
+## Other options
+- **mcpport** (MIT license, needs Node 22+) has the safety features mcpshare lacks. Sync is a dry run unless you add `--apply`, it makes a timestamped `.bak` copy before every write, and it keeps comments and unrelated settings. It has no master list, though: you use one agent (say Claude Code) as the source and copy from it. For example, run `npx mcpport sync claude codex`, check the output, then run it again with `--apply`, and do the same for `gemini`. One catch: if your Gemini `settings.json` contains comments, mcpport reads it but never writes to it. Choose mcpport over mcpshare if you&#x27;d rather have dry runs and backups than a separate master list.
+- **sync-agents-settings** also syncs from Claude Code to Gemini and Codex, and has `diff` and `doctor` commands. I didn&#x27;t read its documentation closely.
+
+Sources:
+- [eggboy/mcpshare](https://github.com/eggboy/mcpshare)
+- [Abdalkaderdev/mcpport](https://github.com/Abdalkaderdev/mcpport)
+- [Leoyang183/sync-agents-settings](https://github.com/Leoyang183/sync-agents-settings)
+- [holstein13/mcp-config-manager](https://github.com/holstein13/mcp-config-manager)
+- [EnjoyableWork/mcp-sync](https://github.com/EnjoyableWork/mcp-sync)</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: -</li></ul></details>
+<fieldset><label><input type="radio" name="q01" value="A"> A</label>
+<label><input type="radio" name="q01" value="B"> B</label>
+<label><input type="radio" name="q01" value="tie"> tie</label>
+<input class="why" data-q="q01" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q02"><h2>2. q02</h2><p class="prompt">Before I paste server logs into an AI chat, I want to automatically scrub API keys, tokens, email addresses and IP addresses out of them. Is there a free, open-source command-line filter (stdin to stdout) that does this entirely on my Linux machine, without me having to write the regexes myself?</p>
+<div class="pair"><div><h3>A</h3><pre>I recommend **leakguard**. It&#x27;s a small Rust command-line tool that reads stdin and writes redacted text to stdout. It runs entirely on your machine, needs no network, and is MIT/Apache-2.0 licensed. You don&#x27;t write any regexes: it already detects emails, IPv4 and IPv6 addresses, JWTs, AWS, GitHub, Slack, Stripe, Google and OpenAI keys, Azure connection strings, PEM private keys, passwords inside URLs, and more. Version 1.0.0 came out on 2026-10-06 and it has about 74k downloads on crates.io.
+
+I haven&#x27;t installed or run it. [source], the tool-recommendation service I checked first, had no tested tool for this job. Everything below comes from leakguard&#x27;s README and its crates.io page.
+
+## Install (Linux)
+
+You need a Rust toolchain (Rust 1.70 or newer). If you don&#x27;t have one, install it with your distro&#x27;s package manager or with rustup:
+
+```bash
+# Option A: distro package (Debian/Ubuntu example)
+sudo apt install cargo
+
+# Option B: rustup (official installer; read the script first if you prefer)
+curl --proto &#x27;=https&#x27; --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Then:
+cargo install leakguard
+```
+
+The binary goes into `~/.cargo/bin`, so make sure that folder is on your `PATH`.
+
+## First run
+
+```bash
+# See what it detects
+leakguard --list-kinds
+
+# Scrub a log and copy to clipboard for pasting (X11 / Wayland)
+leakguard &lt; server.log | xclip -selection clipboard
+leakguard &lt; server.log | wl-copy
+
+# Check what was redacted (summary goes to stderr)
+leakguard --stats server.log &gt; clean.log
+
+# Live tail
+tail -f app.log | leakguard
+```
+
+By default each match is replaced with a label such as `[REDACTED:EMAIL]`. Some useful options:
+- `--mask partial --keep 4` keeps the last 4 characters, which helps you tell values apart.
+- `--ignore 10.0.0.1,test@example.com` leaves values you know are safe untouched.
+- `--redact-word AcmeCorp` or `--redact-literal &quot;...&quot;` also removes your own hostnames, customer names and similar terms.
+- `--without credit_card` helps with logs full of numbers. Some long timestamps pass the card checksum and get redacted by mistake.
+- `--check` exits with code 1 if anything sensitive is found, so you can use it as a &quot;safe to paste?&quot; check.
+
+## Important limitation
+
+The command-line tool doesn&#x27;t do high-entropy detection (spotting random-looking strings); only the library has that. In practice it catches tokens with known formats but can **miss custom or unprefixed secrets**, like `Authorization: Bearer &lt;opaque&gt;` or `api_key=abc123...` from your own services. Always look over the output before pasting, and add `--redact-literal` for any secrets you know about. The README calls the tool &quot;best-effort&quot; and says its detectors are conservative.
+
+## Alternatives (not checked in detail)
+
+- **cleansh** (Rust, `cargo install cleansh`): reads stdin and masks emails, IPs, JWT/AWS/GCP tokens, SSH keys and hex secrets. It&#x27;s newer and much less used (about 2.7k downloads, last release December 2025).
+- **ferret-scan** (Go): `--stdin --enable-redaction` writes redacted text to stdout and scores matches by context. It may catch more generic secrets, but it&#x27;s a bigger tool.
+- **redactor** (its30NA) and **redactcli** (PyPI): both are built specifically for cleaning text before pasting it into an AI chat. They&#x27;re small projects whose quality I haven&#x27;t checked.
+
+Sources:
+- [leakguard on GitHub](https://github.com/ptukovar/leakguard) · [docs.rs](https://docs.rs/crate/leakguard/latest/source/src/bin/leakguard.rs) · [crates.io API](https://crates.io/api/v1/crates/leakguard)
+- [cleansh](https://docs.rs/crate/cleansh/0.1.4/source/src/main.rs) · [crates.io API](https://crates.io/api/v1/crates/cleansh)
+- [ferret-scan](https://github.com/orshih6/ferret-scan)
+- [redactor](https://github.com/its30NA/redactor)
+- [redactcli](https://pypi.org/project/redactcli/)
+- [rog7/redact](https://github.com/rog7/redact)
+- [redactscan PR #8](https://github.com/boktavec/redactscan/pull/8)</pre></div><div><h3>B</h3><pre>**My pick: [leakguard](https://github.com/ptukovar/leakguard).** It&#x27;s a small Rust command-line tool, dual-licensed MIT/Apache-2.0, with no dependencies. It reads from stdin, writes the redacted text to stdout, and runs entirely on your machine. The patterns are already built in, so you don&#x27;t write any regexes.
+
+**What it catches by default:** emails, IPv4 and IPv6 addresses, JWTs, AWS, Google, Stripe and OpenAI keys, GitHub, Slack, Telegram and Discord tokens, passwords inside URLs, Azure connection strings, PEM private keys, plus credit cards, SSNs, MAC addresses and IBANs. It can also flag any random-looking string as a possible secret (the generic &quot;high-entropy&quot; detector), but that&#x27;s off by default and you have to turn it on.
+
+## Install
+
+I&#x27;m assuming you have the Rust toolchain or are willing to install it. The tool is installed through Cargo, Rust&#x27;s package manager.
+
+```bash
+# Only if you don&#x27;t already have cargo (Rust&#x27;s official installer):
+curl --proto &#x27;=https&#x27; --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source &quot;$HOME/.cargo/env&quot;
+
+cargo install leakguard
+leakguard --list-kinds    # shows the exact names of the things it can detect
+```
+
+## First run
+
+```bash
+# 1. Test on a sample first and compare the output with the original
+leakguard --stats &lt; server.log &gt; server.redacted.log
+diff &lt;(head -200 server.log) &lt;(head -200 server.redacted.log) | less
+
+# 2. Normal use: pipe a log through it
+journalctl -u myapp --since &quot;1 hour ago&quot; | leakguard &gt; for-ai.txt
+tail -n 500 /var/log/nginx/error.log | leakguard
+
+# 3. Also scrub your own internal hostnames or names it can&#x27;t know about
+cat app.log | leakguard --redact-word mycorp.internal --redact-word db-prod-01
+```
+
+Use `--only` and `--without` to choose which patterns run, and `--mask` to change how redacted values look. To turn on the random-string detector, find its exact name in `--list-kinds` and add it with `--only`. If you do that, list the default kinds you still want as well. I haven&#x27;t checked whether `--only` replaces the default set or adds to it, so look at the output to be sure. `--check` exits with code 1 if it finds anything, which is handy in scripts.
+
+## Caveats
+
+- **It&#x27;s young.** Version 1.0.0 came out on 2026-10-06 and looks like a one-person project. Read through the source before you trust it, and pin the version.
+- **Pattern matching has gaps.** It will miss secrets in formats it doesn&#x27;t know: custom session IDs, internal hostnames, usernames, and keys inside unusual config formats. Always skim the output before you paste it. `--redact-word` handles known internal strings.
+- **IPs:** it redacts all of them, including harmless ones like `127.0.0.1`. If you want to keep some, `--ignore` lets you allowlist values.
+
+## Alternatives
+
+- **[cleansh](https://docs.rs/crate/cleansh/latest)** (Rust, MIT/Apache-2.0): `cargo install cleansh`, then `cat app.log | cleansh sanitize`. It covers similar ground, also shortens home paths to `~/`, and has an opt-in random-string detector (`--engine entropy`). It pulls in an HTTP library and has inactive paid-service stubs. If you need a guarantee that nothing leaves the machine, check the source or run it with no network access.
+- **[hexredact](https://github.com/happygream/hexredact):** replaces each value with a token, and the same value always gets the same token. That lets the AI still follow, say, &quot;IP_3&quot; through the whole log, and you can reverse it afterwards.
+- **[rog7/redact](https://github.com/rog7/redact)** and **[local-redact](https://github.com/sumankrsh/local-redact)** (Python): simpler, smaller pattern sets.
+- Gitleaks and TruffleHog are better known, but they report secrets rather than filtering text through, so they don&#x27;t fit stdin-to-stdout use.
+
+I didn&#x27;t install or run any of these. The details above come from their docs.rs and GitHub pages.
+
+Sources:
+- [leakguard on docs.rs](https://docs.rs/crate/leakguard/latest) / [source](https://docs.rs/crate/leakguard/latest/source/src/bin/leakguard.rs)
+- [cleansh on docs.rs](https://docs.rs/crate/cleansh/latest) / [cleansh crate docs](https://docs.rs/cleansh/0.1.7/i686-unknown-linux-gnu/cleansh/)
+- [hexredact](https://github.com/happygream/hexredact)
+- [rog7/redact](https://github.com/rog7/redact)
+- [local-redact](https://github.com/sumankrsh/local-redact)</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: -</li></ul></details>
+<fieldset><label><input type="radio" name="q02" value="A"> A</label>
+<label><input type="radio" name="q02" value="B"> B</label>
+<label><input type="radio" name="q02" value="tie"> tie</label>
+<input class="why" data-q="q02" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q03"><h2>3. q03</h2><p class="prompt">I regularly get 2-5 GB CSV exports and need to filter rows, pick columns, and do group-by counts from the terminal on Linux. pandas is too slow and memory-hungry, and awk breaks on quoted fields that contain commas and line breaks. What free, open-source tool should I use? It must be a single binary or a distro package, with no Python, Java or Node runtime.</p>
+<div class="pair"><div><h3>A</h3><pre>I recommend **DuckDB**, used through its command-line tool. It&#x27;s free and open source (MIT) and comes as one standalone binary with no runtime to install. It reads RFC 4180 CSV correctly, including quoted fields that contain commas and line breaks. It uses all your CPU cores and works through the file in chunks, so a 5 GB file doesn&#x27;t need 5 GB of RAM. Filtering rows, picking columns and group-by counts all fit in one SQL query.
+
+If you&#x27;d rather chain small Unix-style commands than write SQL, use **qsv** instead (details below).
+
+I checked [source]&#x27;s tested catalog and none of its tools matched this request. The advice below is from general knowledge, and I haven&#x27;t installed or run any of these here.
+
+## 1. DuckDB CLI (main recommendation)
+
+**Install (one binary, x86_64):**
+```bash
+# Option A: download from GitHub Releases
+wget https://github.com/duckdb/duckdb/releases/latest/download/duckdb_cli-linux-amd64.zip
+unzip duckdb_cli-linux-amd64.zip        # gives you a single file: ./duckdb
+install -m 755 duckdb ~/.local/bin/     # or /usr/local/bin with sudo
+
+# Option B: official install script (read it before piping it into sh)
+curl https://install.duckdb.org | sh
+```
+On ARM, use `duckdb_cli-linux-arm64.zip` instead. Check the install with `duckdb --version`.
+
+**First run:**
+```bash
+# Look at the columns and types DuckDB detects
+duckdb -c &quot;DESCRIBE SELECT * FROM read_csv(&#x27;big.csv&#x27;);&quot;
+
+# Filter, pick columns, write a new CSV
+duckdb -c &quot;COPY (SELECT id, status, amount FROM read_csv(&#x27;big.csv&#x27;)
+                 WHERE status = &#x27;ERROR&#x27; AND amount &gt; 100)
+           TO &#x27;filtered.csv&#x27; (HEADER);&quot;
+
+# Group-by count
+duckdb -c &quot;SELECT status, count(*) AS n FROM read_csv(&#x27;big.csv&#x27;)
+           GROUP BY status ORDER BY n DESC;&quot;
+```
+**Tips:**
+- If type detection guesses wrong on messy data, use `read_csv(&#x27;big.csv&#x27;, all_varchar=true)` or `sample_size=-1`.
+- To limit memory, add `SET memory_limit=&#x27;2GB&#x27;;` at the start of the command. DuckDB writes the overflow to temporary files on disk instead of crashing.
+- If you&#x27;ll query the same file many times, convert it once: `COPY (FROM &#x27;big.csv&#x27;) TO &#x27;big.parquet&#x27;;`. Later queries on the Parquet file run much faster.
+
+## 2. qsv (if you prefer command pipelines)
+
+qsv is a Rust tool that continues the older, unmaintained `xsv` project. It&#x27;s released under MIT/Unlicense and ships static builds (musl) that run on any Linux distro.
+
+**Install:** On the GitHub Releases page for `dathere/qsv`, download `qsv-&lt;version&gt;-x86_64-unknown-linux-musl.zip`. Unzip it and put `qsv` on your PATH. Check the install with `qsv --version`.
+
+**First run:**
+```bash
+qsv index big.csv          # optional; builds an index that makes count, slice and frequency much faster
+qsv count big.csv
+qsv search -s status &#x27;^ERROR$&#x27; big.csv | qsv select id,status,amount &gt; filtered.csv
+qsv frequency -s status --limit 0 big.csv     # group-by counts
+```
+
+## 3. Miller (if it must be a distro package)
+
+Miller handles quoted fields correctly, including ones with line breaks inside them. It&#x27;s in the standard repos:
+- Debian/Ubuntu: `sudo apt install miller`
+- Fedora: `sudo dnf install miller`
+- Arch: `sudo pacman -S miller`
+
+Try it with `mlr --icsv --opprint count -g status big.csv`. Miller is slower than the two tools above at 2–5 GB, and commands like `sort` load all the data into memory. That&#x27;s why I rank it third.
+
+**My assumptions:** You&#x27;re on x86_64 Linux and allowed to put a binary in `~/.local/bin`. The column names in the examples (`status`, `amount`, `id`) are placeholders for your own.
+
+**Bottom line:** For one-off filtering and group-by counts, DuckDB is the fastest and easiest of these. Add qsv if you like building up pipelines command by command.</pre></div><div><h3>B</h3><pre># Use qsv
+
+Install **qsv** ([github.com/dathere/qsv](https://github.com/dathere/qsv)). It is the maintained successor to BurntSushi&#x27;s `xsv`, written in Rust, and released under MIT/Unlicense. It ships as one static binary with no runtime. Its CSV parser follows RFC 4180, so quoted fields that contain commas and line breaks are handled correctly. It streams the file instead of loading it into memory, and once you build an index it uses all your cores. A 2–5 GB file should be no problem.
+
+My assumptions: x86_64 Linux, and UTF-8 CSV with standard double-quote escaping. I didn&#x27;t run anything on this machine.
+
+## Install
+
+1. Open the [releases page](https://github.com/dathere/qsv/releases/latest) and download the asset named `qsv-&lt;version&gt;-x86_64-unknown-linux-musl.zip`. The musl build is fully static, so it runs on any distro. Use the `aarch64` build on ARM.
+2. Unzip it and install it:
+   ```bash
+   unzip qsv-*-x86_64-unknown-linux-musl.zip -d qsv-dl
+   install -m 755 qsv-dl/qsv ~/.local/bin/    # or sudo install ... /usr/local/bin/
+   qsv --version
+   ```
+   The zip also contains `qsvlite` and `qsvdp`, which are smaller variants. You only need `qsv`.
+
+qsv is in Homebrew, Nix, Arch (AUR) and Scoop, but it generally isn&#x27;t in the Debian, Ubuntu or Fedora repos. If you need a distro package, see Miller below.
+
+## First run
+
+```bash
+qsv index big.csv                 # one-time; writes big.csv.idx, makes count/frequency/stats fast + parallel
+qsv headers big.csv               # list column names with their positions
+qsv count big.csv                 # row count (instant once indexed)
+
+# Pick columns
+qsv select id,status,country big.csv &gt; slim.csv
+
+# Filter rows (regex on one column), then pick columns
+qsv search -s status &#x27;^shipped$&#x27; big.csv | qsv select id,country,amount &gt; shipped.csv
+
+# Group-by count on one column (all values, sorted by count)
+qsv frequency -s country --limit 0 big.csv
+
+# Multi-column group-by, or filter+group in one step (SQL via the built-in Polars engine)
+qsv sqlp big.csv &quot;SELECT country, status, COUNT(*) AS n
+                  FROM _t_1 WHERE amount &gt; 100
+                  GROUP BY country, status ORDER BY n DESC&quot;
+```
+
+A few other commands that help: `qsv stats big.csv` profiles each column, `qsv slice -l 20 big.csv | qsv table` gives a quick look at the data, and `qsv sort` and `qsv dedup` do what their names say. `qsv --list` shows every command.
+
+## Alternatives
+
+- **DuckDB CLI** (MIT license, single binary, `duckdb_cli-linux-amd64.zip` on its GitHub releases page). Pick this if most of your work is SQL-style grouping, joins or aggregations. It&#x27;s very fast, multithreaded, and runs out-of-core:
+  ```bash
+  duckdb -c &quot;SELECT country, status, count(*) n FROM read_csv(&#x27;big.csv&#x27;) GROUP BY ALL ORDER BY n DESC&quot;
+  ```
+- **Miller (`mlr`)** (BSD license, single Go binary). Pick this if you must install from your distro&#x27;s repos: `apt install miller` or `dnf install miller`. It&#x27;s slower than qsv or DuckDB on files this big, but it parses CSV correctly and its syntax is friendly:
+  ```bash
+  mlr --icsv --opprint filter &#x27;$amount &gt; 100&#x27; then count -g country,status big.csv
+  ```
+- **Avoid plain `xsv`.** It works, but it&#x27;s no longer maintained, and qsv covers everything it does.
+
+In short: use qsv for everyday filter, select and count work, and add DuckDB when the queries get complex.</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: -</li></ul></details>
+<fieldset><label><input type="radio" name="q03" value="A"> A</label>
+<label><input type="radio" name="q03" value="B"> B</label>
+<label><input type="radio" name="q03" value="tie"> tie</label>
+<input class="why" data-q="q03" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q04"><h2>4. q04</h2><p class="prompt">Our 4-person team shares .env files over chat, which is obviously bad. We want to commit the secrets to our git repo encrypted, let each developer decrypt with their own key, and be able to cut someone off cleanly when they leave the team. No hosted secrets service and no server to run, and it has to be free and open source. We use macOS and Linux.</p>
+<div class="pair"><div><h3>A</h3><pre># Recommendation: SOPS + age
+
+Use **[SOPS](https://github.com/getsops/sops)** to encrypt the files and **[age](https://github.com/FiloSottile/age)** for each developer&#x27;s key. Both are free, open source (MPL-2.0 and BSD-3), run on macOS and Linux, and need no server or hosted service.
+
+How it fits what you asked for:
+
+- **Encrypted files in git.** You commit a file such as `secrets.enc.env`. SOPS encrypts only the values and leaves the key names readable, so `git diff` shows which variable changed without showing the secret.
+- **Each developer has their own key.** Every person makes an age keypair and you list all four public keys in `.sops.yaml`. Anyone on that list can decrypt with their own private key. Nobody shares a password.
+- **Cutting someone off.** Remove their public key, re-encrypt with a new data key, and change the actual secrets. Step 7 explains why you have to change the secrets too.
+
+I wrote this from memory and haven&#x27;t run anything on your machines. I&#x27;m assuming SOPS 3.9 or newer, which has the `sops encrypt`, `sops decrypt`, `sops edit` and `sops rotate` subcommands. On older versions the equivalents are `-e`, `-d`, plain `sops file` and `-r`.
+
+---
+
+## Install (each developer)
+
+**macOS (Homebrew):**
+```sh
+brew install sops age
+```
+
+**Linux:**
+```sh
+# age is in most current distro repos (Debian 12+, Ubuntu 22.04+, Fedora, Arch)
+sudo apt install age        # or: dnf install age / pacman -S age
+
+# sops: download the binary from https://github.com/getsops/sops/releases
+# (pick the linux.amd64 or linux.arm64 asset and check it against the published checksums file)
+curl -LO https://github.com/getsops/sops/releases/download/vX.Y.Z/sops-vX.Y.Z.linux.amd64
+sudo install -m 755 sops-vX.Y.Z.linux.amd64 /usr/local/bin/sops
+```
+Arch also has `pacman -S sops`, and Homebrew on Linux works too.
+
+Check with `sops --version` and `age --version`.
+
+## First run
+
+**1. Each developer creates a key** (one time, on their own machine):
+```sh
+# Linux default location:
+mkdir -p ~/.config/sops/age
+age-keygen -o ~/.config/sops/age/keys.txt
+
+# macOS default location:
+mkdir -p &quot;$HOME/Library/Application Support/sops/age&quot;
+age-keygen -o &quot;$HOME/Library/Application Support/sops/age/keys.txt&quot;
+```
+If you&#x27;d rather use the same path on both systems, set `export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt` in your shell profile.
+
+The command prints a **public key** (`age1...`). Each person posts that public key in chat, which is safe because it&#x27;s public. The private key file never leaves their machine. Back it up in your password manager.
+
+**2. Add `.sops.yaml` to the root of the repo:**
+```yaml
+creation_rules:
+  - path_regex: \.enc\.env$
+    age: &gt;-
+      age1alice...,
+      age1bob...,
+      age1carol...,
+      age1dave...
+```
+
+**3. Keep plaintext out of git.** Add this to `.gitignore`:
+```
+.env
+.env.*
+!*.enc.env
+```
+
+**4. Encrypt the current `.env` once and commit it:**
+```sh
+sops encrypt .env &gt; secrets.enc.env      # the .env extension makes sops use dotenv format
+git add .sops.yaml secrets.enc.env .gitignore
+git commit -m &quot;Add encrypted secrets&quot;
+```
+After that, delete the copies of the `.env` that went around in chat, and plan to rotate those secrets because they&#x27;ve already been exposed.
+
+**5. Daily use:**
+```sh
+sops edit secrets.enc.env                      # opens $EDITOR and re-encrypts when you save
+sops decrypt secrets.enc.env &gt; .env            # if your tooling needs a plain .env file
+sops exec-env secrets.enc.env &#x27;npm run dev&#x27;    # or skip the file and inject the vars into a process
+```
+
+**6. Adding a new teammate:** add their `age1...` key to `.sops.yaml`, then someone who already has access runs:
+```sh
+sops updatekeys -y secrets.enc.env
+git commit -am &quot;Grant access to &lt;name&gt;&quot;
+```
+
+**7. Offboarding:**
+```sh
+# 1. remove their public key from .sops.yaml
+sops updatekeys -y secrets.enc.env   # takes them off the recipient list
+sops rotate -i secrets.enc.env       # makes a new data key
+# 2. change the real secrets (API keys, DB passwords) at each provider
+sops edit secrets.enc.env            # paste in the new values
+git commit -am &quot;Revoke &lt;name&gt;, rotate secrets&quot;
+```
+**Step 2 is required.** Git history still holds the old encrypted file, and the person leaving can decrypt it with their key. Any secret they could read before should be treated as known to them. Encryption tooling can&#x27;t fix that; you have to change the credentials at the source.
+
+---
+
+## Other tips
+
+- **Per-environment access:** use separate files such as `dev.enc.env` and `prod.enc.env`, each with its own `creation_rules` entry, so prod can have a shorter recipient list.
+- **CI:** create a separate age key for CI, add it as a recipient, and store the private key in the CI system&#x27;s secret store as `SOPS_AGE_KEY`.
+- **SSH keys:** age can also encrypt to existing `ssh-ed25519` public keys, but separate age keys are simpler and keep your SSH and secrets keys apart.
+
+## Alternatives I&#x27;d skip
+
+| Tool | Why not first choice |
+|---|---|
+| git-crypt | Needs GPG and encrypts whole files, so diffs are useless. Removing a user is awkward. |
+| git-secret | GPG-based and clunkier to use. |
+| transcrypt | Everyone shares one password, so you can&#x27;t remove a single person. |
+| dotenvx | Works well, but each environment has one shared private key, not one key per person. |
+
+Sources:
+- https://github.com/getsops/sops
+- https://github.com/FiloSottile/age</pre></div><div><h3>B</h3><pre>## My recommendation: SOPS with age keys
+
+**[SOPS](https://github.com/getsops/sops)** (a CNCF project, MPL-2.0) with **[age](https://github.com/FiloSottile/age)** keys (BSD-3) covers everything you asked for:
+
+- **Secrets live in git, encrypted.** SOPS understands dotenv files. It encrypts each value but leaves the key names readable, so diffs and code reviews still make sense.
+- **Each developer has their own key.** Every file is encrypted to a list of age public keys, one per person (and one for CI if you want). No shared password.
+- **Removing someone is a few commands.** Take their public key out of the config, re-encrypt, commit.
+- **No server, no hosted service.** It&#x27;s two small local programs on macOS and Linux.
+
+**About where this comes from:** I checked [source], the tool catalog I have access to. It has not tested any tool that fits this job. It named SOPS too, but it hasn&#x27;t installed or verified it. The steps below come from my own knowledge of SOPS 3.9+ and age, not from a tested run. Check them against the current SOPS README the first time you go through them.
+
+---
+
+### 1. Install (every developer)
+
+**macOS (Homebrew):**
+```sh
+brew install sops age
+```
+
+**Linux:**
+- Arch: `sudo pacman -S sops age`
+- Debian/Ubuntu/Fedora: install `age` from your package manager (`apt install age` / `dnf install age`). For `sops`, download the binary or .deb/.rpm from https://github.com/getsops/sops/releases, because distro packages are often missing or old. Check it against the published checksums before installing.
+
+Check both installed: `sops --version` and `age --version`
+
+### 2. Each developer makes a key (once)
+
+```sh
+mkdir -p ~/.config/sops/age
+age-keygen -o ~/.config/sops/age/keys.txt
+chmod 600 ~/.config/sops/age/keys.txt
+```
+This prints a public key (`age1...`). Each person posts **only the public key** in chat; that part is safe to share. The private key never leaves their machine.
+
+On macOS, SOPS looks for keys in `~/Library/Application Support/sops/age/keys.txt` by default. To use one path on both systems, add this to your shell profile:
+```sh
+export SOPS_AGE_KEY_FILE=&quot;$HOME/.config/sops/age/keys.txt&quot;
+```
+
+Have everyone back up their private key in their password manager. If someone loses it, they can&#x27;t decrypt until a teammate re-adds their new key.
+
+### 3. Set up the repo (one person, once)
+
+Create `.sops.yaml` at the repo root:
+```yaml
+creation_rules:
+  - path_regex: secrets/.*\.env$
+    age: &gt;-
+      age1alice...,
+      age1bob...,
+      age1carol...,
+      age1dave...
+```
+
+Then encrypt your current `.env`:
+```sh
+mkdir -p secrets
+cp .env secrets/dev.env
+sops encrypt -i secrets/dev.env      # the .env extension makes SOPS treat it as dotenv
+echo &quot;.env&quot; &gt;&gt; .gitignore            # never commit the plaintext file
+git add .sops.yaml secrets/dev.env .gitignore
+git commit -m &quot;Add SOPS-encrypted secrets&quot;
+```
+Open `secrets/dev.env` to check: the keys should be readable and the values should look like `ENC[AES256_GCM,...]`.
+
+### 4. Daily use
+
+```sh
+sops edit secrets/dev.env                       # opens decrypted in $EDITOR, re-encrypts on save
+sops exec-env secrets/dev.env &#x27;npm run dev&#x27;     # runs a command with the secrets as env vars, nothing written to disk
+sops decrypt secrets/dev.env &gt; .env             # if your tooling needs a real .env file (it&#x27;s gitignored)
+```
+On SOPS older than 3.9, `sops secrets/dev.env` is the same as `edit`, and `sops -d` is the same as `decrypt`.
+
+You can keep one file per environment (`secrets/staging.env`, `secrets/prod.env`) with different recipient lists in `.sops.yaml`. That way, for example, only two people can read prod.
+
+### 5. Adding someone
+Add their `age1...` key to `.sops.yaml`, then:
+```sh
+sops updatekeys -y secrets/*.env
+git commit -am &quot;Add Erin to secrets recipients&quot;
+```
+
+### 6. Removing someone who leaves
+```sh
+# 1. remove their public key from .sops.yaml
+sops updatekeys -y secrets/*.env     # re-encrypt to the remaining keys
+sops rotate -i secrets/dev.env       # new data key (repeat for each file)
+git commit -am &quot;Remove Dave from secrets recipients&quot;
+```
+**Important:** this only protects future changes. The person who left can still decrypt every old version in git history with their key, and they&#x27;ve already seen the plaintext values. To really cut them off, **change the actual credentials** they could see (API keys, database passwords, and so on), then put the new values in with `sops edit`. No git-based tool can avoid this step.
+
+### 7. CI (optional)
+Make a separate age key for CI. Add its public key to `.sops.yaml` and store the private key as a CI secret in `SOPS_AGE_KEY`.
+
+---
+
+### Other options I looked at
+- **git-crypt** decrypts files automatically on checkout using GPG keys. But removing a user isn&#x27;t built in (you have to re-key by hand), and you&#x27;d need GPG, which is more work to manage than age.
+- **transcrypt** uses one shared password, so there are no per-person keys. That doesn&#x27;t meet your requirement.
+- **dotenvx** encrypts .env files nicely, but each environment has one shared private key instead of a key per developer. Removing someone means handing a new key to everyone.
+- **agebox** is age-based and simpler than SOPS, but it encrypts whole files instead of individual values, and fewer people use and maintain it.
+
+**My assumptions:** your secrets are plain `KEY=value` dotenv files, and your team uses Homebrew on macOS. If you&#x27;d rather not manage new keys, SOPS 3.10+ can reportedly also use existing `ssh-ed25519` keys as age recipients. I haven&#x27;t verified that, so check the release notes before relying on it.</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: verified</li></ul></details>
+<fieldset><label><input type="radio" name="q04" value="A"> A</label>
+<label><input type="radio" name="q04" value="B"> B</label>
+<label><input type="radio" name="q04" value="tie"> tie</label>
+<input class="why" data-q="q04" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q05"><h2>5. q05</h2><p class="prompt">我平常用 pandoc 把 Word 檔轉成 Markdown 給 AI 讀，但它不能讀 PDF，而我們很多規格書都是 PDF。想找一個在 Linux 終端機就能用的工具，PDF 和 Word 都能轉成 Markdown，PDF 裡的表格要保留成表格，標題層級也要正確。公司文件不能上傳到雲端，只能在本機跑，電腦也沒有 GPU。免費最好，買斷也可以，但不要訂閱制。</p>
+<div class="pair"><div><h3>A</h3><pre>我推薦用 **Docling**（IBM 開源，MIT 授權，免費）。它是 Python 寫的命令列工具，PDF 和 Word 都能轉成 Markdown。PDF 裡的表格會轉成 Markdown 表格，有 `--heading-hierarchy` 選項來還原標題層級。只用 CPU 就能跑，第一次下載完模型之後就可以完全離線使用。
+
+先說清楚：[source] 查了 208 個工具，沒有找到它實際測試過、又同時符合你所有條件的。所以下面的建議和指令都是根據我自己的了解和 Docling 官方文件，**[source] 沒有替它做過安裝測試**。
+
+**我的假設：** 你的 Linux 有 Python 3.10 以上；規格書大多是軟體輸出的 PDF，不是掃描檔。
+
+## 為什麼選 Docling
+
+- **表格：** 用專門的表格辨識模型（TableFormer）找出表格結構，輸出成 Markdown 表格。
+- **標題層級：** 這是 Docling 的已知弱點，**一定要加 `--heading-hierarchy`**。不加的話，PDF 裡所有標題都會變成同一層（全部是 `#` 或 `##`）。官方文件說這個功能預設關閉。開啟後它會參考 PDF 的書籤、章節編號（例如 3.2.1）和字體大小來判斷層級。如果規格書有書籤或編號標題，效果通常會比較好。
+- **Word：** `.docx` 也能直接轉，所以 PDF 和 Word 可以用同一套流程。原本的 pandoc 也可以繼續用來轉 Word。
+- **本機和沒有 GPU：** 模型很小，CPU 就能跑，但每頁要幾秒，大份規格書要多等一下。
+
+## 安裝（Linux）
+
+```bash
+# 建一個獨立的虛擬環境
+python3 -m venv ~/.venvs/docling
+source ~/.venvs/docling/bin/activate
+
+# 只用 CPU 的話，先裝 CPU 版 PyTorch，可以省下好幾 GB 的 CUDA 套件
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+pip install docling
+
+# 先把模型下載到本機，之後就能完全離線使用
+docling-tools models download
+# 模型預設放在 ~/.cache/docling/models
+```
+
+## 第一次使用
+
+```bash
+# PDF 轉 Markdown（文字型 PDF 用 --no-ocr 會比較快也比較準）
+docling spec.pdf --to md --output ./out --heading-hierarchy --no-ocr --table-mode accurate
+
+# Word 轉 Markdown
+docling spec.docx --to md --output ./out
+
+# 整個資料夾一起轉
+docling ./specs/ --to md --output ./out --heading-hierarchy --no-ocr
+```
+
+**確保不會連網：** 加上 `--artifacts-path ~/.cache/docling/models`，或先執行 `export HF_HUB_OFFLINE=1`。這樣它只會用本機的模型。
+
+**建議先測試：** 挑一份表格最多、層級最深的規格書轉轉看，打開 `out/spec.md` 檢查表格和 `#`、`##`、`###` 對不對。掃描型的 PDF 就把 `--no-ocr` 拿掉，但在 CPU 上會慢很多。如果你的版本不認得 `--heading-hierarchy`，執行 `pip install -U docling` 升級。
+
+## 其他選擇
+
+- **MarkItDown（Microsoft，免費）：** [source] 有提到它，但同樣沒有驗證過。它轉 Word 沒問題，但 PDF 基本上只抽出純文字，**表格和標題層級都會不見**，所以不符合你的需求。
+- **Marker：** PDF 轉 Markdown 品質很好，CPU 也能跑但比較慢。程式碼是 GPL 授權，模型權重對營收較高的公司有商用限制。公司內部使用前要先看清楚授權，所以我把它排在 Docling 後面。
+
+Sources:
+- [Docling – heading levels](https://docling-project.github.io/docling/usage/heading_levels/)
+- [Docling heading_levels example](https://docling-project.github.io/docling/examples/heading_levels.py)
+- [Docling discussion #1170（標題全部變成 ## 的問題）](https://github.com/docling-project/docling/discussions/1170)
+- [md-reheader（第三方標題層級修復工具）](https://pypi.org/project/md-reheader/)</pre></div><div><h3>B</h3><pre>## 推薦：**Docling**（IBM 開源，MIT 授權，免費）
+
+照你的需求，Docling 最合適：
+
+- **PDF 和 Word 都能轉**：PDF、DOCX、PPTX、HTML 等都用同一個 `docling` 指令轉成 Markdown。
+- **表格保留成表格**：內建 TableFormer 表格結構模型，PDF 裡的表格會輸出成 Markdown 表格。合併儲存格這類複雜表格可能還是要人工檢查。
+- **標題層級正確**：Word 檔會直接讀標題樣式。PDF 要另外加 `--heading-hierarchy` 參數。預設情況下 PDF 的標題全部會變成同一層級，這是常見的問題。開啟後 Docling 會依序參考 PDF 書籤、標題編號（例如「3.2.1」）、字體大小與粗細來判斷層級（[官方說明](https://docling-project.github.io/docling/usage/heading_levels/)）。
+- **完全在本機跑**：模型下載一次後就能離線使用，文件不會上傳。
+- **不需要 GPU**：CPU 就能跑，但比較慢。我估計一般規格書每頁約 1 到數秒，實際速度要看你的機器。
+
+### 安裝（假設：Linux，已有 Python 3.10 以上）
+
+```bash
+# 建議用獨立環境
+python3 -m venv ~/docling-env
+source ~/docling-env/bin/activate
+
+# 只用 CPU 的話，先裝 CPU 版 PyTorch，可以省下好幾 GB 的 CUDA 套件
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+pip install docling
+
+# 先把模型下載好，之後就能離線使用
+docling-tools models download
+```
+
+如果公司電腦完全不能連外，可以在可以連網的機器上執行 `docling-tools models download`，把模型目錄（預設在 `~/.cache/docling/models`）複製到公司電腦，轉檔時用 `--artifacts-path` 指定模型位置。另外設定 `export HF_HUB_OFFLINE=1`，確保它不會嘗試連網。
+
+### 第一次使用
+
+```bash
+# PDF → Markdown（開啟標題層級判斷）
+docling --to md --heading-hierarchy --output ./out spec.pdf
+
+# 文字型 PDF（不是掃描檔）可以關掉 OCR，速度快很多
+docling --to md --heading-hierarchy --no-ocr --output ./out spec.pdf
+
+# 表格很複雜時，用較精準（但較慢）的表格模式
+docling --to md --heading-hierarchy --table-mode accurate --output ./out spec.pdf
+
+# Word 檔
+docling --to md --output ./out spec.docx
+
+# 整個資料夾批次轉換
+docling --to md --heading-hierarchy --no-ocr --output ./out ./specs/
+```
+
+第一次跑完後，建議挑一份表格最多、章節最深的規格書，打開 `out/spec.md` 檢查兩件事：表格有沒有錯欄，`#`、`##`、`###` 的層級對不對。如果你們的文件章節編號很一致但字體不一致，官方說明建議關掉字體樣式判斷，只看編號，這要透過 Python API 設定 `HeadingHierarchyOptions`。
+
+各參數的確切名稱可能因版本而異，請以 `docling --help` 為準。我沒有在你的機器上實際執行過這些指令。
+
+---
+
+### 其他選擇（如果 Docling 效果不理想）
+
+| 工具 | 優點 | 缺點 |
+|---|---|---|
+| **pymupdf4llm** | 非常快，不需要 AI 模型，純 CPU 就很快；表格和標題（依字體大小判斷）效果還不錯 | 只能處理 PDF（Word 還是用 pandoc）；AGPL 授權，只在內部使用通常沒問題，但如果要整合進公司產品就要注意 |
+| **Marker** | PDF 轉換品質很好，標題層級也不錯 | 用 CPU 跑很慢；GPL 授權，模型權重對商業使用另有營收門檻限制，公司使用前請先確認授權條款 |
+| **MarkItDown**（Microsoft） | 輕量，Word 和 PDF 都支援 | PDF 只會抽出純文字，**表格和標題結構基本上會遺失**，不符合你的需求 |
+| **MinerU** | 對中文文件和複雜版面處理得很好 | 安裝較重，沒有 GPU 時很慢；AGPL 授權 |
+
+**簡單說**：先試 Docling，PDF 和 Word 用同一套工具處理。如果覺得 CPU 太慢，而且規格書都是文字型 PDF，可以改用 pymupdf4llm 處理 PDF，Word 繼續用 pandoc。以上工具都是免費開源，沒有訂閱費。
+
+Sources:
+- [Docling – Heading levels 官方說明](https://docling-project.github.io/docling/usage/heading_levels/)
+- [Docling GitHub Discussion #1170（PDF 標題全變成 ## 的問題）](https://github.com/docling-project/docling/discussions/1170)</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: 驗證過</li><li>B: -</li></ul></details>
+<fieldset><label><input type="radio" name="q05" value="A"> A</label>
+<label><input type="radio" name="q05" value="B"> B</label>
+<label><input type="radio" name="q05" value="tie"> tie</label>
+<input class="why" data-q="q05" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q06"><h2>6. q06</h2><p class="prompt">We have an internal REST API described by an OpenAPI 3 spec, and I want my AI coding agents to call it as MCP tools. Is there a free, open-source tool that turns the spec into a working MCP server I can run locally, without writing the server code by hand and without a hosted service or account? It should forward the agents&#x27; tool calls to our API&#x27;s base URL.</p>
+<div class="pair"><div><h3>A</h3><pre>My recommendation is **`@ivotoby/openapi-mcp-server`** ([ivo-toby/mcp-openapi-server](https://github.com/ivo-toby/mcp-openapi-server)). It&#x27;s MIT-licensed and runs locally with `npx`. You point it at your spec and your API&#x27;s base URL, and it turns each operation into an MCP tool. When an agent calls a tool, it sends the HTTP request to that base URL. You don&#x27;t write any server code and you don&#x27;t need an account.
+
+**My assumptions:** you have Node.js 18 or newer, your spec is JSON or YAML (a local file or a URL), and your API uses header-based auth such as a bearer token or API key. I haven&#x27;t run any of this on your machine. The flags below come from the project&#x27;s current README.
+
+## Install and first run
+
+**1. Install.** Nothing to install globally. `npx -y` downloads and runs the package. If you want a fixed version for reproducibility, pin one, e.g. `@ivotoby/openapi-mcp-server@&lt;version&gt;`, and check npm for the latest.
+
+**2. Smoke-test it with the MCP Inspector** before connecting any agents:
+```bash
+npx @modelcontextprotocol/inspector \
+  npx -y @ivotoby/openapi-mcp-server \
+    --api-base-url https://internal-api.example.corp \
+    --openapi-spec ./openapi.yaml \
+    --headers &quot;Authorization:Bearer $INTERNAL_API_TOKEN&quot;
+```
+In the Inspector UI, connect and open **Tools**. Check that your operations appear, then call a harmless GET and confirm it reaches your API.
+
+**3. Connect your agent.** Stdio is the default transport.
+
+- **Claude Code:**
+  ```bash
+  claude mcp add internal-api \
+    -e API_BASE_URL=https://internal-api.example.corp \
+    -e OPENAPI_SPEC_PATH=/abs/path/openapi.yaml \
+    -e API_HEADERS=&quot;Authorization:Bearer YOUR_TOKEN&quot; \
+    -- npx -y @ivotoby/openapi-mcp-server
+  ```
+- **Any JSON-configured client** (Claude Desktop, Cursor, etc.):
+  ```json
+  {
+    &quot;mcpServers&quot;: {
+      &quot;internal-api&quot;: {
+        &quot;command&quot;: &quot;npx&quot;,
+        &quot;args&quot;: [&quot;-y&quot;, &quot;@ivotoby/openapi-mcp-server&quot;],
+        &quot;env&quot;: {
+          &quot;API_BASE_URL&quot;: &quot;https://internal-api.example.corp&quot;,
+          &quot;OPENAPI_SPEC_PATH&quot;: &quot;/abs/path/openapi.yaml&quot;,
+          &quot;API_HEADERS&quot;: &quot;Authorization:Bearer YOUR_TOKEN&quot;
+        }
+      }
+    }
+  }
+  ```
+- **Several agents sharing one server:** run it over HTTP instead. Add `--transport http --port 3000` and point the clients at `http://127.0.0.1:3000/mcp`. The health check is at `/health`, and the server binds to 127.0.0.1 by default.
+
+## Settings worth knowing
+- **Limit what agents can do.** By default every operation becomes a tool. You can narrow that with `--tag`, `--exclude-tag`, `--tool`, `--resource &lt;path-prefix&gt;`, or `--operation get`. For example, `--operation get` makes the agents read-only until you trust the setup.
+- **Big specs:** `--tools dynamic` gives agents a few tools for discovering and calling endpoints, instead of hundreds of separate tools that fill up their context.
+- **Internal TLS:** `--ca-cert` adds your corporate CA, and `--client-cert`/`--client-key` handle mTLS. Use this rather than `--reject-unauthorized false`.
+- **Keep tokens out of committed config.** Use environment variables or your client&#x27;s secret handling. Also note that verbose logging is on by default.
+
+## Alternatives
+- **[`mcp-openapi-proxy`](https://pypi.org/project/mcp-openapi-proxy/)** (Python, MIT): run it with `uvx mcp-openapi-proxy`. It&#x27;s configured with `OPENAPI_SPEC_URL`, which can be a URL or `file://` path, plus `SERVER_URL_OVERRIDE` for your base URL, `API_KEY`, and `TOOL_WHITELIST`. Choose this if your team prefers Python. Option names have changed between releases, so check the [README](https://github.com/matthewhand/mcp-openapi-proxy) first.
+- **FastMCP&#x27;s `FastMCP.from_openapi(...)`** (Python): about 10 lines of code. Use it if you later need custom auth or want to reshape responses.
+- **`openapi-mcp-generator`**: generates a TypeScript server project from the spec instead of proxying at runtime. That&#x27;s useful if you want code you own and can edit, but you then have to maintain the generated code.
+
+Sources:
+- [ivo-toby/mcp-openapi-server (GitHub)](https://github.com/ivo-toby/mcp-openapi-server)
+- [mcp-openapi-proxy on PyPI](https://pypi.org/project/mcp-openapi-proxy/0.1.1741466171/)
+- [mcp-openapi-proxy listing (LobeHub)](https://lobehub.com/pt-BR/mcp/gwyntel-mcp-openapi-proxy)</pre></div><div><h3>B</h3><pre>I recommend **`@ivotoby/openapi-mcp-server`** ([GitHub](https://github.com/ivo-toby/mcp-openapi-server)). It&#x27;s MIT-licensed and runs locally through `npx`. You give it your spec and your API&#x27;s base URL, and it turns each operation in the spec into an MCP tool. When an agent calls a tool, it sends the request to that base URL. You don&#x27;t write any server code and you don&#x27;t need an account or hosted service.
+
+**How I checked:** I looked in [source], a directory of tools it has installed and tested, and none of them fit this request. I read the project&#x27;s README for the flags and config below, but I haven&#x27;t run the tool myself. Test it against a non-production copy of your API first.
+
+**What I assumed:** You&#x27;re on macOS (this machine is a Mac). You have Node.js 18 or later. Your API takes a header-based token, which you can change if it doesn&#x27;t.
+
+## Install and first run
+
+1. **Check Node:** `node --version`. If it&#x27;s missing, install it with `brew install node`.
+2. **Try it once by hand.** Nothing is installed globally because `npx` fetches the package. The `--operation get` flag exposes only read-only endpoints, which is a safer first test:
+   ```bash
+   npx -y @ivotoby/openapi-mcp-server \
+     --api-base-url https://internal-api.example.corp \
+     --openapi-spec ./openapi.yaml \
+     --headers &quot;Authorization:Bearer $INTERNAL_API_TOKEN&quot; \
+     --operation get \
+     --verbose
+   ```
+   `--openapi-spec` takes a file path or a URL. By default the server talks over stdio, so it will start and wait for input. That means it&#x27;s working. Stop it with Ctrl-C.
+3. **Register it with Claude Code:**
+   ```bash
+   claude mcp add internal-api \
+     -e API_BASE_URL=https://internal-api.example.corp \
+     -e OPENAPI_SPEC_PATH=/absolute/path/to/openapi.yaml \
+     -e API_HEADERS=&quot;Authorization:Bearer &lt;token&gt;&quot; \
+     -- npx -y @ivotoby/openapi-mcp-server --operation get
+   ```
+   For Claude Desktop or Cursor, use the same settings as JSON:
+   ```json
+   {
+     &quot;mcpServers&quot;: {
+       &quot;internal-api&quot;: {
+         &quot;command&quot;: &quot;npx&quot;,
+         &quot;args&quot;: [&quot;-y&quot;, &quot;@ivotoby/openapi-mcp-server&quot;, &quot;--operation&quot;, &quot;get&quot;],
+         &quot;env&quot;: {
+           &quot;API_BASE_URL&quot;: &quot;https://internal-api.example.corp&quot;,
+           &quot;OPENAPI_SPEC_PATH&quot;: &quot;/absolute/path/to/openapi.yaml&quot;,
+           &quot;API_HEADERS&quot;: &quot;Authorization:Bearer &lt;token&gt;&quot;
+         }
+       }
+     }
+   }
+   ```
+4. **Test it:** In Claude Code, run `/mcp` and check that `internal-api` is connected and its tools are listed. Then ask the agent to call a simple GET endpoint, such as listing some items.
+
+## Useful options
+- **Exposing fewer tools:** Large specs can swamp the agent with tools. You can narrow them down with `--tag &lt;tag&gt;`, `--exclude-tag`, `--resource /prefix`, `--operation get|post|...` or `--tool &lt;id&gt;`. Another option is `--tools dynamic`, which gives the agent just three tools: one to list endpoints, one to look one up and one to call it.
+- **Several agents sharing one server:** Add `--transport http --port 3000`. The server listens on `127.0.0.1:3000/mcp` by default.
+- **mTLS or an internal CA:** Use `--client-cert`, `--client-key` and `--ca-cert`.
+- **Security:** The tag filters only decide which tools show up. They don&#x27;t block access. Your API still has to enforce permissions, so give the server a token with the least access the agents need. Turn on write operations (`post`, `put`, `delete`) only when you choose to.
+
+## Alternative
+**FastMCP** (Python, open source) can build a server from a spec with `FastMCP.from_openapi(...)`. It does the same job, but you&#x27;d write a short Python script of about 10 lines, so it doesn&#x27;t quite meet your &quot;no hand-written code&quot; requirement. I haven&#x27;t tested it either. Use it if you want to change behavior in code, such as custom authentication or response shaping.
+
+Sources:
+- [ivo-toby/mcp-openapi-server (GitHub)](https://github.com/ivo-toby/mcp-openapi-server)</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: -</li></ul></details>
+<fieldset><label><input type="radio" name="q06" value="A"> A</label>
+<label><input type="radio" name="q06" value="B"> B</label>
+<label><input type="radio" name="q06" value="tie"> tie</label>
+<input class="why" data-q="q06" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q07"><h2>7. q07</h2><p class="prompt">I want our team&#x27;s API requests to live in our git repo as plain-text files that diff cleanly in code review, instead of in a cloud workspace that needs sign-in. Is there a free, open-source tool that works fully offline on my Mac and has a CLI that runs the same request files as tests in our Linux CI, failing the build when an assertion fails?</p>
+<div class="pair"><div><h3>A</h3><pre>I checked [source], which keeps a catalog of tools it has actually installed and tested. None of the 18 tools it has verified fits this request. It did name Hurl as a likely fit but hasn&#x27;t tested it. Everything below comes from my own knowledge, not a test run, so check the details against the official docs. As you asked, I didn&#x27;t run any commands on your machine.
+
+**My assumption:** you&#x27;re moving off Postman or something like it, and your team wants a desktop app on Mac plus a CLI in CI. If your team is happy working only in the terminal, see option 2.
+
+## Main recommendation: Bruno (MIT-licensed, offline, no account)
+
+- **Git-friendly files:** each request is one plain-text file (`.bru`) inside a normal folder. You commit the folder to your repo, and each changed request shows up as a small, readable diff. Newer versions also offer a YAML-based format.
+- **Works offline:** the desktop app has no cloud workspace and needs no sign-in.
+- **CI:** the `bru` CLI runs the same files on Linux. If any assertion fails, it exits with a non-zero code, so the build fails. It can also write JUnit reports.
+- **Cost:** the core app and CLI are free and open source. There&#x27;s an optional paid &quot;Golden Edition&quot;, but you don&#x27;t need it for this.
+
+### Install (Mac)
+```bash
+brew install --cask bruno          # desktop app
+npm install -g @usebruno/cli       # CLI (needs Node 18+), command is `bru`
+```
+
+### First run
+1. Open Bruno, click **Create Collection**, and pick a folder inside your repo, e.g. `api-tests/`.
+2. Add a request. Bruno saves it as a file like this:
+   ```
+   meta { name: Get user  type: http  seq: 1 }
+
+   get {
+     url: {{baseUrl}}/users/1
+   }
+
+   assert {
+     res.status: eq 200
+     res.body.id: eq 1
+   }
+
+   tests {
+     test(&quot;has email&quot;, function() {
+       expect(res.getBody().email).to.be.a(&quot;string&quot;);
+     });
+   }
+   ```
+3. Create an environment (stored as `environments/ci.bru`) that sets `baseUrl`. Keep secrets out of git: reference them as `{{process.env.API_TOKEN}}` and put the real values in a `.env` file listed in `.gitignore`.
+4. Run it locally the same way CI will:
+   ```bash
+   cd api-tests
+   bru run --env ci
+   ```
+5. CI step, shown for GitHub Actions (other CI systems work the same way):
+   ```yaml
+   - run: npm install -g @usebruno/cli
+   - run: bru run --env ci --reporter-junit results.xml
+     working-directory: api-tests
+     env:
+       API_TOKEN: ${{ secrets.API_TOKEN }}
+   ```
+   The reporter flag has changed between CLI versions (older versions used `--output results.xml --format junit`). Run `bru run --help` on the version you install to confirm. Also pin the CLI version in CI so local and CI runs behave the same.
+
+## Option 2: Hurl (Apache-2.0, CLI only)
+Hurl suits you if you don&#x27;t need a desktop app. Each `.hurl` file is a plain-text list of requests with assertions written underneath. It&#x27;s a single fast binary written in Rust (no Node needed), and its files diff very cleanly.
+```bash
+brew install hurl
+hurl --test --report-junit results.xml tests/*.hurl
+```
+Example file:
+```
+GET {{base_url}}/users/1
+HTTP 200
+[Asserts]
+jsonpath &quot;$.id&quot; == 1
+```
+On Linux CI, use the `.deb` package, the release tarball or the Docker image `ghcr.io/orange-opensource/hurl`.
+
+## Other options
+- **httpYac:** runs standard `.http` / `.rest` files. It has a VS Code extension and a CLI (`httpyac send --all`) that works in CI. It&#x27;s a good fit if your team already writes `.http` files.
+
+**Bottom line:** choose Bruno if people want a Postman-style app. Choose Hurl if everyone is comfortable in the terminal and you want the simplest CI setup.</pre></div><div><h3>B</h3><pre>I&#x27;d go with **Bruno**. If your team is fine working only in the CLI, **Hurl** is a strong alternative.
+
+I haven&#x27;t run anything on this machine. The versions and flags below come from a quick web search, so check them against the official docs before you pin anything.
+
+## Bruno
+
+Bruno is a free, open-source (MIT) desktop API client, similar to Postman. It covers everything you asked for:
+
+- **Plain-text files in git:** each request is its own small text file (`.bru`) inside a normal folder. They diff cleanly in pull requests.
+- **Offline, no account:** there&#x27;s no cloud workspace and no sign-in. The app just reads the folder.
+- **Same files in CI:** the CLI (`@usebruno/cli`, command `bru`) runs the same folder on Linux. It exits with a non-zero code when an assertion fails, which fails the build. It can also write JUnit XML for your CI&#x27;s test report.
+- **Paid tier:** there&#x27;s a paid &quot;Golden Edition&quot; with extra features, but you don&#x27;t need it for this.
+
+Assumption: Bruno&#x27;s v3 release (planned for January 2026) adds YAML as a second file format. Either format works in git. Pick one for the whole team.
+
+### Install (Mac)
+```bash
+brew install bruno            # desktop app
+npm install -g @usebruno/cli  # CLI (needs Node.js); gives you `bru`
+```
+
+### First run
+1. Open Bruno and choose **Create Collection**. Point it at a folder inside your repo, e.g. `api-tests/`.
+2. Add an environment, such as `local`. It&#x27;s saved as `api-tests/environments/local.bru` and holds variables like `baseUrl`. Mark tokens as **secret**: secret values stay on your machine and never go into git.
+3. Create a request and add assertions. The saved file looks roughly like this:
+   ```
+   meta {
+     name: Get user
+     type: http
+     seq: 1
+   }
+
+   get {
+     url: {{baseUrl}}/users/1
+   }
+
+   assert {
+     res.status: eq 200
+     res.body.id: eq 1
+   }
+
+   tests {
+     test(&quot;has email&quot;, function() {
+       expect(res.body.email).to.be.a(&quot;string&quot;);
+     });
+   }
+   ```
+4. Run it from the terminal:
+   ```bash
+   cd api-tests
+   bru run --env local
+   ```
+5. Commit the folder.
+
+### CI (GitHub Actions example)
+```yaml
+- uses: actions/setup-node@v4
+  with: { node-version: 20 }
+- run: npm install -g @usebruno/cli@&lt;pinned-version&gt;
+- run: bru run --env ci --env-var token=${{ secrets.API_TOKEN }} --reporter-junit results.xml
+  working-directory: api-tests
+```
+If any assertion fails, `bru` exits non-zero and the job fails. Pin the CLI version so local and CI runs match. Guides disagree on the reporter flag (`--reporter-junit` vs. the older `--output … --format junit`), so run `bru run --help` for your version to check.
+
+## Alternative: Hurl
+
+Choose [Hurl](https://hurl.dev) if you don&#x27;t need a GUI. It&#x27;s open source, made by Orange, written in Rust, and the latest version I found is 8.0.x. Requests and assertions go in very small `.hurl` text files:
+```
+GET {{baseUrl}}/users/1
+HTTP 200
+[Asserts]
+jsonpath &quot;$.id&quot; == 1
+```
+- **Install:** `brew install hurl` on Mac. In CI, use the Linux binary from GitHub releases or the Docker image `ghcr.io/orange-opensource/hurl`. Don&#x27;t confuse it with an unrelated OCaml package also called &quot;hurl&quot;.
+- **Run:** `hurl --test --variable baseUrl=http://localhost:8080 api-tests/*.hurl --report-junit results.xml`. It&#x27;s a single binary with no Node needed, and it exits non-zero when a test fails.
+- **Downside:** there&#x27;s no desktop app, so anyone used to Postman has to learn to work in text files.
+
+**Rule of thumb:** pick Bruno if people want a Postman-like app. Pick Hurl if everyone is comfortable working only in the CLI and you want the smallest files and fastest CI runs.
+
+Sources:
+- [Bruno blog – 2025 recap / v3 plans](https://blog.usebruno.com/bruno-2025-from-idea-to-daily-driver)
+- [Bruno CLI vs Apidog CLI](https://apidog.com/blog/bruno-cli-vs-apidog-cli/)
+- [Bruno API testing guide](https://qaskills.sh/blog/bruno-api-testing-complete-guide)
+- [Bruno API client overview](https://yrkan.com/blog/bruno-api-client/)
+- [Hurl installation docs](https://hurl.dev/docs/installation.html)
+- [Hurl 8.0.0 release](https://newreleases.io/project/github/Orange-OpenSource/hurl/release/8.0.0)
+- [Arch Linux hurl 8.0.1 package](https://archlinux.org/packages/extra/x86_64/hurl/)</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: verified</li><li>B: -</li></ul></details>
+<fieldset><label><input type="radio" name="q07" value="A"> A</label>
+<label><input type="radio" name="q07" value="B"> B</label>
+<label><input type="radio" name="q07" value="tie"> tie</label>
+<input class="why" data-q="q07" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q08"><h2>8. q08</h2><p class="prompt">My company just grew past 250 employees, so Docker Desktop now needs a paid license for us. I need a free, open-source way to run containers from the terminal on my Apple silicon MacBook that still works with my existing docker and docker compose commands and runs arm64 images.</p>
+<div class="pair"><div><h3>A</h3><pre># Recommendation: Colima + the open-source Docker CLI
+
+**Use [Colima](https://github.com/abiosoft/colima) (MIT license) with the Homebrew `docker`, `docker-compose`, and `docker-buildx` packages.** Colima runs a small Linux VM with the real Docker Engine (Moby) inside it, using Apple&#x27;s Virtualization.framework. The Docker CLI and Compose are Apache-2.0 and free to use at any company size. Only Docker Desktop has the paid license. So your existing `docker ...` and `docker compose ...` commands, scripts and compose files keep working as they are, and arm64 images run natively.
+
+**My assumptions:** you have Homebrew, macOS 13 or later, and you&#x27;re fine re-pulling images. Images and volumes stored in Docker Desktop don&#x27;t carry over.
+
+## Install
+
+1. **Quit and uninstall Docker Desktop first.** Its `/usr/local/bin/docker*` symlinks and credential helper can conflict with the new setup. Use Troubleshoot → Uninstall in the app, then delete `Docker.app`. Then edit `~/.docker/config.json` and remove `&quot;credsStore&quot;: &quot;desktop&quot;` if it&#x27;s there. If you leave it, every `docker pull` or `docker login` will fail.
+
+2. **Install the packages:**
+   ```bash
+   brew install colima docker docker-compose docker-buildx
+   ```
+
+3. **Make `docker compose` (with a space) work, not just `docker-compose`.** Add this to `~/.docker/config.json`:
+   ```json
+   {
+     &quot;cliPluginsExtraDirs&quot;: [&quot;/opt/homebrew/lib/docker/cli-plugins&quot;]
+   }
+   ```
+   If the file already has other keys, add this key alongside them.
+
+## First run
+
+```bash
+# Start the VM: native arm64, VZ virtualization, Rosetta for any amd64 images, virtiofs mounts
+colima start --vm-type vz --vz-rosetta --mount-type virtiofs --cpu 4 --memory 8 --disk 100
+
+# Colima creates and selects a &quot;colima&quot; docker context automatically
+docker context ls
+
+# Check that it works
+docker run --rm hello-world
+docker run --rm alpine uname -m        # should print aarch64
+docker compose version
+docker buildx version
+```
+
+Then run `docker compose up` in one of your projects as usual.
+
+## Daily use
+
+- **Start and stop:** `colima start` and `colima stop`. The settings you used the first time are saved, and you can change them with `colima start --edit`.
+- **Start at login (optional):** `brew services start colima`
+- **Check status or troubleshoot:** `colima status`, `colima ssh`, `colima delete` (this wipes the VM)
+- **amd64-only images:** `docker run --platform linux/amd64 ...` runs them through Rosetta.
+- **Tools that expect `/var/run/docker.sock`** (Testcontainers, some IDEs): set this in your shell profile:
+  ```bash
+  export DOCKER_HOST=&quot;unix://$HOME/.colima/default/docker.sock&quot;
+  ```
+  For Testcontainers, also set `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock`.
+- **Port forwarding:** this happens automatically, so `-p 8080:80` is reachable at `localhost:8080`.
+
+## Alternatives (if Colima doesn&#x27;t suit you)
+
+| Option | License | Notes |
+|---|---|---|
+| **Rancher Desktop** | Apache-2.0 | Free, with a GUI. Choose the &quot;dockerd (moby)&quot; engine for full `docker` and `docker compose` compatibility. It&#x27;s heavier because it bundles Kubernetes, which you can turn off. Good if your team wants a Docker Desktop-style app. |
+| **Podman / Podman Desktop** | Apache-2.0 | Free and daemonless. It offers a Docker-compatible socket, but `podman compose` and Docker API compatibility have occasional rough edges, so it&#x27;s less of a drop-in replacement. |
+| Apple `container` | Apache-2.0 | Apple&#x27;s own open-source tool. Its CLI isn&#x27;t Docker-compatible and it has no Compose, so it doesn&#x27;t meet your requirements. |
+| OrbStack | Proprietary | Very good, but **not open source**, and commercial use requires a paid license. |
+
+**Bottom line:** Colima keeps your current `docker` and `docker compose` workflow with the least change. Uninstall Docker Desktop, run the `brew install` line, add the plugin directory to your config, and run `colima start`.</pre></div><div><h3>B</h3><pre>I&#x27;d use **Colima** with the open-source Docker CLI and Compose from Homebrew. Your `docker` and `docker compose` commands stay the same; only the engine underneath changes.
+
+The tool I checked ([source]) has no tested Docker Desktop replacement, so this advice comes from general knowledge, not from an install someone ran for you. Version details may have moved; check `colima version` and `brew info colima` before you depend on a specific flag.
+
+## Why Colima
+- **Free and open source (MIT).** Colima runs a small Linux VM with the real Docker Engine (Moby, Apache‑2.0) inside it. The `docker` CLI, Compose and Buildx you get from Homebrew are also Apache‑2.0, so the Docker Desktop license doesn&#x27;t apply to them.
+- **Works with your existing commands.** It creates a `colima` Docker context, so `docker build`, `docker run` and `docker compose up` work unchanged.
+- **Runs arm64 natively.** On Apple silicon the VM is arm64, so arm64 images run natively. It can also run amd64 images through Rosetta if you need them.
+- **Terminal only.** There&#x27;s no GUI.
+
+**My assumptions:** you have Homebrew installed, you&#x27;re on macOS 13 or later (needed for the faster `vz` VM backend), and you&#x27;re fine with removing Docker Desktop.
+
+## Install
+
+1. **Quit and uninstall Docker Desktop.** You can use the Troubleshoot → Uninstall option in its menu, or drag it to the Trash. This avoids conflicting `docker` binaries and makes it clear for compliance that you no longer use it.
+2. **Install the tools:**
+   ```sh
+   brew install colima docker docker-compose docker-buildx
+   ```
+3. **Let the Docker CLI find the Compose and Buildx plugins.** Homebrew&#x27;s install notes for these packages tell you to do this. Add the following to `~/.docker/config.json`, merging it with what&#x27;s already there:
+   ```json
+   &quot;cliPluginsExtraDirs&quot;: [&quot;/opt/homebrew/lib/docker/cli-plugins&quot;]
+   ```
+4. **Remove Docker Desktop&#x27;s credential helper.** If `~/.docker/config.json` has a `&quot;credsStore&quot;: &quot;desktop&quot;` line, delete it or change it to `&quot;osxkeychain&quot;`. If you leave it, `docker login` and pulls from private registries will fail once Docker Desktop is gone.
+
+## First run
+
+```sh
+# Start the VM (adjust resources to suit; --vz-rosetta is only needed for amd64 images)
+colima start --cpu 4 --memory 8 --disk 60 --vm-type vz --mount-type virtiofs --vz-rosetta
+
+docker context ls                 # &quot;colima&quot; should be marked active
+docker run --rm alpine uname -m   # should print: aarch64
+docker compose version            # confirms the Compose plugin is found
+docker compose up -d              # run this in one of your existing projects
+```
+
+Everyday commands:
+- `colima stop` and `colima start` to stop and restart the VM.
+- `colima status` to check it.
+- `brew services start colima` to start it automatically at login.
+- To change CPU or memory later, run `colima stop`, then `colima start` with new flags. If that doesn&#x27;t apply them, `colima delete` and start again, but **that wipes your images and volumes**.
+
+## Things to watch for
+- **Tools that expect `/var/run/docker.sock`** (some IDEs, Testcontainers): Colima&#x27;s socket is at `~/.colima/default/docker.sock`. Point them at it with:
+  ```sh
+  export DOCKER_HOST=&quot;unix://$HOME/.colima/default/docker.sock&quot;
+  ```
+  For Testcontainers, also set:
+  ```sh
+  export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+  ```
+- **Images and volumes don&#x27;t carry over** from Docker Desktop. Pull or build them again.
+- **Bind mounts:** by default only your home directory is shared with the VM. Projects stored outside `~` need a `--mount` flag.
+
+## Other options
+- **Podman (with `podman machine`)**: free (Apache‑2.0) and doesn&#x27;t need a daemon. Docker compatibility is good but not perfect: Compose runs through `podman compose` or a socket helper, and you&#x27;ll hit more small differences.
+- **Rancher Desktop**: free (Apache‑2.0), a GUI app with a Docker (moby) engine option. A good pick if teammates want a Docker Desktop–style app.
+- **Not suitable here:** OrbStack needs a paid license for commercial use. Apple&#x27;s `container` tool is open source but doesn&#x27;t work with `docker` or `docker compose` commands.
+
+Before rolling this out company-wide, check it with whoever handles your software licensing. The licensing above is accurate as far as I know, but they should confirm it.</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: -</li></ul></details>
+<fieldset><label><input type="radio" name="q08" value="A"> A</label>
+<label><input type="radio" name="q08" value="B"> B</label>
+<label><input type="radio" name="q08" value="tie"> tie</label>
+<input class="why" data-q="q08" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q09"><h2>9. q09</h2><p class="prompt">我同時用 Claude Code 和 Codex 寫程式，想把待辦事項改成存在 repo 裡的純文字檔，跟著 git 一起版本控制，不想再用線上的 issue 系統。有沒有命令列工具，讓我和 agent 都能新增、列出、關閉任務，列表也能輸出成 JSON 給 agent 讀？要免費、開源、不用帳號、離線可用，Mac 和 Linux 都能跑。</p>
+<div class="pair"><div><h3>A</h3><pre>我推薦 **Beads（指令名稱 `bd`）**。如果你比較在意任務檔要讓人直接閱讀，可以改用 **Backlog.md**。
+
+先說明查證範圍：[source] 已經實際裝過測試的工具裡，沒有一個符合「存在 repo 裡、輸出 JSON 給 agent 讀」這個需求（18 個候選都不合）。所以下面兩個都**沒有經過 [source] 安裝驗證**，資料來自網路搜尋。我沒有在你的機器上執行任何指令。
+
+## 主要推薦：Beads（`bd`）
+
+- **為什麼適合你：** 它本來就是設計給 coding agent 用的 issue tracker。任務存成 repo 裡的 `.beads/issues.jsonl`，這個檔案就是正本，會跟著 git commit。本機另外有一個 SQLite 快取，已經加進 gitignore，不會進 repo。
+- **JSON 輸出：** `bd list`、`bd show`、`bd update`、`bd close` 都能加 `--json`，agent 可以直接讀。
+- **多個 agent 同時用：** 從 v0.20 開始，任務 ID 從流水號改成短 hash，Claude Code 和 Codex 在不同 branch 同時新增任務也不會撞號。`bd init` 還會設定 JSONL 的 merge driver，減少合併衝突。
+- **授權與平台：** MIT 授權，免費，不用帳號，可以離線用，Mac 和 Linux 都能跑。
+- **取捨：** 檔案是 JSONL，不是 Markdown。人可以讀，但不太適合手動編輯，主要還是透過 CLI 操作。
+
+### 安裝（以下三種擇一）
+```bash
+# 方法 A：有 Go 的話最通用，Mac / Linux 都適用
+go install github.com/steveyegge/beads/cmd/bd@latest
+
+# 方法 B：用 Homebrew
+#   README 裡有 brew 的安裝方式，但 tap 名稱可能改過，請以官方 README 為準
+
+# 方法 C：官方 curl 安裝腳本
+#   會把腳本直接 pipe 進 shell 執行，建議先打開來看過內容再跑
+```
+官方 repo：https://github.com/steveyegge/beads
+
+### 第一次使用
+```bash
+cd your-repo
+bd init                       # 建立 .beads/，裝好 git hooks 和 merge driver
+                              # 給 agent 跑、不想要互動提示時用 bd init --quiet
+bd create &quot;修正登入逾時&quot;       # 新增任務
+bd list                       # 給人看的列表
+bd list --json                # 給 agent 讀的 JSON
+bd close &lt;id&gt;                 # 關閉任務
+git add .beads &amp;&amp; git commit -m &quot;add tasks&quot;
+```
+接著在 `CLAUDE.md` 和 `AGENTS.md`（Codex 會讀這個檔）各加一行，例如：「用 `bd` 管理任務，不要另寫 markdown 計畫；查詢時加 `--json`」。在新 clone 下來的 repo 裡跑 `bd init`，它會從 JSONL 匯入現有的任務。
+
+**需要你自己確認的地方：** 我查到的資料是 pkg.go.dev 上幾個舊版本（v0.17 到 v0.25）的說明。Beads 版本更新很快，儲存後端和安裝方式後來可能改過。安裝前請先看官方 README，確認任務還是存成 git 追蹤的純文字檔。如果已經不是，請改用下面的 Backlog.md。
+
+## 替代方案：Backlog.md
+
+- **特點：** 每個任務是一個 Markdown 檔（`task-&lt;id&gt; - &lt;標題&gt;.md`），放在 repo 裡的專用資料夾。人讀起來比 Beads 舒服，也有看板和 Web UI。MIT 授權。
+- **跟 agent 的整合：** 初始化精靈可以直接幫 Claude Code 和 Codex 設定 MCP 連線，也可以改成寫指令說明到 `CLAUDE.md` / `AGENTS.md`。
+- **取捨：** 需要 Node.js 或 Bun（Homebrew 和 Nix 也有提供）。我沒有查到 `list` 指令能輸出 JSON。它的 agent 介面主要是 MCP 和純文字輸出，所以如果你一定要 CLI 直接吐 JSON，Beads 比較符合。
+
+```bash
+npm i -g backlog.md           # 或 bun add -g backlog.md，或 brew install backlog-md
+cd your-repo
+backlog init &quot;My Project&quot;     # 精靈裡選擇要不要接 MCP
+backlog task create &quot;修正登入逾時&quot;
+backlog task list --plain
+# 選用：讓 Claude Code 透過 MCP 使用
+claude mcp add backlog --scope user -- backlog mcp start
+```
+官方 repo：https://github.com/MrLesk/Backlog.md
+
+**怎麼選：** 想要 agent 讀到穩定的 JSON、多個 agent 平行作業不撞號，選 **Beads**。比較重視任務是能用人眼閱讀、手動編輯的 Markdown，選 **Backlog.md**。
+
+Sources:
+- [pkg.go.dev – beads v0.20.0](https://pkg.go.dev/github.com/steveyegge/beads@v0.20.0)
+- [pkg.go.dev – beads v0.17.7](https://pkg.go.dev/github.com/steveyegge/beads@v0.17.7)
+- [pkg.go.dev – beads v0.21.1](https://pkg.go.dev/github.com/steveyegge/beads@v0.21.1)
+- [pkg.go.dev – beads v0.25.0](https://pkg.go.dev/github.com/steveyegge/beads@v0.25.0)
+- [MrLesk/Backlog.md](https://github.com/MrLesk/Backlog.md)
+- [SourcePulse – Backlog.md](https://www.sourcepulse.org/projects/11036095)</pre></div><div><h3>B</h3><pre>## 推薦：Backlog.md（`backlog` 指令）
+
+我假設你要的是：每個任務都是 repo 裡的一個檔案，直接 `git commit` 就能進版控，不需要另外的資料庫或同步服務。照這個條件，Backlog.md 最合適：
+
+- **純文字**：每個任務是一個 `.md` 檔，放在 `backlog/` 資料夾。git diff 看得懂，衝突也能手動合併。
+- **輸出 JSON**：`task list`、`task view`、`search` 等指令都支援 `--json`。Agent 讀到的是乾淨的 JSON，沒有互動提示。
+- **專為 agent 設計**：初始化時可以幫你寫好給 Claude Code / Codex 的使用說明，或改用 MCP 連接。
+- **授權與離線**：MIT 授權，官方標榜「no server, no account, no telemetry」。可以離線使用，這是我從說明推斷的，官方沒有直接寫「offline」。
+- **平台**：Mac 和 Linux 都能用，可以透過 Homebrew、npm、bun 或 nix 安裝。
+
+### 安裝（擇一）
+```bash
+brew install backlog-md        # Mac / Linux（Linuxbrew）
+npm i -g backlog.md            # 或用 Node
+bun add -g backlog.md          # 或用 Bun
+```
+不想安裝也可以先試：`npx backlog.md init &quot;My Project&quot;`
+
+### 第一次使用
+```bash
+cd your-repo
+backlog init &quot;My Project&quot;
+```
+初始化精靈會問 AI 整合方式，有三個選項：寫 CLI 使用說明（官方推薦）、MCP、或略過。選 CLI 說明，它就會把用法寫進 agent 的指示檔，Claude Code 和 Codex 都能讀到。
+
+```bash
+# 新增
+backlog task create &quot;實作登入頁&quot; 
+backlog task edit BACK-1 -d &quot;詳細說明&quot; --ac &quot;驗收條件&quot;
+
+# 列出（人看 / agent 讀）
+backlog task list -s &quot;To Do&quot;
+backlog task list --json
+backlog task BACK-1 --json
+
+# 關閉：改狀態為 Done；取消、重複或無效的任務用 archive
+backlog task edit BACK-1 -s Done
+backlog task archive BACK-2
+
+git add backlog/ &amp;&amp; git commit -m &quot;update tasks&quot;
+```
+
+如果想讓 Claude Code 透過 MCP 使用：
+```bash
+claude mcp add backlog --scope user -- backlog mcp start
+```
+Codex 的話，用 CLI 說明（AGENTS.md）通常就夠了。
+
+**注意事項：**
+- 我沒有在你的機器上實際跑過這些指令。`-s Done` 的寫法和 `--json` 支援的範圍，請用 `backlog task edit --help` 和 `backlog task list --help` 確認一次。
+- 建議讓你和 agent 都透過 CLI 修改任務，不要直接手改 `.md` 檔，這樣檔案格式和 ID 才不會亂掉。
+
+## 其他選項（以及為什麼不是首選）
+- **Beads（`bd`）**：同樣是為 coding agent 設計，`--json` 支援完整。但目前的版本以 Dolt 資料庫為主要儲存，`.beads/issues.jsonl` 只是匯出檔，所以不是你要的「純文字跟著 git 走」。如果你更在意任務之間的相依關係，而不在意儲存格式，可以考慮。
+- **todo.txt-cli**：純文字、非常簡單，但沒有 JSON 輸出。
+- **Taskwarrior**：有 JSON 匯出，但資料預設不存在 repo 裡，不適合你的用法。
+
+Sources:
+- [MrLesk/Backlog.md (GitHub)](https://github.com/MrLesk/Backlog.md)
+- [saada/Backlog.md fork](https://github.com/saada/Backlog.md)
+- [Backlog quick reference skill](https://skills.cat/skills/yebot/rad-cc-plugins/plugins-backlog-md-cli-skills-backlog-quick-reference)
+- [beads on pkg.go.dev](https://pkg.go.dev/github.com/steveyegge/beads@v0.54.1)
+- [beads v0.58.0 release notes](https://newreleases.io/project/github/steveyegge/beads/release/v0.58.0)
+- [beads skill (agentskills.so)](https://agentskills.so/skills/itechmeat-llm-code-beads)</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: -</li></ul></details>
+<fieldset><label><input type="radio" name="q09" value="A"> A</label>
+<label><input type="radio" name="q09" value="B"> B</label>
+<label><input type="radio" name="q09" value="tie"> tie</label>
+<input class="why" data-q="q09" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q10"><h2>10. q10</h2><p class="prompt">我用 Markdown 寫中文技術文件，一個段落就是一整行。每次 git diff 都是整行紅綠，根本看不出改了哪幾個字。是不是要另外裝什麼 diff 工具？我在 Ubuntu 上，git 已經裝好了。</p>
+<div class="pair"><div><h3>A</h3><pre># 不用另外裝工具，git 內建的 word diff 就能做到
+
+要加的只有一個設定。git 有 `--word-diff` 和 `--color-words`，只顯示行內改動的部分。
+
+但直接用在中文上沒有效果。git 預設用空白切詞，一整段中文中間沒有空白，會被當成一個「詞」，結果還是整段紅綠。所以要給它一個正則，**把每個中文字當成一個單位，英文單字保持完整**。
+
+## 主要推薦：用 `--color-words` 加上自訂切詞規則
+
+### 1. 先試一次（不用改任何設定）
+
+在你的 repo 裡執行：
+
+```bash
+git diff --color-words=&#x27;[A-Za-z0-9_]+|[^[:space:]]&#x27;
+```
+
+- `[A-Za-z0-9_]+`：英文、數字、變數名稱整個當成一個詞，例如 `config_file`
+- `[^[:space:]]`：其他非空白字元各自算一個單位，所以每個中文字和標點都分開比對
+
+輸出會是同一行裡只有改到的字變紅或變綠。如果終端機沒有顏色，或你想複製貼上，可以改用文字標記：
+
+```bash
+git diff --word-diff=plain --word-diff-regex=&#x27;[A-Za-z0-9_]+|[^[:space:]]&#x27;
+```
+
+刪掉的字顯示成 `[-舊字-]`，新增的字顯示成 `{+新字+}`。
+
+### 2. 只對 Markdown 套用，設定一次就好
+
+在 repo 根目錄的 `.gitattributes` 加一行（沒有這個檔就新建）：
+
+```
+*.md diff=cjk
+```
+
+然後設定這個 `cjk` diff driver 的切詞規則：
+
+```bash
+git config --global diff.cjk.wordRegex &#x27;[A-Za-z0-9_]+|[^[:space:]]&#x27;
+```
+
+之後只要打 `git diff --color-words` 或 `git diff --word-diff`，`.md` 檔就會自動用這個規則，其他程式碼檔案不受影響。
+
+### 3. 設一個短指令（可選）
+
+git 沒有「預設開啟 word diff」的設定，所以通常用 alias：
+
+```bash
+git config --global alias.wdiff &#x27;diff --color-words&#x27;
+```
+
+以後打 `git wdiff` 就可以了。`git wdiff --cached` 和 `git wdiff HEAD~1` 這類寫法照常能用。`git log -p --color-words` 和 `git show --color-words` 也一樣有效。
+
+### 我假設的前提
+
+- **系統 locale 是 UTF-8**。Ubuntu 預設是 `en_US.UTF-8` 或 `C.UTF-8`，通常沒問題。如果中文字被切成亂碼（例如出現 `&lt;E4&gt;` 這種位元組），用 `locale` 檢查一下，確認 `LANG` 結尾是 `.UTF-8`。
+- 我沒有在你的機器上實際跑過這些指令，請以你那邊的輸出為準。
+
+## 補充：另一個習慣上的做法
+
+很多人寫中文 Markdown 會改成**一句一行**，也就是在 `。`、`？` 後面換行。Markdown 渲染時同一段落裡的單一換行不會變成斷行，結果看起來一樣，但 diff 天然就是逐句的，`git blame` 和 merge 衝突也會清楚很多。這可以和上面的 word diff 一起用。
+
+## 如果之後想要更好看的介面
+
+- **delta**（`sudo apt install git-delta`）：有並排顯示、語法高亮。不過它預設的行內比對對中文是以整段連續中文為單位，效果不如上面的 `--color-words`，所以只是錦上添花，不能取代上面的設定。
+- **diff-highlight**：Ubuntu 的 git 套件附帶，在 `/usr/share/doc/git/contrib/diff-highlight`，需要先 `make` 才能用。它只標出前後相同部分中間的差異區段，適合一段只改一處的情況。
+
+結論：先跑第 1 步那行指令看效果，滿意的話再做第 2、3 步，什麼都不用裝。</pre></div><div><h3>B</h3><pre># 不用另外裝工具，git 內建的 `--word-diff` 就可以
+
+只是要多加一個設定。git 預設用空白切「詞」，中文字之間沒有空白，所以整段中文會被當成一個詞，結果還是整段紅綠。只要讓 git 把每個中文字當成一個單位，就能看到改了哪幾個字。
+
+我照你說的，沒有在你的電脑上執行任何指令，也沒有改任何檔案。下面的步驟都由你自己決定要不要執行。我也查了 [source] 的工具庫，裡面沒有比 git 內建功能更適合這件事的工具。
+
+## 第一步：先試一次（不會改任何設定）
+
+在你的 repo 裡執行：
+
+```bash
+git diff --word-diff=color --word-diff-regex=&#x27;[A-Za-z0-9_]+|[^[:space:]]&#x27;
+```
+
+- `[A-Za-z0-9_]+`：英文單字、變數名稱保持整個詞比對，不會被拆成一個一個字母。
+- `[^[:space:]]`：其他非空白字元（中文字、標點）每個字單獨比對。
+- `--word-diff=color`：只用顏色標出刪掉和新增的字。如果你的終端機沒有顏色，或是要貼到別的地方，可以改成 `--word-diff=plain`，會顯示成 `[-刪除-]{+新增+}`。
+
+**我的假設：** 你的系統語系是 UTF-8（Ubuntu 預設就是）。如果中文顯示成亂碼，或是比對結果怪怪的，先執行 `locale` 確認 `LC_CTYPE` 是不是類似 `zh_TW.UTF-8` 或 `en_US.UTF-8`。
+
+## 第二步：設定成固定使用（只對 Markdown 生效）
+
+1. 讓 git 用你的切字規則比對 `.md` 檔。這一行會寫進 `~/.gitconfig`：
+   ```bash
+   git config --global diff.markdown.wordRegex &#x27;[A-Za-z0-9_]+|[^[:space:]]&#x27;
+   ```
+2. 在 repo 根目錄的 `.gitattributes` 加上這一行（沒有這個檔就新建一個）：
+   ```
+   *.md diff=markdown
+   ```
+3. 設一個簡短的別名：
+   ```bash
+   git config --global alias.wd &#x27;diff --word-diff=color&#x27;
+   ```
+
+設定好之後，平常就這樣用：
+
+```bash
+git wd                 # 還沒 stage 的改動
+git wd --cached        # 已經 stage 的改動
+git wd HEAD~1          # 跟上一個 commit 比
+git log -p --word-diff=color   # 看歷史紀錄時也能逐字顯示
+```
+
+**驗證方法：** 隨便改一個長段落裡的兩三個字，執行 `git wd`。如果只有那幾個字變色，就設定成功了。
+
+## 第三步（可選）：想要更好看的介面
+
+如果你想要左右並排顯示、語法上色，可以考慮 **delta**。Ubuntu 24.04 以後可以用 `sudo apt install git-delta` 安裝。要注意兩件事：
+- [source] 沒有驗證過 delta。
+- delta 標示行內差異是靠它自己切詞，中文可能還是會一整串一起標起來。
+
+所以要「準確看出改了哪幾個字」，還是上面的 `--word-diff-regex` 方法最可靠。delta 比較適合當作看程式碼時的外觀升級。
+
+## 補充建議
+
+如果文件是多人協作，可以考慮改用「一句一行」的寫法：每個句號後面換行。Markdown 顯示時會自動合併成同一段，這樣以後連一般的 `git diff`、GitHub 的 PR 頁面都能清楚看出改了哪幾句。</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: 驗證過</li></ul></details>
+<fieldset><label><input type="radio" name="q10" value="A"> A</label>
+<label><input type="radio" name="q10" value="B"> B</label>
+<label><input type="radio" name="q10" value="tie"> tie</label>
+<input class="why" data-q="q10" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q11"><h2>11. q11</h2><p class="prompt">我是學生，用 MacBook Air M2 16GB。想在本機離線跑一個中文模型，回答要是繁體中文、用台灣習慣的用語，不要一直跑出簡體字。最好在終端機就能問，不用付費也不用註冊任何帳號。</p>
+<div class="pair"><div><h3>A</h3><pre>我只給建議，沒有在你的電腦上執行任何指令。
+
+## 主要推薦：Ollama ＋ 聯發科 Breeze 2（8B）＋ OpenCC 把簡體轉回繁體
+
+前提假設：你的 Mac 裝了 Homebrew。如果沒有，可以改到 ollama.com 下載 Mac 版 App。
+
+**為什麼這樣搭配：**
+- **Ollama**：免費，不用註冊，在終端機就能直接問，對 Apple Silicon 支援很好。
+- **Llama-Breeze2-8B**：聯發科研究院專門為**繁體中文（台灣）**訓練的模型。用 Q4_K_M 版本（壓縮過的版本），模型檔大約 5 GB，16GB 的 M2 Air 跑得動。
+- **OpenCC 的 `s2twp` 設定**：任何模型都可能偶爾冒出簡體字。這個設定會把輸出轉成繁體，並把詞彙換成台灣說法，例如「软件」變「軟體」、「视频」變「影片」。這是最穩的保險。
+
+**要先說清楚的幾件事：**
+- 我用的推薦工具 [source] 這次找到的 Camelid 和 Xyntetik Runner 都不太適合你：它們不是專門處理繁體中文的工具，而且沒有實際測過聊天功能。Ollama 和上面的模型都**沒有經過 [source] 安裝驗證**，只是一般常見的做法。
+- Ollama 官方模型庫裡沒有 Breeze 2，下面用的是社群轉檔的純文字版（沒有看圖功能）。
+
+### 安裝（只有第一次要下載，之後完全離線）
+```bash
+brew install ollama          # 安裝 Ollama
+brew install opencc          # 安裝簡轉繁工具
+brew services start ollama   # 讓 Ollama 在背景執行（也可以另開一個視窗跑 ollama serve）
+ollama pull hf.co/DevQuasar-9/voidful.Llama-Breeze2-8B-Instruct-text-only-GGUF:Q4_K_M
+```
+
+### 加上「台灣繁中」的系統提示（建議做）
+建一個叫 `Modelfile` 的檔案，內容如下：
+```
+FROM hf.co/DevQuasar-9/voidful.Llama-Breeze2-8B-Instruct-text-only-GGUF:Q4_K_M
+SYSTEM 你是台灣的助理。一律使用繁體中文與台灣慣用詞（例如：軟體、影片、網路、資訊、程式），絕對不要使用簡體字或中國大陸用語。
+PARAMETER temperature 0.6
+```
+然後執行：
+```bash
+ollama create tw -f Modelfile
+```
+
+### 第一次使用
+```bash
+# 互動式聊天（輸入 /bye 離開）
+ollama run tw
+
+# 單次提問，並保證輸出是台灣繁體
+ollama run tw &quot;用三句話解釋什麼是機器學習&quot; | opencc -c s2twp.json
+```
+想確認是不是真的離線，可以先關掉 Wi-Fi 再問一次，應該照樣能回答。
+
+### 備案：TAIDE（國科會的台灣模型）
+如果覺得 Breeze 2 的回答不夠好，可以換成社群轉檔的 TAIDE：
+```bash
+ollama pull hf.co/tetf/Llama-3.1-TAIDE-LX-8B-Chat-GGUF:Q4_K_M
+```
+- 這條指令我沒有實際確認過能不能用。
+- 那個模型頁面建議加上停止符號 `&lt;|eot_id|&gt;`。如果回答講不停，在 Modelfile 裡加一行 `PARAMETER stop &quot;&lt;|eot_id|&gt;&quot;`。
+- TAIDE 用的是自己的社群授權，使用前請先看一下條款。
+
+### 小提醒
+- 跑 8B 模型時，記憶體大約會吃掉 6–7 GB，最好同時少開幾個瀏覽器分頁。
+- M2 Air 沒有風扇，長時間使用機身會變熱、速度可能變慢，這是正常的。
+
+來源：
+- [Llama-Breeze2-8B-Instruct（MediaTek Research）](https://huggingface.co/MediaTek-Research/Llama-Breeze2-8B-Instruct)
+- [Breeze2 GGUF（社群轉檔，附 Ollama 指令）](https://huggingface.co/DevQuasar-9/voidful.Llama-Breeze2-8B-Instruct-text-only-GGUF)
+- [Breeze 2 論文](https://ar5iv.labs.arxiv.org/html/2501.13921)
+- [Llama-3.1-TAIDE-LX-8B-Chat GGUF](https://huggingface.co/tetf/Llama-3.1-TAIDE-LX-8B-Chat-GGUF)</pre></div><div><h3>B</h3><pre>## 推薦：用 **Ollama** 跑 **Llama-3-Taiwan-8B-Instruct**（Q4_K_M 量化版）
+
+**為什麼選這個組合：**
+- **Ollama** 免費、開源，終端機就能用，不用註冊帳號。下載模型後就能完全離線使用。
+- **Llama-3-Taiwan-8B-Instruct** 是台大林彥廷團隊用大量繁體中文和台灣資料調整的模型，用詞偏台灣習慣，例如「軟體、資訊、影片」，不會講成「软件、信息、视频」。有使用者實測說它很守指令、中文也講得更自然，只是做摘要時偶爾會重複跳針。
+- 8B 模型的 Q4 量化版大約 5 GB，M2 16GB 跑起來很順，速度大概每秒十幾到二十幾個 token（這是我的估計，沒有實際量過）。
+- Hugging Face 上有現成的 GGUF 檔，**公開、不用登入**，Ollama 可以直接從 Hugging Face 下載。
+
+&gt; **我的假設：** 你主要用來問答、寫作、整理資料，不是寫程式或解很難的數學。如果是後兩種，看最後的「備案」。
+
+---
+
+## 安裝步驟（第一次需要網路，之後可以完全離線）
+
+**1. 安裝 Ollama**（二選一）
+- 到 https://ollama.com/download 下載 macOS 版，拖進「應用程式」再打開就好，不用登入。
+- 如果有裝 Homebrew，也可以用：`brew install ollama`，然後 `ollama serve`（這個視窗要一直開著）
+
+**2. 下載並試跑模型**
+```bash
+ollama run hf.co/phate334/Llama-3-Taiwan-8B-Instruct-Q4_K_M-GGUF
+```
+第一次執行會先下載大約 5 GB，下載完就會進入對話模式。輸入 `/bye` 可以離開。
+
+**3. 固定成「台灣繁中模式」（建議做）**
+建一個檔案叫 `Modelfile`，內容如下：
+```
+FROM hf.co/phate334/Llama-3-Taiwan-8B-Instruct-Q4_K_M-GGUF
+SYSTEM &quot;&quot;&quot;你是一位台灣的助理。請一律使用繁體中文與台灣慣用語回答（例如：軟體、網路、影片、資訊、品質），絕對不要使用簡體字或中國大陸用語。&quot;&quot;&quot;
+PARAMETER temperature 0.6
+```
+然後執行：
+```bash
+ollama create tw -f Modelfile
+ollama run tw
+```
+之後每次只要打 `ollama run tw` 就能用。也可以直接單次提問：`ollama run tw &quot;幫我解釋什麼是邊際效用&quot;`
+
+**4. 想百分之百不出現簡體字的話：加 OpenCC 轉換（選用）**
+```bash
+brew install opencc
+ollama run tw &quot;你的問題&quot; | opencc -c s2twp
+```
+`s2twp` 會把簡體字轉成繁體，也會換成台灣用語，例如「軟件→軟體」。這個方法只適合單次提問，互動對話模式沒辦法這樣接。
+
+---
+
+## 注意事項
+- **離線確認：** 下載完成後把 Wi-Fi 關掉，再跑 `ollama run tw`，應該還是能正常回答。
+- **如果回答亂掉或答非所問：** 有些社群轉檔的對話範本（chat template）跟 Ollama 不合。這時可以換另一個轉檔版本試試，例如 `hf.co/tliobnih/Llama-3-Taiwan-8B-Instruct-Q5_K_M-GGUF`（大約 5.7 GB，品質稍好一點）。
+- **為什麼不推官方 TAIDE：** 國科會 TAIDE 的官方 Hugging Face 頁面需要登入並同意條款，不符合你「不註冊」的條件。社群有轉好的 GGUF（例如 QuantFactory 的 Llama3-TAIDE-LX-8B-Chat-Alpha1-GGUF），也可以用 `ollama run hf.co/QuantFactory/Llama3-TAIDE-LX-8B-Chat-Alpha1-GGUF:Q4_K_M` 試試看。不過這是比較舊的 Alpha 版，而且轉檔者提醒 4-bit 版本可能影響品質。
+- **備案（推理能力更強）：** 通用模型像 `ollama run qwen3:8b` 邏輯和程式能力比較好，但很容易跑出簡體字。如果要用它，記得搭配上面的 Modelfile 系統提示加上 `opencc -c s2twp`。
+
+我沒有在你的電腦上執行或修改任何東西。上面的模型路徑是根據 Hugging Face 上目前公開的 repo 寫的，萬一某個 repo 被刪掉，換同名模型的其他轉檔版本就可以。
+
+**資料來源：**
+- [phate334/Llama-3-Taiwan-8B-Instruct-Q4_K_M-GGUF](https://huggingface.co/phate334/Llama-3-Taiwan-8B-Instruct-Q4_K_M-GGUF/raw/main/README.md)
+- [tliobnih/Llama-3-Taiwan-8B-Instruct-Q5_K_M-GGUF](https://huggingface.co/tliobnih/Llama-3-Taiwan-8B-Instruct-Q5_K_M-GGUF/blob/main/README.md)
+- [QuantFactory/Llama3-TAIDE-LX-8B-Chat-Alpha1-GGUF](https://huggingface.co/QuantFactory/Llama3-TAIDE-LX-8B-Chat-Alpha1-GGUF)
+- [lianghsun/Llama-3.2-Taiwan-3B-Instruct-GGUF（Ollama 範本問題）](https://huggingface.co/lianghsun/Llama-3.2-Taiwan-3B-Instruct-GGUF)
+- [iThome 鐵人賽：台灣 LLM 實測](https://ithelp.ithome.com.tw/articles/10347843)
+- [中央社：TAIDE 釋出 8B 模型](https://www.cna.com.tw/news/ait/202404290314.aspx)
+- [Taiwan LLM 發展現況盤點](https://cloudinsight.cc/zh/blog/taiwan-llm)</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: 實測</li></ul></details>
+<fieldset><label><input type="radio" name="q11" value="A"> A</label>
+<label><input type="radio" name="q11" value="B"> B</label>
+<label><input type="radio" name="q11" value="tie"> tie</label>
+<input class="why" data-q="q11" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q12"><h2>12. q12</h2><p class="prompt">On my Apple silicon MacBook Pro I want to run local LLMs with Apple&#x27;s MLX framework instead of GGUF/llama.cpp, from the terminal only, behind a local OpenAI-compatible server that my coding tools can call, with streaming, since my editor streams responses. I&#x27;d like to load MLX-format models straight from Hugging Face or a local folder. It has to be free and open source, no GUI app, no account.</p>
+<div class="pair"><div><h3>A</h3><pre>I recommend **`mlx-lm`**, Apple&#x27;s own MLX package, which includes a built-in server called `mlx_lm.server`. It&#x27;s MIT-licensed, terminal-only and needs no account. It provides OpenAI-style endpoints (`/v1/chat/completions`, `/v1/models`) and streams when a request includes `&quot;stream&quot;: true`. `--model` accepts either a Hugging Face repo ID (downloaded and cached on first use) or a local folder.
+
+I haven&#x27;t run anything on your machine. I checked the server&#x27;s current docs; below are my assumptions and the steps.
+
+## Assumptions
+- You have a native arm64 Python 3.10 or newer, not one running under Rosetta, and a recent macOS. Check with `python3 -c &quot;import platform; print(platform.machine())&quot;`, which should print `arm64`.
+- You want a single-user server bound to localhost. The project says this server &quot;is not recommended for production&quot; because it has only basic security checks, so don&#x27;t expose it to your network.
+
+## Install
+Either of these keeps it in its own isolated environment:
+```bash
+# Option A: uv (recommended)
+brew install uv            # or: curl -LsSf https://astral.sh/uv/install.sh | sh
+uv tool install mlx-lm
+
+# Option B: pipx
+brew install pipx &amp;&amp; pipx ensurepath
+pipx install mlx-lm
+```
+(Running `pip install mlx-lm` inside a venv also works.)
+
+## First run
+1. **Optional: try generation first.** This downloads the model the first time:
+   ```bash
+   mlx_lm.generate --model mlx-community/Qwen2.5-Coder-7B-Instruct-4bit --prompt &quot;Write hello world in Rust&quot;
+   ```
+   Most quantized MLX models are under the `mlx-community` org on Hugging Face. As a rough guide, 4-bit 7–14B models suit 16–32 GB of RAM, and larger models need more.
+
+2. **Start the server:**
+   ```bash
+   mlx_lm.server --model mlx-community/Qwen2.5-Coder-7B-Instruct-4bit --host 127.0.0.1 --port 8080
+   # or a local folder:
+   mlx_lm.server --model ~/models/my-mlx-model
+   ```
+   It listens on localhost:8080 by default. Run `mlx_lm.server --help` to see all options, such as KV-cache quantization with `--kv-bits`.
+
+3. **Test streaming** from a second terminal:
+   ```bash
+   curl -N http://127.0.0.1:8080/v1/chat/completions \
+     -H &quot;Content-Type: application/json&quot; \
+     -d &#x27;{&quot;messages&quot;:[{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;Say hi&quot;}],&quot;stream&quot;:true,&quot;max_tokens&quot;:50}&#x27;
+   ```
+   You should see `chat.completion.chunk` events arriving one at a time.
+
+4. **Point your editor or tools at the server:**
+   - Base URL: `http://127.0.0.1:8080/v1`
+   - API key: any placeholder string, such as `local`, if the tool requires one
+   - Model name: the same repo ID or path you passed to `--model`. `GET /v1/models` lists what&#x27;s available.
+
+## Tips
+- To convert or quantize your own model: `mlx_lm.convert --hf-path &lt;repo&gt; -q`. This writes a local folder that you can pass to `--model`.
+- Downloads are cached in `~/.cache/huggingface`. You can change the location with `HF_HOME`.
+- It handles one user well. If you need concurrent requests from several tools, look at the alternatives below.
+
+## Alternatives (also free, terminal-only)
+- **mlx-omni-server**: an MLX server that implements more of the OpenAI API, including tools/function calling and embeddings. It&#x27;s worth trying if your coding tool depends on tool calls.
+- **vllm-mlx**: a vLLM-style MLX server built for batching and concurrent requests.
+
+Both are community projects and change more often than `mlx-lm`, so check their READMEs before installing.
+
+Source: [mlx-lm SERVER.md](https://github.com/ml-explore/mlx-lm/blob/main/mlx_lm/SERVER.md)</pre></div><div><h3>B</h3><pre>I recommend **mlx-lm**, the command-line package from Apple&#x27;s ML Explore team. Its `mlx_lm.server` command runs a local OpenAI-compatible server.
+
+It meets each of your requirements:
+- **Uses MLX, not GGUF/llama.cpp:** it runs MLX-format models directly on Apple silicon.
+- **Terminal only, no account:** it&#x27;s a pip package under the MIT license, with no GUI and no sign-up. Public models on Hugging Face download without logging in.
+- **OpenAI-compatible:** it serves `POST /v1/chat/completions` and `GET /v1/models` on `localhost:8080` by default.
+- **Streaming:** if a request sets `&quot;stream&quot;: true`, the server sends `chat.completion.chunk` events as tokens are generated, which is what editors expect.
+- **Hugging Face or local folder:** `--model` takes either a Hugging Face repo ID (downloaded to the HF cache) or a local path.
+
+I checked these details against the project&#x27;s `SERVER.md` docs. [source], a tool that recommends software it has installed and tested, didn&#x27;t have a tested option for this request. It also named mlx-lm, but hasn&#x27;t tested it, and I haven&#x27;t run any of the steps below on your machine.
+
+## Install
+I&#x27;m assuming you have a native arm64 Python 3.9 or newer, such as Homebrew&#x27;s or one managed by uv. An x86 Python running under Rosetta won&#x27;t work with MLX. Pick one of these:
+
+```bash
+# Option A: uv (installs the CLI in its own isolated environment)
+brew install uv
+uv tool install mlx-lm
+
+# Option B: pipx
+brew install pipx &amp;&amp; pipx ensurepath
+pipx install mlx-lm
+
+# Option C: a plain virtual environment
+python3 -m venv ~/.venvs/mlx &amp;&amp; source ~/.venvs/mlx/bin/activate
+pip install -U mlx-lm
+```
+
+## First run
+1. **Quick test in the terminal.** This downloads the model the first time:
+   ```bash
+   mlx_lm.generate --model mlx-community/Qwen2.5-Coder-7B-Instruct-4bit --prompt &quot;Write a Python hello world&quot;
+   ```
+   The `mlx-community` organization on Hugging Face has many models already converted to MLX. A 7B model at 4-bit uses roughly 5 GB of memory. On a 32 GB Mac or larger, 14B–32B 4-bit models also run well.
+
+2. **Start the server:**
+   ```bash
+   mlx_lm.server --model mlx-community/Qwen2.5-Coder-7B-Instruct-4bit --port 8080
+   # or from a local folder:
+   mlx_lm.server --model ~/models/my-mlx-model --port 8080
+   ```
+   Run `mlx_lm.server --help` to see all options, such as `--host` and KV-cache quantization with `--kv-bits`.
+
+3. **Check that streaming works:**
+   ```bash
+   curl -N http://127.0.0.1:8080/v1/chat/completions \
+     -H &quot;Content-Type: application/json&quot; \
+     -d &#x27;{&quot;model&quot;:&quot;mlx-community/Qwen2.5-Coder-7B-Instruct-4bit&quot;,&quot;messages&quot;:[{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;Hi&quot;}],&quot;stream&quot;:true}&#x27;
+   ```
+   You should see `data: {...chat.completion.chunk...}` lines arrive one after another.
+
+4. **Point your editor or coding tools at it:**
+   - Base URL: `http://127.0.0.1:8080/v1`
+   - API key: any placeholder like `sk-local`, since many clients require the field to be filled in
+   - Model: the repo ID or path you started the server with
+
+## Using models that aren&#x27;t on mlx-community yet
+You can convert and quantize a regular Hugging Face model to MLX yourself:
+```bash
+mlx_lm.convert --hf-path Qwen/Qwen2.5-Coder-7B-Instruct -q --mlx-path ~/models/qwen-coder-7b-4bit
+```
+Then pass that folder to `--model`.
+
+## Things to know
+- **Security:** the docs say the server only has &quot;basic security checks&quot; and isn&#x27;t meant for production. Keep it on `127.0.0.1` and don&#x27;t expose it to your network.
+- **One model at a time:** it serves the model you start it with, although a request&#x27;s `model` field can name another repo or path. If you use `--kv-bits`, requests are handled one at a time with no batching.
+- **Possible gap:** your tools might need endpoints this server doesn&#x27;t document, like the newer `/v1/responses` API or embeddings. If so, **mlx-omni-server** (`pip install mlx-omni-server`) is another free, MLX-based, OpenAI-compatible server to try. I haven&#x27;t checked its current feature set.</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: -</li></ul></details>
+<fieldset><label><input type="radio" name="q12" value="A"> A</label>
+<label><input type="radio" name="q12" value="B"> B</label>
+<label><input type="radio" name="q12" value="tie"> tie</label>
+<input class="why" data-q="q12" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q13"><h2>13. q13</h2><p class="prompt">We run Ollama on a CPU-only Linux server (no GPU, 64 GB RAM) for about 10 teammates, and it slows to a crawl when several people send requests at once. I already have a folder of GGUF files from Hugging Face and don&#x27;t want them copied into Ollama&#x27;s own model store. What free, open-source server can load GGUF files directly from a path, handle concurrent requests efficiently on CPU, and expose an OpenAI-compatible API?</p>
+<div class="pair"><div><h3>A</h3><pre># My recommendation: llama.cpp&#x27;s `llama-server`
+
+**`llama-server` from llama.cpp** (MIT license) does what you need:
+
+- **Loads a GGUF from any path** with `-m /path/to/model.gguf`. Nothing gets copied or imported.
+- **Handles many users at once on CPU.** It splits the context into N parallel slots (`-np`) and batches them together. On CPU, generating each token is limited mostly by memory bandwidth. Batching lets several users share one pass over the model weights, so 8 requests at once cost much less than 8 requests one after another.
+- **OpenAI-compatible API**: `/v1/chat/completions`, `/v1/completions`, `/v1/embeddings` and `/v1/models`, with streaming and an optional API key. It also includes a simple web chat UI.
+- It&#x27;s the engine Ollama is built on, so your GGUFs will work as-is and you&#x27;ll be closer to the newest CPU optimizations.
+
+**What I assumed:** an x86_64 Linux server, one main shared model, and teammates who connect over the LAN.
+
+## Install (choose one)
+
+**A. Prebuilt binary (simplest)**
+1. From https://github.com/ggml-org/llama.cpp/releases, download the latest `…-bin-ubuntu-x64` archive.
+2. Extract it into its own directory, for example `/opt/llama.cpp/`. `llama-server` is inside.
+
+**B. Build from source (tuned to your CPU&#x27;s AVX2/AVX-512 support)**
+```bash
+sudo apt install -y build-essential cmake git
+git clone https://github.com/ggml-org/llama.cpp
+cd llama.cpp
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j&quot;$(nproc)&quot;
+# binary: build/bin/llama-server
+```
+
+**C. Docker**: `ghcr.io/ggml-org/llama.cpp:server`, with your GGUF folder mounted read-only (`-v /data/gguf:/models:ro`).
+
+## First run
+```bash
+./llama-server \
+  -m /data/gguf/Qwen2.5-7B-Instruct-Q4_K_M.gguf \
+  --host 0.0.0.0 --port 8080 \
+  -np 8 -c 32768 \
+  -t $(nproc --ignore=2) \
+  --api-key &quot;change-me&quot; \
+  --metrics
+```
+- `-np 8` gives 8 parallel slots. Requests beyond 8 wait in a queue instead of slowing everyone down.
+- `-c 32768` is the total context across all slots, so each slot gets about 4K tokens. If people need longer prompts, raise `-c` or lower `-np`.
+- For `-t`, use the number of **physical** cores. Hyperthreads usually don&#x27;t help.
+- Flag defaults change between releases, so check `./llama-server --help` against your build.
+
+**Test it:**
+```bash
+curl http://SERVER:8080/v1/chat/completions \
+  -H &quot;Authorization: Bearer change-me&quot; -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;model&quot;:&quot;any&quot;,&quot;messages&quot;:[{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;Hello&quot;}]}&#x27;
+```
+Teammates set their OpenAI client&#x27;s base URL to `http://SERVER:8080/v1` and use the key. To keep it running permanently, wrap the command in a systemd unit.
+
+## Tips for CPU-only serving
+- **Model size matters more than anything else.** A 7–8B model at Q4_K_M will feel responsive for about 10 users. A 30B+ dense model will be slow on any CPU server, whatever the software. Mixture-of-experts models, like the Qwen3-30B-A3B class, are often a good fit for CPU with 64 GB of RAM.
+- **Serving several models from your folder:** add **llama-swap** (also open source). It sits in front of `llama-server` and starts the right model based on the `model` field in each request, still reading from your paths.
+- **If you&#x27;d rather keep Ollama for now:** setting `OLLAMA_NUM_PARALLEL` and `OLLAMA_MAX_QUEUE` may reduce the slowdown. But it still wants its own model store, and `llama-server` gives you more direct control.
+
+## What I checked and didn&#x27;t use
+I searched [source]&#x27;s catalog of tools it has test-installed. It returned two little-known projects:
+- **Xyntetik Runner:** it serves GGUF over an OpenAI-compatible API, but its handling of many users on CPU wasn&#x27;t tested.
+- **SunnyNet:** it only supports GGUF for RWKV-style models, and its API wasn&#x27;t tested.
+
+Neither is as well suited as `llama-server` here. [source] didn&#x27;t test llama.cpp itself; I&#x27;m recommending it from my own knowledge, and I haven&#x27;t run any of these steps on your server.</pre></div><div><h3>B</h3><pre># Recommendation: llama.cpp&#x27;s `llama-server`
+
+Use **`llama-server` from llama.cpp** (MIT license). Ollama is built on the same engine, so you&#x27;ll get the same inference speed. The difference is that you control concurrency directly.
+
+- **Loads GGUF from any path.** `-m /path/to/model.gguf` reads the file where it is. Nothing is copied or converted.
+- **Handles concurrent requests on CPU.** It splits the server into several request slots with `--parallel N` and uses continuous batching, which is on by default. Requests from different people are combined into one forward pass instead of waiting in line. On CPU, generating each token is mostly limited by memory bandwidth, so batching 4–8 users raises total tokens per second a lot compared with serving them one at a time.
+- **OpenAI-compatible API.** It serves `/v1/chat/completions`, `/v1/completions`, `/v1/embeddings` and `/v1/models`, plus a built-in web chat UI. It also supports optional `--api-key` auth.
+
+**Assumptions:** an x86-64 Linux server and models in the 7B–32B range. I haven&#x27;t checked the current release for exact flag names, so confirm them with `llama-server --help`.
+
+## Install (pick one)
+
+**A. Prebuilt binary (simplest)**
+1. Go to https://github.com/ggml-org/llama.cpp/releases.
+2. Download the `llama-&lt;build&gt;-bin-ubuntu-x64.zip` asset (the CPU build) and unzip it, for example to `/opt/llama.cpp`.
+3. Check it runs: `/opt/llama.cpp/llama-server --version`
+
+**B. Docker**
+```bash
+docker run -d --name llama -p 8080:8080 \
+  -v /srv/gguf:/models:ro \
+  ghcr.io/ggml-org/llama.cpp:server \
+  -m /models/Qwen2.5-14B-Instruct-Q4_K_M.gguf \
+  --host 0.0.0.0 --port 8080 -c 32768 -np 4 -t 16
+```
+The `:ro` mount keeps your GGUF folder read-only and in place.
+
+**C. Build from source (best CPU tuning, since it compiles for your exact CPU)**
+```bash
+sudo apt install -y build-essential cmake git libcurl4-openssl-dev
+git clone https://github.com/ggml-org/llama.cpp &amp;&amp; cd llama.cpp
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON
+cmake --build build -j --target llama-server
+# binary: build/bin/llama-server
+```
+
+## First run
+```bash
+llama-server \
+  -m /srv/gguf/Qwen2.5-14B-Instruct-Q4_K_M.gguf \
+  --host 0.0.0.0 --port 8080 \
+  -np 4 \                 # 4 concurrent request slots
+  -c 32768 \              # TOTAL context, divided across slots (~8k each here)
+  -t 16 \                 # = number of PHYSICAL cores, not hyperthreads
+  -a team-model \         # model name clients will use
+  --api-key &quot;change-me&quot;
+```
+
+Test it:
+```bash
+curl http://SERVER:8080/v1/chat/completions \
+  -H &quot;Authorization: Bearer change-me&quot; -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;model&quot;:&quot;team-model&quot;,&quot;messages&quot;:[{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;Hello&quot;}]}&#x27;
+```
+To point existing clients at it, set the base URL to `http://SERVER:8080/v1` and the API key to `change-me`.
+
+## Tuning for 10 users on CPU
+- **`-np`:** start at 4. Try 6–8 if replies stay fast enough. More slots give more total throughput, but each user&#x27;s stream gets slower.
+- **`-c`:** this is shared across all slots. For example, 8 slots × 8k tokens means `-c 65536`. The KV cache uses RAM, so check memory use after changing it.
+- **`-t`:** set it to physical cores (`lscpu`: cores per socket × sockets). Going above that usually makes things slower. On dual-socket servers, also try `--numa distribute`.
+- **Model size matters more than anything else.** On CPU, a 7–14B model at Q4_K_M is responsive for a team. 32B+ will feel slow under load no matter which server you use.
+- **Watch it with `/metrics`** (enable with `--metrics`) or `/slots` to see whether requests are queuing.
+- **Keep it running** under a systemd unit with `Restart=always` that wraps the command above.
+
+## Several models from one folder
+A single `llama-server` process normally serves one model. You have two options:
+- **Router mode:** recent builds can point at a whole folder with `--models-dir /srv/gguf` and load models on demand, picked by the request&#x27;s `model` field. Check `--help` for your build, since this feature is newer.
+- **llama-swap** (https://github.com/mostlygeek/llama-swap, MIT): a small proxy that starts and stops `llama-server` per model, still reading files from your folder.
+
+Either way, keep only 1–2 models loaded at once. Every loaded model takes RAM and CPU from the others.
+
+## Other options I considered
+- **Tune Ollama instead:** `OLLAMA_NUM_PARALLEL=4` and `OLLAMA_MAX_LOADED_MODELS=1` may fix much of the slowdown. But importing GGUF into Ollama (`FROM /path` in a Modelfile) copies the file into its blob store, which you said you want to avoid.
+- **LocalAI:** also open source and OpenAI-compatible, and it uses llama.cpp underneath. It&#x27;s heavier, and its main benefit is supporting more kinds of models.
+- **vLLM (CPU build):** strong batching, but its GGUF support is experimental and its CPU path is weaker. Not a good fit here.
+- **KoboldCpp:** loads GGUF from a path, but it&#x27;s aimed at single users and handles concurrency less well.
+
+**Bottom line:** run `llama-server` with `-np 4–8`, `-t` set to your physical cores, and a mid-sized Q4 model. Add router mode or llama-swap if you need to switch between models.</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: -</li></ul></details>
+<fieldset><label><input type="radio" name="q13" value="A"> A</label>
+<label><input type="radio" name="q13" value="B"> B</label>
+<label><input type="radio" name="q13" value="tie"> tie</label>
+<input class="why" data-q="q13" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q14"><h2>14. q14</h2><p class="prompt">I&#x27;m building a small RAG tool for internal use at my company on a CPU-only Linux box (8 GB RAM, no GPU) and want to stop sending documents to cloud APIs. I need one local, open-source server that gives me both an OpenAI-compatible /v1/embeddings endpoint and a rerank endpoint, with models that handle mixed English and Chinese documents and whose licenses allow commercial use. What should I run?</p>
+<div class="pair"><div><h3>A</h3><pre>I&#x27;d run **[Infinity](https://github.com/michaelfeil/infinity)**, using the MIT-licensed Python **v2** server and its CPU Docker image, with two models:
+
+- **Embeddings:** `BAAI/bge-m3` (MIT license, strong on mixed Chinese and English, handles inputs up to 8k tokens)
+- **Rerank:** `BAAI/bge-reranker-v2-m3` (Apache-2.0, multilingual, built to pair with bge-m3)
+
+One Infinity process can serve several models. It gives you an OpenAI-compatible `/v1/embeddings` endpoint and a `/v1/rerank` endpoint (Cohere/Jina style), and both models fit in 8 GB of RAM.
+
+**Use v2, not v3.** The new native **v3** server, released in late October, puts its new code under a custom &quot;Infinity Restricted MIT License&quot; with restrictions on providers. The Python `infinity-emb` package and the `infinity_emb v2` command are still plain MIT. For an internal commercial tool, stick with v2 unless your legal team clears v3.
+
+## Install and first run
+
+I&#x27;m assuming an x86-64 Linux box with Docker installed, and internet access for the first model download only.
+
+```bash
+# 1. Make a folder to cache the models (~4.5 GB download the first time)
+mkdir -p ~/infinity-cache
+
+# 2. Start the server. Pin a specific *-cpu tag from Docker Hub (michaelf34/infinity) rather than latest-cpu.
+docker run -d --name infinity --restart unless-stopped \
+  -p 127.0.0.1:7997:7997 \
+  -v ~/infinity-cache:/app/.cache \
+  michaelf34/infinity:latest-cpu \
+  v2 --engine torch \
+     --model-id BAAI/bge-m3 \
+     --model-id BAAI/bge-reranker-v2-m3 \
+     --batch-size 8 --batch-size 8 \
+     --url-prefix /v1 \
+     --port 7997
+
+# 3. Watch the logs until both models are loaded
+docker logs -f infinity
+```
+
+Smoke tests:
+
+```bash
+# Embeddings (OpenAI format)
+curl -s http://127.0.0.1:7997/v1/embeddings -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;model&quot;:&quot;BAAI/bge-m3&quot;,&quot;input&quot;:[&quot;How do I file an expense report?&quot;,&quot;如何提交报销单？&quot;]}&#x27; | head -c 300
+
+# Rerank
+curl -s http://127.0.0.1:7997/v1/rerank -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;model&quot;:&quot;BAAI/bge-reranker-v2-m3&quot;,&quot;query&quot;:&quot;报销流程&quot;,&quot;documents&quot;:[&quot;Expense reports are filed in Concur.&quot;,&quot;午餐菜单在这里。&quot;]}&#x27;
+
+# The full API reference is at http://127.0.0.1:7997/docs
+```
+
+To use it from code, point the OpenAI SDK at it: `OpenAI(base_url=&quot;http://127.0.0.1:7997/v1&quot;, api_key=&quot;unused&quot;)`, then call `client.embeddings.create(model=&quot;BAAI/bge-m3&quot;, input=[...])`. Rerank is a plain HTTP POST as shown above. LangChain and LlamaIndex both have Infinity integrations.
+
+If you&#x27;d rather skip Docker: `pip install &quot;infinity-emb[all]&quot;`, then run `infinity_emb v2 ...` with the same flags.
+
+## Tips for 8 GB, CPU only
+
+- **Memory:** each model is about 568M parameters, roughly 2.2 GB in fp32, so about 5 GB total. Keep batch sizes small (4–8) and leave headroom for the OS and your app.
+- **Speed:** indexing is the slow part on CPU. Chunk documents to about 300–512 tokens instead of using bge-m3&#x27;s full 8k, and rerank only the top 20–50 results. Bulk indexing will take a while, but query-time latency should be fine.
+- **Staying offline:** once the models are cached, add `-e HF_HUB_OFFLINE=1` so the server never contacts Hugging Face again.
+- **Security:** the server has no authentication by default. Keep it bound to localhost (as above) or put it behind a reverse proxy. Check `infinity_emb v2 --help` for an `--api-key` option.
+
+## Alternatives
+
+- **[Hugging Face Text Embeddings Inference (TEI)](https://github.com/huggingface/text-embeddings-inference)** (Apache-2.0, actively maintained, CPU image around `cpu-1.8.x`): native `/v1/embeddings` and `/rerank`, and very fast on CPU. The catch is that it serves one model per instance, so you&#x27;d run two containers on different ports with the same two models. Choose this if being actively maintained matters more to you than having a single process.
+- **Lighter or newer models:** `Qwen/Qwen3-Embedding-0.6B` and `Qwen/Qwen3-Reranker-0.6B` (Apache-2.0) are also very good at Chinese. Server support for the Qwen3 reranker varies, though, so try it before switching.
+- **Licenses to avoid:** jina-embeddings-v3 and jina-reranker-v2 are CC-BY-NC, which doesn&#x27;t allow commercial use.
+
+Sources:
+- [Infinity GitHub](https://github.com/michaelfeil/infinity)
+- [Infinity v3.0.0 release notes (licensing, CPU image)](https://github.com/michaelfeil/infinity/releases/tag/v3.0.0)
+- [Text Embeddings Inference GitHub](https://GitHub.com/huggingface/text-embeddings-inference)
+- [TEI CPU release notes](https://releases.sh/release/rel_BwxGl_zBfEgFELWANCF50)</pre></div><div><h3>B</h3><pre>**Status:** I checked [source]&#x27;s catalog, which had no verified tool for this, and then checked the project docs. None of this was installed or tested on my side.
+
+## Recommendation: Xinference (Apache-2.0) serving bge-m3 and bge-reranker-v2-m3
+
+Xinference is the simplest way to get both endpoints from **one server process**:
+
+- **Embeddings:** `POST /v1/embeddings` (OpenAI-compatible)
+- **Rerank:** `POST /v1/rerank` (body: `model`, `query`, `documents`, `top_n`; Cohere/Jina-style)
+- It has an official **CPU Docker image** (`xprobe/xinference:latest-cpu`).
+- It&#x27;s built by a Chinese team, so English+Chinese models are a core use case.
+
+**Models (licenses allow commercial use):**
+
+| Role | Model | License | Notes |
+|---|---|---|---|
+| Embeddings | `BAAI/bge-m3` | MIT | Strong in Chinese and English, 8k context, 1024-dim |
+| Rerank | `BAAI/bge-reranker-v2-m3` | Apache-2.0 | Same model family, built for multiple languages |
+
+**Avoid** `jina-embeddings-v3` and `jina-reranker-v2`. They&#x27;re CC-BY-NC, which doesn&#x27;t allow commercial use. Check each model&#x27;s license on its Hugging Face card before you deploy.
+
+**RAM assumption:** Both models are about 570M parameters and run in full precision on CPU. Together with Xinference&#x27;s own overhead, expect roughly **5–6 GB**. That fits in 8 GB, but not with much room to spare. If memory gets tight, see the fallbacks below.
+
+### Install and first run (Docker assumed)
+
+```bash
+# 1. Start the server; the volume keeps downloaded models across restarts
+docker run -d --name xinference -p 9997:9997 \
+  -v $HOME/xinference:/root/.xinference \
+  -v $HOME/.cache/huggingface:/root/.cache/huggingface \
+  xprobe/xinference:latest-cpu \
+  xinference-local --host 0.0.0.0 --port 9997
+# (If Hugging Face is slow or blocked from your network, add: -e XINFERENCE_MODEL_SRC=modelscope)
+
+# 2. Load the two models (they download on first launch)
+docker exec xinference xinference launch --model-name bge-m3 --model-type embedding \
+  --endpoint http://127.0.0.1:9997
+docker exec xinference xinference launch --model-name bge-reranker-v2-m3 --model-type rerank \
+  --endpoint http://127.0.0.1:9997
+
+# 3. Test embeddings (OpenAI-compatible)
+curl http://localhost:9997/v1/embeddings -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;model&quot;:&quot;bge-m3&quot;,&quot;input&quot;:[&quot;报销流程是什么？&quot;,&quot;What is the expense process?&quot;]}&#x27;
+
+# 4. Test rerank
+curl http://localhost:9997/v1/rerank -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;model&quot;:&quot;bge-reranker-v2-m3&quot;,&quot;query&quot;:&quot;报销流程&quot;,
+       &quot;documents&quot;:[&quot;Expense reports are filed in the HR portal.&quot;,&quot;午餐菜单每周更新。&quot;],&quot;top_n&quot;:2}&#x27;
+```
+
+**In your app:** point the OpenAI SDK at `base_url=&quot;http://&lt;host&gt;:9997/v1&quot;` with any dummy API key, and call `/v1/rerank` directly. Models aren&#x27;t reloaded automatically after a container restart, so put the two `launch` commands in a startup script. Once the models are cached, nothing leaves the machine. If you set `HF_HUB_OFFLINE=1`, it also stops checking Hugging Face for updates.
+
+## Fallbacks
+
+1. **llama.cpp `llama-server` (MIT): the lowest-RAM option.** It serves `/v1/embeddings` and `/v1/rerank` from 8-bit GGUF versions of the same two models, at roughly 600 MB each. The catch is one model per process, so you&#x27;d run two processes on two ports (for example, `llama-server -m bge-m3-Q8_0.gguf --embedding --port 8081` and `llama-server -m bge-reranker-v2-m3-Q8_0.gguf --reranking --port 8082`). Choose this if Xinference uses too much memory.
+2. **Hugging Face Text Embeddings Inference (Apache-2.0).** It&#x27;s fast and lightweight on CPU (`ghcr.io/huggingface/text-embeddings-inference:cpu-&lt;version&gt;`; the newest tag I found was `cpu-1.8.1`). It also serves only one model per container, so you&#x27;d need two containers. Its rerank route is `/rerank`, not `/v1/rerank`. To my knowledge it also has an OpenAI-style `/v1/embeddings` route, but I didn&#x27;t confirm that here, so check the `/docs` page once it&#x27;s running.
+3. **Smaller models if you stay on Xinference:** `Qwen3-Embedding-0.6B` and `Qwen3-Reranker-0.6B` (both Apache-2.0, very good at Chinese). Neither of these is much smaller than the bge pair, though. To actually save RAM, swap in a smaller reranker such as `bge-reranker-base`.
+
+**Why not Infinity:** Its newer v3 server uses a custom &quot;Infinity Restricted MIT&quot; license, and for company use that needs a legal review first. **Why not Ollama:** it has no rerank endpoint.
+
+## Sources
+- [Xinference rerank docs](https://inference.readthedocs.io/en/latest/models/model_abilities/rerank.html) · [Xinference Docker image docs](https://inference.readthedocs.io/en/latest/getting_started/using_docker_image.html) · [Railway Xinference guide](https://railway.com/deploy/xinference) · [cnblogs CPU bge-reranker-v2-m3 deployment](https://www.cnblogs.com/tan-cong/p/22745462)
+- [LocalAI reranker docs](https://localai.io/docs/features/reranker/) (another single-server option: `/v1/rerank` through the `rerankers` backend, MIT, needs a Python-enabled image)
+- [Hugging Face TEI](https://GitHub.com/huggingface/text-embeddings-inference) · [TEI release notes](https://releases.sh/release/rel_BwxGl_zBfEgFELWANCF50)
+- [michaelfeil/infinity](https://github.com/michaelfeil/infinity) · [Superlinked Infinity migration note](https://superlinked.com/docs/migrate/infinity.md)</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: verified</li></ul></details>
+<fieldset><label><input type="radio" name="q14" value="A"> A</label>
+<label><input type="radio" name="q14" value="B"> B</label>
+<label><input type="radio" name="q14" value="tie"> tie</label>
+<input class="why" data-q="q14" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q15"><h2>15. q15</h2><p class="prompt">我用 openai-whisper 在沒有 GPU 的 Linux 筆電上，把中文會議錄音轉成逐字稿（要 SRT 格式、有時間軸）。可是它跑得很慢、要裝好幾 GB 的 PyTorch，而且常常輸出簡體字。有沒有免費、開源、可以離線跑、在 CPU 上快很多，而且直接輸出繁體中文的工具或設定？會議內容不能上傳。</p>
+<div class="pair"><div><h3>A</h3><pre># 建議：whisper.cpp + OpenCC 轉繁體
+
+最推薦的組合是 **whisper.cpp**（純 C/C++，不需要 PyTorch）加上 **OpenCC**（簡轉繁）。兩者都免費、開源、完全離線。
+
+**為什麼選這個組合：**
+- **不用 PyTorch**：whisper.cpp 編譯完只有幾 MB，模型檔另外下載。large-v3-turbo 量化版大約 550 MB，比裝好幾 GB 的 PyTorch 小很多。
+- **CPU 上比較快**：在 CPU 上通常比 openai-whisper 快好幾倍，主要靠 SIMD/AVX、多執行緒和量化模型。large-v3-turbo 的解碼層比 large-v3 少很多，準確度接近，速度快很多。實際速度要看你的 CPU。
+- **可以直接輸出 SRT**：加 `-osrt` 就會產生含時間軸的字幕檔。
+- **繁體輸出穩定**：Whisper 的中文訓練資料以簡體居多，加提示詞（prompt）可以提高輸出繁體的機率，但不保證。最穩的做法是轉完再用 OpenCC 轉一次。OpenCC 只改字，不會動 SRT 的時間軸。
+
+**我的假設：** 你用 Ubuntu/Debian 系的發行版、x86_64 CPU，錄音是普通話會議。下面的指令我沒有在你的電腦上執行過，請先確認內容再跑。
+
+## 安裝
+
+```bash
+# 1. 編譯工具、ffmpeg、OpenCC（需要 sudo）
+sudo apt install build-essential cmake git ffmpeg opencc
+
+# 2. 下載並編譯 whisper.cpp
+git clone https://github.com/ggml-org/whisper.cpp
+cd whisper.cpp
+cmake -B build
+cmake --build build -j --config Release
+
+# 3. 下載模型（建議先試 turbo 量化版，兼顧速度與準確度）
+sh ./models/download-ggml-model.sh large-v3-turbo-q5_0
+# 太慢的話可以改用 small 或 medium，速度快但錯字較多
+
+# 4.（選用）下載 VAD 模型：跳過靜音段，可以減少「幻聽」重複句
+sh ./models/download-vad-model.sh silero-v5.1.2
+```
+
+## 第一次執行
+
+```bash
+# 1. 轉成 whisper.cpp 需要的格式：16 kHz、單聲道 WAV
+ffmpeg -i meeting.m4a -ar 16000 -ac 1 -c:a pcm_s16le meeting.wav
+
+# 2. 轉錄並輸出 SRT（-t 填你的 CPU 實體核心數）
+./build/bin/whisper-cli \
+  -m models/ggml-large-v3-turbo-q5_0.bin \
+  -f meeting.wav \
+  -l zh -t 8 \
+  --prompt &quot;以下是繁體中文的會議逐字稿。&quot; \
+  --vad -vm models/ggml-silero-v5.1.2.bin \
+  -osrt -of meeting
+# 產生 meeting.srt（沒有下載 VAD 模型的話，拿掉 --vad 那一行）
+
+# 3. 轉成台灣繁體，s2twp 會連用語一起轉，例如 软件→軟體、视频→影片
+opencc -i meeting.srt -o meeting.zh-TW.srt -c s2twp.json
+```
+
+- 只想轉字、不想改用語的話，把 `s2twp.json` 換成 `s2tw.json`。
+- 建議先剪一段 5 分鐘的音檔測速度，再決定要用 turbo 還是 small/medium。
+- 可以把會議常出現的人名和專有名詞寫進 `--prompt`，辨識會比較準。
+
+## 其他選擇
+
+1. **whisper-ctranslate2（底層是 faster-whisper）**
+   - 用 CTranslate2 引擎，同樣不需要 PyTorch，CPU 上用 int8 也很快。
+   - 用法跟 openai-whisper 幾乎一樣，適合想繼續用 Python 的人。
+   ```bash
+   pipx install whisper-ctranslate2
+   whisper-ctranslate2 meeting.m4a --model large-v3-turbo --language zh \
+     --compute_type int8 --vad_filter True \
+     --initial_prompt &quot;以下是繁體中文的會議逐字稿。&quot; --output_format srt
+   opencc -i meeting.srt -o meeting.zh-TW.srt -c s2twp.json
+   ```
+
+2. **MediaTek Breeze-ASR-25**
+   - 這是針對台灣華語（含中英夾雜）微調的 Whisper 模型，原生輸出繁體。
+   - 如果會議是台灣口音或常夾英文，值得試試。
+   - 不過我沒確認它目前有沒有現成的 whisper.cpp（ggml）或 CTranslate2 格式。沒有的話要自己轉換，或改用需要 PyTorch 的 transformers。
+
+3. **babelscribe（[source] 查到的）**
+   - [source] 有在 Linux 沙盒實際安裝，也確認能產生 SRT。
+   - 但它沒有驗證 CPU 上的速度，也沒有驗證會不會輸出繁體。[source] 自己的結論也是：沒有候選工具證明比你現在的做法更好。
+   - 所以我不把它當首選。
+   - 網址：https://github.com/phonology024/babelscribe
+
+**隱私：** 以上做法都只在第一次下載模型時需要連網，之後轉錄全部在本機進行，會議內容不會上傳。
+
+Sources:
+- [whisper.cpp](https://github.com/ggml-org/whisper.cpp)
+- [OpenCC](https://github.com/BYVoid/OpenCC)
+- [whisper-ctranslate2](https://github.com/Softcatala/whisper-ctranslate2)
+- [babelscribe](https://github.com/phonology024/babelscribe)</pre></div><div><h3>B</h3><pre># 建議：whisper.cpp 加 OpenCC 轉繁體
+
+**主要建議：用 [whisper.cpp](https://github.com/ggml-org/whisper.cpp) 轉錄，再用 [OpenCC](https://github.com/BYVoid/OpenCC) 的 `s2twp` 設定把字幕轉成台灣繁體。**
+
+兩者都免費、開源、可以離線使用。whisper.cpp 是 C/C++ 寫的，不需要 Python 也不需要 PyTorch，對 CPU 有特別最佳化，還能直接輸出 SRT。模型檔大約 0.5～1.6 GB，比 PyTorch 那一大包小很多。用量化模型在 CPU 上跑，通常比 openai-whisper 快好幾倍。
+
+**我的假設：** 你用 Debian 或 Ubuntu 類的發行版，需要台灣慣用的繁體中文（如果要香港用字，把 `s2twp` 換成 `s2hk`）。下面的指令我沒有在你的機器上執行過。
+
+---
+
+## 為什麼要分兩步處理繁體
+
+Whisper 的中文訓練資料以簡體為主，所以就算加了繁體提示詞（prompt），還是常常混入簡體字。提示詞可以改善，但不保證每次都對。最可靠的做法是轉錄完再用 OpenCC 轉換一次。`s2twp` 除了轉字，也會轉詞彙，例如「软件」會變成「軟體」，「视频」會變成「影片」。
+
+---
+
+## 安裝（只需做一次）
+
+```bash
+# 1. 系統套件
+sudo apt update
+sudo apt install -y build-essential cmake git ffmpeg opencc
+
+# 2. 下載並編譯 whisper.cpp
+git clone https://github.com/ggml-org/whisper.cpp.git
+cd whisper.cpp
+cmake -B build
+cmake --build build -j --config Release
+
+# 3. 下載模型（只有這一步需要連網，會從 Hugging Face 下載，不會上傳任何東西）
+sh ./models/download-ggml-model.sh large-v3-turbo-q5_0
+```
+
+**模型怎麼選：**
+
+| 模型 | 大小（約） | 說明 |
+|---|---|---|
+| `large-v3-turbo-q5_0` | ~550 MB | **建議先用這個**，速度和中文準確度比較平衡 |
+| `large-v3-q5_0` | ~1.1 GB | 最準，但比較慢，適合口音重或很多專有名詞的會議 |
+| `small` / `base` | 小很多 | 很快，但中文錯字明顯變多 |
+
+## 第一次執行
+
+```bash
+# 1. 先轉成 16 kHz 單聲道 WAV（最穩定的輸入格式）
+ffmpeg -i meeting.m4a -ar 16000 -ac 1 -c:a pcm_s16le meeting.wav
+
+# 2. 轉錄並輸出 SRT（會產生 meeting.wav.srt）
+./build/bin/whisper-cli \
+  -m models/ggml-large-v3-turbo-q5_0.bin \
+  -f meeting.wav \
+  -l zh \
+  -t 8 \
+  --prompt &quot;以下是一場會議的逐字稿，使用繁體中文與全形標點符號。&quot; \
+  -osrt
+
+# 3. 轉成台灣繁體
+opencc -i meeting.wav.srt -o meeting.zh-TW.srt -c s2twp.json
+```
+
+**參數說明：**
+- `-l zh`：直接指定語言是中文，省掉自動偵測，也比較不會誤判。
+- `-t 8`：使用的執行緒數，建議設成 CPU 的實體核心數（用 `nproc` 或 `lscpu` 查詢）。
+- `--prompt`：讓模型偏向輸出繁體和全形標點。也可以把會議中常出現的人名或專有名詞加進去，會更準。
+- `-osrt`：直接輸出 SRT 字幕檔。
+- 如果你的 OpenCC 版本找不到 `s2twp.json`，改成 `-c s2twp` 試試。設定檔通常放在 `/usr/share/opencc/`。
+
+**選用設定：** 如果錄音裡有很多靜音或停頓，可以開啟 VAD（語音活動偵測）來跳過靜音段。這樣比較快，也能減少 Whisper 在靜音時亂編文字（幻覺）。新版 whisper.cpp 有支援：先執行 `sh ./models/download-vad-model.sh silero-v5.1.2`，轉錄時再加上 `--vad --vad-model models/ggml-silero-v5.1.2.bin`。這組參數會隨版本變動，請先用 `./build/bin/whisper-cli --help` 確認你的版本有沒有。
+
+---
+
+## 替代方案：faster-whisper（想留在 Python 的話）
+
+如果你比較習慣 Python，可以用 [faster-whisper](https://github.com/SYSTRAN/faster-whisper)。它的底層是 CTranslate2，**不需要 PyTorch**，在 CPU 上用 int8 運算，速度和 whisper.cpp 差不多，也內建 VAD。
+
+```bash
+python3 -m venv ~/fw &amp;&amp; source ~/fw/bin/activate
+pip install faster-whisper
+```
+
+```python
+# transcribe.py — 用法：python transcribe.py meeting.m4a
+import sys
+from faster_whisper import WhisperModel
+
+def ts(t):
+    h, r = divmod(t, 3600); m, s = divmod(r, 60)
+    return f&quot;{int(h):02}:{int(m):02}:{int(s):02},{int((s % 1) * 1000):03}&quot;
+
+model = WhisperModel(&quot;large-v3-turbo&quot;, device=&quot;cpu&quot;, compute_type=&quot;int8&quot;)
+segments, _ = model.transcribe(
+    sys.argv[1], language=&quot;zh&quot;, vad_filter=True,
+    initial_prompt=&quot;以下是一場會議的逐字稿，使用繁體中文與全形標點符號。&quot;)
+with open(sys.argv[1] + &quot;.srt&quot;, &quot;w&quot;, encoding=&quot;utf-8&quot;) as f:
+    for i, s in enumerate(segments, 1):
+        f.write(f&quot;{i}\n{ts(s.start)} --&gt; {ts(s.end)}\n{s.text.strip()}\n\n&quot;)
+```
+
+第一次執行會從 Hugging Face 下載模型，之後就能完全離線使用。輸出的 SRT 一樣要再用 `opencc ... -c s2twp.json` 轉一次繁體。
+
+---
+
+## 小提醒
+
+- **完全離線：** 模型下載好之後就可以拔網路線。音訊只會在你的電腦上處理。
+- **如果需要區分講者：** whisper.cpp 和 faster-whisper 都不會分辨誰在說話。需要的話可以另外看 WhisperX 或 pyannote，但這兩個又會用到 PyTorch。
+- **SRT 時間軸：** 一定要保留 OpenCC 處理之前的原始檔。OpenCC 只會改文字，不會動到時間軸，所以轉完可以直接拿去用。</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: 沙盒</li><li>B: -</li></ul></details>
+<fieldset><label><input type="radio" name="q15" value="A"> A</label>
+<label><input type="radio" name="q15" value="B"> B</label>
+<label><input type="radio" name="q15" value="tie"> tie</label>
+<input class="why" data-q="q15" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q16"><h2>16. q16</h2><p class="prompt">We need to translate a folder of internal English Markdown docs into European Portuguese for our Lisbon office. The docs can&#x27;t be sent to cloud translation services, so it has to run on our own Linux box (CPU only, 16 GB RAM). Local models we tried keep producing Brazilian Portuguese, and machine translation tends to mangle code blocks and link URLs. What free setup can batch-translate the whole folder from the terminal and leave fenced code blocks and URLs untouched?</p>
+<div class="pair"><div><h3>A</h3><pre>My recommendation is to use **mdpo** to handle the Markdown structure and **liaad/Tradutor** to do the translation, run locally through **Ollama** with a small script connecting the two. I haven&#x27;t run any of this on your machine. Below I mark what I checked and what I&#x27;m assuming.
+
+## Why this setup
+
+- **It targets European Portuguese specifically.** [Tradutor](https://huggingface.co/liaad/Tradutor) is an English→European Portuguese model from LIAAD (University of Porto). It was trained on a large European Portuguese parallel corpus and tested with a classifier that tells European from Brazilian Portuguese ([paper](https://arxiv.org/abs/2502.14385v1)). General-purpose models are trained mostly on Brazilian text, which is why yours keep producing it. Tradutor is an 8B model whose card shows GGUF, Ollama and llama.cpp options. At Q4 it needs about 5 GB of RAM, so it fits in 16 GB on CPU.
+- **The model never sees your code blocks.** [mdpo](https://mondeja.github.io/mdpo/latest/rationale.html) splits each Markdown file into translatable strings and leaves fenced code blocks out by default. It then rebuilds the Markdown from the original file plus the translations, so the code blocks are copied over byte for byte.
+- **URLs are hidden from the model.** Before sending each string, the script swaps inline code, link targets and bare URLs for placeholders like `⟦0⟧`, and puts them back afterwards. If any placeholder goes missing, it keeps the English and marks the string `fuzzy` for review rather than writing broken output.
+- **Bonus:** you get one `.po` translation file per document. When a doc changes, a re-run only translates the new strings. Lisbon staff can also fix wording in [Poedit](https://poedit.net/) without touching the Markdown.
+
+## Install
+
+```bash
+# 1. Ollama (local LLM runtime)
+curl -fsSL https://ollama.com/install.sh | sh
+
+# 2. Get Tradutor as a 4-bit GGUF (about 5 GB)
+ollama pull hf.co/liaad/Tradutor:Q4_K_M
+
+# 3. Python tools
+python3 -m venv ~/mdtrans &amp;&amp; . ~/mdtrans/bin/activate
+pip install mdpo polib
+```
+
+**Assumption:** the `:Q4_K_M` tag exists. The model card has a GGUF tag but doesn&#x27;t list the quantization levels. If the pull fails, try `ollama pull hf.co/liaad/Tradutor` and pick a Q4 option from the model page. If that fails too, convert the model yourself with llama.cpp&#x27;s `convert_hf_to_gguf.py` and `llama-quantize`.
+
+## The script: `translate_po.py`
+
+```python
+#!/usr/bin/env python3
+&quot;&quot;&quot;Fill empty msgstr entries in a PO file using local Tradutor via Ollama.&quot;&quot;&quot;
+import json, re, sys, urllib.request
+import polib
+
+MODEL = &quot;hf.co/liaad/Tradutor:Q4_K_M&quot;
+API = &quot;http://localhost:11434/api/chat&quot;
+# inline code, link/image targets &quot;(url)&quot;, autolinks, bare URLs
+PROTECT = re.compile(r&quot;`[^`\n]+`|\]\([^)\s]+(?:\s+\&quot;[^\&quot;]*\&quot;)?\)|&lt;https?://[^&gt;]+&gt;|https?://[^\s)&gt;\]]+&quot;)
+
+def llm(text):
+    body = json.dumps({
+        &quot;model&quot;: MODEL, &quot;stream&quot;: False,
+        &quot;options&quot;: {&quot;temperature&quot;: 0},
+        &quot;messages&quot;: [
+            {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are a translator from English to European Portuguese&quot;},
+            {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;Translate this text from English to European Portuguese. &quot;
+             &quot;Keep every ⟦n⟧ placeholder and all Markdown markup exactly as is. &quot;
+             f&quot;Output only the translation: {text}&quot;},
+        ],
+    }).encode()
+    req = urllib.request.Request(API, body, {&quot;Content-Type&quot;: &quot;application/json&quot;})
+    with urllib.request.urlopen(req, timeout=600) as r:
+        return json.load(r)[&quot;message&quot;][&quot;content&quot;].strip()
+
+def translate(text):
+    saved = []
+    def mask(m):
+        s = m.group(0)
+        if s.startswith(&quot;](&quot;):              # keep &quot;]&quot; visible, hide &quot;(url)&quot;
+            saved.append(s[1:]); return f&quot;]⟦{len(saved)-1}⟧&quot;
+        saved.append(s); return f&quot;⟦{len(saved)-1}⟧&quot;
+    out = llm(PROTECT.sub(mask, text))
+    for i, s in enumerate(saved):
+        if out.count(f&quot;⟦{i}⟧&quot;) != 1:
+            return None                        # placeholder lost -&gt; don&#x27;t trust it
+        out = out.replace(f&quot;⟦{i}⟧&quot;, s)
+    return out
+
+po = polib.pofile(sys.argv[1])
+for e in po:
+    if e.msgstr or e.obsolete:
+        continue
+    t = translate(e.msgid)
+    if t is None:
+        e.msgstr = e.msgid
+        e.flags.append(&quot;fuzzy&quot;)
+        print(f&quot;[fuzzy] {sys.argv[1]}: {e.msgid[:60]!r}&quot;, file=sys.stderr)
+    else:
+        e.msgstr = t
+    po.save()   # save after each entry so an interrupted run can resume
+```
+
+## Batch run over the folder
+
+The loop below assumes your source docs are in `docs/`. Output goes to `out/`, which mirrors the folder structure.
+
+```bash
+. ~/mdtrans/bin/activate
+mkdir -p po out
+find docs -name &#x27;*.md&#x27; -print0 | while IFS= read -r -d &#x27;&#x27; f; do
+  rel=${f#docs/}; base=${rel%.md}
+  mkdir -p &quot;po/$(dirname &quot;$rel&quot;)&quot; &quot;out/$(dirname &quot;$rel&quot;)&quot;
+  md2po &quot;$f&quot; --po-filepath &quot;po/$base.po&quot; --save
+  python3 translate_po.py &quot;po/$base.po&quot;
+  po2md &quot;$f&quot; --pofiles &quot;po/$base.po&quot; --save &quot;out/$rel&quot;
+done
+```
+
+Check the exact flag names with `md2po --help` and `po2md --help`, since they can differ between mdpo versions. Note that `md2po` and `po2md` also exist in translate-toolkit, but there code blocks are extracted unless you pass `--no-code-blocks`. Make sure the venv&#x27;s mdpo versions are the ones on your PATH.
+
+## First run: test before doing the whole folder
+
+1. Try a single doc first. Diff the fences and URLs:
+   `diff &lt;(grep -E &#x27;^```|https?://&#x27; docs/x.md) &lt;(grep -E &#x27;^```|https?://&#x27; out/x.md)`
+   This should show no differences.
+2. Spot-check for Brazilian Portuguese: `grep -rniE &#x27;\bvocê|\btela\b|arquivo|usuário|gerenciar|registro\b&#x27; out/`. The European forms are ficheiro, utilizador, ecrã, gerir and registo. Look out for &quot;está fazendo&quot;-style gerunds too; European Portuguese uses &quot;está a fazer&quot;.
+3. Open any entries marked `fuzzy` (they&#x27;re listed on stderr) in Poedit and fix them by hand.
+
+## Things to know
+
+- **Speed:** an 8B Q4 model on CPU usually manages a few tokens per second. A long doc can take around 10 minutes, so run the full folder overnight. Because the script saves after every entry, an interrupted run picks up where it stopped.
+- **Licence:** the Tradutor model card doesn&#x27;t state a licence, and the model appears to be Llama-based. Have someone check the terms for internal company use.
+- **YAML front matter and raw HTML** aren&#x27;t handled well by mdpo. Strip front matter before translating and add it back afterwards, or check those files by hand.
+- **Faster but weaker option:** [Helsinki-NLP/opus-mt-tc-big-en-pt](https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-en-pt) via CTranslate2 is much faster on CPU. It has `&gt;&gt;por&lt;&lt;` and `&gt;&gt;pob&lt;&lt;` target tokens. I&#x27;m assuming `&gt;&gt;por&lt;&lt;` is European Portuguese and `pob` is Brazilian, because the card doesn&#x27;t say. Its example output, &quot;esfaquear-me&quot;, reads as European. You&#x27;d only need to change the `llm()` function to use it, but expect more Brazilian forms to slip through than with Tradutor.
+
+Sources:
+- [liaad/Tradutor on Hugging Face](https://huggingface.co/liaad/Tradutor)
+- [Tradutor paper (arXiv 2502.14385)](https://arxiv.org/abs/2502.14385v1)
+- [mdpo rationale](https://mondeja.github.io/mdpo/latest/rationale.html) · [mdpo CLI](https://mondeja.github.io/mdpo/latest/cli.html) · [mdpo releases](https://www.github.com/mondeja/mdpo/releases)
+- [translate-toolkit md2po man page](https://dyn.manpages.debian.org/unstable/translate-toolkit/md2po.1.en.html)
+- [Helsinki-NLP/opus-mt-tc-big-en-pt](https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-en-pt)</pre></div><div><h3>B</h3><pre>My recommendation is **llama.cpp&#x27;s `llama-server` running EuroLLM‑9B‑Instruct (Q4 GGUF), plus a short Python script I&#x27;ve written below.** The script handles your two problems. It never sends fenced code blocks to the model. It swaps URLs and inline code for numbered placeholders before translating and puts the originals back afterwards. It also lists Brazilian Portuguese words that get through.
+
+Everything is free, runs from the terminal and works on CPU. The model needs about 6 GB of RAM, which fits in 16 GB. After the one‑time model download, no text leaves the machine.
+
+## Why this setup
+
+- **Brazilian Portuguese output:** No small local model reliably produces European Portuguese just because you ask. This setup tackles it three ways:
+  1. **EuroLLM** comes from a European project led by Unbabel and IST in Lisbon, so it has a better chance than most.
+  2. The prompt gives explicit pt‑PT rules: *ficheiro, ecrã, utilizador, equipa*, and &quot;está a fazer&quot; rather than &quot;está fazendo&quot;.
+  3. The script lists any Brazilian words left in the output so someone can fix them.
+- **Code and URLs getting mangled:** Prompting alone won&#x27;t fix this. The script separates code and URLs from the text, translates only the text, puts them back, and checks that every placeholder came back.
+- **What [source] suggested:** [source]&#x27;s only match was HilbertRaum. It&#x27;s a desktop app, not a terminal tool, and [source] didn&#x27;t test its translation feature. That feature needs a TranslateGemma 12B model of about 13 GB, which is too tight on a 16 GB CPU‑only box. I&#x27;m not recommending it.
+- **An option to watch:** [Tradutor](https://arxiv.org/html/2502.14385) is an open model built only for English → European Portuguese, based on Llama‑3 8B ([news coverage](https://tech.slator.com/?p=103667)). I couldn&#x27;t find a ready‑made GGUF version of it. If one appears, switch the `-hf`/`-m` argument and keep the same script.
+
+## Install (Ubuntu/Debian, x86_64; I haven&#x27;t run any of this)
+
+```bash
+sudo apt install build-essential cmake git libcurl4-openssl-dev python3
+git clone https://github.com/ggml-org/llama.cpp &amp;&amp; cd llama.cpp
+cmake -B build &amp;&amp; cmake --build build --config Release -j
+```
+llama.cpp also publishes prebuilt `ubuntu-x64` zips on its GitHub Releases page if you&#x27;d rather not compile.
+
+Start the server. The first start downloads the model once; after that it runs offline.
+```bash
+./build/bin/llama-server -hf bartowski/EuroLLM-9B-Instruct-GGUF:Q4_K_M \
+  --jinja -c 4096 --temp 0 --host 127.0.0.1 --port 8080
+```
+I&#x27;m assuming that repo name is right ([EuroLLM GGUF builds exist](https://huggingface.co/QuantFactory/EuroLLM-9B-GGUF), but check the exact repo on Hugging Face). If the box can&#x27;t reach the internet, download the `.gguf` file on another machine and use `-m /path/model.gguf`. `--host 127.0.0.1` makes the server reachable only from that machine.
+
+## The script: `md2ptpt.py` (Python standard library only)
+
+```python
+#!/usr/bin/env python3
+&quot;&quot;&quot;Translate a folder of Markdown (en -&gt; pt-PT) via a local llama-server.
+Fenced code and front matter are copied verbatim; URLs, inline code and HTML are masked.&quot;&quot;&quot;
+import json, re, sys, pathlib, urllib.request
+
+API = &quot;http://127.0.0.1:8080/v1/chat/completions&quot;
+SYSTEM = (
+    &quot;You are a professional translator. Translate the user&#x27;s Markdown from English into &quot;
+    &quot;EUROPEAN Portuguese (Portugal, pt-PT, AO90 spelling). Never use Brazilian Portuguese. &quot;
+    &quot;Use: ficheiro (not arquivo), ecrã (not tela), utilizador (not usuário), equipa (not equipe), &quot;
+    &quot;registo (not registro), contacto (not contato), guardar (not salvar), transferir (not baixar), &quot;
+    &quot;aplicação (not aplicativo), telemóvel (not celular), eliminar (not deletar); &quot;
+    &quot;use &#x27;estar a + infinitivo&#x27; (está a correr), never the gerund (está rodando); &quot;
+    &quot;prefer clitic after the verb (configura-se). &quot;
+    &quot;Keep every token like ⟦0⟧ exactly as is. Keep all Markdown syntax (#, -, *, |, [ ], links). &quot;
+    &quot;Output ONLY the translation, with no comments or quotes.&quot;
+)
+FENCE = re.compile(r&quot;^\s{0,3}(`{3,}|~{3,})&quot;)
+PROTECT = re.compile(
+    r&quot;`+[^`\n]*?`+&quot;                    # inline code
+    r&quot;|(?&lt;=\])\([^)]*\)&quot;                # link/image target (url &quot;title&quot;)
+    r&quot;|^\s*\[[^\]]+\]:\s*\S+.*$&quot;        # reference link definitions
+    r&quot;|https?://[^\s)\]&gt;]+&quot;             # bare URLs
+    r&quot;|&lt;[^&gt;\n]+&gt;&quot;, re.M)                # autolinks and HTML tags
+TOKEN = re.compile(r&quot;⟦\d+⟧&quot;)
+BR = re.compile(r&quot;\b(arquivos?|usuári\w*|tela|equipe|registro|contato|salvar|baixar|aplicativo|&quot;
+                r&quot;celular|deletar|est(?:á|ão|ava|avam)\s+\w+ndo)\b&quot;, re.I)
+
+def ask(text):
+    body = json.dumps({&quot;messages&quot;: [{&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: SYSTEM},
+                                    {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: text}],
+                       &quot;temperature&quot;: 0, &quot;max_tokens&quot;: 2048}).encode()
+    req = urllib.request.Request(API, body, {&quot;Content-Type&quot;: &quot;application/json&quot;})
+    with urllib.request.urlopen(req, timeout=1800) as r:
+        return json.load(r)[&quot;choices&quot;][0][&quot;message&quot;][&quot;content&quot;].strip()
+
+def translate_para(para, name):
+    saved = []
+    def keep(m):
+        saved.append(m.group(0))
+        return f&quot;⟦{len(saved) - 1}⟧&quot;
+    masked = PROTECT.sub(keep, para)
+    if not re.search(r&quot;[A-Za-z]{2,}&quot;, TOKEN.sub(&quot;&quot;, masked)):
+        return para                                 # nothing translatable
+    want = sorted(TOKEN.findall(masked))
+    for _ in range(2):                              # one retry
+        out = ask(masked)
+        if sorted(TOKEN.findall(out)) == want and out.count(&quot;|&quot;) == masked.count(&quot;|&quot;):
+            return TOKEN.sub(lambda m: saved[int(m.group(0)[1:-1])], out)
+    print(f&quot;  ! {name}: kept English (placeholders broke): {para[:60]!r}&quot;, file=sys.stderr)
+    return para
+
+def translate_file(src, dst):
+    lines = src.read_text(encoding=&quot;utf-8&quot;).splitlines(keepends=True)
+    out, para, fence, start = [], [], None, 0
+    if lines and lines[0].strip() == &quot;---&quot;:         # YAML front matter: verbatim
+        end = next((j for j in range(1, len(lines)) if lines[j].strip() in (&quot;---&quot;, &quot;...&quot;)), None)
+        if end:
+            out, start = lines[:end + 1], end + 1
+    def flush():
+        if para:
+            text = &quot;&quot;.join(para); body = text.rstrip(&quot;\n&quot;)
+            out.append(translate_para(body, src.name) + text[len(body):])
+            para.clear()
+    for line in lines[start:]:
+        m = FENCE.match(line)
+        if fence:
+            out.append(line)
+            s = line.strip()
+            if s and set(s) == {fence[0]} and len(s) &gt;= len(fence):
+                fence = None
+        elif m:
+            flush(); fence = m.group(1); out.append(line)
+        elif not line.strip():
+            flush(); out.append(line)
+        else:
+            para.append(line)
+    flush()
+    result = &quot;&quot;.join(out)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_text(result, encoding=&quot;utf-8&quot;)
+    # sanity checks
+    url = re.compile(r&quot;https?://[^\s)\]&gt;\&quot;&#x27;]+&quot;)
+    if sorted(url.findall(src.read_text(encoding=&quot;utf-8&quot;))) != sorted(url.findall(result)):
+        print(f&quot;  ! {src.name}: URL mismatch, check manually&quot;, file=sys.stderr)
+    for w in sorted({m.group(0).lower() for m in BR.finditer(result)}):
+        print(f&quot;  ? {src.name}: possible pt-BR: {w}&quot;, file=sys.stderr)
+
+if __name__ == &quot;__main__&quot;:
+    src_root, dst_root = map(pathlib.Path, sys.argv[1:3])
+    for f in sorted(src_root.rglob(&quot;*.md&quot;)):
+        dst = dst_root / f.relative_to(src_root)
+        if dst.exists():
+            continue                                # resumable
+        print(f&quot;translating {f}&quot;)
+        translate_file(f, dst)
+```
+
+## First run
+
+1. Try it on a small sample first:
+   ```bash
+   mkdir -p /tmp/sample &amp;&amp; cp docs/some-page.md /tmp/sample/
+   python3 md2ptpt.py /tmp/sample /tmp/sample-pt
+   diff &lt;(grep -A999 &#x27;```&#x27; /tmp/sample/some-page.md) &lt;(grep -A999 &#x27;```&#x27; /tmp/sample-pt/some-page.md)  # quick eyeball of code
+   ```
+2. Ask someone in the Lisbon office to read 2–3 translated pages. Then add their corrections (preferred terms, formal or informal tone) to the word list in `SYSTEM`.
+3. Run the whole folder overnight:
+   ```bash
+   nohup python3 md2ptpt.py docs/ docs-pt-PT/ &gt; translate.log 2&gt;&amp;1 &amp;
+   ```
+   It skips files that are already done, so you can stop and restart it. On CPU, expect a few tokens per second, which works out to roughly minutes per page.
+4. Check `translate.log`:
+   - `!` lines: paragraphs left in English, or URLs that don&#x27;t match the source.
+   - `?` lines: Brazilian words that got through.
+
+## Assumptions and limits
+
+- **Front matter:** I assumed YAML front matter shouldn&#x27;t be translated, so it&#x27;s copied as is.
+- **Link titles:** Link targets are copied as is, so link titles like `(url &quot;Title&quot;)` stay in English.
+- **Indented code:** Only fenced code blocks (``` or ~~~) are protected. Code that&#x27;s only indented with 4 spaces would get translated.
+- **Pt‑PT quality:** EuroLLM&#x27;s published tests cover Brazilian Portuguese, not European Portuguese. The prompt and the word check lower the risk but don&#x27;t remove it, so plan on a human review pass.
+- **More RAM:** If the box ever has more memory, trying a bigger model with the same script is the easiest quality upgrade.
+
+Sources:
+- [Tradutor paper (arXiv 2502.14385)](https://arxiv.org/html/2502.14385)
+- [Slator: Meet Tradutor](https://tech.slator.com/?p=103667)
+- [EuroLLM 9B GGUF](https://huggingface.co/QuantFactory/EuroLLM-9B-GGUF)
+- [EuroLLM 1.7B Instruct GGUF](https://huggingface.co/QuantFactory/EuroLLM-1.7B-Instruct-GGUF)
+- [AMALIA pt-PT LLM report (arXiv 2603.26511)](https://arxiv.org/pdf/2603.26511)
+- [HilbertRaum ([source] result)](https://github.com/HilbertraumAI/HilbertRaum)</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: -</li></ul></details>
+<fieldset><label><input type="radio" name="q16" value="A"> A</label>
+<label><input type="radio" name="q16" value="B"> B</label>
+<label><input type="radio" name="q16" value="tie"> tie</label>
+<input class="why" data-q="q16" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q17"><h2>17. q17</h2><p class="prompt">I keep about 2,000 markdown notes and some PDFs, and I want to ask questions about them in plain English from the terminal, completely offline so nothing leaves my laptop, and have it tell me which note or PDF each answer came from. It&#x27;s a Linux laptop with 16 GB RAM and no GPU; free and open source please.</p>
+<div class="pair"><div><h3>A</h3><pre>I recommend **Ollama + AIChat**. Both are free and open source, and both work completely offline once the models are downloaded.
+
+- **Ollama** runs a small language model and an embedding model on your CPU.
+- **AIChat** (github.com/sigoden/aichat) is a terminal chat tool with document search built in. It indexes your notes and PDFs into a local database, finds the passages that match your question, and passes them to the model. Its `.sources rag` command lists the files each answer came from.
+
+It&#x27;s a single Rust binary with no Python setup or web interface. I&#x27;m assuming you&#x27;re fine typing questions into a terminal chat prompt and don&#x27;t need a graphical app.
+
+## Install
+
+1. **Ollama:**
+   ```
+   curl -fsSL https://ollama.com/install.sh | sh
+   ```
+   Or use your distro&#x27;s package or the tarball from ollama.com.
+
+2. **Models.** Download these once while you&#x27;re online:
+   ```
+   ollama pull qwen3:4b            # chat model, ~2.5 GB, usable speed on CPU
+   ollama pull nomic-embed-text    # embedding model for search
+   ```
+   With 16 GB RAM and no GPU, a 3–4B model is the practical choice. `qwen3:8b` or `llama3.1:8b` give better answers but are about half as fast. Model names change over time, so check ollama.com/library for current small models if these have moved on.
+
+3. **PDF text extraction:**
+   ```
+   sudo apt install poppler-utils   # or: dnf install poppler-utils / pacman -S poppler
+   ```
+
+4. **AIChat.** Download the Linux binary from github.com/sigoden/aichat/releases and put it on your PATH. Or install it with `cargo install aichat`. Some distros also package it (for example, `pacman -S aichat`).
+
+## Configure
+
+Create `~/.config/aichat/config.yaml`:
+
+```yaml
+model: ollama:qwen3:4b
+rag_embedding_model: ollama:nomic-embed-text
+rag_top_k: 6
+
+clients:
+  - type: openai-compatible
+    name: ollama
+    api_base: http://localhost:11434/v1
+    models:
+      - name: qwen3:4b
+        max_input_tokens: 32768
+      - name: nomic-embed-text
+        type: embedding
+        default_chunk_size: 1500
+        max_batch_size: 50
+
+document_loaders:
+  pdf: &#x27;pdftotext $1 -&#x27;
+```
+
+AIChat only talks to Ollama on `localhost`, so nothing leaves your laptop. To check this, turn off Wi-Fi and run a query.
+
+## First run
+
+```
+aichat --rag notes
+```
+
+1. AIChat asks you to confirm the embedding model, chunk size and overlap. The defaults are fine.
+2. When it asks for documents, enter a glob such as:
+   ```
+   ~/notes/**/*.{md,pdf}
+   ```
+   Separate multiple paths with `;`.
+3. Indexing about 2,000 notes on CPU will probably take somewhere between several minutes and around 30 minutes. It only happens once.
+4. Ask questions at the prompt:
+   ```
+   notes&gt; What did I decide about the backup strategy last spring?
+   notes&gt; .sources rag
+   ```
+   `.sources rag` lists the files and passages used for the last answer.
+5. For one-off questions from the shell:
+   ```
+   aichat --rag notes &quot;summarize my notes on Kubernetes networking&quot;
+   ```
+
+**Maintenance:** after adding or editing notes, run `.rebuild rag` inside the session. It re-indexes only what changed.
+
+## Tips and caveats
+
+- **Citations in the answer itself:** you can add an instruction such as &quot;cite the file name for each claim&quot;. Small models don&#x27;t always follow it reliably, so treat `.sources rag` as the authoritative list.
+- **Better search results:** add `rag_reranker_model` if you set up a local reranker. The default hybrid search (keyword plus vector) already works well for notes.
+- **Scanned PDFs:** these have no text layer, so `pdftotext` returns nothing. Run them through `ocrmypdf` first.
+- **Accuracy:** a 4B model sometimes gets details wrong. Check important answers against the cited files.
+
+## Alternatives
+
+- **llm (Simon Willison) + llm-ollama:** good for scripting, but you&#x27;d have to build the document search and citations yourself.
+- **AnythingLLM** or **Open WebUI:** offline document chat with citations, but through a GUI or browser, not the terminal.
+- **PrivateGPT:** more setup (Python), and it&#x27;s built around an API or web interface.
+
+Source: [AIChat RAG Guide](https://github.com/sigoden/aichat/wiki/RAG-Guide). Some details come from my own knowledge and weren&#x27;t checked against that page: the Ollama and model install commands, the config keys other than `document_loaders`, and the `.sources rag` and `.rebuild rag` commands. If any of them doesn&#x27;t work, check the AIChat README or `.help`.</pre></div><div><h3>B</h3><pre>I&#x27;m assuming an x86_64 Debian/Ubuntu-style distro and PDFs that contain real text, not scanned images. I haven&#x27;t run anything on your machine.
+
+# My recommendation: aichat + Ollama
+
+- **[Ollama](https://ollama.com)** runs a small language model and an embedding model on your CPU. It&#x27;s free and open source (MIT).
+- **[aichat](https://github.com/sigoden/aichat)** is a single Rust program that runs in the terminal (MIT/Apache-2.0). It has built-in document search (RAG): it indexes a folder of `.md` files and PDFs, answers questions from them, and `.sources rag` shows which files the last answer came from.
+
+**Caveat:** the tool-checking service I used ([source]) has not tested this pair. It&#x27;s my pick from general knowledge plus aichat&#x27;s current documentation, which lists the `.rag` / `.sources rag` commands, folder/glob input, and PDF loading through `pdftotext`. Treat the steps below as unverified.
+
+**Why not [source]&#x27;s tested picks?** It suggested three, and none fits as well:
+- **HilbertRaum** (GPL-3.0) claims document Q&amp;A with citations, but it&#x27;s a desktop app, not a terminal tool. [source] only confirmed it installs and opens offline. It never tested the Q&amp;A or the citations.
+- **Unlimited-Context-LLM** doesn&#x27;t list source citations or PDF loading.
+- **Camelid** doesn&#x27;t say it cites sources.
+
+HilbertRaum is the one to try if you&#x27;d accept a graphical app.
+
+## Install
+
+```bash
+# 1. PDF text extraction
+sudo apt install poppler-utils          # provides pdftotext
+
+# 2. Ollama (official script; read it first if you prefer)
+curl -fsSL https://ollama.com/install.sh -o ollama-install.sh
+less ollama-install.sh &amp;&amp; sh ollama-install.sh
+
+# 3. Models (one-time download, then fully offline)
+ollama pull qwen2.5:7b          # answer model, ~4.7 GB, runs fine in 16 GB RAM on CPU
+ollama pull nomic-embed-text    # embedding model, ~270 MB
+
+# 4. aichat: prebuilt binary from GitHub Releases, or:
+cargo install aichat
+```
+
+If 7B answers feel too slow on your CPU, use `qwen2.5:3b` or `llama3.2:3b`. They&#x27;re faster but less precise.
+
+## Configure `~/.config/aichat/config.yaml`
+
+```yaml
+model: ollama:qwen2.5:7b
+rag_embedding_model: ollama:nomic-embed-text
+rag_top_k: 5
+document_loaders:
+  pdf: &#x27;pdftotext $1 -&#x27;
+clients:
+  - type: openai-compatible
+    name: ollama
+    api_base: http://localhost:11434/v1
+    models:
+      - name: qwen2.5:7b
+        max_input_tokens: 32768
+      - name: nomic-embed-text
+        type: embedding
+        default_chunk_size: 1000
+        max_batch_size: 50
+```
+
+Everything goes to `localhost`, so nothing leaves the laptop.
+
+## First run
+
+```bash
+aichat
+```
+
+Inside the aichat prompt:
+
+```
+.rag notes
+```
+
+When it asks which documents to add, give a glob such as `~/notes/**/*.{md,pdf}`. It then embeds everything. With about 2,000 notes on CPU, expect roughly 10–30 minutes the first time. After that:
+
+```
+What did I decide about the database migration last spring?
+.sources rag        ← lists the note/PDF files behind that answer
+```
+
+## Day-to-day use
+
+- Run `aichat`, then `.rag notes` to reopen the saved index.
+- After editing or adding notes, run `.rebuild rag`.
+- `.set rag_top_k 8` pulls in more passages when an answer seems incomplete.
+- aichat also has a `--rag` flag for one-off questions straight from the shell. I haven&#x27;t checked its exact syntax, so see `aichat --help`.
+
+## Limitations
+
+- Sources come from `.sources rag` after each answer. They aren&#x27;t printed inline by default, so check that list before trusting an answer.
+- Scanned PDFs have no text to extract. Run them through `ocrmypdf` first.
+- Quality depends on the small local model. It&#x27;s good for &quot;find and summarise what I wrote,&quot; weaker for complex reasoning across many notes.
+
+**Alternatives if this doesn&#x27;t suit you:** Khoj (self-hosted, works with Ollama and cites sources, but is web/editor based) or PrivateGPT (local Q&amp;A over documents with sources, API/web UI). [source] hasn&#x27;t tested either.</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: -</li></ul></details>
+<fieldset><label><input type="radio" name="q17" value="A"> A</label>
+<label><input type="radio" name="q17" value="B"> B</label>
+<label><input type="radio" name="q17" value="tie"> tie</label>
+<input class="why" data-q="q17" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q18"><h2>18. q18</h2><p class="prompt">I run local models with Ollama on my Linux laptop and want to chat with them from the terminal while letting the model use my MCP servers as tools, for example a filesystem server and a small stdio server we wrote ourselves. Is there a free, open-source terminal client that connects a local model to stdio MCP servers, with no cloud account and nothing sent off my machine?</p>
+<div class="pair"><div><h3>A</h3><pre>Yes. I&#x27;d use **ollmcp** ([mcp-client-for-ollama](https://pypi.org/project/mcp-client-for-ollama/0.5.0/)). It&#x27;s a free, open-source terminal chat client made for Ollama. It runs stdio MCP servers (it also supports SSE and Streamable HTTP) and talks to Ollama at `http://localhost:11434`. It needs no account and has no cloud backend. A good second choice is **MCPHost** from mark3labs, which I cover below.
+
+I&#x27;m assuming Ollama runs locally on the default port, you have Python 3.10+ and Node.js (for the filesystem server), and your own server is a Python or Node script started from the command line. I didn&#x27;t run anything on your machine.
+
+## Main recommendation: ollmcp
+
+### 1. Pick a model that supports tool calling
+Tools only work if the model supports tool calling. Good local options are `qwen2.5` / `qwen3`, `llama3.1` / `llama3.2`, and `mistral-nemo`. ollmcp&#x27;s default model is `qwen2.5:7b`.
+```bash
+ollama pull qwen2.5:7b
+```
+
+### 2. Install
+```bash
+pipx install ollmcp          # or: uv tool install ollmcp
+# one-off without installing: uvx ollmcp
+```
+
+### 3. Describe your servers in a standard `mcpServers` JSON file
+For example, save this as `~/mcp-servers.json`:
+```json
+{
+  &quot;mcpServers&quot;: {
+    &quot;filesystem&quot;: {
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;-y&quot;, &quot;@modelcontextprotocol/server-filesystem&quot;, &quot;/home/you/projects&quot;]
+    },
+    &quot;ourserver&quot;: {
+      &quot;command&quot;: &quot;python3&quot;,
+      &quot;args&quot;: [&quot;/home/you/code/our-mcp-server/server.py&quot;],
+      &quot;env&quot;: { &quot;LOG_LEVEL&quot;: &quot;info&quot; }
+    }
+  }
+}
+```
+Give the filesystem server only the directories you want the model to access.
+
+### 4. First run
+```bash
+ollmcp --servers-json ~/mcp-servers.json --model qwen2.5:7b
+# or, for a single script: ollmcp --mcp-server /path/to/server.py --model qwen2.5:7b
+```
+When it starts, check that both servers and their tools are listed. Then ask something like &quot;list the files in my projects folder&quot; and watch the tool call happen. Inside the client you can switch models, turn individual tools on or off, and save the setup. The docs say saved configs go in `~/.config/ollmcp/`, but one third-party listing gives a different path, so check what your version actually uses.
+
+If you start ollmcp with no server options, it tries to find servers in a Claude Desktop config. Pass `--servers-json` explicitly so it uses only your servers.
+
+## Alternative: MCPHost (single Go binary)
+[MCPHost](https://gb.xjqchip.workers.dev/mark3labs/mcphost) is a CLI host that supports Ollama models through `ollama:&lt;model&gt;`.
+```bash
+go install github.com/mark3labs/mcphost@latest
+```
+It reads `~/.mcphost.json` or `~/.mcphost.yml`. Its server format is slightly different: `command` is an array and stdio servers use `&quot;type&quot;: &quot;local&quot;`:
+```json
+{
+  &quot;mcpServers&quot;: {
+    &quot;filesystem&quot;: { &quot;type&quot;: &quot;local&quot;,
+      &quot;command&quot;: [&quot;npx&quot;, &quot;-y&quot;, &quot;@modelcontextprotocol/server-filesystem&quot;, &quot;/home/you/projects&quot;] },
+    &quot;ourserver&quot;: { &quot;type&quot;: &quot;local&quot;,
+      &quot;command&quot;: [&quot;python3&quot;, &quot;/home/you/code/our-mcp-server/server.py&quot;] }
+  }
+}
+```
+```bash
+mcphost -m ollama:qwen2.5:7b      # add --config /path/to/file to use a different config
+```
+Older versions used `$HOME/mcp.json` and a different format, so follow the README for the version you install.
+
+## Making sure nothing leaves your machine
+- **The clients:** both only talk to your local Ollama and the servers you list.
+- **`npx -y`:** this downloads the filesystem server package from npm the first time. That&#x27;s a download, not your data going out. To avoid even that, install it once with `npm i -g @modelcontextprotocol/server-filesystem` and run the installed binary directly.
+- **Your servers:** MCP servers can make their own network calls, so data could still leave through a server you add. Your filesystem server and your own server are fine if they don&#x27;t make network requests.
+- **To confirm:** leave `OLLAMA_HOST` at `127.0.0.1`, then watch connections with `ss -tp` while you chat, or test with Wi-Fi turned off.
+
+Sources:
+- [mcp-client-for-ollama on PyPI](https://pypi.org/project/mcp-client-for-ollama/0.5.0/)
+- [x-cmd: mcp-client-for-ollama](https://x-cmd.com/install/mcp-client-for-ollama)
+- [LobeHub: jonigl/mcp-client-for-ollama](https://lobehub.com/zh/mcp/jonigl-mcp-client-for-ollama)
+- [mark3labs/mcphost (mirror)](https://gb.xjqchip.workers.dev/mark3labs/mcphost)
+- [mcphost-server on mcp.so (a separate fork)](https://mcp.so/servers/mcphost-server)</pre></div><div><h3>B</h3><pre>I&#x27;d recommend **`ollmcp`** ([mcp-client-for-ollama](https://github.com/jonigl/mcp-client-for-ollama)). It&#x27;s an MIT-licensed terminal chat client made for Ollama. It runs your local models and starts stdio MCP servers as tools. You don&#x27;t need an account, and it talks to your local Ollama.
+
+**What I assumed:** Ollama runs at the default `localhost:11434`, and you have Python 3.11+ or `uv`.
+
+**Before you install**, I checked these limits:
+- I didn&#x27;t install or test ollmcp. Everything here comes from its README, which I read today (2026-11-02).
+- The README says it **checks for new versions** to show update notices. That&#x27;s an outbound request, but it doesn&#x27;t send your chats. If you need zero network traffic, look in the source or settings for a way to turn the check off, or block it with a firewall.
+- `npx -y @modelcontextprotocol/server-filesystem` downloads from npm the first time it runs. To stay offline after that, install it ahead of time: `npm i -g @modelcontextprotocol/server-filesystem`.
+- Tool calling only works with **models that support tools**. The README lists qwen3.5, llama3.2, mistral and gemma4. Small models often call tools badly, so use the largest tool-capable model your laptop can handle.
+
+## Install
+```bash
+uv tool install --upgrade ollmcp     # or: pip install --upgrade ollmcp
+ollama pull qwen3.5                  # or another tool-capable model you already have
+```
+
+## Add your MCP servers (stdio is the default)
+```bash
+# Filesystem server, limited to one directory
+ollmcp mcp add --scope user filesystem -- npx -y @modelcontextprotocol/server-filesystem /home/you/projects
+
+# Your own stdio server
+ollmcp mcp add --scope user myserver --env MY_VAR=value -- python3 /path/to/your_server.py
+ollmcp mcp list
+```
+`--scope user` saves the servers in `~/.config/ollmcp/mcp.json`. If you want a config you can commit with your project, use `--scope project` instead, which writes a `.mcp.json` in the repo.
+
+You can also skip the `add` commands and pass a JSON file with `ollmcp -j servers.json`:
+```json
+{ &quot;mcpServers&quot;: {
+    &quot;filesystem&quot;: { &quot;command&quot;: &quot;npx&quot;, &quot;args&quot;: [&quot;-y&quot;,&quot;@modelcontextprotocol/server-filesystem&quot;,&quot;/home/you/projects&quot;] },
+    &quot;myserver&quot;:   { &quot;command&quot;: &quot;python3&quot;, &quot;args&quot;: [&quot;/path/to/your_server.py&quot;], &quot;env&quot;: {&quot;MY_VAR&quot;:&quot;value&quot;} }
+}}
+```
+
+## First run
+```bash
+ollmcp -m qwen3.5
+```
+- Inside the chat, type `/model` to switch models.
+- Try a prompt that should use a tool, such as *&quot;List the files in /home/you/projects and summarize README.md&quot;*. Then try one that should call your own server&#x27;s tool.
+- If something goes wrong, the logs are in `~/.config/ollmcp/logs/`.
+
+## Other options
+- **MCPHost** (`mark3labs/mcphost`, MIT): a Go client that runs `mcphost -m ollama/&lt;model&gt;` and reads servers from `~/.mcphost.yml`. It works, but it was **archived on 13 April 2026** and gets no more updates. Its authors point to **Kit** (`github.com/mark3labs/kit`) as the replacement. I haven&#x27;t checked Kit myself.
+- My recommendation tool ([source]) suggested `python-ai-agent-ollama`. That&#x27;s a prototype, and nothing showed it supporting MCP servers, so it doesn&#x27;t do what you need.
+
+Sources:
+- https://github.com/jonigl/mcp-client-for-ollama
+- https://github.com/mark3labs/mcphost</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: -</li></ul></details>
+<fieldset><label><input type="radio" name="q18" value="A"> A</label>
+<label><input type="radio" name="q18" value="B"> B</label>
+<label><input type="radio" name="q18" value="tie"> tie</label>
+<input class="why" data-q="q18" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q19"><h2>19. q19</h2><p class="prompt">Our company bans sending source code to outside AI services, so the popular cloud coding assistants are out. I want a free, open-source coding agent that runs in the terminal, can read and edit files in my repo, and talks only to a model server we host ourselves through an OpenAI-compatible endpoint. No vendor account or login, and no telemetry.</p>
+<div class="pair"><div><h3>A</h3><pre># Recommendation: Aider, with OpenCode as the alternative
+
+**Main pick: [Aider](https://aider.chat)** (Apache-2.0, Python, runs in the terminal).
+
+- **Reads and edits your repo:** You add files to the chat and Aider writes the edits directly to disk. It also uses a repo map so the model understands the rest of the codebase. If you&#x27;re in a git repo, it commits each change, so every edit is easy to review or undo.
+- **Works with your own server:** It connects to any OpenAI-compatible endpoint through LiteLLM. You only set a base URL and a model name.
+- **No account or login:** You only need an API key if your own server asks for one, and it can be a dummy value otherwise.
+- **Telemetry is off unless you agree:** Analytics only run if you opt in. Aider sometimes asks a random sample of users whether they want to, and `--analytics-disable` turns it off permanently. You can also send analytics to your own PostHog instance.
+- **Handles self-hosted models well:** It edits files with text formats like search/replace blocks and diffs, so it doesn&#x27;t need reliable function calling. That matters because function calling is often weak in open-weight models.
+
+**Limitation:** Aider is more a pair programmer than a fully autonomous agent. It doesn&#x27;t run shell commands on its own. You trigger them with `/run` and `/test`, and it can automatically run your linter and tests after each edit. If you want the agent to explore and run commands by itself, see OpenCode below.
+
+**Assumptions:** you&#x27;re on macOS, your server serves `/v1/chat/completions` at something like `https://llm.internal.example.com/v1`, and its model ID is something like `qwen-coder`. Replace these with your real values.
+
+## Install
+
+```bash
+# Option A (recommended): isolated install with uv
+brew install uv
+uv tool install --python 3.12 aider-chat
+
+# Option B: pipx
+brew install pipx &amp;&amp; pipx install aider-chat
+```
+
+The install pulls packages from PyPI, but no code is sent anywhere. If your company requires it, point uv or pip at an internal package mirror.
+
+## Configure (once per repo, or in `~/.aider.conf.yml` for all repos)
+
+`.aider.conf.yml`:
+```yaml
+model: openai/qwen-coder          # &quot;openai/&quot; prefix = generic OpenAI-compatible
+openai-api-base: https://llm.internal.example.com/v1
+openai-api-key: dummy             # or your server&#x27;s real key; better: set via env
+analytics-disable: true           # permanently off
+check-update: false               # no PyPI version check
+show-release-notes: false
+show-model-warnings: false        # silence &quot;unknown model&quot; warnings
+auto-commits: true                # set false if you don&#x27;t want auto git commits
+```
+
+Add this to your shell profile. It stops LiteLLM from downloading its model price list from GitHub at startup:
+```bash
+export LITELLM_LOCAL_MODEL_COST_MAP=True
+export OPENAI_API_KEY=...         # if your server needs auth
+```
+
+Optional: Aider won&#x27;t know your model&#x27;s context size. To tell it, create `.aider.model.metadata.json`:
+```json
+{ &quot;openai/qwen-coder&quot;: { &quot;max_input_tokens&quot;: 131072, &quot;max_output_tokens&quot;: 8192,
+  &quot;input_cost_per_token&quot;: 0, &quot;output_cost_per_token&quot;: 0, &quot;litellm_provider&quot;: &quot;openai&quot;, &quot;mode&quot;: &quot;chat&quot; } }
+```
+
+## First run
+
+```bash
+cd your-repo
+aider src/foo.py src/bar.py       # files you want it allowed to edit
+```
+Then in the chat:
+```
+&gt; add input validation to parse_config and a unit test for it
+&gt; /test pytest -q                 # run tests; failures go back to the model
+&gt; /undo                           # revert the last AI commit if you dislike it
+```
+Use `/add` and `/drop` to change which files it can edit, `/ask` to ask questions without editing, and `/help` to see all commands.
+
+## Alternative: OpenCode, if you want a more autonomous agent
+
+[OpenCode](https://opencode.ai) is MIT-licensed and has a terminal UI. It lets the model use tools on its own: reading, searching, editing and running shell commands. It works best with a model that handles tool calling well.
+
+```bash
+brew install sst/tap/opencode     # or: npm i -g opencode-ai
+```
+`opencode.json` in the repo:
+```json
+{
+  &quot;$schema&quot;: &quot;https://opencode.ai/config.json&quot;,
+  &quot;provider&quot;: {
+    &quot;inhouse&quot;: {
+      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
+      &quot;name&quot;: &quot;In-house LLM&quot;,
+      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://llm.internal.example.com/v1&quot;, &quot;apiKey&quot;: &quot;{env:INHOUSE_KEY}&quot; },
+      &quot;models&quot;: { &quot;qwen-coder&quot;: { &quot;name&quot;: &quot;Qwen Coder&quot;, &quot;limit&quot;: { &quot;context&quot;: 131072, &quot;output&quot;: 8192 } } }
+    }
+  },
+  &quot;model&quot;: &quot;inhouse/qwen-coder&quot;,
+  &quot;autoupdate&quot;: false,
+  &quot;share&quot;: &quot;disabled&quot;
+}
+```
+Run `opencode` in the repo, then use `/models` to pick your model.
+
+Some caveats:
+- **Downloads at runtime:** It fetches the `@ai-sdk/openai-compatible` npm package the first time it runs, so you need npm access or an internal mirror.
+- **Background network calls:** By default it downloads a model catalog from models.dev. I believe the environment variable `OPENCODE_DISABLE_MODELS_FETCH=1` turns that off, but I haven&#x27;t checked it against the current docs.
+- **Sharing:** Keep `share` set to `disabled` so nobody can accidentally publish a session to opencode.ai.
+
+## Enforce it on the network as well
+
+Settings only control what the tool tries to do. To actually guarantee that code never leaves, add an egress rule so developer machines can reach only your LLM host, a package mirror, and other approved destinations. Then a future update or a wrong setting can&#x27;t send code out.
+
+I didn&#x27;t install or run anything here. I checked Aider&#x27;s analytics behavior and OpenCode&#x27;s custom-provider config against their current docs.
+
+Sources:
+- [Aider analytics docs](https://aider.chat/docs/more/analytics.html)
+- [OpenCode providers docs](https://opencode.ai/docs/providers/)</pre></div><div><h3>B</h3><pre>I recommend **Aider** (Apache-2.0). It&#x27;s a mature, free terminal coding agent. It reads your repo, edits files directly and commits each change to git. It works with any OpenAI-compatible endpoint and needs no vendor account or login. Its analytics are opt-in, and you can turn them off permanently.
+
+**Assumptions:** you&#x27;re on macOS (that&#x27;s what this machine reports), and your model server serves `/v1/chat/completions`, as vLLM, llama.cpp server, Ollama, LM Studio and TGI all do. I haven&#x27;t run anything here, so these steps come from Aider&#x27;s docs, not a test install.
+
+## Why Aider over the other options
+
+- **OpenCode** (MIT) is a good agent, but its docs say it uses a &quot;small model&quot; for side tasks like session titles. By default that&#x27;s **gpt-5-nano, hosted by OpenCode**, so some of your content could leave the network unless you override `small_model`. It also fetches model metadata from models.dev. You can lock it down, but it doesn&#x27;t start out safe.
+- **Codex CLI and Qwen Code** can also point at custom endpoints. But they&#x27;re vendor-built tools whose defaults expect the vendor&#x27;s services, so you&#x27;d have more settings to audit.
+- **What [source] offered:** Nedster (alpha, Ollama-only, its main feature wasn&#x27;t tested) and orangu (runs its own GGUF models, only tested on Linux). Neither clearly fits the &quot;our own OpenAI-compatible server&quot; requirement, so I wouldn&#x27;t use either here.
+
+## Install (macOS)
+
+Pick one:
+```bash
+brew install aider
+# or
+python3 -m pip install aider-install &amp;&amp; aider-install
+# or
+pipx install aider-chat
+```
+Aider needs `git`, because it commits its edits.
+
+## Lock it down before first use
+
+Create `~/.aider.conf.yml`:
+```yaml
+analytics-disable: true      # permanent opt-out (same as running `aider --analytics-disable` once)
+check-update: false          # no PyPI version check
+show-release-notes: false
+model: openai/&lt;your-model-name&gt;
+openai-api-base: https://llm.internal.example.com/v1
+```
+Then add this to your shell profile (`~/.zshrc`):
+```bash
+export OPENAI_API_KEY=&lt;internal-key-or-any-dummy-string&gt;
+export LITELLM_LOCAL_MODEL_COST_MAP=True   # stop LiteLLM fetching model metadata from GitHub
+```
+I&#x27;m fairly sure about the LiteLLM variable, but check that it works on your version.
+
+If Aider warns about an &quot;unknown model&quot;, add a `.aider.model.metadata.json` file that sets the context window. The warning is harmless.
+
+## First run
+
+```bash
+cd /path/to/your/repo
+aider                                # uses the config above
+# or with explicit flags:
+aider --model openai/&lt;model-name&gt; --openai-api-base https://llm.internal.example.com/v1 --no-analytics
+```
+Inside Aider:
+```
+/add src/utils.py            # put files in the chat so Aider can edit them
+Add type hints to parse_config and handle a missing file gracefully.
+/diff                        # see what it changed
+/undo                        # revert the last AI commit if you don&#x27;t like it
+```
+Two useful flags: `--no-auto-commits` if you&#x27;d rather commit yourself, and `--edit-format whole` if your model has trouble with diff-style edits. That&#x27;s common with smaller models.
+
+## Recommendations
+1. **Back the settings up with a network rule.** Config flags can drift between versions. A firewall or proxy rule that only lets developer machines reach your model server (plus package mirrors during install) is the only real guarantee that code stays inside.
+2. **Use a strong coding model.** How well Aider works depends mostly on the model. Pick a modern open coding model with a large context window, ideally 32k tokens or more.</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: -</li></ul></details>
+<fieldset><label><input type="radio" name="q19" value="A"> A</label>
+<label><input type="radio" name="q19" value="B"> B</label>
+<label><input type="radio" name="q19" value="tie"> tie</label>
+<input class="why" data-q="q19" placeholder="one sentence: why" size="80"></fieldset></section>
+<section id="q20"><h2>20. q20</h2><p class="prompt">I run Ollama on my Ubuntu desktop. I have a Python script that only speaks the OpenAI API (it uses the official openai package). What proxy or gateway should I install so the script can use my local models instead of OpenAI&#x27;s cloud?</p>
+<div class="pair"><div><h3>A</h3><pre># Use Ollama&#x27;s built-in OpenAI-compatible API instead of a proxy
+
+You probably don&#x27;t need to install anything. Ollama already serves an OpenAI-compatible API at `http://localhost:11434/v1`, which handles chat completions, completions, embeddings and model listing. The official `openai` Python package can connect to it directly. You only need to point the client at that address.
+
+**Assumptions:** The script uses `openai` version 1.x or later, and Ollama runs on the same machine on its default port (11434). I didn&#x27;t run anything on your machine.
+
+## Setup and first run
+
+1. **Check that Ollama is running and has a model:**
+   ```bash
+   systemctl status ollama        # or just: ollama list
+   ollama pull llama3.1:8b        # use any model you want
+   ```
+
+2. **Test the endpoint:**
+   ```bash
+   curl http://localhost:11434/v1/chat/completions \
+     -H &quot;Content-Type: application/json&quot; \
+     -d &#x27;{&quot;model&quot;:&quot;llama3.1:8b&quot;,&quot;messages&quot;:[{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;Say hi&quot;}]}&#x27;
+   ```
+
+3. **Point the script at Ollama using environment variables.** The `openai` package reads both of these automatically, so you don&#x27;t have to change the code:
+   ```bash
+   export OPENAI_BASE_URL=http://localhost:11434/v1
+   export OPENAI_API_KEY=ollama     # the client needs a key; Ollama ignores it
+   python your_script.py
+   ```
+   If the script sets `base_url` or `api_key` in the code, change it there instead:
+   ```python
+   client = OpenAI(base_url=&quot;http://localhost:11434/v1&quot;, api_key=&quot;ollama&quot;)
+   ```
+
+4. **Handle hardcoded model names.** If the script asks for something like `model=&quot;gpt-4o&quot;`, either edit that line or make a copy of your model under that name:
+   ```bash
+   ollama cp llama3.1:8b gpt-4o
+   ```
+   Now requests for `gpt-4o` go to your local model.
+
+## Things to watch for
+
+- **Context length:** Ollama&#x27;s default context window may be smaller than what your script expects. Long prompts can get cut off without any error. You can raise the limit, for example with `OLLAMA_CONTEXT_LENGTH=16384` in the Ollama service environment (`sudo systemctl edit ollama`), and then restart the service.
+- **Unsupported endpoints:** The Assistants API, file uploads, fine-tuning and image generation won&#x27;t work. Support for the newer Responses API depends on your Ollama version. If your script uses `client.responses...`, upgrade Ollama and test it.
+- **Tool calling and JSON mode:** These work, but only with models that support them, such as Llama 3.1+, Qwen 2.5/3 or Mistral.
+
+## When to add a gateway: LiteLLM Proxy
+
+A gateway is worth it if you need model aliasing across several backends, a fallback to the real OpenAI service, virtual API keys, logging, or one endpoint that serves several machines. In that case, LiteLLM is the standard choice:
+
+```bash
+python3 -m venv ~/litellm &amp;&amp; source ~/litellm/bin/activate
+pip install &#x27;litellm[proxy]&#x27;
+```
+
+`config.yaml`:
+```yaml
+model_list:
+  - model_name: gpt-4o
+    litellm_params:
+      model: ollama_chat/llama3.1:8b
+      api_base: http://localhost:11434
+```
+
+```bash
+litellm --config config.yaml       # serves on http://localhost:4000
+export OPENAI_BASE_URL=http://localhost:4000
+export OPENAI_API_KEY=anything     # or a master_key, if you set one
+```
+
+**Security note:** In March 2026, two LiteLLM releases on PyPI (1.82.7 and 1.82.8) were compromised in a supply-chain attack. Pin a version that the project&#x27;s security advisories list as clean, and check those advisories before you install.
+
+**Recommendation:** Use the environment variables in step 3. Only add LiteLLM if you hit one of the cases above.</pre></div><div><h3>B</h3><pre># You don&#x27;t need a proxy: point the script at Ollama directly
+
+Ollama already serves an OpenAI-compatible API at `http://localhost:11434/v1`. The official `openai` Python package reads its endpoint and key from environment variables, so you may not have to change your script at all.
+
+## Steps
+
+**1. Check that Ollama is running and has a model:**
+```bash
+ollama list                      # shows the models you&#x27;ve pulled
+curl http://localhost:11434/v1/models
+```
+If you have no models yet, pull one, for example `ollama pull llama3.1`.
+
+**2. Set the base URL and key before running the script:**
+```bash
+export OPENAI_BASE_URL=http://localhost:11434/v1
+export OPENAI_API_KEY=ollama     # the client needs a value, but Ollama ignores it
+python your_script.py
+```
+This works as long as the script creates a plain `OpenAI()` client. If it passes `base_url=` or `api_key=` in the code, change those values there instead:
+```python
+client = OpenAI(base_url=&quot;http://localhost:11434/v1&quot;, api_key=&quot;ollama&quot;)
+```
+
+**3. Handle the model name.** The script probably asks for something like `model=&quot;gpt-4o&quot;`, and Ollama will return &quot;model not found&quot; for that. You have two options:
+- Change the model string in the script to a local model, such as `&quot;llama3.1&quot;`.
+- Or, if you don&#x27;t want to edit the script, create an alias so the OpenAI name maps to a local model:
+  ```bash
+  ollama cp llama3.1 gpt-4o
+  ```
+
+## What works and what doesn&#x27;t
+- **Works:** `chat.completions` (including streaming, and tool calling or JSON mode on models that support them), `completions`, `embeddings` and `models.list`. Recent Ollama versions also support the Responses API to some degree. Check the OpenAI compatibility page in Ollama&#x27;s docs for your version.
+- **Doesn&#x27;t work:** OpenAI-hosted features such as Assistants/threads, file uploads, fine-tuning, batch, and image generation.
+
+## When a gateway would make sense: LiteLLM Proxy
+Install a gateway only if you need things Ollama can&#x27;t do by itself, such as:
+- mapping many OpenAI model names to local models,
+- falling back to OpenAI&#x27;s cloud when a local call fails,
+- API keys, logging or spend tracking,
+- serving several machines or backends.
+
+LiteLLM is the standard choice for that.
+
+```bash
+pipx install &#x27;litellm[proxy]&#x27;     # or: pip install &#x27;litellm[proxy]&#x27; in a venv
+```
+Create a `config.yaml`:
+```yaml
+model_list:
+  - model_name: gpt-4o
+    litellm_params:
+      model: ollama_chat/llama3.1
+      api_base: http://localhost:11434
+```
+Start it:
+```bash
+litellm --config config.yaml --port 4000
+```
+Then set `OPENAI_BASE_URL=http://localhost:4000` and `OPENAI_API_KEY=anything`. If you configure a master key in LiteLLM, use that key instead.
+
+## Assumptions
+- The script and Ollama run on the same Ubuntu machine. If they don&#x27;t, run Ollama with `OLLAMA_HOST=0.0.0.0` (for the systemd service, set it with `sudo systemctl edit ollama`), use the desktop&#x27;s IP address in the URL, and make sure the port isn&#x27;t exposed to untrusted networks.
+- The script uses chat completions or something similar, not Assistants or other cloud-only features.
+
+My recommendation is to use Ollama&#x27;s built-in endpoint with the two environment variables, and add LiteLLM only if you later need routing or fallback.</pre></div></div>
+<details><summary>Words that may hint at the source (not removed)</summary><ul><li>A: -</li><li>B: -</li></ul></details>
+<fieldset><label><input type="radio" name="q20" value="A"> A</label>
+<label><input type="radio" name="q20" value="B"> B</label>
+<label><input type="radio" name="q20" value="tie"> tie</label>
+<input class="why" data-q="q20" placeholder="one sentence: why" size="80"></fieldset></section>
+<p><button id="export">Export choices.json</button> <span id="left"></span></p>
+<script>
+const FORM = "eae1ce18f04612bc21ca9a04fc72d35e8d59073b915efd05f78759fddd9dabe7";
+const KEY = "blind-prefer-" + FORM;
+function collect() {
+  const out = {form_sha256: FORM, choices: {}};
+  document.querySelectorAll("section").forEach(s => {
+    const q = s.id, c = s.querySelector("input[type=radio]:checked"), why = s.querySelector(".why").value.trim();
+    out.choices[q] = {choice: c ? c.value : null, reason: why};
+  });
+  return out;
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(collect())); } catch (e) {} count(); }
+function count() { const c = collect().choices; const left = Object.values(c).filter(x => !x.choice || !x.reason).length;
+  document.getElementById("left").textContent = left ? left + " left" : "all answered"; }
+try { const saved = JSON.parse(localStorage.getItem(KEY) || "null");
+  if (saved) for (const [q, v] of Object.entries(saved.choices)) {
+    const r = document.querySelector(`input[name="${q}"][value="${v.choice}"]`); if (r) r.checked = true;
+    const w = document.querySelector(`.why[data-q="${q}"]`); if (w) w.value = v.reason || ""; } } catch (e) {}
+document.addEventListener("input", save); count();
+document.getElementById("export").onclick = () => {
+  const blob = new Blob([JSON.stringify(collect(), null, 2)], {type: "application/json"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "choices.json"; a.click(); };
+</script></body></html>
