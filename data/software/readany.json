@@ -86,18 +86,22 @@
       "first_task": "pnpm tauri dev"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "source",
+      "basis": "replayed",
+      "run_id": "verify-readany-20261102-174953-31f9",
+      "method": "binary",
       "steps": [
         {
-          "command": "pnpm tauri dev",
-          "purpose": null
+          "command": "cd ~/work && curl -L -o ReadAny.AppImage \"https://github.com/codedogQBY/ReadAny/releases/download/v1.3.6/ReadAny_1.3.6_amd64.AppImage\"",
+          "purpose": "Download Linux AppImage from GitHub releases"
+        },
+        {
+          "command": "chmod +x ~/work/ReadAny.AppImage",
+          "purpose": "Make AppImage executable"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "pnpm tauri dev"
+      "first_task": "/home/sbx/work/ReadAny.AppImage --appimage-extract-and-run"
     },
     "windows": {
       "basis": "readme_claim",
@@ -127,10 +131,110 @@
     "url": "https://github.com/codedogQBY/ReadAny/releases/tag/v1.3.6"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:10:12.689569+08:00",
+    "runs": [
+      {
+        "id": "verify-readany-20261102-174953-31f9",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:10:12.689569+08:00",
+        "tool_version": "1.3.6",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd ~/work && curl -L -o ReadAny.AppImage \"https://github.com/codedogQBY/ReadAny/releases/download/v1.3.6/ReadAny_1.3.6_amd64.AppImage\"",
+            "purpose": "Download Linux AppImage from GitHub releases"
+          },
+          {
+            "command": "chmod +x ~/work/ReadAny.AppImage",
+            "purpose": "Make AppImage executable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "/home/sbx/work/ReadAny.AppImage --appimage-extract-and-run",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Download .AppImage and run",
+            "actually_needed": "Run with --appimage-extract-and-run (no FUSE) and set hasCompletedOnboarding=true in ~/.local/share/com.readany.app/readany-store/settings.json to skip first-run wizard that blocks library",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The app shows a welcome onboarding screen introducing features with Skip and Start Experience controls.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-readany-20261102-174953-31f9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-readany-20261102-174953-31f9/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.498043,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "/home/sbx/work/ReadAny.AppImage --appimage-extract-and-run",
+          "window_title": "ReadAny",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "RAG chat with library – ask questions grounded in reading context",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "RAG chat requires configured AI provider API key (OpenAI/Claude/Gemini/Ollama) not available in box"
+          },
+          {
+            "feature": "semantic search with hybrid vector + BM25 retrieval",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; Semantic search needs imported book; file chooser automation failed to confirm Open – sandbox clipping"
+          },
+          {
+            "feature": "highlights and multi-format note export",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; Highlight export automation hit onboarding wizard then clipped file dialog; export file not produced"
+          },
+          {
+            "feature": "text-to-speech with 100+ voices and speed control",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; TTS requires book import; same file chooser clipping prevented opening book to show TTS controls"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -461,5 +565,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T18:10:12.691529+08:00"
 }

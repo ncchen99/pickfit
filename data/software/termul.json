@@ -85,18 +85,22 @@
       "first_task": "bun run dev"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-termul-20261102-174953-43c9",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/gnoviawan/termul/main/scripts/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/gnoviawan/termul/main/scripts/install.sh -o /tmp/install.sh",
+          "purpose": "Download install.sh from GitHub"
+        },
+        {
+          "command": "TERMUL_INSTALL_YES=1 bash /tmp/install.sh 2>&1",
+          "purpose": "Run install.sh with TERMUL_INSTALL_YES=1 to install AppImage to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "bun run dev"
+      "first_task": "~/.local/bin/termul-manager --appimage-extract-and-run"
     },
     "windows": {
       "basis": "readme_claim",
@@ -126,10 +130,115 @@
     "url": "https://github.com/gnoviawan/termul/releases/tag/v0.4.52"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:06:02.176174+08:00",
+    "runs": [
+      {
+        "id": "verify-termul-20261102-174953-43c9",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:06:02.176174+08:00",
+        "tool_version": "0.4.52",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/gnoviawan/termul/main/scripts/install.sh -o /tmp/install.sh",
+            "purpose": "Download install.sh from GitHub"
+          },
+          {
+            "command": "TERMUL_INSTALL_YES=1 bash /tmp/install.sh 2>&1",
+            "purpose": "Run install.sh with TERMUL_INSTALL_YES=1 to install AppImage to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "~/.local/bin/termul-manager --appimage-extract-and-run",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL ... | bash installs and runs termul-manager",
+            "actually_needed": "AppImage requires --appimage-extract-and-run (no FUSE / fusermount); also needs DISPLAY=:99 and extraction via --appimage-extract on this box",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Prerequisites: Bun, Rust, libwebkit2gtk-4.1-dev, WebView2 Runtime",
+            "actually_needed": "Installed binary ran without manually installing those dev deps; runtime WebKitGTK already present on this image",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The app's main dashboard is fully drawn, showing sidebar navigation and a central empty state prompting to create the first project.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-termul-20261102-174953-43c9/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-termul-20261102-174953-43c9/replay-6-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.354058,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "~/.local/bin/termul-manager --appimage-extract-and-run",
+          "window_title": "Termul Manager",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "Project-based workspaces with persistent sessions and tabbed panes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; Create New Project dialog opens and accepts name but automation could not set Root Directory to create project/file; file check empty"
+          },
+          {
+            "feature": "Multiple shell support with split panes and drag-and-drop tabs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; No project exists so terminal tabs blocked; automation looped on Create Project button"
+          },
+          {
+            "feature": "AI agent chat with ACP agents and terminal assist",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; Ctrl+T / Agent Launcher did not expose chat panel on empty workspace; screen_text not found"
+          },
+          {
+            "feature": "Git integration with diff views, history graph and worktrees",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; Git panel not reachable without project; automation stuck on project creation"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -452,5 +561,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T18:06:02.178748+08:00"
 }

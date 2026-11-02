@@ -76,20 +76,25 @@
       "first_task": "ouroboros --help"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "uv",
+      "basis": "replayed",
+      "run_id": "verify-ouroboros-20261102-175843-d11a",
+      "method": "binary",
       "steps": [
         {
-          "command": "uv tool install \"git+https://github.com/razzant/ouroboros.git@ouroboros\"",
-          "purpose": null
+          "command": "curl -L -o /tmp/Ouroboros.AppImage \"https://github.com/razzant/ouroboros/releases/download/v7.9.0/Ouroboros-7.9.0-linux-x86_64.AppImage\"",
+          "purpose": "download Linux AppImage release 7.9.0"
+        },
+        {
+          "command": "chmod +x /tmp/Ouroboros.AppImage && mkdir -p ~/Applications && cp /tmp/Ouroboros.AppImage ~/Applications/Ouroboros.AppImage",
+          "purpose": "make executable and install to ~/Applications/Ouroboros.AppImage"
         }
       ],
-      "manual_steps": [
-        "Open Ouroboros from Applications and choose Open Anyway in System Settings → Privacy & Security if macOS refuses to open it"
-      ],
-      "check": null,
-      "first_task": "ouroboros --help"
+      "manual_steps": [],
+      "check": {
+        "command": "~/Applications/Ouroboros.AppImage --appimage-extract-and-run --help 2>&1",
+        "expected_signal": "usage: Ouroboros.bin"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -121,10 +126,101 @@
     "url": "https://github.com/razzant/ouroboros/releases/tag/v7.9.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:06:09.239468+08:00",
+    "runs": [
+      {
+        "id": "verify-ouroboros-20261102-175843-d11a",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:06:09.239468+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -L -o /tmp/Ouroboros.AppImage \"https://github.com/razzant/ouroboros/releases/download/v7.9.0/Ouroboros-7.9.0-linux-x86_64.AppImage\"",
+            "purpose": "download Linux AppImage release 7.9.0"
+          },
+          {
+            "command": "chmod +x /tmp/Ouroboros.AppImage && mkdir -p ~/Applications && cp /tmp/Ouroboros.AppImage ~/Applications/Ouroboros.AppImage",
+            "purpose": "make executable and install to ~/Applications/Ouroboros.AppImage"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "~/Applications/Ouroboros.AppImage --appimage-extract-and-run --help 2>&1",
+            "expected_signal": "usage: Ouroboros.bin",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: Ouroboros.bin [-h] [--no-ui] [--launch-intent {owner,automatic}]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "~/Applications/Ouroboros.AppImage --appimage-extract-and-run",
+            "expected_signal": "gui tier: window",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "--- app output (the app's own, not pickfit's) ---",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "run AppImage directly (requires FUSE)",
+            "actually_needed": "use --appimage-extract-and-run flag on this host due to missing fusermount",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "download page lists .deb/.rpm install with sudo",
+            "actually_needed": "used portable AppImage as user-level install without sudo",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows help output with usage line for Ouroboros.bin and its options.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ouroboros-20261102-175843-d11a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ouroboros-20261102-175843-d11a/check-1-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.102214,
+        "features": [
+          {
+            "feature": "Continue identity, durable memory and history across tasks and restarts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "durable memory/history needs configured model provider, blank UI after setup wizard"
+          },
+          {
+            "feature": "Coordinate a live swarm of specialist agents that work in parallel",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "live swarm requires model API keys and external accounts"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -367,5 +463,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T18:06:09.240900+08:00"
 }

@@ -53,7 +53,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-termy-20261102-174953-e69c",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fL -o /tmp/Termy.AppImage https://github.com/lassejlv/termy/releases/download/v1.0.0-rc.10/Termy-v1.0.0-rc.10-linux-x86_64.AppImage",
+          "purpose": "download Linux AppImage from GitHub Releases"
+        },
+        {
+          "command": "chmod +x /tmp/Termy.AppImage",
+          "purpose": "make AppImage executable"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "/tmp/Termy.AppImage --appimage-extract-and-run --version 2>&1",
+        "expected_signal": "termy 1.0.0-rc.10"
+      },
+      "first_task": "/tmp/Termy.AppImage --appimage-extract-and-run"
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +89,209 @@
     "url": "https://github.com/lassejlv/termy/releases/tag/v1.0.0-rc.10"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:56:38.064801+08:00",
+    "runs": [
+      {
+        "id": "verify-termy-20261102-174953-e69c",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T17:56:38.064801+08:00",
+        "tool_version": "1.0.0-rc.10",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fL -o /tmp/Termy.AppImage https://github.com/lassejlv/termy/releases/download/v1.0.0-rc.10/Termy-v1.0.0-rc.10-linux-x86_64.AppImage",
+            "purpose": "download Linux AppImage from GitHub Releases"
+          },
+          {
+            "command": "chmod +x /tmp/Termy.AppImage",
+            "purpose": "make AppImage executable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "/tmp/Termy.AppImage --appimage-extract-and-run --version 2>&1",
+            "expected_signal": "termy 1.0.0-rc.10",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "termy 1.0.0-rc.10",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "/tmp/Termy.AppImage --appimage-extract-and-run",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "/tmp/Termy.AppImage --appimage-extract-and-run",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /home/sbx/pickfit-out/f2_output.txt: 21 bytes, written after the app started; format text: yes; contains \"F2test_\": yes (typed by the operator)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "/tmp/Termy.AppImage --appimage-extract-and-run",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /home/sbx/pickfit-out/f4_output.txt: 25 bytes, written after the app started; format text: yes; contains \"theme_test_\": yes (typed by the operator)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "/tmp/Termy.AppImage --appimage-extract-and-run",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /home/sbx/pickfit-out/f3_output.txt: 24 bytes, written after the app started; format text: yes; contains \"tmux_test_\": yes (typed by the operator)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Build from source with cargo run --release -p termy (requires Rust)",
+            "actually_needed": "Pre-built Linux AppImage available on GitHub Releases (Termy-v1.0.0-rc.10-linux-x86_64.AppImage) runs with --appimage-extract-and-run, no toolchain needed",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows the --version command printing termy 1.0.0-rc.10. / The window shows a working terminal with a shell prompt ready for input.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-termy-20261102-174953-e69c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-termy-20261102-174953-e69c/check-1-cmd6.judged.png",
+            "runs/verify/verify-termy-20261102-174953-e69c/replay-7-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.152689,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "/tmp/Termy.AppImage --appimage-extract-and-run",
+          "window_title": "Termy",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU",
+          "operations": [
+            {
+              "feature": "Tabs, splits, search and reusable layouts for workspace management",
+              "goal": "Terminal is open. Create a new file via the terminal: type `echo F2test_{nonce} > ~/pickfit-out/f2_output.txt` and press Enter. Wait for the prompt to return.",
+              "check": "file",
+              "target": "~/pickfit-out/f2_output.txt",
+              "expected": [
+                "F2test_"
+              ],
+              "format": "text",
+              "passed": true,
+              "observed": "file /home/sbx/pickfit-out/f2_output.txt: 21 bytes, written after the app started; format text: yes; contains \"F2test_\": yes (typed by the operator)",
+              "smoke_test": 2,
+              "actions": 2,
+              "replay": "actions",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-termy-20261102-174953-e69c/replay-14-2-op-1.png",
+                "runs/verify/verify-termy-20261102-174953-e69c/replay-14-2-op-2.png"
+              ]
+            },
+            {
+              "feature": "Configurable keybindings, colors, themes and terminal behavior",
+              "goal": "Terminal is open. Type `echo theme_test_{nonce} > ~/pickfit-out/f4_output.txt` and press Enter. Wait for prompt to return.",
+              "check": "file",
+              "target": "~/pickfit-out/f4_output.txt",
+              "expected": [
+                "theme_test_"
+              ],
+              "format": "text",
+              "passed": true,
+              "observed": "file /home/sbx/pickfit-out/f4_output.txt: 25 bytes, written after the app started; format text: yes; contains \"theme_test_\": yes (typed by the operator)",
+              "smoke_test": 3,
+              "actions": 2,
+              "replay": "actions",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-termy-20261102-174953-e69c/replay-15-3-op-1.png",
+                "runs/verify/verify-termy-20261102-174953-e69c/replay-15-3-op-2.png"
+              ]
+            },
+            {
+              "feature": "Optional tmux control-mode sessions",
+              "goal": "Terminal is open. Type `echo tmux_test_{nonce} > ~/pickfit-out/f3_output.txt` and press Enter. Wait for prompt to return.",
+              "check": "file",
+              "target": "~/pickfit-out/f3_output.txt",
+              "expected": [
+                "tmux_test_"
+              ],
+              "format": "text",
+              "passed": true,
+              "observed": "file /home/sbx/pickfit-out/f3_output.txt: 24 bytes, written after the app started; format text: yes; contains \"tmux_test_\": yes (typed by the operator)",
+              "smoke_test": 4,
+              "actions": 2,
+              "replay": "actions",
+              "operator_model": "meta-models/muse-spark-open-1026",
+              "screenshots": [
+                "runs/verify/verify-termy-20261102-174953-e69c/replay-16-4-op-1.png",
+                "runs/verify/verify-termy-20261102-174953-e69c/replay-16-4-op-2.png"
+              ]
+            }
+          ]
+        },
+        "features": [
+          {
+            "feature": "GPU-accelerated rendering with damage-scoped dirty-span cell caching",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; GPU rendering not directly testable via screen_text; typed-text and pre-existing prompt checks failed"
+          },
+          {
+            "feature": "Tabs, splits, search and reusable layouts for workspace management",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows typed echo text saved to file, not tabs, splits, search or layouts."
+          },
+          {
+            "feature": "Optional tmux control-mode sessions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows typed echo text saved to file, not a tmux control-mode session."
+          },
+          {
+            "feature": "Configurable keybindings, colors, themes and terminal behavior",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows typed echo text saved to file, not configurable keybindings, colors or themes."
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -291,5 +510,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T17:56:38.067456+08:00"
 }

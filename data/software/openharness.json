@@ -72,18 +72,22 @@
       "first_task": "harness login"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-openharness-20261102-175216-6cac",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://harness.autonomous.ai/cli/install.sh | bash",
-          "purpose": null
+          "command": "curl -fsSL https://cdn.autonomous.ai/harness/desktop/install.sh -o /tmp/desktop-install.sh",
+          "purpose": "download desktop installer script"
+        },
+        {
+          "command": "bash /tmp/desktop-install.sh",
+          "purpose": "install Harness desktop AppImage via desktop installer"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "harness login"
+      "first_task": "/home/sbx/.local/opt/Harness.AppImage --appimage-extract-and-run"
     },
     "windows": {
       "basis": "readme_claim",
@@ -113,10 +117,115 @@
     "url": "https://github.com/autonomous-ai/openharness/releases/tag/v1.3.90_web"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:59:26.068104+08:00",
+    "runs": [
+      {
+        "id": "verify-openharness-20261102-175216-6cac",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T17:59:26.068104+08:00",
+        "tool_version": "1.3.50",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://cdn.autonomous.ai/harness/desktop/install.sh -o /tmp/desktop-install.sh",
+            "purpose": "download desktop installer script"
+          },
+          {
+            "command": "bash /tmp/desktop-install.sh",
+            "purpose": "install Harness desktop AppImage via desktop installer"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "/home/sbx/.local/opt/Harness.AppImage --appimage-extract-and-run",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://harness.autonomous.ai/cli/install.sh | bash installs the tool",
+            "actually_needed": "Desktop app uses separate installer at https://cdn.autonomous.ai/harness/desktop/install.sh which downloads Harness.AppImage to ~/.local/opt/",
+            "kind": "note"
+          },
+          {
+            "readme_said": "AppImage runs directly",
+            "actually_needed": "Must run with --appimage-extract-and-run due to missing FUSE/fusermount in sandbox",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The Harness app displays a 'Getting started' onboarding card asking to install required tools to get the computer ready.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-openharness-20261102-175216-6cac/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-openharness-20261102-175216-6cac/replay-12-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.213113,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "/home/sbx/.local/opt/Harness.AppImage --appimage-extract-and-run",
+          "window_title": "Harness",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "run Claude Code, Codex, Cursor and others side by side in tmux panes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Running agents side-by-side requires logged-in account and installed agent CLIs (Claude/Codex etc.)"
+          },
+          {
+            "feature": "link multiple machines with password-based WebRTC/relay connection",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Linking machines requires harness login and second machine with password WebRTC/relay"
+          },
+          {
+            "feature": "keyboard-first navigation with remappable keys and quick harness finder",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Keyboard navigation finder requires signed-in workspace with harnesses; setup overlay blocks terminal"
+          },
+          {
+            "feature": "end-to-end encrypted relay forwarding ciphertext without keys",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "E2E encrypted relay requires authenticated daemon and relay connection"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -351,5 +460,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T17:36:31+08:00"
+  "updated_at": "2026-11-02T17:59:26.069380+08:00"
 }
