@@ -377,3 +377,72 @@ def test_an_opening_segment_ends_before_the_first_action_that_changed_the_screen
     assert [(c.start, c.end, c.caption, c.needs_caption) for c in cuts] == [
         (0.5, 2.65, "The app opens", False), (2.65, cuts[1].end, "Click", True)]
     assert cuts[1].events[0] == 2 and notes
+
+
+def _saved_clip(tmp_path: Path, **over: Any) -> Path:
+    """A clip result as make_clip saves it, with its files under a videos folder."""
+    videos = tmp_path / "videos" / "concessio"
+    videos.mkdir(parents=True)
+    files = {}
+    for name in ("c.mp4", "c.passed-only.mp4", "r1.mp4", "r2.mp4"):
+        (videos / name).write_bytes(name.encode() * 50)
+        files[name] = hashlib.sha256(name.encode() * 50).hexdigest()
+    clip = {"slug": "concessio", "run": "verify-concessio-20261102-000538-0b61",
+            "recording_run": "video-concessio-20261102-113357-1a86", "clip": "c.mp4", "clip_sha256": files["c.mp4"],
+            "seconds": 48.9, "recorded_at": "2026-11-02T11:34:00+08:00", "model": "meta-models/Muse-Spark-Open-816B-A42B",
+            "raw": [{"file": "r1.mp4", "sha256": files["r1.mp4"], "seconds": 41.8, "smoke_test": 2,
+                     "feature": "convert between symbolic and numeric permissions"},
+                    {"file": "r2.mp4", "sha256": files["r2.mp4"], "seconds": 36.5, "smoke_test": 3,
+                     "feature": "calculate umask and resulting permissions"}],
+            "features": ["convert between symbolic and numeric permissions", "calculate umask and resulting permissions"],
+            "flags": [], "passed_only": None, "events": [], "cuts": []} | over
+    path = tmp_path / "clip.json"
+    path.write_text(json.dumps(clip), encoding="utf-8")
+    return path
+
+
+@pytest.mark.skipif(not CONCESSIO.exists(), reason="needs data/software/concessio.json")
+def test_a_reviewed_clip_is_written_onto_its_run_and_nothing_else(tmp_path: Path):
+    data = tmp_path / "data"
+    data.mkdir()
+    shutil.copy(CONCESSIO, data / "concessio.json")
+    clip = video.load_clip(_saved_clip(tmp_path))
+    assert video.write_back(clip, data, videos=tmp_path / "videos").startswith("written")
+    rec = SoftwareRecord.model_validate_json((data / "concessio.json").read_text(encoding="utf-8"))
+    run = rec.verification.runs[0]
+    assert run.video.clip == "c.mp4" and [r.smoke_test for r in run.video.raw] == [2, 3]
+    before = json.loads(CONCESSIO.read_text(encoding="utf-8"))
+    after = json.loads((data / "concessio.json").read_text(encoding="utf-8"))
+    del after["verification"]["runs"][0]["video"]
+    assert {k: v for k, v in after.items() if k != "updated_at"} == {k: v for k, v in before.items() if k != "updated_at"}
+
+
+@pytest.mark.skipif(not CONCESSIO.exists(), reason="needs data/software/concessio.json")
+def test_a_flagged_or_altered_clip_is_never_written(tmp_path: Path):
+    data = tmp_path / "data"
+    data.mkdir()
+    shutil.copy(CONCESSIO, data / "concessio.json")
+    original = (data / "concessio.json").read_text(encoding="utf-8")
+    flagged = video.load_clip(_saved_clip(tmp_path, flags=["segment 2 'x': not seen"], passed_only={
+        "clip": "c.passed-only.mp4", "clip_sha256": hashlib.sha256(b"c.passed-only.mp4" * 50).hexdigest(),
+        "seconds": 30.0, "features": ["convert between symbolic and numeric permissions"],
+        "left_out": ["calculate umask and resulting permissions"]}))
+    assert video.write_back(flagged, data, videos=tmp_path / "videos").startswith("not written: flagged")
+    (tmp_path / "videos" / "concessio" / "r1.mp4").write_bytes(b"changed")
+    assert "does not match" in video.write_back(flagged, data, passed_only=True, videos=tmp_path / "videos")
+    assert (data / "concessio.json").read_text(encoding="utf-8") == original
+
+
+@pytest.mark.skipif(not CONCESSIO.exists(), reason="needs data/software/concessio.json")
+def test_a_passed_only_cut_carries_only_its_recordings(tmp_path: Path):
+    data = tmp_path / "data"
+    data.mkdir()
+    shutil.copy(CONCESSIO, data / "concessio.json")
+    clip = video.load_clip(_saved_clip(tmp_path, flags=["segment 4 'y': not seen"], passed_only={
+        "clip": "c.passed-only.mp4", "clip_sha256": hashlib.sha256(b"c.passed-only.mp4" * 50).hexdigest(),
+        "seconds": 30.0, "features": ["convert between symbolic and numeric permissions"],
+        "left_out": ["calculate umask and resulting permissions"]}))
+    assert video.write_back(clip, data, passed_only=True, videos=tmp_path / "videos").startswith("written")
+    run = SoftwareRecord.model_validate_json((data / "concessio.json").read_text(encoding="utf-8")).verification.runs[0]
+    assert run.video.clip == "c.passed-only.mp4" and [r.file for r in run.video.raw] == ["r1.mp4"]
+    assert run.video.features == ["convert between symbolic and numeric permissions"]

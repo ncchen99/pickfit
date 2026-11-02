@@ -1171,26 +1171,65 @@ def render_clip(cuts: list[Cut], raw_rows: list[dict[str, Any]], dest: Path, *, 
     return recording.probe_seconds(dest) or round(sum(c.seconds for c in cuts) + 2 * CARD_S, 2)
 
 
-def run_video(clip: ClipResult) -> RunVideo:
-    return RunVideo(clip=clip.clip, clip_sha256=clip.clip_sha256, seconds=clip.seconds,
+def load_clip(path: Path) -> ClipResult:
+    """A clip's result as make_clip saved it (clip.json beside the recording, or <clip>.json beside the clip)."""
+    from dataclasses import fields
+
+    data = json.loads(path.read_text(encoding="utf-8"))
+    names = {f.name for f in fields(ClipResult)}
+    return ClipResult(**{k: v for k, v in data.items() if k in names})
+
+
+def run_video(clip: ClipResult, passed_only: bool = False) -> RunVideo:
+    """The run's video field: the clip, or its passed-only cut (only the recordings whose segments all passed)."""
+    if passed_only:
+        if not clip.passed_only:
+            raise ValueError("this clip has no passed-only cut")
+        part = clip.passed_only
+        rows = [r for r in clip.raw if r["feature"] in part["features"]]
+        name, digest, seconds, features = part["clip"], part["clip_sha256"], part["seconds"], part["features"]
+    else:
+        rows, name, digest, seconds, features = clip.raw, clip.clip, clip.clip_sha256, clip.seconds, clip.features
+    return RunVideo(clip=name, clip_sha256=digest, seconds=seconds,
                     raw=[VideoRaw(file=r["file"], sha256=r["sha256"], seconds=r["seconds"], smoke_test=r["smoke_test"])
-                         for r in clip.raw],
+                         for r in rows],
                     recorded_at=clip.recorded_at, recording_run=clip.recording_run, model=clip.model,
-                    features=clip.features)
+                    features=features)
 
 
-def write_back(clip: ClipResult, data_dir: Path = DATA_DIR) -> str:
-    """Put an unflagged clip on its run in data/software/<slug>.json; the record is validated as a whole."""
-    if clip.flagged or not clip.clip:
+def write_back(clip: ClipResult, data_dir: Path = DATA_DIR, *, passed_only: bool = False,
+               videos: Path | None = None) -> str:
+    """Put a clip on its run in data/software/<slug>.json; the record is validated as a whole.
+
+    Refused: a flagged clip (its passed-only cut may go instead, when only the review's segment flags left recordings
+    out); a clip or raw file under ~/.pickfit/videos/<slug>/ missing or not matching its sha256; a run no longer in the
+    record."""
+    if not clip.clip:
+        return "not written: no clip"
+    if passed_only:
+        if not clip.passed_only:
+            return "not written: no passed-only cut"
+        if any(not f.startswith("segment ") for f in clip.flags):
+            return f"not written: flagged beyond the review's segments ({'; '.join(clip.flags)})"
+    elif clip.flagged:
         return f"not written: flagged ({'; '.join(clip.flags)})"
+    video = run_video(clip, passed_only)
+    folder = (videos or videos_dir()) / clip.slug
+    for name, digest in [(video.clip, video.clip_sha256), *((r.file, r.sha256) for r in video.raw)]:
+        path = folder / name
+        if not path.is_file() or recording.sha256_file(path) != digest:
+            return f"not written: {path} is missing or does not match its sha256"
     path = data_dir / f"{clip.slug}.json"
     data = json.loads(path.read_text(encoding="utf-8"))
     runs = [r for r in data["verification"]["runs"] if r["id"] == clip.run]
     if not runs:
         return f"not written: {clip.run} is no longer a run of {clip.slug}"
-    runs[0]["video"] = run_video(clip).model_dump(mode="json")
+    runs[0]["video"] = video.model_dump(mode="json")
+    data["updated_at"] = taipei_now().isoformat()
     updated = SoftwareRecord.model_validate(data)
-    path.write_text(json.dumps(updated.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp = path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(updated.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(path)
     return f"written to {path.relative_to(REPO_ROOT) if path.is_relative_to(REPO_ROOT) else path}"
 
 
@@ -1204,11 +1243,19 @@ def main(argv: list[str] | None = None) -> int:
     edit.add_argument("video_dir", type=Path)
     edit.add_argument("--write-back", action="store_true", help="put an unflagged clip on its run in the record")
     edit.add_argument("--reuse-edit", action="store_true", help="reuse the model's edit lists from the last clip.json")
+    back = sub.add_parser("write-back", help="put a reviewed clip on its run in data/software/<slug>.json")
+    back.add_argument("clip_json", type=Path, help="clip.json beside the recording, or <clip>.json beside the clip")
+    back.add_argument("--passed-only", action="store_true", help="the passed-only cut instead of the full clip")
+    back.add_argument("--data-dir", type=Path, default=DATA_DIR)
     make = sub.add_parser("make", help="record, then edit")
     make.add_argument("slug")
     make.add_argument("--run", default=None)
     make.add_argument("--write-back", action="store_true")
     args = parser.parse_args(argv)
+    if args.cmd == "write-back":
+        note = write_back(load_clip(args.clip_json), args.data_dir, passed_only=args.passed_only)
+        print(note)
+        return 0 if note.startswith("written") else 1
     if args.cmd in ("record", "make"):
         video_dir = record_run(args.slug, args.run)
         if args.cmd == "record":
