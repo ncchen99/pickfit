@@ -1,0 +1,574 @@
+{
+  "n": 3,
+  "target": {
+    "slug": "mnemoteca",
+    "stratum": "dev_cli",
+    "category": "dev_cli",
+    "level": "function",
+    "os": "linux"
+  },
+  "arguments": {
+    "need": "I use AI coding assistants like Claude Code and OpenCode, and I'm tired of re-explaining my project decisions and preferences every session. I want a command-line tool where the agent can save short notes and later pull them back with a search that understands meaning, not just exact keywords. All the embedding and model work has to happen on my own machine with no cloud API or account needed. It would also help if I could back up my notes to a JSONL file and restore them later.",
+    "os": "linux"
+  },
+  "used_attempt": 0,
+  "attempts": [
+    {
+      "at": "2026-11-02T17:19:50+08:00",
+      "latency_s": 16.3,
+      "http_status": 200,
+      "ledger_row": 43100,
+      "is_error": false,
+      "find": {
+        "rec_id": "rec_d586703258fe4faf9ca1fb4db6c9464b",
+        "matched_by": "muse-spark-1.3",
+        "degraded": false,
+        "degraded_reason": null,
+        "model_attempts": 1,
+        "model_http_status": null,
+        "considered": 591,
+        "picks": [
+          {
+            "slug": "mnemoteca",
+            "name": "Mnemoteca",
+            "summary": "Local CLI that stores short memories and retrieves them with hybrid search.",
+            "fit": "Mnemoteca is a local CLI for short memories with hybrid search plus JSONL export and import.",
+            "why": [
+              {
+                "claim": "It is a command-line tool for short memories with meaning-aware retrieval.",
+                "field": "summary",
+                "value": "Local CLI that stores short memories and retrieves them with hybrid search."
+              },
+              {
+                "claim": "It can back up notes to JSONL.",
+                "field": "use_cases",
+                "value": "export a collection to JSONL"
+              },
+              {
+                "claim": "It can restore notes from JSONL.",
+                "field": "use_cases",
+                "value": "import a collection from JSONL"
+              },
+              {
+                "claim": "All work stays on the local machine.",
+                "field": "processing",
+                "value": "local"
+              }
+            ],
+            "tradeoffs": [
+              "Local embedding and reranking plus JSONL export/import were listed as not checked on the card, so they were not verified working.",
+              "Needs Go 1.21+ toolchain and GCC on the machine.",
+              "Verified only as a function check on Linux, not as agent integration with Claude Code or OpenCode."
+            ],
+            "vs_well_known": null,
+            "platforms": [],
+            "pricing": "unknown",
+            "processing": "local",
+            "open_source": true,
+            "license": "MIT",
+            "verification": {
+              "level": "function",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-10-31T03:31:02.315603+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [
+                {
+                  "feature": "store and retrieve memories with hybrid search",
+                  "check": "mnemoteca init -n pickfit-f1 && mnemoteca add -n pickfit-f1 \"Go is a statically typed programming language\" && mnemoteca add -n pickfit-f1 \"Rust focuses on memory safety and zero-cost abstractions\" && mnemoteca search -n pickfit-f1 -f plain \"programming language\""
+                },
+                {
+                  "feature": "chunk Markdown documents by semantic headings",
+                  "check": "mnemoteca init -n pickfit-f2 && mnemoteca add -n pickfit-f2 --file /tmp/mnemoteca-test.md && mnemoteca list -n pickfit-f2 -f plain"
+                }
+              ],
+              "not_checked": [
+                {
+                  "feature": "run embedding and reranking models locally",
+                  "reason": "other",
+                  "detail": "not checked: its check passed in the agent's box but did not pass again in a fresh box"
+                },
+                {
+                  "feature": "export and import collections as JSONL",
+                  "reason": "other",
+                  "detail": "not checked: its check passed in the agent's box but is too long for the record"
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 2 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 94/100 and popularity 47/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 94.1,
+              "popularity": 47.1,
+              "treasure": false
+            },
+            "repo": "https://github.com/RunWield/mnemoteca",
+            "homepage": null,
+            "web_app": null
+          },
+          {
+            "slug": "uteke",
+            "name": "Uteke",
+            "summary": "Local-first memory engine that stores, recalls, and searches memories for AI agents offline.",
+            "fit": "Uteke is a local CLI memory engine that recalls memories by meaning offline with no account.",
+            "why": [
+              {
+                "claim": "It stores and searches memories offline for agents.",
+                "field": "summary",
+                "value": "Local-first memory engine that stores, recalls, and searches memories for AI agents offline."
+              },
+              {
+                "claim": "It recalls by meaning, not just keywords.",
+                "field": "use_cases",
+                "value": "recall memories by meaning and keyword"
+              },
+              {
+                "claim": "It needs no network access.",
+                "field": "network",
+                "value": "none"
+              },
+              {
+                "claim": "It runs locally.",
+                "field": "processing",
+                "value": "local"
+              }
+            ],
+            "tradeoffs": [
+              "The card shows no JSONL backup and restore, so that want is not covered.",
+              "Meaning plus keyword search is listed as not checked, so semantic recall was not verified.",
+              "It is a general agent memory engine, not specifically built around Claude Code and OpenCode notes."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "macos",
+              "linux",
+              "windows"
+            ],
+            "pricing": "free",
+            "processing": "local",
+            "open_source": true,
+            "license": "Apache-2.0",
+            "verification": {
+              "level": "function",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-10-31T03:17:50.616162+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [
+                {
+                  "feature": "Share memory across agents with Rooms",
+                  "check": "uteke room recall smoke-room \"caching decision\""
+                },
+                {
+                  "feature": "Recall memories at any point in time",
+                  "check": "uteke remember \"Time travel checkpoint beta\" && uteke recall \"time travel checkpoint beta\" --at 2030-01-01T00:00:00Z"
+                }
+              ],
+              "not_checked": [
+                {
+                  "feature": "Search memories by meaning and keywords",
+                  "reason": "other",
+                  "detail": "not checked: its check passed in the agent's box but did not pass again in a fresh box"
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 2 of the 3 main features its README advertises; see features for the ones it did not check and why. Quality 79/100 and popularity 78/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 78.8,
+              "popularity": 77.5,
+              "treasure": false
+            },
+            "repo": "https://github.com/codecoradev/uteke",
+            "homepage": "https://codecora.dev",
+            "web_app": null
+          },
+          {
+            "slug": "m3-memory",
+            "name": "m3 Memory",
+            "summary": "Local-first memory layer that stores facts and history for AI assistants to recall.",
+            "fit": "m3 Memory is a local CLI memory layer that finds memories without exact wording.",
+            "why": [
+              {
+                "claim": "It finds memories without exact wording.",
+                "field": "features_checked",
+                "value": "find memories without exact wording"
+              },
+              {
+                "claim": "It stores facts and history for assistants to recall.",
+                "field": "summary",
+                "value": "Local-first memory layer that stores facts and history for AI assistants to recall."
+              },
+              {
+                "claim": "It runs locally.",
+                "field": "processing",
+                "value": "local"
+              }
+            ],
+            "tradeoffs": [
+              "The card shows no JSONL export or import, so backup and restore is not covered.",
+              "Network is listed as optional, so fully offline use was not explicitly verified.",
+              "It needs Python 3.12+, which is an extra runtime requirement."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "macos",
+              "linux",
+              "windows"
+            ],
+            "pricing": "unknown",
+            "processing": "local",
+            "open_source": true,
+            "license": "Apache-2.0",
+            "verification": {
+              "level": "function",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-10-31T04:00:02.079381+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [
+                {
+                  "feature": "remember projects and preferences across sessions",
+                  "check": "m3 memory memory_write --type decision --title \"project-database\" --content \"We chose PostgreSQL for our website.\" 2>&1"
+                },
+                {
+                  "feature": "find memories without exact wording",
+                  "check": "m3 memory memory_search --query \"Which database did we decide to use?\" --k 1 2>&1"
+                }
+              ],
+              "not_checked": [
+                {
+                  "feature": "share one memory across AI assistants",
+                  "reason": "other",
+                  "detail": "not checked: its check passed in the agent's box but did not pass again in a fresh box"
+                },
+                {
+                  "feature": "capture and recall conversation history",
+                  "reason": "other",
+                  "detail": "not checked: its check passed in the agent's box but did not pass again in a fresh box"
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 2 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 91/100 and popularity 57/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 91.3,
+              "popularity": 56.9,
+              "treasure": false
+            },
+            "repo": "https://github.com/skynetcmd/m3-memory",
+            "homepage": "https://github.com/skynetcmd/m3-memory",
+            "web_app": null
+          }
+        ],
+        "best_free": {
+          "slug": "uteke",
+          "reason": "Uteke is free and stores and recalls memories offline on the machine with meaning and keyword recall."
+        },
+        "no_install_option": null,
+        "well_known_option": null,
+        "clarifying_question": null,
+        "coverage_note": "591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores."
+      },
+      "raw": {
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"rec_id\":\"rec_d586703258fe4faf9ca1fb4db6c9464b\",\"matched_by\":\"muse-spark-1.3\",\"degraded\":false,\"degraded_reason\":null,\"model_attempts\":1,\"model_http_status\":null,\"considered\":591,\"picks\":[{\"slug\":\"mnemoteca\",\"name\":\"Mnemoteca\",\"summary\":\"Local CLI that stores short memories and retrieves them with hybrid search.\",\"fit\":\"Mnemoteca is a local CLI for short memories with hybrid search plus JSONL export and import.\",\"why\":[{\"claim\":\"It is a command-line tool for short memories with meaning-aware retrieval.\",\"field\":\"summary\",\"value\":\"Local CLI that stores short memories and retrieves them with hybrid search.\"},{\"claim\":\"It can back up notes to JSONL.\",\"field\":\"use_cases\",\"value\":\"export a collection to JSONL\"},{\"claim\":\"It can restore notes from JSONL.\",\"field\":\"use_cases\",\"value\":\"import a collection from JSONL\"},{\"claim\":\"All work stays on the local machine.\",\"field\":\"processing\",\"value\":\"local\"}],\"tradeoffs\":[\"Local embedding and reranking plus JSONL export/import were listed as not checked on the card, so they were not verified working.\",\"Needs Go 1.21+ toolchain and GCC on the machine.\",\"Verified only as a function check on Linux, not as agent integration with Claude Code or OpenCode.\"],\"vs_well_known\":null,\"platforms\":[],\"pricing\":\"unknown\",\"processing\":\"local\",\"open_source\":true,\"license\":\"MIT\",\"verification\":{\"level\":\"function\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-10-31T03:31:02.315603+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[{\"feature\":\"store and retrieve memories with hybrid search\",\"check\":\"mnemoteca init -n pickfit-f1 && mnemoteca add -n pickfit-f1 \\\"Go is a statically typed programming language\\\" && mnemoteca add -n pickfit-f1 \\\"Rust focuses on memory safety and zero-cost abstractions\\\" && mnemoteca search -n pickfit-f1 -f plain \\\"programming language\\\"\"},{\"feature\":\"chunk Markdown documents by semantic headings\",\"check\":\"mnemoteca init -n pickfit-f2 && mnemoteca add -n pickfit-f2 --file /tmp/mnemoteca-test.md && mnemoteca list -n pickfit-f2 -f plain\"}],\"not_checked\":[{\"feature\":\"run embedding and reranking models locally\",\"reason\":\"other\",\"detail\":\"not checked: its check passed in the agent's box but did not pass again in a fresh box\"},{\"feature\":\"export and import collections as JSONL\",\"reason\":\"other\",\"detail\":\"not checked: its check passed in the agent's box but is too long for the record\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 2 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 94/100 and popularity 47/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":94.1,\"popularity\":47.1,\"treasure\":false},\"repo\":\"https://github.com/RunWield/mnemoteca\",\"homepage\":null,\"web_app\":null},{\"slug\":\"uteke\",\"name\":\"Uteke\",\"summary\":\"Local-first memory engine that stores, recalls, and searches memories for AI agents offline.\",\"fit\":\"Uteke is a local CLI memory engine that recalls memories by meaning offline with no account.\",\"why\":[{\"claim\":\"It stores and searches memories offline for agents.\",\"field\":\"summary\",\"value\":\"Local-first memory engine that stores, recalls, and searches memories for AI agents offline.\"},{\"claim\":\"It recalls by meaning, not just keywords.\",\"field\":\"use_cases\",\"value\":\"recall memories by meaning and keyword\"},{\"claim\":\"It needs no network access.\",\"field\":\"network\",\"value\":\"none\"},{\"claim\":\"It runs locally.\",\"field\":\"processing\",\"value\":\"local\"}],\"tradeoffs\":[\"The card shows no JSONL backup and restore, so that want is not covered.\",\"Meaning plus keyword search is listed as not checked, so semantic recall was not verified.\",\"It is a general agent memory engine, not specifically built around Claude Code and OpenCode notes.\"],\"vs_well_known\":null,\"platforms\":[\"macos\",\"linux\",\"windows\"],\"pricing\":\"free\",\"processing\":\"local\",\"open_source\":true,\"license\":\"Apache-2.0\",\"verification\":{\"level\":\"function\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-10-31T03:17:50.616162+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[{\"feature\":\"Share memory across agents with Rooms\",\"check\":\"uteke room recall smoke-room \\\"caching decision\\\"\"},{\"feature\":\"Recall memories at any point in time\",\"check\":\"uteke remember \\\"Time travel checkpoint beta\\\" && uteke recall \\\"time travel checkpoint beta\\\" --at 2030-01-01T00:00:00Z\"}],\"not_checked\":[{\"feature\":\"Search memories by meaning and keywords\",\"reason\":\"other\",\"detail\":\"not checked: its check passed in the agent's box but did not pass again in a fresh box\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 2 of the 3 main features its README advertises; see features for the ones it did not check and why. Quality 79/100 and popularity 78/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":78.8,\"popularity\":77.5,\"treasure\":false},\"repo\":\"https://github.com/codecoradev/uteke\",\"homepage\":\"https://codecora.dev\",\"web_app\":null},{\"slug\":\"m3-memory\",\"name\":\"m3 Memory\",\"summary\":\"Local-first memory layer that stores facts and history for AI assistants to recall.\",\"fit\":\"m3 Memory is a local CLI memory layer that finds memories without exact wording.\",\"why\":[{\"claim\":\"It finds memories without exact wording.\",\"field\":\"features_checked\",\"value\":\"find memories without exact wording\"},{\"claim\":\"It stores facts and history for assistants to recall.\",\"field\":\"summary\",\"value\":\"Local-first memory layer that stores facts and history for AI assistants to recall.\"},{\"claim\":\"It runs locally.\",\"field\":\"processing\",\"value\":\"local\"}],\"tradeoffs\":[\"The card shows no JSONL export or import, so backup and restore is not covered.\",\"Network is listed as optional, so fully offline use was not explicitly verified.\",\"It needs Python 3.12+, which is an extra runtime requirement.\"],\"vs_well_known\":null,\"platforms\":[\"macos\",\"linux\",\"windows\"],\"pricing\":\"unknown\",\"processing\":\"local\",\"open_source\":true,\"license\":\"Apache-2.0\",\"verification\":{\"level\":\"function\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-10-31T04:00:02.079381+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[{\"feature\":\"remember projects and preferences across sessions\",\"check\":\"m3 memory memory_write --type decision --title \\\"project-database\\\" --content \\\"We chose PostgreSQL for our website.\\\" 2>&1\"},{\"feature\":\"find memories without exact wording\",\"check\":\"m3 memory memory_search --query \\\"Which database did we decide to use?\\\" --k 1 2>&1\"}],\"not_checked\":[{\"feature\":\"share one memory across AI assistants\",\"reason\":\"other\",\"detail\":\"not checked: its check passed in the agent's box but did not pass again in a fresh box\"},{\"feature\":\"capture and recall conversation history\",\"reason\":\"other\",\"detail\":\"not checked: its check passed in the agent's box but did not pass again in a fresh box\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 2 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 91/100 and popularity 57/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":91.3,\"popularity\":56.9,\"treasure\":false},\"repo\":\"https://github.com/skynetcmd/m3-memory\",\"homepage\":\"https://github.com/skynetcmd/m3-memory\",\"web_app\":null}],\"best_free\":{\"slug\":\"uteke\",\"reason\":\"Uteke is free and stores and recalls memories offline on the machine with meaning and keyword recall.\"},\"no_install_option\":null,\"well_known_option\":null,\"clarifying_question\":null,\"coverage_note\":\"591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores.\"}"
+            }
+          ],
+          "structuredContent": {
+            "rec_id": "rec_d586703258fe4faf9ca1fb4db6c9464b",
+            "matched_by": "muse-spark-1.3",
+            "degraded": false,
+            "degraded_reason": null,
+            "model_attempts": 1,
+            "model_http_status": null,
+            "considered": 591,
+            "picks": [
+              {
+                "slug": "mnemoteca",
+                "name": "Mnemoteca",
+                "summary": "Local CLI that stores short memories and retrieves them with hybrid search.",
+                "fit": "Mnemoteca is a local CLI for short memories with hybrid search plus JSONL export and import.",
+                "why": [
+                  {
+                    "claim": "It is a command-line tool for short memories with meaning-aware retrieval.",
+                    "field": "summary",
+                    "value": "Local CLI that stores short memories and retrieves them with hybrid search."
+                  },
+                  {
+                    "claim": "It can back up notes to JSONL.",
+                    "field": "use_cases",
+                    "value": "export a collection to JSONL"
+                  },
+                  {
+                    "claim": "It can restore notes from JSONL.",
+                    "field": "use_cases",
+                    "value": "import a collection from JSONL"
+                  },
+                  {
+                    "claim": "All work stays on the local machine.",
+                    "field": "processing",
+                    "value": "local"
+                  }
+                ],
+                "tradeoffs": [
+                  "Local embedding and reranking plus JSONL export/import were listed as not checked on the card, so they were not verified working.",
+                  "Needs Go 1.21+ toolchain and GCC on the machine.",
+                  "Verified only as a function check on Linux, not as agent integration with Claude Code or OpenCode."
+                ],
+                "vs_well_known": null,
+                "platforms": [],
+                "pricing": "unknown",
+                "processing": "local",
+                "open_source": true,
+                "license": "MIT",
+                "verification": {
+                  "level": "function",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-10-31T03:31:02.315603+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [
+                    {
+                      "feature": "store and retrieve memories with hybrid search",
+                      "check": "mnemoteca init -n pickfit-f1 && mnemoteca add -n pickfit-f1 \"Go is a statically typed programming language\" && mnemoteca add -n pickfit-f1 \"Rust focuses on memory safety and zero-cost abstractions\" && mnemoteca search -n pickfit-f1 -f plain \"programming language\""
+                    },
+                    {
+                      "feature": "chunk Markdown documents by semantic headings",
+                      "check": "mnemoteca init -n pickfit-f2 && mnemoteca add -n pickfit-f2 --file /tmp/mnemoteca-test.md && mnemoteca list -n pickfit-f2 -f plain"
+                    }
+                  ],
+                  "not_checked": [
+                    {
+                      "feature": "run embedding and reranking models locally",
+                      "reason": "other",
+                      "detail": "not checked: its check passed in the agent's box but did not pass again in a fresh box"
+                    },
+                    {
+                      "feature": "export and import collections as JSONL",
+                      "reason": "other",
+                      "detail": "not checked: its check passed in the agent's box but is too long for the record"
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 2 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 94/100 and popularity 47/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 94.1,
+                  "popularity": 47.1,
+                  "treasure": false
+                },
+                "repo": "https://github.com/RunWield/mnemoteca",
+                "homepage": null,
+                "web_app": null
+              },
+              {
+                "slug": "uteke",
+                "name": "Uteke",
+                "summary": "Local-first memory engine that stores, recalls, and searches memories for AI agents offline.",
+                "fit": "Uteke is a local CLI memory engine that recalls memories by meaning offline with no account.",
+                "why": [
+                  {
+                    "claim": "It stores and searches memories offline for agents.",
+                    "field": "summary",
+                    "value": "Local-first memory engine that stores, recalls, and searches memories for AI agents offline."
+                  },
+                  {
+                    "claim": "It recalls by meaning, not just keywords.",
+                    "field": "use_cases",
+                    "value": "recall memories by meaning and keyword"
+                  },
+                  {
+                    "claim": "It needs no network access.",
+                    "field": "network",
+                    "value": "none"
+                  },
+                  {
+                    "claim": "It runs locally.",
+                    "field": "processing",
+                    "value": "local"
+                  }
+                ],
+                "tradeoffs": [
+                  "The card shows no JSONL backup and restore, so that want is not covered.",
+                  "Meaning plus keyword search is listed as not checked, so semantic recall was not verified.",
+                  "It is a general agent memory engine, not specifically built around Claude Code and OpenCode notes."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "macos",
+                  "linux",
+                  "windows"
+                ],
+                "pricing": "free",
+                "processing": "local",
+                "open_source": true,
+                "license": "Apache-2.0",
+                "verification": {
+                  "level": "function",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-10-31T03:17:50.616162+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [
+                    {
+                      "feature": "Share memory across agents with Rooms",
+                      "check": "uteke room recall smoke-room \"caching decision\""
+                    },
+                    {
+                      "feature": "Recall memories at any point in time",
+                      "check": "uteke remember \"Time travel checkpoint beta\" && uteke recall \"time travel checkpoint beta\" --at 2030-01-01T00:00:00Z"
+                    }
+                  ],
+                  "not_checked": [
+                    {
+                      "feature": "Search memories by meaning and keywords",
+                      "reason": "other",
+                      "detail": "not checked: its check passed in the agent's box but did not pass again in a fresh box"
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 2 of the 3 main features its README advertises; see features for the ones it did not check and why. Quality 79/100 and popularity 78/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 78.8,
+                  "popularity": 77.5,
+                  "treasure": false
+                },
+                "repo": "https://github.com/codecoradev/uteke",
+                "homepage": "https://codecora.dev",
+                "web_app": null
+              },
+              {
+                "slug": "m3-memory",
+                "name": "m3 Memory",
+                "summary": "Local-first memory layer that stores facts and history for AI assistants to recall.",
+                "fit": "m3 Memory is a local CLI memory layer that finds memories without exact wording.",
+                "why": [
+                  {
+                    "claim": "It finds memories without exact wording.",
+                    "field": "features_checked",
+                    "value": "find memories without exact wording"
+                  },
+                  {
+                    "claim": "It stores facts and history for assistants to recall.",
+                    "field": "summary",
+                    "value": "Local-first memory layer that stores facts and history for AI assistants to recall."
+                  },
+                  {
+                    "claim": "It runs locally.",
+                    "field": "processing",
+                    "value": "local"
+                  }
+                ],
+                "tradeoffs": [
+                  "The card shows no JSONL export or import, so backup and restore is not covered.",
+                  "Network is listed as optional, so fully offline use was not explicitly verified.",
+                  "It needs Python 3.12+, which is an extra runtime requirement."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "macos",
+                  "linux",
+                  "windows"
+                ],
+                "pricing": "unknown",
+                "processing": "local",
+                "open_source": true,
+                "license": "Apache-2.0",
+                "verification": {
+                  "level": "function",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-10-31T04:00:02.079381+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [
+                    {
+                      "feature": "remember projects and preferences across sessions",
+                      "check": "m3 memory memory_write --type decision --title \"project-database\" --content \"We chose PostgreSQL for our website.\" 2>&1"
+                    },
+                    {
+                      "feature": "find memories without exact wording",
+                      "check": "m3 memory memory_search --query \"Which database did we decide to use?\" --k 1 2>&1"
+                    }
+                  ],
+                  "not_checked": [
+                    {
+                      "feature": "share one memory across AI assistants",
+                      "reason": "other",
+                      "detail": "not checked: its check passed in the agent's box but did not pass again in a fresh box"
+                    },
+                    {
+                      "feature": "capture and recall conversation history",
+                      "reason": "other",
+                      "detail": "not checked: its check passed in the agent's box but did not pass again in a fresh box"
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 2 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 91/100 and popularity 57/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 91.3,
+                  "popularity": 56.9,
+                  "treasure": false
+                },
+                "repo": "https://github.com/skynetcmd/m3-memory",
+                "homepage": "https://github.com/skynetcmd/m3-memory",
+                "web_app": null
+              }
+            ],
+            "best_free": {
+              "slug": "uteke",
+              "reason": "Uteke is free and stores and recalls memories offline on the machine with meaning and keyword recall."
+            },
+            "no_install_option": null,
+            "well_known_option": null,
+            "clarifying_question": null,
+            "coverage_note": "591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores."
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 1
+      }
+    }
+  ]
+}

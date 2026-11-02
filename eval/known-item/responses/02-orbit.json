@@ -1,0 +1,590 @@
+{
+  "n": 2,
+  "target": {
+    "slug": "orbit",
+    "stratum": "dev_cli",
+    "category": "dev_cli",
+    "level": "service",
+    "os": "linux"
+  },
+  "arguments": {
+    "need": "I run several AI coding agents on my repos and things get messy: they step on each other's files and I lose track of why changes were made. I want something that queues their tasks, runs them in isolated copies of the repo, and opens pull requests after I approve. It must use the agent CLIs I've already logged into without handing over API keys, keep everything local with no telemetry, and be free and open source.",
+    "os": "linux"
+  },
+  "used_attempt": 0,
+  "attempts": [
+    {
+      "at": "2026-11-02T17:19:33+08:00",
+      "latency_s": 16.4,
+      "http_status": 200,
+      "ledger_row": 43099,
+      "is_error": false,
+      "find": {
+        "rec_id": "rec_258b2ea5478742a5af748f9a790c014d",
+        "matched_by": "muse-spark-1.3",
+        "degraded": false,
+        "degraded_reason": null,
+        "model_attempts": 1,
+        "model_http_status": null,
+        "considered": 591,
+        "picks": [
+          {
+            "slug": "orbit",
+            "name": "Orbit",
+            "summary": "Local-first runtime that queues coding-agent tasks and delivers them via sandboxed worktrees.",
+            "fit": "Queues coding-agent tasks and delivers them in sandboxed worktrees with pull requests on Linux.",
+            "why": [
+              {
+                "claim": "Queues coding-agent tasks in sandboxed worktrees.",
+                "field": "summary",
+                "value": "Local-first runtime that queues coding-agent tasks and delivers them via sandboxed worktrees."
+              },
+              {
+                "claim": "Runs tasks in isolated worktrees through plan, execute and review.",
+                "field": "use_cases",
+                "value": "run queued tasks through plan, execute and review in isolated worktrees"
+              },
+              {
+                "claim": "Opens a pull request for task output.",
+                "field": "use_cases",
+                "value": "open a pull request for task output and close task after merge"
+              },
+              {
+                "claim": "Is free.",
+                "field": "pricing",
+                "value": "free"
+              }
+            ],
+            "tradeoffs": [
+              "Agent run in sandboxed worktrees and gated delivery were not verified in sandbox, both list needs_account / not_shown.",
+              "Requires Node 18+ runtime."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "macos",
+              "linux"
+            ],
+            "pricing": "free",
+            "processing": "local",
+            "open_source": true,
+            "license": "MIT",
+            "verification": {
+              "level": "service",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-10-31T01:22:30.810929+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [
+                {
+                  "feature": "queue coding tasks durably",
+                  "check": "cd /tmp/orbit-demo && orbit task add --title \"Add hello.txt\" --description \"Add hello.txt containing hello\" --complexity low --status backlog 2>&1"
+                }
+              ],
+              "not_checked": [
+                {
+                  "feature": "run agents in sandboxed worktrees",
+                  "reason": "needs_account",
+                  "detail": "needs an account or API key, which the sandbox does not have: needs authenticated agent CLI and machine identity; locks list only shows gating"
+                },
+                {
+                  "feature": "deliver changes via gated pipeline",
+                  "reason": "needs_account",
+                  "detail": "needs an account or API key, which the sandbox does not have: needs authenticated gh for PR delivery"
+                },
+                {
+                  "feature": "audit prompt plan and review",
+                  "reason": "not_shown",
+                  "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Output shows only title/description/history with no prompt, plan, trace, or review fields."
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; its service answered a test request. The run exercised 1 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 92/100 and popularity 59/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 92.2,
+              "popularity": 58.6,
+              "treasure": false
+            },
+            "repo": "https://github.com/constellation-works/orbit",
+            "homepage": "https://orbit-cli.com",
+            "web_app": null
+          },
+          {
+            "slug": "vincent",
+            "name": "vincent",
+            "summary": "Local-first daemon plus TUI and CLI to run and supervise AI coding-agent tasks.",
+            "fit": "Supervises many coding-agent tasks locally with each task in its own worktree.",
+            "why": [
+              {
+                "claim": "Runs and supervises coding-agent tasks local-first.",
+                "field": "summary",
+                "value": "Local-first daemon plus TUI and CLI to run and supervise AI coding-agent tasks."
+              },
+              {
+                "claim": "Isolates each task in its own worktree.",
+                "field": "use_cases",
+                "value": "run tasks each isolated in its own git worktree"
+              },
+              {
+                "claim": "Processes locally.",
+                "field": "processing",
+                "value": "local"
+              },
+              {
+                "claim": "Is open source under MIT.",
+                "field": "license",
+                "value": "MIT"
+              }
+            ],
+            "tradeoffs": [
+              "No queued-task plus approve-to-pull-request flow is shown on the card.",
+              "Isolated worktree runs were not shown working in verification.",
+              "Pricing is not listed, so free is not confirmed."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "macos",
+              "linux",
+              "windows"
+            ],
+            "pricing": "unknown",
+            "processing": "local",
+            "open_source": true,
+            "license": "MIT",
+            "verification": {
+              "level": "function",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-10-31T03:28:46.559651+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [
+                {
+                  "feature": "monitor and manage many agent tasks",
+                  "check": "vincent task ls"
+                },
+                {
+                  "feature": "author reusable workflows in validated YAML",
+                  "check": "vincent workflow validate /tmp/vincent-dl/examples/feature-pr.yaml"
+                }
+              ],
+              "not_checked": [
+                {
+                  "feature": "run Claude Code, Codex, or Cursor",
+                  "reason": "needs_account",
+                  "detail": "needs an account or API key, which the sandbox does not have: no claude/codex/cursor-agent CLI auth in box; would need account"
+                },
+                {
+                  "feature": "run tasks in isolated git worktrees",
+                  "reason": "not_shown",
+                  "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Output shows a branch name but no worktree path or isolation evidence."
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 2 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 78/100 and popularity 55/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 78.3,
+              "popularity": 55.1,
+              "treasure": false
+            },
+            "repo": "https://github.com/lezli01/vincent",
+            "homepage": "https://lezli01.is-a.dev/vincent",
+            "web_app": null
+          },
+          {
+            "slug": "detent",
+            "name": "Detent",
+            "summary": "Board-driven orchestration that assigns ready board issues to coding agents in isolated worktrees.",
+            "fit": "Assigns board issues to coding agents in isolated workspaces with serial approved landing.",
+            "why": [
+              {
+                "claim": "Assigns issues to coding agents in isolated worktrees.",
+                "field": "summary",
+                "value": "Board-driven orchestration that assigns ready board issues to coding agents in isolated worktrees."
+              },
+              {
+                "claim": "Lands approved changes serially.",
+                "field": "use_cases",
+                "value": "Land approved changes serially with a merge train"
+              },
+              {
+                "claim": "Verified on the user's OS.",
+                "field": "verified_on_user_os",
+                "value": "true"
+              }
+            ],
+            "tradeoffs": [
+              "Open source and pricing are not listed, so free and open source are not confirmed.",
+              "Processing is hybrid, not confirmed fully local.",
+              "Ready-issue runs and gated validation need an account and were not verified."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "macos",
+              "linux"
+            ],
+            "pricing": "unknown",
+            "processing": "hybrid",
+            "open_source": null,
+            "license": null,
+            "verification": {
+              "level": "service",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-10-31T02:05:13.552371+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [],
+              "not_checked": [
+                {
+                  "feature": "Run ready issues through coding agents",
+                  "reason": "needs_account",
+                  "detail": "needs an account or API key, which the sandbox does not have: Needs Codex or Claude Code sign-in on runner; not attempted here."
+                },
+                {
+                  "feature": "Validate agent results against gates",
+                  "reason": "needs_account",
+                  "detail": "needs an account or API key, which the sandbox does not have: Gate validation runs as part of agent work; needs agent sign-in."
+                },
+                {
+                  "feature": "Land changes via serialized merge",
+                  "reason": "needs_account",
+                  "detail": "needs an account or API key, which the sandbox does not have: Landing runs as part of agent work; needs agent sign-in."
+                },
+                {
+                  "feature": "Monitor work on live dashboards",
+                  "reason": "not_shown",
+                  "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Web root is an empty app shell with no work shown and health reports zero repositories."
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; its service answered a test request. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 87/100 and popularity 49/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 87,
+              "popularity": 48.9,
+              "treasure": false
+            },
+            "repo": "https://github.com/digitaldrywood/detent",
+            "homepage": "https://digitaldrywood.com",
+            "web_app": null
+          }
+        ],
+        "best_free": {
+          "slug": "orbit",
+          "reason": "It is free and its queued isolated worktree flow with pull requests matches the job."
+        },
+        "no_install_option": null,
+        "well_known_option": null,
+        "clarifying_question": null,
+        "coverage_note": "591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores."
+      },
+      "raw": {
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"rec_id\":\"rec_258b2ea5478742a5af748f9a790c014d\",\"matched_by\":\"muse-spark-1.3\",\"degraded\":false,\"degraded_reason\":null,\"model_attempts\":1,\"model_http_status\":null,\"considered\":591,\"picks\":[{\"slug\":\"orbit\",\"name\":\"Orbit\",\"summary\":\"Local-first runtime that queues coding-agent tasks and delivers them via sandboxed worktrees.\",\"fit\":\"Queues coding-agent tasks and delivers them in sandboxed worktrees with pull requests on Linux.\",\"why\":[{\"claim\":\"Queues coding-agent tasks in sandboxed worktrees.\",\"field\":\"summary\",\"value\":\"Local-first runtime that queues coding-agent tasks and delivers them via sandboxed worktrees.\"},{\"claim\":\"Runs tasks in isolated worktrees through plan, execute and review.\",\"field\":\"use_cases\",\"value\":\"run queued tasks through plan, execute and review in isolated worktrees\"},{\"claim\":\"Opens a pull request for task output.\",\"field\":\"use_cases\",\"value\":\"open a pull request for task output and close task after merge\"},{\"claim\":\"Is free.\",\"field\":\"pricing\",\"value\":\"free\"}],\"tradeoffs\":[\"Agent run in sandboxed worktrees and gated delivery were not verified in sandbox, both list needs_account / not_shown.\",\"Requires Node 18+ runtime.\"],\"vs_well_known\":null,\"platforms\":[\"macos\",\"linux\"],\"pricing\":\"free\",\"processing\":\"local\",\"open_source\":true,\"license\":\"MIT\",\"verification\":{\"level\":\"service\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-10-31T01:22:30.810929+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[{\"feature\":\"queue coding tasks durably\",\"check\":\"cd /tmp/orbit-demo && orbit task add --title \\\"Add hello.txt\\\" --description \\\"Add hello.txt containing hello\\\" --complexity low --status backlog 2>&1\"}],\"not_checked\":[{\"feature\":\"run agents in sandboxed worktrees\",\"reason\":\"needs_account\",\"detail\":\"needs an account or API key, which the sandbox does not have: needs authenticated agent CLI and machine identity; locks list only shows gating\"},{\"feature\":\"deliver changes via gated pipeline\",\"reason\":\"needs_account\",\"detail\":\"needs an account or API key, which the sandbox does not have: needs authenticated gh for PR delivery\"},{\"feature\":\"audit prompt plan and review\",\"reason\":\"not_shown\",\"detail\":\"a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Output shows only title/description/history with no prompt, plan, trace, or review fields.\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; its service answered a test request. The run exercised 1 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 92/100 and popularity 59/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":92.2,\"popularity\":58.6,\"treasure\":false},\"repo\":\"https://github.com/constellation-works/orbit\",\"homepage\":\"https://orbit-cli.com\",\"web_app\":null},{\"slug\":\"vincent\",\"name\":\"vincent\",\"summary\":\"Local-first daemon plus TUI and CLI to run and supervise AI coding-agent tasks.\",\"fit\":\"Supervises many coding-agent tasks locally with each task in its own worktree.\",\"why\":[{\"claim\":\"Runs and supervises coding-agent tasks local-first.\",\"field\":\"summary\",\"value\":\"Local-first daemon plus TUI and CLI to run and supervise AI coding-agent tasks.\"},{\"claim\":\"Isolates each task in its own worktree.\",\"field\":\"use_cases\",\"value\":\"run tasks each isolated in its own git worktree\"},{\"claim\":\"Processes locally.\",\"field\":\"processing\",\"value\":\"local\"},{\"claim\":\"Is open source under MIT.\",\"field\":\"license\",\"value\":\"MIT\"}],\"tradeoffs\":[\"No queued-task plus approve-to-pull-request flow is shown on the card.\",\"Isolated worktree runs were not shown working in verification.\",\"Pricing is not listed, so free is not confirmed.\"],\"vs_well_known\":null,\"platforms\":[\"macos\",\"linux\",\"windows\"],\"pricing\":\"unknown\",\"processing\":\"local\",\"open_source\":true,\"license\":\"MIT\",\"verification\":{\"level\":\"function\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-10-31T03:28:46.559651+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[{\"feature\":\"monitor and manage many agent tasks\",\"check\":\"vincent task ls\"},{\"feature\":\"author reusable workflows in validated YAML\",\"check\":\"vincent workflow validate /tmp/vincent-dl/examples/feature-pr.yaml\"}],\"not_checked\":[{\"feature\":\"run Claude Code, Codex, or Cursor\",\"reason\":\"needs_account\",\"detail\":\"needs an account or API key, which the sandbox does not have: no claude/codex/cursor-agent CLI auth in box; would need account\"},{\"feature\":\"run tasks in isolated git worktrees\",\"reason\":\"not_shown\",\"detail\":\"a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Output shows a branch name but no worktree path or isolation evidence.\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 2 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 78/100 and popularity 55/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":78.3,\"popularity\":55.1,\"treasure\":false},\"repo\":\"https://github.com/lezli01/vincent\",\"homepage\":\"https://lezli01.is-a.dev/vincent\",\"web_app\":null},{\"slug\":\"detent\",\"name\":\"Detent\",\"summary\":\"Board-driven orchestration that assigns ready board issues to coding agents in isolated worktrees.\",\"fit\":\"Assigns board issues to coding agents in isolated workspaces with serial approved landing.\",\"why\":[{\"claim\":\"Assigns issues to coding agents in isolated worktrees.\",\"field\":\"summary\",\"value\":\"Board-driven orchestration that assigns ready board issues to coding agents in isolated worktrees.\"},{\"claim\":\"Lands approved changes serially.\",\"field\":\"use_cases\",\"value\":\"Land approved changes serially with a merge train\"},{\"claim\":\"Verified on the user's OS.\",\"field\":\"verified_on_user_os\",\"value\":\"true\"}],\"tradeoffs\":[\"Open source and pricing are not listed, so free and open source are not confirmed.\",\"Processing is hybrid, not confirmed fully local.\",\"Ready-issue runs and gated validation need an account and were not verified.\"],\"vs_well_known\":null,\"platforms\":[\"macos\",\"linux\"],\"pricing\":\"unknown\",\"processing\":\"hybrid\",\"open_source\":null,\"license\":null,\"verification\":{\"level\":\"service\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-10-31T02:05:13.552371+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[],\"not_checked\":[{\"feature\":\"Run ready issues through coding agents\",\"reason\":\"needs_account\",\"detail\":\"needs an account or API key, which the sandbox does not have: Needs Codex or Claude Code sign-in on runner; not attempted here.\"},{\"feature\":\"Validate agent results against gates\",\"reason\":\"needs_account\",\"detail\":\"needs an account or API key, which the sandbox does not have: Gate validation runs as part of agent work; needs agent sign-in.\"},{\"feature\":\"Land changes via serialized merge\",\"reason\":\"needs_account\",\"detail\":\"needs an account or API key, which the sandbox does not have: Landing runs as part of agent work; needs agent sign-in.\"},{\"feature\":\"Monitor work on live dashboards\",\"reason\":\"not_shown\",\"detail\":\"a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Web root is an empty app shell with no work shown and health reports zero repositories.\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; its service answered a test request. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 87/100 and popularity 49/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":87,\"popularity\":48.9,\"treasure\":false},\"repo\":\"https://github.com/digitaldrywood/detent\",\"homepage\":\"https://digitaldrywood.com\",\"web_app\":null}],\"best_free\":{\"slug\":\"orbit\",\"reason\":\"It is free and its queued isolated worktree flow with pull requests matches the job.\"},\"no_install_option\":null,\"well_known_option\":null,\"clarifying_question\":null,\"coverage_note\":\"591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores.\"}"
+            }
+          ],
+          "structuredContent": {
+            "rec_id": "rec_258b2ea5478742a5af748f9a790c014d",
+            "matched_by": "muse-spark-1.3",
+            "degraded": false,
+            "degraded_reason": null,
+            "model_attempts": 1,
+            "model_http_status": null,
+            "considered": 591,
+            "picks": [
+              {
+                "slug": "orbit",
+                "name": "Orbit",
+                "summary": "Local-first runtime that queues coding-agent tasks and delivers them via sandboxed worktrees.",
+                "fit": "Queues coding-agent tasks and delivers them in sandboxed worktrees with pull requests on Linux.",
+                "why": [
+                  {
+                    "claim": "Queues coding-agent tasks in sandboxed worktrees.",
+                    "field": "summary",
+                    "value": "Local-first runtime that queues coding-agent tasks and delivers them via sandboxed worktrees."
+                  },
+                  {
+                    "claim": "Runs tasks in isolated worktrees through plan, execute and review.",
+                    "field": "use_cases",
+                    "value": "run queued tasks through plan, execute and review in isolated worktrees"
+                  },
+                  {
+                    "claim": "Opens a pull request for task output.",
+                    "field": "use_cases",
+                    "value": "open a pull request for task output and close task after merge"
+                  },
+                  {
+                    "claim": "Is free.",
+                    "field": "pricing",
+                    "value": "free"
+                  }
+                ],
+                "tradeoffs": [
+                  "Agent run in sandboxed worktrees and gated delivery were not verified in sandbox, both list needs_account / not_shown.",
+                  "Requires Node 18+ runtime."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "macos",
+                  "linux"
+                ],
+                "pricing": "free",
+                "processing": "local",
+                "open_source": true,
+                "license": "MIT",
+                "verification": {
+                  "level": "service",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-10-31T01:22:30.810929+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [
+                    {
+                      "feature": "queue coding tasks durably",
+                      "check": "cd /tmp/orbit-demo && orbit task add --title \"Add hello.txt\" --description \"Add hello.txt containing hello\" --complexity low --status backlog 2>&1"
+                    }
+                  ],
+                  "not_checked": [
+                    {
+                      "feature": "run agents in sandboxed worktrees",
+                      "reason": "needs_account",
+                      "detail": "needs an account or API key, which the sandbox does not have: needs authenticated agent CLI and machine identity; locks list only shows gating"
+                    },
+                    {
+                      "feature": "deliver changes via gated pipeline",
+                      "reason": "needs_account",
+                      "detail": "needs an account or API key, which the sandbox does not have: needs authenticated gh for PR delivery"
+                    },
+                    {
+                      "feature": "audit prompt plan and review",
+                      "reason": "not_shown",
+                      "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Output shows only title/description/history with no prompt, plan, trace, or review fields."
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; its service answered a test request. The run exercised 1 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 92/100 and popularity 59/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 92.2,
+                  "popularity": 58.6,
+                  "treasure": false
+                },
+                "repo": "https://github.com/constellation-works/orbit",
+                "homepage": "https://orbit-cli.com",
+                "web_app": null
+              },
+              {
+                "slug": "vincent",
+                "name": "vincent",
+                "summary": "Local-first daemon plus TUI and CLI to run and supervise AI coding-agent tasks.",
+                "fit": "Supervises many coding-agent tasks locally with each task in its own worktree.",
+                "why": [
+                  {
+                    "claim": "Runs and supervises coding-agent tasks local-first.",
+                    "field": "summary",
+                    "value": "Local-first daemon plus TUI and CLI to run and supervise AI coding-agent tasks."
+                  },
+                  {
+                    "claim": "Isolates each task in its own worktree.",
+                    "field": "use_cases",
+                    "value": "run tasks each isolated in its own git worktree"
+                  },
+                  {
+                    "claim": "Processes locally.",
+                    "field": "processing",
+                    "value": "local"
+                  },
+                  {
+                    "claim": "Is open source under MIT.",
+                    "field": "license",
+                    "value": "MIT"
+                  }
+                ],
+                "tradeoffs": [
+                  "No queued-task plus approve-to-pull-request flow is shown on the card.",
+                  "Isolated worktree runs were not shown working in verification.",
+                  "Pricing is not listed, so free is not confirmed."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "macos",
+                  "linux",
+                  "windows"
+                ],
+                "pricing": "unknown",
+                "processing": "local",
+                "open_source": true,
+                "license": "MIT",
+                "verification": {
+                  "level": "function",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-10-31T03:28:46.559651+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [
+                    {
+                      "feature": "monitor and manage many agent tasks",
+                      "check": "vincent task ls"
+                    },
+                    {
+                      "feature": "author reusable workflows in validated YAML",
+                      "check": "vincent workflow validate /tmp/vincent-dl/examples/feature-pr.yaml"
+                    }
+                  ],
+                  "not_checked": [
+                    {
+                      "feature": "run Claude Code, Codex, or Cursor",
+                      "reason": "needs_account",
+                      "detail": "needs an account or API key, which the sandbox does not have: no claude/codex/cursor-agent CLI auth in box; would need account"
+                    },
+                    {
+                      "feature": "run tasks in isolated git worktrees",
+                      "reason": "not_shown",
+                      "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Output shows a branch name but no worktree path or isolation evidence."
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 2 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 78/100 and popularity 55/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 78.3,
+                  "popularity": 55.1,
+                  "treasure": false
+                },
+                "repo": "https://github.com/lezli01/vincent",
+                "homepage": "https://lezli01.is-a.dev/vincent",
+                "web_app": null
+              },
+              {
+                "slug": "detent",
+                "name": "Detent",
+                "summary": "Board-driven orchestration that assigns ready board issues to coding agents in isolated worktrees.",
+                "fit": "Assigns board issues to coding agents in isolated workspaces with serial approved landing.",
+                "why": [
+                  {
+                    "claim": "Assigns issues to coding agents in isolated worktrees.",
+                    "field": "summary",
+                    "value": "Board-driven orchestration that assigns ready board issues to coding agents in isolated worktrees."
+                  },
+                  {
+                    "claim": "Lands approved changes serially.",
+                    "field": "use_cases",
+                    "value": "Land approved changes serially with a merge train"
+                  },
+                  {
+                    "claim": "Verified on the user's OS.",
+                    "field": "verified_on_user_os",
+                    "value": "true"
+                  }
+                ],
+                "tradeoffs": [
+                  "Open source and pricing are not listed, so free and open source are not confirmed.",
+                  "Processing is hybrid, not confirmed fully local.",
+                  "Ready-issue runs and gated validation need an account and were not verified."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "macos",
+                  "linux"
+                ],
+                "pricing": "unknown",
+                "processing": "hybrid",
+                "open_source": null,
+                "license": null,
+                "verification": {
+                  "level": "service",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-10-31T02:05:13.552371+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [],
+                  "not_checked": [
+                    {
+                      "feature": "Run ready issues through coding agents",
+                      "reason": "needs_account",
+                      "detail": "needs an account or API key, which the sandbox does not have: Needs Codex or Claude Code sign-in on runner; not attempted here."
+                    },
+                    {
+                      "feature": "Validate agent results against gates",
+                      "reason": "needs_account",
+                      "detail": "needs an account or API key, which the sandbox does not have: Gate validation runs as part of agent work; needs agent sign-in."
+                    },
+                    {
+                      "feature": "Land changes via serialized merge",
+                      "reason": "needs_account",
+                      "detail": "needs an account or API key, which the sandbox does not have: Landing runs as part of agent work; needs agent sign-in."
+                    },
+                    {
+                      "feature": "Monitor work on live dashboards",
+                      "reason": "not_shown",
+                      "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Web root is an empty app shell with no work shown and health reports zero repositories."
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; its service answered a test request. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 87/100 and popularity 49/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 87,
+                  "popularity": 48.9,
+                  "treasure": false
+                },
+                "repo": "https://github.com/digitaldrywood/detent",
+                "homepage": "https://digitaldrywood.com",
+                "web_app": null
+              }
+            ],
+            "best_free": {
+              "slug": "orbit",
+              "reason": "It is free and its queued isolated worktree flow with pull requests matches the job."
+            },
+            "no_install_option": null,
+            "well_known_option": null,
+            "clarifying_question": null,
+            "coverage_note": "591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores."
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 1
+      }
+    }
+  ]
+}
