@@ -243,6 +243,9 @@
 - zsh 的 `interactivecomments` 在評分者的 shell 打開，讓行尾的 `# ...` 是註解（和 Linux 上的 bash 一樣）；zsh 互動模式的預設會把它當成指令的參數。
 - 答案給多個安裝選項時，照抽取首選時記下的安裝方式（9.1 C2「含指定的安裝方式」）；沒有就用第一個（和 Linux 題相同）。標成「選用」的步驟不跑。
 - q11 問題的方式：答案的第一種用法 `ollama run tw`，每題一次新的執行、把凍結的題目貼進去（stdin）。答案的 Modelfile 設 temperature 0.6、Ollama 文件沒有可以固定 seed 的環境變數或設定檔，所以 P1–P5 跑 3 次、2 次過算過。記憶體量測（footprint_watch）從第一行安裝前到最後一個回覆後；重算時排除 Tart Guest Agent（以測試帳號身分、從非系統路徑執行）。
+- 主機記憶體（2026-11-02 約 17:50）：q11 對照組問第 1 題時主機嚴重換頁（swap 24.7/25.6 GB、可用記憶體約 130 MB、CPU 幾乎全滿；16 GB 的 VM 只有 4.5 GB 留在實體記憶體），第 1 題花了 8 分 50 秒（README 的上限是 10 分鐘）。照協調 session 的規則停下回報（`l2/q11-control/host-memory-stop.json`）；那兩則回覆移到 `replies-attempt1-hostswap`，之後從 P1 重做。協調 session 決定先做 q12、q11 等念誠釋出記憶體或晚上主機空閒時再做；q11 對照組的 clone 用 `tart suspend` 暫停（安裝、模型、記憶體狀態都保留）。
+- q12 改用 8 GB 的 clone（1.5B 測試模型用不到 16 GB；協調 session 同意）；之後新開的 clone 都加 `--suspendable`（停用音訊與熵裝置，兩組相同）。
+- q12 的評分 venv：映像的 Homebrew Python 移開後跑不起來，macOS 內建的 3.9 又低於 openai 3.42.1 要求的 3.10，改用固定版本的獨立 CPython 3.12.16（python-build-standalone 20261026，SHA-256 驗過），放在 `/var/eval-grader`，不在測試帳號的家目錄與 PATH 裡。對照組因此在 setup 之後先停下，答案的安裝行已在客體裡開始，就讓它自己跑完（每行的 exit code 在 steps.txt），再建 venv、跑檢查（`l2/q12-control/run-phase-stopped.log`）。
 - 評分者自己的操作失誤（答案不變，第一次保留）：q11 對照組第 1 次（`q11-control-attempt1-setupassistant/`）：關掉新帳號的設定助理會讓那個帳號登出，記憶體量測因此中斷，整台重來；同一次裡評分者用 `open -a Ollama` 代替「打開」，LaunchServices 還沒登記剛複製的 app 而失敗，重做時改成 `open /Applications/Ollama.app`（等於在 Finder 雙擊）。
 
 ### 凍結快照裡的產品錯誤：`gui.tier` 的輸出 schema（2026-11-02 協調 session 通報）
