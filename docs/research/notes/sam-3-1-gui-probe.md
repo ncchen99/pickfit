@@ -5,7 +5,7 @@ so the operator could name a target ("gear icon") and pickfit click the box's ce
 operating loop is unchanged.
 
 ## Method
-- 29 screenshots from saved GUI verification evidence (~/.pickfit/evidence, 25 apps, Linux Xvfb and macOS),
+- 29 screenshots from saved GUI verification evidence (~/.pickfit/evidence, 17 apps, all but one on Linux Xvfb),
   each with a recorded operator click that changed the next screen. 19 targets are icon-only controls (menu,
   gear, plus, close, folder, arrows, slider knob, radio, stop), 10 are text controls (a control group).
 - Ground truth: the click point, nudged onto the control by eye where the click landed a few pixels off.
