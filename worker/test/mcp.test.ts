@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Env } from '../src/env.ts';
+import { INSTRUCTIONS, READONLY_INSTRUCTIONS } from '../src/server.ts';
 import { makeWorker } from '../src/worker.ts';
 import { answer, fixtureIndex, makeD1, metaResponse } from './helpers.ts';
 
@@ -55,7 +56,8 @@ test('legacy clients: initialize, list and call without a session', async () => 
   assert.equal(init.headers.get('mcp-session-id'), null);
   const initMsg = await message(init);
   assert.match(initMsg.result.instructions, /^pickfit recommends lesser-known software/);
-  assert.ok(initMsg.result.instructions.length <= 512);
+  // Every client loads these each session: keep them short (they grew past 512 with the answer guidance).
+  assert.ok(initMsg.result.instructions.length <= 900);
 
   const list = await message(
     await call(rpc({ jsonrpc: '2.0', id: 2, method: 'tools/list' }, { 'mcp-protocol-version': '2025-11-25' })),
@@ -90,6 +92,31 @@ test('legacy clients: initialize, list and call without a session', async () => 
   assert.equal(out.matched_by, 'rules');
   assert.equal(out.degraded_reason, 'model_off');
   assert.deepEqual(JSON.parse(res.result.content[0].text), out);
+});
+
+test('instructions say how to write the answer: pick first, alternative before the steps, no narration', () => {
+  for (const text of [INSTRUCTIONS, READONLY_INSTRUCTIONS]) {
+    assert.match(text, /open with one pick for the likely setup and confirm hard limits/);
+    assert.match(text, /say "free" whenever it is/);
+    assert.match(text, /Next line, before any steps: "If your setup is X instead, use Y\."/);
+    assert.match(text, /say why the obvious choice isn't recommended/);
+    assert.match(text, /Tag well_known_option "\(not verified by pickfit\)" beside its name/);
+    assert.match(text, /Don't narrate the search or say pickfit found nothing; just answer/);
+    assert.match(text, /No disclaimers about what you didn't run/);
+  }
+});
+
+test('find tools: the unverified tag and no search narration', async () => {
+  const { call } = setup();
+  const list = await message(
+    await call(rpc({ jsonrpc: '2.0', id: 1, method: 'tools/list' }, { 'mcp-protocol-version': '2025-11-25' })),
+  );
+  const tools = Object.fromEntries(list.result.tools.map((t: any) => [t.name, t.description as string]));
+  for (const name of ['find_software', 'find_alternatives']) {
+    assert.match(tools[name], /well_known_option[^.]*: tag it "\(not verified by pickfit\)" beside its name/, name);
+    assert.match(tools[name], /If no pick fits, answer without mentioning the search\./, name);
+  }
+  assert.match(tools.find_alternatives, /lead with "keep X" and why/);
 });
 
 test('modern clients: the model path end to end, then the install guide', async () => {

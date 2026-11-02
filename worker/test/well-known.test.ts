@@ -269,6 +269,6 @@ test('a name that is not a plain name is logged without its text', async () => {
 test('rule 10 no longer claims to be the only place for general knowledge; the server says what the option is', () => {
   assert.doesNotMatch(MATCH_INSTRUCTIONS, /only place you may use your general knowledge/);
   assert.match(MATCH_INSTRUCTIONS, /comes from your general knowledge, as for the tools in rules 7 and 9/);
-  assert.match(INSTRUCTIONS, /well_known_option is not verified by pickfit; say so\./);
-  assert.match(READONLY_INSTRUCTIONS, /well_known_option is not verified by pickfit/);
+  assert.match(INSTRUCTIONS, /Tag well_known_option "\(not verified by pickfit\)" beside its name\./);
+  assert.match(READONLY_INSTRUCTIONS, /Tag well_known_option "\(not verified by pickfit\)" beside its name\./);
 });
