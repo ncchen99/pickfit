@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import secrets
 import shutil
@@ -142,11 +143,13 @@ def safe_index(frames_dir: Path, index: dict[str, Any], t0: float) -> dict[str, 
     """frames.json as the host may use it: only frames named as the harness names them that are there, numeric
     times, the end no later than record.MAX_SECONDS after the start, a viewport of sane size."""
     frames = [{"t": float(f["t"]), "file": f["file"]} for f in index.get("frames") or []
-              if isinstance(f, dict) and isinstance(f.get("t"), (int, float)) and FRAME_NAME.match(str(f.get("file")))
-              and (frames_dir / f["file"]).is_file()]
+              if isinstance(f, dict) and isinstance(f.get("t"), (int, float)) and math.isfinite(f["t"])
+              and FRAME_NAME.match(str(f.get("file"))) and (frames_dir / f["file"]).is_file()]
     try:
         stopped = float(index.get("stopped_at") or 0.0)
     except (TypeError, ValueError):
+        stopped = math.nan
+    if not math.isfinite(stopped):  # JSON allows NaN and Infinity; the end is then the last frame
         stopped = frames[-1]["t"] if frames else t0
     width, height = (list(index.get("viewport") or []) + [1280, 900])[:2]
     size = [min(max(int(v), 16), 4096) if isinstance(v, (int, float)) else d for v, d in ((width, 1280), (height, 900))]
@@ -384,7 +387,8 @@ def record_web(slug: str, run_id: str | None = None, *, data_dir: Path = DATA_DI
         meta["box_usd"] = round(box.seconds_alive() * box.usd_per_second(), 5) if hasattr(box, "seconds_alive") else 0
         box.close()
     history = json.loads((visit / "agent_history.json").read_text(encoding="utf-8"))
-    return finish(out, meta, seen, theirs, outcome, typed, nonce, video_run, log, target=target, history=history)
+    return finish(out, meta, seen, theirs, outcome, typed, nonce, video_run, log, target=target, history=history,
+                  data_dir=data_dir)
 
 
 def check_line(check: dict[str, Any]) -> str:
@@ -399,8 +403,10 @@ def check_line(check: dict[str, Any]) -> str:
 
 
 def finish(out: Path, meta: dict[str, Any], seen: dict[str, Any], theirs: Any, outcome: dict[str, Any] | None,
-           typed: list[str], nonce: str, video_run: str, log: Any, *, target: Any, history: dict[str, Any]) -> Path:
-    """Judge the replay as the first visit was judged, encode the raw recording and save replay.json for video.py."""
+           typed: list[str], nonce: str, video_run: str, log: Any, *, target: Any, history: dict[str, Any],
+           data_dir: Path = DATA_DIR) -> Path:
+    """Judge the replay as the first visit was judged, encode the raw recording and save replay.json for video.py.
+    When the visit sent away what pickfit typed or chose, the record's web run says so at once (note_leak)."""
     replayed = (seen.get("replay") or {}).get("result") or {}
     frames_dir = out / "frames"
     frames_dir.mkdir(exist_ok=True)
@@ -409,7 +415,7 @@ def finish(out: Path, meta: dict[str, Any], seen: dict[str, Any], theirs: Any, o
             tar.extractall(frames_dir, filter="data")
     t0 = (meta.get("harness") or {}).get("recording_started_at")
     index: dict[str, Any] = {}
-    if (frames_dir / "frames.json").is_file() and isinstance(t0, (int, float)):
+    if (frames_dir / "frames.json").is_file() and isinstance(t0, (int, float)) and math.isfinite(t0):
         index = safe_index(frames_dir, json.loads((frames_dir / "frames.json").read_text(encoding="utf-8")), t0)
     video: dict[str, Any] = {"error": None}
     viewport = tuple(index.get("viewport") or (1280, 900))
@@ -422,6 +428,10 @@ def finish(out: Path, meta: dict[str, Any], seen: dict[str, Any], theirs: Any, o
         judged = judge_replay(out, target, outcome, typed, nonce, history, steps, replayed, seen["install"],
                               run_id=video_run, scope=f"video:{meta['slug']}")
         meta["judge_usd"] = round(meta.get("judge_usd", 0.0) + judged["cost_usd"], 5)
+        noted = note_leak(meta["slug"], meta["run"], judged, data_dir)
+        if noted:
+            meta["data_sent_update"] = noted
+            log(f"  {noted}")
     check = judged["check"]
     line = check_line(check) if judged["passed"] else judged["why"]
     log(f"  replay {'passed' if judged['passed'] else 'failed'}: {line}")

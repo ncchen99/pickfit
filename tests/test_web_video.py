@@ -219,3 +219,33 @@ def test_a_recording_visit_is_logged_as_the_sites_second(tmp_path: Path, monkeyp
     reason = web_video.log_revisit("s.example", "s", "video-s-20261102-220000-ab12", "web-s-20261102-010000-0002")
     line = json.loads((mine / "web" / "visits.jsonl").read_text())
     assert line["revisit"] == reason and reason.endswith("first visit web-s-20261102-000000-0001")
+
+
+def test_frame_times_that_are_not_finite_are_refused(tmp_path: Path):
+    (tmp_path / "f00000.jpg").write_bytes(b"x")
+    (tmp_path / "f00001.jpg").write_bytes(b"x")
+    index = json.loads('{"frames": [{"t": NaN, "file": "f00000.jpg"}, {"t": 101.0, "file": "f00001.jpg"}, '
+                       '{"t": Infinity, "file": "f00001.jpg"}], "stopped_at": NaN, "viewport": [1280, 900]}')
+    safe = web_video.safe_index(tmp_path, index, 100.0)
+    assert safe["frames"] == [{"t": 101.0, "file": "f00001.jpg"}] and safe["stopped_at"] == 101.0
+
+
+@pytest.mark.skipif(not TESSERA.exists(), reason="needs data/software/tessera.json")
+def test_a_recording_visit_that_sent_data_away_says_so_in_the_record(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    from types import SimpleNamespace
+
+    shutil.copy(TESSERA, tmp_path / "tessera.json")
+    run_id = json.loads(TESSERA.read_text(encoding="utf-8"))["verification"]["runs"][0]["id"]
+    judged = {"passed": False, "why": "data pickfit entered left the device", "check": {}, "data_sent": "observed",
+              "leaks": [{"sent": True, "host": "collector.example"}], "cost_usd": 0.0}
+    monkeypatch.setattr(web_video, "judge_replay", lambda *a, **k: judged)
+    out = tmp_path / "video-tessera-20261102-230000-ab12"
+    out.mkdir()
+    web_video.finish(out, {"slug": "tessera", "run": run_id, "harness": {}}, {"install": {}, "replay": {"result": {"after": {}}}},
+                     SimpleNamespace(goal="g", check="download", expected=[]), None, [], "", out.name, lambda *_: None,
+                     target=None, history={}, data_dir=tmp_path)
+    run = json.loads((tmp_path / "tessera.json").read_text(encoding="utf-8"))["verification"]["runs"][0]
+    assert run["web"]["data_sent"] == "observed" and "collector.example" in run["web"]["data_sent_note"]
+    saved = json.loads((out / "replay.json").read_text(encoding="utf-8"))
+    assert saved["result"]["checks"][0]["run"]["operate"]["passed"] is False
+    assert saved["video"]["data_sent_update"].startswith("tessera: data_sent observed")
