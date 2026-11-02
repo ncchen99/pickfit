@@ -145,7 +145,14 @@ def _video(run: VerificationRun) -> dict[str, Any] | None:
     if v is None:
         return None
     return {"clip": v.clip, "clip_sha256": v.clip_sha256, "seconds": v.seconds, "recorded_at": _iso(v.recorded_at),
-            "features": list(v.features), "raw": [{"file": r.file, "sha256": r.sha256, "seconds": r.seconds} for r in v.raw]}
+            "features": list(v.features),
+            "raw": [{"file": r.file, "sha256": r.sha256, "seconds": r.seconds, "feature": _raw_feature(run, r.smoke_test)}
+                    for r in v.raw]}
+
+
+def _raw_feature(run: VerificationRun, smoke_test: int) -> str | None:
+    """The checked feature a raw recording shows: the one whose passed check is that smoke test."""
+    return next((f.feature for f in run.features if f.status == "checked" and smoke_test in f.smoke_tests), None)
 
 
 def _run_summary(run: VerificationRun) -> dict[str, Any]:
@@ -223,6 +230,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
         "name": record.name,
         "summary": record.summary,
         "why_worth_it": record.why_worth_it,
+        "usage_guide": record.usage_guide.model_dump(mode="json") if record.usage_guide else None,
         "category": record.category,
         "kind": record.kind,
         "maturity": record.maturity,

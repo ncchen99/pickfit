@@ -64,20 +64,34 @@ test('WEB_SEARCH=off serves none of the pages', async () => {
   for (const path of ['/browse', '/tool/fixture-llm-runner', '/how']) assert.equal((await s.get(path)).status, 404, path);
 });
 
-test('a tool page shows every verified run with its steps, and only real runs get stitches', async () => {
+test('a tool page shows how far each verified run got, its install steps, and the test evidence folded', async () => {
   const s = site();
   const html = await (await s.get('/tool/fixture-llm-runner')).text();
   assert.match(html, /<h1>Fixture LLM Runner<\/h1>/);
-  assert.ok(html.includes('id="run-macos"') && html.includes('id="run-linux"'), 'one card per verified OS');
+  assert.ok(html.includes('id="install-macos"') && html.includes('id="install-linux"'), 'one install card per verified OS');
+  assert.equal(html.split('<div class="progress-row">').length - 1, 2, 'one progress row per verified OS');
+  assert.match(html, /<li class="stage stage-done"[^>]*><span class="stage-bar"><\/span><span class="stage-label">.*Installs<\/span><\/li>/);
+  assert.match(html, /Tested on macOS and Linux/);
+  assert.match(html, /<details class="block tested"><summary><h2>How pickfit tested it<\/h2>/);
   // Each run card names its system once, in the heading, with the OS mark.
   assert.match(html, /<h3><svg class="os os-macos"[^>]*><use href="#os-macos"\/><\/svg>macOS <span class="arch">arm64<\/span><\/h3>/);
   assert.match(html, /<h3><svg class="os os-linux"[^>]*><use href="#os-linux"\/><\/svg>Linux <span class="arch">x86_64<\/span><\/h3>/);
   assert.match(html, /<symbol id="os-linux"/, 'the page carries the OS marks it points at');
   assert.match(html, /brew install fixture\/tap\/fixture-llm-runner/);
-  // Two runs, two seams; the gem badge comes from the score.
-  assert.equal(html.split('<div class="seam" aria-hidden="true"></div>').length - 1, 2);
+  // The gem badge comes from the score.
   assert.match(html, /Hidden gem/);
   assert.match(html, /aria-label="Quality: \d+ out of 100/);
+});
+
+test('what it does: plain titles from the usage guide, steps only for a feature the run checked, and who wrote them', async () => {
+  const html = await (await site().get('/tool/fixture-llm-runner')).text();
+  assert.match(html, /<li class="feat-ok">.*?<span class="feat-title">Serve models over an OpenAI-style API<\/span> <span class="feat-tag">Tested<\/span><details class="how-to"><summary>How to use it<\/summary><ol><li>Run <code translate="no">fixture-llm-runner serve<\/code>\.<\/li>/);
+  assert.match(html, /<li class="feat-open">.*?<span class="feat-title">Download models from a registry<\/span><small>Not tested: /);
+  assert.match(html, /Feature names and steps written by fixture-model from what pickfit’s run did\./);
+  // A tool without a guide still lists its features, under the README's own words.
+  const plain = await (await site().get('/tool/fixture-transcribe')).text();
+  assert.match(plain, /<span class="feat-title">Transcribe audio files offline<\/span>/);
+  assert.ok(!plain.includes('written by'));
 });
 
 test('a run card says when the sandbox had a GPU or a simulated microphone, and only then', async () => {

@@ -139,13 +139,14 @@ test('without the VIDEOS binding, or with the file not uploaded yet, /video/ is 
   assert.equal((await site(undefined)('/tool/fixture-json-query', { headers: { accept: 'text/html' } })).status, 200);
 });
 
-test('the tool page plays the clip with its poster, says what it is, and links the raw recordings with their sha256', async () => {
+test('the tool page plays the clip first with its poster, and links the raw recordings with their sha256', async () => {
   const res = await site(undefined)(`/tool/${SLUG}`, { headers: { accept: 'text/html' } });
   const html = await res.text();
   assert.match(res.headers.get('content-security-policy') ?? '', /media-src 'self'/);
-  assert.match(html, new RegExp(`<video controls preload="metadata" playsinline poster="/video/${SLUG}/${CLIP.replace('.mp4', '.jpg')}" aria-describedby="video-[^"]+">`));
+  assert.match(html, new RegExp(`<video controls preload="metadata" playsinline poster="/video/${SLUG}/${CLIP.replace('.mp4', '.jpg')}" aria-describedby="showcase-cap">`));
   assert.match(html, new RegExp(`<source src="/video/${SLUG}/${CLIP}" type="video/mp4">`));
-  assert.match(html, /Recorded by pickfit in a sandbox on 2 Nov 2026 · 20 s · shows chat with a local model\./);
+  assert.match(html, /Fixture Chat TUI running, recorded by pickfit on 2 Nov 2026 · 20 s/);
+  assert.ok(html.indexOf('<figure class="showcase">') < html.indexOf('id="progress-title"'), 'the clip comes before everything else');
   assert.match(html, new RegExp(`href="/video/${SLUG}/${RAW}" download>${RAW}</a>`));
   assert.ok(html.includes('b'.repeat(64)));
   // Other tools have no video element.

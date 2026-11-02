@@ -1451,6 +1451,28 @@ class FieldEvidence(_Model):
         return self
 
 
+class FeatureGuide(_Model):
+    """One advertised feature as a person reads it: a plain title, and for a feature a run checked, how to use it."""
+
+    feature: str = Field(min_length=1, max_length=FEATURE_MAX, description="The feature exactly as in features.")
+    title: str = Field(min_length=1, max_length=80, description="The feature in plain words, sentence case.")
+    steps: list[Annotated[str, StringConstraints(min_length=1, max_length=200)]] = Field(
+        default=[], max_length=4,
+        description="How to use it, from what the run did; only for a feature run_id checked, else empty.")
+
+
+class UsageGuide(_Model):
+    """Reader-facing text written by a model from the record and the run behind its checked features
+    (pickfit/usage_guide.py). It adds words, never claims: a feature gets steps only when run_id checked it."""
+
+    model: str = Field(min_length=1, max_length=80, description="The model that wrote this text.")
+    generated_at: AwareDatetime
+    run_id: RunId | None = Field(description="The passed run the steps rest on; null when no run checked a feature.")
+    open_hint: str | None = Field(default=None, max_length=200,
+                                  description="How to start it once installed, in plain words (GUI apps: where it appears).")
+    features: list[FeatureGuide] = Field(default=[], max_length=FEATURES_MAX)
+
+
 class SoftwareRecord(_Model):
     """One software entry: the canonical file data/software/<slug>.json (software.v1)."""
 
@@ -1483,6 +1505,11 @@ class SoftwareRecord(_Model):
         ),
     )
     why_worth_it: str | None = Field(default=None, max_length=200)
+    usage_guide: UsageGuide | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="Plain feature titles and how-to steps for the tool page; generated text, see usage_guide.model.",
+    )
     homepage: WebUrl | None
     repo: Repo | None = Field(description="Null only for a hosted web app with no public repository ('web:' id).")
     platforms: list[OS] = Field(
@@ -1525,6 +1552,24 @@ class SoftwareRecord(_Model):
                 raise ValueError(f"evidence {item.field} cites unknown source {item.source_id!r}")
             if item.field.split("/")[1] not in type(self).model_fields:
                 raise ValueError(f"evidence points to unknown field {item.field}")
+        return self
+
+    @model_validator(mode="after")
+    def _check_usage_guide(self) -> SoftwareRecord:
+        """Guide text covers the record's own features, and steps only the ones its run checked."""
+        guide = self.usage_guide
+        if guide is None:
+            return self
+        names = [f.feature for f in guide.features]
+        if len(set(names)) != len(names) or not set(names) <= set(self.features):
+            raise ValueError("usage_guide.features must name each of the record's features at most once")
+        run = next((r for r in self.verification.runs if r.id == guide.run_id), None)
+        if guide.run_id is not None and (run is None or not is_passed(run.level)):
+            raise ValueError(f"usage_guide.run_id {guide.run_id!r} is not a passed run")
+        checked = {f.feature for f in run.features if f.status == "checked"} if run else set()
+        for f in guide.features:
+            if f.steps and f.feature not in checked:
+                raise ValueError(f"usage_guide: {f.feature!r} has steps but its run did not check it")
         return self
 
     @model_validator(mode="after")
