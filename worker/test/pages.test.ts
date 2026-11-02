@@ -83,10 +83,19 @@ test('a tool page shows how far each verified run got, its install steps, and th
   assert.match(html, /aria-label="Quality: \d+ out of 100/);
 });
 
+test('install steps come one stage at a time: install, then check, each with Back and Next naming the other', async () => {
+  const html = await (await site().get('/tool/fixture-llm-runner')).text();
+  assert.match(html, /<div class="install-body" data-stepper><ol class="stage-tabs js-only">.*?<span class="lbl">Install<\/span>.*?<span class="lbl">Check it works<\/span>/);
+  assert.match(html, /<section class="inst-stage" data-stage aria-label="Install"><p class="caution">|<section class="inst-stage" data-stage aria-label="Install"><ol class="steps">/);
+  assert.match(html, /data-goto="1">Next: Check it works/);
+  assert.match(html, /data-goto="0">.*?Back: Install<\/button>/);
+});
+
 test('what it does: plain titles from the usage guide, steps only for a feature the run checked, and who wrote them', async () => {
   const html = await (await site().get('/tool/fixture-llm-runner')).text();
-  assert.match(html, /<li class="feat-ok">.*?<span class="feat-title">Serve models over an OpenAI-style API<\/span> <span class="feat-tag">Tested<\/span><details class="how-to"><summary>How to use it<\/summary><ol><li>Run <code translate="no">fixture-llm-runner serve<\/code>\.<\/li>/);
-  assert.match(html, /<li class="feat-open">.*?<span class="feat-title">Download models from a registry<\/span><small>Not tested: /);
+  assert.match(html, /<li class="feat-ok"><div><span class="feat-title">Serve models over an OpenAI-style API<\/span><details class="how-to"><summary>How to use it<\/summary><ol><li>Run <code translate="no">fixture-llm-runner serve<\/code>\.<\/li>.*?<span class="feat-state">.*?Tested<\/span><\/li>/);
+  // An untested feature is greyed, with why in its mark's tooltip.
+  assert.match(html, /<li class="feat-open"><div><span class="feat-title">Download models from a registry<\/span><small>([^<]+)<\/small><\/div><span class="feat-state" tabindex="0" data-tip="\1">.*?Not tested<\/span><\/li>/);
   assert.match(html, /Feature names and steps written by fixture-model from what pickfit’s run did\./);
   // A tool without a guide still lists its features, under the README's own words.
   const plain = await (await site().get('/tool/fixture-transcribe')).text();
