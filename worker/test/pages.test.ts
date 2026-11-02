@@ -49,7 +49,7 @@ test('unknown tools and paths get the not-found page for a browser and the plain
   const s = site();
   const tool = await s.get('/tool/no-such-tool');
   assert.equal(tool.status, 404);
-  assert.match(await tool.text(), /This page doesn’t fit/);
+  assert.match(await tool.text(), /Page not found/);
   assert.equal((await s.get('/tool/%3Cscript%3E')).status, 404);
   assert.equal((await s.get('/nowhere')).status, 404);
   const plain = await s.get('/nowhere', 'application/json');
