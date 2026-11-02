@@ -398,3 +398,47 @@ def test_runs_checked_before_the_feature_judge_are_judged_from_their_evidence(tm
     assert "12:00:03 WARN disk usage" in server.requests[0]["input"][0]["content"][0]["text"]
     again = rejudge_record(path, tmp_path / "runs", client=FakeServer().client(), ledger=ledger, log=lambda line: None)
     assert again["judged"] == 0 and again["skipped"] == [f"{run['id']}: already judged"]
+
+
+def test_a_failed_gui_operation_says_why_it_stopped_instead_of_other():
+    from pickfit.verify.agent import CommandRecord, FinishArgs
+    from pickfit.verify.features import resolve_features
+    from pickfit.verify.verdict import log_verdict
+
+    def operation(cid: int, feature: int, stop: str, why: str) -> CommandRecord:
+        steps = [{"action": {"kind": "click", "x": 1, "y": 1}}] * 3
+        return CommandRecord(turn=cid, tool="operate_gui", command="app", exit_code=1, seconds=1.0, command_id=cid,
+                             operate={"spec": {"feature": feature}, "stop": stop, "passed": False, "steps": steps,
+                                      "result": {"passed": False, "why": why}})
+
+    log = [CommandRecord(turn=1, tool="run_command", command="pipx install app", exit_code=0, seconds=0.1,
+                         stdout="installed", command_id=1),
+           CommandRecord(turn=2, tool="launch_gui", command="app", exit_code=0, seconds=1.0, command_id=2),
+           operation(3, 1, "step_cap", "file ~/pickfit-out/a.png: missing"),
+           operation(4, 2, "done", "the screen does not show the expected text"),
+           operation(5, 3, "no_window", "")]
+    finish_args = FinishArgs.model_validate({"level": "install", "steps": [{"command_id": 1, "purpose": "install"}],
+                                             "smoke_tests": []})
+    verdict = log_verdict(finish_args, log)
+    claims = [FinishFeature(feature=1, status="test_failed", command_ids=[3], note="save dialog"),
+              FinishFeature(feature=2, status="not_checked", command_ids=[4], reason="other", note="no result"),
+              FinishFeature(feature=3, status="not_checked", command_ids=[], reason="other", note=""),
+              FinishFeature(feature=4, status="not_checked", command_ids=[], reason="needs_display", note="portal"),
+              FinishFeature(feature=5, status="not_checked", command_ids=[], reason="other", note="")]
+    resolved = resolve_features(["export", "search", "open", "pick a file", "sync"], claims, verdict, log)
+    assert [f.reason for f in resolved] == ["operator_limit", "check_not_met", "app_error", "needs_desktop", "other"]
+    assert resolved[0].note == ("operation stopped: step_cap after 3 actions; check: file ~/pickfit-out/a.png: "
+                                "missing; save dialog")
+    assert resolved[2].note.startswith("operation stopped: no_window after 3 actions")
+    assert resolved[4].note == "the agent named no cause"
+    assert "reason other needs a note" in resolved[4].problems[-1]
+
+
+def test_reason_other_needs_a_note():
+    from pickfit.schema import FeatureCheck
+
+    with pytest.raises(ValueError, match="reason other needs a note"):
+        FeatureCheck(feature="sync", status="not_checked", reason="other")
+    assert FeatureCheck(feature="sync", status="not_checked", reason="other", note="no sync server").note
+    assert FeatureCheck(feature="sync", status="not_checked", reason="operator_limit").reason == "operator_limit"
+

@@ -108,6 +108,11 @@ type FeatureGap = Literal[
     "other_os",
     "not_attempted",
     "not_shown",
+    # Why a GUI operation for the feature did not pass, from how pickfit's harness saw it stop (gui_operate.py):
+    "operator_limit",  # the operator ran out of steps, went in circles or gave up
+    "check_not_met",  # the operator finished, but pickfit's own check did not find the result
+    "app_error",  # the app showed no window, crashed or showed an error
+    "needs_desktop",  # a desktop piece the box's display lacks: a file-chooser portal, a URL handler, Wayland
     "other",
 ]
 # Who a failed feature test points at, as pitfall kinds do: only this box, or the tool itself.
@@ -719,6 +724,8 @@ class FeatureCheck(_Model):
             raise ValueError("a checked feature has no reason or failure")
         if self.status == "not_checked" and (self.reason is None or self.failure):
             raise ValueError("a feature not checked needs a reason and no failure")
+        if self.reason == "other" and not (self.note or "").strip():
+            raise ValueError("reason other needs a note saying what was seen")
         if self.status == "test_failed" and (self.failure is None or not self.smoke_tests):
             raise ValueError("a failed feature test needs its failure and the smoke tests that failed")
         return self
