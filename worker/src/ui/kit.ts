@@ -7,6 +7,7 @@
 import type { Arch, Entry, GuiEvidence, OS } from '../catalog.ts';
 import { operatedText } from '../evidence.ts';
 import type { FeaturesOut } from '../features.ts';
+import { L } from '../i18n.ts';
 import { day, formOf, KIND, osName, system } from './facts.ts';
 import { esc, listOf } from './html.ts';
 import { icon, osMark, type IconName } from './icons.ts';
@@ -71,7 +72,7 @@ export function badge(tone: BadgeTone, text: string, opts: { icon?: IconName; po
   const tip = short ? ` data-tip="${esc(opts.title ? `${text}: ${opts.title}` : text)}"` : '';
   const inner = `${opts.icon ? icon(opts.icon) : ''}${short ? `${opts.marks}<span class="sr">${esc(text)}</span>` : esc(text)}`;
   if (opts.pop) {
-    return `<button type="button" class="${cls}" popovertarget="${opts.pop}" aria-label="${esc(text)}: what this means"${tip}>${inner}</button>`;
+    return `<button type="button" class="${cls}" popovertarget="${opts.pop}" aria-label="${L(`${esc(text)}: what this means`, `${esc(text)}：這是什麼意思`)}"${tip}>${inner}</button>`;
   }
   return `<span class="${cls}"${tip || (opts.title ? ` title="${esc(opts.title)}"` : '')}>${inner}</span>`;
 }
@@ -90,7 +91,7 @@ export function kindTag(entry: Pick<Entry, 'kind' | 'category'>): string {
   const named = kind && kind.toLowerCase() !== form.toLowerCase();
   return (
     `<span class="kind"${named ? ` data-tip="${esc(kind)}"` : ''}>${icon(web ? 'globe' : kindIcon(entry.category))}` +
-    `${named ? `<span class="sr">${esc(kind)}, </span>` : ''}${esc(form.charAt(0).toUpperCase() + form.slice(1))}</span>`
+    `${named ? `<span class="sr">${esc(kind)}${L(', ', '，')}</span>` : ''}${esc(form.charAt(0).toUpperCase() + form.slice(1))}</span>`
   );
 }
 
@@ -141,24 +142,37 @@ export function runFacts(run: RunFacts, opts: { offline?: boolean | null; mine?:
           opts.mine === true ? 'yes' : opts.mine === false ? 'no' : '',
           osMark(run.os),
           esc(system(run.os, run.arch)),
-          opts.mine === true ? 'Verified on your OS' : opts.mine === false ? 'Not your OS' : undefined,
+          opts.mine === true
+            ? L('Verified on your OS', '已在你的作業系統上驗證')
+            : opts.mine === false
+              ? L('Not your OS', '不是你的作業系統')
+              : undefined,
         ),
     run.method === 'human'
-      ? item('', icon('hand'), 'Installed by hand')
-      : item('', icon('refresh-cw'), run.replayed ? 'Replayed from scratch' : 'Sandbox install'),
-    run.gpu ? item('', icon('cpu'), `GPU: ${esc(run.gpu)}`, 'The sandbox had this GPU') : '',
+      ? item('', icon('hand'), L('Installed by hand', '手動安裝'))
+      : item('', icon('refresh-cw'), run.replayed ? L('Replayed from scratch', '從頭重跑') : L('Sandbox install', '沙盒安裝')),
+    run.gpu ? item('', icon('cpu'), L(`GPU: ${esc(run.gpu)}`, `GPU：${esc(run.gpu)}`), L('The sandbox had this GPU', '沙盒配有這張 GPU')) : '',
     run.microphone
-      ? item('', icon('mic'), 'Simulated microphone', 'A simulated microphone played words pickfit spoke for each check')
+      ? item(
+          '',
+          icon('mic'),
+          L('Simulated microphone', '模擬麥克風'),
+          L('A simulated microphone played words pickfit spoke for each check', '每項檢查時，模擬麥克風會播放 pickfit 念出的字詞'),
+        )
       : '',
     opts.offline === true
-      ? item('', icon('wifi-off'), 'Works offline', 'Its checks passed again with the network off')
+      ? item('', icon('wifi-off'), L('Works offline', '可離線使用'), L('Its checks passed again with the network off', '關閉網路後，檢查再次通過'))
       : opts.offline === false
-        ? item('no', icon('wifi'), 'Needed the network', 'Its checks failed with the network off')
+        ? item('no', icon('wifi'), L('Needed the network', '需要網路'), L('Its checks failed with the network off', '關閉網路後，檢查失敗'))
         : opts.askedOffline
-          ? item('', icon('wifi'), 'Offline not checked')
+          ? item('', icon('wifi'), L('Offline not checked', '未檢查離線使用'))
           : '',
-    run.checked_at ? item('', icon('calendar'), `<span class="sr">Checked on </span>${esc(day(run.checked_at))}`) : '',
-    run.tool_version ? item('', icon('package'), `<span class="sr">Version </span>${esc(run.tool_version)}`) : '',
+    run.checked_at
+      ? item('', icon('calendar'), `${L('<span class="sr">Checked on </span>', '<span class="sr">檢查於 </span>')}${esc(day(run.checked_at))}`)
+      : '',
+    run.tool_version
+      ? item('', icon('package'), `${L('<span class="sr">Version </span>', '<span class="sr">版本 </span>')}${esc(run.tool_version)}`)
+      : '',
   ];
   return `<ul class="run-facts">${items.join('')}</ul>`;
 }
@@ -169,24 +183,39 @@ export function marksLegend(): string {
   const lvl = (level: string, evidence = {}) => `<span class="level-i">${icon(levelIcon(level, evidence))}</span>`;
   return (
     row(
-      `<span class="mark-sample">${osList(['macos', 'linux', 'windows'], { tone: 'pass' })}</span>Where it ran`,
-      'Green OS marks: pickfit ran the install steps there. Grey ones: the README says it runs there, and pickfit has not tried.',
+      `<span class="mark-sample">${osList(['macos', 'linux', 'windows'], { tone: 'pass' })}</span>${L('Where it ran', '在哪裡執行')}`,
+      L(
+        'Green OS marks: pickfit ran the install steps there. Grey ones: the README says it runs there, and pickfit has not tried.',
+        '綠色的作業系統標記：pickfit 在那裡執行過安裝步驟。灰色的：README 說能在那裡執行，但 pickfit 還沒試過。',
+      ),
     ) +
     row(
-      `<span class="mark-sample">${lvl('install')}${lvl('function')}${lvl('service')}${lvl('inference')}</span>How far the run got`,
-      'Installs and starts, its main function works, its service answers, it produces model output. A window means a desktop app opened; a plug, an MCP client used it.',
+      `<span class="mark-sample">${lvl('install')}${lvl('function')}${lvl('service')}${lvl('inference')}</span>${L('How far the run got', '測試進行到哪一步')}`,
+      L(
+        'Installs and starts, its main function works, its service answers, it produces model output. A window means a desktop app opened; a plug, an MCP client used it.',
+        '能安裝並啟動、主要功能可用、服務有回應、能產生模型輸出。視窗代表桌面應用程式已開啟；插頭代表 MCP 用戶端用過它。',
+      ),
     ) +
     row(
-      `<span class="mark-sample rf">${icon('refresh-cw')}${icon('hand')}${icon('wifi-off')}${icon('calendar')}</span>About the run`,
-      'Replayed from scratch in a new sandbox, or installed by hand; passed again with the network off; the day it ran.',
+      `<span class="mark-sample rf">${icon('refresh-cw')}${icon('hand')}${icon('wifi-off')}${icon('calendar')}</span>${L('About the run', '關於這次測試')}`,
+      L(
+        'Replayed from scratch in a new sandbox, or installed by hand; passed again with the network off; the day it ran.',
+        '在新的沙盒中從頭重跑，或手動安裝；關閉網路後再次通過；執行的日期。',
+      ),
     ) +
     row(
-      `<span class="mark-sample rf">${icon('terminal')}${icon('cpu')}${icon('plug')}</span>Kind of tool`,
-      'Developer CLI, local AI tool, MCP server. The words after the mark say its form: command-line tool, desktop app, local server.',
+      `<span class="mark-sample rf">${icon('terminal')}${icon('cpu')}${icon('plug')}</span>${L('Kind of tool', '工具類型')}`,
+      L(
+        'Developer CLI, local AI tool, MCP server. The words after the mark say its form: command-line tool, desktop app, local server.',
+        '開發者 CLI、本機 AI 工具、MCP 伺服器。標記後的文字說明它的形式：命令列工具、桌面應用程式、本機伺服器。',
+      ),
     ) +
     row(
-      `<span class="mark-sample rf">${icon('file-text')}</span>Source of a reason`,
-      'Every reason a pick fits rests on one profile field. Open the reason to see the field and the value it relies on.',
+      `<span class="mark-sample rf">${icon('file-text')}</span>${L('Source of a reason', '理由的來源')}`,
+      L(
+        'Every reason a pick fits rests on one profile field. Open the reason to see the field and the value it relies on.',
+        '每個推薦理由都依據一個資料欄位。展開理由，就能看到它依據的欄位和值。',
+      ),
     )
   );
 }
@@ -196,7 +225,7 @@ export function popover(id: string, title: string, body: string): string {
   return (
     `<div popover id="${id}" class="pop" role="dialog" aria-label="${esc(title)}">` +
     `<p class="pop-title">${esc(title)}</p>${body}` +
-    `<button type="button" class="pop-close" popovertarget="${id}" popovertargetaction="hide" aria-label="Close">${icon('x')}</button></div>`
+    `<button type="button" class="pop-close" popovertarget="${id}" popovertargetaction="hide" aria-label="${L('Close', '關閉')}">${icon('x')}</button></div>`
   );
 }
 
@@ -206,7 +235,7 @@ export function helpButton(id: string, label: string): string {
 
 /** A command with a copy button (the button shows once the script runs). */
 export function command(text: string): string {
-  return `<div class="cmd"><pre translate="no"><code>${esc(text)}</code></pre><button type="button" class="copy" aria-label="Copy command">${icon('copy')}<span>Copy</span></button></div>`;
+  return `<div class="cmd"><pre translate="no"><code>${esc(text)}</code></pre><button type="button" class="copy" aria-label="${L('Copy command', '複製指令')}">${icon('copy')}<span>${L('Copy', '複製')}</span></button></div>`;
 }
 
 /** The stitch: drawn only on verified evidence. */
@@ -227,19 +256,19 @@ export function notice(kind: 'busy' | 'error' | 'info', title: string, text: str
  * Drawn in SVG attributes (no inline styles under the CSP); the fill grows in on reveal.
  */
 export function tape(label: string, value: number | null, opts: { pop?: string; note?: string; tone?: 'tape' | 'quiet' } = {}): string {
-  const head = `<span class="meter-label">${esc(label)}${opts.pop ? helpButton(opts.pop, `About ${label.toLowerCase()}`) : ''}</span>`;
+  const head = `<span class="meter-label">${esc(label)}${opts.pop ? helpButton(opts.pop, L(`About ${label.toLowerCase()}`, `關於${label}`)) : ''}</span>`;
   const ticks: string[] = [];
   for (let x = 10; x < 100; x += 10) ticks.push(`M${x * 2} 0V${x % 50 === 0 ? 9 : 6}`);
   if (value === null) {
     return (
       `<div class="meter meter-none">${head}<svg class="tape" viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true">` +
       `<rect class="tape-track" x="0" y="0" width="200" height="14" rx="3"/><path class="tape-ticks" d="${ticks.join('')}"/></svg>` +
-      `<span class="meter-read">not scored</span></div>`
+      `<span class="meter-read">${L('not scored', '未評分')}</span></div>`
     );
   }
   const v = Math.max(0, Math.min(100, Math.round(value)));
   return (
-    `<div class="meter meter-${opts.tone ?? 'tape'}" role="img" aria-label="${esc(label)}: ${v} out of 100${opts.note ? `, ${esc(opts.note)}` : ''}">${head}` +
+    `<div class="meter meter-${opts.tone ?? 'tape'}" role="img" aria-label="${L(`${esc(label)}: ${v} out of 100`, `${esc(label)}：${v} 分（滿分 100）`)}${opts.note ? `${L(', ', '，')}${esc(opts.note)}` : ''}">${head}` +
     `<svg class="tape" viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true"><rect class="tape-track" x="0" y="0" width="200" height="14" rx="3"/>` +
     `<rect class="tape-fill" x="0" y="0" width="${v * 2}" height="14" rx="3"/><path class="tape-ticks" d="${ticks.join('')}"/>` +
     `<path class="tape-mark" d="M${v * 2} -2V16"/></svg>` +
@@ -253,9 +282,9 @@ export function coverage(features: FeaturesOut, opts: { pop?: string } = {}): st
   const failed = features.not_checked.filter((f) => f.reason === 'test_failed').length;
   const open = features.not_checked.length - failed;
   const total = checked + failed + open;
-  const label = `<span class="meter-label">Features checked${opts.pop ? helpButton(opts.pop, 'About feature checks') : ''}</span>`;
+  const label = `<span class="meter-label">${L('Features checked', '已檢查的功能')}${opts.pop ? helpButton(opts.pop, L('About feature checks', '關於功能檢查')) : ''}</span>`;
   if (!features.recorded || total === 0) {
-    return `<div class="meter meter-none">${label}<span class="meter-read meter-wide">${total ? 'not checked one by one' : 'no feature list'}</span></div>`;
+    return `<div class="meter meter-none">${label}<span class="meter-read meter-wide">${total ? L('not checked one by one', '未逐項檢查') : L('no feature list', '沒有功能清單')}</span></div>`;
   }
   const w = (n: number) => (n / total) * 200;
   let x = 0;
@@ -265,9 +294,14 @@ export function coverage(features: FeaturesOut, opts: { pop?: string } = {}): st
     x += w(n);
     return out;
   };
-  const words = [`${checked} of ${total} checked`, failed ? `${failed} failed` : ''].filter(Boolean).join(', ');
+  const words = [
+    L(`${checked} of ${total} checked`, `已檢查 ${checked}/${total} 項`),
+    failed ? L(`${failed} failed`, `${failed} 項失敗`) : '',
+  ]
+    .filter(Boolean)
+    .join(L(', ', '，'));
   return (
-    `<div class="meter meter-cov" role="img" aria-label="Features: ${esc(words)}">${label}` +
+    `<div class="meter meter-cov" role="img" aria-label="${L(`Features: ${esc(words)}`, `功能：${esc(words)}`)}">${label}` +
     `<svg class="tape" viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true">${seg(checked, 'cov-ok')}${seg(failed, 'cov-fail')}${seg(open, 'cov-open')}</svg>` +
     `<span class="meter-read meter-wide" aria-hidden="true">${esc(words)}</span></div>`
   );
@@ -275,14 +309,14 @@ export function coverage(features: FeaturesOut, opts: { pop?: string } = {}): st
 
 /** One at-a-glance cell: an icon and its value, which say enough; the label is for screen readers and the hover title. */
 export function glance(ico: IconName | { svg: string }, label: string, value: string, tone: 'pass' | 'caution' | 'fail' | 'quiet' | 'plain' = 'plain'): string {
-  return `<div class="gl gl-${tone}" title="${esc(label)}">${typeof ico === 'string' ? icon(ico) : ico.svg}<span class="gl-label sr">${esc(label)}: </span><span class="gl-value">${value}</span></div>`;
+  return `<div class="gl gl-${tone}" title="${esc(label)}">${typeof ico === 'string' ? icon(ico) : ico.svg}<span class="gl-label sr">${esc(label)}${L(': ', '：')}</span><span class="gl-value">${value}</span></div>`;
 }
 
 /** The checkbox that puts a tool in the compare tray (the tray is script; without it, the link to /compare works). */
 export function compareToggle(slug: string, name: string): string {
   return (
     `<label class="chip chip-compare js-only"><input type="checkbox" data-compare="${esc(slug)}" data-name="${esc(name)}">` +
-    `${icon('scale')}<span>Compare</span></label>`
+    `${icon('scale')}<span>${L('Compare', '比較')}</span></label>`
   );
 }
 
@@ -292,10 +326,10 @@ export function age(iso: string | null, now: Date): string | null {
   const then = new Date(iso);
   if (Number.isNaN(then.getTime())) return null;
   const days = Math.max(0, Math.floor((now.getTime() - then.getTime()) / 86_400_000));
-  if (days === 0) return 'today';
-  if (days === 1) return 'yesterday';
-  if (days < 60) return `${days} days ago`;
+  if (days === 0) return L('today', '今天');
+  if (days === 1) return L('yesterday', '昨天');
+  if (days < 60) return L(`${days} days ago`, `${days} 天前`);
   const months = Math.floor(days / 30.4);
-  if (months < 24) return `${months} months ago`;
-  return `${Math.floor(days / 365)} years ago`;
+  if (months < 24) return L(`${months} months ago`, `${months} 個月前`);
+  return L(`${Math.floor(days / 365)} years ago`, `${Math.floor(days / 365)} 年前`);
 }

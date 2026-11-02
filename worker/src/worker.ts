@@ -3,6 +3,7 @@ import { createMcpHandler, localhostAllowedHostnames, validateHostHeader, valida
 import { loadCatalog } from './catalog.ts';
 import { settings, type Env } from './env.ts';
 import { reporterFrom } from './events.ts';
+import type { Translations } from './i18n.ts';
 import { buildServer } from './server.ts';
 import { serveVideo } from './video.ts';
 import { makeWeb } from './web.ts';
@@ -23,6 +24,8 @@ export interface WorkerOptions {
   /** Test hook: replaces global fetch for the Meta call. */
   fetch?: typeof fetch;
   now?: () => Date;
+  /** The web page's zh-TW sentences per tool (generated/zh-TW.json). */
+  translations?: Translations;
 }
 
 export function makeWorker(indexData: unknown, options: WorkerOptions = {}) {

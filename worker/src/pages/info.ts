@@ -1,5 +1,6 @@
 /** The reading pages: how pickfit works (and what its labels mean), connecting an agent, and not found. */
 import type { Catalog } from '../catalog.ts';
+import { L } from '../i18n.ts';
 import { catalogStats, rulesLabel } from '../page.ts';
 import { LEVEL_LABEL } from '../ui/facts.ts';
 import { esc } from '../ui/html.ts';
@@ -14,70 +15,78 @@ const head = (title: string, lede: string, who: Parameters<typeof fitz>[0]) =>
 export function renderHow(catalog: Catalog, nonce: string): string {
   const s = catalogStats(catalog);
   const levels: [string, string][] = [
-    ['install', 'The command runs and prints its version or help. A GUI app opened its own window.'],
-    ['function', 'The run gave it real input and checked the output: a file converted, a query answered.'],
-    ['service', 'A local server came up and answered. For an MCP server, a client called one of its tools.'],
-    ['inference', 'A local AI tool loaded a model and generated text, speech or an image.'],
+    ['install', L('The command runs and prints its version or help. A GUI app opened its own window.', '指令能執行，並印出版本或說明。GUI 應用程式能開啟自己的視窗。')],
+    ['function', L('The run gave it real input and checked the output: a file converted, a query answered.', '測試給它真實的輸入並檢查輸出：檔案轉換成功、查詢得到回答。')],
+    ['service', L('A local server came up and answered. For an MCP server, a client called one of its tools.', '本機伺服器成功啟動並有回應。若是 MCP 伺服器，則有客戶端成功呼叫它的某個工具。')],
+    ['inference', L('A local AI tool loaded a model and generated text, speech or an image.', '本機 AI 工具載入模型，並生成了文字、語音或圖片。')],
   ];
   const main =
-    head('How Fitz checks a tool', 'Every suggestion rests on a run pickfit did itself, and every reason points at the field it came from. Here is the whole method, and what each label on a ticket means.', 'testing') +
+    head(
+      L('How Fitz checks a tool', 'Fitz 如何檢查一款工具'),
+      L('Every suggestion rests on a run pickfit did itself, and every reason points at the field it came from. Here is the whole method, and what each label on a ticket means.', '每個推薦都建立在 pickfit 親自執行的測試上，每個理由都指向它出自的欄位。以下是完整的方法，以及試穿單上每個標籤的意思。'),
+      'testing',
+    ) +
     `<div class="wrap"><article class="prose">` +
-    `<h2>Four steps, one tool at a time</h2>` +
-    `<ol><li><b>Find.</b> Agents scan new GitHub projects and Show HN posts for software that may be good and little known. So far pickfit has read ${s.listed} READMEs.</li>` +
-    `<li><b>Read.</b> Meta’s Muse Spark reads each README and writes a profile: what it does, where it runs, what it costs, whether it works offline. Every field quotes its source; a field with no source is left empty, not guessed.</li>` +
-    `<li><b>Try it on.</b> A verification agent installs the tool in a fresh sandbox (Linux in gVisor; some by hand on a real Mac), fixes what the README got wrong, checks the main features one by one, then replays the working steps in a brand-new sandbox. ${s.replayed} tools passed a replay.</li>` +
-    `<li><b>Match.</b> Your sentence and every verified profile that meets your conditions go to Muse Spark in one call. Each reason it gives must name a profile field; code checks the value and drops any reason that doesn’t hold. If the model is unavailable, pickfit ranks by rules and says so.</li></ol>` +
-    `<h2 id="levels">What “verified” proves</h2><p>A ticket says how far the run got. Higher is stronger evidence:</p>` +
+    `<h2>${L('Four steps, one tool at a time', '四個步驟，一次一款工具')}</h2>` +
+    `<ol><li>${L(`<b>Find.</b> Agents scan new GitHub projects and Show HN posts for software that may be good and little known. So far pickfit has read ${s.listed} READMEs.`, `<b>搜尋。</b>Agent 掃描 GitHub 上的新專案和 Show HN 貼文，尋找可能好用卻鮮為人知的軟體。到目前為止，pickfit 已讀過 ${s.listed} 份 README。`)}</li>` +
+    `<li>${L('<b>Read.</b> Meta’s Muse Spark reads each README and writes a profile: what it does, where it runs, what it costs, whether it works offline. Every field quotes its source; a field with no source is left empty, not guessed.', '<b>閱讀。</b>Meta 的 Muse Spark 閱讀每份 README 並寫成檔案：它做什麼、在哪裡執行、費用多少、能否離線使用。每個欄位都引用出處；沒有出處的欄位就留空，不靠猜測。')}</li>` +
+    `<li>${L(`<b>Try it on.</b> A verification agent installs the tool in a fresh sandbox (Linux in gVisor; some by hand on a real Mac), fixes what the README got wrong, checks the main features one by one, then replays the working steps in a brand-new sandbox. ${s.replayed} tools passed a replay.`, `<b>試穿。</b>驗證 agent 在全新的沙盒中安裝工具（在 gVisor 中的 Linux；部分則在真正的 Mac 上手動進行），修正 README 寫錯的地方，逐一檢查主要功能，再於另一個全新沙盒中重播可行的步驟。已有 ${s.replayed} 款工具通過重播。`)}</li>` +
+    `<li>${L('<b>Match.</b> Your sentence and every verified profile that meets your conditions go to Muse Spark in one call. Each reason it gives must name a profile field; code checks the value and drops any reason that doesn’t hold. If the model is unavailable, pickfit ranks by rules and says so.', '<b>配對。</b>你的描述和所有符合條件的已驗證檔案，會在一次呼叫中送給 Muse Spark。它給出的每個理由都必須指名一個檔案欄位；程式會核對數值，並刪除站不住腳的理由。如果模型無法使用，pickfit 會改用規則排序，並明白告知。')}</li></ol>` +
+    `<h2 id="levels">${L('What “verified” proves', '「已驗證」證明了什麼')}</h2><p>${L('A ticket says how far the run got. Higher is stronger evidence:', '試穿單會標明測試進行到哪一步。層級越高，證據越有力：')}</p>` +
     `<ul class="levels">${levels.map(([k, t]) => `<li><b><span class="level-i">${icon(levelIcon(k))}</span>${esc(LEVEL_LABEL[k])}</b>${esc(t)}</li>`).join('')}</ul>` +
-    `<p>A run says where it happened (OS and CPU) and when. Its OS mark is green when the steps ran on the system you chose; otherwise the ticket says in words where they did run.</p>` +
-    `<h3 id="web">Web apps: no install, just open it</h3><p>A web app runs on its makers’ site, so there is nothing to install. pickfit opens it once in a sandboxed browser: it counts as installed when the page loads to its own main screen (not an error page, a parked domain or a sign-in wall), and as working when Muse Spark uses it for what it claims and pickfit checks the result itself. It never posts, mails, signs up or orders on a real site. The browser’s own records say whether an account was needed, whether ads showed, how many other sites the page contacted, and whether what pickfit typed in left the device. Only an installable web app (a PWA) that pickfit reloaded with the network off counts as working offline${s.web ? `. ${s.web} web ${s.web === 1 ? 'app' : 'apps'} passed so far` : ''}.</p>` +
-    `<p>When a web app and a tool to install fit your need about equally, the web app comes first. A job that runs for long or in the background, ties into the system or works through many local files leans to the tool you install. If you ask for offline use or for your data to stay on your device, a web app qualifies only when its run showed exactly that.</p>` +
-    `<h2 id="labels">What the labels mean</h2>` +
-    `<h3>Stitching</h3><p>The rufous running stitch on a ticket separates the claim from the run record. pickfit draws it only under evidence from its own run. A tool pickfit has not run, such as a well-known option Fitz mentions from general knowledge, never gets stitches, a badge, steps or a link.</p>` +
-    `<h3 id="marks">Marks on a ticket</h3><p>Facts every ticket repeats are shown as marks, each named on hover and for screen readers:</p><dl class="legend">${marksLegend()}</dl>` +
-    `<h3 id="scores">Quality and popularity</h3><div class="levels">${tape('Quality', 84)}${tape('Popularity', 22, { tone: 'quiet' })}</div>` +
-    `<p>Two scores out of 100, computed apart. <b>Quality</b> is a weighted mean: the sandbox run (how far it got, how many install actions, how many README fixes it needed) 40%, how complete the install docs are 25% (Muse Spark grades them, quoting the README), maintenance 10%, issue responsiveness 10%, engineering hygiene 5%; reports from real use join as they accumulate. <b>Popularity</b> compares stars, forks, downloads and Hacker News points with other tools of the same kind. The example tapes above are illustrative.</p>` +
-    `<p>A web app has no README to install from, so its quality is the browser run 50% (it loaded, or it worked when used) and what the browser saw 40% (no account needed, nothing you type sent off your device, no ads, works offline), with real use joining the same way. Its popularity is its GitHub stars, or the points of its Show HN post when it has no public code.</p>` +
-    `<p>${badge('gem', 'Hidden gem', { icon: 'gem' })} marks a verified tool with quality 80 or more and popularity 45 or less: ${s.gems} tools today. Fitz ranks by fit to your need, not by either score.</p>` +
-    `<h3>Features checked</h3><p>The run tries each main feature the README advertises. Some need an account, a GPU, a display or hardware the sandbox doesn’t have; those stay unchecked, and the ticket gives the reason. A feature whose test failed with the tool’s own error is marked as failed.</p>` +
-    `<h3>Match labels</h3><p>When the model is paused, pickfit ranks by rules and labels each pick ${badge('pass', 'Good match')} ${badge('caution', 'Partial match')} or ${badge('caution', 'Weak match')} by which of your words its profile mentions. With the model, Muse Spark writes the fit sentence and code checks each of its reasons.</p>` +
-    `<h2 id="rules">Fitz’s rules</h2><div class="care"><div><p>pickfit is neutral on purpose. It belongs to no agent maker and no software vendor, takes no money for placement, and doesn’t make any of the software it suggests. That is what lets it say a little-known tool fits better, or that what you already have is enough.</p>` +
-    `<p>Privacy: no account, no IP address stored. Your sentence goes to Meta’s Muse Spark with storage turned off; pickfit keeps only the conditions it parsed, such as the task and the OS. Compare picks stay in your own browser.</p></div>${rulesLabel()}</div>` +
-    `<div class="tip">${fitz('peek', 52)}<h3>Found a tool that should be here?</h3><p>Authors and users can submit a GitHub project, or the address of a web app, through the MCP <code>submit_software</code> tool. It gets the same review: read, tried in a sandbox, scored. Submitting never earns a better rank.</p><p><a class="more" href="/agents">Connect an agent${icon('arrow-right')}</a></p></div>` +
+    `<p>${L('A run says where it happened (OS and CPU) and when. Its OS mark is green when the steps ran on the system you chose; otherwise the ticket says in words where they did run.', '每次測試都會標明在哪裡（作業系統和 CPU）以及何時執行。步驟若在你選擇的系統上執行過，作業系統標記就會是綠色；否則試穿單會用文字說明實際在哪裡執行。')}</p>` +
+    `<h3 id="web">${L('Web apps: no install, just open it', '網頁應用：免安裝，打開就能用')}</h3><p>${L('A web app runs on its makers’ site, so there is nothing to install. pickfit opens it once in a sandboxed browser: it counts as installed when the page loads to its own main screen (not an error page, a parked domain or a sign-in wall), and as working when Muse Spark uses it for what it claims and pickfit checks the result itself. It never posts, mails, signs up or orders on a real site. The browser’s own records say whether an account was needed, whether ads showed, how many other sites the page contacted, and whether what pickfit typed in left the device. Only an installable web app (a PWA) that pickfit reloaded with the network off counts as working offline', '網頁應用在開發者的網站上執行，所以沒有東西要安裝。pickfit 會在沙盒瀏覽器中開啟一次：頁面能載入到它自己的主畫面（不是錯誤頁、停放網域或登入牆）就算安裝成功；Muse Spark 拿它來做它宣稱能做的事，且 pickfit 親自檢查結果，就算能用。它絕不會在真實網站上發文、寄信、註冊或下單。瀏覽器本身的紀錄會說明是否需要帳號、是否出現廣告、頁面連到多少其他網站，以及 pickfit 輸入的內容是否離開了裝置。只有 pickfit 在斷網狀態下重新載入過的可安裝網頁應用（PWA），才算能離線使用')}${s.web ? L(`. ${s.web} web ${s.web === 1 ? 'app' : 'apps'} passed so far`, `。目前已有 ${s.web} 款網頁應用通過`) : ''}${L('.', '。')}</p>` +
+    `<p>${L('When a web app and a tool to install fit your need about equally, the web app comes first. A job that runs for long or in the background, ties into the system or works through many local files leans to the tool you install. If you ask for offline use or for your data to stay on your device, a web app qualifies only when its run showed exactly that.', '當網頁應用和需要安裝的工具同樣符合你的需求時，網頁應用優先。需要長時間或在背景執行、與系統整合，或要處理大量本機檔案的工作，則偏向需要安裝的工具。如果你要求離線使用或資料留在自己的裝置上，網頁應用只有在測試確實證明這點時才符合資格。')}</p>` +
+    `<h2 id="labels">${L('What the labels mean', '標籤的意思')}</h2>` +
+    `<h3>${L('Stitching', '縫線')}</h3><p>${L('The rufous running stitch on a ticket separates the claim from the run record. pickfit draws it only under evidence from its own run. A tool pickfit has not run, such as a well-known option Fitz mentions from general knowledge, never gets stitches, a badge, steps or a link.', '試穿單上的紅褐色平針縫線，把宣稱和測試紀錄分隔開來。pickfit 只在自己測試得到的證據下方畫上縫線。pickfit 沒有測試過的工具，例如 Fitz 憑一般常識提到的知名選項，永遠不會有縫線、徽章、步驟或連結。')}</p>` +
+    `<h3 id="marks">${L('Marks on a ticket', '試穿單上的標記')}</h3><p>${L('Facts every ticket repeats are shown as marks, each named on hover and for screen readers:', '每張試穿單都會重複出現的資訊以標記呈現，滑鼠移過去或使用螢幕閱讀器時都會顯示名稱：')}</p><dl class="legend">${marksLegend()}</dl>` +
+    `<h3 id="scores">${L('Quality and popularity', '品質與知名度')}</h3><div class="levels">${tape(L('Quality', '品質'), 84)}${tape(L('Popularity', '知名度'), 22, { tone: 'quiet' })}</div>` +
+    `<p>${L('Two scores out of 100, computed apart. <b>Quality</b> is a weighted mean: the sandbox run (how far it got, how many install actions, how many README fixes it needed) 40%, how complete the install docs are 25% (Muse Spark grades them, quoting the README), maintenance 10%, issue responsiveness 10%, engineering hygiene 5%; reports from real use join as they accumulate. <b>Popularity</b> compares stars, forks, downloads and Hacker News points with other tools of the same kind. The example tapes above are illustrative.', '兩個滿分 100 的分數，分開計算。<b>品質</b>是加權平均：沙盒測試（進行到哪一步、需要多少安裝動作、需要幾處 README 修正）占 40%，安裝文件的完整度占 25%（由 Muse Spark 引用 README 評分），維護狀況占 10%，issue 回應速度占 10%，工程品質占 5%；實際使用的回報累積後也會納入。<b>知名度</b>則把星數、fork 數、下載數和 Hacker News 分數與同類工具比較。上方的範例量尺僅供示意。')}</p>` +
+    `<p>${L('A web app has no README to install from, so its quality is the browser run 50% (it loaded, or it worked when used) and what the browser saw 40% (no account needed, nothing you type sent off your device, no ads, works offline), with real use joining the same way. Its popularity is its GitHub stars, or the points of its Show HN post when it has no public code.', '網頁應用沒有用來安裝的 README，所以它的品質由瀏覽器測試占 50%（能載入，或實際使用時能用），以及瀏覽器觀察到的情況占 40%（不需帳號、輸入內容不會離開裝置、沒有廣告、能離線使用），實際使用的回報也以同樣方式納入。它的知名度是 GitHub 星數；沒有公開原始碼時，則是它 Show HN 貼文的分數。')}</p>` +
+    `<p>${badge('gem', L('Hidden gem', '寶藏'), { icon: 'gem' })}${L(` marks a verified tool with quality 80 or more and popularity 45 or less: ${s.gems} tools today. Fitz ranks by fit to your need, not by either score.`, ` 標示品質 80 以上、知名度 45 以下的已驗證工具：目前共 ${s.gems} 款。Fitz 依是否符合你的需求排序，不看任何一項分數。`)}</p>` +
+    `<h3>${L('Features checked', '已檢查的功能')}</h3><p>${L('The run tries each main feature the README advertises. Some need an account, a GPU, a display or hardware the sandbox doesn’t have; those stay unchecked, and the ticket gives the reason. A feature whose test failed with the tool’s own error is marked as failed.', '測試會試用 README 宣傳的每項主要功能。有些功能需要帳號、GPU、螢幕或沙盒沒有的硬體；這些就保持未檢查，試穿單會說明原因。測試時出現工具本身錯誤的功能，會標示為失敗。')}</p>` +
+    `<h3>${L('Match labels', '配對標籤')}</h3><p>${L('When the model is paused, pickfit ranks by rules and labels each pick ', '模型暫停時，pickfit 會依規則排序，並依檔案提到你的哪些字詞，把每個選項標為 ')}${badge('pass', L('Good match', '高度符合'))} ${badge('caution', L('Partial match', '部分符合'))}${L(' or ', ' 或 ')}${badge('caution', L('Weak match', '勉強符合'))}${L(' by which of your words its profile mentions. With the model, Muse Spark writes the fit sentence and code checks each of its reasons.', '。使用模型時，由 Muse Spark 寫出符合原因，再由程式核對每個理由。')}</p>` +
+    `<h2 id="rules">${L('Fitz’s rules', 'Fitz 的規則')}</h2><div class="care"><div><p>${L('pickfit is neutral on purpose. It belongs to no agent maker and no software vendor, takes no money for placement, and doesn’t make any of the software it suggests. That is what lets it say a little-known tool fits better, or that what you already have is enough.', 'pickfit 刻意保持中立。它不屬於任何 agent 開發商或軟體廠商，不收取排名費用，也不開發它推薦的任何軟體。正因如此，它才能直說某款冷門工具更適合你，或是你現有的已經夠用。')}</p>` +
+    `<p>${L('Privacy: no account, no IP address stored. Your sentence goes to Meta’s Muse Spark with storage turned off; pickfit keeps only the conditions it parsed, such as the task and the OS. Compare picks stay in your own browser.', '隱私：不需帳號，不儲存 IP 位址。你的描述會在關閉儲存的情況下送到 Meta 的 Muse Spark；pickfit 只保留解析出的條件，例如任務和作業系統。比較清單只留在你自己的瀏覽器中。')}</p></div>${rulesLabel()}</div>` +
+    `<div class="tip">${fitz('peek', 52)}<h3>${L('Found a tool that should be here?', '發現應該收錄的工具？')}</h3><p>${L('Authors and users can submit a GitHub project, or the address of a web app, through the MCP <code>submit_software</code> tool. It gets the same review: read, tried in a sandbox, scored. Submitting never earns a better rank.', '作者和使用者都可以透過 MCP 的 <code>submit_software</code> 工具提交 GitHub 專案或網頁應用的網址。它會經過同樣的審查：閱讀、在沙盒中試穿、評分。提交不會讓排名更好。')}</p><p><a class="more" href="/agents">${L('Connect an agent', '連接 agent')}${icon('arrow-right')}</a></p></div>` +
     `</article></div>`;
-  return renderShell({ nonce, title: 'How pickfit works · pickfit', description: 'How pickfit finds, reads, installs, verifies and matches software, and what each label means.', active: 'how', tray: false, main });
+  return renderShell({ nonce, title: L('How pickfit works · pickfit', 'pickfit 的運作方式 · pickfit'), description: L('How pickfit finds, reads, installs, verifies and matches software, and what each label means.', 'pickfit 如何搜尋、閱讀、安裝、驗證與配對軟體，以及每個標籤的意思。'), active: 'how', tray: false, main });
 }
 
 export function renderAgents(origin: string, nonce: string): string {
   const mcp = `${origin}/mcp`;
   const tools: [string, string][] = [
-    ['find_software', 'Two or three verified tools for a need and conditions (OS, CPU, free only, offline), with reasons, tradeoffs, the best free option and, when it fits, “built-in is enough”.'],
-    ['find_alternatives', 'Replacements for a tool you use now, given what you don’t like about it and what you must keep.'],
-    ['get_install_guide', 'The steps that worked in pickfit’s run, for your OS, with what you do by hand and how to check the install.'],
-    ['report_outcome', 'Did it install, did it work, are you still using it. Failures queue the tool for a fresh run.'],
-    ['submit_software', 'Send a GitHub project for review. It goes through the same read, install and replay as everything else.'],
+    ['find_software', L('Two or three verified tools for a need and conditions (OS, CPU, free only, offline), with reasons, tradeoffs, the best free option and, when it fits, “built-in is enough”.', '依需求和條件（作業系統、CPU、僅限免費、離線）提供兩到三款已驗證工具，附上理由、取捨、最佳免費選項，必要時也會說「內建的就夠用」。')],
+    ['find_alternatives', L('Replacements for a tool you use now, given what you don’t like about it and what you must keep.', '根據你對現用工具不滿意的地方和必須保留的功能，找出替代品。')],
+    ['get_install_guide', L('The steps that worked in pickfit’s run, for your OS, with what you do by hand and how to check the install.', '針對你的作業系統，提供在 pickfit 測試中可行的步驟，包含需要手動操作的部分，以及如何確認安裝成功。')],
+    ['report_outcome', L('Did it install, did it work, are you still using it. Failures queue the tool for a fresh run.', '回報是否安裝成功、是否能用、是否還在使用。失敗的回報會讓工具排入重新測試。')],
+    ['submit_software', L('Send a GitHub project for review. It goes through the same read, install and replay as everything else.', '提交 GitHub 專案供審查。它會和其他工具一樣經過閱讀、安裝和重播。')],
   ];
   const main =
-    head('Same answers, in your agent', 'pickfit is an MCP server. Your coding agent gets the same verified data and the same matching as this page, and can install a pick for you with the steps that worked.', 'recommending') +
+    head(
+      L('Same answers, in your agent', '同樣的答案，在你的 agent 裡'),
+      L('pickfit is an MCP server. Your coding agent gets the same verified data and the same matching as this page, and can install a pick for you with the steps that worked.', 'pickfit 是一個 MCP 伺服器。你的程式開發 agent 能取得與本頁相同的已驗證資料和配對結果，還能用可行的步驟替你安裝選中的工具。'),
+      'recommending',
+    ) +
     `<div class="wrap"><article class="prose">` +
-    `<h2>Connect</h2><p>Any MCP client that speaks streamable HTTP can connect to <code translate="no">${esc(mcp)}</code>. For Claude Code:</p>` +
+    `<h2>${L('Connect', '連接')}</h2><p>${L(`Any MCP client that speaks streamable HTTP can connect to <code translate="no">${esc(mcp)}</code>. For Claude Code:`, `任何支援 streamable HTTP 的 MCP 客戶端都能連接到 <code translate="no">${esc(mcp)}</code>。Claude Code 的設定方式：`)}</p>` +
     command(`claude mcp add --transport http pickfit ${mcp}`) +
-    `<p>For Claude Desktop, Cursor and other clients, add it to the MCP config:</p>` +
+    `<p>${L('For Claude Desktop, Cursor and other clients, add it to the MCP config:', 'Claude Desktop、Cursor 和其他客戶端，請將它加入 MCP 設定：')}</p>` +
     command(JSON.stringify({ mcpServers: { pickfit: { type: 'http', url: mcp } } }, null, 2)) +
-    `<h2>Tools</h2><div class="table-wrap"><table class="dt"><thead><tr><th scope="col">Tool</th><th scope="col">What it does</th></tr></thead><tbody>` +
+    `<h2>${L('Tools', '工具')}</h2><div class="table-wrap"><table class="dt"><thead><tr><th scope="col">${L('Tool', '工具')}</th><th scope="col">${L('What it does', '用途')}</th></tr></thead><tbody>` +
     tools.map(([n, t]) => `<tr><th scope="row"><code>${esc(n)}</code></th><td>${esc(t)}</td></tr>`).join('') +
     `</tbody></table></div>` +
-    `<h2>Try it</h2><p>Ask your agent in plain words, for example:</p>${command('Find me a free tool that works offline on my Mac to turn meeting recordings into subtitles, and install it.')}` +
-    `<div class="tip">${fitz('peek', 52)}<h3>No sign-up, no ads</h3><p>The MCP needs no account and returns no referral links. Answers carry a <code>how_we_know</code> line and the run’s <code>evidence_url</code>, so your agent can tell you where each claim came from.</p></div>` +
+    `<h2>${L('Try it', '試試看')}</h2><p>${L('Ask your agent in plain words, for example:', '用平常的話問你的 agent，例如：')}</p>${command(L('Find me a free tool that works offline on my Mac to turn meeting recordings into subtitles, and install it.', '幫我找一款能在我的 Mac 上離線使用的免費工具，把會議錄音轉成字幕，並幫我安裝。'))}` +
+    `<div class="tip">${fitz('peek', 52)}<h3>${L('No sign-up, no ads', '免註冊，無廣告')}</h3><p>${L('The MCP needs no account and returns no referral links. Answers carry a <code>how_we_know</code> line and the run’s <code>evidence_url</code>, so your agent can tell you where each claim came from.', '這個 MCP 不需要帳號，也不會回傳推廣連結。每個答案都附有 <code>how_we_know</code> 說明和測試的 <code>evidence_url</code>，讓你的 agent 能告訴你每項說法的出處。')}</p></div>` +
     `</article></div>`;
-  return renderShell({ nonce, title: 'Connect your agent · pickfit', description: 'Use pickfit from Claude Code, Claude Desktop, Cursor or any MCP client.', active: 'agents', tray: false, main });
+  return renderShell({ nonce, title: L('Connect your agent · pickfit', '連接你的 agent · pickfit'), description: L('Use pickfit from Claude Code, Claude Desktop, Cursor or any MCP client.', '在 Claude Code、Claude Desktop、Cursor 或任何 MCP 客戶端中使用 pickfit。'), active: 'agents', tray: false, main });
 }
 
 export function renderNotFound(nonce: string): string {
   const main =
-    `<section class="head mat after-top"><div class="wrap nf">${fitz('surprised', 160, { eager: true })}<h1>This page doesn’t fit</h1>` +
-    `<p class="lede">The address may be old, or the tool isn’t in pickfit’s catalog.</p>` +
-    `<p class="badges"><a class="btn btn-primary" href="/">${icon('search')}Find software</a><a class="btn btn-on-mat" href="/browse">Browse verified tools</a></p></div>` +
+    `<section class="head mat after-top"><div class="wrap nf">${fitz('surprised', 160, { eager: true })}<h1>${L('This page doesn’t fit', '這個頁面不合身')}</h1>` +
+    `<p class="lede">${L('The address may be old, or the tool isn’t in pickfit’s catalog.', '這個網址可能已經過時，或是這款工具不在 pickfit 的目錄中。')}</p>` +
+    `<p class="badges"><a class="btn btn-primary" href="/">${icon('search')}${L('Find software', '搜尋軟體')}</a><a class="btn btn-on-mat" href="/browse">${L('Browse verified tools', '瀏覽已驗證工具')}</a></p></div>` +
     `<div class="ruler" aria-hidden="true"></div></section>`;
-  return renderShell({ nonce, title: 'Not found · pickfit', description: 'This page does not exist.', active: null, main });
+  return renderShell({ nonce, title: L('Not found · pickfit', '找不到頁面 · pickfit'), description: L('This page does not exist.', '這個頁面不存在。'), active: null, main });
 }
