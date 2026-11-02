@@ -380,3 +380,21 @@ def test_the_contrast_runs_p2_and_sends_opus_the_same_images_and_schema(bundle: 
               "comfort": dict.fromkeys(ComfortChecksP2.model_fields, OK) | {"looks_current": bad(1, "Chats")}}
     checked = check_first_look(FirstLookAnswerP2.model_validate(answer), bundle, TextFinder(fake_ocr))
     assert checked.first["comfortable"] == (1, "scored") and checked.findings[0]["check"] == "looks_current"
+
+
+def test_never_the_opposite_compares_polarity_and_zero_against_two() -> None:
+    from scripts.ease_compare import dimension_level, human_polarity, opposites
+
+    assert [human_polarity(v) for v in (5, 4, 3, 2, 1, "cant_tell", None)] == [1, 1, 0, -1, -1, None, None]
+    assert [dimension_level(v) for v in (2.0, 1.5, 1.25, 0.5, 0.0, None)] == [2, 2, 1, 0, 0, None]
+    dims = lambda **kw: {k: {"score": kw.get(k)} for k in ("ready", "findable", "responsive", "comfortable")}  # noqa: E731
+    results = {"a": {"verdict": "easy", "dimensions": dims(ready=2.0, comfortable=2.0)},
+               "b": {"verdict": "some_friction", "dimensions": dims(ready=1.0, comfortable=0.5)},
+               "c": {"verdict": None, "dimensions": dims(ready=2.0)}}
+    ratings = {"apps": {"a": {"overall": 2, "ready": 2, "comfortable": 0},
+                        "b": {"overall": 5, "ready": 0, "comfortable": "cant_tell"},
+                        "c": {"overall": 1, "ready": 2}}}
+    out = opposites(results, ratings)
+    assert out["overall"] == {"compared": 2, "opposite": ["a"]}  # b is neutral, c has no verdict
+    assert out["comfortable"] == {"compared": 1, "opposite": ["a"]} and out["ready"]["opposite"] == []
+    assert out["passed"] is False
