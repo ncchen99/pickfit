@@ -104,12 +104,12 @@ def self_agreement(results: dict[str, dict[str, Any]]) -> dict[str, Any]:
             "within_one": round(within / pairs, 3) if pairs else None}
 
 
-def compare(per_app: bool = False) -> dict[str, Any]:
+def compare(per_app: bool = False, results_dir: Path = RESULTS_DIR) -> dict[str, Any]:
     ratings = read_ratings(RATINGS.read_text(encoding="utf-8"))
     pilot = json.loads(PILOT.read_text(encoding="utf-8"))["apps"]
     if not any(isinstance(v.get("overall"), int) for v in ratings["apps"].values()):
         raise SystemExit("the ratings are still blank: rate first (runs/ease-sheet/index.html)")
-    results = {a["slug"]: json.loads((RESULTS_DIR / f"{a['slug']}.json").read_text(encoding="utf-8")) for a in pilot}
+    results = {a["slug"]: json.loads((results_dir / f"{a['slug']}.json").read_text(encoding="utf-8")) for a in pilot}
     dims: dict[str, Any] = {}
     for dim in WEIGHTS:
         pairs = [(slug, r["dimensions"][dim]["score"], ratings["apps"].get(slug, {}).get(dim))
@@ -156,8 +156,9 @@ def compare(per_app: bool = False) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--per-app", action="store_true")
+    parser.add_argument("--results", type=Path, default=RESULTS_DIR, help="pickfit's results (default ~/.pickfit/usability)")
     args = parser.parse_args()
-    print(json.dumps(compare(args.per_app), ensure_ascii=False, indent=2))
+    print(json.dumps(compare(args.per_app, args.results), ensure_ascii=False, indent=2))
     return 0
 
 
