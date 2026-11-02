@@ -299,7 +299,7 @@ test('without the script, the form posts and gets the whole page back', async ()
   const html = await res.text();
   assert.match(html, /^<!doctype html>/);
   assert.ok(html.includes('offline &lt;for &quot;me&quot;&gt;</textarea>'));
-  assert.ok(html.includes('<input type="radio" name="os" value="macos" checked>'));
+  assert.ok(html.includes('<input type="radio" name="os" value="macos" checked aria-label="macOS">'));
   assert.match(html, /<body class="is-results" data-served="1">/);
   assert.match(html, /<section id="results"[^>]*><div class="res-head"><div class="says"><img [^>]*><div class="bubble"><h2 class="results-title">2 tools fit your need<\/h2><p class="match-line">/);
   const nonce = /script-src 'nonce-([0-9a-f]+)'/.exec(res.headers.get('content-security-policy')!)![1];
