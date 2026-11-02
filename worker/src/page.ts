@@ -414,11 +414,11 @@ function quickInstall(guide: InstallOutput | undefined, form: FormValues): strin
 // ---------------------------------------------------------------- a web app's ticket
 
 /** A web app's facts as a short list, each with its tone; the same words on the ticket and the profile. */
-export function webFactList(entry: Entry): string {
+export function webFactList(entry: Entry, cls = ''): string {
   const check = webCheck(entry);
   if (!check) return '';
   const tone = { pass: 'yes', caution: 'no', plain: '' } as const;
-  return `<ul class="web-facts">${webFacts(check)
+  return `<ul class="web-facts${cls ? ` ${cls}` : ''}">${webFacts(check)
     .map((f) => `<li${tone[f.tone] ? ` class="${tone[f.tone]}"` : ''}>${f.tone === 'pass' ? icon('check') : f.tone === 'caution' ? icon('triangle-alert') : icon('info')}${esc(f.text)}</li>`)
     .join('')}</ul>`;
 }
