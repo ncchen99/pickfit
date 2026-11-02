@@ -93,6 +93,36 @@ def _dump(path: Path, data: Any) -> None:
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def _gui_outputs(node: Any, where: str) -> list[str]:
+    """Each GUI launch or operation's own output (gui.GuiLaunch.log_tail) under a header naming the command."""
+    found: list[str] = []
+    if isinstance(node, dict):
+        tail = (node.get("gui") or {}).get("log_tail") if isinstance(node.get("gui"), dict) else None
+        if tail and tail.strip():
+            found.append(f"== {where} [cmd {node.get('command_id')}] {node.get('tool') or 'gui'}: "
+                         f"{str(node.get('command'))[:200]} ==\n{tail.rstrip()}\n")
+        for key, value in node.items():
+            if key != "gui":
+                found += _gui_outputs(value, where)
+    elif isinstance(node, list):
+        for value in node:
+            found += _gui_outputs(value, where)
+    return found
+
+
+def save_app_log(evidence_dir: Path, report: VerifyReport, replay: ReplayResult | None) -> Path | None:
+    """The app's own stdout and stderr from every GUI launch and operation of the run (the last part of each, as
+    the launch kept it), in one file beside the trace: data from the app, never a result."""
+    parts = _gui_outputs(report.to_dict().get("commands"), "agent")
+    if replay is not None:
+        parts += _gui_outputs(replay.to_dict(), "replay")
+    if not parts:
+        return None
+    path = evidence_dir / "app.log"
+    path.write_text("\n".join(parts), encoding="utf-8")
+    return path
+
+
 def _display_name(task: VerifyTask) -> str:
     name = task.extraction.name.value if task.extraction is not None else None
     return str(name) if name else task.slug
@@ -241,6 +271,7 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
                                                          **call_kwargs)
 
     judge_cost = (judge.cost_usd if judge else 0.0) + feature_cost + (replay.cost_usd if replay else 0.0)
+    save_app_log(evidence_dir, report, replay)
     run, build_notes = build_run(report, replay, judge, evidence_dir=evidence_dir,
                                  screenshots=[Path(p) for p in (judge.annotated or judge.screenshots)] if judge else [],
                                  judge_cost_usd=judge_cost, confirm=confirm,

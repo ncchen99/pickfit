@@ -365,6 +365,7 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         judge=Judge(verdict=judge.verdict, observed=_clip(judge.observed, 300) or "", model=judge.model)
         if judge else None,
         evidence=RunEvidence(trace_path=_rel(evidence_dir / "report.json"),
+                             log_path=_rel(evidence_dir / "app.log") if (evidence_dir / "app.log").exists() else None,
                              screenshot_paths=[p for p in map(_rel, screenshots or []) if p]),
         actor_model=report.model, cost_usd=round(report.cost_usd + judge_cost_usd, 6), features=features, gui=gui,
         mcp=handshake if is_passed(level) else None, gpu=_clip(report.box.get("gpu"), 80),

@@ -44,15 +44,29 @@ import shlex
 from dataclasses import asdict, dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from pickfit.env import get_env
 from pickfit.verify.box import BOX_HOME, ExecResult
 
 if TYPE_CHECKING:
     from pickfit.verify.box import Box
 
 DISPLAY = ":99"
-SCREEN = "1280x800x24"
-SCREEN_W, SCREEN_H = 1280, 800
-DISPLAY_NOTE = f"Xvfb {SCREEN}, no window manager, no GPU"
+
+
+def full_desktop(value: str | None) -> bool:
+    """PICKFIT_GUI_DESKTOP: unset (pickfit's usual display) or full; any other value is refused when read."""
+    if value not in (None, "", "full"):
+        raise ValueError(f"PICKFIT_GUI_DESKTOP must be unset or full, got {value!r}")
+    return value == "full"
+
+
+# A comparison only (scripts/gui_compare.py, arm A), off unless PICKFIT_GUI_DESKTOP=full: what desktop features'
+# notes said the display lacked. A 1920x1080 screen; the app started on its own session bus with the desktop
+# portal's GTK backend (the file chooser a Flatpak app asks for, and OpenURI); a default app for text files.
+FULL_DESKTOP = full_desktop(get_env("PICKFIT_GUI_DESKTOP"))
+SCREEN = "1920x1080x24" if FULL_DESKTOP else "1280x800x24"
+SCREEN_W, SCREEN_H = (1920, 1080) if FULL_DESKTOP else (1280, 800)
+DISPLAY_NOTE = f"Xvfb {SCREEN}, no window manager, no GPU" + (", session bus and portal" if FULL_DESKTOP else "")
 DISPLAY_UID = 1001  # Xvfb and the watcher: not the box user (1000), not root
 EVIDENCE_DIR = "/var/lib/pickfit-gui"  # DISPLAY_UID's, mode 0700: the box user cannot list, read or write it
 HARNESS_PATH = "/usr/bin:/bin"  # root-owned directories only
@@ -65,6 +79,9 @@ APP_LOG_DIR = f"{BOX_HOME}/.pickfit-gui"
 # ffmpeg: the display uid's screen recording of an operation (record.py).
 GUI_PACKAGES = ("xvfb", "x11-utils", "x11-apps", "xrestop", "imagemagick", "chromium",
                 "libwebkit2gtk-4.1-0", "fonts-dejavu-core", "python3-tk", "python3-venv", "xdotool", "xclip", "ffmpeg")
+DESKTOP_PACKAGES = ("dbus", "dbus-x11", "xdg-desktop-portal", "xdg-desktop-portal-gtk", "xdg-utils", "mousepad")
+if FULL_DESKTOP:
+    GUI_PACKAGES = (*GUI_PACKAGES, *DESKTOP_PACKAGES)
 TIERS = ("none", "process_alive", "window", "ui_rendered", "action_checked")
 WAIT_MAX_S = 60
 SETTLE_S = 6  # after the first window, so a page that loads after the window shows still renders
@@ -275,9 +292,19 @@ def watcher_source(*, before: dict[str, Any], xvfb_pid: int, nonce: str, shot: s
     return _PROCS + f"\nMARK = {MARK!r}\n" + body
 
 
+DESKTOP_SETUP = (
+    "export XDG_CURRENT_DESKTOP=GNOME XDG_SESSION_TYPE=x11 GTK_USE_PORTAL=1; "
+    "mkdir -p ~/.config/xdg-desktop-portal; printf '[preferred]\\ndefault=gtk\\n' "
+    "> ~/.config/xdg-desktop-portal/portals.conf; "
+    "xdg-mime default org.xfce.mousepad.desktop text/plain 2>/dev/null || true")
+
+
 def start_script(command: str, tag: str | int, *, workdir: str, detach: str = "setsid nohup") -> str:
     """Box user: start the app detached on the display; its output and exit code go to its own log."""
     log = f"{APP_LOG_DIR}/{tag}"
+    if FULL_DESKTOP:
+        command = (f"{DESKTOP_SETUP}\n/usr/bin/dbus-run-session -- /usr/bin/bash -c "
+                   f"{shlex.quote(command)}")
     wrapped = f"{command}\necho \"exit_code $?\""
     return (f"/usr/bin/mkdir -p {APP_LOG_DIR} && cd {shlex.quote(workdir)} || exit 1; export DISPLAY={DISPLAY}; "
             f"{detach} /usr/bin/bash -c {shlex.quote(wrapped)} > {log}.log 2>&1 < /dev/null & echo started")

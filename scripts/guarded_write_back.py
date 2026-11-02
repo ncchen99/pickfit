@@ -23,8 +23,8 @@ from pickfit.verify.result import DATA_DIR, write_back
 
 GUI_ORDER = ("window", "ui_rendered", "action_checked")
 # Reasons that say the limit is pickfit's box, not the software.
-ENVIRONMENT = ("needs_gpu", "needs_hardware", "needs_display", "needs_more_resources", "needs_account", "needs_service",
-               "needs_container", "needs_root", "needs_toolchain", "other_os")
+ENVIRONMENT = ("needs_gpu", "needs_hardware", "needs_display", "needs_desktop", "needs_more_resources", "needs_account",
+               "needs_service", "needs_container", "needs_root", "needs_toolchain", "other_os")
 
 
 def checked(run: VerificationRun) -> set[str]:

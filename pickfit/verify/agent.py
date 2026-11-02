@@ -560,7 +560,7 @@ FLATPAK_RULE = """ A Flatpak app installs per user as two cited steps, \
 `flatpak install --user -y flathub <app id>`, and launches with `flatpak run <app id>`: a fresh box has no \
 Flathub remote until the cited step adds it."""
 
-INSTALL_ONLY_RULE = """ This run checks install only: there is no operate_gui here. After the launch_gui, report each listed feature not_checked with reason other and the note "install-only run", and finish."""
+INSTALL_ONLY_RULE = """ This run checks install only: there is no operate_gui here. After the launch_gui, report each listed feature not_checked with reason not_attempted and the note "install-only run", and finish."""
 
 # Public models small enough for an inference check, licenses and URLs checked 2026-10-29.
 # stories260K: karpathy/tinyllamas weights (MIT), GGUF by ggml-org. SmolLM2-135M-Instruct:
