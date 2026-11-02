@@ -1499,7 +1499,8 @@ class EaseDimensions(_Model):
 
 
 class EaseFinding(_Model):
-    """One problem the reviewer saw, with text pickfit found on its own screenshot (OCR) or in the page (DOM)."""
+    """One problem the reviewer saw, with the text on its own screenshot it cites: found by pickfit's OCR or in the
+    page's DOM, or (comfort.v1's visual defects, which are kept either way) unverified."""
 
     item: EaseItem
     operation: int | None = Field(ge=1, description="The operation it happened in (in-use findings).")
@@ -1511,15 +1512,23 @@ class EaseFinding(_Model):
     box: list[Annotated[int, Field(ge=0, le=1000)]] = Field(
         min_length=4, max_length=4, description="[x_min, y_min, x_max, y_max], 0-1000 over the screenshot.")
     quote: str = Field(min_length=1, max_length=200, description="The text on the screen it cites.")
-    found_by: Literal["ocr", "dom"]
+    found_by: Literal["ocr", "dom", "unverified"]
+    kind: Literal["text_cut_off", "overlap", "clipped", "bad_wrap", "low_contrast", "tiny_text", "raw_markup",
+                  "broken_image", "misaligned", "cramped"] | None = Field(
+        default=None, exclude_if=lambda value: value is None,
+        description="comfort.v1: the kind of measurable visual defect.")
+    severity: Literal["major", "minor"] | None = Field(
+        default=None, exclude_if=lambda value: value is None,
+        description="comfort.v1: major hides, garbles or makes hard to read content a user needs; minor does not.")
 
 
 class Usability(_Model):
     """How easy a GUI or web app was to use when pickfit's AI operator used it in a sandbox (ease.v1).
 
     Muse Spark 1.3 read the screenshots and action log of one passed run against a fixed checklist, twice; every
-    score cites text pickfit found on its own screenshot. It is pickfit's AI operator in a sandbox, not users'
-    opinion. Not checked: screen readers, keyboard-only use, phones.
+    score cites text pickfit found on its own screenshot. Under comfort.v1 (prompt_version ending "+comfort.v1"),
+    comfortable comes instead from Muse Wonder listing measurable visual defects in one call. It is pickfit's AI
+    operator in a sandbox, not users' opinion. Not checked: screen readers, keyboard-only use, phones.
     """
 
     version: Literal["ease.v1"]
