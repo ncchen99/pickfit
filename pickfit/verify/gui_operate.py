@@ -66,7 +66,8 @@ OPERATOR_MODEL = "open"
 def operator_model() -> str:
     return get_env("PICKFIT_OPERATOR_MODEL") or OPERATOR_MODEL
 STAGE = "verify-gui-operator"
-REASONING_EFFORT = "low"
+# PICKFIT_OPERATOR_EFFORT: a comparison only (scripts/gui_compare.py, arm D), e.g. medium; low unless set.
+REASONING_EFFORT = get_env("PICKFIT_OPERATOR_EFFORT") or "low"
 MAX_OUTPUT_TOKENS = 1_500
 MAX_STEPS = 28  # actions per operation, done and give_up included (a first-run wizard alone can take 8)
 HISTORY_STEPS = 12  # earlier actions the operator is reminded of
