@@ -398,3 +398,59 @@ def test_never_the_opposite_compares_polarity_and_zero_against_two() -> None:
     assert out["overall"] == {"compared": 2, "opposite": ["a"]}  # b is neutral, c has no verdict
     assert out["comfortable"] == {"compared": 1, "opposite": ["a"]} and out["ready"]["opposite"] == []
     assert out["passed"] is False
+
+
+def defect(kind: str, severity: str, image: int, quote: str, cause: str = "app") -> dict[str, Any]:
+    return {"kind": kind, "severity": severity, "cause": cause, "problem": f"{kind} near {quote}",
+            "evidence": cite(image, quote)}
+
+
+def comfort_answer(*defects: dict[str, Any], broken: bool = False) -> Any:
+    from pickfit.usability import ComfortAnswer
+
+    return ComfortAnswer.model_validate({"observed": "a chat window", "seen": cite(1, "Chats"),
+                                         "screen_broken": broken, "defects": list(defects)})
+
+
+def test_comfort_counts_measurable_defects_and_keeps_unverified_ones(bundle: Bundle) -> None:
+    from pickfit.usability import check_comfort
+
+    finder, shots = TextFinder(fake_ocr), bundle.first_look_shots()
+    assert check_comfort(comfort_answer(), shots, finder)[0] == {"score": 2, "status": "scored"}
+    dim, found, _ = check_comfort(comfort_answer(defect("cramped", "minor", 1, "New message"),
+                                                 defect("clipped", "minor", 2, "not on screen")), shots, finder)
+    assert dim["score"] == 1 and [d["found_by"] for d in found] == ["ocr", "unverified"]  # trusted, marked
+    assert check_comfort(comfort_answer(defect("overlap", "major", 2, "pickfit1 sent")), shots, finder)[0]["score"] == 0
+    # The sandbox's flaws never count; a defect on an image that does not exist is dropped.
+    dim, found, problems = check_comfort(comfort_answer(defect("overlap", "major", 1, "Chats", cause="sandbox"),
+                                                        defect("overlap", "major", 9, "Chats")), shots, finder)
+    assert dim["score"] == 2 and len(found) == 1 and "image 9" in problems[0]
+    assert check_comfort(comfort_answer(broken=True), shots, finder)[0] == {"score": None, "status": "sandbox_broken"}
+
+
+def test_judge_takes_comfortable_from_the_inspector_in_one_call(bundle: Bundle, tmp_path: Path) -> None:
+    calls: list[str] = []
+
+    def ask(body: dict[str, Any], out: type, kind: str) -> Asked:
+        calls.append(kind)
+        if kind == "first_look":
+            return Asked(first_answer(), 0.01, "muse-spark-1.3")
+        return Asked(in_use_answer(op(1, (2, "pickfit1 sent")), op(2, (4, "No menu"))), 0.01, "muse-spark-1.3")
+
+    def inspector(body: dict[str, Any], out: type, kind: str) -> Asked:
+        calls.append(kind)
+        assert "visual quality inspector" in body["instructions"]
+        return Asked(comfort_answer(defect("bad_wrap", "minor", 1, "New message")), 0.05, "muse-wonder-1.0")
+
+    result = judge(bundle, ask, TextFinder(fake_ocr), comfort=inspector)
+    assert calls == ["first_look", "in_use", "first_look", "in_use", "comfort"]
+    assert result["dimensions"]["comfortable"] == {"score": 1, "status": "scored"}
+    assert result["prompt_version"].endswith("+comfort.v1") and result["cost_usd"] == 0.09
+    assert "muse-wonder-1.0" in result["model"]
+    comfortable = [f for f in result["findings"] if f["item"] == "comfortable"]
+    assert [(f["kind"], f["severity"], f["samples"]) for f in comfortable] == [("bad_wrap", "minor", 1)]
+    usability = Usability.model_validate(record_usability(result))
+    assert usability.findings[0].kind == "bad_wrap"
+    record = gui_record(tmp_path)
+    record["usability"] = usability.model_dump(mode="json")
+    SoftwareRecord.model_validate(record)

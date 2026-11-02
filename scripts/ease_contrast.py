@@ -266,6 +266,39 @@ def run_cell(cell: str, slugs: list[str], log=lambda line: print(line, file=sys.
     return summary
 
 
+COMFORT_DIR = RESULTS_DIR / "comfort"
+COMFORT_CAP_USD = 2.0
+COMFORT_RUN_ID = "usability-comfort-2026-11-03"
+
+
+def run_comfort(slugs: list[str], log=lambda line: print(line, file=sys.stderr)) -> dict[str, Any]:
+    """comfort.v1 alone over the pilot apps (section 9): one Muse Wonder call each, at effort medium."""
+    from pickfit.usability import COMFORT_EFFORT, COMFORT_MAX_TOKENS, COMFORT_MODEL, judge_comfort
+    from scripts.ease_sheet import RATINGS, read_ratings
+
+    COMFORT_DIR.mkdir(parents=True, exist_ok=True)
+    ask = meta_ask(COMFORT_MODEL, COMFORT_CAP_USD, COMFORT_RUN_ID, effort=COMFORT_EFFORT,
+                   max_output_tokens=COMFORT_MAX_TOKENS)
+    rated = read_ratings(RATINGS.read_text(encoding="utf-8"))["apps"]
+    finder = TextFinder()
+    rows, cost = [], 0.0
+    for slug in slugs:
+        bundle = bundle_for(json.loads((REPO / "data" / "software" / f"{slug}.json").read_text(encoding="utf-8")))
+        if bundle is None:
+            continue
+        try:
+            out = judge_comfort(bundle, ask, finder, log)
+        except BudgetExceeded as err:
+            log(f"  stopped: {err}")
+            break
+        (COMFORT_DIR / f"{slug}.json").write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n")
+        cost += out["cost_usd"]
+        rows.append({"slug": slug, "comfortable": out["dimension"]["score"], "rater": rated.get(slug, {}).get("comfortable"),
+                     "defects": [f"{d['severity']} {d['kind']} ({d['cause']}, {d['found_by']}): {d['problem']}"
+                                 for d in out["defects"]], "error": out["error"]})
+    return {"cost_usd": round(cost, 4), "apps": rows}
+
+
 def cell_dir(cell: str) -> Path:
     return EARLIER.get(cell, CONTRAST_DIR / cell)
 
@@ -296,8 +329,12 @@ def main() -> int:
     r.add_argument("cell", choices=list(CELLS))
     r.add_argument("--slug", action="append")
     sub.add_parser("table")
+    c = sub.add_parser("comfort", help="comfort.v1 alone over the pilot apps (Muse Wonder, one call each)")
+    c.add_argument("--slug", action="append")
     args = parser.parse_args()
-    if args.command == "run":
+    if args.command == "comfort":
+        print(json.dumps(run_comfort(args.slug or pilot_slugs(REPO)), ensure_ascii=False, indent=2))
+    elif args.command == "run":
         print(json.dumps(run_cell(args.cell, args.slug or pilot_slugs(REPO)), ensure_ascii=False, indent=2))
     else:
         cells = [*EARLIER, *CELLS]

@@ -308,7 +308,7 @@ def _add_score_command(sub: argparse._SubParsersAction) -> None:
 
 
 def _add_usability_command(sub: argparse._SubParsersAction) -> None:
-    from pickfit.usability import MODEL, SAMPLES, STAGE_CAP_USD, main_usability
+    from pickfit.usability import COMFORT_MODEL, MODEL, SAMPLES, STAGE_CAP_USD, main_usability
 
     u = sub.add_parser("usability", help="how easy GUI and web apps are to use, from pickfit's own screenshots "
                                          "(Muse Spark 1.3, paid; prints costs, never the scores)")
@@ -317,6 +317,9 @@ def _add_usability_command(sub: argparse._SubParsersAction) -> None:
     u.add_argument("--data-dir", default=None, help="records (default data/software)")
     u.add_argument("--model", default=MODEL, help='"prod" (muse-spark-1.3, default) or a model id')
     u.add_argument("--samples", type=int, default=SAMPLES, help="times each call is made")
+    u.add_argument("--comfort-model", default=COMFORT_MODEL,
+                   help=f'who lists measurable visual defects for comfortable, one call (default {COMFORT_MODEL}, '
+                        'effort medium); "same" leaves comfortable to the main judge\'s checks')
     u.add_argument("--cap", type=float, default=STAGE_CAP_USD, help="the stage's ledger cap in USD")
     u.add_argument("--out", default=None, help="where results go (default ~/.pickfit/usability)")
     u.add_argument("--write", action="store_true", help="also add each result to its record as `usability`")
