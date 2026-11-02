@@ -144,7 +144,7 @@ class VM:
             raise RuntimeError(f"put {path}: {r.stderr.decode()[-300:]}")
 
     def __exit__(self, *exc: Any) -> None:
-        if self.keep and not exc[1]:
+        if self.keep:  # also on an error: the clone stays for a look or a later phase (delete it by hand)
             self.run_log.close()
             (self.out_dir / "steps.json").write_text(json.dumps(self.log, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
             return

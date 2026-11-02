@@ -22,11 +22,13 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _mac_common import FIX, ROOT, VM, clone_name, keep_files, setup, zsh  # noqa: E402
+from mac_vm import now, pressure  # noqa: E402
 
 GROUP, PHASE = sys.argv[1], sys.argv[2]
 OUT = ROOT / "eval" / "results" / "l2" / f"q11-{GROUP}"
@@ -66,6 +68,16 @@ with VM(f"q11-{GROUP}", OUT, [], name=clone_name(OUT), keep=PHASE != "score") as
         vm.sh(zsh(f"setopt interactivecomments; cd ~ && OUT={R}; . {R}/lib.zsh; run_lines install {R}/install.lines; all_ok install && echo INSTALL-OK || echo INSTALL-FAIL"),
               "L2-1 install lines (one zsh; # starts a comment, as in bash)", timeout=3600)
         vm.sh(DIAG, "after install: apps in the session, ollama on PATH, processes", timeout=300)
+        if GROUP == "control":  # the app's first launch: an authorization dialog (SecurityAgent) to install its CLI.
+            # A person types the password and presses OK; nobody can click in the headless guest, so the grader does
+            # what the dialog does (the CLI link), closes the dialog and restarts the app (attempt 2 showed this works).
+            vm.sh("lsappinfo info -only name `lsappinfo front`; ls /usr/local/bin/ollama 2>&1", "the window in front; CLI link present?")
+            vm.sh("sudo mkdir -p /usr/local/bin && sudo ln -sf /Applications/Ollama.app/Contents/Resources/ollama /usr/local/bin/ollama && "
+                  "ls -l /usr/local/bin/ollama", "grader does the authorization dialog's default (CLI link in /usr/local/bin)")
+            vm.sh("sudo pkill -x SecurityAgent; pkill -x Ollama; sleep 5; open /Applications/Ollama.app; echo reopen exit $?",
+                  "dialog closed, app restarted")
+            vm.sh(DIAG, "after restarting the app: apps in the session, ollama on PATH, processes", timeout=300)
+            vm.sh(zsh("ollama --version; curl -s http://127.0.0.1:11434/api/version"), "CLI and server answer")
     elif PHASE == "reopen":  # control only: install 3 was `open -a Ollama`, run before LaunchServices knew the copied app
         vm.sh('pkill -x "Setup Assistant"; sleep 2; pgrep -x "Setup Assistant" || echo closed',
               "the new account's first-login Setup Assistant closed (part of making the account, CHECKLIST)")
@@ -90,8 +102,9 @@ with VM(f"q11-{GROUP}", OUT, [], name=clone_name(OUT), keep=PHASE != "score") as
         vm.sh(zsh("ollama --version; curl -s http://127.0.0.1:11434/api/version"), "CLI and server answer")
     elif PHASE == "model":
         if FIRST_RUN:
-            vm.sh(f"cd ~ && printf '/bye\\n' | script -q {R}/first-run.txt /bin/zsh -ilc {json.dumps(FIRST_RUN)}; echo first-run exit $?; "
-                  f"tail -c 400 {R}/first-run.txt", "first run online (model download), /bye typed, no prompt", timeout=3600)
+            vm.sh(f"cd ~ && ( until grep -q 'Send a message' {R}/first-run.txt 2> /dev/null; do sleep 5; done; printf '/bye\\n' ) | "
+                  f"script -q -t 0 {R}/first-run.txt /bin/zsh -ilc {json.dumps(FIRST_RUN)}; echo first-run exit $?; "
+                  f"tail -c 300 {R}/first-run.txt | tr -d '\\033'", "first run online (model download), /bye typed at the prompt, no prompt sent", timeout=5400)
         vm.put("/tmp/Modelfile", MODELFILE.encode())
         vm.sh("cp /tmp/Modelfile ~/Modelfile && cat ~/Modelfile", "Modelfile (the answer's, verbatim)")
         vm.sh(zsh(f"cd ~ && {CREATE}; echo create exit $?"), "ollama create tw -f Modelfile", timeout=1200)
@@ -99,6 +112,16 @@ with VM(f"q11-{GROUP}", OUT, [], name=clone_name(OUT), keep=PHASE != "score") as
     elif PHASE == "ask":
         vm.sh(f"sudo sh {FIX}/q11/mac/offline.sh off {R}/net-state.txt 2>&1 | tail -4", "L2-2 offline off (guest network services)")
         for run in (1, 2, 3):
+            free = subprocess.run("memory_pressure | tail -1", shell=True, capture_output=True, text=True).stdout.strip()
+            swap = subprocess.run(["sysctl", "-n", "vm.swapusage"], capture_output=True, text=True).stdout.strip()
+            level = pressure()
+            vm.log.append({"what": f"host memory before prompt set {run}", "at": now(), "exit": 0,
+                           "tail": f"{free}; swap {swap}; pressure level {level}"})
+            print(f"host memory before prompt set {run}: {free}; swap {swap}; level {level}", flush=True)
+            used_mb = float(swap.split("used = ")[1].split("M")[0])
+            if level >= 4 or used_mb > 16384:
+                vm.log.append({"what": f"stopped before prompt set {run}: host memory", "at": now(), "exit": 1, "tail": swap})
+                raise SystemExit(f"host memory: level {level}, swap used {used_mb:.0f} MB; stopping (coordinator rule)")
             vm.sh(f"mkdir -p {R}/replies/run{run}", f"run {run} folder", quiet=True)
             for p in range(1, 6):
                 vm.sh(zsh(f"cd ~ && perl -e 'alarm shift; exec @ARGV' 600 ollama run tw < {FIX}/q11/prompts/P{p}.txt "
