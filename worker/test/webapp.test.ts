@@ -174,7 +174,7 @@ test('page: a web app ticket opens the URL, says no install, and shows what the 
   const html = renderResults({ out, guides }, EMPTY_FORM, catalog);
   const ticket = html.slice(html.indexOf(`id="pick-${SLUG}"`), html.indexOf('</article>', html.indexOf(`id="pick-${SLUG}"`)));
   assert.match(ticket, /No install, just open it/);
-  assert.match(ticket, /href="https:\/\/fixture-sketch\.example\.invalid\/"[^>]*>.*Open Fixture Web Sketch/);
+  assert.match(ticket, /href="https:\/\/fixture-sketch\.example\.invalid\/"[^>]*>.*Open the site/);
   assert.match(ticket, /Any browser/);
   assert.match(ticket, /Nothing to install/);
   assert.match(ticket, /What pickfit typed in stayed on the device/);
@@ -195,7 +195,7 @@ test('page: the tool page of a web app, browse and compare', async () => {
   assert.match(tool, /It worked when used in a browser/);
   assert.match(tool, /href="\/browse\?kind=web_app">Web apps</);
   assert.match(tool, /id="run-web"/);
-  assert.match(tool, /Open Fixture Web Sketch/);
+  assert.match(tool, /Open the site/);
   assert.match(tool, /Any modern browser, nothing to install/);
   assert.ok(!tool.includes('Before you install') && !tool.includes('Source code'));
   assert.ok(!tool.includes('This run came before'), 'its browser run recorded features');
