@@ -31,6 +31,38 @@
     "model workflow prerequisites between edges"
   ],
   "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-02T13:13:15.986006Z",
+    "run_id": "verify-gsl-lang-20261101-120203-9b17",
+    "open_hint": "Run `gsl-query version` to confirm the tool is installed, then pipe a .gsl file into `gsl-query` with a query.",
+    "features": [
+      {
+        "feature": "derive diagrams and views from one graph",
+        "title": "Make diagrams and views from one graph",
+        "steps": [
+          "Write your graph in a .gsl file using `node` and `->` edge lines.",
+          "Run `gsl-query 'from *' < <file> | gsl-diagram -f mermaid -t component` to get a Mermaid component diagram."
+        ]
+      },
+      {
+        "feature": "query blast radius of retiring service",
+        "title": "Find what is affected when a service is retired",
+        "steps": [
+          "Tag important nodes with a set, such as `@critical`, in your .gsl file.",
+          "Run `gsl-query '(subgraph node.id == \"<service>\" traverse in all) as BLAST | from * | (subgraph node in @critical) as CRIT | BLAST & CRIT' < <file>` to list the critical edges that depend on that serv"
+        ]
+      },
+      {
+        "feature": "model workflow prerequisites between edges",
+        "title": "Model prerequisites between workflow edges",
+        "steps": [
+          "Name edges with a label (such as `GATE:`) and link them with `parent=<label>` or by nesting edges in `{ }` blocks.",
+          "Run `gsl-query 'subgraph edge depends on edge.stage == \"<stage>\" scope' < <file>` to list edges that depend on a given stage."
+        ]
+      }
+    ]
+  },
   "homepage": null,
   "repo": {
     "url": "https://github.com/dnnrly/gsl-lang",

@@ -43,6 +43,48 @@
     "analyze LLM serving bottlenecks with roofline model"
   ],
   "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-02T13:15:22.336536Z",
+    "run_id": "verify-servebench-20261031-020535-3d3c",
+    "open_hint": "Run `servebench run --url <server-url>/v1 --model <model> --out <file>` against a running OpenAI-compatible server to start a benchmark.",
+    "features": [
+      {
+        "feature": "load-test OpenAI-compatible LLM endpoints",
+        "title": "Load-test OpenAI-compatible LLM endpoints",
+        "steps": [
+          "Start your OpenAI-compatible server, or try a local one with `servebench mock-server --port <port>`.",
+          "Run `servebench run --url <server-url>/v1 --model <model> --concurrency <levels> --num-requests <n> --input-len <tokens> --output-len <tokens> --out <file>`.",
+          "Results are saved to the file you gave with `--out`."
+        ]
+      },
+      {
+        "feature": "find concurrent user capacity within latency targets",
+        "title": "Find how many concurrent users meet latency targets",
+        "steps": [
+          "Run `servebench find-capacity --url <server-url>/v1 --model <model> --max <n> --num-requests <n> --out <file>`.",
+          "Read the reported capacity and the TTFT and TPOT targets it was measured against."
+        ]
+      },
+      {
+        "feature": "compare benchmark runs side by side with charts",
+        "title": "Compare benchmark runs side by side with charts",
+        "steps": [
+          "Save two or more runs with `servebench run ... --out <file>`.",
+          "Run `servebench compare-models <run-a-file> <run-b-file>` to see the Model Serving Comparison."
+        ]
+      },
+      {
+        "feature": "analyze LLM serving bottlenecks with roofline model",
+        "title": "Find serving bottlenecks with a roofline model",
+        "steps": [
+          "Save a run with `servebench run ... --out <file>`.",
+          "Run `servebench roofline <file> --gpu-name \"<your GPU>\"`.",
+          "Read the Verdict line to see which limit the server is bound by."
+        ]
+      }
+    ]
+  },
   "homepage": "https://prajwal7-2002.github.io/servebench/",
   "repo": {
     "url": "https://github.com/Prajwal7-2002/servebench",
