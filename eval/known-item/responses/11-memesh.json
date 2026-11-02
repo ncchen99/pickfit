@@ -1,0 +1,386 @@
+{
+  "n": 11,
+  "target": {
+    "slug": "memesh",
+    "stratum": "mcp_server",
+    "category": "mcp_server",
+    "level": "service",
+    "os": "linux"
+  },
+  "arguments": {
+    "need": "I run Claude Code and Codex side by side on the same repo and want one to write code while the other reviews it, passing messages back and forth. I also want them to remember project decisions and where we left off between sessions. It needs to keep everything in a local file on my machine, not need a separate AI model, and be open source.",
+    "os": "linux"
+  },
+  "used_attempt": 0,
+  "attempts": [
+    {
+      "at": "2026-11-02T17:22:08+08:00",
+      "latency_s": 19.9,
+      "http_status": 200,
+      "ledger_row": 43112,
+      "is_error": false,
+      "find": {
+        "rec_id": "rec_019ee379168841ac853eaa1dbcd3e676",
+        "matched_by": "muse-spark-1.3",
+        "degraded": false,
+        "degraded_reason": null,
+        "model_attempts": 1,
+        "model_http_status": null,
+        "considered": 591,
+        "picks": [
+          {
+            "slug": "klypix-mcp",
+            "name": "klypix-mcp",
+            "summary": "Shared project memory for coding agents using one brain.klypix file committed with code.",
+            "fit": "Shares one local memory file between agents for decisions, handoffs and review messages.",
+            "why": [
+              {
+                "claim": "It stores shared project memory in one local file.",
+                "field": "summary",
+                "value": "Shared project memory for coding agents using one brain.klypix file committed with code."
+              },
+              {
+                "claim": "It provides a message tool for agents to pass messages.",
+                "field": "mcp_tools",
+                "value": "brain_message"
+              },
+              {
+                "claim": "It provides handoff tools to carry work between sessions.",
+                "field": "mcp_tools",
+                "value": "brain_handoff"
+              }
+            ],
+            "tradeoffs": [
+              "Carry decisions over across sessions was not shown working in checks.",
+              "Warn when sessions overlap files was not shown working in checks.",
+              "Needs Node.js 20 or newer runtime on Linux."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "macos",
+              "linux",
+              "windows"
+            ],
+            "pricing": "unknown",
+            "processing": "local",
+            "open_source": true,
+            "license": "Apache-2.0",
+            "verification": {
+              "level": "service",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-11-01T15:50:10.041080+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [
+                {
+                  "feature": "Leave notes and handoffs between sessions",
+                  "check": "python3 ~/.pickfit/mcp_probe.py --call brain_note --args '{\"text\":\"Use SQLite for the trial project database because this prototype runs on one machine.\",\"area\":\"Storage\"}' -- klypix-mcp --vault /home/sbx/work 2>&1"
+                }
+              ],
+              "not_checked": [
+                {
+                  "feature": "Carry decisions over across sessions",
+                  "reason": "not_shown",
+                  "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: brain_ask output shows only lexical notice, not the stored SQLite decision."
+                },
+                {
+                  "feature": "Warn when sessions overlap files",
+                  "reason": "not_shown",
+                  "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: brain_sync output reports no other declared task, not an overlap warning."
+                },
+                {
+                  "feature": "Guard shared git checkouts",
+                  "reason": "not_shown",
+                  "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: brain_doctor output says NOT INSTALLED with no guard result."
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; an MCP client handshake over stdio listed its 29 tools with the network off, and a call to brain_sync returned a result. The run exercised 1 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 89/100 and popularity 50/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 88.6,
+              "popularity": 50,
+              "treasure": false
+            },
+            "repo": "https://github.com/dahshanlabs/klypix-mcp",
+            "homepage": "https://klypix.com/klypix-mcp",
+            "web_app": null
+          },
+          {
+            "slug": "renor-engine",
+            "name": "Renor",
+            "summary": "Memory for coding agents storing notes as local Markdown and serving them over MCP.",
+            "fit": "Keeps project memory as local Markdown files recalled across agent sessions.",
+            "why": [
+              {
+                "claim": "It stores memory as local Markdown files.",
+                "field": "features_checked",
+                "value": "store memory as local Markdown files"
+              },
+              {
+                "claim": "It saves and recalls memory across agent sessions.",
+                "field": "features_checked",
+                "value": "save and recall memory across agent sessions"
+              },
+              {
+                "claim": "It serves stored memory over MCP for coding agents.",
+                "field": "features_checked",
+                "value": "serve stored memory over MCP"
+              }
+            ],
+            "tradeoffs": [
+              "No direct agent-to-agent message or review tool is listed.",
+              "Needs Node 22 and git on Linux.",
+              "Only one use case about remembering and recalling was verified."
+            ],
+            "vs_well_known": null,
+            "platforms": [],
+            "pricing": "unknown",
+            "processing": "local",
+            "open_source": true,
+            "license": "Apache-2.0",
+            "verification": {
+              "level": "service",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-11-01T11:45:55.289963+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [
+                {
+                  "feature": "save and recall memory across agent sessions",
+                  "check": "VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py --call remember_fact --args '{\"subject\":\"Ada\",\"predicate\":\"favorite_color\",\"object\":\"cerulean\"}' -- renor-engine mcp\n"
+                },
+                {
+                  "feature": "store memory as local Markdown files",
+                  "check": "VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py --call note --args '{\"text\":\"Test note about blue notebook on desk\"}' -- renor-engine mcp\n"
+                },
+                {
+                  "feature": "serve stored memory over MCP",
+                  "check": "VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py --call search --args '{\"query\":\"Ada favorite color\"}' -- renor-engine mcp\n"
+                }
+              ],
+              "not_checked": []
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; an MCP client handshake over stdio listed its 8 tools with the network off, and a call to remember_fact returned a result. The run exercised 3 of the 3 main features its README advertises. Quality 96/100 and popularity 57/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 96.1,
+              "popularity": 57.2,
+              "treasure": false
+            },
+            "repo": "https://github.com/renorai/renor-engine",
+            "homepage": "https://renor.cloud",
+            "web_app": null
+          }
+        ],
+        "best_free": {
+          "slug": "aletheia-mem",
+          "reason": "It is free and shares one local SQLite memory across coding tools with session start context."
+        },
+        "no_install_option": null,
+        "well_known_option": null,
+        "clarifying_question": null,
+        "coverage_note": "591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores."
+      },
+      "raw": {
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"rec_id\":\"rec_019ee379168841ac853eaa1dbcd3e676\",\"matched_by\":\"muse-spark-1.3\",\"degraded\":false,\"degraded_reason\":null,\"model_attempts\":1,\"model_http_status\":null,\"considered\":591,\"picks\":[{\"slug\":\"klypix-mcp\",\"name\":\"klypix-mcp\",\"summary\":\"Shared project memory for coding agents using one brain.klypix file committed with code.\",\"fit\":\"Shares one local memory file between agents for decisions, handoffs and review messages.\",\"why\":[{\"claim\":\"It stores shared project memory in one local file.\",\"field\":\"summary\",\"value\":\"Shared project memory for coding agents using one brain.klypix file committed with code.\"},{\"claim\":\"It provides a message tool for agents to pass messages.\",\"field\":\"mcp_tools\",\"value\":\"brain_message\"},{\"claim\":\"It provides handoff tools to carry work between sessions.\",\"field\":\"mcp_tools\",\"value\":\"brain_handoff\"}],\"tradeoffs\":[\"Carry decisions over across sessions was not shown working in checks.\",\"Warn when sessions overlap files was not shown working in checks.\",\"Needs Node.js 20 or newer runtime on Linux.\"],\"vs_well_known\":null,\"platforms\":[\"macos\",\"linux\",\"windows\"],\"pricing\":\"unknown\",\"processing\":\"local\",\"open_source\":true,\"license\":\"Apache-2.0\",\"verification\":{\"level\":\"service\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-11-01T15:50:10.041080+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[{\"feature\":\"Leave notes and handoffs between sessions\",\"check\":\"python3 ~/.pickfit/mcp_probe.py --call brain_note --args '{\\\"text\\\":\\\"Use SQLite for the trial project database because this prototype runs on one machine.\\\",\\\"area\\\":\\\"Storage\\\"}' -- klypix-mcp --vault /home/sbx/work 2>&1\"}],\"not_checked\":[{\"feature\":\"Carry decisions over across sessions\",\"reason\":\"not_shown\",\"detail\":\"a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: brain_ask output shows only lexical notice, not the stored SQLite decision.\"},{\"feature\":\"Warn when sessions overlap files\",\"reason\":\"not_shown\",\"detail\":\"a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: brain_sync output reports no other declared task, not an overlap warning.\"},{\"feature\":\"Guard shared git checkouts\",\"reason\":\"not_shown\",\"detail\":\"a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: brain_doctor output says NOT INSTALLED with no guard result.\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; an MCP client handshake over stdio listed its 29 tools with the network off, and a call to brain_sync returned a result. The run exercised 1 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 89/100 and popularity 50/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":88.6,\"popularity\":50,\"treasure\":false},\"repo\":\"https://github.com/dahshanlabs/klypix-mcp\",\"homepage\":\"https://klypix.com/klypix-mcp\",\"web_app\":null},{\"slug\":\"renor-engine\",\"name\":\"Renor\",\"summary\":\"Memory for coding agents storing notes as local Markdown and serving them over MCP.\",\"fit\":\"Keeps project memory as local Markdown files recalled across agent sessions.\",\"why\":[{\"claim\":\"It stores memory as local Markdown files.\",\"field\":\"features_checked\",\"value\":\"store memory as local Markdown files\"},{\"claim\":\"It saves and recalls memory across agent sessions.\",\"field\":\"features_checked\",\"value\":\"save and recall memory across agent sessions\"},{\"claim\":\"It serves stored memory over MCP for coding agents.\",\"field\":\"features_checked\",\"value\":\"serve stored memory over MCP\"}],\"tradeoffs\":[\"No direct agent-to-agent message or review tool is listed.\",\"Needs Node 22 and git on Linux.\",\"Only one use case about remembering and recalling was verified.\"],\"vs_well_known\":null,\"platforms\":[],\"pricing\":\"unknown\",\"processing\":\"local\",\"open_source\":true,\"license\":\"Apache-2.0\",\"verification\":{\"level\":\"service\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-11-01T11:45:55.289963+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[{\"feature\":\"save and recall memory across agent sessions\",\"check\":\"VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py --call remember_fact --args '{\\\"subject\\\":\\\"Ada\\\",\\\"predicate\\\":\\\"favorite_color\\\",\\\"object\\\":\\\"cerulean\\\"}' -- renor-engine mcp\\n\"},{\"feature\":\"store memory as local Markdown files\",\"check\":\"VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py --call note --args '{\\\"text\\\":\\\"Test note about blue notebook on desk\\\"}' -- renor-engine mcp\\n\"},{\"feature\":\"serve stored memory over MCP\",\"check\":\"VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py --call search --args '{\\\"query\\\":\\\"Ada favorite color\\\"}' -- renor-engine mcp\\n\"}],\"not_checked\":[]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; an MCP client handshake over stdio listed its 8 tools with the network off, and a call to remember_fact returned a result. The run exercised 3 of the 3 main features its README advertises. Quality 96/100 and popularity 57/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":96.1,\"popularity\":57.2,\"treasure\":false},\"repo\":\"https://github.com/renorai/renor-engine\",\"homepage\":\"https://renor.cloud\",\"web_app\":null}],\"best_free\":{\"slug\":\"aletheia-mem\",\"reason\":\"It is free and shares one local SQLite memory across coding tools with session start context.\"},\"no_install_option\":null,\"well_known_option\":null,\"clarifying_question\":null,\"coverage_note\":\"591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores.\"}"
+            }
+          ],
+          "structuredContent": {
+            "rec_id": "rec_019ee379168841ac853eaa1dbcd3e676",
+            "matched_by": "muse-spark-1.3",
+            "degraded": false,
+            "degraded_reason": null,
+            "model_attempts": 1,
+            "model_http_status": null,
+            "considered": 591,
+            "picks": [
+              {
+                "slug": "klypix-mcp",
+                "name": "klypix-mcp",
+                "summary": "Shared project memory for coding agents using one brain.klypix file committed with code.",
+                "fit": "Shares one local memory file between agents for decisions, handoffs and review messages.",
+                "why": [
+                  {
+                    "claim": "It stores shared project memory in one local file.",
+                    "field": "summary",
+                    "value": "Shared project memory for coding agents using one brain.klypix file committed with code."
+                  },
+                  {
+                    "claim": "It provides a message tool for agents to pass messages.",
+                    "field": "mcp_tools",
+                    "value": "brain_message"
+                  },
+                  {
+                    "claim": "It provides handoff tools to carry work between sessions.",
+                    "field": "mcp_tools",
+                    "value": "brain_handoff"
+                  }
+                ],
+                "tradeoffs": [
+                  "Carry decisions over across sessions was not shown working in checks.",
+                  "Warn when sessions overlap files was not shown working in checks.",
+                  "Needs Node.js 20 or newer runtime on Linux."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "macos",
+                  "linux",
+                  "windows"
+                ],
+                "pricing": "unknown",
+                "processing": "local",
+                "open_source": true,
+                "license": "Apache-2.0",
+                "verification": {
+                  "level": "service",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-11-01T15:50:10.041080+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [
+                    {
+                      "feature": "Leave notes and handoffs between sessions",
+                      "check": "python3 ~/.pickfit/mcp_probe.py --call brain_note --args '{\"text\":\"Use SQLite for the trial project database because this prototype runs on one machine.\",\"area\":\"Storage\"}' -- klypix-mcp --vault /home/sbx/work 2>&1"
+                    }
+                  ],
+                  "not_checked": [
+                    {
+                      "feature": "Carry decisions over across sessions",
+                      "reason": "not_shown",
+                      "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: brain_ask output shows only lexical notice, not the stored SQLite decision."
+                    },
+                    {
+                      "feature": "Warn when sessions overlap files",
+                      "reason": "not_shown",
+                      "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: brain_sync output reports no other declared task, not an overlap warning."
+                    },
+                    {
+                      "feature": "Guard shared git checkouts",
+                      "reason": "not_shown",
+                      "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: brain_doctor output says NOT INSTALLED with no guard result."
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; an MCP client handshake over stdio listed its 29 tools with the network off, and a call to brain_sync returned a result. The run exercised 1 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 89/100 and popularity 50/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 88.6,
+                  "popularity": 50,
+                  "treasure": false
+                },
+                "repo": "https://github.com/dahshanlabs/klypix-mcp",
+                "homepage": "https://klypix.com/klypix-mcp",
+                "web_app": null
+              },
+              {
+                "slug": "renor-engine",
+                "name": "Renor",
+                "summary": "Memory for coding agents storing notes as local Markdown and serving them over MCP.",
+                "fit": "Keeps project memory as local Markdown files recalled across agent sessions.",
+                "why": [
+                  {
+                    "claim": "It stores memory as local Markdown files.",
+                    "field": "features_checked",
+                    "value": "store memory as local Markdown files"
+                  },
+                  {
+                    "claim": "It saves and recalls memory across agent sessions.",
+                    "field": "features_checked",
+                    "value": "save and recall memory across agent sessions"
+                  },
+                  {
+                    "claim": "It serves stored memory over MCP for coding agents.",
+                    "field": "features_checked",
+                    "value": "serve stored memory over MCP"
+                  }
+                ],
+                "tradeoffs": [
+                  "No direct agent-to-agent message or review tool is listed.",
+                  "Needs Node 22 and git on Linux.",
+                  "Only one use case about remembering and recalling was verified."
+                ],
+                "vs_well_known": null,
+                "platforms": [],
+                "pricing": "unknown",
+                "processing": "local",
+                "open_source": true,
+                "license": "Apache-2.0",
+                "verification": {
+                  "level": "service",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-11-01T11:45:55.289963+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [
+                    {
+                      "feature": "save and recall memory across agent sessions",
+                      "check": "VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py --call remember_fact --args '{\"subject\":\"Ada\",\"predicate\":\"favorite_color\",\"object\":\"cerulean\"}' -- renor-engine mcp\n"
+                    },
+                    {
+                      "feature": "store memory as local Markdown files",
+                      "check": "VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py --call note --args '{\"text\":\"Test note about blue notebook on desk\"}' -- renor-engine mcp\n"
+                    },
+                    {
+                      "feature": "serve stored memory over MCP",
+                      "check": "VAULT_PATH=/tmp/renor-vault python3 ~/.pickfit/mcp_probe.py --call search --args '{\"query\":\"Ada favorite color\"}' -- renor-engine mcp\n"
+                    }
+                  ],
+                  "not_checked": []
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; an MCP client handshake over stdio listed its 8 tools with the network off, and a call to remember_fact returned a result. The run exercised 3 of the 3 main features its README advertises. Quality 96/100 and popularity 57/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 96.1,
+                  "popularity": 57.2,
+                  "treasure": false
+                },
+                "repo": "https://github.com/renorai/renor-engine",
+                "homepage": "https://renor.cloud",
+                "web_app": null
+              }
+            ],
+            "best_free": {
+              "slug": "aletheia-mem",
+              "reason": "It is free and shares one local SQLite memory across coding tools with session start context."
+            },
+            "no_install_option": null,
+            "well_known_option": null,
+            "clarifying_question": null,
+            "coverage_note": "591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores."
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 1
+      }
+    }
+  ]
+}

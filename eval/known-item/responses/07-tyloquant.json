@@ -1,0 +1,560 @@
+{
+  "n": 7,
+  "target": {
+    "slug": "tyloquant",
+    "stratum": "local_ai",
+    "category": "local_ai",
+    "level": "function",
+    "os": "linux"
+  },
+  "arguments": {
+    "need": "I want to run a big mixture-of-experts language model on my own machine, but it's larger than my GPU's memory, so I need something that can spill parts of it into system RAM and the SSD. I'd also like to compress a Hugging Face safetensors checkpoint myself with mixed precision so quality doesn't tank. It has to be open source, and it needs to expose an OpenAI-compatible API so my existing apps and agents can talk to it.",
+    "os": "linux"
+  },
+  "used_attempt": 0,
+  "attempts": [
+    {
+      "at": "2026-11-02T17:20:54+08:00",
+      "latency_s": 17.1,
+      "http_status": 200,
+      "ledger_row": 43104,
+      "is_error": false,
+      "find": {
+        "rec_id": "rec_ead5961797eb4a1ba0a6abb37211469d",
+        "matched_by": "muse-spark-1.3",
+        "degraded": false,
+        "degraded_reason": null,
+        "model_attempts": 1,
+        "model_http_status": null,
+        "considered": 591,
+        "picks": [
+          {
+            "slug": "ggrun",
+            "name": "ggrun",
+            "summary": "Terminal launcher that plans and runs local GGUF models via llama.cpp backends.",
+            "fit": "It plans large-MoE placement across GPU and system RAM and exposes an OpenAI API on Linux.",
+            "why": [
+              {
+                "claim": "It plans large-MoE placement across GPU and RAM.",
+                "field": "use_cases",
+                "value": "plan large-MoE placement across GPU memory and system RAM"
+              },
+              {
+                "claim": "It exposes an OpenAI-compatible API for chat.",
+                "field": "use_cases",
+                "value": "expose OpenAI-compatible API for chat completions"
+              },
+              {
+                "claim": "It is open source.",
+                "field": "open_source",
+                "value": "true"
+              }
+            ],
+            "tradeoffs": [
+              "Placement and serving checks failed in sandbox: Recommend models that fit your hardware (not_shown), Run local models through compatible backends (test_failed_in_sandbox), Plan large-MoE placement acr",
+              "Card does not mention SSD offloading or mixed-precision safetensors compression."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "macos",
+              "linux",
+              "windows"
+            ],
+            "pricing": "unknown",
+            "processing": "local",
+            "open_source": true,
+            "license": "MIT",
+            "verification": {
+              "level": "function",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-10-31T01:47:17.477283+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [],
+              "not_checked": [
+                {
+                  "feature": "Recommend models that fit your hardware",
+                  "reason": "not_shown",
+                  "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Output states no models fit the budget, so no recommendation was shown."
+                },
+                {
+                  "feature": "Run local models through compatible backends",
+                  "reason": "test_failed_in_sandbox",
+                  "detail": "its test failed, but the sandbox's limits explain the failure: Tiny 1.2MB model dry-run fails: needs ~4675MB, box has ~1934MB RAM."
+                },
+                {
+                  "feature": "Plan large-MoE placement across GPU and RAM",
+                  "reason": "test_failed_in_sandbox",
+                  "detail": "its test failed, but the sandbox's limits explain the failure: detect --bandwidth needs CUDA GPU; box has none."
+                },
+                {
+                  "feature": "Launch local Claude Code workflows",
+                  "reason": "test_failed_in_sandbox",
+                  "detail": "its test failed, but the sandbox's limits explain the failure: --claude-code --dry-run fails same RAM shortfall before workflow."
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 78/100 and popularity 85/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 78.2,
+              "popularity": 84.7,
+              "treasure": false
+            },
+            "repo": "https://github.com/raketenkater/ggrun",
+            "homepage": null,
+            "web_app": null
+          },
+          {
+            "slug": "tyloquant",
+            "name": "MFQ",
+            "summary": "MFQ quantizes large models and runs them locally with native CUDA and Metal runtimes.",
+            "fit": "It quantizes Hugging Face checkpoints and serves large models via an OpenAI-compatible API.",
+            "why": [
+              {
+                "claim": "It can quantize your own Hugging Face checkpoint.",
+                "field": "features_checked",
+                "value": "quantize Hugging Face checkpoints to MFQ"
+              },
+              {
+                "claim": "It serves models through an OpenAI-compatible API.",
+                "field": "use_cases",
+                "value": "serve models via OpenAI-compatible API"
+              },
+              {
+                "claim": "It is built to run large models on local hardware.",
+                "field": "use_cases",
+                "value": "run large models on local hardware"
+              }
+            ],
+            "tradeoffs": [
+              "Serving and large-model runs are listed as needing GPU or display: run large models on local hardware (needs_gpu), serve models via OpenAI-compatible APIs (needs_gpu)",
+              "Card does not state RAM plus SSD spilling for oversize MoE models."
+            ],
+            "vs_well_known": null,
+            "platforms": [],
+            "pricing": "unknown",
+            "processing": "local",
+            "open_source": true,
+            "license": "Apache-2.0",
+            "verification": {
+              "level": "function",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-11-01T16:45:17.104665+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [
+                {
+                  "feature": "quantize Hugging Face checkpoints to MFQ",
+                  "check": "cd MFQ && uv run mfq quantize /tmp/tiny_hf /tmp/tiny.mfq --preset S4-M --backend cpu --dry-run 2>&1"
+                }
+              ],
+              "not_checked": [
+                {
+                  "feature": "run large models on local hardware",
+                  "reason": "needs_gpu",
+                  "detail": "needs a GPU, which the sandbox does not have: requires Metal on Apple silicon or CUDA/HIP; box has no accelerator, build detect fails"
+                },
+                {
+                  "feature": "download and run models in MFQ Studio",
+                  "reason": "needs_display",
+                  "detail": "needs a display, GUI or browser: MFQ Studio is desktop app with GUI, not CLI testable"
+                },
+                {
+                  "feature": "serve models via OpenAI-compatible APIs",
+                  "reason": "needs_gpu",
+                  "detail": "needs a GPU, which the sandbox does not have: serve needs native runtime; build not possible without accelerator, serve exits with BuildError"
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; a smoke test of its main function passed. The run exercised 1 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 78/100 and popularity 69/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 78.3,
+              "popularity": 69.4,
+              "treasure": false
+            },
+            "repo": "https://github.com/Tylogi/TyloQuant",
+            "homepage": null,
+            "web_app": null
+          },
+          {
+            "slug": "xyntetik-runner",
+            "name": "Xyntetik Runner",
+            "summary": "Single-binary C GGUF engine that serves models and trains LoRA adapters locally.",
+            "fit": "It serves GGUF models and can quantize with a custom plan behind an OpenAI-compatible API.",
+            "why": [
+              {
+                "claim": "It serves models over an OpenAI-compatible API.",
+                "field": "features_checked",
+                "value": "serve models via OpenAI-compatible API"
+              },
+              {
+                "claim": "It can quantize a model file with a custom plan.",
+                "field": "use_cases",
+                "value": "quantize model file with custom type plan"
+              },
+              {
+                "claim": "It is open source.",
+                "field": "open_source",
+                "value": "true"
+              }
+            ],
+            "tradeoffs": [
+              "Card does not mention MoE-specific handling or GPU-RAM-SSD offloading.",
+              "Quantization is a model-file type plan, not explicitly described as mixed-precision safetensors compression."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "macos",
+              "linux",
+              "windows"
+            ],
+            "pricing": "free",
+            "processing": "local",
+            "open_source": true,
+            "license": "Apache-2.0",
+            "verification": {
+              "level": "inference",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-10-31T01:41:22.036969+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [
+                {
+                  "feature": "serve models via OpenAI-compatible API",
+                  "check": "curl -s http://127.0.0.1:8080/v1/chat/completions -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"Say hello in one sentence.\"}],\"temperature\":0,\"max_tokens\":16}' 2>&1"
+                },
+                {
+                  "feature": "train LoRA through quantized weights",
+                  "check": "./runner train /tmp/data.jsonl -m /home/sbx/models/stories260K.gguf --steps 2 --lora-rank 4 --out /tmp/adapter.gguf 2>&1"
+                },
+                {
+                  "feature": "replay runs as signed receipts",
+                  "check": "./runner -m /home/sbx/models/stories260K.gguf -p \"Say hello in one sentence.\" -s 42 --record /tmp/run.json 2>&1 && ./runner -m /home/sbx/models/stories260K.gguf --verify /tmp/run.json 2>&1"
+                }
+              ],
+              "not_checked": [
+                {
+                  "feature": "complete tool calls past token limit",
+                  "reason": "other",
+                  "detail": "not checked: its check passed in the agent's box but not again in a fresh box"
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; it produced model output in a test run. The run exercised 3 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 85/100 and popularity 57/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 84.7,
+              "popularity": 56.8,
+              "treasure": false
+            },
+            "repo": "https://github.com/Joakimpalm-Zen/xyntetik-runner",
+            "homepage": "https://xyntetik.com",
+            "web_app": null
+          }
+        ],
+        "best_free": {
+          "slug": "xyntetik-runner",
+          "reason": "It is free and it serves models via OpenAI API while supporting custom quantization plans."
+        },
+        "no_install_option": null,
+        "well_known_option": null,
+        "clarifying_question": null,
+        "coverage_note": "591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores."
+      },
+      "raw": {
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"rec_id\":\"rec_ead5961797eb4a1ba0a6abb37211469d\",\"matched_by\":\"muse-spark-1.3\",\"degraded\":false,\"degraded_reason\":null,\"model_attempts\":1,\"model_http_status\":null,\"considered\":591,\"picks\":[{\"slug\":\"ggrun\",\"name\":\"ggrun\",\"summary\":\"Terminal launcher that plans and runs local GGUF models via llama.cpp backends.\",\"fit\":\"It plans large-MoE placement across GPU and system RAM and exposes an OpenAI API on Linux.\",\"why\":[{\"claim\":\"It plans large-MoE placement across GPU and RAM.\",\"field\":\"use_cases\",\"value\":\"plan large-MoE placement across GPU memory and system RAM\"},{\"claim\":\"It exposes an OpenAI-compatible API for chat.\",\"field\":\"use_cases\",\"value\":\"expose OpenAI-compatible API for chat completions\"},{\"claim\":\"It is open source.\",\"field\":\"open_source\",\"value\":\"true\"}],\"tradeoffs\":[\"Placement and serving checks failed in sandbox: Recommend models that fit your hardware (not_shown), Run local models through compatible backends (test_failed_in_sandbox), Plan large-MoE placement acr\",\"Card does not mention SSD offloading or mixed-precision safetensors compression.\"],\"vs_well_known\":null,\"platforms\":[\"macos\",\"linux\",\"windows\"],\"pricing\":\"unknown\",\"processing\":\"local\",\"open_source\":true,\"license\":\"MIT\",\"verification\":{\"level\":\"function\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-10-31T01:47:17.477283+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[],\"not_checked\":[{\"feature\":\"Recommend models that fit your hardware\",\"reason\":\"not_shown\",\"detail\":\"a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Output states no models fit the budget, so no recommendation was shown.\"},{\"feature\":\"Run local models through compatible backends\",\"reason\":\"test_failed_in_sandbox\",\"detail\":\"its test failed, but the sandbox's limits explain the failure: Tiny 1.2MB model dry-run fails: needs ~4675MB, box has ~1934MB RAM.\"},{\"feature\":\"Plan large-MoE placement across GPU and RAM\",\"reason\":\"test_failed_in_sandbox\",\"detail\":\"its test failed, but the sandbox's limits explain the failure: detect --bandwidth needs CUDA GPU; box has none.\"},{\"feature\":\"Launch local Claude Code workflows\",\"reason\":\"test_failed_in_sandbox\",\"detail\":\"its test failed, but the sandbox's limits explain the failure: --claude-code --dry-run fails same RAM shortfall before workflow.\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 78/100 and popularity 85/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":78.2,\"popularity\":84.7,\"treasure\":false},\"repo\":\"https://github.com/raketenkater/ggrun\",\"homepage\":null,\"web_app\":null},{\"slug\":\"tyloquant\",\"name\":\"MFQ\",\"summary\":\"MFQ quantizes large models and runs them locally with native CUDA and Metal runtimes.\",\"fit\":\"It quantizes Hugging Face checkpoints and serves large models via an OpenAI-compatible API.\",\"why\":[{\"claim\":\"It can quantize your own Hugging Face checkpoint.\",\"field\":\"features_checked\",\"value\":\"quantize Hugging Face checkpoints to MFQ\"},{\"claim\":\"It serves models through an OpenAI-compatible API.\",\"field\":\"use_cases\",\"value\":\"serve models via OpenAI-compatible API\"},{\"claim\":\"It is built to run large models on local hardware.\",\"field\":\"use_cases\",\"value\":\"run large models on local hardware\"}],\"tradeoffs\":[\"Serving and large-model runs are listed as needing GPU or display: run large models on local hardware (needs_gpu), serve models via OpenAI-compatible APIs (needs_gpu)\",\"Card does not state RAM plus SSD spilling for oversize MoE models.\"],\"vs_well_known\":null,\"platforms\":[],\"pricing\":\"unknown\",\"processing\":\"local\",\"open_source\":true,\"license\":\"Apache-2.0\",\"verification\":{\"level\":\"function\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-11-01T16:45:17.104665+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[{\"feature\":\"quantize Hugging Face checkpoints to MFQ\",\"check\":\"cd MFQ && uv run mfq quantize /tmp/tiny_hf /tmp/tiny.mfq --preset S4-M --backend cpu --dry-run 2>&1\"}],\"not_checked\":[{\"feature\":\"run large models on local hardware\",\"reason\":\"needs_gpu\",\"detail\":\"needs a GPU, which the sandbox does not have: requires Metal on Apple silicon or CUDA/HIP; box has no accelerator, build detect fails\"},{\"feature\":\"download and run models in MFQ Studio\",\"reason\":\"needs_display\",\"detail\":\"needs a display, GUI or browser: MFQ Studio is desktop app with GUI, not CLI testable\"},{\"feature\":\"serve models via OpenAI-compatible APIs\",\"reason\":\"needs_gpu\",\"detail\":\"needs a GPU, which the sandbox does not have: serve needs native runtime; build not possible without accelerator, serve exits with BuildError\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; a smoke test of its main function passed. The run exercised 1 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 78/100 and popularity 69/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":78.3,\"popularity\":69.4,\"treasure\":false},\"repo\":\"https://github.com/Tylogi/TyloQuant\",\"homepage\":null,\"web_app\":null},{\"slug\":\"xyntetik-runner\",\"name\":\"Xyntetik Runner\",\"summary\":\"Single-binary C GGUF engine that serves models and trains LoRA adapters locally.\",\"fit\":\"It serves GGUF models and can quantize with a custom plan behind an OpenAI-compatible API.\",\"why\":[{\"claim\":\"It serves models over an OpenAI-compatible API.\",\"field\":\"features_checked\",\"value\":\"serve models via OpenAI-compatible API\"},{\"claim\":\"It can quantize a model file with a custom plan.\",\"field\":\"use_cases\",\"value\":\"quantize model file with custom type plan\"},{\"claim\":\"It is open source.\",\"field\":\"open_source\",\"value\":\"true\"}],\"tradeoffs\":[\"Card does not mention MoE-specific handling or GPU-RAM-SSD offloading.\",\"Quantization is a model-file type plan, not explicitly described as mixed-precision safetensors compression.\"],\"vs_well_known\":null,\"platforms\":[\"macos\",\"linux\",\"windows\"],\"pricing\":\"free\",\"processing\":\"local\",\"open_source\":true,\"license\":\"Apache-2.0\",\"verification\":{\"level\":\"inference\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-10-31T01:41:22.036969+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[{\"feature\":\"serve models via OpenAI-compatible API\",\"check\":\"curl -s http://127.0.0.1:8080/v1/chat/completions -H 'Content-Type: application/json' -d '{\\\"messages\\\":[{\\\"role\\\":\\\"user\\\",\\\"content\\\":\\\"Say hello in one sentence.\\\"}],\\\"temperature\\\":0,\\\"max_tokens\\\":16}' 2>&1\"},{\"feature\":\"train LoRA through quantized weights\",\"check\":\"./runner train /tmp/data.jsonl -m /home/sbx/models/stories260K.gguf --steps 2 --lora-rank 4 --out /tmp/adapter.gguf 2>&1\"},{\"feature\":\"replay runs as signed receipts\",\"check\":\"./runner -m /home/sbx/models/stories260K.gguf -p \\\"Say hello in one sentence.\\\" -s 42 --record /tmp/run.json 2>&1 && ./runner -m /home/sbx/models/stories260K.gguf --verify /tmp/run.json 2>&1\"}],\"not_checked\":[{\"feature\":\"complete tool calls past token limit\",\"reason\":\"other\",\"detail\":\"not checked: its check passed in the agent's box but not again in a fresh box\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; it produced model output in a test run. The run exercised 3 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 85/100 and popularity 57/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":84.7,\"popularity\":56.8,\"treasure\":false},\"repo\":\"https://github.com/Joakimpalm-Zen/xyntetik-runner\",\"homepage\":\"https://xyntetik.com\",\"web_app\":null}],\"best_free\":{\"slug\":\"xyntetik-runner\",\"reason\":\"It is free and it serves models via OpenAI API while supporting custom quantization plans.\"},\"no_install_option\":null,\"well_known_option\":null,\"clarifying_question\":null,\"coverage_note\":\"591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores.\"}"
+            }
+          ],
+          "structuredContent": {
+            "rec_id": "rec_ead5961797eb4a1ba0a6abb37211469d",
+            "matched_by": "muse-spark-1.3",
+            "degraded": false,
+            "degraded_reason": null,
+            "model_attempts": 1,
+            "model_http_status": null,
+            "considered": 591,
+            "picks": [
+              {
+                "slug": "ggrun",
+                "name": "ggrun",
+                "summary": "Terminal launcher that plans and runs local GGUF models via llama.cpp backends.",
+                "fit": "It plans large-MoE placement across GPU and system RAM and exposes an OpenAI API on Linux.",
+                "why": [
+                  {
+                    "claim": "It plans large-MoE placement across GPU and RAM.",
+                    "field": "use_cases",
+                    "value": "plan large-MoE placement across GPU memory and system RAM"
+                  },
+                  {
+                    "claim": "It exposes an OpenAI-compatible API for chat.",
+                    "field": "use_cases",
+                    "value": "expose OpenAI-compatible API for chat completions"
+                  },
+                  {
+                    "claim": "It is open source.",
+                    "field": "open_source",
+                    "value": "true"
+                  }
+                ],
+                "tradeoffs": [
+                  "Placement and serving checks failed in sandbox: Recommend models that fit your hardware (not_shown), Run local models through compatible backends (test_failed_in_sandbox), Plan large-MoE placement acr",
+                  "Card does not mention SSD offloading or mixed-precision safetensors compression."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "macos",
+                  "linux",
+                  "windows"
+                ],
+                "pricing": "unknown",
+                "processing": "local",
+                "open_source": true,
+                "license": "MIT",
+                "verification": {
+                  "level": "function",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-10-31T01:47:17.477283+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [],
+                  "not_checked": [
+                    {
+                      "feature": "Recommend models that fit your hardware",
+                      "reason": "not_shown",
+                      "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Output states no models fit the budget, so no recommendation was shown."
+                    },
+                    {
+                      "feature": "Run local models through compatible backends",
+                      "reason": "test_failed_in_sandbox",
+                      "detail": "its test failed, but the sandbox's limits explain the failure: Tiny 1.2MB model dry-run fails: needs ~4675MB, box has ~1934MB RAM."
+                    },
+                    {
+                      "feature": "Plan large-MoE placement across GPU and RAM",
+                      "reason": "test_failed_in_sandbox",
+                      "detail": "its test failed, but the sandbox's limits explain the failure: detect --bandwidth needs CUDA GPU; box has none."
+                    },
+                    {
+                      "feature": "Launch local Claude Code workflows",
+                      "reason": "test_failed_in_sandbox",
+                      "detail": "its test failed, but the sandbox's limits explain the failure: --claude-code --dry-run fails same RAM shortfall before workflow."
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 78/100 and popularity 85/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 78.2,
+                  "popularity": 84.7,
+                  "treasure": false
+                },
+                "repo": "https://github.com/raketenkater/ggrun",
+                "homepage": null,
+                "web_app": null
+              },
+              {
+                "slug": "tyloquant",
+                "name": "MFQ",
+                "summary": "MFQ quantizes large models and runs them locally with native CUDA and Metal runtimes.",
+                "fit": "It quantizes Hugging Face checkpoints and serves large models via an OpenAI-compatible API.",
+                "why": [
+                  {
+                    "claim": "It can quantize your own Hugging Face checkpoint.",
+                    "field": "features_checked",
+                    "value": "quantize Hugging Face checkpoints to MFQ"
+                  },
+                  {
+                    "claim": "It serves models through an OpenAI-compatible API.",
+                    "field": "use_cases",
+                    "value": "serve models via OpenAI-compatible API"
+                  },
+                  {
+                    "claim": "It is built to run large models on local hardware.",
+                    "field": "use_cases",
+                    "value": "run large models on local hardware"
+                  }
+                ],
+                "tradeoffs": [
+                  "Serving and large-model runs are listed as needing GPU or display: run large models on local hardware (needs_gpu), serve models via OpenAI-compatible APIs (needs_gpu)",
+                  "Card does not state RAM plus SSD spilling for oversize MoE models."
+                ],
+                "vs_well_known": null,
+                "platforms": [],
+                "pricing": "unknown",
+                "processing": "local",
+                "open_source": true,
+                "license": "Apache-2.0",
+                "verification": {
+                  "level": "function",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-11-01T16:45:17.104665+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [
+                    {
+                      "feature": "quantize Hugging Face checkpoints to MFQ",
+                      "check": "cd MFQ && uv run mfq quantize /tmp/tiny_hf /tmp/tiny.mfq --preset S4-M --backend cpu --dry-run 2>&1"
+                    }
+                  ],
+                  "not_checked": [
+                    {
+                      "feature": "run large models on local hardware",
+                      "reason": "needs_gpu",
+                      "detail": "needs a GPU, which the sandbox does not have: requires Metal on Apple silicon or CUDA/HIP; box has no accelerator, build detect fails"
+                    },
+                    {
+                      "feature": "download and run models in MFQ Studio",
+                      "reason": "needs_display",
+                      "detail": "needs a display, GUI or browser: MFQ Studio is desktop app with GUI, not CLI testable"
+                    },
+                    {
+                      "feature": "serve models via OpenAI-compatible APIs",
+                      "reason": "needs_gpu",
+                      "detail": "needs a GPU, which the sandbox does not have: serve needs native runtime; build not possible without accelerator, serve exits with BuildError"
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; a smoke test of its main function passed. The run exercised 1 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 78/100 and popularity 69/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 78.3,
+                  "popularity": 69.4,
+                  "treasure": false
+                },
+                "repo": "https://github.com/Tylogi/TyloQuant",
+                "homepage": null,
+                "web_app": null
+              },
+              {
+                "slug": "xyntetik-runner",
+                "name": "Xyntetik Runner",
+                "summary": "Single-binary C GGUF engine that serves models and trains LoRA adapters locally.",
+                "fit": "It serves GGUF models and can quantize with a custom plan behind an OpenAI-compatible API.",
+                "why": [
+                  {
+                    "claim": "It serves models over an OpenAI-compatible API.",
+                    "field": "features_checked",
+                    "value": "serve models via OpenAI-compatible API"
+                  },
+                  {
+                    "claim": "It can quantize a model file with a custom plan.",
+                    "field": "use_cases",
+                    "value": "quantize model file with custom type plan"
+                  },
+                  {
+                    "claim": "It is open source.",
+                    "field": "open_source",
+                    "value": "true"
+                  }
+                ],
+                "tradeoffs": [
+                  "Card does not mention MoE-specific handling or GPU-RAM-SSD offloading.",
+                  "Quantization is a model-file type plan, not explicitly described as mixed-precision safetensors compression."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "macos",
+                  "linux",
+                  "windows"
+                ],
+                "pricing": "free",
+                "processing": "local",
+                "open_source": true,
+                "license": "Apache-2.0",
+                "verification": {
+                  "level": "inference",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-10-31T01:41:22.036969+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [
+                    {
+                      "feature": "serve models via OpenAI-compatible API",
+                      "check": "curl -s http://127.0.0.1:8080/v1/chat/completions -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"Say hello in one sentence.\"}],\"temperature\":0,\"max_tokens\":16}' 2>&1"
+                    },
+                    {
+                      "feature": "train LoRA through quantized weights",
+                      "check": "./runner train /tmp/data.jsonl -m /home/sbx/models/stories260K.gguf --steps 2 --lora-rank 4 --out /tmp/adapter.gguf 2>&1"
+                    },
+                    {
+                      "feature": "replay runs as signed receipts",
+                      "check": "./runner -m /home/sbx/models/stories260K.gguf -p \"Say hello in one sentence.\" -s 42 --record /tmp/run.json 2>&1 && ./runner -m /home/sbx/models/stories260K.gguf --verify /tmp/run.json 2>&1"
+                    }
+                  ],
+                  "not_checked": [
+                    {
+                      "feature": "complete tool calls past token limit",
+                      "reason": "other",
+                      "detail": "not checked: its check passed in the agent's box but not again in a fresh box"
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; it produced model output in a test run. The run exercised 3 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 85/100 and popularity 57/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 84.7,
+                  "popularity": 56.8,
+                  "treasure": false
+                },
+                "repo": "https://github.com/Joakimpalm-Zen/xyntetik-runner",
+                "homepage": "https://xyntetik.com",
+                "web_app": null
+              }
+            ],
+            "best_free": {
+              "slug": "xyntetik-runner",
+              "reason": "It is free and it serves models via OpenAI API while supporting custom quantization plans."
+            },
+            "no_install_option": null,
+            "well_known_option": null,
+            "clarifying_question": null,
+            "coverage_note": "591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores."
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 1
+      }
+    }
+  ]
+}

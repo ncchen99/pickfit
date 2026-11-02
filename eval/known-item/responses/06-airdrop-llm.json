@@ -1,0 +1,548 @@
+{
+  "n": 6,
+  "target": {
+    "slug": "airdrop-llm",
+    "stratum": "local_ai",
+    "category": "local_ai",
+    "level": "install",
+    "os": "linux"
+  },
+  "arguments": {
+    "need": "I've got two laptops at home, neither with enough memory to run a 32B coding model by itself. I want something that links them over my home Wi-Fi so they split the model and act like one machine. It has to find the other laptop on its own without me typing IP addresses, run fully offline, and give me an OpenAI-style endpoint I can point Aider or Cursor at.",
+    "os": "linux"
+  },
+  "used_attempt": 0,
+  "attempts": [
+    {
+      "at": "2026-11-02T17:20:37+08:00",
+      "latency_s": 13.8,
+      "http_status": 200,
+      "ledger_row": 43103,
+      "is_error": false,
+      "find": {
+        "rec_id": "rec_1da6ab3f5ab148348393e7ca744b0a0c",
+        "matched_by": "muse-spark-1.3",
+        "degraded": false,
+        "degraded_reason": null,
+        "model_attempts": 1,
+        "model_http_status": null,
+        "considered": 591,
+        "picks": [
+          {
+            "slug": "omarchy-cluster",
+            "name": "omarchy-cluster",
+            "summary": "Runs one local model across networked machines as one OpenAI-compatible endpoint.",
+            "fit": "Splits one model that does not fit on one machine across your two Linux laptops.",
+            "why": [
+              {
+                "claim": "splits a model that does not fit on one machine across nodes",
+                "field": "use_cases",
+                "value": "Split a model that does not fit on one machine across nodes"
+              },
+              {
+                "claim": "finds the other laptop on its own over mDNS without typing IP addresses",
+                "field": "use_cases",
+                "value": "Find cluster nodes over mDNS"
+              },
+              {
+                "claim": "serves the split model as one OpenAI-compatible endpoint",
+                "field": "use_cases",
+                "value": "Serve a split model as one OpenAI-compatible endpoint on :8020"
+              }
+            ],
+            "tradeoffs": [
+              "PickFit did not see the split-model serving, OpenAI endpoint, or mDNS discovery work: they are listed as features_not_checked.",
+              "Needs local network access and system packages Avahi and dns-sd on Linux.",
+              "No offline claim was verified beyond local processing."
+            ],
+            "vs_well_known": null,
+            "platforms": [
+              "macos",
+              "linux"
+            ],
+            "pricing": "unknown",
+            "processing": "local",
+            "open_source": true,
+            "license": "MIT",
+            "verification": {
+              "level": "function",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-10-31T01:41:27.513493+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [],
+              "not_checked": [
+                {
+                  "feature": "run one local model across network machines",
+                  "reason": "other",
+                  "detail": "not checked: needs 2+ network nodes with shared token and model cached on every node; single box cannot exercise"
+                },
+                {
+                  "feature": "serve cluster as OpenAI-compatible endpoint",
+                  "reason": "other",
+                  "detail": "not checked: needs multi-node serve with agents and model download to expose :8020; single box cannot serve"
+                },
+                {
+                  "feature": "discover nodes over mDNS and probe routes",
+                  "reason": "not_shown",
+                  "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: discover shows Connection refused/DOWN and status reports no links.json yet."
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 3 main features its README advertises; see features for the ones it did not check and why. Quality 81/100 and popularity 36/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 81.2,
+              "popularity": 35.6,
+              "treasure": true
+            },
+            "repo": "https://github.com/joshuaswarren/omarchy-cluster",
+            "homepage": null,
+            "web_app": null
+          },
+          {
+            "slug": "airdrop-llm",
+            "name": "AirDrop-LLM",
+            "summary": "Offline P2P broker pooling laptops over Wi-Fi for pipeline-parallel LLM inference.",
+            "fit": "Offline P2P broker pooling laptops over Wi-Fi for pipeline-parallel LLM inference.",
+            "why": [
+              {
+                "claim": "designed to run 32B and larger models across pooled laptops",
+                "field": "use_cases",
+                "value": "Run 32B and 70B parameter models across pooled laptops"
+              },
+              {
+                "claim": "provides distributed chat completions through an API gateway",
+                "field": "use_cases",
+                "value": "Stream distributed chat completions via API gateway"
+              }
+            ],
+            "tradeoffs": [
+              "PickFit only verified install; pooling laptops, running 32B models offline, serving OpenAI API, and Wi-Fi discovery all need more resources or were not shown.",
+              "Card lists network as required, so fully offline use was not verified.",
+              "Lower quality score than the other picks."
+            ],
+            "vs_well_known": "Choose this instead of Ollama / llama.cpp when one laptop cannot hold the 32B model alone, and stay with Ollama when a single machine is enough.",
+            "platforms": [
+              "macos",
+              "linux",
+              "windows"
+            ],
+            "pricing": "unknown",
+            "processing": "local",
+            "open_source": true,
+            "license": "MIT",
+            "verification": {
+              "level": "install",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-11-01T03:10:56.694267+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [],
+              "not_checked": [
+                {
+                  "feature": "Pool laptops into distributed GPU cluster",
+                  "reason": "needs_more_resources",
+                  "detail": "too heavy for the sandbox (memory, disk, time, model size or more than one machine): Requires 2+ laptops on same Wi-Fi for P2P pooling; single box cannot verify"
+                },
+                {
+                  "feature": "Run 32B and 70B models offline",
+                  "reason": "needs_more_resources",
+                  "detail": "too heavy for the sandbox (memory, disk, time, model size or more than one machine): Requires 20-50GB model download and 24-64GB pooled RAM/GPU; not feasible in box"
+                },
+                {
+                  "feature": "Serve OpenAI-compatible chat completions API",
+                  "reason": "not_shown",
+                  "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Output only shows the proxy listening log and open port, with no actual /v1/models or /v1/chat/completions response."
+                },
+                {
+                  "feature": "Discover peer laptops via Wi-Fi",
+                  "reason": "needs_more_resources",
+                  "detail": "too heavy for the sandbox (memory, disk, time, model size or more than one machine): Requires second peer broadcasting on UDP :9998; single box cannot verify discovery"
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-31; the install finished and the tool started. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 64/100 and popularity 45/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 63.6,
+              "popularity": 45.3,
+              "treasure": false
+            },
+            "repo": "https://github.com/Mohit-jpg-dot/AirDrop-LLM",
+            "homepage": null,
+            "web_app": null
+          },
+          {
+            "slug": "superfluid",
+            "name": "superfluid",
+            "summary": "Serving daemon providing one scheduler and APIs for local LLM inference across runtimes and machines.",
+            "fit": "Distributes local LLM serving across machines on a local network.",
+            "why": [
+              {
+                "claim": "can distribute serving across machines on a local network",
+                "field": "use_cases",
+                "value": "distribute serving across machines on local network"
+              },
+              {
+                "claim": "serves local inference via OpenAI-compatible API",
+                "field": "use_cases",
+                "value": "serve local LLM inference via OpenAI, Anthropic or Ollama API"
+              },
+              {
+                "claim": "is a serving daemon for local LLM inference across runtimes and machines",
+                "field": "summary",
+                "value": "Serving daemon providing one scheduler and APIs for local LLM inference across runtimes and machines."
+              }
+            ],
+            "tradeoffs": [
+              "PickFit did not see OpenAI-compatible serving or adding distributed machines work; both are listed as not shown.",
+              "Card does not claim automatic peer discovery without IP addresses or offline operation.",
+              "Card does not claim splitting one 32B model that exceeds single-machine memory."
+            ],
+            "vs_well_known": "Choose this instead of Ollama when you want one scheduler across runtimes and machines, and stay with Ollama when you only need simple single-machine serving.",
+            "platforms": [
+              "macos",
+              "linux"
+            ],
+            "pricing": "unknown",
+            "processing": "local",
+            "open_source": true,
+            "license": "Apache-2.0",
+            "verification": {
+              "level": "inference",
+              "os": "linux",
+              "arch": "x86_64",
+              "method": "sandbox",
+              "replayed": true,
+              "checked_at": "2026-11-01T16:04:48.913884+08:00",
+              "verified_on_user_os": true,
+              "gui": null
+            },
+            "features": {
+              "recorded": true,
+              "checked": [
+                {
+                  "feature": "serve local LLM inference across runtimes",
+                  "check": "curl -s http://127.0.0.1:8453/v1/models"
+                }
+              ],
+              "not_checked": [
+                {
+                  "feature": "serve OpenAI, Anthropic and Ollama clients",
+                  "reason": "not_shown",
+                  "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Outputs show only OpenAI /v1 calls with no Anthropic or Ollama request shown."
+                },
+                {
+                  "feature": "run coding agents on local models",
+                  "reason": "other",
+                  "detail": "not checked: its check did not pass in the log; superfluid launch --help lists Claude Code etc and shows auto-start of serve"
+                },
+                {
+                  "feature": "add machines for distributed serving",
+                  "reason": "other",
+                  "detail": "not checked: its check did not pass in the log; superfluid node join --help shows fleet token, local network discovery and encrypted link"
+                }
+              ]
+            },
+            "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; it produced model output in a test run. The run exercised 1 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 84/100 and popularity 56/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+            "evidence_url": null,
+            "scores": {
+              "quality": 84.4,
+              "popularity": 56.4,
+              "treasure": false
+            },
+            "repo": "https://github.com/basecompute/superfluid",
+            "homepage": "https://superfluid.sh",
+            "web_app": null
+          }
+        ],
+        "best_free": null,
+        "no_install_option": null,
+        "well_known_option": null,
+        "clarifying_question": null,
+        "coverage_note": "591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores."
+      },
+      "raw": {
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"rec_id\":\"rec_1da6ab3f5ab148348393e7ca744b0a0c\",\"matched_by\":\"muse-spark-1.3\",\"degraded\":false,\"degraded_reason\":null,\"model_attempts\":1,\"model_http_status\":null,\"considered\":591,\"picks\":[{\"slug\":\"omarchy-cluster\",\"name\":\"omarchy-cluster\",\"summary\":\"Runs one local model across networked machines as one OpenAI-compatible endpoint.\",\"fit\":\"Splits one model that does not fit on one machine across your two Linux laptops.\",\"why\":[{\"claim\":\"splits a model that does not fit on one machine across nodes\",\"field\":\"use_cases\",\"value\":\"Split a model that does not fit on one machine across nodes\"},{\"claim\":\"finds the other laptop on its own over mDNS without typing IP addresses\",\"field\":\"use_cases\",\"value\":\"Find cluster nodes over mDNS\"},{\"claim\":\"serves the split model as one OpenAI-compatible endpoint\",\"field\":\"use_cases\",\"value\":\"Serve a split model as one OpenAI-compatible endpoint on :8020\"}],\"tradeoffs\":[\"PickFit did not see the split-model serving, OpenAI endpoint, or mDNS discovery work: they are listed as features_not_checked.\",\"Needs local network access and system packages Avahi and dns-sd on Linux.\",\"No offline claim was verified beyond local processing.\"],\"vs_well_known\":null,\"platforms\":[\"macos\",\"linux\"],\"pricing\":\"unknown\",\"processing\":\"local\",\"open_source\":true,\"license\":\"MIT\",\"verification\":{\"level\":\"function\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-10-31T01:41:27.513493+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[],\"not_checked\":[{\"feature\":\"run one local model across network machines\",\"reason\":\"other\",\"detail\":\"not checked: needs 2+ network nodes with shared token and model cached on every node; single box cannot exercise\"},{\"feature\":\"serve cluster as OpenAI-compatible endpoint\",\"reason\":\"other\",\"detail\":\"not checked: needs multi-node serve with agents and model download to expose :8020; single box cannot serve\"},{\"feature\":\"discover nodes over mDNS and probe routes\",\"reason\":\"not_shown\",\"detail\":\"a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: discover shows Connection refused/DOWN and status reports no links.json yet.\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 3 main features its README advertises; see features for the ones it did not check and why. Quality 81/100 and popularity 36/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":81.2,\"popularity\":35.6,\"treasure\":true},\"repo\":\"https://github.com/joshuaswarren/omarchy-cluster\",\"homepage\":null,\"web_app\":null},{\"slug\":\"airdrop-llm\",\"name\":\"AirDrop-LLM\",\"summary\":\"Offline P2P broker pooling laptops over Wi-Fi for pipeline-parallel LLM inference.\",\"fit\":\"Offline P2P broker pooling laptops over Wi-Fi for pipeline-parallel LLM inference.\",\"why\":[{\"claim\":\"designed to run 32B and larger models across pooled laptops\",\"field\":\"use_cases\",\"value\":\"Run 32B and 70B parameter models across pooled laptops\"},{\"claim\":\"provides distributed chat completions through an API gateway\",\"field\":\"use_cases\",\"value\":\"Stream distributed chat completions via API gateway\"}],\"tradeoffs\":[\"PickFit only verified install; pooling laptops, running 32B models offline, serving OpenAI API, and Wi-Fi discovery all need more resources or were not shown.\",\"Card lists network as required, so fully offline use was not verified.\",\"Lower quality score than the other picks.\"],\"vs_well_known\":\"Choose this instead of Ollama / llama.cpp when one laptop cannot hold the 32B model alone, and stay with Ollama when a single machine is enough.\",\"platforms\":[\"macos\",\"linux\",\"windows\"],\"pricing\":\"unknown\",\"processing\":\"local\",\"open_source\":true,\"license\":\"MIT\",\"verification\":{\"level\":\"install\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-11-01T03:10:56.694267+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[],\"not_checked\":[{\"feature\":\"Pool laptops into distributed GPU cluster\",\"reason\":\"needs_more_resources\",\"detail\":\"too heavy for the sandbox (memory, disk, time, model size or more than one machine): Requires 2+ laptops on same Wi-Fi for P2P pooling; single box cannot verify\"},{\"feature\":\"Run 32B and 70B models offline\",\"reason\":\"needs_more_resources\",\"detail\":\"too heavy for the sandbox (memory, disk, time, model size or more than one machine): Requires 20-50GB model download and 24-64GB pooled RAM/GPU; not feasible in box\"},{\"feature\":\"Serve OpenAI-compatible chat completions API\",\"reason\":\"not_shown\",\"detail\":\"a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Output only shows the proxy listening log and open port, with no actual /v1/models or /v1/chat/completions response.\"},{\"feature\":\"Discover peer laptops via Wi-Fi\",\"reason\":\"needs_more_resources\",\"detail\":\"too heavy for the sandbox (memory, disk, time, model size or more than one machine): Requires second peer broadcasting on UDP :9998; single box cannot verify discovery\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-31; the install finished and the tool started. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 64/100 and popularity 45/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":63.6,\"popularity\":45.3,\"treasure\":false},\"repo\":\"https://github.com/Mohit-jpg-dot/AirDrop-LLM\",\"homepage\":null,\"web_app\":null},{\"slug\":\"superfluid\",\"name\":\"superfluid\",\"summary\":\"Serving daemon providing one scheduler and APIs for local LLM inference across runtimes and machines.\",\"fit\":\"Distributes local LLM serving across machines on a local network.\",\"why\":[{\"claim\":\"can distribute serving across machines on a local network\",\"field\":\"use_cases\",\"value\":\"distribute serving across machines on local network\"},{\"claim\":\"serves local inference via OpenAI-compatible API\",\"field\":\"use_cases\",\"value\":\"serve local LLM inference via OpenAI, Anthropic or Ollama API\"},{\"claim\":\"is a serving daemon for local LLM inference across runtimes and machines\",\"field\":\"summary\",\"value\":\"Serving daemon providing one scheduler and APIs for local LLM inference across runtimes and machines.\"}],\"tradeoffs\":[\"PickFit did not see OpenAI-compatible serving or adding distributed machines work; both are listed as not shown.\",\"Card does not claim automatic peer discovery without IP addresses or offline operation.\",\"Card does not claim splitting one 32B model that exceeds single-machine memory.\"],\"vs_well_known\":\"Choose this instead of Ollama when you want one scheduler across runtimes and machines, and stay with Ollama when you only need simple single-machine serving.\",\"platforms\":[\"macos\",\"linux\"],\"pricing\":\"unknown\",\"processing\":\"local\",\"open_source\":true,\"license\":\"Apache-2.0\",\"verification\":{\"level\":\"inference\",\"os\":\"linux\",\"arch\":\"x86_64\",\"method\":\"sandbox\",\"replayed\":true,\"checked_at\":\"2026-11-01T16:04:48.913884+08:00\",\"verified_on_user_os\":true,\"gui\":null},\"features\":{\"recorded\":true,\"checked\":[{\"feature\":\"serve local LLM inference across runtimes\",\"check\":\"curl -s http://127.0.0.1:8453/v1/models\"}],\"not_checked\":[{\"feature\":\"serve OpenAI, Anthropic and Ollama clients\",\"reason\":\"not_shown\",\"detail\":\"a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Outputs show only OpenAI /v1 calls with no Anthropic or Ollama request shown.\"},{\"feature\":\"run coding agents on local models\",\"reason\":\"other\",\"detail\":\"not checked: its check did not pass in the log; superfluid launch --help lists Claude Code etc and shows auto-start of serve\"},{\"feature\":\"add machines for distributed serving\",\"reason\":\"other\",\"detail\":\"not checked: its check did not pass in the log; superfluid node join --help shows fleet token, local network discovery and encrypted link\"}]},\"how_we_know\":\"pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; it produced model output in a test run. The run exercised 1 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 84/100 and popularity 56/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.\",\"evidence_url\":null,\"scores\":{\"quality\":84.4,\"popularity\":56.4,\"treasure\":false},\"repo\":\"https://github.com/basecompute/superfluid\",\"homepage\":\"https://superfluid.sh\",\"web_app\":null}],\"best_free\":null,\"no_install_option\":null,\"well_known_option\":null,\"clarifying_question\":null,\"coverage_note\":\"591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores.\"}"
+            }
+          ],
+          "structuredContent": {
+            "rec_id": "rec_1da6ab3f5ab148348393e7ca744b0a0c",
+            "matched_by": "muse-spark-1.3",
+            "degraded": false,
+            "degraded_reason": null,
+            "model_attempts": 1,
+            "model_http_status": null,
+            "considered": 591,
+            "picks": [
+              {
+                "slug": "omarchy-cluster",
+                "name": "omarchy-cluster",
+                "summary": "Runs one local model across networked machines as one OpenAI-compatible endpoint.",
+                "fit": "Splits one model that does not fit on one machine across your two Linux laptops.",
+                "why": [
+                  {
+                    "claim": "splits a model that does not fit on one machine across nodes",
+                    "field": "use_cases",
+                    "value": "Split a model that does not fit on one machine across nodes"
+                  },
+                  {
+                    "claim": "finds the other laptop on its own over mDNS without typing IP addresses",
+                    "field": "use_cases",
+                    "value": "Find cluster nodes over mDNS"
+                  },
+                  {
+                    "claim": "serves the split model as one OpenAI-compatible endpoint",
+                    "field": "use_cases",
+                    "value": "Serve a split model as one OpenAI-compatible endpoint on :8020"
+                  }
+                ],
+                "tradeoffs": [
+                  "PickFit did not see the split-model serving, OpenAI endpoint, or mDNS discovery work: they are listed as features_not_checked.",
+                  "Needs local network access and system packages Avahi and dns-sd on Linux.",
+                  "No offline claim was verified beyond local processing."
+                ],
+                "vs_well_known": null,
+                "platforms": [
+                  "macos",
+                  "linux"
+                ],
+                "pricing": "unknown",
+                "processing": "local",
+                "open_source": true,
+                "license": "MIT",
+                "verification": {
+                  "level": "function",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-10-31T01:41:27.513493+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [],
+                  "not_checked": [
+                    {
+                      "feature": "run one local model across network machines",
+                      "reason": "other",
+                      "detail": "not checked: needs 2+ network nodes with shared token and model cached on every node; single box cannot exercise"
+                    },
+                    {
+                      "feature": "serve cluster as OpenAI-compatible endpoint",
+                      "reason": "other",
+                      "detail": "not checked: needs multi-node serve with agents and model download to expose :8020; single box cannot serve"
+                    },
+                    {
+                      "feature": "discover nodes over mDNS and probe routes",
+                      "reason": "not_shown",
+                      "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: discover shows Connection refused/DOWN and status reports no links.json yet."
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-30; a smoke test of its main function passed. The run exercised 0 of the 3 main features its README advertises; see features for the ones it did not check and why. Quality 81/100 and popularity 36/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 81.2,
+                  "popularity": 35.6,
+                  "treasure": true
+                },
+                "repo": "https://github.com/joshuaswarren/omarchy-cluster",
+                "homepage": null,
+                "web_app": null
+              },
+              {
+                "slug": "airdrop-llm",
+                "name": "AirDrop-LLM",
+                "summary": "Offline P2P broker pooling laptops over Wi-Fi for pipeline-parallel LLM inference.",
+                "fit": "Offline P2P broker pooling laptops over Wi-Fi for pipeline-parallel LLM inference.",
+                "why": [
+                  {
+                    "claim": "designed to run 32B and larger models across pooled laptops",
+                    "field": "use_cases",
+                    "value": "Run 32B and 70B parameter models across pooled laptops"
+                  },
+                  {
+                    "claim": "provides distributed chat completions through an API gateway",
+                    "field": "use_cases",
+                    "value": "Stream distributed chat completions via API gateway"
+                  }
+                ],
+                "tradeoffs": [
+                  "PickFit only verified install; pooling laptops, running 32B models offline, serving OpenAI API, and Wi-Fi discovery all need more resources or were not shown.",
+                  "Card lists network as required, so fully offline use was not verified.",
+                  "Lower quality score than the other picks."
+                ],
+                "vs_well_known": "Choose this instead of Ollama / llama.cpp when one laptop cannot hold the 32B model alone, and stay with Ollama when a single machine is enough.",
+                "platforms": [
+                  "macos",
+                  "linux",
+                  "windows"
+                ],
+                "pricing": "unknown",
+                "processing": "local",
+                "open_source": true,
+                "license": "MIT",
+                "verification": {
+                  "level": "install",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-11-01T03:10:56.694267+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [],
+                  "not_checked": [
+                    {
+                      "feature": "Pool laptops into distributed GPU cluster",
+                      "reason": "needs_more_resources",
+                      "detail": "too heavy for the sandbox (memory, disk, time, model size or more than one machine): Requires 2+ laptops on same Wi-Fi for P2P pooling; single box cannot verify"
+                    },
+                    {
+                      "feature": "Run 32B and 70B models offline",
+                      "reason": "needs_more_resources",
+                      "detail": "too heavy for the sandbox (memory, disk, time, model size or more than one machine): Requires 20-50GB model download and 24-64GB pooled RAM/GPU; not feasible in box"
+                    },
+                    {
+                      "feature": "Serve OpenAI-compatible chat completions API",
+                      "reason": "not_shown",
+                      "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Output only shows the proxy listening log and open port, with no actual /v1/models or /v1/chat/completions response."
+                    },
+                    {
+                      "feature": "Discover peer laptops via Wi-Fi",
+                      "reason": "needs_more_resources",
+                      "detail": "too heavy for the sandbox (memory, disk, time, model size or more than one machine): Requires second peer broadcasting on UDP :9998; single box cannot verify discovery"
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-10-31; the install finished and the tool started. The run exercised 0 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 64/100 and popularity 45/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 63.6,
+                  "popularity": 45.3,
+                  "treasure": false
+                },
+                "repo": "https://github.com/Mohit-jpg-dot/AirDrop-LLM",
+                "homepage": null,
+                "web_app": null
+              },
+              {
+                "slug": "superfluid",
+                "name": "superfluid",
+                "summary": "Serving daemon providing one scheduler and APIs for local LLM inference across runtimes and machines.",
+                "fit": "Distributes local LLM serving across machines on a local network.",
+                "why": [
+                  {
+                    "claim": "can distribute serving across machines on a local network",
+                    "field": "use_cases",
+                    "value": "distribute serving across machines on local network"
+                  },
+                  {
+                    "claim": "serves local inference via OpenAI-compatible API",
+                    "field": "use_cases",
+                    "value": "serve local LLM inference via OpenAI, Anthropic or Ollama API"
+                  },
+                  {
+                    "claim": "is a serving daemon for local LLM inference across runtimes and machines",
+                    "field": "summary",
+                    "value": "Serving daemon providing one scheduler and APIs for local LLM inference across runtimes and machines."
+                  }
+                ],
+                "tradeoffs": [
+                  "PickFit did not see OpenAI-compatible serving or adding distributed machines work; both are listed as not shown.",
+                  "Card does not claim automatic peer discovery without IP addresses or offline operation.",
+                  "Card does not claim splitting one 32B model that exceeds single-machine memory."
+                ],
+                "vs_well_known": "Choose this instead of Ollama when you want one scheduler across runtimes and machines, and stay with Ollama when you only need simple single-machine serving.",
+                "platforms": [
+                  "macos",
+                  "linux"
+                ],
+                "pricing": "unknown",
+                "processing": "local",
+                "open_source": true,
+                "license": "Apache-2.0",
+                "verification": {
+                  "level": "inference",
+                  "os": "linux",
+                  "arch": "x86_64",
+                  "method": "sandbox",
+                  "replayed": true,
+                  "checked_at": "2026-11-01T16:04:48.913884+08:00",
+                  "verified_on_user_os": true,
+                  "gui": null
+                },
+                "features": {
+                  "recorded": true,
+                  "checked": [
+                    {
+                      "feature": "serve local LLM inference across runtimes",
+                      "check": "curl -s http://127.0.0.1:8453/v1/models"
+                    }
+                  ],
+                  "not_checked": [
+                    {
+                      "feature": "serve OpenAI, Anthropic and Ollama clients",
+                      "reason": "not_shown",
+                      "detail": "a check ran and passed, but its output did not show this feature doing its job (pickfit's feature judge): its check passed, but the output does not show it: Outputs show only OpenAI /v1 calls with no Anthropic or Ollama request shown."
+                    },
+                    {
+                      "feature": "run coding agents on local models",
+                      "reason": "other",
+                      "detail": "not checked: its check did not pass in the log; superfluid launch --help lists Claude Code etc and shows auto-start of serve"
+                    },
+                    {
+                      "feature": "add machines for distributed serving",
+                      "reason": "other",
+                      "detail": "not checked: its check did not pass in the log; superfluid node join --help shows fleet token, local network discovery and encrypted link"
+                    }
+                  ]
+                },
+                "how_we_know": "pickfit installed it in a fresh linux/x86_64 sandbox (modal-gvisor) and replayed the steps from scratch on 2026-11-01; it produced model output in a test run. The run exercised 1 of the 4 main features its README advertises; see features for the ones it did not check and why. Quality 84/100 and popularity 56/100 are scored separately (formula b3.v5). Chosen by muse-spark-1.3 among 591 tools that passed pickfit's hard filters; code checked each reason against the profile.",
+                "evidence_url": null,
+                "scores": {
+                  "quality": 84.4,
+                  "popularity": 56.4,
+                  "treasure": false
+                },
+                "repo": "https://github.com/basecompute/superfluid",
+                "homepage": "https://superfluid.sh",
+                "web_app": null
+              }
+            ],
+            "best_free": null,
+            "no_install_option": null,
+            "well_known_option": null,
+            "clarifying_question": null,
+            "coverage_note": "591 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores."
+          }
+        },
+        "jsonrpc": "2.0",
+        "id": 1
+      }
+    }
+  ]
+}
