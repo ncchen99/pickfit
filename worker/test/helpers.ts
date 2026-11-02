@@ -57,6 +57,7 @@ export function makeD1(): { db: D1Database; sqlite: DatabaseSync } {
 
 export const SETTINGS: Settings = {
   modelEnabled: true,
+  via: 'meta',
   apiKey: 'test-key',
   dailyCapUsd: 3,
   totalCapUsd: 40,

@@ -90,7 +90,7 @@ const FOOTER = () => `<footer class="foot mat">
 </div>
 <div class="wrap foot-notes">
 <p>${L('pickfit ranks by fit, not stars. No ads, no paid placement, no referral links, and it doesn’t make any of the software it suggests.', 'pickfit 看合不合身排序，不看星數。沒有廣告、付費排名或推薦連結，推薦的軟體也沒有一款是自家做的。')}</p>
-<p>${L('No account and no IP address stored. Your sentence goes to Meta’s Muse Spark with storage turned off; pickfit keeps only the conditions it parsed, such as the task and the OS.', '免帳號，也不記錄 IP。你輸入的句子會送到 Meta 的 Muse Spark（已關閉資料保存）；pickfit 只保留從中解析出的條件，例如任務和作業系統。')}</p>
+<p>${L('No account and no IP address stored. Your sentence goes to Meta’s Muse Spark (served by Meta, reached directly or through OpenRouter) with storage turned off; pickfit keeps only the conditions it parsed, such as the task and the OS.', '免帳號，也不記錄 IP。你輸入的句子會送到 Meta 的 Muse Spark（由 Meta 提供，直接或經 OpenRouter 轉送；已關閉資料保存）；pickfit 只保留從中解析出的條件，例如任務和作業系統。')}</p>
 </div>
 <div class="ruler" aria-hidden="true"></div>
 </footer>`;

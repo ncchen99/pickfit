@@ -44,6 +44,7 @@ from pickfit.ledger import (
     baseten_ledger,
     default_ledger,
     modal_llm_ledger,
+    openrouter_ledger,
     taipei_date,
     taipei_now,
 )
@@ -64,7 +65,18 @@ PROVIDERS: dict[str, Provider] = {
     # Muse Spark Open on the hackathon's Modal Shared Endpoint (Modal credits), set up by the coordinating session.
     "modal": Provider("https://ncchen99--ep-pickfit-spark-open-server.us-west.modal.direct/v1",
                       "MODAL_PROXY_TOKEN_ID", "MODAL_PROXY_TOKEN_SECRET"),
+    # Meta's own models resold by OpenRouter, pinned to Meta as the provider (OPENROUTER_PIN).
+    "openrouter": Provider("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY"),
 }
+
+# PICKFIT_META_VIA=openrouter sends every Meta-model call to OpenRouter instead of Meta's API (11/3: Meta answered
+# the team's key with 402 "billing_not_configured"). The model is the same and Meta serves it: OpenRouter may not
+# fall back to another provider. Records and the ledger keep Meta's model id; the ledger row's provider says
+# "openrouter". The contributor tier is not on OpenRouter, so it is served as muse-spark-1.3 at 1.3's price.
+META_VIA = ("meta", "openrouter")
+OPENROUTER_MODELS = {"muse-spark-1.3": "meta/muse-spark-1.3", "muse-spark-1.3-contributor": "meta/muse-spark-1.3",
+                     "muse-wonder-1.0": "meta/muse-wonder"}
+OPENROUTER_PIN = {"order": ["meta"], "allow_fallbacks": False}
 
 # PICKFIT_MODE (default dev) picks the model when a Meta caller passes none.
 MODE_ALIASES = {"dev": "muse-spark-1.3-contributor", "prod": "muse-spark-1.3"}
@@ -94,6 +106,10 @@ PRICES: dict[tuple[str, str], Price] = {
     ("baseten", "meta-models/muse-spark-open"): Price(input=1.25, output=4.25, cached=0.15),
     ("baseten", "meta-models/muse-spark-open-1026"): Price(input=1.25, output=4.25, cached=0.15),
     ("modal", MODAL_OPEN_MODEL): Price(input=1.25, output=4.25, cached=0.15),  # the coordinator's quote, 11/1
+    # OpenRouter's list prices for Meta's models (11/3); its cached-input price is not listed, so cached is input.
+    ("openrouter", "muse-spark-1.3"): Price(input=1.25, output=4.25),
+    ("openrouter", "muse-spark-1.3-contributor"): Price(input=1.25, output=4.25),
+    ("openrouter", "muse-wonder-1.0"): Price(input=4.00, output=20.00),
 }
 WEB_SEARCH_USD = 2.50 / 1000
 
@@ -252,6 +268,26 @@ def provider_for(model: str) -> str:
     return "baseten" if model.startswith(BASETEN_PREFIX) else "meta"
 
 
+def meta_via() -> str:
+    """Where Meta-model calls go: "meta" (Meta's API, the default) or "openrouter" (PICKFIT_META_VIA)."""
+    via = get_env("PICKFIT_META_VIA") or "meta"
+    if via not in META_VIA:
+        raise ValueError(f"PICKFIT_META_VIA must be one of {META_VIA}, got {via!r}")
+    return via
+
+
+def route(provider: str, model: str) -> tuple[str, str]:
+    """The provider a call goes to and the model id it sends: a Meta-model call goes to OpenRouter (under
+    OpenRouter's id) when PICKFIT_META_VIA says so; every other call as it is."""
+    if provider == "meta" and meta_via() == "openrouter":
+        provider = "openrouter"
+    if provider != "openrouter":
+        return provider, model
+    if model not in OPENROUTER_MODELS:
+        raise ModelRefused(f"{model} is not on OpenRouter; unset PICKFIT_META_VIA to call Meta's API")
+    return provider, OPENROUTER_MODELS[model]
+
+
 def is_open_model(model: str | None) -> bool:
     """True when `model` (an alias or an id) is Muse Spark Open (Baseten or Modal) rather than Meta's API."""
     return model is not None and provider_for(OPEN_ALIASES.get(model, model)) in OPEN_PROVIDERS
@@ -392,7 +428,7 @@ def _check_policy(provider: str, model: str, public_data_only: bool, effort: str
         raise ValueError(f"{model} does not support reasoning_effort='max'")
     if not isinstance(max_output_tokens, int) or max_output_tokens <= 0:
         raise ValueError("max_output_tokens must be a positive int")
-    if provider in OPEN_PROVIDERS and body.get("previous_response_id"):
+    if provider in (*OPEN_PROVIDERS, "openrouter") and body.get("previous_response_id"):
         raise ValueError(f"{provider} /responses is stateless; previous_response_id is not supported")
 
 
@@ -754,10 +790,12 @@ def call_meta(
     are reserved at their size rather than at VIDEO_TOKENS each.
     """
     model = resolve_model(model, provider or "meta")
-    provider = provider or provider_for(model)
+    provider, wire_model = route(provider or provider_for(model), model)
     _check_policy(provider, model, public_data_only, reasoning_effort, body, max_output_tokens)
     price = price_for(provider, model)
-    request = build_request(endpoint, model, body, max_output_tokens, reasoning_effort)
+    request = build_request(endpoint, wire_model, body, max_output_tokens, reasoning_effort)
+    if provider == "openrouter":
+        request["provider"] = dict(OPENROUTER_PIN)
     key = request_hash(provider, endpoint, request)
     runs = _runs_dir(runs_dir)
     base = {"run_id": run_id, "stage": stage, "scope": scope, "provider": provider, "model": model,
@@ -772,7 +810,8 @@ def call_meta(
                           response_id=raw.get("id"), cache_hit=cache_hit, attempts=attempts,
                           request_hash=key, raw=raw, parsed=parsed, parse_error=parse_error, **read)
 
-    ledger = ledger or {"baseten": baseten_ledger, "modal": modal_llm_ledger}.get(provider, default_ledger)()
+    ledger = ledger or {"baseten": baseten_ledger, "modal": modal_llm_ledger,
+                        "openrouter": openrouter_ledger}.get(provider, default_ledger)()
     use_cache = _cache_enabled(cache, model)
     if use_cache:
         raw = _cache_read(runs, key)

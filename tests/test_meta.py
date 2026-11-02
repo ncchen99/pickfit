@@ -114,7 +114,7 @@ def sse(*events: dict[str, Any], done: bool = False):
 def isolated(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> list[float]:
     """No real .env, ledger, runs dir or sleeping; returns the recorded backoff sleeps."""
     monkeypatch.setattr(pickfit.env, "DOTENV_PATH", tmp_path / "missing.env")
-    for name in ("PICKFIT_MODE", "PICKFIT_CACHE", "MODEL_API_KEY", "BASETEN_API_KEY"):
+    for name in ("PICKFIT_MODE", "PICKFIT_CACHE", "MODEL_API_KEY", "BASETEN_API_KEY", "PICKFIT_META_VIA"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("PICKFIT_LEDGER", str(tmp_path / "default-ledger.sqlite"))
     monkeypatch.setenv("PICKFIT_RUNS_DIR", str(tmp_path / "runs"))
@@ -688,3 +688,43 @@ def test_muse_spark_open_on_modal_is_its_own_provider_and_budget(tmp_path, monke
     monkeypatch.setenv("PICKFIT_LEDGER", str(tmp_path / "l.sqlite"))
     book = ledger_mod.modal_llm_ledger()
     assert book.budget == "modal-llm" and book.caps.total_usd == 100.0
+
+
+def test_meta_models_go_to_openrouter_pinned_to_meta_when_meta_via_says_so(tmp_path: Path, runs: Path, monkeypatch):
+    monkeypatch.setenv("PICKFIT_META_VIA", "openrouter")
+    server = FakeServer(ok({**RESPONSES_OK, "model": "meta/muse-spark-1.3"}))
+    result = call_meta("responses", {"input": "README text", "store": False}, stage="test", public_data_only=True,
+                       max_output_tokens=1000, model="prod", reasoning_effort="max", client=server.client())
+    sent = server.requests[0]
+    assert sent["model"] == "meta/muse-spark-1.3" and sent["reasoning"]["effort"] == "max"
+    assert sent["provider"] == {"order": ["meta"], "allow_fallbacks": False}
+    assert (result.provider, result.model) == ("openrouter", "muse-spark-1.3")  # records keep Meta's model id
+    # OpenRouter lists no cached-input price, so the 1,000 cached tokens are charged at the input price.
+    assert result.cost_usd == pytest.approx((2000 * 1.25 + 400 * 4.25) / 1e6)
+    with sqlite3.connect(tmp_path / "default-ledger.sqlite") as conn:
+        assert conn.execute("SELECT budget, provider, model FROM calls").fetchall() == [
+            ("openrouter", "openrouter", "muse-spark-1.3")]
+
+
+def test_openrouter_route_maps_models_and_refuses_what_it_cannot_serve(ledger: Ledger, monkeypatch):
+    from pickfit import ledger as ledger_mod
+    from pickfit.meta import make_client, route
+
+    assert route("meta", "muse-spark-1.3") == ("meta", "muse-spark-1.3")  # unset: Meta's API, unchanged
+    monkeypatch.setenv("PICKFIT_META_VIA", "openrouter")
+    assert route("meta", "muse-spark-1.3-contributor") == ("openrouter", "meta/muse-spark-1.3")
+    assert route("meta", "muse-wonder-1.0") == ("openrouter", "meta/muse-wonder")
+    assert route("baseten", OPEN_MODEL) == ("baseten", OPEN_MODEL)  # open models keep their own provider
+    with pytest.raises(ModelRefused, match="not on OpenRouter"):
+        route("meta", "sam-3.1")
+    server = FakeServer()
+    with pytest.raises(ValueError, match="stateless"):
+        call(server, ledger, "responses", {"input": "x", "previous_response_id": "resp_1"}, model="prod")
+    assert server.requests == []
+    monkeypatch.setenv("PICKFIT_META_VIA", "anthropic")
+    with pytest.raises(ValueError, match="PICKFIT_META_VIA"):
+        route("meta", "muse-spark-1.3")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
+    assert "openrouter.ai" in str(make_client("openrouter").base_url)
+    book = ledger_mod.openrouter_ledger()
+    assert book.budget == "openrouter" and book.caps.total_usd == 50.0

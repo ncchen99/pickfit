@@ -9,6 +9,13 @@
 
 export const META_BASE_URL = 'https://api.meta.ai/v1';
 export const MATCH_MODEL = 'muse-spark-1.3';
+/**
+ * META_VIA=openrouter (11/3: Meta's API answered the team's key with 402 billing errors): the same model through
+ * OpenRouter's Responses API, with Meta as the only provider it may use. The request is otherwise unchanged.
+ */
+export const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+const OPENROUTER_MODEL = 'meta/muse-spark-1.3';
+const OPENROUTER_PIN = { order: ['meta'], allow_fallbacks: false };
 /** USD per 1M tokens for MATCH_MODEL (same table as pickfit/meta.py). */
 const PRICE = { input: 1.25, cached: 0.15, output: 4.25 };
 export const MAX_OUTPUT_TOKENS = 4000;
@@ -151,6 +158,8 @@ export function requestBody(req: StructuredRequest): Record<string, unknown> {
 export interface CallOptions {
   /** META_TIMEOUT_MS: both tries and the wait between them fit in it. */
   timeoutMs: number;
+  /** Meta's API (default) or OpenRouter pinned to Meta (META_VIA). */
+  via?: 'meta' | 'openrouter';
   fetch?: typeof fetch;
   /** Milliseconds now, the wait before a retry, and jitter in [0, 1); seams for tests. */
   clock?: () => number;
@@ -173,7 +182,7 @@ export async function callMeta(apiKey: string, body: Record<string, unknown>, op
   let spent = 0;
   for (let attempt = 1; ; attempt++) {
     try {
-      const result = await callOnce(apiKey, body, deadline - clock(), opts.fetch ?? fetch, clock);
+      const result = await callOnce(apiKey, body, deadline - clock(), opts.fetch ?? fetch, clock, opts.via ?? 'meta');
       return { ...result, costUsd: spent + result.costUsd, statuses: [...statuses, ...result.statuses] };
     } catch (err) {
       if (!(err instanceof MetaCallError)) throw err;
@@ -213,14 +222,19 @@ async function callOnce(
   timeoutMs: number,
   doFetch: typeof fetch,
   clock: () => number,
+  via: 'meta' | 'openrouter',
 ): Promise<MetaResult> {
   const started = clock();
+  const [url, sent] =
+    via === 'openrouter'
+      ? [`${OPENROUTER_BASE_URL}/responses`, { ...body, model: OPENROUTER_MODEL, provider: OPENROUTER_PIN }]
+      : [`${META_BASE_URL}/responses`, body];
   let response: Response;
   try {
-    response = await doFetch(`${META_BASE_URL}/responses`, {
+    response = await doFetch(url, {
       method: 'POST',
       headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify(sent),
       signal: AbortSignal.timeout(Math.max(1, timeoutMs)),
     });
   } catch (err) {
