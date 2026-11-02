@@ -570,4 +570,4 @@ def test_the_live_sha_is_read_with_a_user_agent(env: dict[str, Any], monkeypatch
 
     monkeypatch.setattr(urllib.request, "urlopen", urlopen)
     assert live_data_sha(env["worker"])() == "abc"
-    assert seen[0].full_url == "https://pickfit-mcp.ncchen99.workers.dev/"
+    assert seen[0].full_url == "https://pickfit.app/"  # the first ALLOWED_HOSTS name in worker/wrangler.jsonc
