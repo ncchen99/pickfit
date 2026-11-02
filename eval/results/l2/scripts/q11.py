@@ -100,6 +100,14 @@ with VM(f"q11-{GROUP}", OUT, [], name=clone_name(OUT), keep=PHASE != "score") as
         vm.sh("pkill -x Ollama; sleep 5; pgrep -x Ollama || echo app-quit; open /Applications/Ollama.app; echo reopen exit $?", "app restarted")
         vm.sh(DIAG, "after restarting: apps in the session, ollama on PATH, processes", timeout=300)
         vm.sh(zsh("ollama --version; curl -s http://127.0.0.1:11434/api/version"), "CLI and server answer")
+    elif PHASE == "resume":  # experimental: `ollama create` (which downloads the model) hit the grader's 20-minute step
+        # limit, so `tw` never existed and the prompts after it ran against no model. Set those aside and finish the step.
+        vm.sh(f"cd {R} && mv replies replies-attempt1-no-model && sudo mv footprint footprint-part1 && sudo mv footprint.log footprint-part1.log && ls",
+              "set aside the replies made without a model; keep footprint part 1")
+        vm.sh(f"sudo nohup /usr/bin/python3 {FIX}/q11/mac/footprint_watch.py --uid $(id -u) --out {R}/footprint "
+              f"> {R}/footprint.log 2>&1 & sleep 3; cat {R}/footprint.log", "L2-1 footprint watch part 2 starts")
+        vm.sh(zsh(f"cd ~ && {CREATE}; echo create exit $?"), "ollama create tw -f Modelfile again (it downloads the model; no grader limit short of 90 min)", timeout=5400)
+        vm.sh(zsh("ollama list; ollama --version"), "models and version")
     elif PHASE == "model":
         if FIRST_RUN:
             vm.sh(f"cd ~ && ( until grep -q 'Send a message' {R}/first-run.txt 2> /dev/null; do sleep 5; done; printf '/bye\\n' ) | "
