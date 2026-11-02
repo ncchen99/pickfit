@@ -412,7 +412,7 @@ function install(catalog: Catalog, entry: Entry): string {
 function webRun(entry: Entry): string {
   const check = webCheck(entry);
   const url = entry.web!.url;
-  const open = link(url, `${icon('external-link')}${L(`Open ${esc(entry.name)}`, `開啟 ${esc(entry.name)}`)}`, 'btn btn-primary btn-sm');
+  const open = link(url, `${icon('external-link')}${L('Open the site', '開啟網站')}`, 'btn btn-primary btn-sm');
   if (!check) {
     return (
       `<section class="block" aria-labelledby="install-title">${installTitle('Open it', '開啟')}` +

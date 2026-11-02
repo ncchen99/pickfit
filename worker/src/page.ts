@@ -457,7 +457,7 @@ function webGlance(pick: PickOut, entry: Entry | undefined): string {
 /** The one action on a web app's ticket: open it. */
 function webOpen(pick: PickOut): string {
   const web = pick.web_app!;
-  const open = link(web.url, `${icon('external-link')}${L(`Open ${esc(pick.name)}`, `開啟 ${esc(pick.name)}`)}`, 'btn btn-primary btn-sm');
+  const open = link(web.url, `${icon('external-link')}${L('Open the site', '開啟網站')}`, 'btn btn-primary btn-sm');
   return open
     ? `<div class="t-install"><p class="t-install-label">${icon('globe')}${esc(noInstallLabel())}</p><p class="t-open">${open}<span class="quiet small" translate="no">${esc(web.url)}</span></p></div>`
     : '';
