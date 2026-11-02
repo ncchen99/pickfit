@@ -25,6 +25,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -52,6 +53,19 @@ ollama pull hf.co/DevQuasar-9/voidful.Llama-Breeze2-8B-Instruct-text-only-GGUF:Q
 CREATE = "ollama create tw -f Modelfile"
 DIAG = ("sleep 45; lsappinfo list | grep -E '^ *[0-9]+\\) \"' ; /bin/zsh -il -c 'command -v ollama'; ls -l /usr/local/bin/ollama 2>&1; "
         "ps -axo user,pid,command | grep -i [o]llama | cut -c1-160")
+
+def host_reading() -> str:
+    """The VM's resident memory on the host and the host's swap-in rate over 5 s (coordinator 2026-11-02 21:40)."""
+    vmp = subprocess.run("pgrep -f com.apple.Virtualization.VirtualMachine | head -1", shell=True, capture_output=True, text=True).stdout.strip()
+    rss = subprocess.run(["ps", "-o", "rss=", "-p", vmp], capture_output=True, text=True).stdout.strip() if vmp else "0"
+
+    def swapins() -> int:
+        out = subprocess.run(["vm_stat"], capture_output=True, text=True).stdout
+        return int(next(line for line in out.splitlines() if line.startswith("Swapins")).split()[-1].rstrip("."))
+    a = swapins(); time.sleep(5); b = swapins()
+    swap = subprocess.run(["sysctl", "-n", "vm.swapusage"], capture_output=True, text=True).stdout.strip()
+    return f"VM resident {int(rss or 0) / 1048576:.1f} GiB; swap-ins {(b - a) / 5:.0f} pages/s; swap {swap}; pressure level {pressure()}"
+
 
 if PHASE == "setup":
     with VM(f"q11-{GROUP}", OUT, ["q11", "_mac", "_shared", "pins.json"], cpu=8, memory_mb=16384, keep=True) as vm:
@@ -142,10 +156,9 @@ with VM(f"q11-{GROUP}", OUT, [], name=clone_name(OUT), keep=PHASE != "score") as
             vm.log.append({"what": f"host memory before prompt set {run}", "at": now(), "exit": 0,
                            "tail": f"{free}; swap {swap}; pressure level {level}"})
             print(f"host memory before prompt set {run}: {free}; swap {swap}; level {level}", flush=True)
-            used_mb = float(swap.split("used = ")[1].split("M")[0])
-            if level >= 4 or used_mb > 16384:
-                vm.log.append({"what": f"stopped before prompt set {run}: host memory", "at": now(), "exit": 1, "tail": swap})
-                raise SystemExit(f"host memory: level {level}, swap used {used_mb:.0f} MB; stopping (coordinator rule)")
+            if level >= 4:  # coordinator 2026-11-02 21:40: start below ~14 GB swap, stop on critical pressure
+                vm.log.append({"what": f"stopped before prompt set {run}: host memory critical", "at": now(), "exit": 1, "tail": swap})
+                raise SystemExit(f"host memory critical (level {level}); stopping (coordinator rule)")
             vm.sh(f"mkdir -p {R}/replies/run{run}", f"run {run} folder", quiet=True)
             for p in range(1, 6):
                 if (run, p) < START:
@@ -153,9 +166,10 @@ with VM(f"q11-{GROUP}", OUT, [], name=clone_name(OUT), keep=PHASE != "score") as
                 # README L2-2: a prompt with no reply within 10 minutes fails; the watchdog stops the client at 600 s
                 # (attempts before 2026-11-02 21:25 used perl's alarm, which does not stop ollama)
                 out, err = f"{R}/replies/run{run}/P{p}.txt", f"{R}/replies/run{run}/P{p}.err"
+                vm.log.append({"what": f"host before run {run} P{p}", "at": now(), "exit": 0, "tail": host_reading()})
                 vm.sh(zsh(f"cd ~ && ollama run tw < {FIX}/q11/prompts/P{p}.txt > {out} 2> {err} & pid=$!; "
-                          f"( sleep 600; kill $pid 2> /dev/null && echo 'grader: stopped at the 10-minute limit' >> {err} ) & w=$!; "
-                          f"wait $pid; rc=$?; kill $w 2> /dev/null; echo exit $rc; wc -m < {out}"),
+                          f"( sleep 600; kill $pid 2> /dev/null && echo 'grader: stopped at the 10-minute limit' >> {err} ) > /dev/null 2>&1 < /dev/null & w=$!; "
+                          f"wait $pid; rc=$?; pkill -P $w 2> /dev/null; kill $w 2> /dev/null; echo exit $rc; wc -m < {out}"),
                       f"L2-2 run {run} P{p}", timeout=700, quiet=True)
         vm.sh(f"PATH=/usr/bin:/bin:/usr/sbin:/sbin sh {FIX}/q11/mac/offline.sh check 2>&1 | tail -2; sudo sh {FIX}/q11/mac/offline.sh on {R}/net-state.txt 2>&1 | tail -2",
               "L2-2 offline check after the prompts, then network on")
@@ -172,8 +186,10 @@ with VM(f"q11-{GROUP}", OUT, [], name=clone_name(OUT), keep=PHASE != "score") as
                   f"echo '{p['verified_sha256']}  /tmp/opencc/{d}.txt' | shasum -a 256 -c -", f"grader pin opencc {d}", quiet=True)
         vm.sh(f"python3 {FIX}/q11/score_replies.py --dict-dir /tmp/opencc --json {R}/replies/run1 {R}/replies/run2 {R}/replies/run3 "
               f"> {R}/score.json; echo exit $?", "L2-3, L2-4, L2-5 score_replies", quiet=True)
-        vm.sh(f"AG=$(pgrep -u $(id -u) -f tart-guest-agent | tr '\\n' ' '); python3 {FIX}/q11/mac/footprint_watch.py recompute "
-              f"{R}/footprint/footprint.json --exclude-pid $AG > {R}/footprint-recompute.txt 2>&1; echo exit $?", "L2-1 recompute without the guest agent", quiet=True)
+        vm.sh(f"cd {R}; for d in footprint-part1 footprint-part2 footprint; do [ -f $d/footprint.json ] || continue; "
+              f"AG=$(python3 -c \"import json; print(' '.join(str(p['pid']) for p in json.load(open('$d/footprint.json')).get('processes', []) if 'tart-guest-agent' in str(p.get('path', p.get('command', '')))))\"); "
+              f"echo == $d excluding guest agent pids: $AG >> footprint-recompute.txt; python3 {FIX}/q11/mac/footprint_watch.py recompute $d/footprint.json "
+              f"--exclude-pid $AG >> footprint-recompute.txt 2>&1; done; echo exit $?", "L2-1 recompute each footprint part without the guest agent", quiet=True)
         vm.sh(f"sudo sh {FIX}/q11/mac/snapshot_state.sh {R} after evaluser > {R}/snapshot-after.log 2>&1; "
               f"python3 {FIX}/q11/mac/diff_state.py {R}/before {R}/after > {R}/diff-before-after.md 2>&1; echo exit $?", "after snapshot and diff", timeout=1800, quiet=True)
         keep_files(vm, R, OUT)

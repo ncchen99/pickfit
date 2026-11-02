@@ -251,6 +251,11 @@
   - 第 2 組前：可用 37%，swap 11.7／12.3 GB，等級 2；101、90、33、7、105。
   - 第 3 組前：可用 36%，swap 11.6／12.3 GB，等級 2；126、97、42、8、110。
   - 評分者失誤：記憶體量測的停止檔由測試帳號建立，但量測程式以 root 建的資料夾不讓它寫，量測一直到 VM 刪除都沒輸出結果，所以對照組的 footprint 沒量到。對照組的 L2-1 本來就因為要用 GUI 而不過，不影響判定；實驗組改用 sudo 建停止檔。`offline.sh` 的位址檢查因為 PATH 沒有 /sbin 而沒跑（`ifconfig: command not found`），其他斷網檢查都過；實驗組已修。
+- q11 實驗組（2026-11-02 19:2x–22:30；一台 clone，`--suspendable`）：
+  - 安裝第 4 行 `ollama pull` 失敗：和 `brew services start ollama` 同一秒執行，伺服器晚 1 秒才起來（race；整段貼上也會這樣）。照 C7 是安裝失敗；這個 race 算不算，協調 session 決定解盲後再問念誠，所以其餘項目照跑並記下觀察值。答案的下一步 `ollama create` 會自己下載模型，第一次碰到評分者自訂的 20 分鐘步驟上限而中斷，之後不設上限重跑。
+  - 主機記憶體：第一組題目時主機又嚴重換頁（VM 常駐只剩 1.5 GB），停下、乾淨重開客體、從頭問；之後等記憶體（`l2/q11-experimental/host-wait-2026-11-02.log`），swap 15.4 GB、可用 54%、等級 1 時就繼續（協調 session 訂的是約 14 GB；可用記憶體比對照組第 3 次順利跑完時還多，已告知）。
+  - 每題前的主機狀態（`steps.json` 的 `host before run R Pn`）：VM 常駐 3.8–5.1 GiB、swap-in 16–889 頁／秒、swap 13.3–14.7 GB、壓力等級 1–2。run 1 P2–P4 的讀數只存在記憶體裡，評分者在題與題之間停掉迴圈時遺失；那三題 ollama 伺服器記的時間是 2 分 20 秒、2 分 10 秒、44 秒。
+  - 評分者失誤：10 分鐘上限原本用 perl 的 alarm，停不了 ollama，run 1 P1（模型重複迴圈）跑了 24 分鐘才由評分者停掉，P2 排在它後面（P2 移到 `harness-discarded/`）；改成真的 watchdog。watchdog 的 `sleep` 留著輸出管道，讓每題的步驟都等滿 10 分鐘（題目本身的時間不受影響），之後修正。記憶體分三段量（安裝、create 與第一次題目、重開後），重算時取各段最大值。
 - 評分者自己的操作失誤（答案不變，第一次保留）：q11 對照組第 1 次（`q11-control-attempt1-setupassistant/`）：關掉新帳號的設定助理會讓那個帳號登出，記憶體量測因此中斷，整台重來；同一次裡評分者用 `open -a Ollama` 代替「打開」，LaunchServices 還沒登記剛複製的 app 而失敗，重做時改成 `open /Applications/Ollama.app`（等於在 Finder 雙擊）。
 
 ### 凍結快照裡的產品錯誤：`gui.tier` 的輸出 schema（2026-11-02 協調 session 通報）

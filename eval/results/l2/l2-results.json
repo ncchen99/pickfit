@@ -550,6 +550,25 @@
      "asked with the answer's first way, `ollama run tw`, prompt on stdin, a new run per prompt; temperature 0.6 in the answer's Modelfile, no documented seed setting: 3 runs, 2 of 3",
      "L2-5 hand mapping to be confirmed by 念誠"
     ]
+   },
+   "experimental": {
+    "pick": "Ollama + Llama-Breeze2-8B-Instruct (brew install ollama)",
+    "method": "agent, tart clone (16 GB, 8 vCPU, suspendable), macOS 26.6.2 guest",
+    "items": {
+     "1": "fail under C7 (install line 4 `ollama pull hf.co/DevQuasar-9/…` exit 1: 'could not connect to ollama server'; it ran in the same second as `brew services start ollama` (11:29:56 guest UTC), and the server was up at 11:29:57: a race, as when the block is pasted at once). Observed otherwise: every step in the terminal, no app; summed peak footprint 5.04 GiB (three parts: 0.21, 4.70, 5.04 GiB) < 12 GiB",
+     "2": "fail under C7. Observed: 2 of 3 runs pass (run 1 P1 still generating after 24 min, a repetition loop, over the 10-minute limit; every other prompt answered in time, guest network services off, offline check PASS)",
+     "3": "fail under C7. Observed: fail, 1 of 3 runs (run 1 P1: the loop, '、一個量杯' 561 times, judge false; run 3 P1: judge false; run 2 passes)",
+     "4": "fail under C7. Observed: pass (ratio 1.0 in all 3 runs)",
+     "5": "fail under C7. Observed: pass (runs 1 and 2 map by line order, 8 of 8; run 3 is one comma-separated line, 8 of 8 by hand mapping)"
+    },
+    "l2": "fail",
+    "l2_if_the_race_does_not_count": "fail (item 3)",
+    "notes": [
+     "C7: an install failure fails the remaining items; whether this one-second race counts is 念誠's call after unblinding (coordinator 2026-11-02); the observed values are recorded so the verdict can be redone either way",
+     "the answer's next step, `ollama create tw -f Modelfile`, downloads the model by itself (FROM hf.co/…); it first hit the grader's 20-minute step limit and was re-run without it",
+     "grader errors and environment, answer unchanged: prompts without a model (replies-attempt1-no-model), host swapping during the first prompt set (guest rebooted cleanly, replies-attempt2-hostswap), the 10-minute wrapper did not stop ollama (run 1 P2 queued behind P1, set aside), a watchdog leftover kept each step at 10 minutes of wall time (prompt times unaffected; per-prompt host readings for run 1 P2-P4 were kept only in memory and lost when that loop was stopped between prompts)",
+     "asked with the answer's first way, `ollama run tw` (interactive in the answer), prompt on stdin, a new run per prompt; temperature 0.6 in the answer's Modelfile, no documented seed setting: 3 runs, 2 of 3"
+    ]
    }
   }
  }
