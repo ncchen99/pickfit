@@ -1,0 +1,690 @@
+[
+ {
+  "what": "copy fixtures",
+  "cmd": "sudo mkdir -p /Users/Shared/eval-fixtures && sudo tar -C /Users/Shared/eval-fixtures -xzf /tmp/fixtures.tgz && sudo chmod -R a+rX /Users/Shared/eval-fixtures",
+  "exit": 0,
+  "at": "2026-11-02T19:11:03+08:00",
+  "tail": ""
+ },
+ {
+  "what": "baseline part 1 (new user, image Homebrew aside)",
+  "cmd": "bash /tmp/mac_baseline.sh",
+  "exit": 0,
+  "at": "2026-11-02T19:11:07+08:00",
+  "tail": "baseline part 1 done: user evaluser (staff,everyone,localaccounts,_appserverusr,admin,_appserveradm,com.apple.sharepoint.group.2,com.apple.sharepoint.group.1,_appstore,_lpadmin,_lpoperator,_developer,_analyticsusers,com.apple.access_ftp,com.apple.access_screensharing,com.apple.access_ssh,com.apple.access_remote_ae), image Homebrew moved to /var/eval-image-aside\n"
+ },
+ {
+  "what": "shutdown from inside the guest (the agent goes away with it)",
+  "cmd": "sync; sudo shutdown -h now",
+  "exit": 1,
+  "at": "2026-11-02T19:11:08+08:00",
+  "tail": "sudo: shutdown: command not found\n"
+ },
+ {
+  "what": "baseline: logged-in user after reboot",
+  "cmd": "whoami; stat -f %Su /dev/console; ls /opt",
+  "exit": 0,
+  "at": "2026-11-02T19:16:40+08:00",
+  "tail": "evaluser\nevaluser\n"
+ },
+ {
+  "what": "no first-login Setup Assistant in the session",
+  "cmd": "sleep 20; pgrep -x \"Setup Assistant\" || echo none",
+  "exit": 0,
+  "at": "2026-11-02T19:17:00+08:00",
+  "tail": "none\n"
+ },
+ {
+  "what": "baseline part 2: empty Homebrew, official installer (NONINTERACTIVE: no RETURN prompt)",
+  "cmd": "curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o /tmp/brew-install.sh && shasum -a 256 /tmp/brew-install.sh && NONINTERACTIVE=1 /bin/bash /tmp/brew-install.sh > /tmp/brew-install.log 2>&1; rc=$?; tail -15 /tmp/brew-install.log; exit $rc",
+  "exit": 0,
+  "at": "2026-11-02T19:27:45+08:00",
+  "tail": "5f333bbe53bc490e51e7ccb1df8779b3dd6ee73a1a7379efda216edb08ccb148  /tmp/brew-install.sh\n  https://docs.brew.sh/Analytics\nNo analytics data has been sent yet (nor will any be during this install run).\n\n==> Homebrew is run entirely by unpaid volunteers. Please consider donating:\n  https://github.com/Homebrew/brew#donations\n\n==> Next steps:\n- Run these commands in your terminal to add Homebrew to your PATH:\n    echo >> /Users/evaluser/.zprofile\n    echo 'eval \"$(/opt/homebrew/bin/brew shellenv zsh)\"' >> /Users/evaluser/.zprofile\n    eval \"$(/opt/homebrew/bin/brew shellenv zsh)\"\n- Run brew help to get started\n- Further documentation:\n    https://docs.brew.sh\n\n"
+ },
+ {
+  "what": "baseline: the installer's next-steps line in ~/.zprofile (copied from its output)",
+  "cmd": "L=$(grep -o 'eval \"$(/opt/homebrew/bin/brew shellenv[^)]*)\"' /tmp/brew-install.log | head -1); [ -n \"$L\" ] && echo >> ~/.zprofile && echo \"$L\" >> ~/.zprofile && cat ~/.zprofile",
+  "exit": 0,
+  "at": "2026-11-02T19:27:46+08:00",
+  "tail": "\neval \"$(/opt/homebrew/bin/brew shellenv zsh)\"\n"
+ },
+ {
+  "what": "baseline: Homebrew and CLT versions",
+  "cmd": "/bin/zsh -il -c 'brew --version; brew list --formula | wc -l; brew list --cask | wc -l; xcode-select -p; pkgutil --pkg-info=com.apple.pkg.CLTools_Executables | grep version'",
+  "exit": 0,
+  "at": "2026-11-02T19:27:46+08:00",
+  "tail": "Homebrew 7.0.12\n       0\n       0\n/Library/Developer/CommandLineTools\nversion: 27.0.0.0.1788430756\n"
+ },
+ {
+  "what": "run folder",
+  "cmd": "sudo mkdir -p /Users/Shared/eval-runs/q11-experimental && sudo chown evaluser /Users/Shared/eval-runs/q11-experimental && cp /tmp/lib.zsh /Users/Shared/eval-runs/q11-experimental/lib.zsh",
+  "exit": 0,
+  "at": "2026-11-02T19:27:46+08:00",
+  "tail": ""
+ },
+ {
+  "what": "before snapshot",
+  "cmd": "sudo sh /Users/Shared/eval-fixtures/q11/mac/snapshot_state.sh /Users/Shared/eval-runs/q11-experimental before evaluser > /Users/Shared/eval-runs/q11-experimental/snapshot-before.log 2>&1; echo exit $?",
+  "exit": 0,
+  "at": "2026-11-02T19:27:47+08:00",
+  "tail": "exit 0\n"
+ },
+ {
+  "what": "preflight",
+  "cmd": "/bin/zsh -il -c 'sh /Users/Shared/eval-fixtures/q11/mac/preflight.sh /Users/Shared/eval-runs/q11-experimental/preflight.txt; echo preflight exit $?; tail -5 /Users/Shared/eval-runs/q11-experimental/preflight.txt'",
+  "exit": 0,
+  "at": "2026-11-02T19:27:48+08:00",
+  "tail": "== machine\n  date: 2026-11-02T11:27:47Z\n  macOS: 26.6.2 (25G83); arch: arm64\n  chip: Apple M5 (Virtual); memory: 16 GiB\n  developer tools: /Library/Developer/CommandLineTools\n== user\n  user: evaluser uid=502 home=/Users/evaluser\n  admin: yes\n  home created: 2026-11-02T11:11\n== home directory (must hold only what macOS creates for a new account)\n  ok\n== environment (names only)\n  no token, key, cache-location or offline variables set\n  PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/opt/homebrew/bin\n== large model-like files readable by this user (>= 100 MB)\n  none\n== package managers and runtimes on PATH\n  brew: /opt/homebrew/bin/brew\n  python3: /usr/bin/python3\n  pip3: /usr/bin/pip3\n  brew prefix: /opt/homebrew owner: evaluser\n  brew formulae: 0, casks: 0\n  /opt/homebrew exists, owner evaluser\n== listening TCP ports\n  none visible to this user\n== virtual machine bridges (stop all VMs before a run)\n  none\n\npreflight: PASS\npreflight exit 0\n  none visible to this user\n== virtual machine bridges (stop all VMs before a run)\n  none\n\npreflight: PASS\n"
+ },
+ {
+  "what": "Terminal zsh: are # comments comments?",
+  "cmd": "/bin/zsh -il -c 'setopt | grep -i interactivecomments || echo '\"'\"'interactivecomments off'\"'\"''",
+  "exit": 0,
+  "at": "2026-11-02T19:27:49+08:00",
+  "tail": "interactivecomments off\n"
+ },
+ {
+  "what": "grader check: does a background job outlive its exec?",
+  "cmd": "nohup sleep 600 > /dev/null 2>&1 < /dev/null & echo started $!",
+  "exit": 0,
+  "at": "2026-11-02T19:27:49+08:00",
+  "tail": "started 1814\n"
+ },
+ {
+  "what": "grader check: background job still there",
+  "cmd": "pgrep -fl 'sleep 600' || echo gone",
+  "exit": 0,
+  "at": "2026-11-02T19:27:49+08:00",
+  "tail": "1814 sleep 600\n"
+ },
+ {
+  "what": "L2-1 footprint watch starts",
+  "cmd": "sudo nohup /usr/bin/python3 /Users/Shared/eval-fixtures/q11/mac/footprint_watch.py --uid $(id -u) --out /Users/Shared/eval-runs/q11-experimental/footprint > /Users/Shared/eval-runs/q11-experimental/footprint.log 2>&1 & sleep 3; cat /Users/Shared/eval-runs/q11-experimental/footprint.log",
+  "exit": 0,
+  "at": "2026-11-02T19:27:52+08:00",
+  "tail": "watching (uid 502, shell 0); stop with Ctrl-C or: touch /Users/Shared/eval-runs/q11-experimental/footprint/stop\n"
+ },
+ {
+  "what": "L2-1 install lines (one zsh; # starts a comment, as in bash)",
+  "cmd": "/bin/zsh -il -c 'setopt interactivecomments; cd ~ && OUT=/Users/Shared/eval-runs/q11-experimental; . /Users/Shared/eval-runs/q11-experimental/lib.zsh; run_lines install /Users/Shared/eval-runs/q11-experimental/install.lines; all_ok install && echo INSTALL-OK || echo INSTALL-FAIL'",
+  "exit": 0,
+  "at": "2026-11-02T19:29:56+08:00",
+  "tail": "== install 1: brew install ollama          # 安裝 Ollama\ninstall 1 exit 0\n  brew services start ollama\nOr, if you don't want/need a background service you can just run:\n  OLLAMA_FLASH_ATTENTION=\"1\" OLLAMA_KV_CACHE_TYPE=\"q8_0\" /opt/homebrew/opt/ollama/bin/ollama serve\n== install 2: brew install opencc          # 安裝簡轉繁工具\ninstall 2 exit 0\n==> Installing opencc\n==> Pouring opencc--1.4.2.arm64_tahoe.bottle.tar.gz\n🍺  /opt/homebrew/Cellar/opencc/1.4.2: 94 files, 22MB\n== install 3: brew services start ollama   # 讓 Ollama 在背景執行（也可以另開一個視窗跑 ollama serve）\ninstall 3 exit 0\n==> Successfully started `ollama` (label: sh.brew.ollama)\n== install 4: ollama pull hf.co/DevQuasar-9/voidful.Llama-Breeze2-8B-Instruct-text-only-GGUF:Q4_K_M\ninstall 4 exit 1\nError: could not connect to ollama server, run 'ollama serve' to start it\nINSTALL-FAIL\n"
+ },
+ {
+  "what": "after install: apps in the session, ollama on PATH, processes",
+  "cmd": "sleep 45; lsappinfo list | grep -E '^ *[0-9]+\\) \"' ; /bin/zsh -il -c 'command -v ollama'; ls -l /usr/local/bin/ollama 2>&1; ps -axo user,pid,command | grep -i [o]llama | cut -c1-160",
+  "exit": 0,
+  "at": "2026-11-02T19:30:41+08:00",
+  "tail": "ingle Sign-On\" ASN:0x0-0x17017: \n15) \"SystemUIServer\" ASN:0x0-0x18018: \n16) \"Dock\" ASN:0x0-0x19019: \n17) \"Control Center\" ASN:0x0-0x1a01a: \n18) \"Finder\" ASN:0x0-0x1b01b: (in front) \n19) \"Wallpaper\" ASN:0x0-0x1c01c: \n20) \"QuickLookUIService (Finder)\" ASN:0x0-0x1d01d: \n21) \"TextInputMenuAgent\" ASN:0x0-0x1e01e: \n22) \"AirPlay Screen Mirroring\" ASN:0x0-0x20020: \n23) \"TextInputSwitcher\" ASN:0x0-0x21021: \n24) \"Siri\" ASN:0x0-0x23023: \n25) \"SoftwareUpdateNotificationManager\" ASN:0x0-0x24024: \n26) \"CursorUIViewService\" ASN:0x0-0x25025: \n27) \"Spotlight\" ASN:0x0-0x26026: \n28) \"AppSSODaemon\" ASN:0x0-0x27027: \n29) \"RemindersIntentsExtension\" ASN:0x0-0x28028: \n30) \"TipsWidgetExtension\" ASN:0x0-0x29029: \n31) \"macOSWidgetExtension\" ASN:0x0-0x2a02a: \n32) \"CalendarWidgetExtension\" ASN:0x0-0x2b02b: \n33) \"GamePolicyAgent\" ASN:0x0-0x2e02e: \n34) \"Shortcuts\" ASN:0x0-0x2f02f: \n35) \"Dock Extra\" ASN:0x0-0x30030: \n36) \"SiriNCService\" ASN:0x0-0x31031: \n37) \"WallpaperLegacyExtension\" ASN:0x0-0x32032: \n38) \"nsattributedstringagent\" ASN:0x0-0x37037: \n/opt/homebrew/bin/ollama\nls: /usr/local/bin/ollama: No such file or directory\nevaluser          5093 /opt/homebrew/opt/ollama/bin/ollama serve\nevaluser          5107 /bin/bash -c bash -c 'sleep 45; lsappinfo list | grep -E '\"'\"'^ *[0-9]+\\) \"'\"'\"' ; /bin/zsh -il -c '\"'\"'command -v ollama'\"'\"'; ls -l /us\nevaluser          5108 bash -c sleep 45; lsappinfo list | grep -E '^ *[0-9]+\\) \"' ; /bin/zsh -il -c 'command -v ollama'; ls -l /usr/local/bin/ollama 2>&1; ps -a\n"
+ },
+ {
+  "what": "Modelfile (the answer's, verbatim)",
+  "cmd": "cp /tmp/Modelfile ~/Modelfile && cat ~/Modelfile",
+  "exit": 0,
+  "at": "2026-11-02T19:30:42+08:00",
+  "tail": "FROM hf.co/DevQuasar-9/voidful.Llama-Breeze2-8B-Instruct-text-only-GGUF:Q4_K_M\nSYSTEM 你是台灣的助理。一律使用繁體中文與台灣慣用詞（例如：軟體、影片、網路、資訊、程式），絕對不要使用簡體字或中國大陸用語。\nPARAMETER temperature 0.6\n"
+ },
+ {
+  "what": "ollama create tw -f Modelfile",
+  "cmd": "/bin/zsh -il -c 'cd ~ && ollama create tw -f Modelfile; echo create exit $?'",
+  "exit": 124,
+  "at": "2026-11-02T19:51:42+08:00",
+  "tail": "host timeout"
+ },
+ {
+  "what": "models and version",
+  "cmd": "/bin/zsh -il -c 'ollama list; ollama --version'",
+  "exit": 0,
+  "at": "2026-11-02T19:51:42+08:00",
+  "tail": "NAME    ID    SIZE    MODIFIED \nollama version is 0.40.13\n"
+ },
+ {
+  "what": "L2-2 offline off (guest network services)",
+  "cmd": "PATH=/usr/bin:/bin:/usr/sbin:/sbin sudo sh /Users/Shared/eval-fixtures/q11/mac/offline.sh off /Users/Shared/eval-runs/q11-experimental/net-state.txt 2>&1 | tail -4",
+  "exit": 0,
+  "at": "2026-11-02T19:51:48+08:00",
+  "tail": "  disabled: Ethernet\n  default IPv4 route present\n  default IPv6 route present\noffline check: FAIL\n"
+ },
+ {
+  "what": "host memory before prompt set 1",
+  "at": "2026-11-02T19:51:48+08:00",
+  "exit": 0,
+  "tail": "System-wide memory free percentage: 36%; swap total = 10240.00M  used = 9162.44M  free = 1077.56M  (encrypted); pressure level 2"
+ },
+ {
+  "what": "run 1 folder",
+  "cmd": "mkdir -p /Users/Shared/eval-runs/q11-experimental/replies/run1",
+  "exit": 0,
+  "at": "2026-11-02T19:51:48+08:00",
+  "tail": ""
+ },
+ {
+  "what": "L2-2 run 1 P1",
+  "cmd": "/bin/zsh -il -c 'cd ~ && perl -e '\"'\"'alarm shift; exec @ARGV'\"'\"' 600 ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P1.txt > /Users/Shared/eval-runs/q11-experimental/replies/run1/P1.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run1/P1.err; echo exit $?; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run1/P1.txt'",
+  "exit": 0,
+  "at": "2026-11-02T19:51:48+08:00",
+  "tail": "exit 1\n       0\n"
+ },
+ {
+  "what": "L2-2 run 1 P2",
+  "cmd": "/bin/zsh -il -c 'cd ~ && perl -e '\"'\"'alarm shift; exec @ARGV'\"'\"' 600 ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P2.txt > /Users/Shared/eval-runs/q11-experimental/replies/run1/P2.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run1/P2.err; echo exit $?; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run1/P2.txt'",
+  "exit": 0,
+  "at": "2026-11-02T19:51:48+08:00",
+  "tail": "exit 1\n       0\n"
+ },
+ {
+  "what": "L2-2 run 1 P3",
+  "cmd": "/bin/zsh -il -c 'cd ~ && perl -e '\"'\"'alarm shift; exec @ARGV'\"'\"' 600 ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P3.txt > /Users/Shared/eval-runs/q11-experimental/replies/run1/P3.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run1/P3.err; echo exit $?; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run1/P3.txt'",
+  "exit": 0,
+  "at": "2026-11-02T19:51:48+08:00",
+  "tail": "exit 1\n       0\n"
+ },
+ {
+  "what": "L2-2 run 1 P4",
+  "cmd": "/bin/zsh -il -c 'cd ~ && perl -e '\"'\"'alarm shift; exec @ARGV'\"'\"' 600 ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P4.txt > /Users/Shared/eval-runs/q11-experimental/replies/run1/P4.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run1/P4.err; echo exit $?; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run1/P4.txt'",
+  "exit": 0,
+  "at": "2026-11-02T19:51:48+08:00",
+  "tail": "exit 1\n       0\n"
+ },
+ {
+  "what": "L2-2 run 1 P5",
+  "cmd": "/bin/zsh -il -c 'cd ~ && perl -e '\"'\"'alarm shift; exec @ARGV'\"'\"' 600 ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P5.txt > /Users/Shared/eval-runs/q11-experimental/replies/run1/P5.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run1/P5.err; echo exit $?; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run1/P5.txt'",
+  "exit": 0,
+  "at": "2026-11-02T19:51:48+08:00",
+  "tail": "exit 1\n       0\n"
+ },
+ {
+  "what": "host memory before prompt set 2",
+  "at": "2026-11-02T19:51:48+08:00",
+  "exit": 0,
+  "tail": "System-wide memory free percentage: 35%; swap total = 10240.00M  used = 9162.44M  free = 1077.56M  (encrypted); pressure level 2"
+ },
+ {
+  "what": "run 2 folder",
+  "cmd": "mkdir -p /Users/Shared/eval-runs/q11-experimental/replies/run2",
+  "exit": 0,
+  "at": "2026-11-02T19:51:48+08:00",
+  "tail": ""
+ },
+ {
+  "what": "L2-2 run 2 P1",
+  "cmd": "/bin/zsh -il -c 'cd ~ && perl -e '\"'\"'alarm shift; exec @ARGV'\"'\"' 600 ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P1.txt > /Users/Shared/eval-runs/q11-experimental/replies/run2/P1.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run2/P1.err; echo exit $?; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run2/P1.txt'",
+  "exit": 0,
+  "at": "2026-11-02T19:51:49+08:00",
+  "tail": "exit 1\n       0\n"
+ },
+ {
+  "what": "L2-2 run 2 P2",
+  "cmd": "/bin/zsh -il -c 'cd ~ && perl -e '\"'\"'alarm shift; exec @ARGV'\"'\"' 600 ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P2.txt > /Users/Shared/eval-runs/q11-experimental/replies/run2/P2.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run2/P2.err; echo exit $?; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run2/P2.txt'",
+  "exit": 0,
+  "at": "2026-11-02T19:51:49+08:00",
+  "tail": "exit 1\n       0\n"
+ },
+ {
+  "what": "L2-2 run 2 P3",
+  "cmd": "/bin/zsh -il -c 'cd ~ && perl -e '\"'\"'alarm shift; exec @ARGV'\"'\"' 600 ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P3.txt > /Users/Shared/eval-runs/q11-experimental/replies/run2/P3.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run2/P3.err; echo exit $?; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run2/P3.txt'",
+  "exit": 0,
+  "at": "2026-11-02T19:51:49+08:00",
+  "tail": "exit 1\n       0\n"
+ },
+ {
+  "what": "L2-2 run 2 P4",
+  "cmd": "/bin/zsh -il -c 'cd ~ && perl -e '\"'\"'alarm shift; exec @ARGV'\"'\"' 600 ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P4.txt > /Users/Shared/eval-runs/q11-experimental/replies/run2/P4.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run2/P4.err; echo exit $?; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run2/P4.txt'",
+  "exit": 0,
+  "at": "2026-11-02T19:51:49+08:00",
+  "tail": "exit 1\n       0\n"
+ },
+ {
+  "what": "L2-2 run 2 P5",
+  "cmd": "/bin/zsh -il -c 'cd ~ && perl -e '\"'\"'alarm shift; exec @ARGV'\"'\"' 600 ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P5.txt > /Users/Shared/eval-runs/q11-experimental/replies/run2/P5.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run2/P5.err; echo exit $?; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run2/P5.txt'",
+  "exit": 0,
+  "at": "2026-11-02T19:51:49+08:00",
+  "tail": "exit 1\n       0\n"
+ },
+ {
+  "what": "host memory before prompt set 3",
+  "at": "2026-11-02T19:51:49+08:00",
+  "exit": 0,
+  "tail": "System-wide memory free percentage: 36%; swap total = 10240.00M  used = 9162.44M  free = 1077.56M  (encrypted); pressure level 2"
+ },
+ {
+  "what": "run 3 folder",
+  "cmd": "mkdir -p /Users/Shared/eval-runs/q11-experimental/replies/run3",
+  "exit": 0,
+  "at": "2026-11-02T19:51:49+08:00",
+  "tail": ""
+ },
+ {
+  "what": "L2-2 run 3 P1",
+  "cmd": "/bin/zsh -il -c 'cd ~ && perl -e '\"'\"'alarm shift; exec @ARGV'\"'\"' 600 ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P1.txt > /Users/Shared/eval-runs/q11-experimental/replies/run3/P1.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run3/P1.err; echo exit $?; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run3/P1.txt'",
+  "exit": 0,
+  "at": "2026-11-02T19:51:49+08:00",
+  "tail": "exit 1\n       0\n"
+ },
+ {
+  "what": "L2-2 run 3 P2",
+  "cmd": "/bin/zsh -il -c 'cd ~ && perl -e '\"'\"'alarm shift; exec @ARGV'\"'\"' 600 ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P2.txt > /Users/Shared/eval-runs/q11-experimental/replies/run3/P2.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run3/P2.err; echo exit $?; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run3/P2.txt'",
+  "exit": 0,
+  "at": "2026-11-02T19:51:49+08:00",
+  "tail": "exit 1\n       0\n"
+ },
+ {
+  "what": "L2-2 run 3 P3",
+  "cmd": "/bin/zsh -il -c 'cd ~ && perl -e '\"'\"'alarm shift; exec @ARGV'\"'\"' 600 ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P3.txt > /Users/Shared/eval-runs/q11-experimental/replies/run3/P3.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run3/P3.err; echo exit $?; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run3/P3.txt'",
+  "exit": 0,
+  "at": "2026-11-02T19:51:49+08:00",
+  "tail": "exit 1\n       0\n"
+ },
+ {
+  "what": "L2-2 run 3 P4",
+  "cmd": "/bin/zsh -il -c 'cd ~ && perl -e '\"'\"'alarm shift; exec @ARGV'\"'\"' 600 ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P4.txt > /Users/Shared/eval-runs/q11-experimental/replies/run3/P4.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run3/P4.err; echo exit $?; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run3/P4.txt'",
+  "exit": 0,
+  "at": "2026-11-02T19:51:49+08:00",
+  "tail": "exit 1\n       0\n"
+ },
+ {
+  "what": "L2-2 run 3 P5",
+  "cmd": "/bin/zsh -il -c 'cd ~ && perl -e '\"'\"'alarm shift; exec @ARGV'\"'\"' 600 ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P5.txt > /Users/Shared/eval-runs/q11-experimental/replies/run3/P5.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run3/P5.err; echo exit $?; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run3/P5.txt'",
+  "exit": 0,
+  "at": "2026-11-02T19:51:49+08:00",
+  "tail": "exit 1\n       0\n"
+ },
+ {
+  "what": "L2-2 offline check after the prompts, then network on",
+  "cmd": "PATH=/usr/bin:/bin:/usr/sbin:/sbin sh /Users/Shared/eval-fixtures/q11/mac/offline.sh check 2>&1 | tail -2; sudo sh /Users/Shared/eval-fixtures/q11/mac/offline.sh on /Users/Shared/eval-runs/q11-experimental/net-state.txt 2>&1 | tail -2",
+  "exit": 0,
+  "at": "2026-11-02T19:51:49+08:00",
+  "tail": "  default IPv6 route present\noffline check: FAIL\n  enabled: Ethernet\nnetwork services restored; Wi-Fi may take a few seconds to rejoin\n"
+ },
+ {
+  "what": "L2-1 footprint stop",
+  "cmd": "sudo touch /Users/Shared/eval-runs/q11-experimental/footprint/stop; sleep 5; ls /Users/Shared/eval-runs/q11-experimental/footprint; pgrep -u $(id -u) -fl tart-guest-agent; tail -3 /Users/Shared/eval-runs/q11-experimental/footprint.log",
+  "exit": 0,
+  "at": "2026-11-02T19:51:55+08:00",
+  "tail": "footprint.json\nstop\n     0.028 GiB  pid 4726   user process /opt/homebrew/Library/Homebrew/vendor/portable-ruby/4.0.9/bin/ruby\npeak concurrent sum: 0.209 GiB at 114.5 s (limit 12.0 GiB): PASS\n(sum of every peak, for reference: 1.016 GiB)\n"
+ },
+ {
+  "what": "L2-3 blind judge requests",
+  "cmd": "python3 /Users/Shared/eval-fixtures/q11/score_replies.py --write-judge-requests /Users/Shared/eval-runs/q11-experimental/judge-requests.jsonl /Users/Shared/eval-runs/q11-experimental/replies/run1 /Users/Shared/eval-runs/q11-experimental/replies/run2 /Users/Shared/eval-runs/q11-experimental/replies/run3",
+  "exit": 0,
+  "at": "2026-11-02T19:51:55+08:00",
+  "tail": "wrote 12 judge requests to /Users/Shared/eval-runs/q11-experimental/judge-requests.jsonl (fill in the pinned model id before sending)\n"
+ },
+ {
+  "what": "pack run folder",
+  "cmd": "cd /Users/Shared/eval-runs/q11-experimental && tar czf /tmp/keep.tgz --exclude '*.gguf' --exclude 'models' . && ls -l /tmp/keep.tgz",
+  "exit": 0,
+  "at": "2026-11-02T19:51:55+08:00",
+  "tail": "-rw-r--r--  1 evaluser  wheel  28883 Nov  2 11:51 /tmp/keep.tgz\n"
+ },
+ {
+  "what": "set aside the replies made without a model; keep footprint part 1",
+  "cmd": "cd /Users/Shared/eval-runs/q11-experimental && mv replies replies-attempt1-no-model && sudo mv footprint footprint-part1 && sudo mv footprint.log footprint-part1.log && ls",
+  "exit": 0,
+  "at": "2026-11-02T19:52:35+08:00",
+  "tail": "before\nfootprint-part1\nfootprint-part1.log\ninstall-1.txt\ninstall-2.txt\ninstall-3.txt\ninstall-4.txt\ninstall.lines\njudge-requests.jsonl\nlib.zsh\nmarker\nnet-state.txt\npreflight.txt\nreplies-attempt1-no-model\nsnapshot-before.log\nsteps.txt\n"
+ },
+ {
+  "what": "L2-1 footprint watch part 2 starts",
+  "cmd": "sudo nohup /usr/bin/python3 /Users/Shared/eval-fixtures/q11/mac/footprint_watch.py --uid $(id -u) --out /Users/Shared/eval-runs/q11-experimental/footprint > /Users/Shared/eval-runs/q11-experimental/footprint.log 2>&1 & sleep 3; cat /Users/Shared/eval-runs/q11-experimental/footprint.log",
+  "exit": 0,
+  "at": "2026-11-02T19:52:38+08:00",
+  "tail": "watching (uid 502, shell 0); stop with Ctrl-C or: touch /Users/Shared/eval-runs/q11-experimental/footprint/stop\n"
+ },
+ {
+  "what": "ollama create tw -f Modelfile again (it downloads the model; no grader limit short of 90 min)",
+  "cmd": "/bin/zsh -il -c 'cd ~ && ollama create tw -f Modelfile; echo create exit $?'",
+  "exit": 0,
+  "at": "2026-11-02T20:47:22+08:00",
+  "tail": "732a1d698 100% ▕███████████████████▏  552 B                         \u001b[K\nverifying sha256 digest \u001b[K\nwriting manifest \u001b[K\nsuccess \u001b[K\nusing existing layer sha256:0518a86029ea8d03cab962ff3dcfd06e59f50ec8a3f255c62c73ab109c0261d6 \u001b[K\nusing existing layer sha256:948af2743fc78a328dcb3b0f5a31b3d75f415840fdb699e8b1235978392ecf85 \u001b[K\ncreating new layer sha256:e36aac08790021785da7e4de2a02e8e9c03afcd13dbc94d3fe831b082ae840ef \u001b[K\ncreating new layer sha256:5ef0d204894be74914c24b53f7361550b6233ce98828d095d0be050a87274b36 \u001b[K\nwriting manifest ⠋ \u001b[K\u001b[?25h\u001b[?2026l\u001b[?2026h\u001b[?25l\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[A\u001b[1Ggathering model components \u001b[K\npulling manifest \u001b[K\npulling 0518a86029ea 100% ▕██████████████████ ▏ 4.9 GB/4.9 GB  1.1 MB/s      0s\u001b[K\npulling 948af2743fc7   0% ▕                   ▏    0 B/1.5 KB                  \u001b[K\npulling 6c0b08d96525   0% ▕                   ▏    0 B/  65 B                  \u001b[K\npulling 429732a1d698 100% ▕███████████████████▏  552 B                         \u001b[K\nverifying sha256 digest \u001b[K\nwriting manifest \u001b[K\nsuccess \u001b[K\nusing existing layer sha256:0518a86029ea8d03cab962ff3dcfd06e59f50ec8a3f255c62c73ab109c0261d6 \u001b[K\nusing existing layer sha256:948af2743fc78a328dcb3b0f5a31b3d75f415840fdb699e8b1235978392ecf85 \u001b[K\ncreating new layer sha256:e36aac08790021785da7e4de2a02e8e9c03afcd13dbc94d3fe831b082ae840ef \u001b[K\ncreating new layer sha256:5ef0d204894be74914c24b53f7361550b6233ce98828d095d0be050a87274b36 \u001b[K\nwriting manifest \u001b[K\nsuccess \u001b[K\u001b[?25h\u001b[?2026l\ncreate exit 0\n"
+ },
+ {
+  "what": "models and version",
+  "cmd": "/bin/zsh -il -c 'ollama list; ollama --version'",
+  "exit": 0,
+  "at": "2026-11-02T20:47:23+08:00",
+  "tail": "NAME                                                                         ID              SIZE      MODIFIED     \ntw:latest                                                                    ca598d0e106f    4.9 GB    1 second ago    \nhf.co/DevQuasar-9/voidful.Llama-Breeze2-8B-Instruct-text-only-GGUF:Q4_K_M    c0715e48b632    4.9 GB    1 second ago    \nollama version is 0.40.13\n"
+ },
+ {
+  "what": "network on; prompts so far set aside",
+  "cmd": "PATH=/usr/bin:/bin:/usr/sbin:/sbin sudo sh /Users/Shared/eval-fixtures/q11/mac/offline.sh on /Users/Shared/eval-runs/q11-experimental/net-state.txt 2>&1 | tail -2; cd /Users/Shared/eval-runs/q11-experimental && sudo rm -f net-state.txt; [ -d replies ] && mv replies replies-attempt2-hostswap; ls",
+  "exit": 0,
+  "at": "2026-11-02T20:48:45+08:00",
+  "tail": "  enabled: Ethernet\nnetwork services restored; Wi-Fi may take a few seconds to rejoin\nbefore\nfootprint\nfootprint-part1\nfootprint-part1.log\nfootprint.log\ninstall-1.txt\ninstall-2.txt\ninstall-3.txt\ninstall-4.txt\ninstall.lines\njudge-requests.jsonl\nlib.zsh\nmarker\npreflight.txt\nreplies-attempt1-no-model\nreplies-attempt2-hostswap\nsnapshot-before.log\nsteps.txt\n"
+ },
+ {
+  "what": "L2-1 footprint part 2 stop",
+  "cmd": "sudo touch /Users/Shared/eval-runs/q11-experimental/footprint/stop; sleep 5; ls /Users/Shared/eval-runs/q11-experimental/footprint; cd /Users/Shared/eval-runs/q11-experimental && sudo mv footprint footprint-part2 && sudo mv footprint.log footprint-part2.log",
+  "exit": 0,
+  "at": "2026-11-02T20:48:51+08:00",
+  "tail": "footprint.json\nstop\n"
+ },
+ {
+  "what": "shutdown from inside the guest (the agent goes away with it)",
+  "cmd": "sync; sudo shutdown -h now",
+  "exit": 1,
+  "at": "2026-11-02T20:48:51+08:00",
+  "tail": "sudo: shutdown: command not found\n"
+ },
+ {
+  "what": "shutdown from inside the guest (the agent goes away with it)",
+  "cmd": "sync; sudo shutdown -h now",
+  "exit": 1,
+  "at": "2026-11-02T20:49:48+08:00",
+  "tail": "sudo: shutdown: command not found\n"
+ },
+ {
+  "what": "after reboot: user, the answer's background server",
+  "cmd": "whoami; stat -f %Su /dev/console; pgrep -fl 'ollama serve' | cut -c1-80",
+  "exit": 0,
+  "at": "2026-11-02T20:55:10+08:00",
+  "tail": "evaluser\nevaluser\n502 /opt/homebrew/opt/ollama/bin/ollama serve\n"
+ },
+ {
+  "what": "L2-1 footprint watch part 3 starts",
+  "cmd": "sudo nohup /usr/bin/python3 /Users/Shared/eval-fixtures/q11/mac/footprint_watch.py --uid $(id -u) --out /Users/Shared/eval-runs/q11-experimental/footprint > /Users/Shared/eval-runs/q11-experimental/footprint.log 2>&1 & sleep 3; cat /Users/Shared/eval-runs/q11-experimental/footprint.log",
+  "exit": 0,
+  "at": "2026-11-02T20:55:14+08:00",
+  "tail": ""
+ },
+ {
+  "what": "L2-2 offline off (guest network services)",
+  "cmd": "PATH=/usr/bin:/bin:/usr/sbin:/sbin; if [ -f /Users/Shared/eval-runs/q11-experimental/net-state.txt ]; then sh /Users/Shared/eval-fixtures/q11/mac/offline.sh check 2>&1 | tail -1; else sudo sh /Users/Shared/eval-fixtures/q11/mac/offline.sh off /Users/Shared/eval-runs/q11-experimental/net-state.txt 2>&1 | tail -4; fi",
+  "exit": 0,
+  "at": "2026-11-02T21:21:06+08:00",
+  "tail": "offline check: FAIL\n"
+ },
+ {
+  "what": "host memory before prompt set 1",
+  "at": "2026-11-02T21:21:06+08:00",
+  "exit": 0,
+  "tail": "System-wide memory free percentage: 34%; swap total = 19456.00M  used = 18358.38M  free = 1097.62M  (encrypted); pressure level 2"
+ },
+ {
+  "what": "stopped before prompt set 1: host memory",
+  "at": "2026-11-02T21:21:06+08:00",
+  "exit": 1,
+  "tail": "total = 19456.00M  used = 18358.38M  free = 1097.62M  (encrypted)"
+ },
+ {
+  "what": "L2-2 offline off (guest network services)",
+  "cmd": "PATH=/usr/bin:/bin:/usr/sbin:/sbin; if [ -f /Users/Shared/eval-runs/q11-experimental/net-state.txt ]; then sh /Users/Shared/eval-fixtures/q11/mac/offline.sh check 2>&1 | tail -1; else sudo sh /Users/Shared/eval-fixtures/q11/mac/offline.sh off /Users/Shared/eval-runs/q11-experimental/net-state.txt 2>&1 | tail -4; fi",
+  "exit": 0,
+  "at": "2026-11-02T22:09:54+08:00",
+  "tail": "offline check: FAIL\n"
+ },
+ {
+  "what": "host memory before prompt set 1",
+  "at": "2026-11-02T22:09:54+08:00",
+  "exit": 0,
+  "tail": "System-wide memory free percentage: 35%; swap total = 15360.00M  used = 14770.75M  free = 589.25M  (encrypted); pressure level 2"
+ },
+ {
+  "what": "run 1 folder",
+  "cmd": "mkdir -p /Users/Shared/eval-runs/q11-experimental/replies/run1",
+  "exit": 0,
+  "at": "2026-11-02T22:09:54+08:00",
+  "tail": ""
+ },
+ {
+  "what": "host before run 1 P5",
+  "at": "2026-11-02T22:09:54+08:00",
+  "exit": 0,
+  "tail": "VM resident 0.6 GiB; swap-ins 426 pages/s; swap total = 15360.00M  used = 14722.75M  free = 637.25M  (encrypted); pressure level 2"
+ },
+ {
+  "what": "L2-2 run 1 P5",
+  "cmd": "/bin/zsh -il -c 'cd ~ && ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P5.txt > /Users/Shared/eval-runs/q11-experimental/replies/run1/P5.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run1/P5.err & pid=$!; ( sleep 600; kill $pid 2> /dev/null && echo '\"'\"'grader: stopped at the 10-minute limit'\"'\"' >> /Users/Shared/eval-runs/q11-experimental/replies/run1/P5.err ) > /dev/null 2>&1 < /dev/null & w=$!; wait $pid; rc=$?; pkill -P $w 2> /dev/null; kill $w 2> /dev/null; echo exit $rc; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run1/P5.txt'",
+  "exit": 0,
+  "at": "2026-11-02T22:12:54+08:00",
+  "tail": "exit 0\n     578\n"
+ },
+ {
+  "what": "host memory before prompt set 2",
+  "at": "2026-11-02T22:12:54+08:00",
+  "exit": 0,
+  "tail": "System-wide memory free percentage: 47%; swap total = 15360.00M  used = 13700.50M  free = 1659.50M  (encrypted); pressure level 1"
+ },
+ {
+  "what": "run 2 folder",
+  "cmd": "mkdir -p /Users/Shared/eval-runs/q11-experimental/replies/run2",
+  "exit": 0,
+  "at": "2026-11-02T22:12:54+08:00",
+  "tail": ""
+ },
+ {
+  "what": "host before run 2 P1",
+  "at": "2026-11-02T22:12:54+08:00",
+  "exit": 0,
+  "tail": "VM resident 5.1 GiB; swap-ins 889 pages/s; swap total = 15360.00M  used = 13628.50M  free = 1731.50M  (encrypted); pressure level 1"
+ },
+ {
+  "what": "L2-2 run 2 P1",
+  "cmd": "/bin/zsh -il -c 'cd ~ && ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P1.txt > /Users/Shared/eval-runs/q11-experimental/replies/run2/P1.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run2/P1.err & pid=$!; ( sleep 600; kill $pid 2> /dev/null && echo '\"'\"'grader: stopped at the 10-minute limit'\"'\"' >> /Users/Shared/eval-runs/q11-experimental/replies/run2/P1.err ) > /dev/null 2>&1 < /dev/null & w=$!; wait $pid; rc=$?; pkill -P $w 2> /dev/null; kill $w 2> /dev/null; echo exit $rc; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run2/P1.txt'",
+  "exit": 0,
+  "at": "2026-11-02T22:15:35+08:00",
+  "tail": "exit 0\n     648\n"
+ },
+ {
+  "what": "host before run 2 P2",
+  "at": "2026-11-02T22:15:35+08:00",
+  "exit": 0,
+  "tail": "VM resident 4.7 GiB; swap-ins 82 pages/s; swap total = 14336.00M  used = 13522.38M  free = 813.62M  (encrypted); pressure level 2"
+ },
+ {
+  "what": "L2-2 run 2 P2",
+  "cmd": "/bin/zsh -il -c 'cd ~ && ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P2.txt > /Users/Shared/eval-runs/q11-experimental/replies/run2/P2.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run2/P2.err & pid=$!; ( sleep 600; kill $pid 2> /dev/null && echo '\"'\"'grader: stopped at the 10-minute limit'\"'\"' >> /Users/Shared/eval-runs/q11-experimental/replies/run2/P2.err ) > /dev/null 2>&1 < /dev/null & w=$!; wait $pid; rc=$?; pkill -P $w 2> /dev/null; kill $w 2> /dev/null; echo exit $rc; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run2/P2.txt'",
+  "exit": 0,
+  "at": "2026-11-02T22:16:47+08:00",
+  "tail": "exit 0\n     313\n"
+ },
+ {
+  "what": "host before run 2 P3",
+  "at": "2026-11-02T22:16:47+08:00",
+  "exit": 0,
+  "tail": "VM resident 4.7 GiB; swap-ins 22 pages/s; swap total = 14336.00M  used = 13346.38M  free = 989.62M  (encrypted); pressure level 2"
+ },
+ {
+  "what": "L2-2 run 2 P3",
+  "cmd": "/bin/zsh -il -c 'cd ~ && ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P3.txt > /Users/Shared/eval-runs/q11-experimental/replies/run2/P3.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run2/P3.err & pid=$!; ( sleep 600; kill $pid 2> /dev/null && echo '\"'\"'grader: stopped at the 10-minute limit'\"'\"' >> /Users/Shared/eval-runs/q11-experimental/replies/run2/P3.err ) > /dev/null 2>&1 < /dev/null & w=$!; wait $pid; rc=$?; pkill -P $w 2> /dev/null; kill $w 2> /dev/null; echo exit $rc; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run2/P3.txt'",
+  "exit": 0,
+  "at": "2026-11-02T22:18:46+08:00",
+  "tail": "exit 0\n     635\n"
+ },
+ {
+  "what": "host before run 2 P4",
+  "at": "2026-11-02T22:18:46+08:00",
+  "exit": 0,
+  "tail": "VM resident 4.7 GiB; swap-ins 16 pages/s; swap total = 15360.00M  used = 14068.44M  free = 1291.56M  (encrypted); pressure level 1"
+ },
+ {
+  "what": "L2-2 run 2 P4",
+  "cmd": "/bin/zsh -il -c 'cd ~ && ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P4.txt > /Users/Shared/eval-runs/q11-experimental/replies/run2/P4.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run2/P4.err & pid=$!; ( sleep 600; kill $pid 2> /dev/null && echo '\"'\"'grader: stopped at the 10-minute limit'\"'\"' >> /Users/Shared/eval-runs/q11-experimental/replies/run2/P4.err ) > /dev/null 2>&1 < /dev/null & w=$!; wait $pid; rc=$?; pkill -P $w 2> /dev/null; kill $w 2> /dev/null; echo exit $rc; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run2/P4.txt'",
+  "exit": 0,
+  "at": "2026-11-02T22:18:57+08:00",
+  "tail": "exit 0\n      26\n"
+ },
+ {
+  "what": "host before run 2 P5",
+  "at": "2026-11-02T22:18:57+08:00",
+  "exit": 0,
+  "tail": "VM resident 4.9 GiB; swap-ins 46 pages/s; swap total = 15360.00M  used = 14060.44M  free = 1299.56M  (encrypted); pressure level 1"
+ },
+ {
+  "what": "L2-2 run 2 P5",
+  "cmd": "/bin/zsh -il -c 'cd ~ && ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P5.txt > /Users/Shared/eval-runs/q11-experimental/replies/run2/P5.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run2/P5.err & pid=$!; ( sleep 600; kill $pid 2> /dev/null && echo '\"'\"'grader: stopped at the 10-minute limit'\"'\"' >> /Users/Shared/eval-runs/q11-experimental/replies/run2/P5.err ) > /dev/null 2>&1 < /dev/null & w=$!; wait $pid; rc=$?; pkill -P $w 2> /dev/null; kill $w 2> /dev/null; echo exit $rc; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run2/P5.txt'",
+  "exit": 0,
+  "at": "2026-11-02T22:21:13+08:00",
+  "tail": "exit 0\n     674\n"
+ },
+ {
+  "what": "host memory before prompt set 3",
+  "at": "2026-11-02T22:21:13+08:00",
+  "exit": 0,
+  "tail": "System-wide memory free percentage: 48%; swap total = 15360.00M  used = 13708.38M  free = 1651.62M  (encrypted); pressure level 1"
+ },
+ {
+  "what": "run 3 folder",
+  "cmd": "mkdir -p /Users/Shared/eval-runs/q11-experimental/replies/run3",
+  "exit": 0,
+  "at": "2026-11-02T22:21:14+08:00",
+  "tail": ""
+ },
+ {
+  "what": "host before run 3 P1",
+  "at": "2026-11-02T22:21:14+08:00",
+  "exit": 0,
+  "tail": "VM resident 4.7 GiB; swap-ins 114 pages/s; swap total = 15360.00M  used = 13668.38M  free = 1691.62M  (encrypted); pressure level 1"
+ },
+ {
+  "what": "L2-2 run 3 P1",
+  "cmd": "/bin/zsh -il -c 'cd ~ && ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P1.txt > /Users/Shared/eval-runs/q11-experimental/replies/run3/P1.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run3/P1.err & pid=$!; ( sleep 600; kill $pid 2> /dev/null && echo '\"'\"'grader: stopped at the 10-minute limit'\"'\"' >> /Users/Shared/eval-runs/q11-experimental/replies/run3/P1.err ) > /dev/null 2>&1 < /dev/null & w=$!; wait $pid; rc=$?; pkill -P $w 2> /dev/null; kill $w 2> /dev/null; echo exit $rc; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run3/P1.txt'",
+  "exit": 0,
+  "at": "2026-11-02T22:24:12+08:00",
+  "tail": "exit 0\n     683\n"
+ },
+ {
+  "what": "host before run 3 P2",
+  "at": "2026-11-02T22:24:12+08:00",
+  "exit": 0,
+  "tail": "VM resident 4.7 GiB; swap-ins 25 pages/s; swap total = 15360.00M  used = 13907.94M  free = 1452.06M  (encrypted); pressure level 1"
+ },
+ {
+  "what": "L2-2 run 3 P2",
+  "cmd": "/bin/zsh -il -c 'cd ~ && ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P2.txt > /Users/Shared/eval-runs/q11-experimental/replies/run3/P2.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run3/P2.err & pid=$!; ( sleep 600; kill $pid 2> /dev/null && echo '\"'\"'grader: stopped at the 10-minute limit'\"'\"' >> /Users/Shared/eval-runs/q11-experimental/replies/run3/P2.err ) > /dev/null 2>&1 < /dev/null & w=$!; wait $pid; rc=$?; pkill -P $w 2> /dev/null; kill $w 2> /dev/null; echo exit $rc; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run3/P2.txt'",
+  "exit": 0,
+  "at": "2026-11-02T22:25:41+08:00",
+  "tail": "exit 0\n     453\n"
+ },
+ {
+  "what": "host before run 3 P3",
+  "at": "2026-11-02T22:25:41+08:00",
+  "exit": 0,
+  "tail": "VM resident 4.7 GiB; swap-ins 62 pages/s; swap total = 14336.00M  used = 13539.81M  free = 796.19M  (encrypted); pressure level 1"
+ },
+ {
+  "what": "L2-2 run 3 P3",
+  "cmd": "/bin/zsh -il -c 'cd ~ && ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P3.txt > /Users/Shared/eval-runs/q11-experimental/replies/run3/P3.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run3/P3.err & pid=$!; ( sleep 600; kill $pid 2> /dev/null && echo '\"'\"'grader: stopped at the 10-minute limit'\"'\"' >> /Users/Shared/eval-runs/q11-experimental/replies/run3/P3.err ) > /dev/null 2>&1 < /dev/null & w=$!; wait $pid; rc=$?; pkill -P $w 2> /dev/null; kill $w 2> /dev/null; echo exit $rc; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run3/P3.txt'",
+  "exit": 0,
+  "at": "2026-11-02T22:27:38+08:00",
+  "tail": "exit 0\n     695\n"
+ },
+ {
+  "what": "host before run 3 P4",
+  "at": "2026-11-02T22:27:38+08:00",
+  "exit": 0,
+  "tail": "VM resident 4.7 GiB; swap-ins 182 pages/s; swap total = 14336.00M  used = 13339.81M  free = 996.19M  (encrypted); pressure level 2"
+ },
+ {
+  "what": "L2-2 run 3 P4",
+  "cmd": "/bin/zsh -il -c 'cd ~ && ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P4.txt > /Users/Shared/eval-runs/q11-experimental/replies/run3/P4.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run3/P4.err & pid=$!; ( sleep 600; kill $pid 2> /dev/null && echo '\"'\"'grader: stopped at the 10-minute limit'\"'\"' >> /Users/Shared/eval-runs/q11-experimental/replies/run3/P4.err ) > /dev/null 2>&1 < /dev/null & w=$!; wait $pid; rc=$?; pkill -P $w 2> /dev/null; kill $w 2> /dev/null; echo exit $rc; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run3/P4.txt'",
+  "exit": 0,
+  "at": "2026-11-02T22:27:52+08:00",
+  "tail": "exit 0\n      33\n"
+ },
+ {
+  "what": "host before run 3 P5",
+  "at": "2026-11-02T22:27:52+08:00",
+  "exit": 0,
+  "tail": "VM resident 3.8 GiB; swap-ins 20 pages/s; swap total = 14336.00M  used = 13664.25M  free = 671.75M  (encrypted); pressure level 2"
+ },
+ {
+  "what": "L2-2 run 3 P5",
+  "cmd": "/bin/zsh -il -c 'cd ~ && ollama run tw < /Users/Shared/eval-fixtures/q11/prompts/P5.txt > /Users/Shared/eval-runs/q11-experimental/replies/run3/P5.txt 2> /Users/Shared/eval-runs/q11-experimental/replies/run3/P5.err & pid=$!; ( sleep 600; kill $pid 2> /dev/null && echo '\"'\"'grader: stopped at the 10-minute limit'\"'\"' >> /Users/Shared/eval-runs/q11-experimental/replies/run3/P5.err ) > /dev/null 2>&1 < /dev/null & w=$!; wait $pid; rc=$?; pkill -P $w 2> /dev/null; kill $w 2> /dev/null; echo exit $rc; wc -m < /Users/Shared/eval-runs/q11-experimental/replies/run3/P5.txt'",
+  "exit": 0,
+  "at": "2026-11-02T22:29:56+08:00",
+  "tail": "exit 0\n     737\n"
+ },
+ {
+  "what": "L2-2 offline check after the prompts, then network on",
+  "cmd": "PATH=/usr/bin:/bin:/usr/sbin:/sbin sh /Users/Shared/eval-fixtures/q11/mac/offline.sh check 2>&1 | tail -2; sudo sh /Users/Shared/eval-fixtures/q11/mac/offline.sh on /Users/Shared/eval-runs/q11-experimental/net-state.txt 2>&1 | tail -2",
+  "exit": 0,
+  "at": "2026-11-02T22:29:57+08:00",
+  "tail": "  default IPv6 route present\noffline check: FAIL\n  enabled: Ethernet\nnetwork services restored; Wi-Fi may take a few seconds to rejoin\n"
+ },
+ {
+  "what": "L2-1 footprint stop",
+  "cmd": "sudo touch /Users/Shared/eval-runs/q11-experimental/footprint/stop; sleep 5; ls /Users/Shared/eval-runs/q11-experimental/footprint; pgrep -u $(id -u) -fl tart-guest-agent; tail -3 /Users/Shared/eval-runs/q11-experimental/footprint.log",
+  "exit": 0,
+  "at": "2026-11-02T22:30:03+08:00",
+  "tail": "footprint.json\nstop\n     0.008 GiB  pid 1911   user process /opt/homebrew/Cellar/ollama/0.40.13/libexec/ollama\npeak concurrent sum: 5.035 GiB at 5679.3 s (limit 12.0 GiB): PASS\n(sum of every peak, for reference: 23.959 GiB)\n"
+ },
+ {
+  "what": "L2-3 blind judge requests",
+  "cmd": "python3 /Users/Shared/eval-fixtures/q11/score_replies.py --write-judge-requests /Users/Shared/eval-runs/q11-experimental/judge-requests.jsonl /Users/Shared/eval-runs/q11-experimental/replies/run1 /Users/Shared/eval-runs/q11-experimental/replies/run2 /Users/Shared/eval-runs/q11-experimental/replies/run3",
+  "exit": 0,
+  "at": "2026-11-02T22:30:03+08:00",
+  "tail": "wrote 12 judge requests to /Users/Shared/eval-runs/q11-experimental/judge-requests.jsonl (fill in the pinned model id before sending)\n"
+ },
+ {
+  "what": "pack run folder",
+  "cmd": "cd /Users/Shared/eval-runs/q11-experimental && tar czf /tmp/keep.tgz --exclude '*.gguf' --exclude 'models' . && ls -l /tmp/keep.tgz",
+  "exit": 0,
+  "at": "2026-11-02T22:30:03+08:00",
+  "tail": "-rw-r--r--  1 evaluser  wheel  137325 Nov  2 14:30 /tmp/keep.tgz\n"
+ },
+ {
+  "what": "grader pin opencc STCharacters",
+  "cmd": "mkdir -p /tmp/opencc && curl -fsSL -o /tmp/opencc/STCharacters.txt 'https://raw.githubusercontent.com/BYVoid/OpenCC/ver.1.4.2/data/dictionary/STCharacters.txt' && echo 'a0ca1601c70648cf48b33c3c6210ccbecc5c7eead4b4c3daf76587ba2c03582b  /tmp/opencc/STCharacters.txt' | shasum -a 256 -c -",
+  "exit": 0,
+  "at": "2026-11-02T22:31:37+08:00",
+  "tail": "/tmp/opencc/STCharacters.txt: OK\n"
+ },
+ {
+  "what": "grader pin opencc STPhrases",
+  "cmd": "mkdir -p /tmp/opencc && curl -fsSL -o /tmp/opencc/STPhrases.txt 'https://raw.githubusercontent.com/BYVoid/OpenCC/ver.1.4.2/data/dictionary/STPhrases.txt' && echo 'f6eab5e5c6dd7640597878d3dfc6599ee1279d2bc91561eadd8e114194e2925a  /tmp/opencc/STPhrases.txt' | shasum -a 256 -c -",
+  "exit": 0,
+  "at": "2026-11-02T22:31:39+08:00",
+  "tail": "/tmp/opencc/STPhrases.txt: OK\n"
+ },
+ {
+  "what": "grader pin opencc TSCharacters",
+  "cmd": "mkdir -p /tmp/opencc && curl -fsSL -o /tmp/opencc/TSCharacters.txt 'https://raw.githubusercontent.com/BYVoid/OpenCC/ver.1.4.2/data/dictionary/TSCharacters.txt' && echo '737c21c66f55a419dd6956cb3089476cdefc5a36877452631617696df1e5d925  /tmp/opencc/TSCharacters.txt' | shasum -a 256 -c -",
+  "exit": 0,
+  "at": "2026-11-02T22:31:40+08:00",
+  "tail": "/tmp/opencc/TSCharacters.txt: OK\n"
+ },
+ {
+  "what": "grader pin opencc TWVariants",
+  "cmd": "mkdir -p /tmp/opencc && curl -fsSL -o /tmp/opencc/TWVariants.txt 'https://raw.githubusercontent.com/BYVoid/OpenCC/ver.1.4.2/data/dictionary/TWVariants.txt' && echo 'e187278e119c427ca561180ac5da5b20e9f8681190458f35c327ce499e95a6a5  /tmp/opencc/TWVariants.txt' | shasum -a 256 -c -",
+  "exit": 0,
+  "at": "2026-11-02T22:31:41+08:00",
+  "tail": "/tmp/opencc/TWVariants.txt: OK\n"
+ },
+ {
+  "what": "L2-3, L2-4, L2-5 score_replies",
+  "cmd": "python3 /Users/Shared/eval-fixtures/q11/score_replies.py --dict-dir /tmp/opencc --json /Users/Shared/eval-runs/q11-experimental/replies/run1 /Users/Shared/eval-runs/q11-experimental/replies/run2 /Users/Shared/eval-runs/q11-experimental/replies/run3 > /Users/Shared/eval-runs/q11-experimental/score.json; echo exit $?",
+  "exit": 0,
+  "at": "2026-11-02T22:31:42+08:00",
+  "tail": "exit 1\n"
+ },
+ {
+  "what": "L2-1 recompute each footprint part without the guest agent",
+  "cmd": "cd /Users/Shared/eval-runs/q11-experimental; for d in footprint-part1 footprint-part2 footprint; do [ -f $d/footprint.json ] || continue; AG=$(python3 -c \"import json; print(' '.join(str(p['pid']) for p in json.load(open('$d/footprint.json')).get('processes', []) if 'tart-guest-agent' in str(p.get('path', p.get('command', '')))))\"); echo == $d excluding guest agent pids: $AG >> footprint-recompute.txt; python3 /Users/Shared/eval-fixtures/q11/mac/footprint_watch.py recompute $d/footprint.json --exclude-pid $AG >> footprint-recompute.txt 2>&1; done; echo exit $?",
+  "exit": 0,
+  "at": "2026-11-02T22:31:42+08:00",
+  "tail": "exit 0\n"
+ },
+ {
+  "what": "after snapshot and diff",
+  "cmd": "sudo sh /Users/Shared/eval-fixtures/q11/mac/snapshot_state.sh /Users/Shared/eval-runs/q11-experimental after evaluser > /Users/Shared/eval-runs/q11-experimental/snapshot-after.log 2>&1; python3 /Users/Shared/eval-fixtures/q11/mac/diff_state.py /Users/Shared/eval-runs/q11-experimental/before /Users/Shared/eval-runs/q11-experimental/after > /Users/Shared/eval-runs/q11-experimental/diff-before-after.md 2>&1; echo exit $?",
+  "exit": 0,
+  "at": "2026-11-02T22:31:46+08:00",
+  "tail": "exit 1\n"
+ },
+ {
+  "what": "pack run folder",
+  "cmd": "cd /Users/Shared/eval-runs/q11-experimental && tar czf /tmp/keep.tgz --exclude '*.gguf' --exclude 'models' . && ls -l /tmp/keep.tgz",
+  "exit": 0,
+  "at": "2026-11-02T22:31:47+08:00",
+  "tail": "-rw-r--r--  1 evaluser  wheel  235418 Nov  2 14:31 /tmp/keep.tgz\n"
+ },
+ {
+  "what": "guest version",
+  "cmd": "sw_vers -productVersion; sw_vers -buildVersion",
+  "exit": 0,
+  "at": "2026-11-02T22:31:47+08:00",
+  "tail": "26.6.2\n25G83\n"
+ }
+]

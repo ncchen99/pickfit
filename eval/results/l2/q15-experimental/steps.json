@@ -1,0 +1,386 @@
+[
+ {
+  "box": "T",
+  "what": "copy fixtures",
+  "cmd": "mkdir -p /opt/eval/fixtures /opt/eval/state /opt/eval/xfer && tar -C /opt/eval/fixtures -xzf /tmp/fixtures.tgz",
+  "exit": 0,
+  "at": "2026-11-02T13:54:13+08:00",
+  "tail": ""
+ },
+ {
+  "box": "BL",
+  "what": "copy fixtures",
+  "cmd": "mkdir -p /opt/eval/fixtures /opt/eval/state /opt/eval/xfer && tar -C /opt/eval/fixtures -xzf /tmp/fixtures.tgz",
+  "exit": 0,
+  "at": "2026-11-02T13:54:18+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "box check",
+  "cmd": "nproc; command -v nvidia-smi || echo no-gpu; grep -m1 'model name' /proc/cpuinfo",
+  "exit": 0,
+  "at": "2026-11-02T13:54:19+08:00",
+  "tail": "4\nno-gpu\nmodel name\t: unknown\n"
+ },
+ {
+  "box": "BL",
+  "what": "box check",
+  "cmd": "nproc; command -v nvidia-smi || echo no-gpu; grep -m1 'model name' /proc/cpuinfo",
+  "exit": 0,
+  "at": "2026-11-02T13:54:19+08:00",
+  "tail": "4\nno-gpu\nmodel name\t: unknown\n"
+ },
+ {
+  "box": "BL",
+  "what": "BL setup",
+  "cmd": "WHISPER_VERSION=20250625 TORCH_VERSION=2.15.0+cpu TORCH_INDEX_URL=https://download.pytorch.org/whl/cpu SMALL_PT_SHA256=9ecf779972d90ba49c06d968637d720dd632c55bbf19d441fb42bf17a411e794 sh $F/q15/baseline/run_baseline.sh setup > /tmp/bl-setup.txt 2>&1; echo exit $?; tail -3 /tmp/bl-setup.txt",
+  "exit": 0,
+  "at": "2026-11-02T13:55:34+08:00",
+  "tail": "exit 0\n[00:04.200 --> 00:07.700] 我因为生计关系,不得不一早在路上走\n[00:07.700 --> 00:09.700] 一路几乎遇不见人\nbaseline ready; record /tmp/whisper-warmup/pip-freeze.txt\n"
+ },
+ {
+  "box": "T",
+  "what": "environment: sudo (9.3 A)",
+  "cmd": "apt-get update -qq > /dev/null && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq sudo > /dev/null",
+  "exit": 0,
+  "at": "2026-11-02T13:55:40+08:00",
+  "tail": "debconf: delaying package configuration, since apt-utils is not installed\n"
+ },
+ {
+  "box": "T",
+  "what": "L2-1 install (one shell)",
+  "cmd": "mkdir -p /work/input && cd /work && OUT=/results; . /results/lib.sh; run_lines install /results/install.lines; all_ok install && echo INSTALL-OK || echo INSTALL-FAIL",
+  "exit": 0,
+  "at": "2026-11-02T13:57:33+08:00",
+  "tail": "== install 1: TTY:sudo apt install build-essential cmake git ffmpeg opencc\ninstall 1 exit 0\nSetting up ubuntu-mono (24.04-0ubuntu1) ...\r\nProcessing triggers for libc-bin (2.39-0ubuntu8.9) ...\r\nProcessing triggers for libgdk-pixbuf-2.0-0:amd64 (2.42.10+dfsg-3ubuntu3.3) ...\r\n== install 2: git clone https://github.com/ggml-org/whisper.cpp\ninstall 2 exit 0\nCloning into 'whisper.cpp'...\n== install 3: cd whisper.cpp\ninstall 3 exit 0\n== install 4: cmake -B build\ninstall 4 exit 0\n-- Configuring done (1.3s)\n-- Generating done (0.1s)\n-- Build files have been written to: /work/whisper.cpp/build\n== install 5: cmake --build build -j --config Release\ninstall 5 exit 0\n[ 98%] Built target whisper-cli\n[100%] Linking CXX executable ../../bin/whisper-server\n[100%] Built target whisper-server\n== install 6: sh ./models/download-ggml-model.sh large-v3-turbo-q5_0\ninstall 6 exit 0\n\n  $ ./build/bin/whisper-cli -m /work/whisper.cpp/models/ggml-large-v3-turbo-q5_0.bin -f samples/jfk.wav\n\n== install 7: sh ./models/download-vad-model.sh silero-v5.1.2\ninstall 7 exit 0\n\n  $ ./build/bin/whisper-cli -vm /work/whisper.cpp/models/ggml-silero-v5.1.2.bin --vad -f samples/jfk.wav -m models/ggml-base.en.bin\n\nINSTALL-OK\n"
+ },
+ {
+  "box": "T",
+  "what": "L2-1 warmup (network open)",
+  "cmd": "cp $F/q15/clip/warmup.wav /work/input/meeting.wav && bash /results/run.sh > /results/warmup.txt 2>&1; echo warmup exit $?; ls -l /work/whisper.cpp/meeting.zh-TW.srt; cd /work/whisper.cpp && rm -f meeting.wav meeting.srt meeting.zh-TW.srt",
+  "exit": 0,
+  "at": "2026-11-02T14:01:26+08:00",
+  "tail": "warmup exit 0\n-rw-r--r-- 1 root root 159 Nov  2 06:01 /work/whisper.cpp/meeting.zh-TW.srt\n"
+ },
+ {
+  "box": "T",
+  "what": "L2-1 no torch",
+  "cmd": "sh $F/q15/check_no_torch.sh / > /results/no-torch.txt 2>&1; echo no-torch exit $?; tail -2 /results/no-torch.txt",
+  "exit": 0,
+  "at": "2026-11-02T14:01:27+08:00",
+  "tail": "no-torch exit 0\nno torch package found under /\n"
+ },
+ {
+  "box": "T",
+  "what": "input: clip",
+  "cmd": "cp $F/q15/clip/clip.wav /work/input/meeting.wav",
+  "exit": 0,
+  "at": "2026-11-02T14:01:28+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "Run A",
+  "cmd": "python3 $SHARED/egress.py run --out /results/eg --block-network --label runA --no-trace --timeout 600 -- bash /results/run.sh; echo runA exit $?; cp /work/whisper.cpp/meeting.zh-TW.srt /results/runA.srt; cd /work/whisper.cpp && rm -f meeting.wav meeting.srt meeting.zh-TW.srt",
+  "exit": 0,
+  "at": "2026-11-02T14:11:28+08:00",
+  "tail": "egress: runA exit=124 timed_out=True 600.0s tracer_running=False trace=/results/eg/runA.strace\nrunA exit 124\ncp: cannot stat '/work/whisper.cpp/meeting.zh-TW.srt': No such file or directory\n"
+ },
+ {
+  "box": "T",
+  "what": "probe before",
+  "cmd": "python3 $SHARED/egress.py run --out /results/eg --block-network --label probe-before --no-trace -- python3 $SHARED/egress.py probe --json /results/probe-before.json; echo probe exit $?",
+  "exit": 0,
+  "at": "2026-11-02T14:11:29+08:00",
+  "tail": "egress: probe-before exit=0 timed_out=False 0.2s tracer_running=False trace=/results/eg/probe-before.strace\nprobe exit 0\n"
+ },
+ {
+  "box": "T",
+  "what": "Run B (traced)",
+  "cmd": "python3 $SHARED/egress.py run --out /results/eg --block-network --label runB --timeout 600 -- bash /results/run.sh; echo runB exit $?; cp /work/whisper.cpp/meeting.zh-TW.srt /results/runB.srt; cd /work/whisper.cpp && rm -f meeting.wav meeting.srt meeting.zh-TW.srt",
+  "exit": 0,
+  "at": "2026-11-02T14:21:30+08:00",
+  "tail": "egress: runB exit=124 timed_out=True 600.1s tracer_running=False trace=/results/eg/runB.strace\nrunB exit 124\ncp: cannot stat '/work/whisper.cpp/meeting.zh-TW.srt': No such file or directory\n"
+ },
+ {
+  "box": "T",
+  "what": "egress stop",
+  "cmd": "python3 $SHARED/egress.py stop --out /results/eg --kill",
+  "exit": 0,
+  "at": "2026-11-02T14:21:30+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "probe after",
+  "cmd": "python3 $SHARED/egress.py run --out /results/eg --block-network --label probe-after --no-trace -- python3 $SHARED/egress.py probe --json /results/probe-after.json; echo probe exit $?",
+  "exit": 0,
+  "at": "2026-11-02T14:21:31+08:00",
+  "tail": "egress: probe-after exit=0 timed_out=False 0.2s tracer_running=False trace=/results/eg/probe-after.strace\nprobe exit 0\n"
+ },
+ {
+  "box": "T",
+  "what": "L2-6 egress report",
+  "cmd": "python3 $SHARED/egress.py report --out /results/eg --labels runB --json /results/egress.json; echo report exit $?",
+  "exit": 0,
+  "at": "2026-11-02T14:21:32+08:00",
+  "tail": "egress: PASS (no egress attempt in 1 trace(s))\nreport exit 0\n"
+ },
+ {
+  "box": "T",
+  "what": "Run C",
+  "cmd": "python3 $SHARED/egress.py run --out /results/eg --block-network --label runC --no-trace --timeout 600 -- bash /results/run.sh; echo runC exit $?; cp /work/whisper.cpp/meeting.zh-TW.srt /results/runC.srt; cd /work/whisper.cpp && rm -f meeting.wav meeting.srt meeting.zh-TW.srt",
+  "exit": 0,
+  "at": "2026-11-02T14:31:32+08:00",
+  "tail": "egress: runC exit=124 timed_out=True 600.0s tracer_running=False trace=/results/eg/runC.strace\nrunC exit 124\ncp: cannot stat '/work/whisper.cpp/meeting.zh-TW.srt': No such file or directory\n"
+ },
+ {
+  "box": "BL",
+  "what": "BL time (blocked)",
+  "cmd": "python3 $SHARED/egress.py run --out /results/eg --block-network --label baseline-outer --no-trace -- sh $F/q15/baseline/run_baseline.sh time /results/baseline; echo exit $?; cat /results/baseline/baseline.json",
+  "exit": 0,
+  "at": "2026-11-02T14:32:06+08:00",
+  "tail": "egress: baseline-outer exit=0 timed_out=False 32.8s tracer_running=False trace=/results/eg/baseline-outer.strace\nexit 0\n{\n  \"tool\": \"egress.py\",\n  \"label\": \"baseline\",\n  \"command\": [\n    \"/opt/whisper-baseline/bin/whisper\",\n    \"/opt/eval/fixtures/q15/clip/clip.wav\",\n    \"--model\",\n    \"small\"\n  ],\n  \"shell\": false,\n  \"cwd\": \"/results/baseline\",\n  \"trace\": null,\n  \"traced\": false,\n  \"block_network\": false,\n  \"timeout_s\": null,\n  \"self_addresses\": [],\n  \"strace\": null,\n  \"stdout\": \"/results/baseline/baseline.stdout\",\n  \"stderr\": \"/results/baseline/baseline.stderr\",\n  \"started_at\": \"2026-11-02T06:31:33.670+00:00\",\n  \"started_epoch\": 1793601093.670427,\n  \"tracer_pid\": 2349,\n  \"ended_at\": \"2026-11-02T06:32:06.281+00:00\",\n  \"ended_epoch\": 1793601126.281,\n  \"duration_s\": 32.61,\n  \"timed_out\": false,\n  \"exit_code\": 0,\n  \"tracer_running\": false\n}\n"
+ },
+ {
+  "box": "T",
+  "what": "grader pin srt",
+  "cmd": "mkdir -p $(dirname /opt/grader/srt.tar.gz) && curl -fsSL -o /opt/grader/srt.tar.gz 'https://files.pythonhosted.org/packages/66/b7/4a1bc231e0681ebf339337b0cd05b91dc6a0d701fa852bb812e244b7a030/srt-3.5.3.tar.gz' && echo '4884315043a4f0740fd1f878ed6caa376ac06d70e135f306a6dc44632eed0cc0  /opt/grader/srt.tar.gz' | sha256sum -c -",
+  "exit": 0,
+  "at": "2026-11-02T14:32:08+08:00",
+  "tail": "/opt/grader/srt.tar.gz: OK\n"
+ },
+ {
+  "box": "T",
+  "what": "grader: srt module",
+  "cmd": "cd /opt/grader && tar xzf srt.tar.gz && cp srt-3.5.3/srt.py /opt/grader/",
+  "exit": 0,
+  "at": "2026-11-02T14:32:08+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "grader pin opencc-STCharacters.txt",
+  "cmd": "mkdir -p $(dirname /opt/grader/opencc/STCharacters.txt) && curl -fsSL -o /opt/grader/opencc/STCharacters.txt 'https://raw.githubusercontent.com/BYVoid/OpenCC/ver.1.4.2/data/dictionary/STCharacters.txt' && echo 'a0ca1601c70648cf48b33c3c6210ccbecc5c7eead4b4c3daf76587ba2c03582b  /opt/grader/opencc/STCharacters.txt' | sha256sum -c -",
+  "exit": 0,
+  "at": "2026-11-02T14:32:09+08:00",
+  "tail": "/opt/grader/opencc/STCharacters.txt: OK\n"
+ },
+ {
+  "box": "T",
+  "what": "grader pin opencc-STPhrases.txt",
+  "cmd": "mkdir -p $(dirname /opt/grader/opencc/STPhrases.txt) && curl -fsSL -o /opt/grader/opencc/STPhrases.txt 'https://raw.githubusercontent.com/BYVoid/OpenCC/ver.1.4.2/data/dictionary/STPhrases.txt' && echo 'f6eab5e5c6dd7640597878d3dfc6599ee1279d2bc91561eadd8e114194e2925a  /opt/grader/opencc/STPhrases.txt' | sha256sum -c -",
+  "exit": 0,
+  "at": "2026-11-02T14:32:10+08:00",
+  "tail": "/opt/grader/opencc/STPhrases.txt: OK\n"
+ },
+ {
+  "box": "T",
+  "what": "grader pin opencc-TSCharacters.txt",
+  "cmd": "mkdir -p $(dirname /opt/grader/opencc/TSCharacters.txt) && curl -fsSL -o /opt/grader/opencc/TSCharacters.txt 'https://raw.githubusercontent.com/BYVoid/OpenCC/ver.1.4.2/data/dictionary/TSCharacters.txt' && echo '737c21c66f55a419dd6956cb3089476cdefc5a36877452631617696df1e5d925  /opt/grader/opencc/TSCharacters.txt' | sha256sum -c -",
+  "exit": 0,
+  "at": "2026-11-02T14:32:11+08:00",
+  "tail": "/opt/grader/opencc/TSCharacters.txt: OK\n"
+ },
+ {
+  "box": "T",
+  "what": "grader pin opencc-TWVariants.txt",
+  "cmd": "mkdir -p $(dirname /opt/grader/opencc/TWVariants.txt) && curl -fsSL -o /opt/grader/opencc/TWVariants.txt 'https://raw.githubusercontent.com/BYVoid/OpenCC/ver.1.4.2/data/dictionary/TWVariants.txt' && echo 'e187278e119c427ca561180ac5da5b20e9f8681190458f35c327ce499e95a6a5  /opt/grader/opencc/TWVariants.txt' | sha256sum -c -",
+  "exit": 0,
+  "at": "2026-11-02T14:32:11+08:00",
+  "tail": "/opt/grader/opencc/TWVariants.txt: OK\n"
+ },
+ {
+  "box": "T",
+  "what": "score run A",
+  "cmd": "cd /results && PYTHONPATH=/opt/grader python3 $F/q15/srt_check.py runA.srt --out srtA.json; PYTHONPATH=/opt/grader python3 $F/q15/zh_score.py --dict-dir /opt/grader/opencc all --ref $F/q15/clip/reference.txt --srt runA.srt --out scoreA.json; tail -c 600 scoreA.json",
+  "exit": 1,
+  "at": "2026-11-02T14:32:12+08:00",
+  "tail": "{\n  \"tool\": \"srt_check.py\",\n  \"file\": \"runA.srt\",\n  \"parser\": \"pinned\",\n  \"problems\": [\n    \"does not parse: FileNotFoundError: [Errno 2] No such file or directory: 'runA.srt'\"\n  ],\n  \"valid\": false,\n  \"cues\": 0,\n  \"coverage_seconds\": 0.0,\n  \"passed\": false\n}\nTraceback (most recent call last):\n  File \"/opt/eval/fixtures/q15/zh_score.py\", line 124, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"/opt/eval/fixtures/q15/zh_score.py\", line 107, in main\n    hyp = _hyp_text(args)\n          ^^^^^^^^^^^^^^^\n  File \"/opt/eval/fixtures/q15/zh_score.py\", line 83, in _hyp_text\n    return srt_check.cue_text(srt_check.parse_file(args.srt, args.parser))\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/eval/fixtures/q15/srt_check.py\", line 83, in parse_file\n    text = read_text(path)\n           ^^^^^^^^^^^^^^^\n  File \"/opt/eval/fixtures/q15/srt_check.py\", line 74, in read_text\n    with open(path, \"rb\") as fh:\n         ^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: 'runA.srt'\ntail: cannot open 'scoreA.json' for reading: No such file or directory\n"
+ },
+ {
+  "box": "T",
+  "what": "score run B",
+  "cmd": "cd /results && PYTHONPATH=/opt/grader python3 $F/q15/srt_check.py runB.srt --out srtB.json; PYTHONPATH=/opt/grader python3 $F/q15/zh_score.py --dict-dir /opt/grader/opencc all --ref $F/q15/clip/reference.txt --srt runB.srt --out scoreB.json; tail -c 600 scoreB.json",
+  "exit": 1,
+  "at": "2026-11-02T14:32:13+08:00",
+  "tail": "{\n  \"tool\": \"srt_check.py\",\n  \"file\": \"runB.srt\",\n  \"parser\": \"pinned\",\n  \"problems\": [\n    \"does not parse: FileNotFoundError: [Errno 2] No such file or directory: 'runB.srt'\"\n  ],\n  \"valid\": false,\n  \"cues\": 0,\n  \"coverage_seconds\": 0.0,\n  \"passed\": false\n}\nTraceback (most recent call last):\n  File \"/opt/eval/fixtures/q15/zh_score.py\", line 124, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"/opt/eval/fixtures/q15/zh_score.py\", line 107, in main\n    hyp = _hyp_text(args)\n          ^^^^^^^^^^^^^^^\n  File \"/opt/eval/fixtures/q15/zh_score.py\", line 83, in _hyp_text\n    return srt_check.cue_text(srt_check.parse_file(args.srt, args.parser))\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/eval/fixtures/q15/srt_check.py\", line 83, in parse_file\n    text = read_text(path)\n           ^^^^^^^^^^^^^^^\n  File \"/opt/eval/fixtures/q15/srt_check.py\", line 74, in read_text\n    with open(path, \"rb\") as fh:\n         ^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: 'runB.srt'\ntail: cannot open 'scoreB.json' for reading: No such file or directory\n"
+ },
+ {
+  "box": "T",
+  "what": "score run C",
+  "cmd": "cd /results && PYTHONPATH=/opt/grader python3 $F/q15/srt_check.py runC.srt --out srtC.json; PYTHONPATH=/opt/grader python3 $F/q15/zh_score.py --dict-dir /opt/grader/opencc all --ref $F/q15/clip/reference.txt --srt runC.srt --out scoreC.json; tail -c 600 scoreC.json",
+  "exit": 1,
+  "at": "2026-11-02T14:32:14+08:00",
+  "tail": "{\n  \"tool\": \"srt_check.py\",\n  \"file\": \"runC.srt\",\n  \"parser\": \"pinned\",\n  \"problems\": [\n    \"does not parse: FileNotFoundError: [Errno 2] No such file or directory: 'runC.srt'\"\n  ],\n  \"valid\": false,\n  \"cues\": 0,\n  \"coverage_seconds\": 0.0,\n  \"passed\": false\n}\nTraceback (most recent call last):\n  File \"/opt/eval/fixtures/q15/zh_score.py\", line 124, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"/opt/eval/fixtures/q15/zh_score.py\", line 107, in main\n    hyp = _hyp_text(args)\n          ^^^^^^^^^^^^^^^\n  File \"/opt/eval/fixtures/q15/zh_score.py\", line 83, in _hyp_text\n    return srt_check.cue_text(srt_check.parse_file(args.srt, args.parser))\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/eval/fixtures/q15/srt_check.py\", line 83, in parse_file\n    text = read_text(path)\n           ^^^^^^^^^^^^^^^\n  File \"/opt/eval/fixtures/q15/srt_check.py\", line 74, in read_text\n    with open(path, \"rb\") as fh:\n         ^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: 'runC.srt'\ntail: cannot open 'scoreC.json' for reading: No such file or directory\n"
+ },
+ {
+  "box": "T",
+  "what": "has install.lines",
+  "cmd": "test -f /results/install.lines",
+  "exit": 0,
+  "at": "2026-11-02T14:32:14+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has run.sh",
+  "cmd": "test -f /results/run.sh",
+  "exit": 0,
+  "at": "2026-11-02T14:32:16+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has steps.txt",
+  "cmd": "test -f /results/steps.txt",
+  "exit": 0,
+  "at": "2026-11-02T14:32:17+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has warmup.txt",
+  "cmd": "test -f /results/warmup.txt",
+  "exit": 0,
+  "at": "2026-11-02T14:32:19+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has no-torch.txt",
+  "cmd": "test -f /results/no-torch.txt",
+  "exit": 0,
+  "at": "2026-11-02T14:32:20+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has probe-before.json",
+  "cmd": "test -f /results/probe-before.json",
+  "exit": 0,
+  "at": "2026-11-02T14:32:22+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has probe-after.json",
+  "cmd": "test -f /results/probe-after.json",
+  "exit": 0,
+  "at": "2026-11-02T14:32:23+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has egress.json",
+  "cmd": "test -f /results/egress.json",
+  "exit": 0,
+  "at": "2026-11-02T14:32:25+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has runA.srt",
+  "cmd": "test -f /results/runA.srt",
+  "exit": 1,
+  "at": "2026-11-02T14:32:26+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has runB.srt",
+  "cmd": "test -f /results/runB.srt",
+  "exit": 1,
+  "at": "2026-11-02T14:32:27+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has runC.srt",
+  "cmd": "test -f /results/runC.srt",
+  "exit": 1,
+  "at": "2026-11-02T14:32:28+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has srtA.json",
+  "cmd": "test -f /results/srtA.json",
+  "exit": 0,
+  "at": "2026-11-02T14:32:29+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has srtB.json",
+  "cmd": "test -f /results/srtB.json",
+  "exit": 0,
+  "at": "2026-11-02T14:32:30+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has srtC.json",
+  "cmd": "test -f /results/srtC.json",
+  "exit": 0,
+  "at": "2026-11-02T14:32:31+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has scoreA.json",
+  "cmd": "test -f /results/scoreA.json",
+  "exit": 1,
+  "at": "2026-11-02T14:32:33+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has scoreB.json",
+  "cmd": "test -f /results/scoreB.json",
+  "exit": 1,
+  "at": "2026-11-02T14:32:34+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has scoreC.json",
+  "cmd": "test -f /results/scoreC.json",
+  "exit": 1,
+  "at": "2026-11-02T14:32:35+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has eg/runA.json",
+  "cmd": "test -f /results/eg/runA.json",
+  "exit": 0,
+  "at": "2026-11-02T14:32:36+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has eg/runB.json",
+  "cmd": "test -f /results/eg/runB.json",
+  "exit": 0,
+  "at": "2026-11-02T14:32:37+08:00",
+  "tail": ""
+ },
+ {
+  "box": "T",
+  "what": "has eg/runC.json",
+  "cmd": "test -f /results/eg/runC.json",
+  "exit": 0,
+  "at": "2026-11-02T14:32:39+08:00",
+  "tail": ""
+ },
+ {
+  "box": "BL",
+  "what": "has baseline.json",
+  "cmd": "test -f /results/baseline/baseline.json",
+  "exit": 0,
+  "at": "2026-11-02T14:32:41+08:00",
+  "tail": ""
+ }
+]

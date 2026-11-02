@@ -1,0 +1,83 @@
+{
+ "answer_id": "A0033",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "request_id": "req_011CgdnwSXtVFu8aqtzsbiJe",
+ "note": {
+  "differences": [
+   {
+    "step": "Later resources: 'If that doesn't apply them, colima delete and start again, but that wipes your images and volumes'",
+    "docs_say": "The FAQ says that from v0.9.0 Colima keeps container runtime data on a separate disk, so it is not lost on deletion and is reinstated on the next `colima start`. Only `colima delete --data` clears it. The current Homebrew version is 0.10.3. The README also says `colima stop` then `colima start --cpu 4 --memory 8` modifies an existing VM.",
+    "effect": "behaves_differently",
+    "source": "Colima FAQ – How can I delete container data; Homebrew formula colima (stable 0.10.3); Colima README – Customization Examples"
+   },
+   {
+    "step": "Things to watch for: socket path ~/.colima/default/docker.sock and `export DOCKER_HOST=\"unix://$HOME/.colima/default/docker.sock\"`",
+    "docs_say": "This matches the documented socket for v0.4.0+ and the documented DOCKER_HOST fix. However, the config directory is resolved in this order: $HOME/.colima if it exists, then $XDG_CONFIG_HOME/colima if that variable is set, then ~/.config/colima if it exists, otherwise $HOME/.colima. On a fresh machine with XDG_CONFIG_HOME set or ~/.config/colima present, the socket would be elsewhere. The docs say to confirm the path with `colima status`.",
+    "effect": "behaves_differently",
+    "source": "Colima FAQ – Specifying the config location; Docker socket location; Cannot connect to the Docker daemon"
+   },
+   {
+    "step": "Bind mounts: 'Projects stored outside ~ need a --mount flag.'",
+    "docs_say": "The FAQ says bind mounts outside /Users/$USER start without error but show up empty. The documented fix is to add the path to the `mounts` section of $HOME/.colima/default/colima.yaml (or use `colima start --edit`) and then run `colima restart`. The provided docs do not mention a `--mount` flag. Paths containing spaces are rejected.",
+    "effect": "not_covered",
+    "source": "Colima FAQ – Issue with Docker bind mount showing empty; Mount path with spaces is not supported"
+   },
+   {
+    "step": "First run: `--mount-type virtiofs` in the colima start command",
+    "docs_say": "The excerpts do not mention the `--mount-type` flag or virtiofs. They do document `--cpu`, `--memory`, `--disk`, `--vm-type=vz` and `--vz-rosetta` (Rosetta requires v0.5.3+, macOS 13+, Apple Silicon).",
+    "effect": "not_covered",
+    "source": "Colima README – Customizing the VM / Customization Examples"
+   },
+   {
+    "step": "First run: `--disk 60`",
+    "docs_say": "The default disk is 100GiB. Disk size can be increased after creation, but the docs only describe increasing it, not shrinking it. Choosing 60 is an optional setting that gives a smaller disk than the default.",
+    "effect": "cosmetic",
+    "source": "Colima README – Customizing the VM; Colima FAQ – How can disk size be increased?"
+   },
+   {
+    "step": "Assumptions: 'macOS 13 or later (needed for the faster vz VM backend)'",
+    "docs_say": "Colima as a whole requires macOS 13 or newer, not just the vz backend. Under the instructions' own assumption this changes nothing.",
+    "effect": "cosmetic",
+    "source": "Colima FAQ – Are older macOS versions supported?"
+   },
+   {
+    "step": "Install step 1: uninstall Docker Desktop to avoid conflicts",
+    "docs_say": "From v0.3.0 Colima uses Docker contexts and can run alongside Docker for Mac, making itself the default context on startup. Uninstalling is not required for Colima to work. The docs do not cover the compliance reason or how to uninstall.",
+    "effect": "cosmetic",
+    "source": "Colima FAQ – Can it run alongside Docker for Mac?"
+   },
+   {
+    "step": "Install step 3: add \"cliPluginsExtraDirs\": [\"/opt/homebrew/lib/docker/cli-plugins\"] to ~/.docker/config.json",
+    "docs_say": "The docker-compose and docker-buildx formula caveats say to add cliPluginsExtraDirs with $HOMEBREW_PREFIX/lib/docker/cli-plugins, which is /opt/homebrew on Apple silicon, so the instructions match. The Colima FAQ shows an older method for buildx: symlinking into ~/.docker/cli-plugins. The snippet is a fragment and must be placed inside a valid JSON object.",
+    "effect": "cosmetic",
+    "source": "Homebrew formula docker-compose / docker-buildx caveats; Colima FAQ – Installing Buildx"
+   },
+   {
+    "step": "Install step 4: remove \"credsStore\": \"desktop\" or change it to \"osxkeychain\"",
+    "docs_say": "The provided documentation does not mention credential helpers.",
+    "effect": "not_covered",
+    "source": "none"
+   },
+   {
+    "step": "Things to watch for: `export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock`",
+    "docs_say": "The documentation does not mention Testcontainers or this variable.",
+    "effect": "not_covered",
+    "source": "none"
+   },
+   {
+    "step": "First run: `docker run --rm alpine uname -m` prints aarch64; `docker compose up -d`",
+    "docs_say": "The docs' example is `docker run hello-world`. Expected `uname` output and Compose usage are not covered. The FAQ shows the VM arch as aarch64 in `colima list`.",
+    "effect": "not_covered",
+    "source": "Colima README – Docker; Colima FAQ – Broken status"
+   },
+   {
+    "step": "First run: `docker context ls` shows colima active",
+    "docs_say": "The docs agree that Colima sets itself as the default context on startup. They use `docker context list` (`ls` is the same command).",
+    "effect": "cosmetic",
+    "source": "Colima FAQ – Can it run alongside Docker for Mac?; Listing Docker contexts"
+   }
+  ],
+  "summary": "On an Apple silicon Mac the install and first-run commands broadly match the docs: the brew packages, the cliPluginsExtraDirs path, `colima start` with --cpu/--memory/--disk/--vm-type vz/--vz-rosetta, docker contexts, brew services and the DOCKER_HOST fix. The one contradiction is the warning that `colima delete` wipes images and volumes: since v0.9.0, container data survives deletion unless you use `colima delete --data`. The fixed ~/.colima socket path can also differ when XDG_CONFIG_HOME is set or ~/.config/colima exists. The docs do not cover `--mount-type virtiofs`, the `--mount` flag (they document mounts via colima.yaml plus `colima restart`), the credsStore change, or the Testcontainers variable. Uninstalling Docker Desktop, the macOS 13 wording and the 60GiB disk are optional or wording differences."
+ }
+}

@@ -1,0 +1,577 @@
+{
+ "note": "L2 per 9.1 C7: run-1 control and experimental answers, Linux questions in order, Modal dev image; scripts in l2/scripts, raw output in l2/<q>-<group>/. Verdicts are the grader's (this session) reading of those outputs; 念誠's decisions are final.",
+ "results": {
+  "q01": {
+   "control": {
+    "pick": "sync-agents-settings (answer says no tool fits exactly; this is its closest fit)",
+    "items": {
+     "1": "pass (npm install -g sync-agents-settings exit 0)",
+     "2": "pass (seed_configs check RESULT PASS)",
+     "3": "fail (claude lists fixture-echo; codex and gemini do not: the answer's `claude mcp add` wrote Claude's local scope by default and `sync-agents sync` read 0 user-scope servers)",
+     "4": "fail (3 attempts, all in step 08 `claude mcp add`: DNS 172.21.0.1:53 and 160.79.104.10:443)"
+    },
+    "l2": "fail",
+    "notes": [
+     "placeholder of `claude mcp add …` filled with the fixture server (README section 3), scope left at its default (local); the answer assumes user-wide configs. With --scope user item 3 might differ, but item 4 fails on the same claude mcp add, so the L2 verdict would not change"
+    ]
+   },
+   "experimental": {
+    "pick": "mcpshare",
+    "items": {
+     "1": "fail (`brew install uv` exit 127: the answer's install is for macOS with Homebrew; the dev image has neither)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q02": {
+   "control": {
+    "pick": "leakguard",
+    "items": {
+     "1": "fail (rustup under a pty with the default accepted: exit 0; `cargo install leakguard` exit 101: linker `cc` not found, the dev image has no C compiler and the answer installs none; `leakguard --list-kinds` exit 127)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7; the traced pipeline itself made no attempt)"
+    },
+    "l2": "fail",
+    "notes": [
+     "environment: sudo installed in the image for every q02 run (9.3 A substitution); rustup's installer reads /dev/tty, run under a pty with Enter (accept the default)"
+    ]
+   },
+   "experimental": {
+    "pick": "leakguard",
+    "items": {
+     "1": "pass (`sudo apt install cargo` with the default Y accepted, exit 0; `cargo install leakguard` exit 0)",
+     "2": "fail (the pipeline `cat app.log | leakguard > clean.log` exit 127: cargo installed to /root/.cargo/bin, which is not on PATH, and the answer never adds it; check_clean's `masking PASS` is only because clean.log is empty)",
+     "3": "fail (check_clean ITEM ordinary FAIL: empty output)",
+     "4": "pass (no egress attempt; the tool never ran)"
+    },
+    "l2": "fail",
+    "notes": [
+     "first attempt (q02-experimental-attempt1-apt-prompt) is a harness measurement failure: apt's [Y/n] prompt got no input and aborted; rerun with the default accepted, answer unchanged",
+     "item 2 recorded as fail although check_clean prints masking PASS: no tool output exists to be masked (for 念誠 to confirm)"
+    ]
+   }
+  },
+  "q03": {
+   "control": {
+    "pick": "qsv",
+    "items": {
+     "1": "fail (base image: `unzip` exit 127 (not installed), `install -m 755 qsv-dl/qsv ~/.local/bin/` exit 1, `qsv --version` exit 127; check_runtime empty before and after)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": [
+     "step 1 is a browser download from the releases page; not performed in the box (the base image has no downloader), and the next line `unzip` fails regardless"
+    ]
+   },
+   "experimental": {
+    "pick": "DuckDB CLI",
+    "items": {
+     "1": "fail (base image: `wget` exit 127, `unzip` exit 127, `install` exit 1; Option A, the first given)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q04": {
+   "control": {
+    "pick": "SOPS + age (Linux block)",
+    "items": {
+     "1": "fail (`sops encrypt .env > secrets.enc.env` exit 1: `error loading config: no matching creation rules found` — the answer's .sops.yaml rule `\\.enc\\.env$` is matched against the input `.env`; an empty secrets.enc.env was committed, so check_history's PASS is only for an empty file)",
+     "2": "fail (B's `sops decrypt secrets.enc.env > .env` exit 1; check_values present FAIL; C absent PASS)",
+     "3": "pass by the check (absent PASS for v2) although every removal step exited 1 (`sops metadata not found`): the file was never encrypted",
+     "4": "pass (no egress attempt in any box)"
+    },
+    "l2": "fail",
+    "notes": [
+     "install: `sudo apt install age` (default accepted), curl the sops binary with vX.Y.Z filled by the latest release (v3.13.3), `sudo install`: all exit 0",
+     "first run (q04-control-attempt1) had the same exits; rerun only to capture the error text (stderr tails)",
+     "environment in every q04 box: git identity (README section 3), sudo installed (9.3 A); `sops edit` run with an EDITOR that pastes the rotated values (the answer: 'paste in the new values')"
+    ]
+   },
+   "experimental": {
+    "pick": "SOPS + age (Debian/Ubuntu prose)",
+    "items": {
+     "1": "pass (encrypt -i, commit; check_history RESULT PASS)",
+     "2": "pass (B present PASS; C decrypt exit 128, absent PASS)",
+     "3": "pass (updatekeys, rotate, commit, then sops edit with new values as the prose orders; B's old and fresh clones: absent PASS)",
+     "4": "pass (no egress attempt in any box)"
+    },
+    "l2": "pass",
+    "notes": [
+     "the answer gives sops for Ubuntu only in prose ('download the binary or .deb from releases ... check it against the published checksums'); the grader downloaded sops_3.13.3_amd64.deb, ran `sha256sum --ignore-missing -c sops-v3.13.3.checksums.txt` (no file was verified: the checksums file has no entry for the .deb) and `dpkg -i` (exit 0). `apt install age` ran verbatim with the default accepted. For 念誠 to confirm that following the prose this way counts"
+    ]
+   }
+  },
+  "q05": {
+   "control": {
+    "pick": "Docling",
+    "items": {
+     "1": "fail (`python3 -m venv ~/docling-env` exit 1: ensurepip is not available, the dev image has no python3-venv; every later line fails: source exit 1, pip/docling exit 127)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   },
+   "experimental": {
+    "pick": "Docling",
+    "items": {
+     "1": "fail (`python3 -m venv ~/.venvs/docling` exit 1: no python3-venv; later lines fail the same way)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q06": {
+   "control": {
+    "pick": "@ivotoby/openapi-mcp-server",
+    "items": {
+     "1": "pass (nothing to install: the answer says `npx -y` fetches the package and assumes Node.js 18+)",
+     "2": "fail (the stdio server `npx -y @ivotoby/openapi-mcp-server ...` cannot start: npx not found, the dev image has no Node.js and the answer installs none; reference client FileNotFoundError)",
+     "3": "fail (no session)",
+     "4": "fail (no session)"
+    },
+    "l2": "fail",
+    "notes": [
+     "config values filled per README section 3: spec /work/api/openapi.yaml, base URL http://127.0.0.1:18080, a fake bearer token generated at run time"
+    ]
+   },
+   "experimental": {
+    "pick": "@ivotoby/openapi-mcp-server",
+    "items": {
+     "1": "fail (`node --version` exit 127, then the answer's `brew install node` exit 127)",
+     "2": "fail (install failed, C7; the session also could not start npx)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q07": {
+   "control": {
+    "pick": "Bruno (bru CLI)",
+    "items": {
+     "1": "fail (`brew install bruno` exit 127, `npm install -g @usebruno/cli` exit 127: no Homebrew, no Node.js in the dev image)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   },
+   "experimental": {
+    "pick": "Bruno (bru CLI)",
+    "items": {
+     "1": "fail (`brew install --cask bruno` exit 127, `npm install -g @usebruno/cli` exit 127)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q09": {
+   "control": {
+    "pick": "Backlog.md",
+    "items": {
+     "1": "fail (`brew install backlog-md` exit 127: the first install method given; no Homebrew in the dev image)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   },
+   "experimental": {
+    "pick": "Beads (bd)",
+    "items": {
+     "1": "fail (method A `go install github.com/steveyegge/beads/cmd/bd@latest` exit 127: no Go in the dev image; methods B and C are prose without a command)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q10": {
+   "control": {
+    "pick": "built-in: git diff --color-words with a custom word regex",
+    "items": {
+     "1": "pass (only git; .gitattributes and git config exit 0; output check ok)",
+     "2": "pass (spans 己 / 已)",
+     "3": "pass",
+     "4": "pass (`*.md diff=cjk` + `git config --global diff.cjk.wordRegex ...`, everyday `git diff --color-words`: same spans)",
+     "5": "pass (color)"
+    },
+    "l2": "pass",
+    "notes": [
+     "one-off command: `git diff --color-words='[A-Za-z0-9_]+|[^[:space:]]'`; the optional alias (step 3) not applied: the answer names `git diff --color-words` as the everyday command after step 2"
+    ]
+   },
+   "experimental": {
+    "pick": "built-in: git diff --word-diff=color with --word-diff-regex",
+    "items": {
+     "1": "pass (only git; settings exit 0; output check ok)",
+     "2": "pass (spans 己 / 已 with the one-off command)",
+     "3": "pass",
+     "4": "fail (after `git config --global diff.markdown.wordRegex ...`, `*.md diff=markdown` and `alias.wd`, the everyday `git wd` marks the whole 216-character line: the custom regex did not take effect under the `markdown` driver name)",
+     "5": "pass (color)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q13": {
+   "control": {
+    "pick": "llama.cpp llama-server (A. prebuilt binary)",
+    "items": {
+     "1": "fail (the answer names `llama-<build>-bin-ubuntu-x64.zip` and says to unzip it; the newest build release b12032 (2026-11-01) has no .zip for ubuntu-x64, only llama-b12032-bin-ubuntu-x64.tar.gz, and the dev image has no unzip; the same binary also cannot start here: libgomp.so.1 missing)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": [
+     "/releases/latest points at v0.8.0, which has only nightly-tag.txt; the newest bNNNN release was used"
+    ]
+   },
+   "experimental": {
+    "pick": "llama.cpp llama-server (A. prebuilt binary)",
+    "items": {
+     "1": "fail (downloaded and extracted llama-b12032-bin-ubuntu-x64.tar.gz as the prose says; `llama-server --version` exit 127: error while loading shared libraries: libgomp.so.1, not in the dev image and not installed by the answer)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   },
+   "note": "calibration.md step 1 (the frozen GGUF and its read-only store) was never filled in; it did not matter because both installs failed (C7)"
+  },
+  "q14": {
+   "control": {
+    "pick": "Infinity (Docker image michaelf34/infinity:latest-cpu)",
+    "items": {
+     "1": "fail (`docker run ...` exit 127: no Docker in the dev image, and the answer's only install path is Docker)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   },
+   "experimental": {
+    "pick": "Xinference (Docker image xprobe/xinference:latest-cpu)",
+    "items": {
+     "1": "fail (`docker run ...` exit 127: no Docker)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q16": {
+   "control": {
+    "pick": "mdpo + Ollama + liaad/Tradutor + the answer's script",
+    "items": {
+     "1": "fail (`curl -fsSL https://ollama.com/install.sh | sh` exit 1 (`ERROR: This version requires zstd for extraction`; the dev image has no zstd), `ollama pull ...` exit 127, `python3 -m venv ~/mdtrans && . ~/mdtrans/bin/activate` exit 1 (no python3-venv), `pip install mdpo polib` exit 127)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)",
+     "6": "fail (install failed, C7)",
+     "7": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   },
+   "experimental": {
+    "pick": "llama.cpp llama-server + EuroLLM-9B-Instruct (Q4 GGUF via -hf) + the answer's md2ptpt.py",
+    "items": {
+     "1": "pass (`sudo apt install build-essential cmake git libcurl4-openssl-dev python3` with the default accepted, clone, `cmake -B build && cmake --build build --config Release -j`: all exit 0)",
+     "2": "fail (the server cannot load the model: `get_repo_commit: error: HTTPS is not supported. Please rebuild with ...` — the build the answer gives has no HTTPS support for -hf, so the model never downloads; the script then gets connection refused; the egress report itself is pass)",
+     "3": "fail (no output files)",
+     "4": "fail (no output)",
+     "5": "fail (no output; the pinned language identifier was also never chosen in calibration.md)",
+     "6": "fail (no output)",
+     "7": "fail (no output; the meaning judge was also never chosen)"
+    },
+    "l2": "fail",
+    "notes": [
+     "first run (q16-experimental-attempt1-harness): the grader's line runner skipped the last install line (cmake --build); rerun with the fix",
+     "the answer's script is 96 lines (the question allows glue code up to 50 lines; an L1 matter, recorded here only)",
+     "D3: not every [L2] item was run: L2-5 (pinned language identifier) and L2-7 (meaning judge) were never calibrated (run log, L2 section, recorded before unblinding); items 5 and 7 also had no output to judge"
+    ],
+    "all_items_run": false
+   }
+  },
+  "q17": {
+   "control": {
+    "pick": "aichat (with Ollama)",
+    "items": {
+     "1": "fail (`curl -fsSL https://ollama.com/install.sh | sh` exit 1: requires zstd, not in the dev image; both `ollama pull` exit 127)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   },
+   "experimental": {
+    "pick": "aichat (with Ollama)",
+    "items": {
+     "1": "fail (`less ollama-install.sh && sh ollama-install.sh` exit 127: no less in the dev image, so Ollama is never installed; `ollama pull` exit 127; `cargo install aichat` exit 127)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q18": {
+   "control": {
+    "pick": "ollmcp",
+    "items": {
+     "1": "fail (`pipx install ollmcp` exit 127: no pipx in the dev image)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": [
+     "the answer's `ollama pull` line not run (9.3 C.1: the fixed test model replaces it)"
+    ]
+   },
+   "experimental": {
+    "pick": "ollmcp",
+    "items": {
+     "1": "fail (`uv tool install --upgrade ollmcp` exit 127: no uv)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": [
+     "the answer's `ollama pull` line not run (9.3 C.1: the fixed test model replaces it)"
+    ]
+   }
+  },
+  "q19": {
+   "control": {
+    "pick": "Aider (option A: uv)",
+    "items": {
+     "1": "fail (`brew install uv` exit 127, `uv tool install --python 3.12 aider-chat` exit 127)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   },
+   "experimental": {
+    "pick": "Aider",
+    "items": {
+     "1": "fail (`brew install aider` exit 127: the first method)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q20": {
+   "control": {
+    "pick": "built-in: Ollama's OpenAI-compatible /v1 endpoint",
+    "items": {
+     "1": "pass (check_base_url http://localhost:11434/v1 exit 0)",
+     "2": "pass (check_script_diff exit 0; run_ask online pass, non-empty answer)",
+     "3": "pass (blocked run pass; egress report pass in the call's window)"
+    },
+    "l2": "pass",
+    "notes": [
+     "the answer's main way: OPENAI_BASE_URL and OPENAI_API_KEY=ollama as environment variables, the model string changed to the frozen fixture model qwen2.5:0.5b (9.3 C); environment = calibration C1-C2 (pinned Ollama, venv with pinned openai); L2-3 in the same box with Ollama stopped and a fresh --block-network namespace, as calibration C5"
+    ]
+   },
+   "experimental": {
+    "pick": "built-in: Ollama's OpenAI-compatible /v1 endpoint",
+    "items": {
+     "1": "pass (check_base_url http://localhost:11434/v1 exit 0)",
+     "2": "pass (check_script_diff exit 0; run_ask online pass, non-empty answer)",
+     "3": "pass (blocked run pass; egress report pass in the call's window)"
+    },
+    "l2": "pass",
+    "notes": [
+     "the answer's main way: OPENAI_BASE_URL and OPENAI_API_KEY=ollama as environment variables, the model string changed to the frozen fixture model qwen2.5:0.5b (9.3 C); environment = calibration C1-C2 (pinned Ollama, venv with pinned openai); L2-3 in the same box with Ollama stopped and a fresh --block-network namespace, as calibration C5"
+    ]
+   }
+  },
+  "q15": {
+   "control": {
+    "pick": "whisper.cpp (large-v3-turbo-q5_0) + OpenCC s2twp",
+    "items": {
+     "1": "pass (install exit 0 in one shell; warmup exit 0 with an SRT; check_no_torch exit 0)",
+     "2": "fail (Run A, B and C each stopped at the 600 s limit, exit 124: no SRT)",
+     "3": "fail (no SRT)",
+     "4": "fail (no SRT)",
+     "5": "fail (Run A timed out at 600 s; baseline openai-whisper small 40.1 s)",
+     "6": "fail (probes blocked before and after, egress report pass, but Run B exit 124, and the item needs exit 0)"
+    },
+    "l2": "fail",
+    "notes": [
+     "SPEED ARTIFACT TO REVIEW: whisper.cpp built in this sandbox prints `system_info: ... CPU : OPENMP = 1 | REPACK = 1` with no SIMD features, and its encoder takes ~232 s per 30 s window (warmup, 10 s clip) at -t 4 and -t 8 alike, although the sandbox CPU reports avx2/avx512 (q15-cpu-flags) and openai-whisper small runs the 60 s clip in 33-40 s in an identical box. This may be an artifact of building inside gVisor rather than of the answer; both groups picked the same tool and setup, so it does not separate them. Recorded as measured (README section 2: a timed-out run fails); for 念誠 to decide",
+     "attempts: attempt1-harness (the line runner skipped the model download), attempt2-t8 (the grader left -t 8; both answers say to set -t to the CPU's physical core count, nproc = 4), this run with -t 4",
+     "input placeholder meeting.m4a filled with /work/input/meeting.wav; the run starts in /work/whisper.cpp; experimental's optional VAD model downloaded because its run command uses --vad; CPU model name is 'unknown' in every box (gVisor), so 'same CPU model' could only be recorded as unknown on both sides"
+    ]
+   },
+   "experimental": {
+    "pick": "whisper.cpp (large-v3-turbo-q5_0) + OpenCC s2twp",
+    "items": {
+     "1": "pass (install exit 0 in one shell; warmup exit 0 with an SRT; check_no_torch exit 0)",
+     "2": "fail (Run A, B and C each stopped at the 600 s limit, exit 124: no SRT)",
+     "3": "fail (no SRT)",
+     "4": "fail (no SRT)",
+     "5": "fail (Run A timed out at 600 s; baseline openai-whisper small 32.6 s)",
+     "6": "fail (probes blocked before and after, egress report pass, but Run B exit 124, and the item needs exit 0)"
+    },
+    "l2": "fail",
+    "notes": [
+     "SPEED ARTIFACT TO REVIEW: whisper.cpp built in this sandbox prints `system_info: ... CPU : OPENMP = 1 | REPACK = 1` with no SIMD features, and its encoder takes ~232 s per 30 s window (warmup, 10 s clip) at -t 4 and -t 8 alike, although the sandbox CPU reports avx2/avx512 (q15-cpu-flags) and openai-whisper small runs the 60 s clip in 33-40 s in an identical box. This may be an artifact of building inside gVisor rather than of the answer; both groups picked the same tool and setup, so it does not separate them. Recorded as measured (README section 2: a timed-out run fails); for 念誠 to decide",
+     "attempts: attempt1-harness (the line runner skipped the model download), attempt2-t8 (the grader left -t 8; both answers say to set -t to the CPU's physical core count, nproc = 4), this run with -t 4",
+     "input placeholder meeting.m4a filled with /work/input/meeting.wav; the run starts in /work/whisper.cpp; experimental's optional VAD model downloaded because its run command uses --vad; CPU model name is 'unknown' in every box (gVisor), so 'same CPU model' could only be recorded as unknown on both sides"
+    ]
+   }
+  },
+  "q08": {
+   "control": {
+    "pick": "Colima",
+    "items": {
+     "1": "not run: a macOS guest has no nested virtualization (tart: 'macOS virtual machines do not support nested virtualization'; guest kern.hv_support 0), so Colima cannot start its Linux VM; no Docker install on 念誠's own Mac (coordinator 2026-11-02). l2/mac-gate/gate.json",
+     "2": "not run: a macOS guest has no nested virtualization (tart: 'macOS virtual machines do not support nested virtualization'; guest kern.hv_support 0), so Colima cannot start its Linux VM; no Docker install on 念誠's own Mac (coordinator 2026-11-02). l2/mac-gate/gate.json",
+     "3": "not run: a macOS guest has no nested virtualization (tart: 'macOS virtual machines do not support nested virtualization'; guest kern.hv_support 0), so Colima cannot start its Linux VM; no Docker install on 念誠's own Mac (coordinator 2026-11-02). l2/mac-gate/gate.json",
+     "4": "not run: a macOS guest has no nested virtualization (tart: 'macOS virtual machines do not support nested virtualization'; guest kern.hv_support 0), so Colima cannot start its Linux VM; no Docker install on 念誠's own Mac (coordinator 2026-11-02). l2/mac-gate/gate.json"
+    },
+    "l2": "not_run",
+    "notes": [
+     "method: agent in a tart clone (2026-11-02 method change); a blind comparison with the official docs is in l2/q08-docs-note/ (a note, not L2)"
+    ]
+   },
+   "experimental": {
+    "pick": "Colima",
+    "items": {
+     "1": "not run: a macOS guest has no nested virtualization (tart: 'macOS virtual machines do not support nested virtualization'; guest kern.hv_support 0), so Colima cannot start its Linux VM; no Docker install on 念誠's own Mac (coordinator 2026-11-02). l2/mac-gate/gate.json",
+     "2": "not run: a macOS guest has no nested virtualization (tart: 'macOS virtual machines do not support nested virtualization'; guest kern.hv_support 0), so Colima cannot start its Linux VM; no Docker install on 念誠's own Mac (coordinator 2026-11-02). l2/mac-gate/gate.json",
+     "3": "not run: a macOS guest has no nested virtualization (tart: 'macOS virtual machines do not support nested virtualization'; guest kern.hv_support 0), so Colima cannot start its Linux VM; no Docker install on 念誠's own Mac (coordinator 2026-11-02). l2/mac-gate/gate.json",
+     "4": "not run: a macOS guest has no nested virtualization (tart: 'macOS virtual machines do not support nested virtualization'; guest kern.hv_support 0), so Colima cannot start its Linux VM; no Docker install on 念誠's own Mac (coordinator 2026-11-02). l2/mac-gate/gate.json"
+    },
+    "l2": "not_run",
+    "notes": [
+     "method: agent in a tart clone (2026-11-02 method change); a blind comparison with the official docs is in l2/q08-docs-note/ (a note, not L2)"
+    ]
+   }
+  },
+  "q12": {
+   "control": {
+    "pick": "mlx-lm (option A: uv)",
+    "method": "agent, tart clone (8 GB, 8 vCPU), macOS 26.6.2 guest",
+    "items": {
+     "1": "pass (preflight PASS; `brew install uv` and `uv tool install mlx-lm` exit 0; no app or cask added)",
+     "2": "fail (`mlx_lm.server --model mlx-community/Qwen2.5-1.5B-Instruct-4bit --host 127.0.0.1 --port 8080`: `zsh: command not found: mlx_lm.server`; uv put the commands in ~/.local/bin, which is not on PATH, and printed that warning; the answer does not add it)",
+     "3": "fail (no server: APIConnectionError)",
+     "4": "fail (no server: APIConnectionError)",
+     "5": "fail (no server; offline check run as written)",
+     "6": "pass (scan_transcript: 0 lines to review; no login or account prompt)"
+    },
+    "l2": "fail",
+    "notes": [
+     "option A, the first given; the optional generation step not run; the pinned fixture model fills the answer's example model; API key 'local' (the answer's placeholder)",
+     "grader errors, answer unchanged: the setup's grader venv failed (the image's Homebrew Python cannot run once moved aside), the host-side run was stopped after the install lines had started in the guest; the install shell finished on its own (exits in steps.txt), the venv was rebuilt from a pinned standalone CPython 3.12.16 and the checks ran (run-phase-stopped.log)",
+     "the marker file was made by the before snapshot (09:56 guest time), before the first install line; the later `touch` by the test user failed on its root-owned file and was not needed"
+    ]
+   },
+   "experimental": {
+    "pick": "mlx-lm (option A: uv)",
+    "method": "agent, tart clone (8 GB, 8 vCPU), macOS 26.6.2 guest",
+    "items": {
+     "1": "pass (preflight PASS; `brew install uv` and `uv tool install mlx-lm` exit 0; no app or cask added)",
+     "2": "fail (the answer's quick test `mlx_lm.generate …` exit 127 and `mlx_lm.server --model mlx-community/Qwen2.5-1.5B-Instruct-4bit --port 8080`: `command not found`; uv put the commands in ~/.local/bin, which is not on PATH, and printed that warning; the answer does not add it)",
+     "3": "fail (no server: APIConnectionError)",
+     "4": "fail (no server: APIConnectionError)",
+     "5": "fail (no server; offline check run as written)",
+     "6": "pass (scan_transcript: 0 lines to review; no login or account prompt)"
+    },
+    "l2": "fail",
+    "notes": [
+     "option A, the first given; the quick test (not marked optional) run with the pinned fixture model in place of the answer's example model; API key 'sk-local' (the answer's placeholder)",
+     "the marker file was made by the before snapshot, before the first install line"
+    ]
+   }
+  },
+  "q11": {
+   "control": {
+    "pick": "Ollama + Llama-3-Taiwan-8B-Instruct (install: the macOS app from ollama.com/download, as extracted)",
+    "method": "agent, tart clone (16 GB, 8 vCPU), macOS 26.6.2 guest; attempt 3 (attempts 1-2 kept: grader errors and host swapping)",
+    "items": {
+     "1": "fail (the steps are not all in the terminal: download the app, drag it into Applications, open it; on first launch the app shows an authorization dialog (SecurityAgent) to install its command line tool, which needs a click and a password. The memory footprint was not measured: grader error, the watcher's stop file could not be written by the test user, so it never wrote its result)",
+     "2": "pass (guest network services off, offline check PASS before and after; all 15 prompts (P1-P5, 3 runs) got a non-empty reply in 7-126 s, exit 0)",
+     "3": "pass (2 of 3 runs; every run: P1, P2, P3, P5 at least 50 CJK, no 10-character substring more than 3 times, blind judge true)",
+     "4": "pass (Traditional ratio 1.0, 395 differing characters in run 1; the same in 2 of 3 runs)",
+     "5": "pass by hand mapping (P4 in all 3 runs is one line, '軟體、影片、網路、程式、資訊、預設、檔案、記憶體。', the 8 terms in the asked order separated by 、 instead of one per line, so score_replies could not map lines; mapped by hand in order: 8 of 8 Taiwan terms, no listed term, 'file' = 檔案. P5 passes in all 3 runs)"
+    },
+    "l2": "fail",
+    "notes": [
+     "the dialog's default was done by the grader (CLI link /usr/local/bin/ollama -> the app's binary, dialog closed with sudo, app restarted), so that the remaining items could be checked; L2-1 fails on the GUI steps either way",
+     "first run (`ollama run hf.co/phate334/…`) online under a pty, `/bye` typed once the prompt showed; no prompt sent",
+     "offline.sh: `ifconfig: command not found` (the grader's PATH lacked /sbin), so its address/bridge sub-check did not run; the network services were off and the other checks passed. Fixed for experimental",
+     "asked with the answer's first way, `ollama run tw`, prompt on stdin, a new run per prompt; temperature 0.6 in the answer's Modelfile, no documented seed setting: 3 runs, 2 of 3",
+     "L2-5 hand mapping to be confirmed by 念誠"
+    ]
+   },
+   "experimental": {
+    "pick": "Ollama + Llama-Breeze2-8B-Instruct (brew install ollama)",
+    "method": "agent, tart clone (16 GB, 8 vCPU, suspendable), macOS 26.6.2 guest",
+    "items": {
+     "1": "fail under C7 (install line 4 `ollama pull hf.co/DevQuasar-9/…` exit 1: 'could not connect to ollama server'; it ran in the same second as `brew services start ollama` (11:29:56 guest UTC), and the server was up at 11:29:57: a race, as when the block is pasted at once). Observed otherwise: every step in the terminal, no app; summed peak footprint 5.04 GiB (three parts: 0.21, 4.70, 5.04 GiB) < 12 GiB",
+     "2": "fail under C7. Observed: 2 of 3 runs pass (run 1 P1 still generating after 24 min, a repetition loop, over the 10-minute limit; every other prompt answered in time, guest network services off, offline check PASS)",
+     "3": "fail under C7. Observed: fail, 1 of 3 runs (run 1 P1: the loop, '、一個量杯' 561 times, judge false; run 3 P1: judge false; run 2 passes)",
+     "4": "fail under C7. Observed: pass (ratio 1.0 in all 3 runs)",
+     "5": "fail under C7. Observed: pass (runs 1 and 2 map by line order, 8 of 8; run 3 is one comma-separated line, 8 of 8 by hand mapping)"
+    },
+    "l2": "fail",
+    "l2_if_the_race_does_not_count": "fail (item 3)",
+    "notes": [
+     "C7: an install failure fails the remaining items; whether this one-second race counts is 念誠's call after unblinding (coordinator 2026-11-02); the observed values are recorded so the verdict can be redone either way",
+     "the answer's next step, `ollama create tw -f Modelfile`, downloads the model by itself (FROM hf.co/…); it first hit the grader's 20-minute step limit and was re-run without it",
+     "grader errors and environment, answer unchanged: prompts without a model (replies-attempt1-no-model), host swapping during the first prompt set (guest rebooted cleanly, replies-attempt2-hostswap), the 10-minute wrapper did not stop ollama (run 1 P2 queued behind P1, set aside), a watchdog leftover kept each step at 10 minutes of wall time (prompt times unaffected; per-prompt host readings for run 1 P2-P4 were kept only in memory and lost when that loop was stopped between prompts)",
+     "asked with the answer's first way, `ollama run tw` (interactive in the answer), prompt on stdin, a new run per prompt; temperature 0.6 in the answer's Modelfile, no documented seed setting: 3 runs, 2 of 3"
+    ]
+   }
+  }
+ }
+}

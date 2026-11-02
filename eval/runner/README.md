@@ -5,9 +5,11 @@
 ## 怎麼跑
 
 ```bash
-uv run python eval/runner/collect_evidence.py                          # D5 要比對的原始沙盒紀錄 → runs/eval-evidence/
-uv run --with pyyaml==6.0.2 python eval/runner/run.py snapshot --label before   # A3
-uv run --with pyyaml==6.0.2 python eval/runner/run.py run1             # B1、B2、B4
+uv run python eval/runner/collect_evidence.py [--extra-root DIR]       # D5 要比對的原始沙盒紀錄 → runs/eval-evidence/
+uv run --with pyyaml==6.0.2 python eval/runner/run.py freeze-candidates --to ~/.pickfit/eval-snapshot/candidates   # A3 的候選庫（唯讀副本）
+uv run --with pyyaml==6.0.2 python eval/runner/run.py snapshot --label before --pickfit-commit SHA --candidates ~/.pickfit/eval-snapshot/candidates   # A3
+uv run --with pyyaml==6.0.2 python eval/runner/run.py run1 --until q02 # 試跑：q01、q02 三組（算正式的第 1 次，B1），跑完停下等念誠決定
+uv run --with pyyaml==6.0.2 python eval/runner/run.py run1             # B1、B2、B4（接著 q03 跑，已完成的不重跑）
 uv run --with pyyaml==6.0.2 python eval/runner/run.py check --round run1        # B2 核對
 uv run --with pyyaml==6.0.2 python eval/runner/run.py reruns           # B3
 uv run --with pyyaml==6.0.2 python eval/runner/run.py haiku            # 9.2 C（9.1 全部結束後）
@@ -40,7 +42,7 @@ uv run --with pyyaml==6.0.2 --with pytest python -m pytest eval/runner/tests -q
 
 | 項目 | 值 |
 |---|---|
-| Claude Code | 2.1.304（`~/.local/bin/claude`；評測期間 `DISABLE_AUTOUPDATER=1`） |
+| Claude Code | 2.1.304：11/2 起用 `~/.pickfit/eval/claude-2.1.304`（`~/.local/share/claude/versions/2.1.304` 的複本，sha256 `b9ac5374…aab78e6a`，簽章有效），這樣這台 Mac 其他地方的 `claude` 自動更新、換掉 `~/.local/bin/claude` 的連結時，評測用的版本不會跟著變；評測期間 `DISABLE_AUTOUPDATER=1` |
 | 模型 | `claude-opus-5-5`（Claude Code 對 API key 使用者的預設；念誠 2026-10-29 確認）；9.2 C 的對照模型 `claude-haiku-5-5` |
 | 開場 | 第 4 節的原文 |
 | 每次執行上限 | 900 秒、$3 |
@@ -54,7 +56,7 @@ uv run --with pyyaml==6.0.2 --with pytest python -m pytest eval/runner/tests -q
 
 | 規則 | 在哪裡 |
 |---|---|
-| A3 版本紀錄（前、後） | `run.py snapshot`：git commit 與是否有未 commit 的檔、資料快照（含 Worker 用的同一個 `data_sha256` 算法）、`runs/pipeline.db` 與漏斗的 SHA-256、原始紀錄清單的 SHA-256、兩個部署的 `/` 回應與最新版本 ID、Claude Code 版本、模型、config 與題目檔的 SHA-256 → `eval/results/versions-<label>.json`。兩個部署送出的資料必須相同，也必須等於 repo 的資料，否則記為問題；有問題時 `run1` 不會開跑。`run.py compare` 比對前後紀錄 |
+| A3 版本紀錄（前、後） | `run.py snapshot`（11/2 補）：`--pickfit-commit` 是協調 session 的快照 commit，比對的是 eval/ 以外的 tree（`pickfit_tree_sha256`），所以在 eval/ commit 結果或執行器修正不算改 pickfit，`git_head` 只記錄不比對；候選庫分散在主 checkout 與各 worktree 的 `runs/pipeline.db`，那些 session 還在寫，所以先用 `freeze-candidates` 做一次唯讀副本（SQLite backup），快照只算副本的雜湊，漏斗在副本的 APFS clone 上跑（開資料庫會寫入 schema）；`claude_bin` 的 sha256 也記下。`after` 沿用 before 的 commit 與候選庫。以下是 10/30 的部分：git commit 與是否有未 commit 的檔、資料快照（含 Worker 用的同一個 `data_sha256` 算法）、`runs/pipeline.db` 與漏斗的 SHA-256、原始紀錄清單的 SHA-256、兩個部署的 `/` 回應與最新版本 ID、Claude Code 版本、模型、config 與題目檔的 SHA-256 → `eval/results/versions-<label>.json`。兩個部署送出的資料必須相同，也必須等於 repo 的資料，否則記為問題；有問題時 `run1` 不會開跑。`run.py compare` 比對前後紀錄 |
 | A4 腳本與提示 | D5：`d5_check.py`（檔頭列出欄位對應）；C6：[../prompts/c6_no_fit_search.md](../prompts/c6_no_fit_search.md)；B2：`run.py check` |
 | B1 順序 | `run1_order`：單號題對照組先、雙號題實驗組先、rules-only 最後；同一題各組接著跑，不並行 |
 | B2 無效執行 | `classify`：只有執行結束在 Anthropic API 錯誤（5xx、429、overloaded、回應途中的 server error），或執行器當掉、沒有最終答案，才算無效；立即重跑、最多 2 次，每次都保留。執行器中斷留下的資料夾補記為無效再續跑。逾時、金額上限照常評分。金鑰、帳號、額度錯誤不算一次執行：整個指令停下，修好再跑。每次有效執行後核對版本、模型（含中途換模型）、工具清單；某組設定錯誤就停下，`run.py void` 把該組那一輪整輪移到 `voided/`（保留、照報告）後重跑。pickfit 沒連上算 pickfit 的錯（照常評分，E 的 `tool_error`），不算設定錯誤 |
