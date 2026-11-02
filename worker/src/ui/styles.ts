@@ -351,7 +351,7 @@ button.badge{cursor:help}
 .head{padding:28px 0 0;position:relative;z-index:4;overflow:clip visible}
 .head-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:24px;padding-bottom:28px}
 .head h1{font-size:clamp(2.1rem,4.2vw,3.4rem)}
-.head .lede{font-size:var(--t-lead);color:var(--on-mat-2);margin:12px 0 0;max-width:60ch}
+.head .lede{font-size:var(--t-lead);color:var(--on-mat-2);margin:12px 0 0;max-width:72ch;text-wrap:balance}
 .head .fitz{margin-bottom:-6px}
 .head .badges{margin-top:14px}
 .crumbs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 14px;font:600 .9rem/1 var(--display);color:var(--on-mat-2)}
@@ -382,7 +382,7 @@ const RESULTS = `
 .ask textarea::placeholder{color:color-mix(in srgb,var(--ink-2) 75%,transparent);font-weight:500}
 .ask textarea:focus-visible{outline:none}
 .ask-meta{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-top:14px}
-.ask-opts{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.ask-opts{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .ask-go{display:flex;align-items:center;justify-content:flex-end;gap:12px}
 .ask-meta .label{font:600 .85rem/1 var(--display);color:var(--ink-2);margin-right:2px}
 .ask-meta .grow{flex:1}
@@ -422,7 +422,7 @@ const RESULTS = `
 .t-kind{font:600 .85rem/1.3 var(--display);color:var(--ink-2);margin:2px 0 0}
 .t-top .badges{justify-content:flex-end;max-width:320px}
 .summary{color:var(--ink-2);margin:14px 0 0}
-.fit{font:600 1.3rem/1.4 var(--display);letter-spacing:-.015em;margin:12px 0 20px;max-width:56ch;text-wrap:pretty}
+.fit{font:600 1.3rem/1.4 var(--display);letter-spacing:-.015em;margin:12px 0 20px;max-width:56ch;text-wrap:balance}
 .t-glance{margin:0 0 22px}
 .t-glance{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin:0}
 .gl-value small{display:block;font:500 .8rem/1.3 var(--sans);color:var(--ink-2)}
@@ -562,7 +562,7 @@ const PAGES = `
 .hero h1{max-width:13ch}
 :lang(zh) .hero h1{max-width:none}
 .hero h1 em{font-style:normal;color:var(--tape)}
-.hero .lede{font-size:clamp(1.05rem,1.6vw,1.25rem);color:var(--on-mat-2);margin:20px 0 28px;max-width:none}
+.hero .lede{font-size:clamp(1.05rem,1.6vw,1.25rem);color:var(--on-mat-2);margin:20px 0 28px;max-width:none;text-wrap:balance}
 .hero-fitz{position:relative;align-self:end;justify-self:center;margin-bottom:-10px;translate:20px 0}
 .hero-fitz .fitz{width:clamp(200px,24vw,320px);height:auto;display:block;animation:hop-in .9s .1s var(--ease-out) both}
 .hero-form{max-width:none}
@@ -847,6 +847,16 @@ const MOTION = `
 `;
 
 const RESPONSIVE = `
+/* home hero, mid widths: Fitz beside the headline, the form, examples and proof line across the full row so each stays one row */
+@media (min-width:901px) and (max-width:1240px){
+body:not(.is-results) .hero-grid{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:1fr;gap:0 32px}
+body:not(.is-results) .hero-main{display:contents}
+body:not(.is-results) .hero-main>*{grid-column:1/-1}
+body:not(.is-results) .hero h1,body:not(.is-results) .hero .lede{grid-column:1}
+body:not(.is-results) .hero h1{align-self:end}
+body:not(.is-results) .hero-fitz{grid-column:2;grid-row:1/3;align-self:end;margin:0 0 20px;translate:none}
+body:not(.is-results) .hero-fitz .fitz{width:clamp(150px,17vw,210px)}
+}
 @media (max-width:1080px){
 .stages{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none;gap:32px 20px}
 .stages::before{display:none}
