@@ -22,13 +22,16 @@ passed in the record's run and again in the recorded replay, and its numbers and
 pickfit's own log (the goal, the typed text, the check); the raw mp4s are kept beside the clip with their sha256.
 A flagged clip is kept for a person to look at, never written to a record.
 
-Files go under ~/.pickfit/videos/<slug>/ (PICKFIT_VIDEOS), not git. `python -m pickfit.verify.video --help`.
+Files go under ~/.pickfit/videos/<slug>/ (PICKFIT_VIDEOS), not git; `write-back --upload` (or `upload`, for a clip
+already written) puts the clip, its raw recordings and a poster frame in R2, each read back against its sha256.
+`python -m pickfit.verify.video --help`.
 """
 
 from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import io
 import json
 import re
@@ -65,6 +68,8 @@ ZOOM_MAX = 2.0  # how far the part of the screen the app used is enlarged
 CARD_S = 3.5
 MIN_SEGMENT_S, MAX_CLIP_S = 1.5, 90.0
 CAPTION_MAX = 90
+BUCKET = "pickfit-videos"  # R2, served by the Worker; keys <slug>/<file>
+POSTER_WIDTH, POSTER_BEFORE_END_S = 1280, 0.5
 BACKGROUND = (15, 17, 21)
 _TOKENS = re.compile(r"\"([^\"]{1,60})\"|'([^']{1,60})'|“([^”]{1,60})”|(\b[\w.:/-]*\d[\w.:/-]*\b)")
 
@@ -1197,9 +1202,59 @@ def run_video(clip: ClipResult, passed_only: bool = False) -> RunVideo:
                     features=features)
 
 
+def poster_at(clip: ClipResult, passed_only: bool = False) -> tuple[float, int]:
+    """Where in the clip its poster frame is: just before the end of the first segment whose checked result is on
+    screen (else of the last segment), past the first card. Returns (clip seconds, the segment's index in clip.cuts)."""
+    refused = {c["raw"] for c, row in zip(clip.cuts, clip.review) if not row.get("ok", True)}
+    shown = [(i, c) for i, c in enumerate(clip.cuts) if not passed_only or c["raw"] not in refused]
+    if not shown:
+        raise ValueError("the clip has no segments")
+    pick = next((k for k, (_, c) in enumerate(shown) if c.get("result_visible")), len(shown) - 1)
+    lengths = [(c["end"] - c["start"]) / (2 if c.get("faster") else 1) for _, c in shown]
+    return round(CARD_S + sum(lengths[:pick]) + max(lengths[pick] - POSTER_BEFORE_END_S, lengths[pick] / 2), 2), \
+        shown[pick][0]
+
+
+def make_poster(clip_path: Path, at: float, dest: Path) -> None:
+    """A POSTER_WIDTH-wide JPEG of the clip's frame at `at` seconds."""
+    _run_ffmpeg(["-ss", f"{at:.2f}", "-i", str(clip_path), "-frames:v", "1", "-vf", f"scale={POSTER_WIDTH}:-2",
+                 "-q:v", "3", str(dest)])
+
+
+def run_wrangler(args: list[str]) -> bytes:
+    """wrangler from worker/, with its existing login; its stdout."""
+    done = subprocess.run(["npx", "wrangler", *args], cwd=REPO_ROOT / "worker", capture_output=True, timeout=600)
+    if done.returncode != 0:
+        raise RuntimeError(f"wrangler {args[0]} {args[2] if len(args) > 2 else ''} failed: "
+                           f"{done.stderr.decode(errors='replace')[-300:]}")
+    return done.stdout
+
+
+def upload(clip: ClipResult, video: RunVideo, folder: Path, *, passed_only: bool = False,
+           wrangler: Any = run_wrangler) -> list[tuple[str, int]]:
+    """Put a clip, its raw recordings and its poster in R2 (BUCKET, keys <slug>/<file>, the names in the run's video
+    field), each read back and matched against its sha256. Returns (key, bytes) for each object."""
+    stem = video.clip.removesuffix(".mp4")
+    poster = folder / f"{stem}.jpg"
+    if not poster.is_file():
+        make_poster(folder / video.clip, poster_at(clip, passed_only)[0], poster)
+    files = [(video.clip, video.clip_sha256, "video/mp4"), *((r.file, r.sha256, "video/mp4") for r in video.raw),
+             (poster.name, recording.sha256_file(poster), "image/jpeg")]
+    sent = []
+    for name, digest, kind in files:
+        key = f"{BUCKET}/{clip.slug}/{name}"
+        wrangler(["r2", "object", "put", key, "--file", str(folder / name), "--content-type", kind, "--remote"])
+        back = wrangler(["r2", "object", "get", key, "--pipe", "--remote"])
+        if hashlib.sha256(back).hexdigest() != digest:
+            raise RuntimeError(f"{key} read back does not match its sha256")
+        sent.append((f"{clip.slug}/{name}", len(back)))
+    return sent
+
+
 def write_back(clip: ClipResult, data_dir: Path = DATA_DIR, *, passed_only: bool = False,
-               videos: Path | None = None) -> str:
-    """Put a clip on its run in data/software/<slug>.json; the record is validated as a whole.
+               videos: Path | None = None, upload_to_r2: bool = False, wrangler: Any = run_wrangler) -> str:
+    """Put a clip on its run in data/software/<slug>.json; the record is validated as a whole. With upload_to_r2, the
+    clip, its raw recordings and its poster go to R2 first (upload), and the record is written only once all match.
 
     Refused: a flagged clip (its passed-only cut may go instead, when only the review's segment flags left recordings
     out); a clip or raw file under ~/.pickfit/videos/<slug>/ missing or not matching its sha256; a run no longer in the
@@ -1227,10 +1282,17 @@ def write_back(clip: ClipResult, data_dir: Path = DATA_DIR, *, passed_only: bool
     runs[0]["video"] = video.model_dump(mode="json")
     data["updated_at"] = taipei_now().isoformat()
     updated = SoftwareRecord.model_validate(data)
+    sent = ""
+    if upload_to_r2:
+        try:
+            objects = upload(clip, video, folder, passed_only=passed_only, wrangler=wrangler)
+        except (RuntimeError, ValueError, subprocess.TimeoutExpired) as exc:
+            return f"not written: upload failed: {exc}"
+        sent = f"; uploaded {', '.join(f'{key} ({size} bytes)' for key, size in objects)}"
     tmp = path.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(updated.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     tmp.replace(path)
-    return f"written to {path.relative_to(REPO_ROOT) if path.is_relative_to(REPO_ROOT) else path}"
+    return f"written to {path.relative_to(REPO_ROOT) if path.is_relative_to(REPO_ROOT) else path}{sent}"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1247,15 +1309,26 @@ def main(argv: list[str] | None = None) -> int:
     back.add_argument("clip_json", type=Path, help="clip.json beside the recording, or <clip>.json beside the clip")
     back.add_argument("--passed-only", action="store_true", help="the passed-only cut instead of the full clip")
     back.add_argument("--data-dir", type=Path, default=DATA_DIR)
+    back.add_argument("--upload", action="store_true", help="put the files in R2 first (wrangler's login, worker/)")
+    up = sub.add_parser("upload", help="put a written clip, its raw recordings and its poster in R2")
+    up.add_argument("clip_json", type=Path)
+    up.add_argument("--passed-only", action="store_true")
     make = sub.add_parser("make", help="record, then edit")
     make.add_argument("slug")
     make.add_argument("--run", default=None)
     make.add_argument("--write-back", action="store_true")
     args = parser.parse_args(argv)
     if args.cmd == "write-back":
-        note = write_back(load_clip(args.clip_json), args.data_dir, passed_only=args.passed_only)
+        note = write_back(load_clip(args.clip_json), args.data_dir, passed_only=args.passed_only,
+                          upload_to_r2=args.upload)
         print(note)
         return 0 if note.startswith("written") else 1
+    if args.cmd == "upload":
+        clip = load_clip(args.clip_json)
+        for key, size in upload(clip, run_video(clip, args.passed_only), videos_dir() / clip.slug,
+                                passed_only=args.passed_only):
+            print(f"{BUCKET}/{key} {size} bytes, sha256 matches")
+        return 0
     if args.cmd in ("record", "make"):
         video_dir = record_run(args.slug, args.run)
         if args.cmd == "record":
