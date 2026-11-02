@@ -35,6 +35,7 @@ def repo(tmp_path: Path) -> Path:
             path.read_text(encoding="utf-8")
             .replace(path.stem, slug)
             .replace("https://example.invalid/fixture/", "https://github.com/someone/")
+            .replace("fixture-sketch.example.invalid", "sketch.someone.example.com")
         )
         (data / f"{slug}.json").write_text(text, encoding="utf-8")
     worker = tmp_path / "worker"
@@ -71,7 +72,7 @@ def dry_run(repo: Path, **kwargs) -> tuple[int, list[str]]:
 def test_good_data_plans_the_deploy_and_writes_nothing(repo: Path) -> None:
     code, lines = dry_run(repo)
     assert code == 0, lines
-    assert lines[0].startswith("publish: 6 listed entries from ")
+    assert lines[0].startswith("publish: 7 listed entries from ")
     assert "commit " in lines[0] and "commit none" not in lines[0]
     assert lines[-1].endswith(f"would run `npx wrangler deploy` in {repo / 'worker'}")
     assert not (repo / "worker" / "src").exists()
@@ -177,3 +178,9 @@ def test_an_unknown_env_refuses(repo: Path) -> None:
     code, lines = dry_run(repo, env="nope")
     assert code == 1
     assert "- wrangler.jsonc: no env.nope section" in lines
+
+
+def test_a_web_app_on_an_invalid_host_is_a_fixture() -> None:
+    index = {"entries": [{"slug": "sketch", "repo_url": None, "web": {"url": "https://sketch.example.invalid/"}},
+                         {"slug": "real", "repo_url": "https://github.com/a/b", "web": None}]}
+    assert publish_mod.fixture_entries(index) == ["sketch"]

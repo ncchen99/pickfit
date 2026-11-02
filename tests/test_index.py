@@ -26,10 +26,12 @@ def edit(path: Path, change) -> None:
 def test_fixtures_build(data_dir: Path) -> None:
     index = build_index(data_dir).index
     assert index["index_version"] == INDEX_VERSION
-    assert index["count"] == 6
+    assert index["count"] == 7
     slugs = [e["slug"] for e in index["entries"]]
     assert slugs == sorted(slugs)
-    assert all(e["repo_url"].startswith("https://example.invalid/") for e in index["entries"])
+    # A web app with no repository is on the reserved .invalid host too.
+    assert all((e["repo_url"] or e["web"]["url"]).startswith(("https://example.invalid/", "https://fixture-sketch.example.invalid/"))
+               for e in index["entries"])
 
 
 def test_only_run_install_guides_are_indexed(data_dir: Path) -> None:
@@ -40,6 +42,10 @@ def test_only_run_install_guides_are_indexed(data_dir: Path) -> None:
     assert {os: g["basis"] for os, g in runner.items()} == {"macos": "human", "linux": "replayed"}
     assert runner["linux"]["run"]["replayed"] is True
     assert runner["linux"]["run"]["evidence_url"].startswith("https://example.invalid/runs/")
+    # The box's GPU and simulated microphone reach the page; a box without them says null.
+    assert runner["linux"]["run"]["gpu"] is None and runner["linux"]["run"]["microphone"] is None
+    transcribe = entries["fixture-transcribe"]["install"]["linux"]["run"]
+    assert transcribe["gpu"] == "Tesla T4" and transcribe["microphone"].startswith("simulated:")
     assert runner["linux"]["works_offline"] is True and runner["macos"]["works_offline"] is None
     assert runner["linux"]["first_task_setup"] == [{"command": "fixture-llm-runner pull tiny-test",
                                                    "background": False}]
@@ -119,7 +125,7 @@ def test_script_writes_nothing_on_failure(data_dir: Path, tmp_path: Path, capsys
 def test_script_writes_index(data_dir: Path, tmp_path: Path) -> None:
     out = tmp_path / "gen" / "index.json"
     assert build_index_main(["--data", str(data_dir), "--out", str(out)]) == 0
-    assert json.loads(out.read_text(encoding="utf-8"))["count"] == 6
+    assert json.loads(out.read_text(encoding="utf-8"))["count"] == 7
 
 
 def test_write_index_round_trips(data_dir: Path, tmp_path: Path) -> None:
@@ -199,3 +205,31 @@ def test_a_gui_apps_operations_reach_the_index_with_pickfits_own_lines_only(data
         {"feature": "chat", "check": "file", "passed": False, "replay": "operated", "goal": "Type {nonce} and press Return.",
          "observed": "no file under /home/sbx/: not found"}]
     assert "replay-3-1-op-1.png" not in json.dumps(chat)  # evidence paths stay in the record
+
+
+def test_a_web_app_carries_its_url_and_the_facts_its_browser_run_saw(data_dir: Path) -> None:
+    entries = {e["slug"]: e for e in build_index(data_dir).index["entries"]}
+    sketch = entries["fixture-web-sketch"]
+    assert (sketch["kind"], sketch["repo_url"], sketch["install"]) == ("web_app", None, {})
+    web = sketch["web"]
+    assert web["url"] == "https://fixture-sketch.example.invalid/"
+    check = web["check"]
+    assert (check["level"], check["checked_at"], check["run_id"]) == ("function", "2026-11-02T09:00:00Z",
+                                                                      "run-20261102-web-1")
+    assert (check["account_needed"], check["ads_seen"], check["third_party_domains"]) == (False, False, 1)
+    assert (check["data_sent"], check["pwa"], check["offline"]) == ("none", True, "verified")
+    assert [o["passed"] for o in check["operations"]] == [True]
+    assert [f["status"] for f in check["features"]] == ["checked", "checked"]
+    assert entries["fixture-json-query"]["web"] is None
+
+
+def test_a_web_app_has_no_checked_facts_before_a_run_passed(data_dir: Path) -> None:
+    def not_loaded(record: dict) -> None:
+        run = record["verification"]["runs"][0]
+        run.update(level="unverified", unverified_reason="needs_account", smoke_tests=[], features=[])
+        run["web"].update(screen="sign_in_wall", operations=[], data_sent="unknown")
+        record["verification"].update(level="unverified", unverified_reason="needs_account")
+
+    edit(data_dir / "fixture-web-sketch.json", not_loaded)
+    sketch = {e["slug"]: e for e in build_index(data_dir).index["entries"]}["fixture-web-sketch"]
+    assert sketch["web"] == {"url": "https://fixture-sketch.example.invalid/", "check": None}

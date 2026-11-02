@@ -8,18 +8,19 @@ import { NOT_CHECKED_REASONS } from './features.ts';
 import { logEvent, logFailure } from './events.ts';
 import { ERROR_EXCERPT_MAX, LAST_USED, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } from './outcome.ts';
 import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './submit.ts';
+import { NO_INSTALL_LABEL } from './webapp.ts';
 
 const ABOUT =
-  'pickfit recommends lesser-known software it installed and tested in a sandbox. Scope: dev CLIs, local AI tools, MCP servers. ' +
+  'pickfit recommends lesser-known software it tested in a sandbox. Scope: dev CLIs, local AI tools, MCP servers, web apps. ' +
   'well_known_option is not verified by pickfit; say so. ';
 const RULES = 'Ask at most 1-2 questions first (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars.';
 
 export const INSTRUCTIONS =
   ABOUT +
-  'Flow: find_software (or find_alternatives to replace a tool) -> user picks -> get_install_guide -> run steps with consent -> report_outcome; ' +
+  'Flow: find_software (or find_alternatives to replace one) -> user picks -> get_install_guide -> run steps with consent -> report_outcome; ' +
   'weeks later, with consent, its check_in. ' +
   RULES +
-  ' submit_software adds a GitHub repo.';
+  ' submit_software adds a repo or a website.';
 
 /** TOOLS=readonly: no mention of the tools that are not registered. */
 export const READONLY_INSTRUCTIONS =
@@ -59,6 +60,25 @@ const features = z
   })
   .describe("The main features the README advertises, as pickfit's verification run covered them");
 
+/** A web app in a pick or a guide: where to open it and what pickfit's browser saw. */
+const webApp = z
+  .object({
+    url: z.string().describe('Open this in a browser; there is nothing to install'),
+    label: z.literal(NO_INSTALL_LABEL),
+    checked_at: z.string().nullable().describe("When pickfit's sandboxed browser checked it"),
+    account_needed: z.boolean().nullable(),
+    ads_seen: z.boolean().nullable(),
+    third_party_domains: z.number().int().nullable().describe('Other sites the page contacted'),
+    data_sent: z
+      .enum(['none', 'observed', 'unknown'])
+      .describe('none = what pickfit typed in stayed on the device; observed = it was sent off; unknown = not checked'),
+    works_offline: z
+      .enum(['verified', 'not_offline', 'not_tested'])
+      .describe('verified = a PWA pickfit reloaded with the network off still worked'),
+  })
+  .nullable()
+  .describe('A hosted web app: open the URL, nothing to install. null for software to install');
+
 /** A GUI app's launch as pickfit saw it; the level stays install (a launch is not a feature test). */
 const gui = z
   .object({
@@ -97,7 +117,7 @@ const pick = z.object({
     verified_on_user_os: z
       .boolean()
       .nullable()
-      .describe('true = pickfit ran the install steps on your OS, and on your CPU architecture when arch was given; null = no os given'),
+      .describe('true = pickfit ran the install steps on your OS, and on your CPU architecture when arch was given; null = no os given, or a web app (any browser)'),
     gui: gui,
   }),
   features,
@@ -108,8 +128,9 @@ const pick = z.object({
     popularity: z.number().nullable().describe('0-100; scored separately from quality'),
     treasure: z.boolean().describe('High quality, low popularity'),
   }),
-  repo: z.string(),
+  repo: z.string().nullable(),
   homepage: z.string().nullable(),
+  web_app: webApp,
   match: z
     .object({
       quality: z.enum(['good', 'partial', 'weak']),
@@ -129,6 +150,8 @@ const conditions = {
   arch: arch.optional(),
   budget: z.enum(['free_only', 'free_or_paid']).optional(),
   must_run_locally: z.boolean().optional().describe('true = must work offline; no data leaves the machine'),
+  offline: z.boolean().optional().describe('true = must work offline (only this half of must_run_locally)'),
+  data_stays_local: z.boolean().optional().describe("true = the user's data must not leave the machine (only this half)"),
   ui_language: z.string().max(35).optional().describe('BCP 47 tag, only if the user needs the UI or docs in that language'),
   exclude: z.array(slug).max(20).optional().describe('Slugs already shown or rejected'),
   limit: z.number().int().min(1).max(3).optional().describe('Default 3'),
@@ -296,6 +319,7 @@ const installOutput = z.object({
     })
     .nullable()
     .describe('Later, not now: how to ask whether the user still uses it, with their consent; nothing is installed or left running'),
+  web_app: webApp,
   warnings: z.array(z.string()),
   sources: z.array(z.string()),
 });
@@ -334,14 +358,14 @@ const outcomeOutput = z.object({
 });
 
 const submitInput = z.object({
-  url: z.string().min(10).max(300).describe('https URL of a GitHub repository, e.g. https://github.com/owner/repo'),
+  url: z.string().min(10).max(300).describe('https URL of a GitHub repository (https://github.com/owner/repo) or of a web app to use in a browser'),
   submitter_role: z.enum(['author', 'user', 'unknown']).optional().describe('Is the user its author? Default unknown'),
   note: z.string().max(SUBMIT_NOTE_MAX).optional().describe('Optional: what the tool is for, without personal data; read by people only'),
 });
 
 const submitOutput = z.object({
   submission_id: z.string().nullable().describe('null when the repository is already listed'),
-  url: z.string().describe('The normalized repository URL'),
+  url: z.string().describe('The normalized repository or website URL'),
   status: z.enum(['queued', 'reading', 'verifying', 'listed', 'listed_unverified', 'rejected']),
   slug: z.string().nullable(),
   reason: z.string().nullable().describe('Why it was rejected, when it was'),
@@ -375,10 +399,10 @@ export function buildServer(deps: Deps): McpServer {
       description:
         'Use when the user wants a tool for a job and has not settled on a product (e.g. "a free offline CLI to transcribe audio on my Mac"). ' +
         'Before calling, ask at most one or two questions, and only if unknown: which OS, and whether it must be free or run fully offline. ' +
-        'Returns up to 3 lesser-known tools whose install pickfit actually ran, ranked by fit (not popularity), each with reasons tied to its verified profile, trade-offs, verification evidence and separate quality/popularity scores, plus the best free option. ' +
+        'Returns up to 3 lesser-known tools pickfit actually ran, ranked by fit (not popularity), each with reasons tied to its verified profile, trade-offs, evidence and separate quality/popularity scores, plus the best free option. ' +
         'If a well-known free tool pickfit does not list may fit better, well_known_option names it: tell the user pickfit has not verified it. ' +
         'If clarifying_question is set, ask it and call again. When matched_by is "rules", match_quality and each pick\'s match say how well the profiles cover the request; present partial or weak picks as such. ' +
-        'Next: get_install_guide(slug, os, rec_id). Coverage: developer CLI tools, local AI/LLM tools and MCP servers.',
+        'Next: get_install_guide(slug, os, rec_id). Coverage: developer CLI tools, local AI/LLM tools, MCP servers and web apps (web_app set: open the URL, no install).',
       inputSchema: findInput,
       outputSchema: findOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
@@ -411,7 +435,8 @@ export function buildServer(deps: Deps): McpServer {
         'the steps only the user can do (permissions, accounts), a command to verify the install and a first task to try. ' +
         'For an MCP server, mcp_client_config gives the `claude mcp add` line and the mcpServers JSON for the launch command pickfit started, with placeholders for keys the user must supply. ' +
         'Show each command to the user before running it, and ask before any step that needs sudo or pipes a script into a shell. ' +
-        'If applies_to_user_system.match is not "exact", tell the user the steps were checked on a different system.' +
+        'If applies_to_user_system.match is not "exact", tell the user the steps were checked on a different system. ' +
+        'For a web app (web_app set) there are no steps: give the user its URL and the facts pickfit checked.' +
         (readonly
           ? ''
           : ' After the user tries it, call report_outcome with the rec_id. Weeks later, check_in says how to ask (with consent) whether they still use it.'),
@@ -483,11 +508,11 @@ export function buildServer(deps: Deps): McpServer {
   server.registerTool(
     'submit_software',
     {
-      title: 'Submit a GitHub project to pickfit',
+      title: 'Submit a GitHub project or a web app to pickfit',
       description:
-        'Use only when the user asks to add a software project to pickfit, often their own. Takes the GitHub repository URL. ' +
-        "pickfit's pipeline reads it with Meta's Muse Spark, tries the install in a sandbox and lists it if it works; this takes minutes, so call again with the same url to check the status. " +
-        'Developer CLI tools, local AI/LLM tools and MCP servers are verified today; other software may be rejected or listed unverified. Nothing is published under the user\'s name.',
+        'Use only when the user asks to add a software project to pickfit, often their own. Takes the GitHub repository URL, or the https URL of a web app people use in a browser. ' +
+        "pickfit's pipeline reads it with Meta's Muse Spark, tries it in a sandbox (a web app in a sandboxed browser) and lists it if it works; this takes minutes, so call again with the same url to check the status. " +
+        'Developer CLI tools, local AI/LLM tools, MCP servers and web apps are verified today; other software may be rejected or listed unverified. Nothing is published under the user\'s name.',
       inputSchema: submitInput,
       outputSchema: submitOutput,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },

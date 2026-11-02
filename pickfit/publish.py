@@ -5,7 +5,7 @@ before anything is written, and any problem refuses the whole publish:
 
 - a record fails software.v1 (build_index validates every file);
 - no record is listed;
-- the records are test fixtures (slug ``fixture-*`` or a repo on ``.invalid``);
+- the records are test fixtures (slug ``fixture-*``, or a repo or web app URL on ``.invalid``);
 - data/software has uncommitted changes, so the deploy would not match a
   commit (``--allow-dirty`` skips this one check);
 - wrangler.jsonc still has the placeholder D1 id or no ALLOWED_HOSTS (for
@@ -115,10 +115,14 @@ def check_wrangler(worker_dir: Path, env: str | None = None) -> tuple[list[str],
 
 def fixture_entries(index: dict[str, Any]) -> list[str]:
     """Slugs that are test fixtures: they must never be deployed."""
+
+    def on_invalid(url: str | None) -> bool:
+        return (urlparse(url or "").hostname or "").endswith(".invalid")
+
     return [
         e["slug"]
         for e in index["entries"]
-        if e["slug"].startswith("fixture-") or (urlparse(e["repo_url"]).hostname or "").endswith(".invalid")
+        if e["slug"].startswith("fixture-") or on_invalid(e["repo_url"]) or on_invalid((e.get("web") or {}).get("url"))
     ]
 
 

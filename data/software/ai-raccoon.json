@@ -63,18 +63,29 @@
       "first_task": "ai-raccoon model embedding set local"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-ai-raccoon-20261102-003721-ac5f",
       "method": "other",
       "steps": [
         {
-          "command": "dotnet tool install -g ai-raccoon",
-          "purpose": null
+          "command": "curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh",
+          "purpose": "Download dotnet-install script"
+        },
+        {
+          "command": "bash /tmp/dotnet-install.sh --channel 10.0 --install-dir $HOME/.dotnet",
+          "purpose": "Install .NET 10 SDK to $HOME/.dotnet"
+        },
+        {
+          "command": "export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1; export PATH=\"$HOME/.dotnet:$HOME/.dotnet/tools:$HOME/.local/bin:$PATH\"; dotnet tool install -g ai-raccoon",
+          "purpose": "Install ai-raccoon global tool via dotnet"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "ai-raccoon model embedding set local"
+      "check": {
+        "command": "export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_ROOT=$HOME/.dotnet DOTNET_ROOT_X64=$HOME/.dotnet; export PATH=\"$HOME/.dotnet:$HOME/.dotnet/tools:$PATH\"; ai-raccoon --version",
+        "expected_signal": "2.3.0"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -104,51 +115,140 @@
     "url": "https://github.com/Arasz/ai-raccoon/releases/tag/v2.3.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_more_resources",
-    "checked_at": "2026-11-01T00:57:40.708119+08:00",
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T00:39:30.892597+08:00",
     "runs": [
       {
-        "id": "verify-ai-raccoon-20261101-005629-f42e",
-        "level": "unverified",
-        "unverified_reason": "needs_more_resources",
+        "id": "verify-ai-raccoon-20261102-003721-ac5f",
+        "level": "function",
+        "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:57:40.708119+08:00",
-        "tool_version": null,
+        "image": "pickfit-sbx:f56cd5b7aa53",
+        "checked_at": "2026-11-02T00:39:30.892597+08:00",
+        "tool_version": "2.3.0",
         "install_method": "other",
-        "replayed": false,
+        "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh && wc -c /tmp/dotnet-install.sh",
-            "purpose": "Download dotnet install script"
+            "command": "curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh",
+            "purpose": "Download dotnet-install script"
           },
           {
-            "command": "bash /tmp/dotnet-install.sh --channel 8.0 --install-dir $HOME/.dotnet 2>&1 | tail -20\necho \"EXIT:$?\"\nls $HOME/.dotnet/dotnet 2>&1\n$HOME/.dotnet/dotnet --version 2>&1",
-            "purpose": "Install dotnet 8.0 SDK"
+            "command": "bash /tmp/dotnet-install.sh --channel 10.0 --install-dir $HOME/.dotnet",
+            "purpose": "Install .NET 10 SDK to $HOME/.dotnet"
+          },
+          {
+            "command": "export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1; export PATH=\"$HOME/.dotnet:$HOME/.dotnet/tools:$HOME/.local/bin:$PATH\"; dotnet tool install -g ai-raccoon",
+            "purpose": "Install ai-raccoon global tool via dotnet"
           }
         ],
-        "smoke_tests": [],
+        "smoke_tests": [
+          {
+            "command": "export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_ROOT=$HOME/.dotnet DOTNET_ROOT_X64=$HOME/.dotnet; export PATH=\"$HOME/.dotnet:$HOME/.dotnet/tools:$PATH\"; ai-raccoon --version",
+            "expected_signal": "2.3.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2.3.0+2e31a1e408c30c44b31d0e243a5c85bef357cf11",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_ROOT=$HOME/.dotnet DOTNET_ROOT_X64=$HOME/.dotnet; export PATH=\"$HOME/.dotnet:$HOME/.dotnet/tools:$PATH\"; ai-raccoon --help",
+            "expected_signal": "Commands:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Commands:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_ROOT=$HOME/.dotnet DOTNET_ROOT_X64=$HOME/.dotnet; export PATH=\"$HOME/.dotnet:$HOME/.dotnet/tools:$PATH\"; python3 ~/.pickfit/mcp_probe.py --timeout 120 -- ai-raccoon",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
         "pitfalls": [
           {
-            "readme_said": "dotnet tool install -g ai-raccoon on .NET 10",
-            "actually_needed": "Box has no dotnet and file size limit of 805 MB per file blocks dotnet tool restore; dotnet 8 was installed but tool install hits SIGXFSZ",
+            "readme_said": "dotnet tool install -g ai-raccoon then run ai-raccoon",
+            "actually_needed": "Run with DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 (and DOTNET_CLI_TELEMETRY_OPTOUT=1); the box has no libicu and dotnet host fails with 'Couldn't find a valid ICU package' without it",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "ai-raccoon is on PATH after dotnet tool install -g",
+            "actually_needed": "Export DOTNET_ROOT=$HOME/.dotnet and DOTNET_ROOT_X64=$HOME/.dotnet and add $HOME/.dotnet and $HOME/.dotnet/tools to PATH, otherwise the ai-raccoon apphost exits 131 'Not found' searching /usr/share/dotnet",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
-        "judge": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP probe listing 30 tools with handshake ok and --version printing 2.3.0.",
+          "model": "muse-spark-1.3"
+        },
         "evidence": {
-          "trace_path": "runs/verify/verify-ai-raccoon-20261101-005629-f42e/report.json",
+          "trace_path": "runs/verify/verify-ai-raccoon-20261102-003721-ac5f/report.json",
           "log_path": null,
-          "screenshot_paths": [],
+          "screenshot_paths": [
+            "runs/verify/verify-ai-raccoon-20261102-003721-ac5f/check-1-cmd10.judged.png",
+            "runs/verify/verify-ai-raccoon-20261102-003721-ac5f/check-2-cmd8.judged.png"
+          ],
           "evidence_url": null
         },
-        "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.105525
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.104715,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "ai-raccoon"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "AiRaccoon",
+          "server_version": "2.3.0.0",
+          "tools": [
+            "get_project_id",
+            "get_store_statistics",
+            "save_project_id_token",
+            "trigger_memory_sharing",
+            "get_index",
+            "sync_to_cloud",
+            "ingest_file",
+            "query",
+            "initialize_workspace",
+            "add_watch",
+            "delete_memory_from_ranking",
+            "get_workspace_status",
+            "get_quality_report",
+            "close_workspace",
+            "remove_watch",
+            "discard_workspace",
+            "get_memories_sharing_ranking",
+            "add_memory",
+            "get_entry",
+            "delete_context",
+            "get_engine_statistics",
+            "ingest_directory",
+            "delete_entry",
+            "set_memory_usage_record",
+            "get_watch_status",
+            "set_query_result_grade",
+            "set_memory_ttl",
+            "embed_deferred_entries",
+            "trigger_memory_cleanup",
+            "share_memory"
+          ],
+          "tool_count": 30,
+          "called_tool": null,
+          "offline": true
+        }
       }
     ]
   },
@@ -181,15 +281,15 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-02T00:39:41+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 74.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.68,
           "weight": 40.0
         },
         "install_docs": {
@@ -230,7 +330,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 53.82
+      "value": 57.88
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -569,5 +669,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:42+08:00",
-  "updated_at": "2026-11-01T00:57:40.709219+08:00"
+  "updated_at": "2026-11-02T00:39:41.815932+08:00"
 }

@@ -391,6 +391,12 @@ const RESULTS = `
 .t-fix .i{color:var(--stitch);margin-top:2px}
 .t-fix b{font-family:var(--display);color:var(--ink)}
 .t-install .cmd pre{font-size:.95rem;padding:14px 16px}
+.t-open{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0;max-width:none}
+.t-open .quiet{overflow-wrap:anywhere}
+.web-facts{list-style:none;padding:0;margin:4px 0 8px;display:grid;gap:4px}
+.web-facts li{display:flex;gap:8px;align-items:flex-start;font-size:var(--t-small)}
+.web-facts .i{flex:none;width:16px;height:16px;margin-top:2px}
+.web-facts li:not(.yes):not(.no){color:var(--ink-2)}
 .t-more{margin-top:16px;border-radius:var(--r-ctl)}
 .t-more>summary{display:inline-flex;align-items:center;gap:8px;list-style:none;padding:8px 0;font:700 .95rem/1.3 var(--display);color:var(--ink-2)}
 .t-more>summary::-webkit-details-marker{display:none}

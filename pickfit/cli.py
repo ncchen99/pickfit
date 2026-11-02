@@ -96,6 +96,67 @@ def _profiles(args: argparse.Namespace) -> int:
     return 0
 
 
+def _webapps(args: argparse.Namespace) -> int:
+    from datetime import UTC, datetime
+
+    from pickfit.discover import webapps
+    from pickfit.discover.github import GitHub, GitHubError, github_token
+    from pickfit.discover.run import pipeline_db_path
+    from pickfit.discover.showhn import HN
+    from pickfit.ledger import taipei_now
+
+    db = webapps.WebSites(pipeline_db_path())
+    log = lambda line: print(line, file=sys.stderr)  # noqa: E731
+    if args.action == "funnel":
+        print(json.dumps(webapps.funnel(db), ensure_ascii=False, indent=2))
+        return 0
+    if args.action == "purge":
+        print(json.dumps({"pages_dropped": db.purge_pages()}))
+        return 0
+    if args.action == "recheck-terms":
+        print(json.dumps(webapps.recheck_terms(db, log=log)))
+        return 0
+    if args.action == "extract":
+        from pickfit.extract import run_extract
+        from pickfit.webrecords import web_candidate
+
+        sites = [web_candidate(r) for r in db.rows(outcome="selected")]
+        summary = run_extract(limit=args.limit or max(1, len(sites)), model=args.model, reasoning_effort=args.effort,
+                              candidates=sites, force=args.force, concurrency=args.concurrency, log=log)
+        print(json.dumps(summary, ensure_ascii=False, indent=2))
+        return 0 if summary["errors"] == 0 else 1
+    if args.action == "records":
+        from pickfit.meta import resolve_model
+        from pickfit.webrecords import write_web_records
+
+        if not args.dry_run:
+            webapps.probe_https(db, log=log)
+        summary = write_web_records(db, model=resolve_model(args.model), dry_run=args.dry_run, log=log)
+        print(json.dumps(summary.to_dict(), ensure_ascii=False, indent=2))
+        return 0
+    try:
+        gh = GitHub(github_token())
+    except GitHubError as err:
+        print(f"pickfit webapps: {err}", file=sys.stderr)
+        return 2
+    run_id = f"webapps-{args.action}-" + taipei_now().strftime("%Y%m%d-%H%M%S")
+    out = []
+    for source in args.source or webapps.SOURCES:
+        if args.action == "gather":
+            out.append(webapps.run_gather(db, source=source, hn=HN(), gh=gh, now=datetime.now(UTC), days=args.days,
+                                          per_query=args.per_query, run_id=run_id, log=log).to_dict())
+        elif args.action == "recheck-thin":
+            out.append(webapps.recheck_thin(db, source=source, quota=args.quota, seed=args.seed, hn=HN(), gh=gh,
+                                            run_id=run_id, log=log, review=not args.no_review))
+        else:
+            taken = {r["site_key"] for r in db.rows() if r["source"] != source and r["outcome"] in webapps.PASSED}
+            out.append(webapps.run_pick(db, source=source, quota=args.quota, seed=args.seed, hn=HN(), gh=gh,
+                                        run_id=run_id, concurrency=args.concurrency, max_checks=args.max_checks,
+                                        taken=taken, log=log, review=not args.no_review))
+    print(json.dumps({"run_id": run_id, "results": out}, ensure_ascii=False, indent=2))
+    return 0
+
+
 def _funnel(args: argparse.Namespace) -> int:
     from pickfit.discover.run import pipeline_db_path, prescreen_status
     from pickfit.discover.store import PipelineDB
@@ -177,6 +238,33 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--slug", action="append", help="--features-only: only this record (repeatable)")
     p.set_defaults(func=_profiles)
 
+    from pickfit.discover import webapps
+
+    wa = sub.add_parser("webapps", help="hosted web apps (P2.8): gather Show HN and GitHub rows under neutral "
+                                        "rules ($0), pick and check sites in hash order (Spark Open screen, paid)")
+    wa.add_argument("action", choices=["gather", "pick", "funnel", "recheck-terms", "recheck-thin", "extract",
+                                       "records", "purge"],
+                    help="gather: rules 1-3; pick: rules 4-8 until each source has its quota; funnel: counts; "
+                         "recheck-terms: rule 7 again for passed sites; recheck-thin: rules 4-8 again, rendered, for "
+                         "sites whose page showed no text before rendering; extract: selected sites with a Meta "
+                         "model (paid); records: write new web_app records ($0); purge: drop stored page text. "
+                         "Rendering needs `uv run --with playwright`")
+    wa.add_argument("--source", action="append", choices=webapps.SOURCES, help="one source (default both)")
+    wa.add_argument("--days", type=int, default=webapps.DEFAULT_DAYS,
+                    help=f"show_hn: posts from the last N days (default {webapps.DEFAULT_DAYS})")
+    wa.add_argument("--per-query", type=int, default=1000, help="github: results per topic query (max 1000)")
+    wa.add_argument("--quota", type=int, default=50, help="pick: sites to select per source (default 50)")
+    wa.add_argument("--seed", default=webapps.DEFAULT_SEED, help=f"pick order seed (default {webapps.DEFAULT_SEED})")
+    wa.add_argument("--concurrency", type=int, default=4, help="pick: sites checked at once (default 4)")
+    wa.add_argument("--max-checks", type=int, default=None, help="pick: stop after checking N sites")
+    wa.add_argument("--no-review", action="store_true", help="pick: skip muse-spark-1.3 reviews")
+    wa.add_argument("--model", default="prod", help='extract, records: "prod" (muse-spark-1.3, default) or a model id')
+    wa.add_argument("--effort", default="minimal", help="extract: reasoning effort (default minimal)")
+    wa.add_argument("--limit", type=int, default=None, help="extract: at most N sites (default all selected)")
+    wa.add_argument("--force", action="store_true", help="extract: again even if already extracted")
+    wa.add_argument("--dry-run", action="store_true", help="records: build and validate, write nothing")
+    wa.set_defaults(func=_webapps)
+
     f = sub.add_parser("funnel", help="counts, models and cost per funnel stage from runs/pipeline.db")
     f.set_defaults(func=_funnel)
 
@@ -189,6 +277,7 @@ def _add_score_command(sub: argparse._SubParsersAction) -> None:
 
     s = sub.add_parser("score", help="quality, popularity and treasure scores for data/software (rubric call is paid)")
     s.add_argument("--slug", action="append", help="score only this record (repeatable; default all)")
+    s.add_argument("--kind", default=None, help="score only records of this kind, e.g. web_app (with --slug: both)")
     s.add_argument("--limit", type=int, default=None, help="score at most N records (in slug order)")
     s.add_argument("--data-dir", default=None, help="records to score (default data/software)")
     s.add_argument("--db", default=None, help="pipeline database with the GitHub snapshots (default runs/pipeline.db)")

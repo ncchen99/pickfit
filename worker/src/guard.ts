@@ -15,7 +15,7 @@ const norm = (text: string) => text.trim().toLowerCase().replace(/\s+/g, ' ');
 /** Does `value` appear in the card value (whole value, a list item, or a quoted part of text)? */
 export function valueMatches(cardValue: CardValue, value: string): boolean {
   const want = norm(value);
-  if (cardValue === null || want === '') return false;
+  if (cardValue === null || cardValue === undefined || want === '') return false;
   if (typeof cardValue === 'number') {
     const n = Number.parseFloat(want);
     return Number.isFinite(n) && Math.abs(n - cardValue) <= 0.5;
@@ -41,7 +41,15 @@ const RAN = new RegExp(`\\b(${RAN_WORDS})\\b`);
 /** Why a free-text claim contradicts the card, or null when it does not. */
 export function contradiction(card: Card, text: string): string | null {
   const t = text.toLowerCase();
-  if (/\b(offline|no internet|no network|no cloud|on[- ]device|fully local|runs locally|local[- ]only|private)\b/.test(t)) {
+  if (card.no_install === true) {
+    // A web app: offline only as a PWA pickfit reloaded offline; private only when nothing it typed left the device.
+    if (/\b(offline|no internet|no network)\b/.test(t) && card.works_offline !== 'verified') return 'claims a web app works offline';
+    if (/\b(no cloud|on[- ]device|fully local|runs locally|local[- ]only|private|stays? (on|in) (your|the))\b/.test(t) && card.data_sent !== 'none') {
+      return 'claims a web app keeps data local';
+    }
+    if (/\b(no|without an?) (account|sign[- ]?up|login)\b/.test(t) && card.account_needed !== false) return 'claims it needs no account';
+    if (/\b(no|without) ads\b|\bad[- ]free\b/.test(t) && card.ads_seen !== false) return 'claims it has no ads';
+  } else if (/\b(offline|no internet|no network|no cloud|on[- ]device|fully local|runs locally|local[- ]only|private)\b/.test(t)) {
     const local = card.processing === 'local' && card.network !== 'required' && (card.api_keys as string[]).length === 0;
     if (!local) return 'claims it runs locally/offline';
   }

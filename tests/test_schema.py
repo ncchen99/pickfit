@@ -340,7 +340,9 @@ def test_record_schema_forbids_unknown_keys():
         "engineering_hygiene",
         "responsiveness",
         "usage_outcomes",
+        "browser_facts",  # web apps only (web.v1), optional
     ]
+    assert "browser_facts" not in schema["$defs"]["QualityComponents"]["required"]
 
 
 # --- ExtractionResult ----------------------------------------------------------
@@ -570,3 +572,89 @@ def test_a_failed_feature_test_says_whom_it_points_at(example):
                                                "reason": "needs_more_resources"})
     run = SoftwareRecord.model_validate(doc).verification.runs[0]
     assert (run.features[0].failure, run.smoke_tests[2].passed) == ("sandbox", False)
+
+
+# --- Hosted web apps (kind web_app) --------------------------------------------
+
+WEB_FIXTURE = ROOT / "worker" / "test" / "fixtures" / "software" / "fixture-web-sketch.json"
+WEB_RUN = ("verification", "runs", 0)
+
+
+@pytest.fixture
+def web_app() -> dict:
+    return json.loads(WEB_FIXTURE.read_text(encoding="utf-8"))
+
+
+def test_web_app_record_validates_and_round_trips(web_app):
+    record = SoftwareRecord.model_validate(web_app)
+    assert (record.kind, record.repo, record.web.url) == ("web_app", None, "https://fixture-sketch.example.invalid/")
+    run = record.verification.runs[0]
+    assert (run.level, run.replayed, run.web.data_sent, run.web.offline) == ("function", False, "none", "verified")
+    assert record.model_dump(mode="json") == web_app
+
+
+def test_records_without_web_facts_dump_as_before(example):
+    # Existing records have no web block on the record or its runs: nothing new appears when they are written.
+    dumped = SoftwareRecord.model_validate(example).model_dump(mode="json")
+    assert "web" not in dumped and all("web" not in run for run in dumped["verification"]["runs"])
+    assert dumped == example
+
+
+def test_a_web_app_may_keep_its_github_repo(web_app, example):
+    web_app["repo_id"], web_app["repo"] = example["repo_id"], example["repo"]
+    SoftwareRecord.model_validate(web_app)
+
+
+def _web_set(*path_and_value):
+    *path, value = path_and_value
+    return set_path(*WEB_RUN, "web", *path, value)
+
+
+WEB_MUTATIONS = {
+    "web id with a repo": ("repo is null exactly when", set_path("repo_id", "gh:900000777")),
+    "web id on another kind": ("belongs to kind web_app only", set_path("kind", "self_hosted_web_app")),
+    "no url": ("web \\(the URL to open\\) is required", set_path("web", None)),
+    "install guide": ("install stays empty", set_path("install", "linux", {
+        "basis": "readme_claim", "run_id": None, "method": "other", "steps": [{"command": "open it"}]})),
+    "passed run without web facts": ("needs what the browser saw", both(
+        set_path(*WEB_RUN, "web", None), set_path(*WEB_RUN, "replayed", True))),
+    "sign-in wall passes": ("must load the app's main screen", _web_set("screen", "sign_in_wall")),
+    "service level": ("is install, or function", both(set_path(*WEB_RUN, "level", "service"),
+                                                      set_path("verification", "level", "service"))),
+    "function with no passed operation": ("function only on an operation", both(
+        _web_set("operations", 0, "passed", False), _web_set("data_sent", "unknown"))),
+    "operation passed on a failed test": ("passed only when its smoke test passed", both(
+        set_path(*WEB_RUN, "smoke_tests", 1, "passed", False), set_path(*WEB_RUN, "features", []))),
+    "operation cites a missing test": ("cites a smoke test the run does not have",
+                                       _web_set("operations", 0, "smoke_test", 5)),
+    "offline result on a non-PWA": ("only a PWA is tested offline", _web_set("pwa", False)),
+    "no upload without an operation": ("data_sent 'none' needs an operation", both(
+        _web_set("operations", []), set_path(*WEB_RUN, "level", "install"),
+        set_path("verification", "level", "install"), set_path(*WEB_RUN, "features", []))),
+    "fewer domains than hosts": ("at least the number of hosts", _web_set("third_party_domains", 0)),
+    "host with a scheme": ("String should match pattern", _web_set("third_party_hosts", ["https://x.example"])),
+    "unknown data_sent value": ("Input should be", _web_set("data_sent", "maybe")),
+}
+
+
+@pytest.mark.parametrize(("error", "mutate"), WEB_MUTATIONS.values(), ids=WEB_MUTATIONS.keys())
+def test_invalid_web_apps_rejected(web_app, error, mutate):
+    mutate(web_app)
+    with pytest.raises(ValidationError, match=error):
+        SoftwareRecord.model_validate(web_app)
+
+
+def test_web_facts_belong_to_web_apps_only(example, web_app):
+    run = example["verification"]["runs"][0]
+    web = web_app["verification"]["runs"][0]["web"]
+    run["web"] = web | {"operations": [web["operations"][0] | {"smoke_test": 0}]}
+    with pytest.raises(ValidationError, match="only a web app's run carries web facts"):
+        SoftwareRecord.model_validate(example)
+
+
+def test_a_web_run_that_did_not_load_stays_unverified(web_app):
+    run = web_app["verification"]["runs"][0]
+    run.update(level="unverified", unverified_reason="needs_account", smoke_tests=[], features=[])
+    run["web"].update(screen="sign_in_wall", account_needed=True, operations=[], data_sent="unknown")
+    web_app["verification"].update(level="unverified", unverified_reason="needs_account")
+    assert SoftwareRecord.model_validate(web_app).verification.level == "unverified"

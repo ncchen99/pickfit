@@ -46,6 +46,22 @@ responsiveness and registry signals.
 b3.v5: a pitfall tagged with a kind counts as a README fix only when it is readme_wrong; since only
 the record-derived parts changed, b3.v4 scores move to b3.v5 by refresh_scores, with no rescore.
 
+Hosted web apps (kind web_app, brief 2.2) use formula "web.v1" (WEB_FORMULA_VERSION), whether or not they
+have a repository, since what a user meets is the site, not the code:
+
+- quality: sandbox_verification 50 (the strongest passed browser run: the page loaded to its main screen
+  0.6, an operation pickfit checked 1.0; a failed run 0), browser_facts 40 (from that run: no account
+  needed for the core use 0.3, nothing pickfit typed in left the device 0.3, no ads 0.2, a PWA reloaded
+  offline 0.2; a fact the run could not tell drops out, data_sent unknown included), usage_outcomes 10+
+  (as above; its extra weight comes out of browser_facts). install_docs, maintenance, engineering_hygiene
+  and responsiveness keep weight 0: there is no README to install from, and a repository's upkeep is not
+  the site's. No model call. The caps are the same (an unverified web app is capped at 69).
+- popularity: GitHub stars when the record has a repository, else the points of the Show HN post the
+  record cites (read from the official HN item API), else none; each log-normalized against its P95 over
+  web-sources' rule-passed candidates on 2026-11-02 (WEB_POPULARITY_REFS: 2,440 GitHub web app repos,
+  1,047.6 stars; 7,068 Show HN sites with 2 or more points, 46.6 points). Both selection bands (stars 3..31,
+  points 2..5) land at about 20..50, so treasure still means good and not famous.
+
 Inputs are the record, the GitHub snapshot it was built from (runs/pipeline.db; fetched live
 when the pipeline database does not hold the repo), one REST call for issues and the registry
 lookups. Ages are measured at the snapshot time, so the same snapshot gives the same quality.
@@ -98,6 +114,7 @@ FORMULA_VERSION = "b3.v5"
 # their scores move to this formula instead of being cleared. b3.v5 changed only how README fixes
 # are counted: a tagged pitfall's kind decides.
 REFRESHABLE_FROM = frozenset({"b3.v4"})
+WEB_FORMULA_VERSION = "web.v1"
 STAGE = "score-rubric"
 REASONING_EFFORT = "low"
 MAX_OUTPUT_TOKENS = 8_000  # reasoning shares it; at effort low one call used 4,000 and ran out
@@ -636,6 +653,122 @@ def treasure(quality: float | None, popularity_score: float | None) -> dict[str,
             "value": round(treasure_value(quality, popularity_score), 2)}
 
 
+# --- hosted web apps: formula web.v1 ----------------------------------------------------------
+
+WEB_WEIGHTS: dict[str, float] = {"sandbox_verification": 50, "browser_facts": 40, "usage_outcomes": 10}
+WEB_DEPTH = {"install": 0.6, "function": 1.0}
+BROWSER_FACT_WEIGHTS = {"account": 0.3, "data": 0.3, "ads": 0.2, "offline": 0.2}
+WEB_POPULARITY_REFS = {"stars": 1047.6, "hn_top_score": 46.6}
+HN_ITEM_URL = "https://hacker-news.firebaseio.com/v0/item/{id}.json"
+
+
+def best_web_run(verification: Verification) -> Any:
+    """The strongest passed browser run (function first), the latest on a tie; the one the index shows."""
+    passed = [run for run in verification.runs if run.web is not None and is_passed(run.level)]
+    return max(passed, key=lambda run: (run.level == "function", run.checked_at), default=None)
+
+
+def web_sandbox_score(verification: Verification) -> float | None:
+    run = best_web_run(verification)
+    if run is not None:
+        return WEB_DEPTH.get(run.level, 0.0)
+    return 0.0 if verification.level == "failed" else None
+
+
+def browser_facts_score(verification: Verification) -> float | None:
+    """What the strongest passed browser run saw, 0-1; a fact it could not tell drops out."""
+    run = best_web_run(verification)
+    if run is None:
+        return None
+    web = run.web
+    parts = {
+        "account": None if web.account_needed is None else float(not web.account_needed),
+        "data": {"none": 1.0, "observed": 0.0}.get(web.data_sent),
+        "ads": None if web.ads_seen is None else float(not web.ads_seen),
+        "offline": 1.0 if web.offline == "verified" else 0.0,
+    }
+    have = {name: v for name, v in parts.items() if v is not None}
+    return round(sum(BROWSER_FACT_WEIGHTS[n] * v for n, v in have.items()) / sum(BROWSER_FACT_WEIGHTS[n] for n in have), 4)
+
+
+def web_weights(usage_weight: float) -> dict[str, float]:
+    out = dict.fromkeys(NOMINAL_WEIGHTS, 0.0) | WEB_WEIGHTS | {"usage_outcomes": usage_weight}
+    out["browser_facts"] = WEB_WEIGHTS["browser_facts"] - (usage_weight - WEB_WEIGHTS["usage_outcomes"])
+    return out
+
+
+def compose_web_quality(components: dict[str, float | None], usage_weight: float, cap_reason: str | None) -> dict[str, Any]:
+    w = web_weights(usage_weight)
+    have = {name: score for name, score in components.items() if score is not None and w[name] > 0}
+    had = sum(w[name] for name in have)
+    total = round(100 * sum(score * w[name] for name, score in have.items()) / had, 1) if had else None
+    cap = QUALITY_CAPS[cap_reason] if cap_reason else None
+    if total is not None and cap is not None:
+        total = min(total, float(cap))
+    return {"total": total, "confidence": round(had / 100, 2), "cap": cap, "cap_reason": cap_reason,
+            "components": {name: {"score": components.get(name), "weight": w[name]} for name in w}}
+
+
+def web_popularity(signals: dict[str, int | None]) -> float | None:
+    """Stars when the record has a repository (signals carry them only then), else the cited Show HN points."""
+    for name in ("stars", "hn_top_score"):
+        if signals.get(name) is not None:
+            return round(_norm(signals[name], WEB_POPULARITY_REFS[name]), 1)
+    return None
+
+
+def hn_item_id(record: SoftwareRecord) -> int | None:
+    """The Show HN post a web app's record cites: source id hn:<id>, or its news.ycombinator.com/item?id=<id> URL."""
+    for source in record.sources:
+        if source.kind != "hn":
+            continue
+        m = re.fullmatch(r"hn:([1-9][0-9]{0,11})", source.id) or re.fullmatch(
+            r"https://news\.ycombinator\.com/item\?id=([1-9][0-9]{0,11})", source.url or "")
+        if m:
+            return int(m.group(1))
+    return None
+
+
+def hn_points(registries: Any, item_id: int) -> int | None:
+    """The post's points from the official HN item API; None when it cannot be read."""
+    from pickfit.registries import RegistryError
+
+    try:
+        item = registries.get_json(HN_ITEM_URL.format(id=item_id))
+    except RegistryError:
+        return None
+    score = (item or {}).get("score")
+    return score if isinstance(score, int) and not isinstance(score, bool) else None
+
+
+def _web_quality(verification: Verification, outcomes: Outcomes, kind: str, archived: bool) -> dict[str, Any]:
+    components = {"sandbox_verification": web_sandbox_score(verification), "browser_facts": browser_facts_score(verification),
+                  "usage_outcomes": usage_score(outcomes)}
+    cap_reason = binding_cap(kind, archived, verification.level)
+    return compose_web_quality(components, usage_outcomes_weight(outcomes.external.total()), cap_reason)
+
+
+def build_web_scores(record: SoftwareRecord, *, stars: int | None, hn: int | None, now: datetime) -> dict[str, Any]:
+    """The scores object for a web app (web.v1). Stars only with a repository; HN points only without one."""
+    archived = record.repo is not None and record.repo.archived
+    quality = _web_quality(record.verification, record.outcomes, record.kind, archived)
+    signals: dict[str, int | None] = dict.fromkeys(POPULARITY_WEIGHTS)
+    if record.repo is not None:
+        signals["stars"] = stars
+    else:
+        signals["hn_top_score"] = hn
+    pop = web_popularity(signals)
+    return {
+        "formula_version": WEB_FORMULA_VERSION,
+        "computed_at": now.isoformat(timespec="seconds"),
+        "quality": quality,
+        # No star velocity under web.v1, so no age (it would change every day and rewrite the file).
+        "popularity": {"score": pop, "signals": signals, "age_days": None, "packages": []},
+        "treasure": treasure(quality["total"], pop),
+        "docs_rubric": None,
+    }
+
+
 # --- whole record ------------------------------------------------------------------------------
 
 
@@ -673,10 +806,11 @@ def build_scores(record: SoftwareRecord, snapshot: dict[str, Any] | None, issues
         "responsiveness": responsiveness,
         "usage_outcomes": usage_score(record.outcomes),
     }
-    cap_reason = binding_cap(record.kind, record.repo.archived, record.verification.level)
+    archived = record.repo is not None and record.repo.archived
+    cap_reason = binding_cap(record.kind, archived, record.verification.level)
     quality = compose_quality(components, usage_outcomes_weight(record.outcomes.external.total()), cap_reason)
     signals = popularity_signals(snapshot, registry) if snapshot else dict.fromkeys(POPULARITY_WEIGHTS)
-    created = record.repo.created_at
+    created = record.repo.created_at if record.repo else None
     age_days = max(0, int(_days(as_of, created))) if created else None
     pop = popularity(signals, record.category, age_days)
     return {
@@ -690,6 +824,23 @@ def build_scores(record: SoftwareRecord, snapshot: dict[str, Any] | None, issues
     }
 
 
+def _refresh_web(data: dict[str, Any], scores: dict[str, Any], now: datetime) -> str | None:
+    """refresh_scores for a web app: the whole web.v1 quality follows the record; popularity is kept."""
+    version = scores.get("formula_version")
+    if version != WEB_FORMULA_VERSION:
+        data["scores"] = None
+        return f"scores cleared: a web app is scored by {WEB_FORMULA_VERSION}, not {version}; rescore"
+    verification = Verification.model_validate(data["verification"])
+    outcomes = Outcomes.model_validate(data.get("outcomes") or {})
+    quality = _web_quality(verification, outcomes, data["kind"], bool((data.get("repo") or {}).get("archived")))
+    if quality == scores["quality"]:
+        return None
+    scores["quality"] = quality
+    scores["treasure"] = treasure(quality["total"], scores["popularity"]["score"])
+    scores["computed_at"] = now.isoformat(timespec="seconds")
+    return "scores refreshed from the record"
+
+
 def refresh_scores(data: dict[str, Any], now: datetime) -> str | None:
     """Recompute, in place, what follows the record itself: sandbox and usage components, cap, total,
     treasure. No model or network call. Returns a note when something changed, else None."""
@@ -697,6 +848,8 @@ def refresh_scores(data: dict[str, Any], now: datetime) -> str | None:
     if not scores:
         return None
     version = scores.get("formula_version")
+    if data.get("kind") == "web_app":
+        return _refresh_web(data, scores, now)
     if version != FORMULA_VERSION and version not in REFRESHABLE_FROM:
         data["scores"] = None
         return f"scores cleared: formula {version} is not {FORMULA_VERSION}; rescore"
@@ -705,7 +858,7 @@ def refresh_scores(data: dict[str, Any], now: datetime) -> str | None:
     components = {name: c["score"] for name, c in scores["quality"]["components"].items()}
     components["sandbox_verification"] = sandbox_score(verification, data["category"])
     components["usage_outcomes"] = usage_score(outcomes)
-    cap_reason = binding_cap(data["kind"], data["repo"]["archived"], verification.level)
+    cap_reason = binding_cap(data["kind"], bool((data.get("repo") or {}).get("archived")), verification.level)
     quality = compose_quality(components, usage_outcomes_weight(outcomes.external.total()), cap_reason)
     if quality == scores["quality"] and version == FORMULA_VERSION:
         return None
@@ -889,6 +1042,8 @@ def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: st
 
     record, rubric = load_for_scoring(path)
     row: dict[str, Any] = {"slug": record.slug, "status": None, "cost_usd": 0.0, "rubric": None}
+    if record.kind == "web_app":
+        return _score_web(path, record, row, snapshot=snapshot, gh=gh, registries=registries, now=now, dry_run=dry_run)
     if snapshot is None and gh is not None:
         snapshot = live_snapshot(gh, record.repo.full_name, now)
         row["snapshot"] = "live"
@@ -935,8 +1090,48 @@ def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: st
     return row
 
 
+def _score_web(path: Path, record: SoftwareRecord, row: dict[str, Any], *, snapshot: dict[str, Any] | None, gh: Any,
+               registries: Any, now: datetime, dry_run: bool) -> dict[str, Any]:
+    """score_one for a web app (web.v1): stars from the snapshot or GitHub, or the cited HN post's points.
+    No model call. A signal that was not fetched (--no-github, --no-registries) keeps its stored value."""
+    old = record.scores
+    kept = old.popularity.signals if old and old.formula_version == WEB_FORMULA_VERSION else None
+    stars = hn = None
+    if record.repo is not None:
+        if snapshot is None and gh is not None:
+            snapshot = live_snapshot(gh, record.repo.full_name, now)
+            row["snapshot"] = "live"
+        else:
+            row["snapshot"] = "pipeline_db" if snapshot else None
+        stars = snapshot["repo"].get("stargazers_count") if snapshot else (kept.stars if kept else None)
+    else:
+        item = hn_item_id(record)
+        if item is not None and registries is not None:
+            hn = hn_points(registries, item)
+        if hn is None and kept is not None:
+            hn = kept.hn_top_score
+    scores = build_web_scores(record, stars=stars, hn=hn, now=now)
+    row.update(rubric="none", quality=scores["quality"]["total"], confidence=scores["quality"]["confidence"],
+               cap_reason=scores["quality"]["cap_reason"], popularity=scores["popularity"]["score"],
+               treasure=scores["treasure"]["is_treasure"], treasure_value=scores["treasure"]["value"],
+               components={k: c["score"] for k, c in scores["quality"]["components"].items()},
+               features=feature_coverage(record.verification))
+    if _same_scores(old.model_dump(mode="json") if old else None, scores):
+        row["status"] = "unchanged"
+        return row
+    text = _with_scores(json.loads(path.read_text(encoding="utf-8")), scores, now.isoformat(timespec="seconds"))
+    if not dry_run:
+        _write(path, text)
+    row["status"] = "written"
+    return row
+
+
+def _of_kind(paths: list[Path], kind: str | None) -> list[Path]:
+    return [p for p in paths if json.loads(p.read_text(encoding="utf-8")).get("kind") == kind] if kind else paths
+
+
 def score_records(data_dir: Path, *, db_path: Path | None, model: str, slugs: list[str] | None = None,
-                  force: bool = False, dry_run: bool = False, use_github: bool = True,
+                  kind: str | None = None, force: bool = False, dry_run: bool = False, use_github: bool = True,
                   use_registries: bool = True, concurrency: int = DEFAULT_CONCURRENCY, limit: int | None = None,
                   now: datetime | None = None, log: Callable[[str], None] | None = None,
                   registries: Any = None, **call: Any) -> ScoreSummary:
@@ -948,6 +1143,7 @@ def score_records(data_dir: Path, *, db_path: Path | None, model: str, slugs: li
     if slugs:
         wanted = set(slugs)
         paths = [p for p in paths if p.stem in wanted]
+    paths = _of_kind(paths, kind)
     if limit is not None:
         paths = paths[:limit]
     snapshots: dict[str, dict[str, Any]] = {}
@@ -1012,7 +1208,7 @@ def score_records(data_dir: Path, *, db_path: Path | None, model: str, slugs: li
     return summary
 
 
-def refresh_records(data_dir: Path, *, slugs: list[str] | None = None, dry_run: bool = False,
+def refresh_records(data_dir: Path, *, slugs: list[str] | None = None, kind: str | None = None, dry_run: bool = False,
                     now: datetime | None = None, log: Callable[[str], None] | None = None) -> ScoreSummary:
     """`pickfit score --refresh`: refresh_scores over the records, writing only scores and updated_at.
     No GitHub, registry or model call. A record whose formula cannot be refreshed is left as it is
@@ -1022,13 +1218,14 @@ def refresh_records(data_dir: Path, *, slugs: list[str] | None = None, dry_run: 
     paths = sorted(data_dir.glob("*.json"))
     if slugs:
         paths = [p for p in paths if p.stem in set(slugs)]
+    paths = _of_kind(paths, kind)
     summary = ScoreSummary()
     for path in paths:
         data = json.loads(path.read_text(encoding="utf-8"))
         before = data.get("scores")
         version = (before or {}).get("formula_version")
         row: dict[str, Any] = {"slug": path.stem, "cost_usd": 0.0, "rubric": "kept"}
-        if before and version != FORMULA_VERSION and version not in REFRESHABLE_FROM:
+        if before and version not in (FORMULA_VERSION, WEB_FORMULA_VERSION) and version not in REFRESHABLE_FROM:
             summary.errors[path.stem] = f"formula {version} cannot be refreshed; run pickfit score"
             continue
         old_quality = before["quality"]["total"] if before else None
@@ -1060,7 +1257,7 @@ def main_score(args: Any) -> int:
     started = time.monotonic()
     if getattr(args, "refresh", False):
         summary = refresh_records(Path(args.data_dir) if args.data_dir else DEFAULT_OUT, slugs=args.slug,
-                                  dry_run=args.dry_run, log=lambda line: print(line, file=sys.stderr))
+                                  kind=getattr(args, "kind", None), dry_run=args.dry_run, log=lambda line: print(line, file=sys.stderr))
         out = summary.to_dict()
         out["seconds"] = round(time.monotonic() - started, 1)
         if not args.verbose:
@@ -1070,7 +1267,8 @@ def main_score(args: Any) -> int:
     try:
         summary = score_records(Path(args.data_dir) if args.data_dir else DEFAULT_OUT,
                                 db_path=Path(args.db) if args.db else pipeline_db_path(),
-                                model=resolve_model(args.model), slugs=args.slug, force=args.force,
+                                model=resolve_model(args.model), slugs=args.slug, kind=getattr(args, "kind", None),
+                                force=args.force,
                                 dry_run=args.dry_run, use_github=not args.no_github,
                                 use_registries=not args.no_registries,
                                 concurrency=args.concurrency, limit=args.limit,

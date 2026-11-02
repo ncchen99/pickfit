@@ -1,5 +1,5 @@
 /** Step B of find_software: hard conditions, applied by code before any model sees a card. */
-import { nameKey, verifiedOn, type Arch, type Entry, type OS } from './catalog.ts';
+import { isWebApp, nameKey, verifiedOn, webCheck, type Arch, type Entry, type OS } from './catalog.ts';
 import { relevance, rulesRelevance } from './relevance.ts';
 
 export interface Conditions {
@@ -7,9 +7,17 @@ export interface Conditions {
   os?: OS;
   arch?: Arch;
   budget?: 'free_only' | 'free_or_paid';
+  /** Both of the two below. */
   must_run_locally?: boolean;
+  /** Must work without internet. */
+  offline?: boolean;
+  /** What the user enters must not leave the machine. */
+  data_stays_local?: boolean;
   exclude?: string[];
 }
+
+export const needsOffline = (cond: Conditions) => cond.must_run_locally === true || cond.offline === true;
+export const needsLocalData = (cond: Conditions) => cond.must_run_locally === true || cond.data_stays_local === true;
 
 /** Hard filters never relax; MAX_CARDS bounds what one model call reads (architecture F.2 C). */
 export const MAX_CARDS = 60;
@@ -19,13 +27,27 @@ export function runsLocally(entry: Entry): boolean {
   return entry.processing === 'local' && network !== 'required' && api_keys.length === 0;
 }
 
+/**
+ * A web app opens in any browser, so the OS does not filter it. It qualifies for offline use only as a PWA that
+ * pickfit reloaded with the network off, and for data that must stay local only when pickfit saw nothing it typed
+ * in leave the device (unknown does not qualify).
+ */
+function webFits(entry: Entry, cond: Conditions): boolean {
+  const check = webCheck(entry);
+  if (!check) return false; // only sites a browser run passed on
+  if (needsOffline(cond) && check.offline !== 'verified') return false;
+  if (needsLocalData(cond) && check.data_sent !== 'none') return false;
+  return true;
+}
+
 function fits(entry: Entry, cond: Conditions): boolean {
-  const verified = verifiedOn(entry);
-  if (verified.length === 0) return false; // only tools whose install steps were actually run
   if (cond.exclude?.includes(entry.slug)) return false;
   if (cond.category && cond.category !== 'any' && entry.category !== cond.category) return false;
   if (cond.budget === 'free_only' && entry.pricing !== 'free') return false;
-  if (cond.must_run_locally && !runsLocally(entry)) return false;
+  if (isWebApp(entry)) return webFits(entry, cond);
+  const verified = verifiedOn(entry);
+  if (verified.length === 0) return false; // only tools whose install steps were actually run
+  if ((needsOffline(cond) || needsLocalData(cond)) && !runsLocally(entry)) return false;
   if (cond.os && !entry.platforms.includes(cond.os) && !verified.includes(cond.os)) return false;
   if (entry.prerequisites.apple_silicon_only) {
     if (cond.os && cond.os !== 'macos') return false;

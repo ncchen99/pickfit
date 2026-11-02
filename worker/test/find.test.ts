@@ -21,7 +21,7 @@ test('model path: picks come from muse-spark-1.3 and are checked against the car
   assert.equal(out.degraded_reason, null);
   assert.match(out.rec_id, /^rec_[0-9a-f]{32}$/);
   assert.deepEqual(out.picks.map((p) => p.slug), ['fixture-llm-runner', 'fixture-chat-tui']);
-  assert.equal(out.considered, 4); // cloud-summarize fails free_only and must_run_locally
+  assert.equal(out.considered, 5); // cloud-summarize fails free_only and must_run_locally; the web app is an offline-checked PWA
 
   const [runner, chat] = out.picks;
   assert.equal(runner.why.length, 2);
@@ -29,7 +29,7 @@ test('model path: picks come from muse-spark-1.3 and are checked against the car
   assert.equal(runner.verification.method, 'human');
   assert.equal(runner.verification.verified_on_user_os, true);
   assert.match(runner.how_we_know, /installed it by hand on macos\/arm64/);
-  assert.match(runner.how_we_know, /Chosen by muse-spark-1\.3 among 4 tools/);
+  assert.match(runner.how_we_know, /Chosen by muse-spark-1\.3 among 5 tools/);
   assert.equal(runner.evidence_url, 'https://example.invalid/runs/run-20261028-macos-1');
   assert.deepEqual(runner.scores, { quality: 84, popularity: 12, treasure: true });
   // Verified only on Linux: the response says so even though the model did not.
@@ -51,7 +51,7 @@ test('the request uses muse-spark-1.3, store false, low effort and a strict sche
   assert.equal(body.text.format.type, 'json_schema');
   assert.equal(body.text.format.strict, true);
   const slugEnum = body.text.format.schema.properties.picks.items.properties.slug.enum;
-  assert.deepEqual(slugEnum, ['fixture-chat-tui', 'fixture-json-query', 'fixture-llm-runner', 'fixture-transcribe']);
+  assert.deepEqual(slugEnum, ['fixture-chat-tui', 'fixture-json-query', 'fixture-llm-runner', 'fixture-transcribe', 'fixture-web-sketch']);
   // The user's words go to the model inside <request>, as data.
   assert.match(body.input[1].content, /<request>\n.*secret-project-xyz.*\n<\/request>/);
 });
@@ -272,7 +272,7 @@ test('the model may honestly answer that nothing fits', async () => {
   const out = await findSoftware({ need: 'edit videos with a timeline', os: 'linux' }, h.deps);
   assert.equal(out.matched_by, MATCH_MODEL);
   assert.deepEqual(out.picks, []);
-  assert.match(out.coverage_note ?? '', /None of the 6 verified tools/);
+  assert.match(out.coverage_note ?? '', /None of the 7 verified tools/);
 });
 
 test('best_free must be a free candidate', async () => {

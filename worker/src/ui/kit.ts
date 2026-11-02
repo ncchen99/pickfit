@@ -83,11 +83,13 @@ const KIND_ICON: Record<string, IconName> = { dev_cli: 'terminal', local_ai: 'cp
 export const kindIcon = (category: string): IconName => KIND_ICON[category] ?? 'package';
 
 export function kindTag(entry: Pick<Entry, 'kind' | 'category'>): string {
-  const kind = KIND[entry.category] ?? '';
+  // A web app gets the globe; outside the three categories it is just a web app.
+  const web = entry.kind === 'web_app';
+  const kind = web && entry.category === 'other' ? '' : (KIND[entry.category] ?? '');
   const form = formOf(entry);
   const named = kind && kind.toLowerCase() !== form.toLowerCase();
   return (
-    `<span class="kind"${named ? ` data-tip="${esc(kind)}"` : ''}>${icon(kindIcon(entry.category))}` +
+    `<span class="kind"${named ? ` data-tip="${esc(kind)}"` : ''}>${icon(web ? 'globe' : kindIcon(entry.category))}` +
     `${named ? `<span class="sr">${esc(kind)}, </span>` : ''}${esc(form.charAt(0).toUpperCase() + form.slice(1))}</span>`
   );
 }
@@ -118,6 +120,9 @@ export interface RunFacts {
   replayed: boolean | null;
   checked_at: string | null;
   tool_version?: string | null;
+  /** The sandbox's GPU and simulated microphone (index runs only); absent or null: none. */
+  gpu?: string | null;
+  microphone?: string | null;
 }
 
 /**
@@ -141,6 +146,10 @@ export function runFacts(run: RunFacts, opts: { offline?: boolean | null; mine?:
     run.method === 'human'
       ? item('', icon('hand'), 'Installed by hand')
       : item('', icon('refresh-cw'), run.replayed ? 'Replayed from scratch' : 'Sandbox install'),
+    run.gpu ? item('', icon('cpu'), `GPU: ${esc(run.gpu)}`, 'The sandbox had this GPU') : '',
+    run.microphone
+      ? item('', icon('mic'), 'Simulated microphone', 'A simulated microphone played words pickfit spoke for each check')
+      : '',
     opts.offline === true
       ? item('', icon('wifi-off'), 'Works offline', 'Its checks passed again with the network off')
       : opts.offline === false

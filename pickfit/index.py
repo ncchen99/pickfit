@@ -17,6 +17,10 @@ facts (env vars, config snippets, tool names) ride along under the entry's `mcp`
 A GUI app's run carries what pickfit saw of its launch (`gui`: tier, the screen
 the judge read, the display, whether the launch passed offline); the window
 title is the app's own text and stays out of the index.
+A hosted web app (kind web_app) has no install guides: its entry's `web` carries
+the URL to open and the facts its strongest passed browser run recorded (account,
+ads, third-party domains, whether entered data left the device, the PWA offline
+result, the operations pickfit checked, the check date), or none before a run passed.
 """
 
 from __future__ import annotations
@@ -103,6 +107,37 @@ def _gui(run: VerificationRun) -> dict[str, Any] | None:
     return out
 
 
+def _web(record: SoftwareRecord) -> dict[str, Any] | None:
+    """A web app's URL and what its strongest passed browser run saw (latest first on a tie); check is None
+    until a run passed. Operations' observed lines are pickfit's own."""
+    if record.web is None:
+        return None
+    passed = [r for r in record.verification.runs if r.web is not None and is_passed(r.level)]
+    best = max(passed, key=lambda r: (r.level == "function", r.checked_at), default=None)
+    check = None
+    if best is not None and best.web is not None:
+        web = best.web
+        check = {
+            "run_id": best.id,
+            "level": best.level,
+            "checked_at": _iso(best.checked_at),
+            "evidence_url": best.evidence.evidence_url,
+            "browser": web.browser,
+            "account_needed": web.account_needed,
+            "ads_seen": web.ads_seen,
+            "third_party_domains": web.third_party_domains,
+            "third_party_hosts": web.third_party_hosts,
+            "data_sent": web.data_sent,
+            "data_sent_note": web.data_sent_note,
+            "pwa": web.pwa,
+            "offline": web.offline,
+            "operations": [{"feature": o.feature, "check": o.check, "passed": o.passed, "goal": o.goal,
+                            "observed": o.observed} for o in web.operations],
+            "features": _feature_coverage(best),
+        }
+    return {"url": record.web.url, "check": check}
+
+
 def _run_summary(run: VerificationRun) -> dict[str, Any]:
     return {
         "id": run.id,
@@ -116,6 +151,8 @@ def _run_summary(run: VerificationRun) -> dict[str, Any]:
         "tool_version": run.tool_version,
         "evidence_url": run.evidence.evidence_url,
         "gui": _gui(run),
+        "gpu": run.gpu,
+        "microphone": run.microphone,
     }
 
 
@@ -183,7 +220,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
         "alternatives_to": record.alternatives_to,
         "features": record.features,
         "homepage": record.homepage,
-        "repo_url": record.repo.url,
+        "repo_url": record.repo.url if record.repo else None,
         "platforms": record.platforms,
         "prerequisites": record.prerequisites.model_dump(),
         "pricing": record.pricing.model,
@@ -199,6 +236,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
         },
         "install": install,
         "mcp": record.mcp.model_dump() if record.mcp else None,
+        "web": _web(record),
         "scores": {
             "quality": scores.quality.total,
             "popularity": scores.popularity.score,

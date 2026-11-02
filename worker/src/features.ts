@@ -3,7 +3,7 @@
  * index. A feature is shown as checked only when a smoke test of that run that covers it passed;
  * every other feature is not checked, with the reason. No model writes any of it.
  */
-import type { Entry, FeatureCoverage, InstallGuide } from './catalog.ts';
+import { webCheck, type Entry, type FeatureCoverage, type InstallGuide } from './catalog.ts';
 
 export const NOT_CHECKED_REASONS = [
   'needs_account',
@@ -66,17 +66,19 @@ function notChecked(f: FeatureCoverage): { reason: NotCheckedReason; detail: str
   return { reason, detail: f.note ? `${detail}: ${f.note}` : detail };
 }
 
-/** The features view of one guide's run; the entry's own list when that run recorded none. */
+/** The features view of one guide's run (a web app's browser run: it has no guides); the entry's own list when that run recorded none. */
 export function featuresOut(entry: Entry, guide: InstallGuide | null): FeaturesOut {
-  const coverage = guide?.features ?? [];
+  const web = guide ? null : webCheck(entry);
+  const ran = guide !== null || web !== null;
+  const coverage = guide?.features ?? web?.features ?? [];
   if (coverage.length === 0) {
     return {
       recorded: false,
       checked: [],
       not_checked: (entry.features ?? []).map((feature) => ({
         feature,
-        reason: guide ? ('not_recorded' as const) : ('other' as const),
-        detail: guide ? REASON_TEXT.not_recorded : 'pickfit has not run this tool',
+        reason: ran ? ('not_recorded' as const) : ('other' as const),
+        detail: ran ? REASON_TEXT.not_recorded : 'pickfit has not run this tool',
       })),
     };
   }

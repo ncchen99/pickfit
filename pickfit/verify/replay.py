@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pickfit.verify import gui
+from pickfit.verify.audio import ListenArgs, run_listen
 from pickfit.verify.box import Box, BoxError, ExecResult
 from pickfit.verify.gui_operate import OperateArgs, run_operation
 from pickfit.verify.features import failed_run
@@ -41,11 +42,13 @@ from pickfit.verify.mcp import is_mcp
 from pickfit.verify.verdict import (
     GUI_KINDS,
     MCP_KINDS,
+    TRUSTED_KINDS,
     ResolvedCheck,
     evaluate_check,
     gui_op_problems,
     install_command,
     mcp_problems,
+    mic_problems,
     supported_level,
 )
 
@@ -73,12 +76,13 @@ def replay_timeout(recorded_s: float | None) -> int:
 @dataclass(frozen=True)
 class ReplayCommand:
     command_id: int
-    tool: str  # run_command, run_background, launch_gui or operate_gui
+    tool: str  # run_command, run_background, launch_gui, operate_gui or listen
     command: str
     port: int | None = None
     wait_s: int | None = None
     seconds: float | None = None  # how long it took for the agent
     operate: dict[str, Any] | None = None  # operate_gui: the spec and the recorded actions
+    listen: dict[str, Any] | None = None  # listen: the spec (audio.ListenArgs); fresh words are spoken again
 
 
 @dataclass(frozen=True)
@@ -119,7 +123,8 @@ def plan_from(verdict: LogVerdict, commands: list[CommandRecord], rerun_failed: 
         if c.tool == "operate_gui" and c.operate:
             operate = {"spec": c.operate["spec"], "actions": c.operate.get("actions") or [],
                        "model": c.operate.get("model")}
-        return ReplayCommand(cid, c.tool, c.command, c.port, c.wait_s, c.seconds, operate)
+        listen = c.listen["spec"] if c.tool == "listen" and c.listen else None
+        return ReplayCommand(cid, c.tool, c.command, c.port, c.wait_s, c.seconds, operate, listen)
 
     def step(cid: int) -> ReplayCommand:
         c = command(cid)
@@ -160,6 +165,7 @@ class RanCommand:
     screenshot: str | None = None  # launch_gui, operate_gui: the PNG of the app's first window
     gui: dict[str, Any] | None = None  # launch_gui, operate_gui: what the launch showed (gui.GuiLaunch)
     operate: dict[str, Any] | None = None  # operate_gui: how it went (gui_operate.Operation)
+    listen: dict[str, Any] | None = None  # listen: how it went (audio.Listening)
 
     @property
     def ok(self) -> bool:
@@ -260,12 +266,25 @@ class Replayer:
             ran.screenshot = str(path)
         return ran
 
+    def _listen(self, cmd: ReplayCommand) -> RanCommand:
+        """The recorded command again, with fresh words spoken into the microphone and the same check."""
+        if not self.box.audio or not cmd.listen:
+            raise BoxError("a listen needs a box with the simulated microphone and its recorded spec")
+        self.launches += 1
+        result, heard = run_listen(self.box, ListenArgs.model_validate(cmd.listen),
+                                   f"replay-{cmd.command_id}-{self.launches}", log=self.log)
+        ran = self._ran(cmd, result)
+        ran.listen = asdict(heard)
+        return ran
+
     def rerun(self, cmd: ReplayCommand, max_s: int | None = None, *, install: bool = False) -> RanCommand:
         """install: an install step gets the full command time, not replay_timeout's: the agent's cited step can
         have been quick only because a failed try before it filled a download cache (thundertalk 11/1: a cask
         install recorded at 10 s needed over 70 s in the fresh box). It runs online, before any check."""
         if cmd.tool == "operate_gui":
             return self._operate(cmd)
+        if cmd.tool == "listen":
+            return self._listen(cmd)
         if cmd.tool == "launch_gui":
             if not self.box.display:
                 raise BoxError("a GUI launch needs a box with a display")
@@ -302,9 +321,11 @@ class Replayer:
     def _check(self, check: ReplayCheck) -> tuple[RanCommand, bool, list[str]]:
         ran = self.rerun(check.run)
         ok, problems = evaluate_check(ran, check.expected_exit_code, check.expected_signal,
-                                      trusted_only=check.kind in GUI_KINDS)
+                                      trusted_only=check.kind in TRUSTED_KINDS)
         if check.kind in MCP_KINDS:
             problems += mcp_problems(check.kind, ran.stdout)
+        if check.kind == "mic":
+            problems += mic_problems(ran.exit_code, ran.stdout)
         if check.kind == "gui_op":
             problems += gui_op_problems(ran.exit_code, ran.stdout)
         return ran, ok and not problems, problems
@@ -313,7 +334,8 @@ class Replayer:
         began = time.monotonic()
         result = ReplayResult(passed=False, level=None, offline=False,
                               box={"runner": self.box.runner, "image": self.box.image,
-                                   "start_s": getattr(self.box, "start_s", None)})
+                                   "start_s": getattr(self.box, "start_s", None), "gpu": self.box.gpu_name,
+                                   "audio": self.box.audio})
         try:
             self._run(plan, task, result)
         except BoxError as err:
