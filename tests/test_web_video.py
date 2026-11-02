@@ -26,14 +26,17 @@ def test_the_action_log_becomes_clicks_typing_keys_and_scrolls():
             "label": "Download PNG"},
            {"t0": 15.0, "t1": 15.2, "actions": {"send_keys": {"keys": "Enter"}}},
            {"t0": 16.0, "t1": 16.4, "actions": {"scroll": {"down": False}}},
-           {"t0": 17.0, "t1": 17.1, "actions": {"navigate": {"url": "https://example.com"}}}]
+           {"t0": 17.0, "t1": 17.1, "actions": {"navigate": {"url": "https://example.com"}}},
+           {"t0": 18.0, "t1": 18.5, "actions": {"upload_file": {"index": 3, "path": "/home/web/samples/sample.txt"}},
+            "label": "Select files"}]
     steps = web_video.steps_of(log, (1280, 900))
     assert [s["action"] for s in steps] == [
         {"kind": "click", "x": 250, "y": 220, "label": "Job link"},
         {"kind": "type", "text": "https://example.com/x"},
         {"kind": "click", "x": 960, "y": 115, "label": "Download PNG"},
         {"kind": "key", "name": "Enter"},
-        {"kind": "scroll", "direction": "up", "x": 640, "y": 450}]
+        {"kind": "scroll", "direction": "up", "x": 640, "y": 450},
+        {"kind": "click", "label": "Select files, choosing pickfit's sample.txt"}]
     assert steps[0]["at"] == [10.0, 10.0] and steps[1]["at"] == [10.0, 11.0]
 
 

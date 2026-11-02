@@ -73,6 +73,9 @@ def steps_of(actions: list[dict[str, Any]], viewport: tuple[int, int]) -> list[d
             if name in ("click", "select_dropdown", "upload_file"):
                 if not point and params.get("coordinate_x") is not None:
                     point = {"x": int(params["coordinate_x"]), "y": int(params["coordinate_y"])}
+                if name == "upload_file":  # the file chooser: pickfit picks one of its own sample files
+                    chosen = Path(str(params.get("path", ""))).name
+                    label = {"label": f"{entry.get('label') or 'the file input'}, choosing pickfit's {chosen}"}
                 steps.append({"action": {"kind": "click", **point, **label}, "at": at})
             elif name == "input":
                 if point:
@@ -238,6 +241,17 @@ def record_web(slug: str, run_id: str | None = None, *, data_dir: Path = DATA_DI
     return finish(out, meta, seen, theirs, outcome, typed, nonce, video_run, log)
 
 
+def check_line(check: dict[str, Any]) -> str:
+    """pickfit's check of the replay in one line."""
+    if check.get("file"):
+        return f"{check['file']['name']} ({check['file']['size']} bytes) arrived"
+    if check.get("text"):
+        return f"the page shows {check['text']!r}"
+    if check.get("visual") is not None and check.get("passed"):
+        return f"{check['visual']:.0%} of the page changed"
+    return check.get("why") or ""
+
+
 def finish(out: Path, meta: dict[str, Any], seen: dict[str, Any], theirs: Any, outcome: dict[str, Any] | None,
            typed: list[str], nonce: str, video_run: str, log: Any) -> Path:
     """Check the replay's result, encode the raw recording and save replay.json for video.py."""
@@ -255,8 +269,7 @@ def finish(out: Path, meta: dict[str, Any], seen: dict[str, Any], theirs: Any, o
         check, cost = wv.screenshot_check(check, outcome, out / "install.png", out / "after.png", typed,
                                           run_id=video_run, scope=f"video:{meta['slug']}")
         meta["read_usd"] = round(cost, 5)
-    line = (f"{check['file']['name']} ({check['file']['size']} bytes) arrived" if check.get("file")
-            else f"the page shows {check['text']!r}" if check.get("text") else check.get("why") or "")
+    line = check_line(check)
     log(f"  replay check {'passed' if check.get('passed') else 'failed'}: {line}"
         + (f" · replay errors {replayed.get('errors')}" if replayed.get("errors") else ""))
     frames_dir = out / "frames"
