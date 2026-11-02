@@ -208,6 +208,8 @@ STATIC_MAX_S = 3.5  # a segment with a longer stretch where nothing happens play
 CHANGE_SIZE = (320, 200)  # change points are found on frames this small
 CHANGE_PIXEL, CHANGE_SHARE = 24, 0.002  # a pixel changed by more than this much; a change: this share of pixels
 MAC_MENU_BAR = 28  # pixels: the menu bar (its clock ticks) is left out of the app's area on a Mac
+ACTION_PIXELS = 40  # full-size pixels an action must change to count as changing the screen (a digit is ~100)
+BRIDGE_MAX_S = 12.0  # an action left in a cut gap is put back as its own segment up to this long, else named
 
 
 @dataclass
@@ -219,6 +221,7 @@ class Event:
     end: float
     kind: str  # start, change, click, type, key, scroll
     what: str
+    changed: bool | None = None  # an action: whether the screen differs after it (pickfit's own frame diff)
 
 
 def gray_frames(path: Path, fps: float, size: tuple[int, int] | None = None) -> Any:
@@ -257,8 +260,8 @@ def changed_share(a: Any, b: Any) -> float:
 
 
 def blank(frame: Any) -> bool:
-    low, high = frame.getextrema()
-    return high - low < 8
+    """One flat color but for a few pixels (the pointer x11grab draws on a black screen counts as blank)."""
+    return max(frame.histogram()) >= 0.995 * frame.size[0] * frame.size[1]
 
 
 def change_points(path: Path, fps: int = recording.RECORD_FPS, mac: bool = False) -> list[tuple[float, float]]:
@@ -284,11 +287,19 @@ def change_points(path: Path, fps: int = recording.RECORD_FPS, mac: bool = False
     return points
 
 
-def events_of(op: dict[str, Any], changes: list[tuple[float, float]], duration: float) -> list[Event]:
-    """pickfit's actions (times from its own log) and the screen's changes, in time order, numbered from 1."""
+def events_of(op: dict[str, Any], changes: list[tuple[float, float]], duration: float, first_shown: float = 0.0,
+              changed: Any = None) -> list[Event]:
+    """pickfit's actions (times from its own log) and the screen's changes, in time order, numbered from 1.
+
+    first_shown: when the screen first shows anything (Xvfb is black until the app draws); the recording's first
+    event is put 0.5 s before it. changed(start, end, point, next_start) -> whether an action changed the screen."""
     t0 = (op.get("video") or {}).get("started_at")
-    found = [(0.0, 0.0, "start", "the recording starts; pickfit is about to start the app")]
-    found += [(t, t, "change", f"the screen changes ({share:.0%} of it)") for t, share in changes if t < duration]
+    begin = round(max(0.0, first_shown - 0.5), 2)
+    found = [(begin, begin, "start", "the recording starts; pickfit is about to start the app"
+              + (f" (the screen is black until {first_shown:.1f} s)" if begin > 0 else ""), None)]
+    found += [(t, t, "change", f"the screen changes ({share:.0%} of it)", None) for t, share in changes
+              if begin <= t < duration]
+    acts = []
     for step in op.get("steps") or []:
         act, at = step.get("action"), step.get("at")
         if not act or act["kind"] not in ACTIONS or not at or not t0:
@@ -303,9 +314,50 @@ def events_of(op: dict[str, Any], changes: list[tuple[float, float]], duration: 
             what = f"pickfit presses {act['name']}"
         else:
             what = f"pickfit scrolls {act['direction']} at ({act['x']}, {act['y']})"
-        found.append((a, b, kind, what))
+        acts.append((a, b, kind, what, (act["x"], act["y"]) if "x" in act else None))
+    for i, (a, b, kind, what, point) in enumerate(acts):
+        did = None
+        if changed is not None:
+            following = acts[i + 1][0] if i + 1 < len(acts) else duration
+            did = bool(changed(a, b, [point, acts[i - 1][4] if i else None], following))
+            what += "; the screen changes after it" if did else "; nothing on screen changes"
+        found.append((a, b, kind, what, did))
     found.sort(key=lambda e: (e[0], e[2] == "change"))
-    return [Event(i, t, end, kind, what) for i, (t, end, kind, what) in enumerate(found, start=1)]
+    return [Event(i, t, end, kind, what, did) for i, (t, end, kind, what, did) in enumerate(found, start=1)]
+
+
+def first_shown(path: Path, mac: bool = False) -> float:
+    """When the recording first shows something other than one flat color (Xvfb is black before the app draws)."""
+    for i, frame in enumerate(gray_frames(path, recording.RECORD_FPS, CHANGE_SIZE)):
+        if not blank(frame):
+            return round(i / recording.RECORD_FPS, 2)
+    return 0.0
+
+
+def action_changed(path: Path, duration: float) -> Any:
+    """changed(start, end, points, next_start) for events_of: the frame just before an action against the frame
+    just before pickfit's next one (at most 2 s after it ends), full size, with the pointer's old and new places
+    left out; more than ACTION_PIXELS changed pixels is a change."""
+    from PIL import Image, ImageChops
+
+    def frame(at: float) -> Any:
+        return Image.open(io.BytesIO(recording.png_frame(path, at))).convert("L")
+
+    def changed(start: float, end: float, points: list[Any], following: float) -> bool:
+        after = min(following - 0.15, end + 2.0, duration - 0.1)
+        if after <= end:
+            after = min(end + 0.1, duration - 0.05)
+        try:
+            a, b = frame(max(0.0, start - 0.25)), frame(after)
+        except RuntimeError:
+            return False
+        diff = ImageChops.difference(a, b).point(lambda v: 255 if v > CHANGE_PIXEL else 0)
+        for point in points:
+            if point:
+                diff.paste(0, (point[0] - 24, point[1] - 24, point[0] + 24, point[1] + 24))
+        return diff.histogram()[255] > ACTION_PIXELS
+
+    return changed
 
 
 class Segment(BaseModel):
@@ -325,6 +377,8 @@ class Seen(BaseModel):
     seen: bool = Field(description="What the caption says visibly happens or shows in this clip.")
     first_seen_s: float = Field(description="Seconds from the start of this clip when it first shows; -1 if never.")
     why: str = Field(description="At most 160 characters: what is on screen.")
+    unmentioned: str = Field(description="A notable action or change in the clip the caption does not mention (a new "
+                                         "tab, page or dialog, a value changing), at most 120 characters; else empty.")
 
 
 EDIT_INSTRUCTIONS = """\
@@ -339,8 +393,12 @@ own log) and the moments the screen changes (measured by pickfit). Choose segmen
   answered `last`. Segments in order, not overlapping (a segment's first event comes after the previous one's last);
 - show the steps a person needs, in order: the app appearing, each action that moves toward the goal, and the
   screen's answer to it. Leave out waiting, retries and actions that changed nothing;
+- every action marked "the screen changes after it" must be inside a segment: a viewer must never see a value
+  jump without the action that changed it. Only actions marked "nothing on screen changes" may be left out;
 - the last segment ends with the result pickfit checked on screen: result_visible true there;
 - together about {target} s of recording (the clip shows {n} checked feature(s), each from its own recording);
+- a caption covers its whole segment: if the segment also switches to another tab, page or dialog, say so, or end
+  the segment before the switch and give the switch its own segment;
 - caption: one short line, at most 70 characters, written for the viewer: what to do, or what they now see
   ("Type 755 in Numeric", "Symbolic now reads rwxr-xr-x", "Press Cmd+S and name the file note.md", "Settings
   saved"). Never describe pickfit's procedure ("Wait 3 seconds until...", "pickfit clicks..."). Do not copy long
@@ -486,6 +544,7 @@ class Cut:
     faster: bool
     events: tuple[int, int] = (0, 0)  # the model's first and last event
     note: str = ""  # what pickfit changed in the model's answer
+    skipped: str = ""  # an action in the gap before this segment that changed the screen, named in its label
 
     @property
     def seconds(self) -> float:
@@ -499,7 +558,7 @@ def span(events: list[Event], first: int, last: int, duration: float, result: bo
     are in the clip's time: twice as long in the recording at 2x."""
     speed = 2 if faster else 1
     a, b = events[first - 1], events[last - 1]
-    start = max(0.0, a.t - LEAD_S) if a.kind != "start" else 0.0
+    start = max(0.0, a.t - LEAD_S) if a.kind != "start" else a.t
     answer = b if b.kind in ("change", "start") else next(
         (e for e in events[last:] if e.kind == "change" and e.t <= b.end + ANSWER_S), None)
     end = (answer.t if answer else b.end) + HOLD_S * speed
@@ -567,6 +626,38 @@ def checked_cuts(answer: EditList, raw: int, duration: float, events: list[Event
     return cuts, dropped
 
 
+def bridge_gaps(cuts: list[Cut], events: list[Event], duration: float, raw: int, label: str
+                ) -> tuple[list[Cut], list[str]]:
+    """No action of pickfit's that changed the screen may sit unseen in a cut gap (or before the first segment): it
+    goes back in as its own segment, captioned from pickfit's log (2x and labelled when its screen stands still),
+    or, past BRIDGE_MAX_S, is named in the next segment's label."""
+    out: list[Cut] = []
+    notes: list[str] = []
+    lo = 0.0
+    for cut in [*cuts, None]:
+        hi = cut.start if cut is not None else lo
+        hidden = [e for e in events if e.kind in ACTIONS and e.changed and lo <= e.t < hi]
+        if hidden:
+            start, end = span(events, hidden[0].number, hidden[-1].number, duration, False)
+            start, end = max(start, lo), min(end, hi)
+            caption = logged_caption(hidden) or "Click"
+            if end - start <= BRIDGE_MAX_S and end - start >= 0.5:
+                faster = static_stretch(events, start, end) > STATIC_MAX_S
+                if faster:
+                    start, end = span(events, hidden[0].number, hidden[-1].number, duration, False, True)
+                    start, end = max(start, lo), min(end, hi)
+                out.append(Cut(raw, start, end, label, caption, False, faster, (hidden[0].number, hidden[-1].number),
+                               "added by pickfit: an action in a cut gap changed the screen"))
+                notes.append(f"put back {caption!r} at {start:.1f}-{end:.1f} s")
+            elif cut is not None:
+                cut.skipped = caption
+                notes.append(f"named in the label: skipped {caption!r} at {hidden[0].t:.1f} s")
+        if cut is not None:
+            out.append(cut)
+            lo = cut.end
+    return out, notes
+
+
 def _video_part(path: Path) -> dict[str, Any]:
     return {"type": "video_url", "video_url": {"url": "data:video/mp4;base64," + base64.b64encode(
         path.read_bytes()).decode()}}
@@ -627,7 +718,8 @@ def review_cuts(pieces: list[Path], cuts: list[Cut], scope: dict[str, Any], log:
         length = cut.seconds
         inside = seen is not None and seen.seen and -0.25 <= seen.first_seen_s <= length + 0.25
         rows.append({"caption": cut.caption, "ok": inside, "seen": bool(seen and seen.seen), "first_seen_s":
-                     seen.first_seen_s if seen else None, "segment_s": round(length, 2), "why": seen.why if seen else ""})
+                     seen.first_seen_s if seen else None, "segment_s": round(length, 2), "why": seen.why if seen else "",
+                     "unmentioned": seen.unmentioned if seen else ""})
         if not inside:
             why = "no answer" if seen is None else (seen.why if not seen.seen else
                                                     f"first seen at {seen.first_seen_s} s of a {length:.1f} s segment")
@@ -807,6 +899,7 @@ class ClipResult:
     events: list[dict[str, Any]] = field(default_factory=list)  # each recording's events, as the model saw them
     crops: list[list[int] | None] = field(default_factory=list)  # the part of each recording the clip shows
     passed_only: dict[str, Any] | None = None  # a clip of only the recordings whose segments all passed the review
+    bridged: list[str] = field(default_factory=list)  # actions pickfit put back from cut gaps, or named
     dropped: list[str] = field(default_factory=list)
     review: list[dict[str, Any]] = field(default_factory=list)
     flags: list[str] = field(default_factory=list)
@@ -889,7 +982,8 @@ def _make_clip(video_dir: Path, data_dir: Path, log: Any, earlier: dict[str, Any
         shutil.copy2(path, dest / name)
         out.raw.append({"file": name, "sha256": op["video"]["sha256"], "seconds": duration,
                         "smoke_test": theirs.smoke_test, "feature": label})
-        events = events_of(op, change_points(path, mac=mac), duration)
+        events = events_of(op, change_points(path, mac=mac), duration, first_shown(path, mac),
+                           action_changed(path, duration))
         out.events.append({"raw": name, "events": [asdict(e) for e in events]})
         if name in earlier:
             answer, cost, error = EditList.model_validate({k: v for k, v in earlier[name].items() if k != "raw"}), 0.0, ""
@@ -903,6 +997,8 @@ def _make_clip(video_dir: Path, data_dir: Path, log: Any, earlier: dict[str, Any
         out.answers.append({"raw": name, **answer.model_dump()})
         mine, dropped = checked_cuts(answer, k - 1, duration, events, label, evidence_text(op, label),
                                      lambda a, b, path=path: screen_text(path, a, b))
+        mine, bridged = bridge_gaps(mine, events, duration, k - 1, label)
+        out.bridged += [f"{name} {b}" for b in bridged]
         out.dropped += [f"{name} {d}" for d in dropped]
         if not any(c.result_visible for c in mine):
             out.flags.append(f"{name}: no segment shows the checked result of {label!r}")
@@ -977,7 +1073,7 @@ def render_clip(cuts: list[Cut], raw_rows: list[dict[str, Any]], dest: Path, *, 
     for i, cut in enumerate(cuts):
         raw_name = raw_rows[cut.raw]["file"]
         label = (f"Recorded by pickfit · {date} · {raw_name} {_clock(cut.start)}-{_clock(cut.end)}"
-                 + (" · 2x speed" if cut.faster else ""))
+                 + (" · 2x speed" if cut.faster else "") + (f" · skipped before: {cut.skipped}" if cut.skipped else ""))
         (work / f"{tag}-ov-{i}.png").write_bytes(overlay_png(label, cut.caption))
         piece = work / f"{tag}-cap-{i}.mp4"
         render_piece(raws[cut.raw][0], cut, crops[cut.raw], screen, work / f"{tag}-ov-{i}.png", piece)

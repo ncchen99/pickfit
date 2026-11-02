@@ -345,3 +345,23 @@ def test_a_caption_may_also_name_what_pickfits_ocr_reads_on_the_segment():
     assert cuts[0].caption == "Length now shows 00 h 07 m" and not cuts[0].note
     cuts, _ = video.checked_cuts(answer, 0, 20.0, events, label, video.evidence_text(OP, label))
     assert cuts[0].caption != "Length now shows 00 h 07 m"  # without the screen's word for it, not kept
+
+
+def test_an_action_that_changed_the_screen_is_never_left_in_a_cut_gap():
+    label = "convert between symbolic and numeric permissions"
+    did = lambda start, end, points, following: start < 4.0  # the click at 3.25 changed the screen; the rest not
+    events = video.events_of(OP, CHANGES, 20.0, changed=did)
+    assert events[1].changed and events[1].what.endswith("the screen changes after it")
+    assert events[3].changed is False and events[3].what.endswith("nothing on screen changes")
+    answer = video.EditList(segments=[S(1, 1, "The app opens"), S(6, 7, "Symbolic now reads rwxr-xr-x", result=True)],
+                            notes="")
+    cuts, _ = video.checked_cuts(answer, 0, 20.0, events, label, video.evidence_text(OP, label))
+    cuts, notes = video.bridge_gaps(cuts, events, 20.0, 0, label)
+    assert [c.caption for c in cuts] == ["The app opens", "Click", "Symbolic now reads rwxr-xr-x"]
+    assert (cuts[1].start, cuts[1].end) == (2.65, 4.9) and "cut gap" in cuts[1].note and notes
+
+
+def test_the_first_segment_starts_just_before_the_screen_shows_anything():
+    events = video.events_of(OP, CHANGES, 20.0, first_shown=2.0)
+    assert events[0].kind == "start" and events[0].t == 1.5 and "black until 2.0 s" in events[0].what
+    assert video.span(events, 1, 1, 20.0, False)[0] == 1.5
