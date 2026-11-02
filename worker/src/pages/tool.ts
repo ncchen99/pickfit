@@ -85,7 +85,7 @@ function prerequisites(entry: Entry): string {
     const list = p.api_keys.map(esc).join(', ');
     items.push(L(`Keys or accounts: ${list}`, `金鑰或帳號：${list}`));
   }
-  return items.length ? `<div class="prereq"><h3>${L('You need first', '需要先準備')}</h3><ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul></div>` : '';
+  return items.length ? `<div class="prereq"><h4>${L('You need first', '需要先準備')}</h4><ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul></div>` : '';
 }
 
 // ---------------------------------------------------------------- the clip, with chapters
@@ -379,9 +379,11 @@ function install(catalog: Catalog, entry: Entry): string {
   const oses = OSES.filter((os) => entry.install[os]);
   if (!oses.length) {
     const needs = prerequisites(entry);
-    return needs ? `<section class="block" aria-labelledby="install-title">${installTitle('Install', '安裝')}${needs}</section>` : '';
+    return needs ? `<section class="block" aria-labelledby="install-title">${installTitle('Use it', '使用')}${needs}</section>` : '';
   }
   const hint = entry.usage_guide?.open_hint ?? null;
+  // What you need first sits in each system's install step, where it can differ by system.
+  const needs = prerequisites(entry);
   const tabbed = oses.length > 1;
   const sysLabel = (os: OS) => {
     const arch = entry.install[os]!.run.arch;
@@ -394,7 +396,7 @@ function install(catalog: Catalog, entry: Entry): string {
     return (
       `<div class="run-panel" id="install-${os}"${tabbed ? ` role="tabpanel" aria-labelledby="tab-${os}" data-os="${os}"` : ''}>` +
       `<div class="run-head"><h3>${sysLabel(os)}</h3></div>` +
-      installSection(out, { ...EMPTY_FORM, os }, true, true, { hint }) +
+      installSection(out, { ...EMPTY_FORM, os }, true, true, { hint, needs }) +
       `</div>`
     );
   });
@@ -405,7 +407,7 @@ function install(catalog: Catalog, entry: Entry): string {
       oses.map((os, i) => `<button type="button" role="tab" id="tab-${os}" aria-controls="install-${os}" aria-selected="${i === 0}" data-os="${os}"${i ? ' tabindex="-1"' : ''}>${sysLabel(os)}</button>`).join('') +
       `</div>`
     : '';
-  return `<section class="block" aria-labelledby="install-title">${installTitle('Install', '安裝')}${prerequisites(entry)}<article class="run-card install-card">${tabs}${panels.join('')}</article></section>`;
+  return `<section class="block" aria-labelledby="install-title">${installTitle('Use it', '使用')}<article class="run-card install-card">${tabs}${panels.join('')}</article></section>`;
 }
 
 /** A web app: open it, and the facts a person weighs before typing anything in. */

@@ -257,10 +257,12 @@ button.badge{cursor:help}
 .cov-sample{background:linear-gradient(90deg,var(--pass) 0 50%,var(--fail) 50% 62%,color-mix(in srgb,var(--ink) 18%,var(--sunk)) 62%)}
 
 /* commands */
-.cmd{display:flex;align-items:flex-start;background:var(--code);color:var(--code-ink);border-radius:var(--r-ctl);margin:6px 0 10px;min-width:0}
+.cmd{display:flex;align-items:center;background:var(--code);color:var(--code-ink);border-radius:var(--r-ctl);margin:6px 0 10px;min-width:0}
 .cmd pre{flex:1;min-width:0;margin:0;padding:12px 14px;overflow-x:auto;line-height:1.55;white-space:pre;scrollbar-color:rgb(231 238 220/.3) transparent}
-.copy{display:none;align-items:center;gap:6px;flex:none;font:600 .8rem/1 var(--display);color:var(--code-ink);background:rgb(231 238 220/.12);border:0;border-radius:8px;padding:7px 10px;margin:6px 6px 0 0;cursor:pointer;transition:background .2s,color .2s}
+.copy{display:none;align-items:center;gap:6px;flex:none;font:600 .8rem/1 var(--display);color:var(--code-ink);background:rgb(231 238 220/.12);border:0;border-radius:8px;padding:7px 10px;margin:0 6px 0 0;cursor:pointer;transition:background .2s,color .2s}
 .js .copy{display:inline-flex}
+.cmd-multi{align-items:flex-start}
+.cmd-multi .copy{margin-top:6px}
 .copy:hover{background:var(--tape);color:var(--tape-ink)}
 .copy.done{background:var(--pass);color:#fff}
 
@@ -652,7 +654,8 @@ body.is-results .home-only{display:none}
 .block h3{margin:24px 0 8px}
 .block .run-card h3,.block .run-head h3{margin:0}
 .feat-list{list-style:none;padding:0;margin:0;display:grid;gap:10px}
-.feat-list>li{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:12px;padding:12px 14px;border-radius:var(--r-ctl);background:var(--tag);box-shadow:var(--lift-1)}
+.feat-list>li{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--r-ctl);background:var(--tag);box-shadow:var(--lift-1)}
+.feat-list>li:has(.how-to[open]){align-items:start}
 .feat-state{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;font:700 .78rem/1.1 var(--display);white-space:nowrap}
 .feat-state .i{width:14px;height:14px;stroke-width:2.4}
 .feat-ok .feat-state{background:var(--pass-soft);color:var(--pass)}
@@ -729,6 +732,7 @@ body.is-results .home-only{display:none}
 .open-hint{display:flex;gap:8px;align-items:flex-start;margin:14px 0 0}
 .open-hint .i{flex:none;margin-top:3px;color:var(--pass)}
 .prereq{margin-bottom:16px}
+.prereq h4{margin-top:0}
 .tested>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none}
 .tested>summary::-webkit-details-marker{display:none}
 .tested>summary h2{font-size:1.25rem;margin:0}

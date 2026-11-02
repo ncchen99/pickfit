@@ -169,7 +169,7 @@ function facts(pick: PickOut): string {
 }
 
 /** The steps get_install_guide returns, for a person instead of an agent. `inRun`: inside a run card that already names the system, so no fold of its own. */
-export function installSection(guide: InstallOutput, form: FormValues, open: boolean, inRun = false, stepper: { hint: string | null } | null = null): string {
+export function installSection(guide: InstallOutput, form: FormValues, open: boolean, inRun = false, stepper: { hint: string | null; needs?: string } | null = null): string {
   const v = guide.verification;
   if (guide.steps.length === 0) return '';
   const cautions: string[] = [];
@@ -241,7 +241,7 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
   const sysSpan = `<span class="sys">${v.os ? osMark(v.os) : ''}${esc(system(v.os, v.arch))}</span>`;
   const body = stepper
     ? installStages([
-        { name: L('Install', '安裝'), html: cautions.join('') + stepList + manual + issues },
+        { name: L('Install', '安裝'), html: (stepper?.needs ?? '') + cautions.join('') + stepList + manual + issues },
         { name: L('Check it works', '確認能用'), html: verify, cls: 'inst-check' },
         { name: L('Start using it', '開始使用'), html: first + agent + (stepper.hint ? `<p class="open-hint">${icon('arrow-right')}<span>${stepText(stepper.hint)}</span></p>` : '') },
       ])

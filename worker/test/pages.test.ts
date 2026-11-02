@@ -90,7 +90,9 @@ test('a tool page shows how far each verified run got, its install steps, and th
 test('install steps come one stage at a time: install, then check, each with Back and Next naming the other', async () => {
   const html = await (await site().get('/tool/fixture-llm-runner')).text();
   assert.match(html, /<div class="install-body" data-stepper><ol class="stage-tabs js-only">.*?<span class="lbl">Install<\/span>.*?<span class="lbl">Check it works<\/span>/);
-  assert.match(html, /<section class="inst-stage" data-stage aria-label="Install"><p class="caution">|<section class="inst-stage" data-stage aria-label="Install"><ol class="steps">/);
+  // What you need first opens the install stage of each system, not a block above the systems.
+  assert.match(html, /<section class="inst-stage" data-stage aria-label="Install"><div class="prereq"><h4>You need first<\/h4>.*?<ol class="steps">/);
+  assert.doesNotMatch(html, /<h2 id="install-title">Use it<\/h2><div class="prereq">/);
   assert.match(html, /data-goto="1">Next: Check it works/);
   assert.match(html, /data-goto="0">.*?Back: Install<\/button>/);
 });
