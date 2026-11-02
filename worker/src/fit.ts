@@ -208,11 +208,11 @@ export function fitNote(fit: Fit): string | null {
     return fit.covers.length
       ? L(
           `Weak match: its profile mentions ${list(fit.covers)} but not ${list(fit.missing)}.`,
-          `符合度低：它的簡介提到 ${list(fit.covers)}，但沒有提到 ${list(fit.missing)}。`,
+          `勉強符合：它的簡介提到 ${list(fit.covers)}，但沒有提到 ${list(fit.missing)}。`,
         )
       : L(
           `Weak match: its profile mentions none of ${list(fit.missing)}.`,
-          `符合度低：它的簡介完全沒有提到 ${list(fit.missing)}。`,
+          `勉強符合：它的簡介完全沒有提到 ${list(fit.missing)}。`,
         );
   }
   return null;

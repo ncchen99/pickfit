@@ -76,7 +76,7 @@ export function webRanSentence(check: WebCheck): string {
     (operated
       ? L(`, and ${operated}.`, `，${operated}。`)
       : L(', and pickfit did not use any of its features.', '，pickfit 沒有使用它的任何功能。')) +
-    L(' Each site is visited once, so there is no replay.', '每個網站只造訪一次，因此沒有重播。')
+    L(' Each site is visited once, so there is no replay.', '每個網站只造訪一次，所以沒有重跑。')
   );
 }
 
@@ -91,13 +91,13 @@ export function webFacts(check: WebCheck): { text: string; tone: 'pass' | 'cauti
   if (n !== null)
     facts.push({
       text: n === 0
-        ? L('Contacted no other sites', '沒有連線到其他網站')
-        : L(`Contacted ${n} other site${n === 1 ? '' : 's'}`, `連線到 ${n} 個其他網站`),
+        ? L('Contacted no other sites', '沒有連到其他網站')
+        : L(`Contacted ${n} other site${n === 1 ? '' : 's'}`, `連到 ${n} 個其他網站`),
       tone: n === 0 ? 'pass' : 'plain',
     });
-  if (check.data_sent === 'none') facts.push({ text: L('What pickfit typed in stayed on the device', 'pickfit 輸入的內容留在裝置上'), tone: 'pass' });
-  else if (check.data_sent === 'observed') facts.push({ text: L('What pickfit typed in was sent to a server', 'pickfit 輸入的內容被傳送到伺服器'), tone: 'caution' });
-  else facts.push({ text: L('Not checked whether what you type leaves your device', '未檢查你輸入的內容是否會離開裝置'), tone: 'plain' });
+  if (check.data_sent === 'none') facts.push({ text: L('What pickfit typed in stayed on the device', '輸入的內容沒有離開裝置'), tone: 'pass' });
+  else if (check.data_sent === 'observed') facts.push({ text: L('What pickfit typed in was sent to a server', '輸入的內容會傳到伺服器'), tone: 'caution' });
+  else facts.push({ text: L('Not checked whether what you type leaves your device', '未檢查輸入內容是否離開裝置'), tone: 'plain' });
   if (check.offline === 'verified') facts.push({ text: L('Works offline once loaded (checked)', '載入後可離線使用（已檢查）'), tone: 'pass' });
   else if (check.offline === 'not_offline') facts.push({ text: L('Did not work offline', '無法離線使用'), tone: 'plain' });
   return facts;
