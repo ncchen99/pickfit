@@ -1749,6 +1749,15 @@
       "additionalProperties": false,
       "description": "A short captioned clip of pickfit operating a GUI app to check its features (pickfit/verify/video.py).\n\nA fresh box replayed this run's steps and operations while pickfit recorded its own screen; Muse Spark Open\nwatched each recording with pickfit's action log and picked whole segments, kept in their order (a speed-up\nis labelled on screen), and then watched the cut and confirmed that each caption shows on screen. Captions\nclaim only checks that passed in this run and again in the recorded replay. The clip's first frame says it\nwas recorded by pickfit in a sandbox, and on what date; it names each raw recording and its sha256.",
       "properties": {
+        "chapters": {
+          "default": [],
+          "description": "The clip's chapters in time order, covering it whole: the first card at 0, one chapter for each run of segments of one feature, the last card.",
+          "items": {
+            "$ref": "#/$defs/VideoChapter"
+          },
+          "maxItems": 10,
+          "type": "array"
+        },
         "clip": {
           "$ref": "#/$defs/VideoFile"
         },
@@ -2484,6 +2493,43 @@
         "evidence"
       ],
       "title": "VerificationRun",
+      "type": "object"
+    },
+    "VideoChapter": {
+      "additionalProperties": false,
+      "description": "A chapter of a clip, for the player's progress bar: the first card, each feature's segments, the last card.",
+      "properties": {
+        "feature": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The video.features entry the chapter shows; null for the first and last cards."
+        },
+        "start_s": {
+          "description": "Where the chapter starts in the clip, seconds.",
+          "minimum": 0,
+          "type": "number"
+        },
+        "title": {
+          "description": "English, for the progress bar.",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "start_s",
+        "title",
+        "feature"
+      ],
+      "title": "VideoChapter",
       "type": "object"
     },
     "VideoFile": {

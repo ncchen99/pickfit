@@ -13,7 +13,7 @@ from typing import Any
 import pytest
 
 from pickfit.meta import IMAGE_TOKENS, VIDEO_TOKENS, estimate_input_tokens
-from pickfit.schema import SoftwareRecord
+from pickfit.schema import RunVideo, SoftwareRecord
 from pickfit.verify import gui, record, video
 from pickfit.verify import gui_operate as op
 from pickfit.verify.box import ExecResult
@@ -533,3 +533,68 @@ def test_a_poster_is_a_1280_wide_jpeg(tmp_path: Path):
 
     with Image.open(tmp_path / "c.jpg") as im:
         assert im.format == "JPEG" and im.size == (1280, 944)
+
+
+def test_chapters_join_one_features_segments_between_the_cards():
+    starts = [0.0, 3.75, 8.0, 12.25, 20.5]
+    assert video.chapters_of(["edit a file", "edit a file", "save it"], starts) == [
+        {"start_s": 0.0, "title": "Recorded by pickfit", "feature": None},
+        {"start_s": 3.75, "title": "Edit a file", "feature": "edit a file"},
+        {"start_s": 12.25, "title": "Save it", "feature": "save it"},
+        {"start_s": 20.5, "title": "Unedited recordings", "feature": None}]
+    # the boundaries found in the clip, matched to the cuts' nominal starts (a piece runs a frame or two long)
+    assert video.piece_starts([0.0, 3.5, 7.75, 11.9, 19.8], [3.75, 8.0, 12.25, 20.5]) == starts
+    with pytest.raises(ValueError, match="pieces"):
+        video.piece_starts([0.0, 3.5, 7.75, 11.9, 19.8], [3.75, 8.0, 20.5])
+    with pytest.raises(ValueError, match="starts at"):
+        video.piece_starts([0.0, 3.5, 7.75, 11.9, 19.8], [3.75, 9.5, 12.25, 20.5])
+
+
+def test_a_videos_chapters_cover_the_clip_in_order_and_name_its_features():
+    two = ["convert between symbolic and numeric permissions", "calculate umask and resulting permissions"]
+    good = [{"start_s": 0.0, "title": "Recorded by pickfit", "feature": None},
+            {"start_s": 3.75, "title": "Convert", "feature": two[0]},
+            {"start_s": 30.9, "title": "Umask", "feature": two[1]},
+            {"start_s": 45.1, "title": "Unedited recordings", "feature": None}]
+    base = _video(seconds=48.9, features=two)
+    assert len(RunVideo.model_validate(base | {"chapters": good}).chapters) == 4
+    assert "chapters" not in RunVideo.model_validate(base).model_dump(mode="json")
+    bad = {
+        "rise": [good[0], good[2], good[1], good[3]],
+        "start at 0": [good[0] | {"start_s": 0.5}, *good[1:]],
+        "before the clip ends": [*good[:3], good[3] | {"start_s": 48.9}],
+        "close on the last": good[:3],
+        "each at least once": [good[0], good[1], good[3]],
+        "one chapter": [good[0], good[1], good[1] | {"start_s": 10.0}, good[2], good[3]],
+    }
+    for why, chapters in bad.items():
+        with pytest.raises(ValueError, match=why):
+            RunVideo.model_validate(base | {"chapters": chapters})
+    with pytest.raises(ValueError):
+        RunVideo.model_validate(base | {"chapters": [*good[:2], good[2] | {"feature": "not in the clip"}, good[3]]})
+    with pytest.raises(ValueError):
+        RunVideo.model_validate(base | {"chapters": [good[0] | {"title": "x" * 81}, *good[1:]]})
+
+
+@pytest.mark.skipif(FFMPEG is None, reason="needs ffmpeg")
+def test_a_rendered_clip_has_chapters_where_its_pieces_meet(tmp_path: Path):
+    raws = []
+    for k in range(2):
+        raw = tmp_path / f"raw-{k}.mp4"
+        subprocess.run([FFMPEG, "-v", "error", "-f", "lavfi", "-i", f"testsrc=size=1280x800:rate=4:duration={8 + k}",
+                        "-pix_fmt", "yuv420p", str(raw)], check=True)
+        raws.append((raw,))
+    cuts = [video.Cut(raw=0, start=0.5, end=2.6, feature="open it", caption="a", result_visible=False, faster=False),
+            video.Cut(raw=0, start=3.0, end=7.1, feature="open it", caption="b", result_visible=True, faster=True),
+            video.Cut(raw=1, start=1.0, end=4.3, feature="save it", caption="c", result_visible=True, faster=False)]
+    rows = [{"file": f"r{k}.mp4", "sha256": "b" * 64, "seconds": 8.0 + k} for k in range(2)]
+    work = tmp_path / "work"
+    work.mkdir()
+    seconds, chapters, problem = video.render_clip(
+        cuts, rows, tmp_path / "c.mp4", name="App", date="2026-11-02", os="linux", run="verify-app-20261102-000000-0000",
+        recording_run="video-app-20261102-000000-0000", raws=raws, crops=[None, None], screen=(1280, 800), work=work)
+    assert problem is None
+    assert [c["feature"] for c in chapters] == [None, "open it", "save it", None]
+    found = video.boundaries(tmp_path / "c.mp4")
+    assert [c["start_s"] for c in chapters[1:]] == pytest.approx([found[0], found[2], found[3]], abs=0.13)
+    assert chapters[-1]["start_s"] < seconds
