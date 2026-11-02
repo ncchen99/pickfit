@@ -186,8 +186,8 @@ def test_a_website_submission_waits_for_the_web_pipeline(env: dict[str, Any]) ->
 
 def test_private_famous_and_rule_rejected_repositories(env: dict[str, Any]) -> None:
     repos = {"someone/secret": repo_item(8, "someone/secret", private=True),
-             "someone/famous": repo_item(9, "someone/famous", stars=5_000),
-             "someone/readme-only": repo_item(10, "someone/readme-only")}
+             "someone/famous": repo_item(9, "someone/famous", stars=5_001),
+             "someone/readme-only": repo_item(10, "someone/readme-only", stars=1_200)}
     details = {name: DETAILS for name in repos}
     details["someone/readme-only"] = {**DETAILS, "files": ["README.md", "docs/guide.md"]}
     for i, name in enumerate(repos, 1):
@@ -196,7 +196,7 @@ def test_private_famous_and_rule_rejected_repositories(env: dict[str, Any]) -> N
     run_once(env, pipeline, concurrency=3)
     reasons = {sid: submission(env["d1"], sid)["reason"] for sid in ("sub_1", "sub_2", "sub_3")}
     assert "private repository" in reasons["sub_1"]
-    assert "(at most 300 GitHub stars); this one has 5000" in reasons["sub_2"]
+    assert "(at most 5000 GitHub stars); this one has 5001" in reasons["sub_2"]
     assert reasons["sub_3"] == "Did not pass pickfit's rules (readme_only)."
     assert pipeline.calls == []
 
