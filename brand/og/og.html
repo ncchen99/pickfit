@@ -1,0 +1,71 @@
+<!doctype html>
+<!-- The share card (og:image), 1200 × 630. Rendered to PNG by render.sh; ?lang=zh gives the zh-TW card. -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+@font-face{font-family:Bricolage;src:url(../../worker/public/assets/fonts/bricolage-grotesque.woff2) format("woff2");font-weight:200 800}
+*{box-sizing:border-box;margin:0}
+html,body{width:1200px;height:630px;overflow:hidden}
+body{
+  --mat:#1D3D2A;--mat-deep:#132A1C;--line:rgb(244 241 222/.06);--line-2:rgb(244 241 222/.12);
+  --on-mat:#F4F1DE;--on-mat-2:#C9D3B4;--tape:#F5C243;--tape-ink:#3A2905;--stitch:#C4552D;--tag:#FFFEF7;
+  font-family:Bricolage,"PingFang TC","Noto Sans TC",system-ui,sans-serif;color:var(--on-mat);
+  background:
+    radial-gradient(ellipse 70% 90% at 78% 55%,rgb(169 188 76/.16),transparent 70%),
+    linear-gradient(var(--line-2) 1px,transparent 1px) 0 0/120px 120px,
+    linear-gradient(90deg,var(--line-2) 1px,transparent 1px) 0 0/120px 120px,
+    linear-gradient(var(--line) 1px,transparent 1px) 0 0/24px 24px,
+    linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/24px 24px,
+    var(--mat);
+  position:relative;
+}
+/* ruler edge along the bottom, like the cutting mat on the site */
+.ruler{position:absolute;left:0;right:0;bottom:0;height:46px;background:var(--tape);border-top:3px solid #4A2E22;
+  background-image:repeating-linear-gradient(90deg,#4A2E22 0 2px,transparent 2px 24px),repeating-linear-gradient(90deg,#4A2E22 0 2px,transparent 2px 120px);
+  background-size:100% 12px,100% 22px;background-repeat:no-repeat;background-position:12px 0,12px 0}
+.ruler span{position:absolute;bottom:6px;font:700 15px/1 Bricolage;color:var(--tape-ink)}
+.copy{position:absolute;left:84px;top:74px;width:640px}
+.brand{display:flex;align-items:center;gap:16px;font:800 46px/1 Bricolage;letter-spacing:-.03em}
+.brand img{width:52px;height:52px}
+.i-dot{position:relative}
+.i-dot::after{content:"";position:absolute;left:50%;top:.02em;width:.26em;height:.26em;border-radius:50%;background:var(--stitch);transform:translateX(-50%);box-shadow:0 0 0 .07em var(--mat)}
+h1{margin-top:58px;font:800 76px/1.02 Bricolage;letter-spacing:-.03em}
+h1 em{font-style:normal;color:var(--tape)}
+.zh h1{font-size:72px;line-height:1.18;letter-spacing:.01em;font-weight:800}
+p{margin-top:26px;font-size:27px;line-height:1.4;color:var(--on-mat-2);max-width:600px}
+.zh p{font-size:26px;line-height:1.55}
+/* the seam: rufous running stitch, the site's sign for "pickfit ran this" */
+.seam{margin-top:34px;display:flex;gap:12px;flex-wrap:wrap}
+.chip{font:600 20px/1 Bricolage;padding:11px 16px;border-radius:999px;background:rgb(244 241 222/.08);border:2px dashed var(--stitch);color:var(--on-mat)}
+.zh .chip{font-size:20px}
+.fitz{position:absolute;right:56px;top:68px;width:450px;height:450px;filter:drop-shadow(0 18px 30px rgb(0 0 0/.28))}
+.tag{position:absolute;right:388px;top:96px;transform:rotate(-7deg);background:var(--tag);color:#17231A;border-radius:8px 8px 8px 8px;padding:12px 18px 12px 30px;
+  font:700 21px/1.2 Bricolage;box-shadow:0 10px 24px rgb(0 0 0/.25)}
+.tag::before{content:"";position:absolute;left:11px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:var(--mat);}
+.tag b{color:#2E7A35}
+.zh .tag{font-size:21px}
+</style>
+</head>
+<body>
+<div class="ruler"><span style="left:126px">1</span><span style="left:246px">2</span><span style="left:366px">3</span><span style="left:486px">4</span><span style="left:606px">5</span><span style="left:726px">6</span><span style="left:846px">7</span><span style="left:966px">8</span><span style="left:1086px">9</span></div>
+<div class="copy">
+  <div class="brand"><img src="../mascot/icons/fitz-64.svg" alt=""><span>pickf<span class="i-dot">i</span>t</span></div>
+  <h1 data-en="Every tool,<br><em>tested first.</em>" data-zh="先幫你<em>試過</em><br>推薦的軟體"></h1>
+  <p data-en="Describe the job in one sentence. Get software pickfit has installed and run in a sandbox, with the steps that worked." data-zh="用一句話說你要做什麼。pickfit 只推薦它親自在沙盒裡裝過、跑過的軟體，附上真的可行的步驟。"></p>
+  <div class="seam" data-en="Sandbox-tested|Steps that worked|Hidden gems" data-zh="沙盒實測|可行的步驟|少有人知的好工具"></div>
+</div>
+<div class="tag" data-en="<b>✓</b> Fits your setup" data-zh="<b>✓</b> 合你的環境"></div>
+<img class="fitz" src="../mascot/fitz.svg" alt="">
+<script>
+const zh = new URLSearchParams(location.search).get('lang') === 'zh';
+if (zh) document.body.classList.add('zh');
+document.documentElement.lang = zh ? 'zh-Hant-TW' : 'en';
+for (const el of document.querySelectorAll('[data-en]')) {
+  const text = el.dataset[zh ? 'zh' : 'en'];
+  if (el.classList.contains('seam')) el.innerHTML = text.split('|').map((t) => `<span class="chip">${t}</span>`).join('');
+  else el.innerHTML = text;
+}
+</script>
+</body>
+</html>

@@ -211,9 +211,14 @@ export const script = () => `
     const r = anchor.getBoundingClientRect();
     if (r.bottom + 6 + list.offsetHeight > innerHeight && r.top - 6 - list.offsetHeight > 0) list.classList.add('up');
   };
+  // Scrolls the list only: scrollIntoView and a bare focus() also scroll every clipped ancestor, which slid the whole search card up.
+  const reveal = (list, li) => {
+    if (li.offsetTop < list.scrollTop) list.scrollTop = li.offsetTop;
+    else if (li.offsetTop + li.offsetHeight > list.scrollTop + list.clientHeight) list.scrollTop = li.offsetTop + li.offsetHeight - list.clientHeight;
+  };
   const activate = (list, li) => {
     for (const o of $$('li', list)) o.classList.toggle('active', o === li);
-    if (li) { list.setAttribute('aria-activedescendant', li.id); li.scrollIntoView({ block: 'nearest' }); }
+    if (li) { list.setAttribute('aria-activedescendant', li.id); reveal(list, li); }
   };
   for (const sel of $$('select[data-dropdown]')) {
     const id = 'dd' + ++ddCount;
@@ -256,7 +261,7 @@ export const script = () => `
       btn.setAttribute('aria-expanded', 'true');
       place(list, btn);
       activate(list, opts[sel.selectedIndex] || opts[0]);
-      list.focus();
+      list.focus({ preventScroll: true });
     };
     const close = (refocus) => {
       if (list.hidden) return;
@@ -325,7 +330,7 @@ export const script = () => `
     const close = () => { list.hidden = true; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant'); };
     const mark = (li) => {
       for (const o of items) o.classList.toggle('active', o === li);
-      if (li) { input.setAttribute('aria-activedescendant', li.id); li.scrollIntoView({ block: 'nearest' }); }
+      if (li) { input.setAttribute('aria-activedescendant', li.id); reveal(list, li); }
       else input.removeAttribute('aria-activedescendant');
     };
     const show = () => {

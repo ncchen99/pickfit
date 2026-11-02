@@ -725,6 +725,27 @@ def icon_32(ink=INK, suffix=""):
     write(f"icons/fitz-32{suffix}.svg", doc("0 0 32 32", s, "Fitz icon", "Fitz the tailorbird, 32 px icon."))
 
 
+def favicon():
+    """The browser-tab icon: the 32 px drawing without tuft and tail, cropped to the body so Fitz fills the tab.
+    The outline turns cream when the browser chrome is dark."""
+    s = (
+        f'<style>.o{{stroke:{INK}}}@media (prefers-color-scheme: dark){{.o{{stroke:{BELLY}}}}}</style>'
+        f'<defs><clipPath id="fav"><path d="{I32["body"]}"/></clipPath></defs>'
+        f'<path d="{I32["body"]}" fill="{BODY}"/>'
+        f'<g clip-path="url(#fav)"><path d="{I32["cap"]}" fill="{CAP}"/>'
+        f'<ellipse cx="16" cy="28.5" rx="8" ry="4" fill="{BELLY}"/>'
+        f'<path d="M3 22.2 Q16 26.5 29 22.2" fill="none" stroke="{TAPE}" stroke-width="2.4"/></g>'
+        f'<path d="M19.2 24.5 L19.2 27.6" stroke="{TAPE}" stroke-width="2"/>'
+        f'<path class="o" d="{I32["body"]}" fill="none" stroke-width="1.5"/>'
+        f'<path class="o" d="M7 22.5 Q 8.4 25 7.6 27.4 M25 22.5 Q 23.6 25 24.4 27.4" fill="none" stroke-width="1.2" stroke-linecap="round"/>'
+        f'<ellipse cx="11" cy="19.2" rx="1.5" ry="1.9" fill="{INK}"/><ellipse cx="21" cy="19.2" rx="1.5" ry="1.9" fill="{INK}"/>'
+        f'<circle cx="10.6" cy="18.5" r=".5" fill="{WHITE}"/><circle cx="20.6" cy="18.5" r=".5" fill="{WHITE}"/>'
+        f'<path d="M14.6 20.6 L17.4 20.6 L16 22.4 Z" fill="{BEAK}"/>'
+        f'<path d="M14.6 20.6 L16 19 L17.4 20.6 Z" fill="{BEAK_TOP}"/>'
+    )
+    write("icons/fitz-favicon.svg", doc("3.7 6.2 24.6 24.6", s, "pickfit", "Fitz the tailorbird, browser-tab icon.", size=("32", "32")))
+
+
 def icon_16(ink=INK, suffix=""):
     cid = "i16" + suffix
     # edges sit on half pixels so the 1 px outline lands on whole pixels
@@ -792,4 +813,5 @@ if __name__ == "__main__":
         icon_64(ink, suffix)
         icon_32(ink, suffix)
         icon_16(ink, suffix)
+    favicon()
     mono()

@@ -41,13 +41,10 @@ export function compareTable(entries: Entry[], opts: Opts): string {
     const top = known.reduce((a, b) => ((low ? b[0] < a[0] : b[0] > a[0]) ? b : a));
     return known.filter(([v]) => v === top[0]).length === 1 ? top[1] : -1;
   };
-  /** Rows where every tool says the same thing leave the table for one "same for all" line: only differences compete. */
-  const same: string[] = [];
+  /** A row where every tool says the same thing is one cell across the columns, marked "same for all": only differences compete. */
   const row = (label: string, cells: string[], best = -1) => {
-    if (cols > 1 && cells.every((c) => c === cells[0])) {
-      same.push(`<div><dt>${esc(label)}</dt><dd>${cells[0]}</dd></div>`);
-      return '';
-    }
+    if (cols > 1 && cells.every((c) => c === cells[0]))
+      return `<tr class="same"><th scope="row">${esc(label)}</th><td colspan="${cols}">${cells[0]}<span class="same-tag">${L('Same for all', '都一樣')}</span></td></tr>`;
     return `<tr><th scope="row">${esc(label)}</th>${cells.map((c, i) => `<td>${c}${i === best ? BEST() : ''}</td>`).join('')}</tr>`;
   };
   const group = (label: string) => `<tr class="grp"><th colspan="${cols + 1}" scope="colgroup">${esc(label)}</th></tr>`;
@@ -201,8 +198,7 @@ export function compareTable(entries: Entry[], opts: Opts): string {
   const body = rows.filter(Boolean).filter((r, i, all) => !(r.startsWith('<tr class="grp">') && (i === all.length - 1 || all[i + 1].startsWith('<tr class="grp">'))));
   return (
     `<div class="table-wrap"><table class="dt cmp-table"><caption class="sr">${L('Side-by-side comparison', '並排比較')}</caption>` +
-    `<thead><tr><td></td>${head}</tr></thead><tbody>${body.join('')}</tbody></table></div>` +
-    (same.length ? `<div class="cmp-same"><p class="cmp-same-title">${L('Same for all of them', '都一樣的項目')}</p><dl class="facts-dl">${same.join('')}</dl></div>` : '')
+    `<thead><tr><td></td>${head}</tr></thead><tbody>${body.join('')}</tbody></table></div>`
   );
 }
 

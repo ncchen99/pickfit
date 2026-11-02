@@ -35,6 +35,32 @@ const NAV = (): [Exclude<NavKey, null>, string, string][] => [
 /** The wordmark: Fitz's 32 px icon and the name, with the cap-rufous dot over the i. */
 export const BRAND = `<a class="brand" href="/" translate="no"><img src="${ICON_32}" width="32" height="32" alt=""><span>pickf<span class="i-dot">i</span>t</span></a>`;
 
+/** The tab icon: Fitz without tuft and tail, cropped so the bird fills the tab (brand/mascot/build.py favicon). */
+const FAVICON = `${FITZ_BASE}icons/fitz-favicon.svg`;
+
+/** The site's public address: link previews need absolute image URLs. */
+const SITE = 'https://pickfit.app';
+
+/** Open Graph and Twitter card tags, so a shared link shows the title, description and the share card (brand/og) in the page's language. */
+function shareMeta(input: ShellInput): string {
+  const zh = lang() === 'zh-TW';
+  const image = `${SITE}/assets/og/pickfit-${zh ? 'zh' : 'en'}.png`;
+  const alt = L('pickfit: every tool, tested first. Fitz the tailorbird on a cutting mat.', 'pickfit：先幫你試過推薦的軟體。縫葉鶯 Fitz 站在裁縫切割墊上。');
+  return `<meta property="og:type" content="website">
+<meta property="og:site_name" content="pickfit">
+<meta property="og:locale" content="${zh ? 'zh_TW' : 'en_US'}">
+<meta property="og:title" content="${esc(input.title)}">
+<meta property="og:description" content="${esc(input.description)}">
+<meta property="og:image" content="${image}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="${esc(alt)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${esc(input.title)}">
+<meta name="twitter:description" content="${esc(input.description)}">
+<meta name="twitter:image" content="${image}">`;
+}
+
 /** The other language, on the same page: ?lang= is remembered in a cookie (i18n.ts); the script keeps the page's other query parameters. */
 function langSwitch(): string {
   const [to, tag, text] = lang() === 'zh-TW' ? ['en', 'en', 'English'] : ['zh-TW', 'zh-Hant-TW', '中文'];
@@ -104,7 +130,9 @@ export function renderShell(input: ShellInput): string {
 <meta name="description" content="${esc(input.description)}">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#1D3D2A">
-<link rel="icon" href="${ICON_32}" type="image/svg+xml">
+<link rel="icon" href="${FAVICON}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/og/apple-touch-icon.png">
+${shareMeta(input)}
 <link rel="preload" href="/assets/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${FITZ_BASE}states/fitz-searching.svg" as="image" type="image/svg+xml">
 <style nonce="${nonce}">${CSS}${lang() === 'zh-TW' ? CSS_ZH : ''}</style>
