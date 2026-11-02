@@ -68,11 +68,14 @@ function normalize(value: string | null): Lang | null {
 
 export const langCookie = (language: Lang) => `${LANG_COOKIE}=${language}; Path=/; Max-Age=31536000; SameSite=Lax; Secure`;
 
-/** Keys whose values are commands, names, ids, URLs or values the code compares: never translated. */
+/**
+ * Keys whose values are commands, names, ids, URLs or values the code compares: never translated. Not `check`:
+ * a web app's whole test record is web.check, and an install check's command and signal are kept by their own keys.
+ */
 const KEEP = new Set([
   'slug', 'name', 'repo', 'repo_url', 'homepage', 'url', 'evidence_url', 'command', 'commands', 'launch', 'snippet',
   'json', 'claude_code', 'first_task', 'expected_signal', 'expected_contains', 'observed_excerpt', 'readme_said',
-  'tags', 'kind', 'category', 'level', 'os', 'arch', 'method', 'runner', 'tier', 'screen', 'transport', 'check',
+  'tags', 'kind', 'category', 'level', 'os', 'arch', 'method', 'runner', 'tier', 'screen', 'transport',
   'status', 'failure', 'replay', 'processing', 'pricing', 'license', 'platforms', 'tools', 'called_tool', 'field',
   'value', 'alternatives_to', 'runtimes', 'system_packages', 'clip', 'file', 'raw', 'id', 'run_id', 'browser',
   'third_party_hosts', 'data_sent', 'offline', 'match', 'quality', 'formula_version', 'server_name',

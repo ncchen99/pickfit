@@ -735,7 +735,9 @@ class Watcher:
         deploy = self._publish_fn or publish
         with self._git_lock:
             began = time.monotonic()
-            code = deploy(self.s.data_dir, self.s.worker_dir, out=log)
+            # The real publish also translates the new record's page sentences into zh-TW (pickfit/translate.py).
+            extra = {} if self._publish_fn else {"translate": True}
+            code = deploy(self.s.data_dir, self.s.worker_dir, out=log, **extra)
             took = round(time.monotonic() - began, 1)
         if code != 0:
             for job in jobs:
