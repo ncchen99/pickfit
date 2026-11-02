@@ -244,3 +244,33 @@ def test_a_piece_is_cut_whole_from_its_recording_and_framed(tmp_path: Path):
     assert record.probe_seconds(piece) == pytest.approx(1.5, abs=0.3)
     png = record.png_frame(piece, 0.5)
     assert png.startswith(b"\x89PNG")
+
+
+class FakeVnc:
+    sock = None
+    captures = 0
+
+    def capture(self) -> tuple[int, int, bytes]:
+        FakeVnc.captures += 1
+        shade = FakeVnc.captures * 40 % 256
+        return 64, 48, bytes([shade, 90, 30, 0]) * (64 * 48)
+
+
+@pytest.mark.skipif(FFMPEG is None, reason="needs ffmpeg")
+def test_the_mac_recorder_writes_frames_at_its_rate_and_ends_the_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    import time
+
+    from pickfit.verify import vnc
+
+    monkeypatch.setattr(vnc.VncClient, "from_url", classmethod(lambda cls, url, **kw: FakeVnc()))
+
+    class Box:
+        os, vnc_url, _screen = "macos", "vnc://:pw@127.0.0.1:5900", None
+
+    rec = record.VncRecorder(Box(), tmp_path / "r.mp4")
+    rec.start()
+    time.sleep(2.2)
+    got = rec.stop()
+    assert got.error is None and got.clock == "host" and (got.width, got.height) == (64, 48)
+    assert got.sha256 == record.sha256_file(tmp_path / "r.mp4") and got.seconds == pytest.approx(2.25, abs=0.5)
+    assert rec.frames >= 8 and FakeVnc.captures >= 3

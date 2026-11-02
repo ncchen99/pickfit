@@ -266,7 +266,8 @@ class VncRecorder:
     def _pointer(self) -> tuple[int, int] | None:
         screen = getattr(self.box, "_screen", None)
         client = getattr(screen, "_client", None)
-        return getattr(client, "pointer", None) if client is not None and client.sock is not None else None
+        pointer = getattr(client, "pointer", None) if client is not None and client.sock is not None else None
+        return pointer if pointer and pointer != (0, 0) else None  # (0, 0): pickfit has not moved it yet
 
     def start(self) -> None:
         from pickfit.verify.vnc import VncClient
@@ -323,9 +324,7 @@ class VncRecorder:
         if self._thread is not None:
             self._thread.join(timeout=10)
         try:
-            assert self._proc.stdin is not None
-            self._proc.stdin.close()
-            _, err = self._proc.communicate(timeout=60)
+            _, err = self._proc.communicate(timeout=60)  # closes ffmpeg's stdin: the end of the video
             if self._proc.returncode != 0:
                 raise RuntimeError(f"ffmpeg exited {self._proc.returncode}: {err.decode(errors='replace')[-200:]}")
             self.rec.path, self.rec.sha256 = str(self.host_path), sha256_file(self.host_path)
