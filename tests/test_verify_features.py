@@ -214,6 +214,15 @@ def test_the_tool_is_not_blamed_unless_the_agent_says_so(tmp_path: Path):
     assert (themes.status, themes.failure, themes.reason) == ("test_failed", "sandbox", "needs_service")
 
 
+def test_a_silent_failure_with_reason_other_and_no_note_still_gets_a_note(tmp_path: Path):
+    said = [feature(2, "test_failed", [5], failure=None, reason="other", note="")]
+    silent = {NEON: (1, "", "")}
+    outcome, _ = verify(tmp_path, [*turns(said), *judges()], Boxes(script(**silent), script(**silent)))
+    themes = by_name(outcome.run)["switch color themes"]
+    assert (themes.status, themes.failure, themes.reason) == ("test_failed", "sandbox", "other")
+    assert themes.note
+
+
 def test_a_failure_the_fresh_box_does_not_repeat_is_not_kept(tmp_path: Path):
     fixed = {NEON: (0, "a ──▶ b", "")}
     outcome, lines = verify(tmp_path, [*turns(REPORTED), *judges()], Boxes(script(), script(**fixed)))
@@ -405,10 +414,12 @@ def test_a_failed_gui_operation_says_why_it_stopped_instead_of_other():
     from pickfit.verify.features import resolve_features
     from pickfit.verify.verdict import log_verdict
 
-    def operation(cid: int, feature: int, stop: str, why: str) -> CommandRecord:
+    def operation(cid: int, feature: int, stop: str, why: str, error: str | None = None,
+                  tier: str = "none") -> CommandRecord:
         steps = [{"action": {"kind": "click", "x": 1, "y": 1}}] * 3
         return CommandRecord(turn=cid, tool="operate_gui", command="app", exit_code=1, seconds=1.0, command_id=cid,
                              operate={"spec": {"feature": feature}, "stop": stop, "passed": False, "steps": steps,
+                                      "error": error, "launch": {"tier": tier},
                                       "result": {"passed": False, "why": why}})
 
     log = [CommandRecord(turn=1, tool="run_command", command="pipx install app", exit_code=0, seconds=0.1,
@@ -416,7 +427,14 @@ def test_a_failed_gui_operation_says_why_it_stopped_instead_of_other():
            CommandRecord(turn=2, tool="launch_gui", command="app", exit_code=0, seconds=1.0, command_id=2),
            operation(3, 1, "step_cap", "file ~/pickfit-out/a.png: missing"),
            operation(4, 2, "done", "the screen does not show the expected text"),
-           operation(5, 3, "no_window", "")]
+           operation(5, 3, "no_window", ""),
+           operation(6, 6, "give_up", "no file"),
+           operation(7, 7, "no_window", "box-user processes survived the stop before the launch",
+                     error="box-user processes survived the stop before the launch"),
+           operation(8, 8, "no_window", "this box has no simulated microphone",
+                     error="this box has no simulated microphone"),
+           operation(9, 9, "no_window", "the app showed no window of its own to operate", tier="window"),
+           operation(10, 10, "step_cap", "")]
     finish_args = FinishArgs.model_validate({"level": "install", "steps": [{"command_id": 1, "purpose": "install"}],
                                              "smoke_tests": []})
     verdict = log_verdict(finish_args, log)
@@ -424,14 +442,26 @@ def test_a_failed_gui_operation_says_why_it_stopped_instead_of_other():
               FinishFeature(feature=2, status="not_checked", command_ids=[4], reason="other", note="no result"),
               FinishFeature(feature=3, status="not_checked", command_ids=[], reason="other", note=""),
               FinishFeature(feature=4, status="not_checked", command_ids=[], reason="needs_display", note="portal"),
-              FinishFeature(feature=5, status="not_checked", command_ids=[], reason="other", note="")]
-    resolved = resolve_features(["export", "search", "open", "pick a file", "sync"], claims, verdict, log)
-    assert [f.reason for f in resolved] == ["operator_limit", "check_not_met", "app_error", "needs_desktop", "other"]
+              FinishFeature(feature=5, status="not_checked", command_ids=[], reason="other", note=""),
+              FinishFeature(feature=6, status="not_checked", command_ids=[6], reason="needs_display", note="dialog"),
+              FinishFeature(feature=7, status="not_checked", command_ids=[7], reason="other", note=""),
+              FinishFeature(feature=8, status="not_checked", command_ids=[8], reason="other", note=""),
+              FinishFeature(feature=9, status="not_checked", command_ids=[9], reason="other", note="")]
+    names = ["export", "search", "open", "pick a file", "sync", "save", "start", "dictate", "show", "print"]
+    resolved = resolve_features(names, claims, verdict, log)  # F10: left out of finish
+    assert [f.reason for f in resolved] == [
+        "operator_limit", "check_not_met", "app_error", "needs_desktop", "other",
+        "operator_limit",  # a failed operation's stop comes before turning needs_display into needs_desktop
+        "other", "needs_hardware",  # the harness's own errors never blame the app
+        "other",  # a window showed, but pickfit could not read its screenshot
+        "operator_limit"]  # the agent left it out, pickfit's operation for it ran out of steps
     assert resolved[0].note == ("operation stopped: step_cap after 3 actions; check: file ~/pickfit-out/a.png: "
                                 "missing; save dialog")
     assert resolved[2].note.startswith("operation stopped: no_window after 3 actions")
     assert resolved[4].note == "the agent named no cause"
     assert "reason other needs a note" in resolved[4].problems[-1]
+    assert "survived the stop" in resolved[6].note
+    assert resolved[9].note == "operation stopped: step_cap after 3 actions"
 
 
 def test_reason_other_needs_a_note():

@@ -68,9 +68,14 @@ The app's own log already showed some causes and was never kept on its own. port
    - `resolve_features` derives the first three from pickfit's own record of how the operation stopped (`step_cap`
      and `give_up` → `operator_limit`, `done` → `check_not_met`, `no_window` → `app_error`). It does this when
      every operation for a feature failed and the agent's reason is vague (`other`, `not_attempted`,
-     `needs_display` or none). The note starts with what the harness saw, e.g. "operation stopped: step_cap after
-     27 actions; check: file ~/pickfit-out/a.png: missing; <agent's note>".
-   - `needs_display` in a box that launched a GUI becomes `needs_desktop`.
+     `needs_display` or none, including a feature the agent left out of finish). The note starts with what the
+     harness saw, e.g. "operation stopped: step_cap after 27 actions; check: file ~/pickfit-out/a.png: missing;
+     <agent's note>".
+   - `no_window` is `app_error` only when the harness had no error of its own:
+     - box-user processes it could not stop: the reason stays `other`, with the error in the note;
+     - no simulated microphone: `needs_hardware`;
+     - a window whose screenshot pickfit could not read: the reason stays `other`.
+   - `needs_display` left after that, in a box that launched a GUI, becomes `needs_desktop`.
    - The finish tool names `needs_desktop` and says that a failed `operate_gui` is reported `not_checked`, citing
      its command id.
    - Also updated: the Worker texts (`features.ts`; an unknown reason already falls back to `other`), the
@@ -83,8 +88,9 @@ The app's own log already showed some causes and was never kept on its own. port
    - The operator's screenshots of every step, failed operations included, were already saved in the evidence
      directory.
 4. **Reason `other` needs a note.**
-   - The schema refuses `other` without one, and `resolve_features` writes "the agent named no cause" with a
-     problem when the agent gave none.
+   - The schema refuses `other` without one, whatever the status.
+   - `resolve_features` writes "the agent named no cause" with a problem when the agent gave none (any status).
+   - Coverage falls back to "no cause recorded" for a failed check that printed nothing.
    - Every existing record complies (no `other` without a note); the index builds 961 entries.
 
 Tests: Python 1,549 passed; Worker 248 passed; the TypeScript check is clean.
