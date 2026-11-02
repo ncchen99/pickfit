@@ -64,11 +64,13 @@ pickfit 在隔離的環境裡驗證：Linux 用 Modal 的沙盒（gVisor；網�
   |---|---|---|
   | 沒有試（那次只跑到安裝） | 169 | 17 |
   | 環境：缺背景服務或桌面元件、缺硬體或 GPU、畫面、資源不夠 | 63 | 21 |
-  | 操作的 agent 步數用完或繞圈 | 13 | 2 |
+  | 操作的 agent 步數用完或繞圈（註記裡有寫到的） | 13 | 2 |
   | 需要帳號 | 13 | 3 |
   | 其他或原因不明 | 32 | 28 |
 
   最多的是根本沒試，這要多跑操作，不用換硬體。試了沒過的裡面，環境是最大的原因；其中真的缺硬體的（`needs_hardware`、`needs_gpu`）Linux 18、Mac 3，其餘多是缺背景服務、桌面元件或資源。
+
+  「步數用完」這一列偏低：它來自 agent 寫的註記，但每次操作停在哪裡是 pickfit 自己記的。依現場紀錄（`~/.pickfit/evidence`，Linux 與 Mac 共 117 次 GUI 操作），59 次跑到 28 步的上限（其中 12 次在最後一步才通過），44 次自己說完成；通過的 36 次中位數用 14 步。停在上限的功能，原因常被記成 `other`，註記也不一定寫到。所以每個功能的原因之後改用 pickfit 記錄的停止原因，不再只靠註記。
 - **研究上的做法**：電腦操作 agent 的基準（[OSWorld](https://api.emergentmind.com/topics/osworld-and-windowsagentarena)、Windows Agent Arena、macOSWorld、[MacArena](https://huggingface.co/papers/2606.06560.md)）也都跑在 VM 裡，接受同樣的限制；GPU、麥克風、攝影機都要真的，通常要靠真機。
 - **之後的方向**（賽後；比賽期間沒有做）：
   - Linux：改用有 NVIDIA GPU 的完整雲端 VM（例如 AWS G5/G6），裝真正的桌面（視窗管理員、檔案對話框、預設程式、PipeWire），用 [Amazon DCV](https://docs.aws.amazon.com/dcv/latest/adminguide/servers.html) 的虛擬螢幕（最高 4K），畫面改成 1920×1080。完整 VM 能裝虛擬攝影機與麥克風的驅動；每次檢查從快照重開，OSWorld 也是這樣做。
