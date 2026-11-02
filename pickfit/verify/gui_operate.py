@@ -455,10 +455,12 @@ def effect_problems(args: OperateArgs) -> list[str]:
                         "or copying it shows nothing. Expect what the app makes from the input (a value it computes or converts, text "
                         "of an input file it opens or finds), or, when keeping what is typed is the feature, a "
                         "file the app saves (effect_kind stored)")
-    inputs = " ".join(_norm(i.text or "") for i in args.inputs)
+    # An input file's text, or its name: an app that opens, imports or finds a file shows one or the other.
+    inputs = " ".join([*(_norm(i.text or "") for i in args.inputs), *(i.path.rstrip("/").rsplit("/", 1)[-1]
+                                                                       for i in args.inputs)])
     if check.effect_kind == "loaded" and not any(_norm(c) in inputs for c in check.contains):
-        problems.append("effect_kind loaded: expect text that is in an input file (e.g. {nonce} in its text), which "
-                        "the app shows or finds once it opens the file")
+        problems.append("effect_kind loaded: expect text that is in an input file (e.g. {nonce} in its text) or its "
+                        "file name, which the app shows or finds once it opens or imports the file")
     if check.effect_kind == "converted_file" and (check.kind != "file" or check.format is None):
         problems.append("effect_kind converted_file: a file check with the format the app converts to")
     if check.kind == "file" and check.contains:

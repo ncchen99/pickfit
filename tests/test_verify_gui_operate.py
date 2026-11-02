@@ -210,6 +210,11 @@ def test_a_check_must_name_the_features_effect_and_prove_more_than_the_text_type
     assert op.spec_problems(found) == []
     assert "is in an input file" in op.spec_problems(operate_args(
         goal="Open the sample.", check={**typed_path, "contains": ["lost"]}))[0]
+    # A library that imports a folder lists the image's file name: that is loaded too (the name is not in the goal).
+    listed = operate_args(goal="Add ~/pickfit-in/walls as an image library and wait for it to load.",
+                          check={**typed_path, "contains": ["photo.png"]},
+                          inputs=[{"path": "~/pickfit-in/walls/photo.png", "text": None, "sample": "png"}])
+    assert op.spec_problems(listed) == []
     assert "a file check with the format" in op.spec_problems(operate_args(
         check={**FILE_CHECK, "effect_kind": "converted_file", "format": None, "contains": ["x"]}))[0]
     for path, fmt in (("~/pickfit-out/book.epub", None), ("~/pickfit-out/out.pdf", "pdf"), ("~/pickfit-out/a", "zip")):
