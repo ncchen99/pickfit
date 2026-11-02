@@ -41,6 +41,49 @@
     "generate tokens via speculative decoding"
   ],
   "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-02T13:14:09.357792Z",
+    "run_id": "verify-mini-infer-20261031-035325-da8c",
+    "open_hint": "Run `mini-infer info` to see the tool's details and available commands.",
+    "features": [
+      {
+        "feature": "run continuous-batching LLM inference",
+        "title": "Run LLM inference with continuous batching",
+        "steps": [
+          "In Python, build an `InferenceEngine` from `mini_infer.engine` with a Qwen2 model and its config.",
+          "Queue prompts with `engine.add_request(prompt_token_ids=<tokens>, max_tokens=<n>)`.",
+          "Call `engine.step()` repeatedly until each request has its output tokens."
+        ]
+      },
+      {
+        "feature": "manage KV cache with paged blocks",
+        "title": "Manage the KV cache in paged blocks",
+        "steps": [
+          "Create an `InferenceEngine` with `num_blocks=<n>` and `block_size=<size>`.",
+          "Check free blocks with `engine.block_pool.num_free` and a request's blocks with `seq.block_table.physical_block_ids`."
+        ]
+      },
+      {
+        "feature": "reuse shared prompt prefixes via caching",
+        "title": "Reuse shared prompt prefixes with a cache",
+        "steps": [
+          "Create a `PrefixCache` and a `BlockPool` from `mini_infer.cache`.",
+          "Store a prefix with `insert_prefix_block(<tokens>, <block>, <pool>)`.",
+          "Look up a new prompt with `match_prefix(<tokens>, <pool>)` to get the cached blocks."
+        ]
+      },
+      {
+        "feature": "generate tokens via speculative decoding",
+        "title": "Generate tokens with speculative decoding",
+        "steps": [
+          "Load a target model and a smaller draft model.",
+          "Call `speculative_step(target_model=<model>, draft_model=<draft>, prefix_ids=<tokens>, k_draft=<k>)` from `mini_infer.speculative.verifier`.",
+          "Read the new tokens and the number of accepted draft tokens it returns."
+        ]
+      }
+    ]
+  },
   "homepage": "https://prajwal7-2002.github.io/mini-infer/",
   "repo": {
     "url": "https://github.com/Prajwal7-2002/mini-infer",

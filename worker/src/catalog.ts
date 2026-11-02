@@ -13,8 +13,17 @@ export interface RunVideo {
   recorded_at: string;
   /** The run's checked features the clip shows. */
   features: string[];
-  /** The unedited recordings the clip was cut from. */
-  raw: { file: string; sha256: string; seconds: number }[];
+  /** The unedited recordings the clip was cut from; feature_index: which of `features` each one shows (older indexes lack it). */
+  raw: { file: string; sha256: string; seconds: number; feature_index?: number | null }[];
+  /** The clip's segments in time order, covering it from 0 s: an opening card, one per feature, a closing card (feature null on both cards). */
+  chapters?: VideoChapter[] | null;
+}
+
+export interface VideoChapter {
+  start_s: number;
+  title: string;
+  /** Exactly one of the clip's `features`; null for the opening and closing cards. */
+  feature: string | null;
 }
 
 export interface RunSummary {
@@ -170,11 +179,29 @@ export interface WebApp {
   check: WebCheck | null;
 }
 
+/** One advertised feature in plain words, with steps only when the guide's run checked it. */
+export interface FeatureGuide {
+  feature: string;
+  title: string;
+  steps: string[];
+}
+
+/** Reader-facing text a model wrote from the record and its run (pickfit/usage_guide.py); model names who wrote it. */
+export interface UsageGuide {
+  model: string;
+  generated_at: string;
+  run_id: string | null;
+  open_hint: string | null;
+  features: FeatureGuide[];
+}
+
 export interface Entry {
   slug: string;
   name: string;
   summary: string;
   why_worth_it: string | null;
+  /** Plain feature titles and how-to steps for the tool page; older indexes lack it. */
+  usage_guide?: UsageGuide | null;
   category: 'dev_cli' | 'local_ai' | 'mcp_server' | 'other';
   kind: string;
   maturity: string | null;

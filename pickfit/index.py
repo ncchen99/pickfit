@@ -35,6 +35,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from pickfit.schema import SCHEMA_VERSION, SoftwareRecord, VerificationRun, is_passed
+from pickfit.usage_guide import shown_guide
 
 INDEX_VERSION = "pickfit-index.v1"
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -144,8 +145,22 @@ def _video(run: VerificationRun) -> dict[str, Any] | None:
     v = run.video
     if v is None:
         return None
-    return {"clip": v.clip, "clip_sha256": v.clip_sha256, "seconds": v.seconds, "recorded_at": _iso(v.recorded_at),
-            "features": list(v.features), "raw": [{"file": r.file, "sha256": r.sha256, "seconds": r.seconds} for r in v.raw]}
+    out = {"clip": v.clip, "clip_sha256": v.clip_sha256, "seconds": v.seconds, "recorded_at": _iso(v.recorded_at),
+           "features": list(v.features),
+           "raw": [{"file": r.file, "sha256": r.sha256, "seconds": r.seconds,
+                    "feature_index": _raw_feature_index(run, list(v.features), r.smoke_test)} for r in v.raw]}
+    # Chapters (start_s, title, feature) come from the video step; passed through as they are.
+    chapters = getattr(v, "chapters", None)
+    if chapters:
+        out["chapters"] = [c if isinstance(c, dict) else c.model_dump(mode="json") for c in chapters]
+    return out
+
+
+def _raw_feature_index(run: VerificationRun, features: list[str], smoke_test: int) -> int | None:
+    """Which of the clip's features a raw recording shows (an index, so a translated page still matches it):
+    the checked feature whose passed check is that smoke test."""
+    name = next((f.feature for f in run.features if f.status == "checked" and smoke_test in f.smoke_tests), None)
+    return features.index(name) if name in features else None
 
 
 def _run_summary(run: VerificationRun) -> dict[str, Any]:
@@ -223,6 +238,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
         "name": record.name,
         "summary": record.summary,
         "why_worth_it": record.why_worth_it,
+        "usage_guide": shown_guide(record),
         "category": record.category,
         "kind": record.kind,
         "maturity": record.maturity,

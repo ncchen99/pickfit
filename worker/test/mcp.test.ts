@@ -185,6 +185,26 @@ test('modern clients: the model path end to end, then the install guide', async 
   assert.equal(rows[2].reporter, 'dev');
 });
 
+test('a record with a usage guide still passes find_software and get_install_guide output schemas', async () => {
+  const { call } = setup();
+  const headers = { 'mcp-protocol-version': '2025-11-25' };
+  const guide = await message(
+    await call(
+      rpc(
+        { jsonrpc: '2.0', id: 30, method: 'tools/call', params: { name: 'get_install_guide', arguments: { slug: 'fixture-llm-runner', os: 'linux' } } },
+        headers,
+      ),
+    ),
+  );
+  assert.ok(!guide.result.isError, JSON.stringify(guide.result).slice(0, 300));
+  assert.equal(guide.result.structuredContent.slug, 'fixture-llm-runner');
+  const found = await message(
+    await call(rpc({ jsonrpc: '2.0', id: 31, method: 'tools/call', params: { name: 'find_software', arguments: ARGS } }, headers)),
+  );
+  assert.ok(!found.result.isError, JSON.stringify(found.result).slice(0, 300));
+  assert.ok(found.result.structuredContent.picks.some((p: any) => p.slug === 'fixture-llm-runner'));
+});
+
 test('bad input and unknown slugs come back as tool errors', async () => {
   const { call } = setup();
   const headers = { 'mcp-protocol-version': '2025-11-25' };

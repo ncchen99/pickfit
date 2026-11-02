@@ -289,6 +289,41 @@
       ],
       "type": "string"
     },
+    "FeatureGuide": {
+      "additionalProperties": false,
+      "description": "One advertised feature as a person reads it: a plain title, and for a feature a run checked, how to use it.",
+      "properties": {
+        "feature": {
+          "description": "The feature exactly as in features.",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "steps": {
+          "default": [],
+          "description": "How to use it, from what the run did; only for a feature run_id checked, else empty.",
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4,
+          "type": "array"
+        },
+        "title": {
+          "description": "The feature in plain words, sentence case.",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "feature",
+        "title"
+      ],
+      "title": "FeatureGuide",
+      "type": "object"
+    },
     "FeatureStatus": {
       "enum": [
         "checked",
@@ -2069,6 +2104,61 @@
       ],
       "type": "string"
     },
+    "UsageGuide": {
+      "additionalProperties": false,
+      "description": "Reader-facing text written by a model from the record and the run behind its checked features\n(pickfit/usage_guide.py). It adds words, never claims: a feature gets steps only when run_id checked it.",
+      "properties": {
+        "features": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/FeatureGuide"
+          },
+          "maxItems": 4,
+          "type": "array"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "model": {
+          "description": "The model that wrote this text.",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "open_hint": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How to start it once installed, in plain words (GUI apps: where it appears)."
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RunId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The passed run the steps rest on; null when no run checked a feature."
+        }
+      },
+      "required": [
+        "model",
+        "generated_at",
+        "run_id"
+      ],
+      "title": "UsageGuide",
+      "type": "object"
+    },
     "Verification": {
       "additionalProperties": false,
       "description": "Summary over runs; keeps only the latest run per OS, arch and method.\n\nOlder runs live in git history. Write-back never replaces a passed run with one\nthat did not pass, and writes a failure only on an OS with no passed run.",
@@ -2913,6 +3003,18 @@
     "updated_at": {
       "format": "date-time",
       "type": "string"
+    },
+    "usage_guide": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/UsageGuide"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Plain feature titles and how-to steps for the tool page; generated text, see usage_guide.model."
     },
     "use_cases": {
       "default": [],
