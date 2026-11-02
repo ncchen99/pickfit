@@ -103,6 +103,9 @@ MAX_EFFORT_MODELS = {"muse-spark-1.3", "muse-wonder-1.0"}
 # Worst-case estimate knobs (used only to reserve budget before sending).
 BYTES_PER_TOKEN = 3  # UTF-8 JSON bytes per token; low on purpose so estimates run high
 IMAGE_TOKENS = 3_000  # a ~1280px image is about 1,300-1,500 tokens
+# A video: Muse Spark Open on Modal samples 2 frames a second at ~124 tokens each (probe 11/2); pickfit's screen
+# recordings stop at 15 minutes (record.MAX_SECONDS), so this is their worst case.
+VIDEO_TOKENS = 230_000
 UNKNOWN_CONTEXT_TOKENS = 32_000  # previous_response_id with no tokens in the ledger
 WEB_SEARCHES_PER_CALL = 3  # default max_tool_calls when web_search is on (meta-usage-design)
 TOKENS_PER_WEB_SEARCH = 5_000
@@ -273,21 +276,27 @@ def _has_web_search(body: dict[str, Any]) -> bool:
 
 
 def estimate_input_tokens(body: dict[str, Any]) -> int:
-    """Rough upper estimate from request size; each image counts as IMAGE_TOKENS.
+    """Rough upper estimate from request size; each image counts as IMAGE_TOKENS, each video as VIDEO_TOKENS.
 
     An image is an `image_url` / `input_image` part (inline data, https URL or file_id)
-    or any other inline `data:image/` string.
+    or any other inline `data:image/` string; a video a `video_url` / `input_video` part or a `data:video/` string.
     """
-    images = 0
+    images = videos = 0
 
     def strip_images(value: Any) -> Any:
-        nonlocal images
+        nonlocal images, videos
         if isinstance(value, str) and value.startswith("data:image/"):
             images += 1
+            return ""
+        if isinstance(value, str) and value.startswith("data:video/"):
+            videos += 1
             return ""
         if isinstance(value, dict):
             if value.get("type") in ("image_url", "input_image"):
                 images += 1
+                return {}
+            if value.get("type") in ("video_url", "input_video"):
+                videos += 1
                 return {}
             return {k: strip_images(v) for k, v in value.items()}
         if isinstance(value, list):
@@ -295,7 +304,7 @@ def estimate_input_tokens(body: dict[str, Any]) -> int:
         return value
 
     size = len(json.dumps(strip_images(body), ensure_ascii=False).encode("utf-8"))
-    return size // BYTES_PER_TOKEN + 1 + images * IMAGE_TOKENS
+    return size // BYTES_PER_TOKEN + 1 + images * IMAGE_TOKENS + videos * VIDEO_TOKENS
 
 
 def estimate_cost(price: Price, request: dict[str, Any], max_output_tokens: int,

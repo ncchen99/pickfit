@@ -49,7 +49,7 @@ from pickfit.env import get_env
 from pickfit.ledger import BudgetExceeded
 from pickfit.meta import call_meta, resolve_model
 from pickfit.schema import meta_strict_schema
-from pickfit.verify import gui
+from pickfit.verify import gui, record
 from pickfit.verify.box import BOX_HOME, ExecResult
 
 if TYPE_CHECKING:
@@ -166,6 +166,7 @@ try:
     if not our_server():
         raise RuntimeError("pickfit's X server is not running")
     kind = ACT["kind"]
+    out["t0"] = time.time()  # the box's clock, which its screen recording uses (record.py)
     if kind == "click":
         xdo("mousemove", "--sync", ACT["x"], ACT["y"], "click", "--repeat", ACT.get("count", 1), "--delay", 90, 1)
     elif kind == "type":
@@ -195,6 +196,7 @@ try:
         out["clipboard"] = __import__("base64").b64encode(done.stdout[:ACT["max"]]).decode() if done.returncode == 0 else None
     else:
         raise RuntimeError("unknown action " + repr(kind))
+    out["t1"] = time.time()
     if not our_server():  # a server the app started after killing ours could have shown anything
         raise RuntimeError("pickfit's X server was gone after the action")
     out["ok"] = True
@@ -236,6 +238,7 @@ class XvfbDisplay:
         if not box.display or not xvfb_pid:
             raise ValueError("operating a GUI app needs a box with pickfit's display")
         self.box, self.tag, self.xvfb_pid, self.shots = box, tag, int(xvfb_pid), 0
+        self.acted: list[float] | None = None  # when the last input ran, in the box's clock (Step.at)
 
     def _do(self, act: dict[str, Any], timeout_s: int = 60) -> dict[str, Any]:
         nonce = secrets.token_hex(12)
@@ -247,6 +250,8 @@ class XvfbDisplay:
                                f"{done.stderr.strip()[-200:]}")
         if not report.get("ok"):
             raise DisplayError(f"{act['kind']} failed: {report.get('error')}")
+        if act["kind"] in ("click", "type", "key", "scroll") and report.get("t0") and report.get("t1"):
+            self.acted = [round(float(report["t0"]), 3), round(float(report["t1"]), 3)]
         return report
 
     def screenshot(self) -> bytes:
@@ -874,6 +879,7 @@ class Step:
     observation: str = ""  # the operator's words: data, never a result
     why: str = ""
     refused: str | None = None  # why pickfit did not perform the answer
+    at: list[float] | None = None  # when the action ran, [start, end], in its recording's clock (record.py)
 
 
 @dataclass
@@ -897,6 +903,7 @@ class Operation:
     launch: dict[str, Any] | None = None  # gui.GuiLaunch of the app's start
     screenshot: str | None = None  # the launch's window screenshot (the GUI judge reads it)
     first: Operation | None = None  # replay: the recorded actions' attempt, when the loop ran after it
+    video: dict[str, Any] | None = None  # the screen recording of this operation (record.Recording), if any
 
     def actions(self) -> list[dict[str, Any]]:
         """What pickfit performed, typed text with the nonce put back as {nonce} (what a replay reruns)."""
@@ -962,6 +969,21 @@ def circling(steps: list[Step]) -> str | None:
                     "in circles. That control does not lead to the goal here: use a different control or path "
                     "(another button, tab, menu, a keyboard shortcut, or Escape and start over), or give_up.")
     return None
+
+
+def timed_perform(display: Display, act: dict[str, Any], sleep: Callable[[float], None] = time.sleep
+                  ) -> list[float] | None:
+    """perform, and when it ran in the clock of the display's recording: the display's own stamps where it keeps
+    them (XvfbDisplay: the box's clock; None for a wait, which never reaches the box), else the host's (a VNC
+    display, recorded on the host)."""
+    own = hasattr(display, "acted")
+    if own:
+        display.acted = None  # type: ignore[attr-defined]
+    began = time.time()
+    perform(display, act, sleep)
+    if own:
+        return getattr(display, "acted", None)
+    return [round(began, 3), round(time.time(), 3)]
 
 
 def _operator_turn(goal: str, steps: list[Step], step_no: int, max_steps: int, note: str | None,
@@ -1060,7 +1082,7 @@ def operate(display: Display, goal: str, *, model: str | None = None, max_steps:
         if act["kind"] in ("done", "give_up"):
             return steps, act["kind"], cost, None
         try:
-            perform(display, act, sleep)
+            step.at = timed_perform(display, act, sleep)
         except DisplayError as err:
             return steps, "error", cost, str(err)
         png, previous = None, png
@@ -1081,11 +1103,12 @@ def replay_actions(display: Display, actions: list[dict[str, Any]], nonce: str, 
             png = display.screenshot()
         except DisplayError as err:
             return steps, "error", str(err)
-        steps.append(Step(screenshot=save(i, png), sha256=hashlib.sha256(png).hexdigest(),
-                          changed=changed(previous, png), action=act))
+        step = Step(screenshot=save(i, png), sha256=hashlib.sha256(png).hexdigest(), changed=changed(previous, png),
+                    action=act)
+        steps.append(step)
         previous = png
         try:
-            perform(display, act, sleep)
+            step.at = timed_perform(display, act, sleep)
         except DisplayError as err:
             return steps, "error", str(err)
     return steps, "replayed", None
@@ -1290,6 +1313,9 @@ def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[
     target = home_path(args.check.path, home) if args.check.kind == "file" and args.check.path else None
     before = file_probe(box, {"mode": "before", "target": target or home + "/"})
     since = float(before.get("now") or 0.0)
+    recorder = record.for_box(box, tag, evidence_dir)  # from before the app starts until the check has looked
+    if recorder is not None:
+        recorder.start()
     opened = (gui_mac.open_app if mac else gui.open_app)(box, args.command, tag, args.wait_s, timeout_s=timeout_s)
     shown = opened.shown
     first_png: bytes | None = None
@@ -1331,6 +1357,9 @@ def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[
         elif kind == "screen_text":
             op.result = check_screen(last_png, args.check, nonce, op.typed(), read_screen, before=first_png)
             op.cost_usd += float(op.result.pop("cost_usd", 0.0) or 0.0)
+    if recorder is not None:
+        op.video = recorder.stop().to_dict()
+        log(f"    recording · {op.video['error'] or op.video['path']}")
     png, survived = (gui_mac.close_app if mac else gui.close_app)(box, opened, tag)
     if survived:
         op.error = "; ".join(filter(None, [op.error, "box-user processes survived the stop"]))

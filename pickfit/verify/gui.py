@@ -62,8 +62,9 @@ APP_LOG_DIR = f"{BOX_HOME}/.pickfit-gui"
 # (chromium brings GTK, NSS, GBM and ALSA). Installed on top of sandbox.Dockerfile.
 # python3-tk brings Debian's own /usr/bin/python3 with tkinter: the image's python3.12 has none.
 # xdotool and xclip: the display uid's hands (XTEST input) and its reading of the clipboard (gui_operate.py).
+# ffmpeg: the display uid's screen recording of an operation (record.py).
 GUI_PACKAGES = ("xvfb", "x11-utils", "x11-apps", "xrestop", "imagemagick", "chromium",
-                "libwebkit2gtk-4.1-0", "fonts-dejavu-core", "python3-tk", "python3-venv", "xdotool", "xclip")
+                "libwebkit2gtk-4.1-0", "fonts-dejavu-core", "python3-tk", "python3-venv", "xdotool", "xclip", "ffmpeg")
 TIERS = ("none", "process_alive", "window", "ui_rendered", "action_checked")
 WAIT_MAX_S = 60
 SETTLE_S = 6  # after the first window, so a page that loads after the window shows still renders
