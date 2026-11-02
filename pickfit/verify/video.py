@@ -70,6 +70,11 @@ MIN_SEGMENT_S, MAX_CLIP_S = 1.5, 90.0
 CAPTION_MAX = 90
 BUCKET = "pickfit-videos"  # R2, served by the Worker; keys <slug>/<file>
 POSTER_WIDTH, POSTER_BEFORE_END_S = 1280, 0.5
+# Chapters: where the pieces of a clip meet, the label bar changes (each segment's label names its own span of the raw
+# file, a card has none): a frame with this many label pixels changed starts a piece. A piece runs a frame or two
+# longer than its nominal length (11/2: up to 1.3 s over a clip), so chapters take the measured starts.
+BOUNDARY_PIXELS, PIECE_DRIFT_S = 100, 0.3
+FIRST_CHAPTER, LAST_CHAPTER = "Recorded by pickfit", "Unedited recordings"
 BACKGROUND = (15, 17, 21)
 _TOKENS = re.compile(r"\"([^\"]{1,60})\"|'([^']{1,60})'|“([^”]{1,60})”|(\b[\w.:/-]*\d[\w.:/-]*\b)")
 
@@ -929,6 +934,58 @@ def render_card(png: Path, seconds: float, out: Path) -> None:
                  "-c:v", "libx264", "-preset", "medium", "-crf", "23", "-tune", "stillimage", out.as_posix()])
 
 
+def boundaries(clip: Path) -> list[float]:
+    """Where the clip's pieces meet, seconds: the frames whose label bar changed from the frame before."""
+    from PIL import Image, ImageChops
+
+    done = subprocess.run([_ffmpeg(), "-v", "error", "-i", str(clip), "-vf", f"crop={W}:{TOP}:0:0,format=gray",
+                           "-f", "rawvideo", "-"], capture_output=True, timeout=600)
+    if done.returncode != 0:
+        raise RuntimeError(f"ffmpeg failed: {done.stderr.decode(errors='replace')[-300:]}")
+    size = W * TOP
+    bars = [Image.frombytes("L", (W, TOP), done.stdout[i:i + size]) for i in range(0, len(done.stdout) - size + 1, size)]
+    found: list[float] = []
+    for i in range(1, len(bars)):
+        changed = ImageChops.difference(bars[i - 1], bars[i]).point(lambda v: 255 if v > CHANGE_PIXEL else 0)
+        if changed.histogram()[255] >= BOUNDARY_PIXELS and (not found or i / FPS - found[-1] > 0.5):
+            found.append(round(i / FPS, 3))
+    return found
+
+
+def piece_starts(nominal: list[float], found: list[float]) -> list[float]:
+    """The pieces' starts as the clip has them: the boundaries found, one for each nominal start after the first, none
+    further from it than the pieces before could have drifted."""
+    if len(found) != len(nominal) - 1:
+        raise ValueError(f"the clip has {len(found) + 1} pieces, its cuts {len(nominal)}")
+    for k, (want, got) in enumerate(zip(nominal[1:], found), start=1):
+        if not want - PIECE_DRIFT_S <= got <= want + PIECE_DRIFT_S * k:
+            raise ValueError(f"piece {k + 1} starts at {got:.2f} s, its cuts say {want:.2f} s")
+    return [0.0, *found]
+
+
+def chapters_of(features: list[str], starts: list[float]) -> list[dict[str, Any]]:
+    """Chapters from the pieces' starts (the first card, each segment's feature, the last card): the cards, and one for
+    each run of segments of one feature."""
+    chapters: list[dict[str, Any]] = [{"start_s": 0.0, "title": FIRST_CHAPTER, "feature": None}]
+    for feature, start in zip(features, starts[1:-1]):
+        if feature != chapters[-1]["feature"]:
+            chapters.append({"start_s": round(start, 2), "title": (feature[:1].upper() + feature[1:])[:80],
+                             "feature": feature})
+    return [*chapters, {"start_s": round(starts[-1], 2), "title": LAST_CHAPTER, "feature": None}]
+
+
+def clip_chapters(clip: ClipResult, passed_only: bool = False, videos: Path | None = None) -> list[dict[str, Any]]:
+    """A rendered clip's chapters from its saved cuts and the piece boundaries in the file (no model, no render)."""
+    refused = {c["raw"] for c, row in zip(clip.cuts, clip.review) if not row.get("ok", True)}
+    cuts = [c for c in clip.cuts if not passed_only or c["raw"] not in refused]
+    nominal = [0.0, CARD_S]
+    for c in cuts:
+        nominal.append(nominal[-1] + (c["end"] - c["start"]) / (2 if c.get("faster") else 1))
+    name = clip.passed_only["clip"] if passed_only and clip.passed_only else clip.clip
+    starts = piece_starts(nominal, boundaries((videos or videos_dir()) / clip.slug / name))
+    return chapters_of([c["feature"] for c in cuts], starts)
+
+
 def concat(pieces: list[Path], out: Path, comment: str = "") -> None:
     listing = out.with_suffix(".txt")
     listing.write_text("".join(f"file '{p.as_posix()}'\n" for p in pieces), encoding="utf-8")
@@ -952,6 +1009,7 @@ class ClipResult:
     events: list[dict[str, Any]] = field(default_factory=list)  # each recording's events, as the model saw them
     crops: list[list[int] | None] = field(default_factory=list)  # the part of each recording the clip shows
     passed_only: dict[str, Any] | None = None  # a clip of only the recordings whose segments all passed the review
+    chapters: list[dict[str, Any]] = field(default_factory=list)  # RunVideo.chapters (the passed-only cut: its own)
     bridged: list[str] = field(default_factory=list)  # actions pickfit put back from cut gaps, or named
     dropped: list[str] = field(default_factory=list)
     review: list[dict[str, Any]] = field(default_factory=list)
@@ -967,6 +1025,14 @@ class ClipResult:
         return bool(self.flags)
 
 
+def save_clip(out: ClipResult, path: Path) -> None:
+    """The clip's result as clip.json beside the recording, and as <clip>.json beside the clip."""
+    text = json.dumps(asdict(out) | {"flagged": out.flagged}, ensure_ascii=False, indent=1)
+    path.write_text(text, encoding="utf-8")
+    if out.clip:
+        (videos_dir() / out.slug / out.clip).with_suffix(".json").write_text(text, encoding="utf-8")
+
+
 def make_clip(video_dir: Path, *, data_dir: Path = DATA_DIR, reuse_edit: bool = False, log: Any = print
               ) -> ClipResult:
     """Edit, review and render the clip of a recorded replay (record_run's directory); the result is saved beside
@@ -977,11 +1043,7 @@ def make_clip(video_dir: Path, *, data_dir: Path = DATA_DIR, reuse_edit: bool = 
         earlier = {a["raw"]: a for a in json.loads((video_dir / "clip.json").read_text(encoding="utf-8"))["answers"]}
     out = _make_clip(video_dir, data_dir, log, earlier)
     out.cost_usd = round(out.cost_usd, 6)
-    (video_dir / "clip.json").write_text(json.dumps(asdict(out) | {"flagged": out.flagged}, ensure_ascii=False,
-                                                    indent=1), encoding="utf-8")
-    if out.clip:
-        (videos_dir() / out.slug / out.clip).with_suffix(".json").write_text(
-            json.dumps(asdict(out) | {"flagged": out.flagged}, ensure_ascii=False, indent=1), encoding="utf-8")
+    save_clip(out, video_dir / "clip.json")
     log(f"clip {out.clip or '-'} · {out.seconds:.0f}s · ${out.cost_usd:.4f}"
         + (f" · FLAGGED: {'; '.join(out.flags)}" if out.flags else ""))
     for d in out.dropped:
@@ -1121,7 +1183,8 @@ def _make_clip(video_dir: Path, data_dir: Path, log: Any, earlier: dict[str, Any
         common = dict(name=rec.name, date=date, os=meta["os"], run=run.id, recording_run=video_dir.name, raws=raws,
                       crops=crops, screen=screen, work=work)
         out.clip = f"{stem}{'.flagged' if out.flags else ''}.mp4"
-        out.seconds = render_clip(cuts, out.raw, dest / out.clip, **common)
+        out.seconds, out.chapters, problem = render_clip(cuts, out.raw, dest / out.clip, **common)
+        out.flags += [problem] if problem else []
         out.clip_sha256 = recording.sha256_file(dest / out.clip)
         out.features = list(dict.fromkeys(c.feature for c in cuts))
         # A recording whose segments all passed the review stands on its own: one clip of only those, for a person
@@ -1131,16 +1194,18 @@ def _make_clip(video_dir: Path, data_dir: Path, log: Any, earlier: dict[str, Any
         if refused and kept and not [f for f in out.flags if not f.startswith("segment ")]:
             left = [out.raw[k]["feature"] for k in sorted(refused)]
             name = f"{stem}.passed-only.mp4"
-            seconds = render_clip(kept, out.raw, dest / name, left_out=left, **common)
+            seconds, chapters, problem = render_clip(kept, out.raw, dest / name, left_out=left, **common)
             out.passed_only = {"clip": name, "clip_sha256": recording.sha256_file(dest / name), "seconds": seconds,
-                               "features": list(dict.fromkeys(c.feature for c in kept)), "left_out": left}
+                               "features": list(dict.fromkeys(c.feature for c in kept)), "left_out": left,
+                               "chapters": chapters, **({"problem": problem} if problem else {})}
     return out
 
 
 def render_clip(cuts: list[Cut], raw_rows: list[dict[str, Any]], dest: Path, *, name: str, date: str, os: str,
                 run: str, recording_run: str, raws: list[Any], crops: list[Any], screen: tuple[int, int], work: Path,
-                left_out: list[str] = ()) -> float:
-    """The clip: the first card, each segment with its label and caption, the last card; returns its length."""
+                left_out: list[str] = ()) -> tuple[float, list[dict[str, Any]], str | None]:
+    """The clip: the first card, each segment with its label and caption, the last card. Returns its length, its
+    chapters (from the pieces' lengths by ffprobe) and a problem when the boundaries in the clip do not match them."""
     used = sorted({c.raw for c in cuts})
     rows = [raw_rows[k] for k in used]
     names = ", ".join(r["file"] for r in rows)
@@ -1173,7 +1238,15 @@ def render_clip(cuts: list[Cut], raw_rows: list[dict[str, Any]], dest: Path, *, 
     pieces.append(work / f"{tag}-last.mp4")
     comment = "pickfit verification video; raw: " + "; ".join(f"{r['file']} sha256 {r['sha256']}" for r in rows)
     concat(pieces, dest, comment)
-    return recording.probe_seconds(dest) or round(sum(c.seconds for c in cuts) + 2 * CARD_S, 2)
+    seconds = recording.probe_seconds(dest) or round(sum(c.seconds for c in cuts) + 2 * CARD_S, 2)
+    starts = [0.0]
+    for piece in pieces[:-1]:
+        starts.append(starts[-1] + (recording.probe_seconds(piece) or 0.0))
+    found = boundaries(dest)
+    problem = None
+    if len(found) != len(starts) - 1 or any(abs(a - b) > 1.5 / FPS for a, b in zip(starts[1:], found)):
+        problem = f"chapters: the pieces start at {[round(t, 2) for t in starts]} s, the clip changes at {found}"
+    return seconds, chapters_of([c.feature for c in cuts], starts), problem
 
 
 def load_clip(path: Path) -> ClipResult:
@@ -1193,13 +1266,15 @@ def run_video(clip: ClipResult, passed_only: bool = False) -> RunVideo:
         part = clip.passed_only
         rows = [r for r in clip.raw if r["feature"] in part["features"]]
         name, digest, seconds, features = part["clip"], part["clip_sha256"], part["seconds"], part["features"]
+        chapters = part.get("chapters") or []
     else:
         rows, name, digest, seconds, features = clip.raw, clip.clip, clip.clip_sha256, clip.seconds, clip.features
+        chapters = clip.chapters
     return RunVideo(clip=name, clip_sha256=digest, seconds=seconds,
                     raw=[VideoRaw(file=r["file"], sha256=r["sha256"], seconds=r["seconds"], smoke_test=r["smoke_test"])
                          for r in rows],
                     recorded_at=clip.recorded_at, recording_run=clip.recording_run, model=clip.model,
-                    features=features)
+                    features=features, chapters=chapters)
 
 
 def poster_at(clip: ClipResult, passed_only: bool = False) -> tuple[float, int]:
@@ -1266,6 +1341,8 @@ def write_back(clip: ClipResult, data_dir: Path = DATA_DIR, *, passed_only: bool
             return "not written: no passed-only cut"
         if any(not f.startswith("segment ") for f in clip.flags):
             return f"not written: flagged beyond the review's segments ({'; '.join(clip.flags)})"
+        if clip.passed_only.get("problem"):
+            return f"not written: {clip.passed_only['problem']}"
     elif clip.flagged:
         return f"not written: flagged ({'; '.join(clip.flags)})"
     video = run_video(clip, passed_only)
@@ -1295,6 +1372,35 @@ def write_back(clip: ClipResult, data_dir: Path = DATA_DIR, *, passed_only: bool
     return f"written to {path.relative_to(REPO_ROOT) if path.is_relative_to(REPO_ROOT) else path}{sent}"
 
 
+def add_chapters(clip_json: Path, data_dir: Path = DATA_DIR, *, passed_only: bool = False,
+                 videos: Path | None = None) -> str:
+    """Chapters for a clip rendered before they were made: from its saved cuts and the piece boundaries in the file,
+    saved into its clip.json (both copies) and put on its run's video in the record, which gains only `chapters`."""
+    clip = load_clip(clip_json)
+    chapters = clip_chapters(clip, passed_only, videos)
+    if passed_only:
+        clip.passed_only = {**(clip.passed_only or {}), "chapters": chapters}
+    else:
+        clip.chapters = chapters
+    video = run_video(clip, passed_only)
+    path = data_dir / f"{clip.slug}.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    runs = [r for r in data["verification"]["runs"] if r["id"] == clip.run]
+    if not runs or (runs[0].get("video") or {}).get("clip_sha256") != video.clip_sha256:
+        return f"not written: {clip.run} in {clip.slug} does not carry {video.clip}"
+    runs[0]["video"]["chapters"] = [c.model_dump(mode="json") for c in video.chapters]
+    updated = SoftwareRecord.model_validate(data)
+    clip_json.write_text(json.dumps(asdict(clip) | {"flagged": clip.flagged}, ensure_ascii=False, indent=1),
+                         encoding="utf-8")
+    beside = ((videos or videos_dir()) / clip.slug / clip.clip).with_suffix(".json") if clip.clip else None
+    if beside and beside.is_file() and beside != clip_json:
+        beside.write_text(clip_json.read_text(encoding="utf-8"), encoding="utf-8")
+    tmp = path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(updated.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(path)
+    return f"{len(chapters)} chapters on {clip.slug}: " + ", ".join(f"{c['start_s']:.2f} {c['title']}" for c in chapters)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m pickfit.verify.video", description=__doc__.split("\n")[0])
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -1310,6 +1416,10 @@ def main(argv: list[str] | None = None) -> int:
     back.add_argument("--passed-only", action="store_true", help="the passed-only cut instead of the full clip")
     back.add_argument("--data-dir", type=Path, default=DATA_DIR)
     back.add_argument("--upload", action="store_true", help="put the files in R2 first (wrangler's login, worker/)")
+    chap = sub.add_parser("chapters", help="add chapters to a clip written before they were made (no model, no render)")
+    chap.add_argument("clip_json", type=Path)
+    chap.add_argument("--passed-only", action="store_true")
+    chap.add_argument("--data-dir", type=Path, default=DATA_DIR)
     up = sub.add_parser("upload", help="put a written clip, its raw recordings and its poster in R2")
     up.add_argument("clip_json", type=Path)
     up.add_argument("--passed-only", action="store_true")
@@ -1323,6 +1433,10 @@ def main(argv: list[str] | None = None) -> int:
                           upload_to_r2=args.upload)
         print(note)
         return 0 if note.startswith("written") else 1
+    if args.cmd == "chapters":
+        note = add_chapters(args.clip_json, args.data_dir, passed_only=args.passed_only)
+        print(note)
+        return 0 if not note.startswith("not written") else 1
     if args.cmd == "upload":
         clip = load_clip(args.clip_json)
         for key, size in upload(clip, run_video(clip, args.passed_only), videos_dir() / clip.slug,
