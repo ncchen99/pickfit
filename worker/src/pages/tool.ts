@@ -270,14 +270,17 @@ function progress(entry: Entry): string {
   }
   const rows = oses.map((os) => {
     const g = entry.install[os]!;
-    return `<div class="progress-row"><p class="progress-sys">${osMark(os)}${esc(OS_NAME[os])}${g.run.arch ? ` <span class="arch">${esc(g.run.arch)}</span>` : ''}</p>${stageRow(stagesFor(entry, g))}</div>`;
+    return `<div class="progress-row" data-os="${os}"><p class="progress-sys">${osMark(os)}${esc(OS_NAME[os])}${g.run.arch ? ` <span class="arch">${esc(g.run.arch)}</span>` : ''}</p>${stageRow(stagesFor(entry, g))}</div>`;
   });
+  // More than one system: the page script keeps the reader's own (or the first) in view and folds the rest here.
+  // Without the script every row stays, one under the other.
+  const more = rows.length > 1 ? `<details class="progress-more" data-progress-more hidden><summary>${L('Other systems', '其他系統')}${icon('chevron-down')}</summary></details>` : '';
   const untried = entry.platforms.filter((os) => !entry.install[os]);
   const names = esc(listOf(untried.map((os) => OS_NAME[os])));
   const note = untried.length
     ? `<p class="small quiet">${L(`${names}: the project says it runs there; pickfit hasn’t tried it.`, `${names}：專案說支援，但 pickfit 還沒試過。`)}</p>`
     : '';
-  return `<section class="block progress" aria-labelledby="progress-title">${progressTitle()}${rows.join('')}${note}</section>`;
+  return `<section class="block progress" aria-labelledby="progress-title">${progressTitle()}${rows.join('')}${more}${note}</section>`;
 }
 
 // ---------------------------------------------------------------- what it does
@@ -388,14 +391,15 @@ function install(catalog: Catalog, entry: Entry): string {
     const arch = entry.install[os]!.run.arch;
     return `${osMark(os)}${esc(OS_NAME[os])}${arch ? ` <span class="arch">${esc(arch)}</span>` : ''}`;
   };
-  const cards = oses.map((os: OS, i) => {
+  // One card: the systems as tabs across its top, then that system's steps straight in it (no box inside the box).
+  const panels = oses.map((os: OS) => {
     const g = entry.install[os]!;
     const out = readerGuide(installGuide(catalog, { slug: entry.slug, os }), hint, !!g.run.gui);
     return (
-      `<article class="run-card" id="install-${os}"${tabbed ? ` role="tabpanel" aria-labelledby="tab-${os}" data-os="${os}"` : ''}>` +
+      `<div class="run-panel" id="install-${os}"${tabbed ? ` role="tabpanel" aria-labelledby="tab-${os}" data-os="${os}"` : ''}>` +
       `<div class="run-head"><h3>${sysLabel(os)}</h3></div>` +
-      installSection(out, { ...EMPTY_FORM, os }, tabbed || i === 0, true, { hint }) +
-      `</article>`
+      installSection(out, { ...EMPTY_FORM, os }, true, true, { hint }) +
+      `</div>`
     );
   });
   // More than one system: tabs, which the page script shows and turns to the reader's own system.
@@ -405,7 +409,7 @@ function install(catalog: Catalog, entry: Entry): string {
       oses.map((os, i) => `<button type="button" role="tab" id="tab-${os}" aria-controls="install-${os}" aria-selected="${i === 0}" data-os="${os}"${i ? ' tabindex="-1"' : ''}>${sysLabel(os)}</button>`).join('') +
       `</div>`
     : '';
-  return `<section class="block" aria-labelledby="install-title">${installTitle('Install', '安裝')}${prerequisites(entry)}${tabs}${cards.join('')}</section>`;
+  return `<section class="block" aria-labelledby="install-title">${installTitle('Install', '安裝')}${prerequisites(entry)}<article class="run-card install-card">${tabs}${panels.join('')}</article></section>`;
 }
 
 /** A web app: open it, and the facts a person weighs before typing anything in. */
@@ -518,7 +522,10 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
     web
       ? badge('pass', L('Tested in a browser', '已在瀏覽器實測'), { icon: 'badge-check' })
       : verified && on
-        ? badge('pass', L(`Tested on ${on}`, `已在 ${on} 上測試`), { icon: 'badge-check' })
+        ? badge('pass', L(`Tested on ${on}`, `已在 ${on} 上測試`), {
+            icon: 'badge-check',
+            marks: `<span aria-hidden="true">${L('Tested', '已測試')}</span>${verifiedOn(entry).map(osMark).join('')}`,
+          })
         : badge('quiet', L('Not verified yet', '尚未驗證'), { icon: 'circle-dashed' }),
     entry.scores?.treasure ? badge('gem', L('Hidden gem', '寶藏'), { icon: 'gem', pop: 'pop-gem' }) : '',
   ].join('');
