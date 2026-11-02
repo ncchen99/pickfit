@@ -3,7 +3,10 @@
 For each advertised feature a plain title, and for a feature a passed run checked, one to three steps
 that say how to use it, taken from what the run did (the smoke test's command, or the goal pickfit
 operated a GUI app or web app toward). A one-line hint says how to start the tool once installed.
-The text adds words, never claims: SoftwareRecord refuses steps for a feature the run did not check.
+The text adds words, never claims: to_guide keeps steps only for features the run checked, and the
+record keeps the guide as a snapshot. Records change after it is written (a re-verification replaces
+the run, an extraction changes the features), so the index shows it through shown_guide(): a title only
+for a feature the record still lists, steps only while a passed run still checks that feature.
 
 The product writes these with a Meta model (call_meta, default muse-spark-1.3). `--provider anthropic`
 writes them with Claude instead; 念誠 chose that for the 11/2 backfill of records that already existed
@@ -221,6 +224,20 @@ def with_guide(raw: dict[str, Any], guide: dict[str, Any]) -> str:
             out["usage_guide"] = guide
     SoftwareRecord.model_validate(out)
     return json.dumps(out, ensure_ascii=False, indent=2) + "\n"
+
+
+def shown_guide(record: SoftwareRecord) -> dict[str, Any] | None:
+    """The guide as the page may show it now: the record's current features only, and steps only for a
+    feature some passed run still checks. None when nothing of it applies any more."""
+    guide = record.usage_guide
+    if guide is None:
+        return None
+    checked = {f.feature for r in record.verification.runs if is_passed(r.level) for f in r.features if f.status == "checked"}
+    features = [{"feature": f.feature, "title": f.title, "steps": list(f.steps) if f.feature in checked else []}
+                for f in guide.features if f.feature in record.features]
+    if not features and not guide.open_hint:
+        return None
+    return {**guide.model_dump(mode="json"), "features": features}
 
 
 def wants_guide(record: SoftwareRecord, force: bool) -> bool:

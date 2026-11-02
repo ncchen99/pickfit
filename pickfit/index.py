@@ -35,6 +35,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from pickfit.schema import SCHEMA_VERSION, SoftwareRecord, VerificationRun, is_passed
+from pickfit.usage_guide import shown_guide
 
 INDEX_VERSION = "pickfit-index.v1"
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -237,7 +238,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
         "name": record.name,
         "summary": record.summary,
         "why_worth_it": record.why_worth_it,
-        "usage_guide": record.usage_guide.model_dump(mode="json") if record.usage_guide else None,
+        "usage_guide": shown_guide(record),
         "category": record.category,
         "kind": record.kind,
         "maturity": record.maturity,

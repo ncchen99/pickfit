@@ -295,8 +295,8 @@ export const script = () => `
       const t = video.currentTime;
       const i = segs.indexOf(at(t));
       const to = {
-        ArrowRight: t + 5, ArrowLeft: t - 5, Home: 0, End: total(),
-        PageDown: (segs[i + 1] || segs[i]).start,
+        ArrowRight: t + 5, ArrowUp: t + 5, ArrowLeft: t - 5, ArrowDown: t - 5, Home: 0, End: total(),
+        PageDown: segs[i + 1] ? segs[i + 1].start : total(),
         PageUp: t - segs[i].start > 2 ? segs[i].start : (segs[i - 1] || segs[0]).start,
       };
       if (e.key in to) { e.preventDefault(); seek(to[e.key]); }
@@ -314,12 +314,14 @@ export const script = () => `
     for (const ev of ['timeupdate', 'play', 'pause', 'loadedmetadata', 'seeked']) video.addEventListener(ev, paint);
     paint();
   }
-  // The chapter list and each feature's "Watch it at" jump into the clip.
+  // The chapter list and each feature's "Watch it at" are links to the clip at that time; with the
+  // script they play it in the page instead.
   for (const b of $$('[data-seek]')) {
-    b.addEventListener('click', () => {
+    b.addEventListener('click', (e) => {
       const fig = $('[data-player]');
       const video = fig && $('video', fig);
       if (!video) return;
+      e.preventDefault();
       video.currentTime = +b.dataset.seek;
       video.play();
       fig.scrollIntoView({ block: 'nearest', behavior: still() ? 'auto' : 'smooth' });

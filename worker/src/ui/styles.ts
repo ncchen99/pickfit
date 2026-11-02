@@ -621,11 +621,10 @@ body.is-results .home-only{display:none}
 .chap-tip{position:absolute;bottom:30px;transform:translateX(-50%);padding:4px 8px;border-radius:6px;background:var(--tag);color:var(--ink);font-size:.8rem;white-space:nowrap;box-shadow:var(--lift-1);pointer-events:none}
 .player-time{font-size:.85rem;font-variant-numeric:tabular-nums;white-space:nowrap}
 .chapters{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:2px}
-.chapters button{display:flex;gap:12px;align-items:baseline;width:100%;padding:8px 10px;border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
-.chapters button:hover{background:var(--sunk)}
-.chapters button[aria-current]{background:var(--tag);box-shadow:var(--lift-1);font-weight:600}
+.chapters a{display:flex;gap:12px;align-items:baseline;padding:8px 10px;border-radius:var(--r-ctl);color:var(--ink);text-decoration:none}
+.chapters a:hover{background:var(--sunk)}
+.chapters a[aria-current]{background:var(--tag);box-shadow:var(--lift-1);font-weight:600}
 .chap-time{min-width:3.2em;color:var(--ink-2);font-variant-numeric:tabular-nums}
-button.watch{padding:0;border:0;background:none;color:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 @media (max-width:520px){.player-time{display:none}.player-bar{gap:4px;padding:4px 6px}}
 .progress-row{margin-bottom:14px}
 .progress-sys{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-weight:600}

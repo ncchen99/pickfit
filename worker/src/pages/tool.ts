@@ -99,6 +99,9 @@ function firstVideo(entry: Entry): RunVideo | null {
 /** usage_guide's plain title for a feature, if it has one. */
 const guideTitle = (entry: Entry, feature: string) => entry.usage_guide?.features.find((f) => f.feature === feature)?.title ?? null;
 
+/** The clip opened at a time (a media fragment), so a chapter link works without the page script too. */
+const atTime = (slug: string, video: RunVideo, s: number) => `${videoPath(slug, video.clip)}#t=${s}`;
+
 /** m:ss for a time in seconds. */
 export const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
@@ -149,7 +152,7 @@ function showcase(entry: Entry): string {
   const list = chapters.length
     ? `<ol class="chapters" aria-label="${L('Chapters', '段落')}">` +
       chapters
-        .map((c, i) => `<li><button type="button" data-seek="${c.start}"${i === 0 ? ' aria-current="true"' : ''}><span class="chap-time">${clock(c.start)}</span><span class="chap-title">${esc(c.title)}</span></button></li>`)
+        .map((c, i) => `<li><a href="${esc(atTime(slug, video, c.start))}" data-seek="${c.start}"${i === 0 ? ' aria-current="true"' : ''}><span class="chap-time">${clock(c.start)}</span><span class="chap-title">${esc(c.title)}</span></a></li>`)
         .join('') +
       `</ol>`
     : '';
@@ -303,7 +306,7 @@ function featureClip(entry: Entry, feature: string): string {
   if (!video) return '';
   const chapter = video.chapters?.find((c) => c.feature === feature);
   if (chapter) {
-    return `<button type="button" class="watch" data-seek="${chapter.start_s}">${icon('play')}${L(`Watch it at ${clock(chapter.start_s)}`, `從 ${clock(chapter.start_s)} 開始看`)}</button>`;
+    return `<a class="watch" href="${esc(atTime(entry.slug, video, chapter.start_s))}" data-seek="${chapter.start_s}">${icon('play')}${L(`Watch it at ${clock(chapter.start_s)}`, `從 ${clock(chapter.start_s)} 開始看`)}</a>`;
   }
   const at = video.features.indexOf(feature);
   const raw = at < 0 ? undefined : video.raw.find((r) => r.feature_index === at);

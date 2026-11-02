@@ -1556,20 +1556,13 @@ class SoftwareRecord(_Model):
 
     @model_validator(mode="after")
     def _check_usage_guide(self) -> SoftwareRecord:
-        """Guide text covers the record's own features, and steps only the ones its run checked."""
-        guide = self.usage_guide
-        if guide is None:
-            return self
-        names = [f.feature for f in guide.features]
-        if len(set(names)) != len(names) or not set(names) <= set(self.features):
-            raise ValueError("usage_guide.features must name each of the record's features at most once")
-        run = next((r for r in self.verification.runs if r.id == guide.run_id), None)
-        if guide.run_id is not None and (run is None or not is_passed(run.level)):
-            raise ValueError(f"usage_guide.run_id {guide.run_id!r} is not a passed run")
-        checked = {f.feature for f in run.features if f.status == "checked"} if run else set()
-        for f in guide.features:
-            if f.steps and f.feature not in checked:
-                raise ValueError(f"usage_guide: {f.feature!r} has steps but its run did not check it")
+        """A guide names each feature once. It is a snapshot of the record when it was written: a later
+        write-back that replaces its run, or new features, leaves it stale but valid; the index shows only
+        what still holds (pickfit.usage_guide.shown_guide)."""
+        if self.usage_guide is not None:
+            names = [f.feature for f in self.usage_guide.features]
+            if len(set(names)) != len(names):
+                raise ValueError("usage_guide.features must name each feature at most once")
         return self
 
     @model_validator(mode="after")
