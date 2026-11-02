@@ -124,8 +124,9 @@ def baseten_daily_cap(day: date) -> float:
 
 BASETEN_CAPS = Caps(total_usd=100.0, daily_usd=baseten_daily_cap)
 # Muse Spark Open on the hackathon's Modal Shared Endpoint, paid from Modal credits: its own budget,
-# $30 in all and $20 a day (the coordinating session, 11/1).
-MODAL_LLM_CAPS = Caps(total_usd=30.0, daily_usd=lambda day: 20.0)
+# $30 in all and $20 a day (the coordinating session, 11/1); 念誠 raised it to $60 in all and $30 a day
+# on 11/2 (verification videos: Muse watches pickfit's screen recordings).
+MODAL_LLM_CAPS = Caps(total_usd=60.0, daily_usd=lambda day: 30.0)
 
 
 def taipei_now(clock: Callable[[], datetime] | None = None) -> datetime:

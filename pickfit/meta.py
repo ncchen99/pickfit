@@ -103,6 +103,11 @@ MAX_EFFORT_MODELS = {"muse-spark-1.3", "muse-wonder-1.0"}
 # Worst-case estimate knobs (used only to reserve budget before sending).
 BYTES_PER_TOKEN = 3  # UTF-8 JSON bytes per token; low on purpose so estimates run high
 IMAGE_TOKENS = 3_000  # a ~1280px image is about 1,300-1,500 tokens
+# A video: Muse Spark Open on Modal samples 2 frames a second at ~124 tokens each (probe 11/2); pickfit's screen
+# recordings stop at 15 minutes (record.MAX_SECONDS), so VIDEO_TOKENS is their worst case. A caller that knows the
+# videos' length passes video_seconds, and they are reserved at VIDEO_TOKENS_PER_S with a margin.
+VIDEO_TOKENS = 230_000
+VIDEO_TOKENS_PER_S = 250
 UNKNOWN_CONTEXT_TOKENS = 32_000  # previous_response_id with no tokens in the ledger
 WEB_SEARCHES_PER_CALL = 3  # default max_tool_calls when web_search is on (meta-usage-design)
 TOKENS_PER_WEB_SEARCH = 5_000
@@ -272,22 +277,28 @@ def _has_web_search(body: dict[str, Any]) -> bool:
                for t in body.get("tools") or [])
 
 
-def estimate_input_tokens(body: dict[str, Any]) -> int:
-    """Rough upper estimate from request size; each image counts as IMAGE_TOKENS.
+def estimate_input_tokens(body: dict[str, Any], video_seconds: float | None = None) -> int:
+    """Rough upper estimate from request size; each image counts as IMAGE_TOKENS, each video as VIDEO_TOKENS.
 
     An image is an `image_url` / `input_image` part (inline data, https URL or file_id)
-    or any other inline `data:image/` string.
+    or any other inline `data:image/` string; a video a `video_url` / `input_video` part or a `data:video/` string.
     """
-    images = 0
+    images = videos = 0
 
     def strip_images(value: Any) -> Any:
-        nonlocal images
+        nonlocal images, videos
         if isinstance(value, str) and value.startswith("data:image/"):
             images += 1
+            return ""
+        if isinstance(value, str) and value.startswith("data:video/"):
+            videos += 1
             return ""
         if isinstance(value, dict):
             if value.get("type") in ("image_url", "input_image"):
                 images += 1
+                return {}
+            if value.get("type") in ("video_url", "input_video"):
+                videos += 1
                 return {}
             return {k: strip_images(v) for k, v in value.items()}
         if isinstance(value, list):
@@ -295,17 +306,19 @@ def estimate_input_tokens(body: dict[str, Any]) -> int:
         return value
 
     size = len(json.dumps(strip_images(body), ensure_ascii=False).encode("utf-8"))
-    return size // BYTES_PER_TOKEN + 1 + images * IMAGE_TOKENS
+    video_tokens = videos * VIDEO_TOKENS if video_seconds is None or not videos else \
+        int(video_seconds * VIDEO_TOKENS_PER_S * 1.25) + 500 * videos
+    return size // BYTES_PER_TOKEN + 1 + images * IMAGE_TOKENS + video_tokens
 
 
 def estimate_cost(price: Price, request: dict[str, Any], max_output_tokens: int,
-                  context_tokens: int = 0) -> float:
+                  context_tokens: int = 0, video_seconds: float | None = None) -> float:
     """Worst case for one attempt: estimated input + context + every allowed output token.
 
     With web_search on, every allowed built-in tool call (`max_tool_calls`) is a search.
     """
     searches = request.get("max_tool_calls", WEB_SEARCHES_PER_CALL) if _has_web_search(request) else 0
-    tokens_in = estimate_input_tokens(request) + context_tokens + searches * TOKENS_PER_WEB_SEARCH
+    tokens_in = estimate_input_tokens(request, video_seconds) + context_tokens + searches * TOKENS_PER_WEB_SEARCH
     token_usd = (tokens_in * price.input + max_output_tokens * price.output) / 1_000_000
     return token_usd + searches * WEB_SEARCH_USD
 
@@ -725,6 +738,7 @@ def call_meta(
     client: Any = None,
     ledger: Ledger | None = None,
     runs_dir: Path | str | None = None,
+    video_seconds: float | None = None,
 ) -> MetaResult:
     """Call a Meta model through Chat Completions (`chat`) or the Responses API (`responses`).
 
@@ -736,7 +750,8 @@ def call_meta(
     `output_model` validates the text output as JSON into that pydantic model.
     `cache` defaults to PICKFIT_CACHE, else on for dev (contributor) models only.
     `provider` defaults to the one serving the model (Baseten for "open" and meta-models/ ids), and
-    `ledger` to that provider's budget in the shared ledger.
+    `ledger` to that provider's budget in the shared ledger. `video_seconds`: the videos' total length, so they
+    are reserved at their size rather than at VIDEO_TOKENS each.
     """
     model = resolve_model(model, provider or "meta")
     provider = provider or provider_for(model)
@@ -777,7 +792,7 @@ def call_meta(
     secrets = [client.api_key] if isinstance(getattr(client, "api_key", None), str) else []
     raw, usage, cost, attempts = _send_with_retries(
         client, endpoint, request, price, max_output_tokens, ledger, runs, base, secrets,
-        scope_cap_usd=scope_cap_usd)
+        scope_cap_usd=scope_cap_usd, video_seconds=video_seconds)
     result = make_result(raw, usage, cost, cache_hit=False, attempts=attempts)
     if use_cache and _cacheable(result):
         _cache_write(runs, key, provider, endpoint, raw)
@@ -800,6 +815,7 @@ def _trace_error(runs: Path, trace: dict[str, Any], secrets: list[str], err: Bas
 def _send_with_retries(
     client: Any, endpoint: Endpoint, request: dict[str, Any], price: Price, max_output_tokens: int,
     ledger: Ledger, runs: Path, base: dict[str, Any], secrets: list[str], *, scope_cap_usd: float | None,
+    video_seconds: float | None = None,
 ) -> tuple[dict[str, Any], Usage | None, float, int]:
     """Send one request with visible retries; every attempt is reserved, settled and traced.
 
@@ -811,7 +827,7 @@ def _send_with_retries(
     attempt = 0
     while True:
         attempt += 1
-        estimate = estimate_cost(price, request, max_output_tokens, _previous_context(request, ledger))
+        estimate = estimate_cost(price, request, max_output_tokens, _previous_context(request, ledger), video_seconds)
         trace = {**base, "attempt": attempt, "stream": retry.stream, "reserved_usd": round(estimate, 6)}
         try:
             row = ledger.reserve(estimate, run_id=base["run_id"], stage=base["stage"], scope=base["scope"],
