@@ -1675,6 +1675,69 @@
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
       "type": "string"
     },
+    "RunVideo": {
+      "additionalProperties": false,
+      "description": "A short captioned clip of pickfit operating a GUI app to check its features (pickfit/verify/video.py).\n\nA fresh box replayed this run's steps and operations while pickfit recorded its own screen; Muse Spark Open\nwatched each recording with pickfit's action log and picked whole segments, kept in their order (a speed-up\nis labelled on screen), and then watched the cut and confirmed that each caption shows on screen. Captions\nclaim only checks that passed in this run and again in the recorded replay. The clip's first frame says it\nwas recorded by pickfit in a sandbox, and on what date; it names each raw recording and its sha256.",
+      "properties": {
+        "clip": {
+          "$ref": "#/$defs/VideoFile"
+        },
+        "clip_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "features": {
+          "description": "The run's checked features the clip shows.",
+          "items": {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4,
+          "minItems": 1,
+          "type": "array"
+        },
+        "model": {
+          "description": "Who picked the segments and checked the captions.",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "raw": {
+          "items": {
+            "$ref": "#/$defs/VideoRaw"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "type": "array"
+        },
+        "recorded_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "recording_run": {
+          "$ref": "#/$defs/RunId",
+          "description": "The recorded replay of this run's steps (its evidence id)."
+        },
+        "seconds": {
+          "exclusiveMinimum": 0,
+          "maximum": 180,
+          "type": "number"
+        }
+      },
+      "required": [
+        "clip",
+        "clip_sha256",
+        "seconds",
+        "raw",
+        "recorded_at",
+        "recording_run",
+        "model",
+        "features"
+      ],
+      "title": "RunVideo",
+      "type": "object"
+    },
     "Scores": {
       "additionalProperties": false,
       "properties": {
@@ -2231,6 +2294,18 @@
             }
           ],
           "default": null
+        },
+        "video": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RunVideo"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "GUI apps: a captioned clip of pickfit operating the app to check its features."
         }
       },
       "required": [
@@ -2245,6 +2320,41 @@
         "evidence"
       ],
       "title": "VerificationRun",
+      "type": "object"
+    },
+    "VideoFile": {
+      "maxLength": 120,
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.-]*\\.mp4$",
+      "type": "string"
+    },
+    "VideoRaw": {
+      "additionalProperties": false,
+      "description": "One unedited screen recording a clip was cut from: one operation, from just before the app started until\npickfit's check had looked at the screen (pickfit/verify/record.py).",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/VideoFile"
+        },
+        "seconds": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "smoke_test": {
+          "description": "The operation's check: an index into the run's smoke_tests.",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "file",
+        "sha256",
+        "seconds",
+        "smoke_test"
+      ],
+      "title": "VideoRaw",
       "type": "object"
     },
     "WebUrl": {

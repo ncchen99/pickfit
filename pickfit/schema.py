@@ -847,6 +847,42 @@ class McpHandshake(_Model):
         return self
 
 
+# A video file's name: the files sit under ~/.pickfit/videos/<slug>/ until they are served (not in git).
+type VideoFile = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_][A-Za-z0-9_.-]*\.mp4$", max_length=120)]
+VIDEO_MAX_S = 180
+
+
+class VideoRaw(_Model):
+    """One unedited screen recording a clip was cut from: one operation, from just before the app started until
+    pickfit's check had looked at the screen (pickfit/verify/record.py)."""
+
+    file: VideoFile
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    seconds: float = Field(gt=0)
+    smoke_test: int = Field(ge=0, description="The operation's check: an index into the run's smoke_tests.")
+
+
+class RunVideo(_Model):
+    """A short captioned clip of pickfit operating a GUI app to check its features (pickfit/verify/video.py).
+
+    A fresh box replayed this run's steps and operations while pickfit recorded its own screen; Muse Spark Open
+    watched each recording with pickfit's action log and picked whole segments, kept in their order (a speed-up
+    is labelled on screen), and then watched the cut and confirmed that each caption shows on screen. Captions
+    claim only checks that passed in this run and again in the recorded replay. The clip's first frame says it
+    was recorded by pickfit in a sandbox, and on what date; it names each raw recording and its sha256.
+    """
+
+    clip: VideoFile
+    clip_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    seconds: float = Field(gt=0, le=VIDEO_MAX_S)
+    raw: list[VideoRaw] = Field(min_length=1, max_length=FEATURES_MAX * 2)
+    recorded_at: AwareDatetime
+    recording_run: RunId = Field(description="The recorded replay of this run's steps (its evidence id).")
+    model: str = Field(min_length=1, max_length=80, description="Who picked the segments and checked the captions.")
+    features: list[Annotated[str, StringConstraints(min_length=1, max_length=FEATURE_MAX)]] = Field(
+        min_length=1, max_length=FEATURES_MAX, description="The run's checked features the clip shows.")
+
+
 class VerificationRun(_Model):
     """One verification attempt on one OS (C.3)."""
 
@@ -901,6 +937,28 @@ class VerificationRun(_Model):
             "or it was verified before pickfit checked features)."
         ),
     )
+    video: RunVideo | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="GUI apps: a captioned clip of pickfit operating the app to check its features.",
+    )
+
+    @model_validator(mode="after")
+    def _check_video(self) -> VerificationRun:
+        """A clip shows only what this run checked: passed operations' smoke tests and checked features."""
+        if self.video is None:
+            return self
+        if self.gui is None or not is_passed(self.level):
+            raise ValueError("a video belongs to a passed run of a GUI app")
+        operated = {op.smoke_test for op in self.gui.operations if op.passed}
+        for raw in self.video.raw:
+            if raw.smoke_test not in operated:
+                raise ValueError("a video's recording must be of an operation that passed in this run")
+        checked = {f.feature for f in self.features if f.status == "checked"}
+        for feature in self.video.features:
+            if feature not in checked:
+                raise ValueError(f"a video may show only features this run checked, not {feature!r}")
+        return self
 
     @model_validator(mode="after")
     def _check_features(self) -> VerificationRun:

@@ -1,0 +1,246 @@
+"""Verification videos: the recorders' commands and copies, action stamps in the recording's clock, the edit
+list's honesty rules, the clip's cards, and the record's video field."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import shutil
+import subprocess
+from pathlib import Path
+from typing import Any
+
+import pytest
+
+from pickfit.meta import IMAGE_TOKENS, VIDEO_TOKENS, estimate_input_tokens
+from pickfit.schema import SoftwareRecord
+from pickfit.verify import gui, record, video
+from pickfit.verify import gui_operate as op
+from pickfit.verify.box import ExecResult
+
+REPO = Path(__file__).resolve().parents[1]
+CONCESSIO = REPO / "data" / "software" / "concessio.json"
+FFMPEG = shutil.which("ffmpeg")
+
+
+def test_only_a_replays_operations_are_recorded_unless_told(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv("PICKFIT_RECORD", raising=False)
+    monkeypatch.setattr("pickfit.verify.record.get_env", lambda name, default=None: None)
+    assert record.wanted("replay-6-2") and not record.wanted(6)
+    monkeypatch.setattr("pickfit.verify.record.get_env", lambda name, default=None: "all")
+    assert record.wanted(6)
+    monkeypatch.setattr("pickfit.verify.record.get_env", lambda name, default=None: "off")
+    assert not record.wanted("replay-6-2")
+
+
+def test_the_display_uid_records_pickfits_own_xvfb_and_never_the_box_user():
+    script = record.start_script(["/usr/bin/nsenter", "--target=7", "--net", "--"], [], f"{gui.EVIDENCE_DIR}/t.mp4",
+                                 f"{gui.EVIDENCE_DIR}/t.rec.log")
+    assert f"--reuid={gui.DISPLAY_UID}" in script and "--reuid=1000" not in script
+    assert "x11grab" in script and f"-i {gui.DISPLAY}" in script and "--no-new-privs" in script
+    assert "< /dev/null >" in script and 'echo "rec_pid $!"' in script  # detached, so the command returns
+    assert script.index("/usr/bin/nsenter") < script.index("/usr/bin/setpriv") < script.index("/usr/bin/ffmpeg")
+    assert record.ffmpeg_argv("x")[record.ffmpeg_argv("x").index("-framerate") + 1] == str(record.RECORD_FPS)
+
+
+def test_the_first_frames_time_comes_from_ffmpegs_input_line():
+    log = ("[x11grab @ 0x5] stream 0: ...\nInput #0, x11grab, from ':99':\n"
+           "  Duration: N/A, start: 1762052345.123456, bitrate: 393216 kb/s\n  Stream #0:0: Video: rawvideo\n")
+    assert record.first_frame_at(log) == pytest.approx(1762052345.123456)
+    assert record.first_frame_at("Output #0, mp4") is None
+
+
+class CopyBox:
+    """Root's reads of a file in the box: a short read first, as a slow output stream gives."""
+
+    def __init__(self, data: bytes) -> None:
+        self.data, self.files, self.reads = data, {}, 0
+
+    def harness_exec(self, argv: list[str], timeout_s: int, **_: Any) -> ExecResult:
+        assert argv[0] == "/usr/bin/split"
+        size, prefix = int(argv[2]), argv[-1]
+        for i in range(0, len(self.data), size):
+            self.files[f"{prefix}{i // size:03d}"] = self.data[i:i + size]
+        return ExecResult(command="split", exit_code=0, stdout="", stderr="", seconds=0.1)
+
+    def harness_read(self, path: str, max_bytes: int) -> bytes:
+        self.reads += 1
+        data = self.files.get(path, self.data)[:max_bytes]
+        return data[: len(data) // 2] if self.reads == 1 else data
+
+
+def test_a_recording_is_copied_out_in_parts_and_must_match_roots_hash(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(record, "PART_BYTES", 10)
+    data = bytes(range(35))
+    box = CopyBox(data)
+    assert record.copy_out(box, "/var/lib/pickfit-gui/r.mp4", len(data), hashlib.sha256(data).hexdigest()) == data
+    assert len(box.files) == 4 and box.reads == 5  # one short read retried
+    with pytest.raises(RuntimeError, match="hash"):
+        record.copy_out(CopyBox(data), "/var/lib/pickfit-gui/r.mp4", len(data), "0" * 64)
+
+
+class StampDisplay:
+    """A display that keeps its own clock (as XvfbDisplay does with the box's)."""
+
+    width, height = 1280, 800
+
+    def __init__(self) -> None:
+        self.acted: list[float] | None = None
+
+    def click(self, x: int, y: int, count: int = 1) -> None:
+        self.acted = [100.0, 100.2]
+
+    def key(self, name: str) -> None:
+        self.acted = [101.0, 101.1]
+
+
+class HostDisplay:
+    width, height = 1280, 800
+
+    def click(self, x: int, y: int, count: int = 1) -> None:
+        pass
+
+
+def test_each_action_is_stamped_in_its_recordings_clock():
+    own = StampDisplay()
+    assert op.timed_perform(own, {"kind": "click", "x": 1, "y": 2}) == [100.0, 100.2]
+    assert op.timed_perform(own, {"kind": "wait", "seconds": 0}, sleep=lambda s: None) is None  # never reached the box
+    host = op.timed_perform(HostDisplay(), {"kind": "click", "x": 1, "y": 2})
+    assert host is not None and host[0] <= host[1] and host[0] > 1.7e9  # the host's wall clock (a VNC recording)
+
+
+def test_the_hands_stamp_input_with_the_boxs_clock():
+    source = op.hands_source({"kind": "click", "x": 1, "y": 2}, xvfb_pid=5, nonce="n")
+    assert 'out["t0"] = time.time()' in source and 'out["t1"] = time.time()' in source
+    compile(source, "<hands>", "exec")
+
+
+def test_a_video_counts_as_its_worst_case_when_the_budget_is_reserved():
+    image = {"messages": [{"role": "user", "content": [{"type": "image_url", "image_url": {"url": "data:image/png;base64,AA"}}]}]}
+    clip = {"messages": [{"role": "user", "content": [
+        {"type": "video_url", "video_url": {"url": "data:video/mp4;base64," + "A" * 3_000_000}}]}]}
+    assert estimate_input_tokens(image) < IMAGE_TOKENS + 100
+    assert VIDEO_TOKENS <= estimate_input_tokens(clip) < VIDEO_TOKENS + 100  # not the base64's length
+
+
+OP = {
+    "goal": "In Numeric, type 755 and read Symbolic ({nonce}).", "nonce": "kiwi42", "passed": True,
+    "check": {"kind": "screen_text", "expected": ["rwxr-xr-x"]}, "inputs": [],
+    "video": {"started_at": 1000.0},
+    "steps": [
+        {"action": {"kind": "click", "x": 142, "y": 257, "count": 1}, "at": [1003.25, 1003.4]},
+        {"action": {"kind": "type", "text": "755"}, "at": [1005.0, 1005.2]},
+        {"action": {"kind": "wait", "seconds": 1}, "at": None},
+        {"action": {"kind": "key", "name": "Return"}, "at": [1009.5, 1009.6]},
+        {"action": {"kind": "done"}},
+    ],
+    "result": {"line": "on screen: \"rwxr-xr-x\": yes", "seen": {"read": ["rwxr-xr-x"]}},
+}
+
+
+def test_the_action_log_gives_times_in_the_recording():
+    lines, typed = video.action_log(OP)
+    assert lines[1] == "0:03.2 click at (142, 257)" and lines[2] == '0:05.0 type "755"'
+    assert lines[3].startswith("     -") and lines[4] == "0:09.5 press Return" and typed == ["755"]
+    assert lines[-1].startswith("end: pickfit's check passed")
+
+
+def test_a_caption_may_name_only_numbers_and_words_from_pickfits_log():
+    evidence = video.evidence_text(OP, "convert between symbolic and numeric permissions")
+    assert video.caption_problem("Type 755 in Numeric", evidence) is None
+    assert video.caption_problem("Symbolic now reads rwxr-xr-x", evidence) is None
+    assert video.caption_problem("Type 777 to allow everything", evidence) == "'777' is not in pickfit's log"
+    assert video.caption_problem('Pick "Read only"', evidence) == "'Read only' is not in pickfit's log"
+    assert video.caption_problem("x" * 91, evidence) == "too long"
+
+
+def test_the_edit_list_keeps_whole_segments_in_order_and_only_checked_features():
+    answer = video.EditList(segments=[
+        video.Segment(start=12.0, end=16.0, feature="F1", caption="Symbolic now reads rwxr-xr-x", result_visible=True,
+                      faster=False),
+        video.Segment(start=2.0, end=6.5, feature="F1", caption="Type 755 in Numeric", result_visible=False,
+                      faster=False),
+        video.Segment(start=6.0, end=9.0, feature="F1", caption="Type 777 instead", result_visible=False, faster=True),
+        video.Segment(start=9.0, end=9.8, feature="F1", caption="Blink", result_visible=False, faster=False),
+        video.Segment(start=20.0, end=25.0, feature="F2", caption="Undo it", result_visible=True, faster=False),
+        video.Segment(start=30.0, end=99.0, feature="F1", caption="Done", result_visible=True, faster=False),
+    ], notes="")
+    label = "convert between symbolic and numeric permissions"
+    cuts, dropped = video.checked_cuts(answer, 0, 40.0, {"F1": label}, {"F1": video.evidence_text(OP, label)})
+    assert [(c.start, c.end) for c in cuts] == [(2.0, 6.5), (6.5, 9.0), (12.0, 16.0), (30.0, 40.0)]
+    assert cuts[1].caption == "Convert between symbolic and numeric permissions" and "777" in cuts[1].note
+    assert cuts[1].seconds == pytest.approx(1.25)  # 2x counts half
+    assert any("F2" in d for d in dropped) and any("shorter" in d for d in dropped)
+
+
+def _video(**over: Any) -> dict[str, Any]:
+    data = {"clip": "concessio-20261102-1200.mp4", "clip_sha256": "a" * 64, "seconds": 42.5,
+            "raw": [{"file": "concessio-20261102-1200-raw-1.mp4", "sha256": "b" * 64, "seconds": 61.0, "smoke_test": 2}],
+            "recorded_at": "2026-11-02T12:00:00+08:00", "recording_run": "video-concessio-20261102-120000-ab12",
+            "model": "meta-models/Muse-Spark-Open-816B-A42B",
+            "features": ["convert between symbolic and numeric permissions"]}
+    return data | over
+
+
+def _with_video(value: dict[str, Any]) -> SoftwareRecord:
+    data = json.loads(CONCESSIO.read_text(encoding="utf-8"))
+    data["verification"]["runs"][0]["video"] = value
+    return SoftwareRecord.model_validate(data)
+
+
+@pytest.mark.skipif(not CONCESSIO.exists(), reason="needs data/software/concessio.json")
+def test_a_runs_video_shows_only_what_the_run_checked():
+    rec = _with_video(_video())
+    assert rec.verification.runs[0].video.raw[0].smoke_test == 2
+    plain = json.loads(CONCESSIO.read_text(encoding="utf-8"))
+    assert "video" not in SoftwareRecord.model_validate(plain).model_dump(mode="json")["verification"]["runs"][0]
+    with pytest.raises(ValueError, match="only features this run checked"):
+        _with_video(_video(features=["open a file to read its permissions"]))
+    with pytest.raises(ValueError, match="operation that passed"):
+        _with_video(_video(raw=[{"file": "r.mp4", "sha256": "b" * 64, "seconds": 3.0, "smoke_test": 1}]))
+    with pytest.raises(ValueError):
+        _with_video(_video(clip="../escape.mp4"))
+
+
+def test_the_plan_keeps_the_install_steps_and_only_the_passed_operations():
+    saved = {"steps": [{"command_id": 4, "tool": "run_command", "command": "flatpak install -y x", "port": None,
+                        "wait_s": None, "seconds": 40.0, "operate": None}],
+             "setups": [{"command_id": 5, "tool": "run_command", "command": "mkdir -p ~/d", "port": None,
+                         "wait_s": None, "seconds": 0.1, "operate": None}],
+             "checks": [
+                 {"run": {"command_id": 1, "tool": "run_command", "command": "x --help", "port": None, "wait_s": None,
+                          "seconds": 0.5, "operate": None}, "setup_ids": [], "expected_exit_code": 0,
+                  "expected_signal": "Usage", "kind": "example"},
+                 {"run": {"command_id": 6, "tool": "operate_gui", "command": "flatpak run x", "port": None,
+                          "wait_s": 30, "seconds": 90.0, "operate": {"spec": {"goal": "G1"}, "actions": [], "model": None}},
+                  "setup_ids": [5], "expected_exit_code": 0, "expected_signal": "gui check: passed", "kind": "gui_op"},
+                 {"run": {"command_id": 7, "tool": "operate_gui", "command": "flatpak run x", "port": None,
+                          "wait_s": 30, "seconds": 90.0, "operate": {"spec": {"goal": "G2"}, "actions": [], "model": None}},
+                  "setup_ids": [], "expected_exit_code": 0, "expected_signal": "gui check: passed", "kind": "gui_op"}]}
+    plan = video.operations_plan(video.load_plan(saved), {"G1"})
+    assert [s.command_id for s in plan.steps] == [4] and [s.command_id for s in plan.setups] == [5]
+    assert [c.run.command_id for c in plan.checks] == [6]
+
+
+def test_the_cards_and_captions_are_drawn_at_the_clips_size():
+    from PIL import Image
+    import io
+
+    first = Image.open(io.BytesIO(video.card_png("Recorded by pickfit in a sandbox on 2026-11-02", ["a", "b"], ["c"])))
+    over = Image.open(io.BytesIO(video.overlay_png("Recorded by pickfit · 2026-11-02", "Type 755 in Numeric")))
+    assert first.size == over.size == (video.W, video.H) and over.mode == "RGBA"
+    assert over.getpixel((video.W // 2, video.H // 2))[3] == 0  # the app shows through the middle
+
+
+@pytest.mark.skipif(FFMPEG is None, reason="needs ffmpeg")
+def test_a_piece_is_cut_whole_from_its_recording_and_framed(tmp_path: Path):
+    raw = tmp_path / "raw.mp4"
+    subprocess.run([FFMPEG, "-v", "error", "-f", "lavfi", "-i", "testsrc=size=1280x800:rate=4:duration=6",
+                    "-pix_fmt", "yuv420p", str(raw)], check=True)
+    cut = video.Cut(raw=0, start=1.0, end=4.0, feature="f", caption="c", result_visible=True, faster=True)
+    piece = tmp_path / "p.mp4"
+    (tmp_path / "o.png").write_bytes(video.overlay_png("label", "caption"))
+    video.render_piece(raw, cut, (100, 50, 400, 300), (1280, 800), tmp_path / "o.png", piece)
+    assert record.probe_seconds(piece) == pytest.approx(1.5, abs=0.3)
+    png = record.png_frame(piece, 0.5)
+    assert png.startswith(b"\x89PNG")
