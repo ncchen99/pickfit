@@ -459,3 +459,77 @@ def test_a_passed_only_cut_carries_only_its_recordings(tmp_path: Path):
     run = SoftwareRecord.model_validate_json((data / "concessio.json").read_text(encoding="utf-8")).verification.runs[0]
     assert run.video.clip == "c.passed-only.mp4" and [r.file for r in run.video.raw] == ["r1.mp4"]
     assert run.video.features == ["convert between symbolic and numeric permissions"]
+
+
+def _cut(raw: int, start: float, end: float, result: bool, faster: bool = False) -> dict[str, Any]:
+    return {"raw": raw, "start": start, "end": end, "result_visible": result, "faster": faster, "caption": "c"}
+
+
+def test_the_poster_is_the_first_shown_result_past_the_first_card():
+    clip = video.ClipResult(slug="s", run="r", recording_run="v", cuts=[
+        _cut(0, 0.0, 4.0, False), _cut(0, 10.0, 18.0, False, faster=True), _cut(0, 20.0, 23.0, True),
+        _cut(1, 0.0, 6.0, True)], review=[{"ok": True}, {"ok": True}, {"ok": False}, {"ok": True}])
+    # first card 3.5 + 4 + 8/2 (2x) + 3 - 0.5: the end of the third segment, its result held on screen
+    assert video.poster_at(clip) == (14.0, 2)
+    # the passed-only cut leaves recording 0 out (its third segment was refused): recording 1's result
+    assert video.poster_at(clip, passed_only=True) == (video.CARD_S + 5.5, 3)
+    clip.cuts = [_cut(0, 0.0, 0.6, False)]
+    assert video.poster_at(clip) == (video.CARD_S + 0.3, 0)  # no result shown: the last segment, never the card
+
+
+class _FakeR2:
+    def __init__(self, corrupt: str | None = None):
+        self.objects: dict[str, bytes] = {}
+        self.calls: list[list[str]] = []
+        self.corrupt = corrupt
+
+    def __call__(self, args: list[str]) -> bytes:
+        self.calls.append(args)
+        key = args[3]
+        if args[2] == "put":
+            assert args[args.index("--remote") - 2] == "--content-type"
+            self.objects[key] = Path(args[args.index("--file") + 1]).read_bytes()
+            return b""
+        return b"x" if self.corrupt and key.endswith(self.corrupt) else self.objects[key]
+
+
+@pytest.mark.skipif(not CONCESSIO.exists(), reason="needs data/software/concessio.json")
+def test_an_uploaded_clip_goes_up_with_its_raws_and_poster_and_is_read_back(tmp_path: Path):
+    data = tmp_path / "data"
+    data.mkdir()
+    _copy_concessio(data)
+    clip = video.load_clip(_saved_clip(tmp_path))
+    (tmp_path / "videos" / "concessio" / "c.jpg").write_bytes(b"poster")  # made by make_poster when missing
+    r2 = _FakeR2()
+    note = video.write_back(clip, data, videos=tmp_path / "videos", upload_to_r2=True, wrangler=r2)
+    assert note.startswith("written") and "concessio/c.jpg (6 bytes)" in note
+    assert sorted(r2.objects) == ["pickfit-videos/concessio/c.jpg", "pickfit-videos/concessio/c.mp4",
+                                  "pickfit-videos/concessio/r1.mp4", "pickfit-videos/concessio/r2.mp4"]
+    kinds = {c[3]: c[c.index("--content-type") + 1] for c in r2.calls if c[2] == "put"}
+    assert kinds["pickfit-videos/concessio/c.jpg"] == "image/jpeg" and kinds["pickfit-videos/concessio/c.mp4"] == "video/mp4"
+    assert all("--remote" in c for c in r2.calls)
+
+
+@pytest.mark.skipif(not CONCESSIO.exists(), reason="needs data/software/concessio.json")
+def test_a_clip_that_does_not_read_back_whole_is_not_written(tmp_path: Path):
+    data = tmp_path / "data"
+    data.mkdir()
+    _copy_concessio(data)
+    original = (data / "concessio.json").read_text(encoding="utf-8")
+    clip = video.load_clip(_saved_clip(tmp_path))
+    (tmp_path / "videos" / "concessio" / "c.jpg").write_bytes(b"poster")
+    note = video.write_back(clip, data, videos=tmp_path / "videos", upload_to_r2=True, wrangler=_FakeR2("r2.mp4"))
+    assert note == "not written: upload failed: pickfit-videos/concessio/r2.mp4 read back does not match its sha256"
+    assert (data / "concessio.json").read_text(encoding="utf-8") == original
+
+
+@pytest.mark.skipif(FFMPEG is None, reason="needs ffmpeg")
+def test_a_poster_is_a_1280_wide_jpeg(tmp_path: Path):
+    clip = tmp_path / "c.mp4"
+    subprocess.run([FFMPEG, "-v", "error", "-f", "lavfi", "-i", "testsrc=size=640x472:rate=8:duration=3",
+                    "-pix_fmt", "yuv420p", str(clip)], check=True)
+    video.make_poster(clip, 1.5, tmp_path / "c.jpg")
+    from PIL import Image
+
+    with Image.open(tmp_path / "c.jpg") as im:
+        assert im.format == "JPEG" and im.size == (1280, 944)
