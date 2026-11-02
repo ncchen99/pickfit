@@ -169,7 +169,7 @@ function facts(pick: PickOut): string {
 }
 
 /** The steps get_install_guide returns, for a person instead of an agent. `inRun`: inside a run card that already names the system, so no fold of its own. */
-export function installSection(guide: InstallOutput, form: FormValues, open: boolean, inRun = false, stepper: { hint: string | null } | null = null): string {
+export function installSection(guide: InstallOutput, form: FormValues, open: boolean, inRun = false, stepper: { hint: string | null; needs?: string } | null = null): string {
   const v = guide.verification;
   if (guide.steps.length === 0) return '';
   const cautions: string[] = [];
@@ -241,7 +241,7 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
   const sysSpan = `<span class="sys">${v.os ? osMark(v.os) : ''}${esc(system(v.os, v.arch))}</span>`;
   const body = stepper
     ? installStages([
-        { name: L('Install', '安裝'), html: cautions.join('') + stepList + manual + issues },
+        { name: L('Install', '安裝'), html: (stepper?.needs ?? '') + cautions.join('') + stepList + manual + issues },
         { name: L('Check it works', '確認能用'), html: verify, cls: 'inst-check' },
         { name: L('Start using it', '開始使用'), html: first + agent + (stepper.hint ? `<p class="open-hint">${icon('arrow-right')}<span>${stepText(stepper.hint)}</span></p>` : '') },
       ])
@@ -1021,7 +1021,7 @@ export function renderPage(input: PageInput): string {
   const served = input.results !== '';
   const main =
     `<section class="hero mat after-top" aria-labelledby="title"><div class="wrap hero-grid"><div>` +
-    `<h1 id="title">${L('Every tool, <em>tested</em> first', '每款軟體，都先幫你<em>試過</em>')}</h1>` +
+    `<h1 id="title">${L('Every tool, <em>tested</em> first', '先幫你<em>試過</em>推薦的軟體')}</h1>` +
     `<p class="lede">${L(
       'Tell pickfit what you want to do. It suggests tools it has already installed and tested, with commands that work.',
       '說說你想做什麼，pickfit 會推薦它親自裝過、測過的工具，還附上實際跑得動的指令',
@@ -1082,7 +1082,7 @@ export function renderPage(input: PageInput): string {
     )}</template>`;
   return renderShell({
     nonce: input.nonce,
-    title: L('pickfit: every tool, tested first', 'pickfit：每款軟體，都先幫你試過'),
+    title: L('pickfit: every tool, tested first', 'pickfit：先幫你試過推薦的軟體'),
     description: L(
       'Describe the job in one sentence. pickfit suggests developer CLI tools, local AI tools, MCP servers, desktop apps and web apps it has tested itself, including good ones few people know yet, with the evidence and the steps that worked.',
       '用一句話描述你要做的事。pickfit 會推薦它親自測試過的開發者 CLI 工具、本機 AI 工具、MCP 伺服器、桌面應用和網頁應用，也包括還少有人知道的好工具，並附上證據和實際可行的步驟。',

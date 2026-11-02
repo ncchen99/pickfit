@@ -233,9 +233,9 @@ export function helpButton(id: string, label: string): string {
   return `<button type="button" class="help" popovertarget="${id}" aria-label="${esc(label)}">${icon('circle-help')}</button>`;
 }
 
-/** A command with a copy button (the button shows once the script runs). */
+/** A command with a copy button (the button shows once the script runs); a one-line command centres it, a longer one keeps it at the top. */
 export function command(text: string): string {
-  return `<div class="cmd"><pre translate="no"><code>${esc(text)}</code></pre><button type="button" class="copy" aria-label="${L('Copy command', '複製指令')}">${icon('copy')}<span>${L('Copy', '複製')}</span></button></div>`;
+  return `<div class="cmd${text.includes('\n') ? ' cmd-multi' : ''}"><pre translate="no"><code>${esc(text)}</code></pre><button type="button" class="copy" aria-label="${L('Copy command', '複製指令')}">${icon('copy')}<span>${L('Copy', '複製')}</span></button></div>`;
 }
 
 /** The stitch: drawn only on verified evidence. */

@@ -6,7 +6,7 @@
  */
 import { bestGuide, isVerified, isWebApp, OSES, verifiedOn, webCheck, type Catalog, type Entry, type OS } from '../catalog.ts';
 import { L } from '../i18n.ts';
-import { formOf, KIND, KIND_PLURAL, levelLabel, OS_NAME, osName, PRICE, webLevelLabel } from '../ui/facts.ts';
+import { formOf, KIND, KIND_PLURAL, levelLabel, OS_NAME, osName, PRICE } from '../ui/facts.ts';
 import { esc, listOf } from '../ui/html.ts';
 import { icon, osMark } from '../ui/icons.ts';
 import { badge, compareToggle, fitz, kindIcon, kindTag } from '../ui/kit.ts';
@@ -76,7 +76,7 @@ function card(entry: Entry, i: number): string {
     (verified ? '<div class="seam" aria-hidden="true"></div>' : '') +
     `<div class="row">` +
     (web
-      ? badge('pass', L('Checked in a browser, any OS', '已在瀏覽器實測，不限系統'), { marks: icon('globe'), title: webLevelLabel(web) })
+      ? badge('pass', L('Checked in a browser, any OS', '已在瀏覽器實測，不限系統'), { marks: icon('globe') })
       : verified
         ? badge('pass', L(`Verified on ${osList}`, `已在 ${osList} 驗證`), {
             marks: oses.map(osMark).join(''),
