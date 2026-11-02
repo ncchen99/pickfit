@@ -83,11 +83,13 @@ const KIND_ICON: Record<string, IconName> = { dev_cli: 'terminal', local_ai: 'cp
 export const kindIcon = (category: string): IconName => KIND_ICON[category] ?? 'package';
 
 export function kindTag(entry: Pick<Entry, 'kind' | 'category'>): string {
-  const kind = KIND[entry.category] ?? '';
+  // A web app gets the globe; outside the three categories it is just a web app.
+  const web = entry.kind === 'web_app';
+  const kind = web && entry.category === 'other' ? '' : (KIND[entry.category] ?? '');
   const form = formOf(entry);
   const named = kind && kind.toLowerCase() !== form.toLowerCase();
   return (
-    `<span class="kind"${named ? ` data-tip="${esc(kind)}"` : ''}>${icon(kindIcon(entry.category))}` +
+    `<span class="kind"${named ? ` data-tip="${esc(kind)}"` : ''}>${icon(web ? 'globe' : kindIcon(entry.category))}` +
     `${named ? `<span class="sr">${esc(kind)}, </span>` : ''}${esc(form.charAt(0).toUpperCase() + form.slice(1))}</span>`
   );
 }

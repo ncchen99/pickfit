@@ -1,9 +1,10 @@
 /**
- * submit_software (architecture E.3): queue a GitHub repository for the
- * pipeline (`pickfit watch` reads D1 submissions, P5.2). The Worker only
- * checks and normalizes the URL; it fetches nothing. One row per repository,
- * so submitting again reads the status. New submissions are capped per hour
- * across everyone (there is no per-user key: pickfit stores no IP).
+ * submit_software (architecture E.3): queue a GitHub repository, or the https
+ * URL of a hosted web app, for the pipeline (`pickfit watch` reads D1
+ * submissions, P5.2; it takes repositories, and website rows wait for the web
+ * pipeline). The Worker only checks and normalizes the URL; it fetches nothing.
+ * One row per URL, so submitting again reads the status. New submissions are
+ * capped per hour across everyone (there is no per-user key: pickfit stores no IP).
  */
 import type { Catalog } from './catalog.ts';
 import { logEvent, logFailure, newId } from './events.ts';
@@ -42,13 +43,39 @@ const NOT_OWNERS = new Set(
 const GITHUB_REPO = /^(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9](?:[A-Za-z0-9-]{0,38}))\/([A-Za-z0-9._-]{1,100})(?:[/?#].*)?$/i;
 
 /** https://github.com/<owner>/<repo>, lower case, or null when the URL is not a repository on github.com. */
-export function normalizeRepoUrl(url: string): string | null {
-  const match = GITHUB_REPO.exec(url.trim());
+export function normalizeRepoUrl(url: string | null): string | null {
+  const match = GITHUB_REPO.exec((url ?? '').trim());
   if (!match) return null;
   const owner = match[1].toLowerCase();
   const repo = match[2].replace(/\.git$/i, '').toLowerCase();
   if (NOT_OWNERS.has(owner) || repo === '' || /^\.+$/.test(repo)) return null;
   return `https://github.com/${owner}/${repo}`;
+}
+
+/** Hosts that are never a public web app: local or reserved names, and GitHub itself (repositories go the other way). */
+const NOT_PUBLIC = /(^|\.)(localhost|local|internal|intranet|lan|home|corp|invalid|test|example|onion)$|^(www\.)?github\.com$/;
+const IP_HOST = /^\d{1,3}(\.\d{1,3}){3}$|^\[/;
+/** Code hosts pickfit does not read: a repository there is not a web app. */
+const CODE_HOST = /(^|\.)(gitlab\.com|codeberg\.org|bitbucket\.org|sourceforge\.net|sr\.ht|gitee\.com)$/;
+
+/**
+ * https://<host>/<path> of a web app: lower-case host, no query, fragment, credentials or port, and no trailing
+ * slash past the root. null when it is not a public https site.
+ */
+export function normalizeWebUrl(url: string | null): string | null {
+  const text = (url ?? '').trim();
+  if (!/^https:\/\//i.test(text)) return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(text);
+  } catch {
+    return null;
+  }
+  const host = parsed.hostname.toLowerCase();
+  if (parsed.username || parsed.password || parsed.port) return null;
+  if (!host.includes('.') || host.length > 253 || IP_HOST.test(host) || NOT_PUBLIC.test(host) || CODE_HOST.test(host)) return null;
+  const path = parsed.pathname.replace(/\/+$/, '');
+  return `https://${host}${path || '/'}`;
 }
 
 const WAIT_S: Partial<Record<SubmissionStatus, number>> = { queued: 120, reading: 120, verifying: 300 };
@@ -61,6 +88,17 @@ const NEXT: Record<SubmissionStatus, string> = {
   listed_unverified: 'Listed without a verified install: pickfit could not finish its install, so find_software does not recommend it yet.',
   rejected: 'Not listed; reason says why. Submitting the same url again only reads this status.',
 };
+
+/** A web app is read and tried in a sandboxed browser, not installed. */
+const WEB_NEXT: Partial<Record<SubmissionStatus, string>> = {
+  queued: 'Queued. pickfit will read the site with Muse Spark, then try it in a sandboxed browser. Call again with the same url to check.',
+  reading: 'Muse Spark is reading the site. Call again with the same url to check.',
+  verifying: 'pickfit is trying it in a sandboxed browser. Call again with the same url to check.',
+  listed_unverified: 'Listed without a verified check: pickfit could not finish trying it in its browser, so find_software does not recommend it yet.',
+};
+
+const nextFor = (status: SubmissionStatus, url: string) =>
+  (url.startsWith('https://github.com/') ? undefined : WEB_NEXT[status]) ?? NEXT[status];
 
 interface Row {
   id: string;
@@ -78,7 +116,7 @@ function output(row: Row, url: string, already: boolean): SubmitOutput {
     reason: row.reason,
     already_submitted: already,
     check_again_after_s: WAIT_S[row.status] ?? null,
-    next: NEXT[row.status],
+    next: nextFor(row.status, url),
   };
 }
 
@@ -91,15 +129,20 @@ export interface SubmitDeps {
 }
 
 export async function submitSoftware(input: SubmitInput, deps: SubmitDeps): Promise<SubmitOutput> {
-  const url = normalizeRepoUrl(input.url);
+  const repo = normalizeRepoUrl(input.url);
+  const url = repo ?? normalizeWebUrl(input.url);
   if (!url) {
-    throw new SubmitError('pickfit accepts only GitHub repository URLs, like https://github.com/owner/repo.');
+    throw new SubmitError(
+      'pickfit accepts a GitHub repository URL, like https://github.com/owner/repo, or the https URL of a public web app, like https://example.com/tool.',
+    );
   }
   const now = deps.now();
   const log = (status: string, slug: string | null) =>
     logEvent(deps.db, now, { type: 'submit', slug, results: [status], client: deps.client ?? null }).catch(logFailure('submit'));
 
-  const listed = deps.catalog.entries.find((entry) => normalizeRepoUrl(entry.repo_url) === url);
+  const listed = deps.catalog.entries.find((entry) =>
+    repo ? normalizeRepoUrl(entry.repo_url) === url : entry.web && normalizeWebUrl(entry.web.url) === url,
+  );
   if (listed) {
     await log('listed', listed.slug);
     return {

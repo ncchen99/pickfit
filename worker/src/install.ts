@@ -3,12 +3,13 @@
  * sandbox, or done by hand on a real machine). No model call. README claims
  * that were never run are not in the index, so they cannot leak out here.
  */
-import { bestGuide, type Arch, type Catalog, type GuiEvidence, type OS } from './catalog.ts';
-import { checkIn, type CheckIn } from './checkin.ts';
+import { bestGuide, isWebApp, webCheck, type Arch, type Catalog, type Entry, type GuiEvidence, type OS } from './catalog.ts';
+import { checkIn, webCheckIn, type CheckIn } from './checkin.ts';
 import { ranSentence } from './evidence.ts';
 import { featureSentence, featuresOut, type FeaturesOut } from './features.ts';
 import { newId, REC_ID } from './events.ts';
 import { clientConfig, type McpClientConfig } from './mcpconfig.ts';
+import { webAppOut, webRanSentence, webWarnings, type WebAppOut } from './webapp.ts';
 
 export interface InstallInput {
   slug: string;
@@ -66,6 +67,8 @@ export interface InstallOutput {
   mcp_client_config: McpClientConfig | null;
   /** How to ask, weeks later and only with the user's consent, whether they still use it; null without a guide. */
   check_in: CheckIn | null;
+  /** A hosted web app: the URL to open instead of steps, and what pickfit's browser saw; null for anything else. */
+  web_app: WebAppOut | null;
   warnings: string[];
   sources: string[];
 }
@@ -74,11 +77,58 @@ export class UnknownSlugError extends Error {}
 
 export const PIPE_TO_SHELL = /\|\s*(sudo\s+)?(ba|z)?sh\b/;
 
+/** A web app's guide: open the URL. The checked facts and the date stand where steps would; nothing runs on the machine. */
+function webGuide(entry: Entry, input: InstallInput, now: Date): InstallOutput {
+  const check = webCheck(entry);
+  const web = webAppOut(entry)!;
+  const covered = featureSentence(featuresOut(entry, null));
+  return {
+    rec_id: input.rec_id && REC_ID.test(input.rec_id) ? input.rec_id : newId('rec'),
+    matched_by: 'rules',
+    slug: entry.slug,
+    name: entry.name,
+    how_we_know: check
+      ? `${webRanSentence(check)} Nothing to install: open ${web.url} in a browser.${covered ? ` ${covered}` : ''}`
+      : `pickfit has not checked ${entry.name} in its browser yet.`,
+    evidence_url: check?.evidence_url ?? null,
+    verification: {
+      status: check ? 'verified' : 'unverified',
+      level: check?.level ?? null,
+      os: null,
+      arch: null,
+      method: check ? 'sandbox' : null,
+      replayed: false,
+      runner: null,
+      checked_at: check?.checked_at ?? null,
+      tool_version: null,
+      evidence_url: check?.evidence_url ?? null,
+      works_offline: check?.offline === 'verified' ? true : check?.offline === 'not_offline' ? false : null,
+      gui: null,
+    },
+    applies_to_user_system: check
+      ? { match: 'exact', note: `A web app: it opens in a browser on any OS. pickfit checked it in a sandboxed browser (${check.browser}).` }
+      : { match: 'none', note: `pickfit has not checked ${entry.name} in its browser yet. Do not present it as verified.` },
+    steps: [],
+    manual_steps: [{ title: `Open ${web.url} in a browser. Nothing to install.`, run_by: 'user' }],
+    verify: null,
+    first_task: null,
+    first_task_setup: [],
+    features: featuresOut(entry, null),
+    known_issues: [],
+    mcp_client_config: null,
+    check_in: check ? webCheckIn(entry, web.url, now) : null,
+    web_app: web,
+    warnings: webWarnings(check),
+    sources: entry.sources,
+  };
+}
+
 export function installGuide(catalog: Catalog, input: InstallInput, now = new Date()): InstallOutput {
   const entry = catalog.bySlug.get(input.slug);
   if (!entry) {
     throw new UnknownSlugError(`Unknown slug "${input.slug}". Call find_software first and use a slug it returned.`);
   }
+  if (isWebApp(entry) && entry.web) return webGuide(entry, input, now);
   const guide = bestGuide(entry, input.os);
   const run = guide?.run ?? null;
   let match: InstallOutput['applies_to_user_system']['match'] = 'none';
@@ -152,6 +202,7 @@ export function installGuide(catalog: Catalog, input: InstallInput, now = new Da
     })),
     mcp_client_config: clientConfig(entry, guide),
     check_in: guide ? checkIn(entry, guide, input.os, now) : null,
+    web_app: null,
     warnings,
     sources: entry.sources,
   };

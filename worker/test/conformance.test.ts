@@ -116,7 +116,7 @@ test('find_software conforms: picks, a clarifying question, empty, no candidates
 
   const none = await call('no candidates', {
     ...LLM,
-    exclude: ['fixture-chat-tui', 'fixture-cloud-summarize', 'fixture-json-query', 'fixture-llm-runner', 'fixture-transcribe'],
+    exclude: ['fixture-chat-tui', 'fixture-cloud-summarize', 'fixture-json-query', 'fixture-llm-runner', 'fixture-transcribe', 'fixture-web-sketch'],
   });
   assert.equal(none.considered, 0);
 
@@ -223,6 +223,20 @@ test('get_install_guide conforms: pitfalls, setup, no pitfalls, another OS or ar
   assert.equal(plain.mcp_client_config, null);
   const elsewhere = await call('an MCP server checked on another OS', { slug: 'fixture-notes-mcp', os: 'macos' });
   assert.equal(elsewhere.applies_to_user_system.match, 'other_os');
+});
+
+test('a web app conforms: find_software picks it with web_app set, and its guide is the URL with no steps', async () => {
+  const off = server({ MATCH_MODE: 'off' });
+  const schemas = await validators(off);
+  const found = await conforming(off, schemas, 'rules, a web app', 'find_software', { need: 'draw a flowchart diagram and export it as PNG' });
+  const sketch = found.picks.find((p: any) => p.slug === 'fixture-web-sketch');
+  assert.ok(sketch, 'the web app is a pick');
+  assert.deepEqual([sketch.repo, sketch.web_app.label, sketch.web_app.url], [null, 'No install, just open it', 'https://fixture-sketch.example.invalid/']);
+  assert.equal(sketch.verification.verified_on_user_os, null);
+  const guide = await conforming(off, schemas, 'a web app guide', 'get_install_guide', { slug: 'fixture-web-sketch', os: 'windows' });
+  assert.deepEqual([guide.steps, guide.verify, guide.applies_to_user_system.match], [[], null, 'exact']);
+  assert.equal(guide.web_app.data_sent, 'none');
+  assert.deepEqual(guide.check_in.commands, []);
 });
 
 test('find_software conforms for the mcp_server category', async () => {

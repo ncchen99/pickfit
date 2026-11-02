@@ -83,10 +83,15 @@ test('a tool page shows every verified run with its steps, and only real runs ge
 test('browse lists verified tools only unless asked, filters by plain links, and keeps typed text out of URLs', async () => {
   const s = site();
   const all = await (await s.get('/browse')).text();
-  assert.equal(all.split('<li class="cat-card"').length - 1, 6);
+  assert.equal(all.split('<li class="cat-card"').length - 1, 7);
   const mac = await (await s.get('/browse?os=macos')).text();
-  assert.equal(mac.split('<li class="cat-card"').length - 1, 1);
+  // The web app was checked in a browser, so it runs on any OS.
+  assert.equal(mac.split('<li class="cat-card"').length - 1, 2);
   assert.match(mac, /href="\/tool\/fixture-llm-runner"/);
+  assert.match(mac, /href="\/tool\/fixture-web-sketch"/);
+  const web = await (await s.get('/browse?kind=web_app')).text();
+  assert.equal(web.split('<li class="cat-card"').length - 1, 1);
+  assert.match(web, /Checked in a browser, any OS/);
   const mcp = await (await s.get('/browse?kind=mcp_server')).text();
   assert.equal(mcp.split('<li class="cat-card"').length - 1, 1);
   // The text filter is an input with no name: it never becomes a query parameter.

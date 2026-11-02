@@ -111,6 +111,47 @@ export interface InstallGuide {
   mcp?: McpHandshake | null;
 }
 
+/** One goal pickfit operated a hosted web app toward in its browser, and what its own check found. */
+export interface WebOperation {
+  feature: string | null;
+  /** page_text, element, url: read off the page by pickfit; download: a file pickfit read; clipboard: read by pickfit. */
+  check: 'page_text' | 'element' | 'url' | 'download' | 'clipboard';
+  passed: boolean;
+  goal: string;
+  /** pickfit's own line about what the check found. */
+  observed: string;
+}
+
+/**
+ * What a sandboxed browser saw of a hosted web app (the strongest passed run; index.py _web). One session per
+ * site, so no replay. The page loaded to its main screen = install; an operation pickfit checked = function.
+ */
+export interface WebCheck {
+  run_id: string;
+  level: 'function' | 'install';
+  checked_at: string;
+  evidence_url: string | null;
+  browser: string;
+  account_needed: boolean | null;
+  ads_seen: boolean | null;
+  third_party_domains: number | null;
+  third_party_hosts: string[];
+  /** none: what pickfit typed in or chose stayed on the device; observed: a request carried it off; unknown: not checked. */
+  data_sent: 'none' | 'observed' | 'unknown';
+  data_sent_note: string | null;
+  pwa: boolean | null;
+  /** verified: a PWA reloaded with the network off and still worked. */
+  offline: 'verified' | 'not_offline' | 'not_tested';
+  operations: WebOperation[];
+  features: FeatureCoverage[];
+}
+
+/** A hosted web app (kind web_app): the URL to open, and what pickfit's browser saw (null until a run passed). */
+export interface WebApp {
+  url: string;
+  check: WebCheck | null;
+}
+
 export interface Entry {
   slug: string;
   name: string;
@@ -125,7 +166,8 @@ export interface Entry {
   /** The main features the README advertises; older indexes lack it. */
   features?: string[];
   homepage: string | null;
-  repo_url: string;
+  /** null for a hosted web app with no public repository. */
+  repo_url: string | null;
   platforms: OS[];
   prerequisites: {
     runtimes: string[];
@@ -150,6 +192,8 @@ export interface Entry {
   install: Partial<Record<OS, InstallGuide>>;
   /** MCP servers only: what the README says about using it from an MCP client. */
   mcp?: McpFacts | null;
+  /** Hosted web apps only (kind web_app): no install guides, a URL to open instead. */
+  web?: WebApp | null;
   scores: {
     quality: number | null;
     popularity: number | null;
@@ -210,3 +254,12 @@ export function verifiedOnUserSystem(entry: Entry, os?: OS, arch?: Arch): boolea
 export function verifiedOn(entry: Entry): OS[] {
   return OSES.filter((os) => entry.install[os] !== undefined);
 }
+
+/** A hosted web app: opened at a URL, never installed. */
+export const isWebApp = (entry: Pick<Entry, 'kind'>) => entry.kind === 'web_app';
+
+/** What pickfit's browser saw of a web app, or null (not a web app, or no run passed yet). */
+export const webCheck = (entry: Entry): WebCheck | null => entry.web?.check ?? null;
+
+/** pickfit ran it: install steps on some OS, or, for a web app, a passed browser run. Only these are ever suggested. */
+export const isVerified = (entry: Entry) => verifiedOn(entry).length > 0 || webCheck(entry) !== null;
