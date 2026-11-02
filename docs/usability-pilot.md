@@ -232,3 +232,15 @@
 - **花費**：全部跑一次約 $6.1（174 款要新打，試點的 12 款沿用）；這個 stage 在帳本裡共用一個 $8 的上限。
 - **檢查跟著 run 走**：`inputs_sha` 包含 run id，所以紀錄重新驗證、換了 run 之後，就算第一眼的畫面一模一樣也會再檢查一次。`pickfit profiles` 重建紀錄時會保留 `visual_check`（和 `usability`），不會讓已付費的檢查消失。
 - **一個要知道的效果**：有檢查而且乾淨（2 分）的 App，品質分會比沒檢查前高幾分（試點 7 款高 3.6–7.7 分）；有缺陷的會變低（capitolisation 87.3 → 73.8，失去寶藏）。沒有截圖可以檢查的 104 款拿不到這一項，所以有檢查的和沒檢查的 App 之間不完全對等。
+
+### 10.1 第一次全量執行（11/3，跑到一半停下）
+
+先請一個獨立的 agent 審查這次改動，修掉它找到的 7 個問題（commit `5ae0bb0f`），再開始跑。
+
+- **跑了多少**：186 款可檢查的 App 中，51 款寫入了 `visual_check`（新打 39 款，花 $1.54；試點 12 款沿用），並用 `pickfit score --refresh` 更新分數。其中 26 款桌面 App 改用 gui.v2，25 款網頁 App 改用 web.v3。
+- **為什麼停**：從 04:21 起，Meta 的 API 對整個團隊回 402「Billing verification failed」，同時間別的 stage（verify-judge）也失敗。剩下 135 款都在送出前被拒，沒有花錢。帳務解決後再跑一次 `pickfit visual --all --write` 和 `pickfit score --refresh` 就好，已經檢查過的不會重打。
+- **結果**（51 款）：
+  - 30 款沒有缺陷，15 款只有輕微缺陷，6 款有嚴重缺陷。
+  - 品質分的中位數 +3.7，範圍 −16.7 到 +10.2。
+  - 失去寶藏的有 4 款：astrobservatories、boltzyml-v2-0、capitolisation、free-online-tools-for-video-audio-pdfs-images-and-ai；新成為寶藏的有 2 款：backstory、carte-des-antennes-mobiles-anfr。
+- **還沒改的地方**：工具頁的品質分說明框（`worker/src/ui/shell.ts` 的 popover）仍寫「沙盒 40%、安裝文件 25%」。這個檔案歸工具頁的 session，這邊沒動；「How pickfit works」頁（`worker/src/pages/info.ts`）已補上視覺品質的說明。
