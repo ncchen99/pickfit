@@ -185,7 +185,7 @@ def test_the_edit_list_keeps_whole_segments_in_order_and_only_checked_features()
         notes="")
     cuts, dropped = video.checked_cuts(answer, 0, 20.0, events, label, video.evidence_text(OP, label))
     assert [(c.start, c.end) for c in cuts] == [(0.0, 4.9), (4.9, 6.8), (8.9, 12.75), (13.4, 17.0)]  # never overlapping
-    assert cuts[1].caption == 'pickfit: type "755"' and "777" in cuts[1].note  # its own log, not the model's claim
+    assert cuts[1].caption == 'Type "755"' and "777" in cuts[1].note  # pickfit's own log, not the model's claim
     assert cuts[3].caption == "Convert between symbolic and numeric permissions"  # shows the checked result
     assert cuts[0].seconds == pytest.approx(2.45)  # 2x counts half
     assert any("overlaps" in d for d in dropped)
@@ -194,11 +194,23 @@ def test_the_edit_list_keeps_whole_segments_in_order_and_only_checked_features()
     assert not short and "shorter" in why[0]
 
 
+def test_a_segment_with_a_long_still_stretch_plays_at_2x_and_says_so():
+    label = "convert between symbolic and numeric permissions"
+    events = video.events_of(OP, CHANGES, 30.0)
+    answer = video.EditList(segments=[S(8, 8, "Symbolic still reads rwxr-xr-x", result=True)], notes="")
+    long_hold = [*events, video.Event(9, 25.0, 25.0, "change", "the screen changes (1% of it)")]
+    cuts, _ = video.checked_cuts(answer, 0, 30.0, long_hold, label, video.evidence_text(OP, label))
+    assert not cuts[0].faster  # 14.0 -> 17.0: three seconds of the result, not more
+    late = video.EditList(segments=[S(8, 9, "Symbolic still reads rwxr-xr-x", result=True)], notes="")
+    cuts, _ = video.checked_cuts(late, 0, 30.0, long_hold, label, video.evidence_text(OP, label))
+    assert cuts[0].faster and "no change on screen" in cuts[0].note  # 14.0 -> 25.0 with nothing happening
+
+
 def test_a_long_caption_is_cut_to_its_first_clause_or_told_from_pickfits_log():
     long = "Clicking in the editor and typing two lines creates a heading; the document now shows it with the word"
     assert video.shorten(long) == "Clicking in the editor and typing two lines creates a heading"
     events = video.events_of(OP, CHANGES, 20.0)
-    assert video.logged_caption(events[1:4]) == 'pickfit: click, then type "755"'
+    assert video.logged_caption(events[1:4]) == 'Click, then type "755"'
     assert video.logged_caption(events[2:3]) is None
 
 

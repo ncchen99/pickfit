@@ -1358,6 +1358,8 @@ def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[
             op.result = check_screen(last_png, args.check, nonce, op.typed(), read_screen, before=first_png)
             op.cost_usd += float(op.result.pop("cost_usd", 0.0) or 0.0)
     if recorder is not None:
+        if recorder.recording:
+            sleep(record.TAIL_S)  # the result on screen a little longer, for the clip
         op.video = recorder.stop().to_dict()
         log(f"    recording · {op.video['error'] or op.video['path']}")
     png, survived = (gui_mac.close_app if mac else gui.close_app)(box, opened, tag)

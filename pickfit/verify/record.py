@@ -40,6 +40,7 @@ if TYPE_CHECKING:
 
 RECORD_FPS = 4
 MAX_SECONDS = 900  # a backstop: an operation takes 28 actions at most
+TAIL_S = 3.0  # recording goes on this long after the operation's last screenshot, so the result shows long enough
 MAX_BYTES = 40_000_000  # ffmpeg stops writing past this (-fs)
 PART_BYTES = 8_000_000  # the host copies a recording out of the box in parts of this size
 COPY_READS = 3  # a long read can come back short when the box's output stream is slow (gui.SHOT_READS)
@@ -81,6 +82,8 @@ class Recording:
 
 
 class Recorder(Protocol):
+    recording: bool  # it started and has not stopped
+
     def start(self) -> None: ...
 
     def stop(self) -> Recording: ...
@@ -164,6 +167,10 @@ class XvfbRecorder:
         self.pid: int | None = None
         self.rec = Recording(path=None, sha256=None, clock="box", recorder="x11grab", width=gui.SCREEN_W,
                              height=gui.SCREEN_H)
+
+    @property
+    def recording(self) -> bool:
+        return self.pid is not None and self.rec.started_at is not None and self.rec.path is None
 
     def _root(self, script: str, timeout_s: int = 30) -> Any:
         return self.box.harness_exec(["/usr/bin/bash", "-c", script], timeout_s)
@@ -271,6 +278,10 @@ class VncRecorder:
         self._proc: subprocess.Popen[bytes] | None = None
         self.frames = 0
         self.captures = 0
+
+    @property
+    def recording(self) -> bool:
+        return self._proc is not None and self._proc.returncode is None and not self._stop.is_set()
 
     def _pointer(self) -> tuple[int, int] | None:
         screen = getattr(self.box, "_screen", None)
