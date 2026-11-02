@@ -1,0 +1,119 @@
+{
+ "answer_id": "A0107",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "request_id": "req_011CgdntovAYDBGbCjyFFM7r",
+ "note": {
+  "differences": [
+   {
+    "step": "Install step 1: quit and uninstall Docker Desktop first because it 'can conflict with the new setup'",
+    "docs_say": "The Colima FAQ says that from v0.3.0 Colima uses Docker contexts, can run alongside Docker for Mac, and makes itself the default context on startup. The docs do not require uninstalling Docker Desktop.",
+    "effect": "cosmetic",
+    "source": "Colima FAQ – Can it run alongside Docker for Mac?"
+   },
+   {
+    "step": "Install step 1: remove \"credsStore\": \"desktop\" from ~/.docker/config.json, otherwise docker pull/login will fail",
+    "docs_say": "Not covered by the provided docs.",
+    "effect": "not_covered",
+    "source": "none"
+   },
+   {
+    "step": "Install step 2: brew install colima docker docker-compose docker-buildx",
+    "docs_say": "Supported. The README installs Colima with `brew install colima` and the Docker client with `brew install docker`. The docker-compose and docker-buildx formulae exist (5.6.1 and 0.38.1), and the colima formula pulls in lima as a dependency.",
+    "effect": "cosmetic",
+    "source": "Colima README – Installation, Docker; Homebrew formulae colima/docker-compose/docker-buildx"
+   },
+   {
+    "step": "Install step 3: add \"cliPluginsExtraDirs\": [\"/opt/homebrew/lib/docker/cli-plugins\"] to ~/.docker/config.json",
+    "docs_say": "Matches the docker-compose and docker-buildx formula caveats ($HOMEBREW_PREFIX/lib/docker/cli-plugins, which is /opt/homebrew on Apple silicon). The setting also enables buildx, though the instructions only mention compose. The Colima FAQ describes a different buildx method: symlink docker-buildx into ~/.docker/cli-plugins.",
+    "effect": "cosmetic",
+    "source": "Homebrew formula docker-compose / docker-buildx caveats; Colima FAQ – Installing Buildx"
+   },
+   {
+    "step": "First run: colima start --vm-type vz --vz-rosetta ...",
+    "docs_say": "Supported. The README documents `colima start --vm-type=vz --vz-rosetta` for Rosetta 2 emulation (v0.5.3+, macOS 13+, Apple Silicon).",
+    "effect": "cosmetic",
+    "source": "Colima README – Customization Examples"
+   },
+   {
+    "step": "First run: --mount-type virtiofs",
+    "docs_say": "The provided docs do not mention the --mount-type flag or virtiofs.",
+    "effect": "not_covered",
+    "source": "none"
+   },
+   {
+    "step": "First run: --cpu 4 --memory 8 --disk 100",
+    "docs_say": "Supported. The flags are documented. 100GiB is already the default disk size (defaults are 2 CPUs, 2GiB, 100GiB), so --disk 100 changes nothing.",
+    "effect": "cosmetic",
+    "source": "Colima README – Customizing the VM"
+   },
+   {
+    "step": "First run: 'Colima creates and selects a \"colima\" docker context automatically'",
+    "docs_say": "The FAQ confirms Colima sets itself as the default Docker context on startup. The context name 'colima' is not stated in the provided docs.",
+    "effect": "not_covered",
+    "source": "Colima FAQ – Can it run alongside Docker for Mac?"
+   },
+   {
+    "step": "First run: docker run --rm alpine uname -m should print aarch64",
+    "docs_say": "Not covered by the provided docs.",
+    "effect": "not_covered",
+    "source": "none"
+   },
+   {
+    "step": "Daily use: settings from the first start are saved; change them with colima start --edit",
+    "docs_say": "Consistent. The config is stored at $HOME/.colima/default/colima.yaml and edited with `colima start --edit`. An existing VM can also be modified by running colima stop, then colima start with new flags.",
+    "effect": "cosmetic",
+    "source": "Colima FAQ – Editing the config; README – Customization Examples"
+   },
+   {
+    "step": "Daily use: brew services start colima",
+    "docs_say": "Supported. The FAQ recommends brew services for autostart, and the formula's service runs `colima start -f`.",
+    "effect": "cosmetic",
+    "source": "Colima FAQ – Does Colima support autostart?; Homebrew formula colima service"
+   },
+   {
+    "step": "Daily use: `colima delete` (this wipes the VM)",
+    "docs_say": "From v0.9.0, container runtime data is kept on a separate disk. It survives `colima delete` and is reinstated on `colima start`. Clearing all data needs `colima delete --data`. Homebrew ships 0.10.3, so images and volumes are not wiped by plain `colima delete`.",
+    "effect": "behaves_differently",
+    "source": "Colima FAQ – How can I delete container data"
+   },
+   {
+    "step": "Daily use: export DOCKER_HOST=\"unix://$HOME/.colima/default/docker.sock\" for tools that expect /var/run/docker.sock",
+    "docs_say": "Matches the FAQ's DOCKER_HOST fix and socket location for v0.4.0+. The FAQ also offers two alternatives: an application-specific socket setting, or symlinking the socket to /var/run/docker.sock.",
+    "effect": "cosmetic",
+    "source": "Colima FAQ – Cannot connect to the Docker daemon; Docker socket location"
+   },
+   {
+    "step": "Daily use: TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock",
+    "docs_say": "Not covered by the provided docs.",
+    "effect": "not_covered",
+    "source": "none"
+   },
+   {
+    "step": "Daily use: docker run --platform linux/amd64 runs amd64 images through Rosetta",
+    "docs_say": "The README documents Rosetta 2 emulation enabled with --vz-rosetta, but does not describe the --platform usage.",
+    "effect": "not_covered",
+    "source": "Colima README – Customization Examples"
+   },
+   {
+    "step": "Daily use: automatic port forwarding (-p 8080:80 reachable at localhost:8080)",
+    "docs_say": "Consistent. The README lists Automatic Port Forwarding as a feature.",
+    "effect": "cosmetic",
+    "source": "Colima README – Features"
+   },
+   {
+    "step": "Assumption: macOS 13 or later",
+    "docs_say": "Consistent. The FAQ states Colima requires macOS 13 or newer.",
+    "effect": "cosmetic",
+    "source": "Colima FAQ – Are older macOS versions supported?"
+   },
+   {
+    "step": "Claims about Docker Desktop data not carrying over, /usr/local/bin symlinks, and the Alternatives table",
+    "docs_say": "Not covered by the provided docs.",
+    "effect": "not_covered",
+    "source": "none"
+   }
+  ],
+  "summary": "On Apple silicon the instructions largely match the docs. The brew install line, the cliPluginsExtraDirs path (/opt/homebrew/lib/docker/cli-plugins), the vz/vz-rosetta flags, brew services, DOCKER_HOST and port forwarding are all supported. The one behavioural difference: since v0.9.0, `colima delete` does not wipe container data; `colima delete --data` is required. Uninstalling Docker Desktop is presented as necessary, but the FAQ says Colima can run alongside it via Docker contexts. --disk 100 is just the default. Several points are not covered by the provided docs: --mount-type virtiofs, the 'colima' context name, the credsStore removal, the Testcontainers variable and the aarch64 output check. No step is shown by the docs to fail."
+ }
+}
