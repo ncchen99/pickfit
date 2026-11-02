@@ -188,6 +188,168 @@
       "title": "DocsRubricItems",
       "type": "object"
     },
+    "EaseDimension": {
+      "additionalProperties": false,
+      "properties": {
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 2,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "0-2, the two samples' mean; null with any other status."
+        },
+        "status": {
+          "$ref": "#/$defs/EaseStatus"
+        }
+      },
+      "required": [
+        "score",
+        "status"
+      ],
+      "title": "EaseDimension",
+      "type": "object"
+    },
+    "EaseDimensions": {
+      "additionalProperties": false,
+      "properties": {
+        "comfortable": {
+          "$ref": "#/$defs/EaseDimension",
+          "description": "Readable, a clear main area, nothing broken or covering the work."
+        },
+        "findable": {
+          "$ref": "#/$defs/EaseDimension",
+          "description": "The controls each operation needed were visible, labelled, expected."
+        },
+        "ready": {
+          "$ref": "#/$defs/EaseDimension",
+          "description": "Ready to use on opening (first look; starts from the screen judge)."
+        },
+        "responsive": {
+          "$ref": "#/$defs/EaseDimension",
+          "description": "The result showed on the screen, or an error said what to do."
+        }
+      },
+      "required": [
+        "ready",
+        "findable",
+        "responsive",
+        "comfortable"
+      ],
+      "title": "EaseDimensions",
+      "type": "object"
+    },
+    "EaseFinding": {
+      "additionalProperties": false,
+      "description": "One problem the reviewer saw, with text pickfit found on its own screenshot (OCR) or in the page (DOM).",
+      "properties": {
+        "box": {
+          "description": "[x_min, y_min, x_max, y_max], 0-1000 over the screenshot.",
+          "items": {
+            "maximum": 1000,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array"
+        },
+        "cause": {
+          "description": "Only app problems lower a score; the operator's and the sandbox's are listed, never scored.",
+          "enum": [
+            "app",
+            "operator",
+            "sandbox"
+          ],
+          "type": "string"
+        },
+        "found_by": {
+          "enum": [
+            "ocr",
+            "dom"
+          ],
+          "type": "string"
+        },
+        "item": {
+          "$ref": "#/$defs/EaseItem"
+        },
+        "operation": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The operation it happened in (in-use findings)."
+        },
+        "problem": {
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        },
+        "quote": {
+          "description": "The text on the screen it cites.",
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string"
+        },
+        "screenshot": {
+          "description": "The screenshot's file name in the run's evidence folder.",
+          "maxLength": 120,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.-]*\\.png$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "item",
+        "operation",
+        "cause",
+        "problem",
+        "screenshot",
+        "box",
+        "quote",
+        "found_by"
+      ],
+      "title": "EaseFinding",
+      "type": "object"
+    },
+    "EaseItem": {
+      "enum": [
+        "ready",
+        "findable",
+        "responsive",
+        "comfortable"
+      ],
+      "type": "string"
+    },
+    "EaseStatus": {
+      "enum": [
+        "scored",
+        "not_seen",
+        "unquoted",
+        "not_app",
+        "sandbox_broken",
+        "disagree",
+        "no_operation"
+      ],
+      "type": "string"
+    },
+    "EaseVerdict": {
+      "enum": [
+        "easy",
+        "some_friction",
+        "hard"
+      ],
+      "type": "string"
+    },
     "EvidenceMethod": {
       "enum": [
         "api",
@@ -1528,6 +1690,18 @@
         "sandbox_verification": {
           "$ref": "#/$defs/QualityComponent"
         },
+        "usability": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/QualityComponent"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Formulas gui.v1 and web.v2 only: the record's usability score / 100 (pickfit/usability.py)."
+        },
         "usage_outcomes": {
           "$ref": "#/$defs/QualityComponent",
           "description": "Only external reports count. <3 reports: weight 10, score null (dropped from the denominator); 3-9: 10; 10-29: 20; >=30: 30 (usage_outcomes_weight)."
@@ -2068,6 +2242,141 @@
         "other"
       ],
       "type": "string"
+    },
+    "Usability": {
+      "additionalProperties": false,
+      "description": "How easy a GUI or web app was to use when pickfit's AI operator used it in a sandbox (ease.v1).\n\nMuse Spark 1.3 read the screenshots and action log of one passed run against a fixed checklist, twice; every\nscore cites text pickfit found on its own screenshot. It is pickfit's AI operator in a sandbox, not users'\nopinion. Not checked: screen readers, keyboard-only use, phones.",
+      "properties": {
+        "basis": {
+          "description": "operated: an operation passed pickfit's check; first_look: only the first screens were seen.",
+          "enum": [
+            "operated",
+            "first_look"
+          ],
+          "type": "string"
+        },
+        "checked_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "cost_usd": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "dimensions": {
+          "$ref": "#/$defs/EaseDimensions"
+        },
+        "findings": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/EaseFinding"
+          },
+          "maxItems": 8,
+          "type": "array"
+        },
+        "inputs_sha": {
+          "description": "sha256 over the prompts' text and every image's.",
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "model": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "not_checked": {
+          "default": [
+            "screen_reader",
+            "keyboard_only",
+            "mobile"
+          ],
+          "items": {
+            "enum": [
+              "screen_reader",
+              "keyboard_only",
+              "mobile"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "operations": {
+          "description": "Operations the in-use review read.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "prompt_version": {
+          "maxLength": 40,
+          "minLength": 1,
+          "type": "string"
+        },
+        "run_id": {
+          "$ref": "#/$defs/RunId",
+          "description": "The run whose screenshots and log were read; stale once that run is gone."
+        },
+        "samples": {
+          "maximum": 5,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "sandbox": {
+          "description": "The display or browser, as the run recorded it.",
+          "maxLength": 200,
+          "type": "string"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "0-100; a first look alone counts at most 60."
+        },
+        "screens": {
+          "description": "Screenshots the review read.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "verdict": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EaseVerdict"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": ">=70 easy, 40-69 some friction, <40 hard; none for a first look."
+        },
+        "version": {
+          "const": "ease.v1",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "run_id",
+        "basis",
+        "score",
+        "verdict",
+        "dimensions",
+        "operations",
+        "screens",
+        "sandbox",
+        "model",
+        "prompt_version",
+        "samples",
+        "inputs_sha",
+        "checked_at",
+        "cost_usd"
+      ],
+      "title": "Usability",
+      "type": "object"
     },
     "Verification": {
       "additionalProperties": false,
@@ -2913,6 +3222,18 @@
     "updated_at": {
       "format": "date-time",
       "type": "string"
+    },
+    "usability": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Usability"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Only for kind desktop_app and web_app: how easy pickfit's AI operator found it (ease.v1)."
     },
     "use_cases": {
       "default": [],

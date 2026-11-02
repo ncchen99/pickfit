@@ -163,6 +163,11 @@ assert max(QUALITY_CAPS.values()) < TREASURE_MIN_QUALITY
 # usage_outcomes scores only from this many external reports (B.3).
 USAGE_MIN_REPORTS = 3
 
+# Formulas that score how easy a GUI or web app is to use (pickfit/usability.py, pickfit/score.py). Under them a
+# treasure also needs a run with a passed operation and usability >= 70; a first look alone counts at most 60.
+EASE_FORMULAS = frozenset({"gui.v1", "web.v2"})
+EASE_TREASURE_MIN = 0.70
+
 # Length limits shared by extracted claims and record fields.
 QUOTE_MAX = 300
 COMMAND_MAX = 500
@@ -1203,6 +1208,11 @@ class QualityComponents(_Model):
         exclude_if=lambda value: value is None,
         description="Web apps only: what the browser run saw (account, data sent, ads, offline).",
     )
+    usability: QualityComponent | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="Formulas gui.v1 and web.v2 only: the record's usability score / 100 (pickfit/usability.py).",
+    )
 
     def items(self) -> list[tuple[str, QualityComponent]]:
         return [(name, c) for name in type(self).model_fields if (c := getattr(self, name)) is not None]
@@ -1358,9 +1368,14 @@ class Scores(_Model):
             and q >= TREASURE_MIN_QUALITY
             and n <= TREASURE_MAX_POPULARITY
         )
+        ease = self.quality.components.usability
+        if self.formula_version in EASE_FORMULAS:
+            eligible = eligible and ease is not None and ease.score is not None and ease.score >= EASE_TREASURE_MIN
         if self.treasure.is_treasure != eligible:
             raise ValueError(f"is_treasure must be quality >= {TREASURE_MIN_QUALITY} and "
-                             f"popularity <= {TREASURE_MAX_POPULARITY}")
+                             f"popularity <= {TREASURE_MAX_POPULARITY}"
+                             + (f" and usability >= {EASE_TREASURE_MIN}" if self.formula_version in EASE_FORMULAS
+                                else ""))
         return self
 
 
@@ -1415,6 +1430,95 @@ class McpServer(_Model):
     client_configs: list[McpClientConfig] = Field(default=[], max_length=3)
     env_vars: list[McpEnvVar] = Field(default=[], max_length=10)
     tools: list[str] = Field(default=[], max_length=30, description="Tool names the sources list.")
+
+
+type EaseItem = Literal["ready", "findable", "responsive", "comfortable"]
+# scored: both samples scored it; not_seen: the screens could not tell; unquoted: its text was not found on pickfit's
+# screenshot; not_app: a score below 2 with no problem blamed on the app; sandbox_broken: the sandbox broke the screen;
+# disagree: the two samples were two levels apart; no_operation: no operation passed, so nothing was seen in use.
+type EaseStatus = Literal["scored", "not_seen", "unquoted", "not_app", "sandbox_broken", "disagree", "no_operation"]
+type EaseVerdict = Literal["easy", "some_friction", "hard"]
+
+
+class EaseDimension(_Model):
+    score: float | None = Field(ge=0, le=2, description="0-2, the two samples' mean; null with any other status.")
+    status: EaseStatus
+
+    @model_validator(mode="after")
+    def _score_fits_status(self) -> EaseDimension:
+        if (self.score is not None) != (self.status == "scored"):
+            raise ValueError("a dimension has a score exactly when its status is scored")
+        return self
+
+
+class EaseDimensions(_Model):
+    ready: EaseDimension = Field(description="Ready to use on opening (first look; starts from the screen judge).")
+    findable: EaseDimension = Field(description="The controls each operation needed were visible, labelled, expected.")
+    responsive: EaseDimension = Field(description="The result showed on the screen, or an error said what to do.")
+    comfortable: EaseDimension = Field(description="Readable, a clear main area, nothing broken or covering the work.")
+
+
+class EaseFinding(_Model):
+    """One problem the reviewer saw, with text pickfit found on its own screenshot (OCR) or in the page (DOM)."""
+
+    item: EaseItem
+    operation: int | None = Field(ge=1, description="The operation it happened in (in-use findings).")
+    cause: Literal["app", "operator", "sandbox"] = Field(
+        description="Only app problems lower a score; the operator's and the sandbox's are listed, never scored.")
+    problem: str = Field(min_length=1, max_length=300)
+    screenshot: str = Field(pattern=r"^[A-Za-z0-9_][A-Za-z0-9_.-]*\.png$", max_length=120,
+                            description="The screenshot's file name in the run's evidence folder.")
+    box: list[Annotated[int, Field(ge=0, le=1000)]] = Field(
+        min_length=4, max_length=4, description="[x_min, y_min, x_max, y_max], 0-1000 over the screenshot.")
+    quote: str = Field(min_length=1, max_length=200, description="The text on the screen it cites.")
+    found_by: Literal["ocr", "dom"]
+
+
+class Usability(_Model):
+    """How easy a GUI or web app was to use when pickfit's AI operator used it in a sandbox (ease.v1).
+
+    Muse Spark 1.3 read the screenshots and action log of one passed run against a fixed checklist, twice; every
+    score cites text pickfit found on its own screenshot. It is pickfit's AI operator in a sandbox, not users'
+    opinion. Not checked: screen readers, keyboard-only use, phones.
+    """
+
+    version: Literal["ease.v1"]
+    run_id: RunId = Field(description="The run whose screenshots and log were read; stale once that run is gone.")
+    basis: Literal["operated", "first_look"] = Field(
+        description="operated: an operation passed pickfit's check; first_look: only the first screens were seen.")
+    score: float | None = Field(ge=0, le=100, description="0-100; a first look alone counts at most 60.")
+    verdict: EaseVerdict | None = Field(description=">=70 easy, 40-69 some friction, <40 hard; none for a first look.")
+    dimensions: EaseDimensions
+    findings: list[EaseFinding] = Field(default=[], max_length=8)
+    operations: int = Field(ge=0, description="Operations the in-use review read.")
+    screens: int = Field(ge=1, description="Screenshots the review read.")
+    sandbox: str = Field(max_length=200, description="The display or browser, as the run recorded it.")
+    not_checked: list[Literal["screen_reader", "keyboard_only", "mobile"]] = Field(
+        default=["screen_reader", "keyboard_only", "mobile"])
+    model: str = Field(min_length=1, max_length=80)
+    prompt_version: str = Field(min_length=1, max_length=40)
+    samples: int = Field(ge=1, le=5)
+    inputs_sha: str = Field(pattern=r"^[0-9a-f]{64}$", description="sha256 over the prompts' text and every image's.")
+    checked_at: AwareDatetime
+    cost_usd: float = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _check_score(self) -> Usability:
+        scored = [d.score for _, d in self.dimensions if d.score is not None]
+        if (self.score is None) != (not scored):
+            raise ValueError("usability has a score exactly when a dimension is scored")
+        if self.basis == "first_look":
+            if self.verdict is not None:
+                raise ValueError("a first look alone gets no verdict")
+            if self.score is not None and self.score > 60:
+                raise ValueError("a first look alone counts at most 60")
+            if self.dimensions.findable.score is not None or self.dimensions.responsive.score is not None:
+                raise ValueError("findable and responsive need an operation that passed")
+        elif self.score is not None:
+            band = "easy" if self.score >= 70 else "some_friction" if self.score >= 40 else "hard"
+            if self.verdict != band:
+                raise ValueError(f"verdict must be {band!r} for usability {self.score}")
+        return self
 
 
 class WebApp(_Model):
@@ -1508,6 +1612,11 @@ class SoftwareRecord(_Model):
         exclude_if=lambda value: value is None,
         description="Only for kind web_app: the URL to open.",
     )
+    usability: Usability | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="Only for kind desktop_app and web_app: how easy pickfit's AI operator found it (ease.v1).",
+    )
     scores: Scores | None = None
     outcomes: Outcomes = Field(default_factory=Outcomes)
     sources: list[Source] = Field(min_length=1)
@@ -1525,6 +1634,12 @@ class SoftwareRecord(_Model):
                 raise ValueError(f"evidence {item.field} cites unknown source {item.source_id!r}")
             if item.field.split("/")[1] not in type(self).model_fields:
                 raise ValueError(f"evidence points to unknown field {item.field}")
+        return self
+
+    @model_validator(mode="after")
+    def _check_usability(self) -> SoftwareRecord:
+        if self.usability is not None and self.kind not in ("desktop_app", "web_app"):
+            raise ValueError("usability belongs to kind desktop_app and web_app only")
         return self
 
     @model_validator(mode="after")
