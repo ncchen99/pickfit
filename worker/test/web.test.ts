@@ -321,7 +321,7 @@ test('before any search the page shows real catalog runs, never invented ones', 
   const runs = html.slice(html.indexOf('<ul class="runs-list">'), html.indexOf('</ul></div></section>'));
   assert.equal(runs.split('<li class="run-row">').length - 1, 3);
   assert.match(runs, /<a class="name" href="\/tool\/[a-z0-9-]+">/);
-  assert.match(html, /6 of 7 tools installed and replayed, and 1 web app used in a browser\. Only those are ever suggested\./);
+  assert.match(html, /Of 7 tools, 6 have been installed and rerun, and 1 web app has been used in a browser\. pickfit only suggests these\./);
   // The counts in the hero are the catalog's.
   assert.match(html, /<strong>7<\/strong> READMEs read/);
   assert.equal(s.metaCalls.length, 0);
