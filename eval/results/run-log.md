@@ -64,7 +64,7 @@
 
 ## 作廢試跑、重跑 q01、q02（B2）
 
-- 念誠 09:4x 選擇把資料夾名稱當成設定錯誤（B2）：`run.py void --round run1 --group <組>` 三組各做一次（09:46:43–09:46:45），6 次移到 `runs/voided/run1-<組>-<時間>/`，保留供報告；試跑的 `run1-estimate.json`、`run1-paused.json`、`d5-run1.json` 移到 `runs/voided/run1-markers-20261102-094646/`（commit `a833413`）。
+- 念誠在 09:46 前選擇把資料夾名稱當成設定錯誤（B2）：`run.py void --round run1 --group <組>` 三組各做一次（09:46:43–09:46:45），6 次移到 `runs/voided/run1-<組>-<時間>/`，保留供報告；試跑的 `run1-estimate.json`、`run1-paused.json`、`d5-run1.json` 移到 `runs/voided/run1-markers-20261102-094646/`（commit `a833413`）。
 - 重跑：`run.py run1 --until q02`，執行器 `324145f`（暫存資料夾用沒有前綴的 `mkdtemp()`），其餘設定與快照不變（A3 紀錄同一份；eval/ 以外沒動）。開跑 09:46:58，停在 q02 之後 09:52:50。順序同 B1。
 
 | 題 | 組 | 開始 | 秒 | 回合 | 花費 | pickfit 呼叫 | 有效 |
@@ -84,3 +84,24 @@
 - D5：0 違反、34 筆主張找得到、0 無法檢查（`d5-run1.json`）。結果裡沒有金鑰。
 - 觀察（不是流程問題）：實驗組兩題的 pickfit 仍回 0 個推薦（沒降級），agent 改用網路搜尋；rules-only 各回 3 個。
 - B3 的 24 小時：執行器從重跑的 q01（09:46:58）起算；第一次試跑的 q01 是 07:56:20。兩種算法都會在報告寫出。
+
+## 第 1 次：q03–q20（接在重跑之後）
+
+- 指令：`run.py run1`（從 q03 接續；q01、q02 已完成的格子跳過），執行器 `324145f`。開跑 09:54:06，`run1-complete.json` 10:35:18。
+- 60 格全部有效、每格 1 次（0 次無效、0 次重試）；第 1 次合計 $6.403（上限 $30；另有作廢的試跑 $0.950）。`within_24_hours` true（09:46:58–10:35:18）。
+
+| 組 | 次數 | 花費合計 | 平均花費 | 平均秒 | 平均回合 |
+|---|---|---|---|---|---|
+| control | 20 | $1.899 | $0.095 | 41.4 | 2.9 |
+| experimental | 20 | $2.060 | $0.103 | 52.3 | 3.5 |
+| rules_only | 20 | $2.444 | $0.122 | 47.5 | 3.9 |
+
+- B2 核對（`check --round run1`）：0 個設定問題。init 掃描：60 次的工作目錄都是中性的 `tmpXXXXXXXX/work`，沒有 pickfit、組名、題號等字樣；對照組都沒有 MCP 伺服器，兩個 MCP 組都是 pickfit connected。對照組的工具輸入都沒有 pickfit 或 ncchen99，也沒有拿到任何 rec_id。
+- pickfit 呼叫：實驗組 find_software 15、find_alternatives 5；rules-only 13、6。其中各有 1 次是 Claude Code 在送出前就擋下的 `InputValidationError`（agent 寫出無法解析的 JSON；q13 實驗組、q07 rules-only 的 find_alternatives），沒有到伺服器，agent 之後重送；B2 不算無效（不是 API 錯誤、也不是執行器當掉）。
+- 伺服器端（D1）：實驗組 19 個 rec_id 都只在 `pickfit-eval`（`matched_by` muse-spark-1.3、沒有降級、`model_statuses` 都是 [200]）；rules-only 18 個都只在 `pickfit-eval-rules`（rules、`model_off`）；每筆的時間都在該次執行之內；09:46:58 之後兩個資料庫沒有任何串流裡找不到的事件。
+- Meta：`meta_budget` 2026-11-02（UTC）23 次呼叫、$0.4185＝19 次配對的 `meta_cost_usd` 合計；多出的 4 次是 `expand.ts` 的關鍵字擴充（同一筆事件的費用已含在內）。加上試跑的 $0.0319，評測部署的 Meta 合計 $0.450（上限每天 $10）。
+- 實驗組 19 次 pickfit 回應裡 12 次回 0 個推薦（q01–q07、q08 的 alternatives、q09、q10、q12、q14）；rules-only 18 次都有推薦。只記事實，評分另做。
+- D5（`d5_check.py --rounds run1`）：**1 次違反**、376 筆主張找得到、2 筆無法檢查（`d5-run1.json`）。
+  - 違反：q14 rules-only 的 find_software，`jevalt`、linux x86_64，features.checked 三項（`python3 /tmp/check_f1.py`、`check_f2.py`、`check_f3.py`）。開跑前 commit 的比對規則（a1a8ab4）要求 replay 裡有「完全相同指令」的通過檢查；原始紀錄 `verify-jevalt-20261101-163415-6a0e`（festive-torvalds worktree）的 replay 檢查指令是把 heredoc 寫檔與 `python3 /tmp/check_fN.py` 合成一行（`cat > /tmp/check_f1.py << 'PY' … PY\npython3 /tmp/check_f1.py`），三項都通過、印出預期訊號，feature_judge 三項都是 shows_it_working；資料檔把 heredoc 拆成 setup、指令只留最後一行。照開跑前的規則仍算 1 次違反（D5 的寫法：寫明次數與內容）；比對規則沒有改。
+  - 無法檢查：q07 rules-only、q13 實驗組各 1 則 find_alternatives 回應，就是上面被 Claude Code 擋下的那 2 次（沒有到伺服器，沒有 rec_id、沒有回應內容）。
+- 結果裡沒有金鑰（`sk-ant-` 掃描）。
