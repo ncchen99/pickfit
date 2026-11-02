@@ -48,6 +48,6 @@ def test_a_feature_set_aside_for_the_box_keeps_that_reason():
     rec = record()
     old = rec.verification.runs[0]
     rec.verification.runs[0] = run_like(old, features=[feature("A", False)])  # needs_gpu
-    vague = {"feature": "A", "status": "not_checked", "smoke_tests": [], "reason": "other"}
+    vague = {"feature": "A", "status": "not_checked", "smoke_tests": [], "reason": "other", "note": "not shown"}
     assert "would lose its reason" in why_not(run_like(old, features=[vague]), rec)
     assert why_not(run_like(old, features=[feature("A", False)]), rec) is None

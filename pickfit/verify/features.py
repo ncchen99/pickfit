@@ -64,7 +64,10 @@ FINISH_FEATURES = {
             "or server pickfit does not run), needs_more_resources (too big or slow for this box, or more "
             "than one machine), needs_container (Docker or Podman), needs_root (sudo, system services), "
             "needs_toolchain (a source build with Rust, Go or a C compiler), other_os, not_attempted (the "
-            "commands ran out before it), other (say why in note).")},
+            "commands ran out before it), needs_desktop (the display lacks a piece the app asks for: a "
+            "file-chooser portal, a URL handler, Wayland), other (say in note what you saw). A GUI feature "
+            "whose operate_gui did not pass is not_checked, citing that operation's command_id: pickfit reads "
+            "from its own log why the operation stopped.")},
         "failure": {"type": ["string", "null"], "enum": [*get_args(FeatureFailure.__value__), None]},
         "note": {"type": "string", "description": "A few words: why not, or the error it showed."}},
         "required": ["feature", "status", "command_ids", "reason", "failure", "note"],
@@ -204,6 +207,7 @@ def resolve_features(names: list[str], claims: list[FinishFeature], verdict: Log
         out = ResolvedFeature(number, name, "not_checked", reason="not_attempted",
                               note="the run did not report this feature")
         if claim is None:
+            _operation_cause(out, None, by_id, number, commands)
             resolved.append(out)
             continue
         out.claimed, out.note = claim.status, _clip(claim.note)
@@ -241,8 +245,57 @@ def resolve_features(names: list[str], claims: list[FinishFeature], verdict: Log
                 out.note = _clip(f"no failed check in the log; {claim.note or ''}")
         else:
             out.reason = claim.reason or "other"
+        if out.status == "not_checked":
+            _operation_cause(out, claim, by_id, number, commands)
+        if out.reason == "other" and not out.note:  # whatever the status: the record refuses other without one
+            out.note = "the agent named no cause"
+            out.problems.append("reason other needs a note saying what was seen")
         resolved.append(out)
     return resolved
+
+
+# How pickfit's harness saw a GUI operation stop (gui_operate.Operation.stop), as a feature's reason. no_window is
+# the app's only when the harness itself had no error and the launch saw no window of the app's (_stop_reason).
+STOP_REASONS = {"step_cap": "operator_limit", "give_up": "operator_limit", "done": "check_not_met",
+                "no_window": "app_error"}
+VAGUE_REASONS = (None, "other", "not_attempted", "needs_display")
+
+
+def _stop_reason(op: dict[str, Any]) -> str | None:
+    """The reason an operation's stop gives, never blaming the app for the harness: before a launch, the harness
+    sets the operation's error itself (box-user processes it could not stop, no simulated microphone), and a
+    launch whose window showed but whose screenshot pickfit could not read is pickfit's problem too."""
+    stop = str(op.get("stop") or "")
+    if stop != "no_window":
+        return STOP_REASONS.get(stop)
+    error = str(op.get("error") or "")
+    if error:
+        return "needs_hardware" if "microphone" in error else None
+    return None if (op.get("launch") or {}).get("tier") == "window" else "app_error"
+
+
+def _operation_cause(out: ResolvedFeature, claim: FinishFeature | None, by_id: dict[int, CommandRecord],
+                     number: int, commands: list[CommandRecord]) -> None:
+    """A feature not checked: when every GUI operation for it failed, say why from pickfit's own record of them
+    (why the last one stopped, what the check found) rather than keep the agent's vague reason (or none, when the
+    agent left the feature out). A box that launched a GUI had a display, so needs_display left after that means
+    a missing desktop piece."""
+    cited = [by_id[cid].operate for cid in (claim.command_ids if claim else []) if cid in by_id and by_id[cid].operate]
+    ops = cited or [c.operate for c in commands if c.operate and (c.operate.get("spec") or {}).get("feature") == number]
+    failed = [op for op in ops if not op.get("passed")]
+    if failed and len(failed) == len(ops):
+        last = failed[-1]
+        actions = sum(1 for step in last.get("steps") or [] if step.get("action"))
+        result = last.get("result") or {}
+        found = result.get("why") or result.get("line") or last.get("error") or ""
+        seen = f"operation stopped: {last.get('stop')} after {actions} actions" + (f"; check: {found}" if found else "")
+        derived = _stop_reason(last)
+        if out.reason in VAGUE_REASONS and derived:
+            out.reason = derived
+        said = claim.note if claim else None
+        out.note = _clip(f"{seen}; {said or ''}".rstrip("; "))
+    if out.reason == "needs_display" and any(c.tool in ("launch_gui", "operate_gui") for c in commands):
+        out.reason = "needs_desktop"
 
 
 Fit = Callable[[str], "tuple[str, list[SetupStep]] | None"]
@@ -313,16 +366,17 @@ def coverage(resolved: list[dict[str, Any]], smoke_index: dict[int, int], smoke:
                 held.append(smoke_index[cid])
                 excerpt = excerpt or smoke[smoke_index[cid]].observed_excerpt
             if held:
+                note = _clip(item["note"] or excerpt) or ("no cause recorded" if item["reason"] == "other" else None)
                 checks.append(FeatureCheck(feature=name, status="test_failed", smoke_tests=held,
-                                           failure=item["failure"], reason=item["reason"],
-                                           note=_clip(item["note"] or excerpt)))
+                                           failure=item["failure"], reason=item["reason"], note=note))
                 continue
             notes.append(f"feature {name!r}: its failed check did not fail again in the fresh box")
             checks.append(FeatureCheck(feature=name, status="not_checked", reason="other",
                                        note="its check failed in the agent's box but not again in a fresh box"))
         else:
-            checks.append(FeatureCheck(feature=name, status="not_checked", reason=item["reason"] or "other",
-                                       note=_clip(item["note"])))
+            reason = item["reason"] or "other"
+            checks.append(FeatureCheck(feature=name, status="not_checked", reason=reason,
+                                       note=_clip(item["note"]) or ("no cause recorded" if reason == "other" else None)))
     return checks, notes
 
 
