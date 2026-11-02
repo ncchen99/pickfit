@@ -18,6 +18,7 @@ Open `index.html` through a local server (for example `python3 -m http.server -d
 | `icons/fitz-{16,32,64}.svg` | Icons, drawn separately for each size |
 | `icons/fitz-{16,32,64}-dark.svg` | Same icons with a cream outline, for dark backgrounds |
 | `icons/fitz-mono-32.svg` | One-colour 32 px icon |
+| `icons/fitz-favicon.svg` | Browser-tab icon: the 32 px icon without tuft and tail, cropped to the body so the bird reads at tab size; cream outline in dark mode |
 | `build.py` | Writes every SVG above from one set of shapes and one palette |
 | `index.html` | Preview page |
 
