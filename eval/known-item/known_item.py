@@ -364,26 +364,36 @@ def call_find(need: str, os_name: str) -> dict[str, Any]:
             "find": content, "raw": message if message is not None else raw}
 
 
+MAX_FIND_ATTEMPTS = 4
+RETRY_WAIT_S = 90
+
+
+def sound(attempt: dict[str, Any]) -> bool:
+    """The model chose the picks: no error and not degraded to rules."""
+    return not attempt["is_error"] and not (attempt["find"] or {}).get("degraded")
+
+
 def step_run() -> None:
     sample = json.loads(SAMPLE.read_text(encoding="utf-8"))
     questions = accepted_questions()
     RESPONSES.mkdir(exist_ok=True)
     for i, target in enumerate(sample["targets"], 1):
         out = RESPONSES / f"{i:02d}-{target['slug']}.json"
-        if out.exists():
+        attempts = json.loads(out.read_text(encoding="utf-8"))["attempts"] if out.exists() else []
+        if any(sound(a) for a in attempts) or len(attempts) >= MAX_FIND_ATTEMPTS:
             continue
         need = questions[target["slug"]]["reply"]["parsed"]["request"]
-        attempts = [call_find(need, target["os"])]
-        first = attempts[0]
-        if first["is_error"] or (first["find"] or {}).get("degraded"):
-            print(f"  {target['slug']}: degraded or error, retrying in 60 s")
-            time.sleep(60)
+        while len(attempts) < MAX_FIND_ATTEMPTS:  # README change log 11/2 17:14: retry degraded answers, outcome-blind
+            if attempts:
+                print(f"  {target['slug']}: degraded or error, retrying in {RETRY_WAIT_S} s")
+                time.sleep(RETRY_WAIT_S)
             attempts.append(call_find(need, target["os"]))
-        used = next((j for j, a in enumerate(attempts) if not a["is_error"] and not a["find"].get("degraded")),
-                    len(attempts) - 1)
-        out.write_text(json.dumps({"n": i, "target": target, "arguments": {"need": need, "os": target["os"]},
-                                   "used_attempt": used, "attempts": attempts}, ensure_ascii=False, indent=2) + "\n",
-                       encoding="utf-8")
+            used = next((j for j, a in enumerate(attempts) if sound(a)), len(attempts) - 1)
+            out.write_text(json.dumps({"n": i, "target": target, "arguments": {"need": need, "os": target["os"]},
+                                       "used_attempt": used, "attempts": attempts}, ensure_ascii=False, indent=2)
+                           + "\n", encoding="utf-8")
+            if sound(attempts[-1]):
+                break
         picks = [p["slug"] for p in ((attempts[used]["find"] or {}).get("picks") or [])]
         print(f"{i:02d} {target['slug']}: picks {picks} ({attempts[used]['latency_s']} s)")
 
