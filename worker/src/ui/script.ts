@@ -415,6 +415,28 @@ export const script = () => `
     });
   }
 
+  // ---------------------------------------------------------------- install, check, use: one stage at a time
+  for (const box of $$('[data-stepper]')) {
+    const stages = $$('[data-stage]', box);
+    const tabs = $$('.stage-tabs [data-goto]', box);
+    const go = (i, scroll) => {
+      stages.forEach((s, j) => (s.hidden = j !== i));
+      tabs.forEach((t, j) => {
+        if (j === i) t.setAttribute('aria-current', 'step'); else t.removeAttribute('aria-current');
+        t.classList.toggle('done', j < i);
+      });
+      // A long stage leaves Next far below the tabs: bring the start of the next one back into view.
+      if (scroll && box.getBoundingClientRect().top < 80) box.scrollIntoView({ block: 'start', behavior: still() ? 'auto' : 'smooth' });
+    };
+    box.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-goto]');
+      if (!b) return;
+      go(+b.dataset.goto, !b.closest('.stage-tabs'));
+      if (!b.closest('.stage-tabs')) { const t = tabs[+b.dataset.goto]; if (t) t.focus({ preventScroll: true }); }
+    });
+    go(0, false);
+  }
+
   // ---------------------------------------------------------------- legend dialog
   document.addEventListener('click', (e) => {
     if (!e.target.closest('[data-open-legend]')) return;

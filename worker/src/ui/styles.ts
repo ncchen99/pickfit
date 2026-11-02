@@ -490,6 +490,24 @@ details>summary{cursor:pointer}
 .install[open]>summary .i:last-child{transform:rotate(180deg)}
 .install-body{padding:0 16px 14px}
 .install-body h4{font:700 .95rem/1.3 var(--display);margin:18px 0 6px}
+[data-stepper]{scroll-margin-top:16px}
+.stage-tabs{display:flex;flex-wrap:wrap;align-items:center;gap:4px;list-style:none;padding:0;margin:0 0 6px}
+.stage-tabs li{display:flex;align-items:center;gap:4px}
+.stage-tabs li+li::before{content:"";width:16px;height:2px;border-radius:1px;background:color-mix(in srgb,var(--ink-2) 35%,transparent)}
+.stage-tabs button{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:0 12px 0 5px;border:0;border-radius:999px;background:none;color:var(--ink-2);font:600 .9rem/1 var(--display);cursor:pointer}
+.stage-tabs button:hover{color:var(--ink)}
+.stage-tabs .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--sunk);font-size:.78rem}
+.stage-tabs button[aria-current=step]{background:var(--tag);color:var(--ink);box-shadow:var(--lift-1)}
+.stage-tabs button[aria-current=step] .n{background:var(--ink);color:var(--paper)}
+.stage-tabs button.done .n{background:var(--pass-soft);color:var(--pass)}
+.stage-tabs button:focus-visible{outline:3px solid var(--stitch);outline-offset:1px}
+.inst-stage[hidden]{display:none}
+.inst-stage+.inst-stage{margin-top:6px}
+.js .inst-check>h4:first-child{display:none}
+.js .inst-stage .open-hint:first-child{margin-top:10px}
+.stage-nav{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:20px;padding-top:14px;border-top:1px solid color-mix(in srgb,var(--ink-2) 18%,transparent)}
+.stage-nav .stage-next{margin-left:auto}
+@media (max-width:520px){.stage-tabs{flex-wrap:nowrap}.stage-tabs button:not([aria-current]) .lbl{display:none}.stage-tabs button:not([aria-current]){padding-right:5px}}
 .steps{padding-left:24px;margin:0}.steps li{margin-bottom:12px}.steps li::marker{font:700 .9rem var(--display);color:var(--ink-2)}.steps li p{margin-bottom:4px}
 .caution{color:var(--caution)}
 .issues{list-style:none;padding:0}.issues li{padding:10px 12px;margin-bottom:8px;border-radius:var(--r-ctl);background:var(--tag)}
@@ -825,9 +843,9 @@ body.is-results .hero-fitz{display:none}
 }
 @media (max-width:640px){
 .wrap{padding-left:16px;padding-right:16px}
-.ask{flex-direction:column;gap:4px}
+.ask{flex-direction:column;gap:10px}
 .ask label{font-size:1.1rem}
-.ask textarea{font-size:1.2rem}
+.ask textarea{font-size:1.2rem;padding-top:2px}
 .ask-meta{grid-template-columns:minmax(0,1fr)}.ask-go{align-items:stretch}
 .ask-meta .btn-primary{width:100%}
 .seg{width:100%;justify-content:space-between}.seg label{flex:1;justify-content:center;padding:0 8px}

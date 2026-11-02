@@ -10,7 +10,7 @@ import { bestGuide, isVerified, isWebApp, OSES, verifiedOn, webCheck, type Catal
 import { featuresOut, type FeaturesOut } from '../features.ts';
 import { L } from '../i18n.ts';
 import { installGuide, type InstallOutput } from '../install.ts';
-import { EMPTY_FORM, installSection, levelLine, webFactList } from '../page.ts';
+import { EMPTY_FORM, installSection, levelLine, stepText, webFactList } from '../page.ts';
 import { day, guiSentence, KIND, KIND_PLURAL, levelLabel, OS_NAME, PRICE, PROCESSING, passed, webLevelLabel } from '../ui/facts.ts';
 import { esc, link, listOf, safeUrl } from '../ui/html.ts';
 import { icon, osMark, type IconName } from '../ui/icons.ts';
@@ -315,8 +315,6 @@ function featureClip(entry: Entry, feature: string): string {
     : '';
 }
 
-/** `code` spans in generated steps; everything else escaped. */
-const stepText = (s: string) => esc(s).replace(/`([^`]+)`/g, '<code translate="no">$1</code>');
 
 function featureList(entry: Entry, f: FeaturesOut): string {
   const guide = entry.usage_guide ?? null;
@@ -396,8 +394,7 @@ function install(catalog: Catalog, entry: Entry): string {
     return (
       `<article class="run-card" id="install-${os}"${tabbed ? ` role="tabpanel" aria-labelledby="tab-${os}" data-os="${os}"` : ''}>` +
       `<div class="run-head"><h3>${sysLabel(os)}</h3></div>` +
-      installSection(out, { ...EMPTY_FORM, os }, tabbed || i === 0, true) +
-      (hint ? `<p class="open-hint">${icon('arrow-right')}<span>${stepText(hint)}</span></p>` : '') +
+      installSection(out, { ...EMPTY_FORM, os }, tabbed || i === 0, true, { hint }) +
       `</article>`
     );
   });
