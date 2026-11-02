@@ -105,3 +105,37 @@
   - 違反：q14 rules-only 的 find_software，`jevalt`、linux x86_64，features.checked 三項（`python3 /tmp/check_f1.py`、`check_f2.py`、`check_f3.py`）。開跑前 commit 的比對規則（a1a8ab4）要求 replay 裡有「完全相同指令」的通過檢查；原始紀錄 `verify-jevalt-20261101-163415-6a0e`（festive-torvalds worktree）的 replay 檢查指令是把 heredoc 寫檔與 `python3 /tmp/check_fN.py` 合成一行（`cat > /tmp/check_f1.py << 'PY' … PY\npython3 /tmp/check_f1.py`），三項都通過、印出預期訊號，feature_judge 三項都是 shows_it_working；資料檔把 heredoc 拆成 setup、指令只留最後一行。照開跑前的規則仍算 1 次違反（D5 的寫法：寫明次數與內容）；比對規則沒有改。
   - 無法檢查：q07 rules-only、q13 實驗組各 1 則 find_alternatives 回應，就是上面被 Claude Code 擋下的那 2 次（沒有到伺服器，沒有 rec_id、沒有回應內容）。
 - 結果裡沒有金鑰（`sk-ant-` 掃描）。
+
+## 補充重跑（第 2、3 次）、Haiku 對照（9.2 C）、B 題組（9.2 E）
+
+- 指令：一個背景工作依序跑 `run.py reruns`、`haiku`、`bset`（前一段結束碼不是 0 就停）；執行器 `324145f`，設定與快照不變。念誠選了繼續之後，照預先登記的順序接著跑。
+- reruns：10:38:42–11:43:36；`plan_reruns` 照 B4 估算排第 2、3 次（上限 $100）；24 小時期限 2026-11-03T09:46:58+08:00（從重跑的 q01 起算）。haiku：11:43:36–12:00:43（`claude-haiku-5-5`，其餘同第 1 次）。bset：12:00:43–12:26:31（12 題）。
+- 144 次全部有效、每格 1 次（0 次無效、0 次重試）。花費：第 2、3 次 $7.902（上限 $100）、Haiku $0.480（上限 $15）、B 題組 $3.377（上限 $40）。
+
+| 回合 | 組 | 次數 | 花費 | 平均花費 | 平均秒 | 平均回合 | 模型 |
+|---|---|---|---|---|---|---|---|
+| run2 | control | 20 | $2.062 | $0.103 | 44 | 3.0 | claude-opus-5-5 |
+| run2 | experimental | 20 | $2.111 | $0.106 | 55 | 3.5 | claude-opus-5-5 |
+| run3 | control | 20 | $1.866 | $0.093 | 45 | 2.7 | claude-opus-5-5 |
+| run3 | experimental | 20 | $1.864 | $0.093 | 51 | 3.5 | claude-opus-5-5 |
+| haiku | control | 20 | $0.267 | $0.013 | 22 | 2.1 | claude-haiku-5-5 |
+| haiku | experimental | 20 | $0.213 | $0.011 | 30 | 2.5 | claude-haiku-5-5 |
+| bset | control | 12 | $1.610 | $0.134 | 59 | 4.7 | claude-opus-5-5 |
+| bset | experimental | 12 | $1.767 | $0.147 | 70 | 5.8 | claude-opus-5-5 |
+
+- B2 核對（`check --round` run2、run3、haiku、bset）：都是 0 個設定問題；版本都是 2.1.304。
+- init 掃描（全部 264 次，排除 mcp_servers、tools、session_id、uuid、model）：工作目錄都是中性的 `tmpXXXXXXXX/work`；以字詞邊界找 pickfit、組名、題號、eval、bset、Software-Advisor、ncchen、worktree 都沒有。對照組都沒有 MCP 伺服器；MCP 組都是 pickfit connected。對照組沒有碰到 pickfit、也沒有拿到 rec_id。
+- 伺服器端（D1）：每個 rec_id 都只在該組的部署、時間都在該次執行之內（實驗組：run1 19、run2 18、run3 18、haiku 12、bset 11；rules-only run1 18）；09:46:58 之後兩個資料庫沒有串流裡找不到的事件。
+- **Meta 404 降級 5 次**：`pickfit-eval` 有 5 筆 `matched_by` rules、`degraded_reason` model_http、`model_statuses` [404,404]、Meta 費用 $0——11:02:56、11:03:45（run2 q09、q16）、11:27:04（run3 q09）、11:47:04、11:47:28（haiku q05、q06）。前後的呼叫都是 [200]，看起來是間歇的。照 eval/README.md 第 4 節，pickfit 回錯誤或降級都不算無效、照常評分（E 的 `tool_error`）。
+- 被 Claude Code 擋下的 pickfit 呼叫（agent 寫出無法解析的 JSON，沒有到伺服器）共 5 次：run1 q07 rules-only、run1 q13、run2 q13、haiku q08、haiku q15（後四次是實驗組），都是 find_alternatives。
+- 0 個推薦的實驗組回應：run1 12/19、run2 11/18、run3 13/18、haiku 6/12、bset 9/11；rules-only run1 0/18。只記事實。
+- Meta 合計（`pickfit-eval` 的 `meta_budget`）：2026-11-01 UTC 2 次 $0.0319（作廢的試跑），2026-11-02 UTC 91 次 $1.5647（78 次配對＋13 次 `expand.ts` 關鍵字擴充；78 筆事件的 `meta_cost_usd` 合計相同）；共 $1.597。`pickfit-eval-rules` $0。
+- D5：
+  - 9.1（`d5_check.py --rounds run1 run2 run3`，`d5-run1-run2-run3.json`）：**1 次違反**（就是上面 run1 q14 rules-only 的 jevalt，linux）、518 筆找得到、3 筆無法檢查（run1 q07 rules-only、run1 q13、run2 q13 被擋下的 find_alternatives）。
+  - Haiku（`d5-haiku.json`）：0 違反、61 筆找得到、2 筆無法檢查（haiku q08、q15 被擋下的呼叫）。
+  - B 題組（`d5-bset.json`，照 9.2 分開列）：**3 次違反**，都是規則 (e)（模型寫的句子裡驗證類字詞與作業系統同句）：
+    - b11 實驗組、find_software 的 well_known_option「PostgreSQL MCP Server」、linux：句子是 "…SQL query tools that run on Linux for remote clients…"；比對腳本把 `run on` 列為驗證類字詞。這個選項本身是 `verified: false`，how_we_know 寫明 pickfit 沒裝過、沒確認在 linux 能跑。
+    - b12 實驗組、find_software 的 indexio 與 agent-lsp、macos：句子是 "Verified only on linux x86_64, not on macOS, though platforms lists macOS."；第一個 macOS 前面有 not，第二個（platforms lists macOS）離 not 超過腳本的 30 字元窗，所以算成 macOS 的驗證主張，兩個工具各 1 次。
+    - 比對腳本沒有改，次數照腳本算；上面是逐筆讀過原文的內容（D5 的寫法：寫明次數與內容）。
+- 結果裡沒有金鑰（`sk-ant-` 掃描）。
+- Anthropic 合計（評測執行器）：第 1 次 $6.403＋第 2、3 次 $7.902＋Haiku $0.480＋B 題組 $3.377＝$18.163；另有作廢的試跑 $0.950、準備時的管線測試 $0.094，共 $19.207。評分還沒做（上限 $20）。
