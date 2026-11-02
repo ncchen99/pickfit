@@ -342,10 +342,12 @@ def test_record_schema_forbids_unknown_keys():
         "usage_outcomes",
         "browser_facts",  # web apps only (web.v1), optional
         "usability",  # GUI and web apps under gui.v1 and web.v2 only, optional
+        "visual_quality",  # GUI and web apps under gui.v2 and web.v3 only, optional
     ]
     assert "browser_facts" not in schema["$defs"]["QualityComponents"]["required"]
     assert "usability" not in schema["$defs"]["QualityComponents"]["required"]
-    assert "usability" not in schema["required"]
+    assert "usability" not in schema["required"] and "visual_check" not in schema["required"]
+    assert "visual_quality" not in schema["$defs"]["QualityComponents"]["required"]
 
 
 # --- ExtractionResult ----------------------------------------------------------

@@ -1253,6 +1253,11 @@ class QualityComponents(_Model):
         exclude_if=lambda value: value is None,
         description="Formulas gui.v1 and web.v2 only: the record's usability score / 100 (pickfit/usability.py).",
     )
+    visual_quality: QualityComponent | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="Formulas gui.v2 and web.v3 only: visual_check.score / 2, from measurable visual defects.",
+    )
 
     def items(self) -> list[tuple[str, QualityComponent]]:
         return [(name, c) for name in type(self).model_fields if (c := getattr(self, name)) is not None]
@@ -1568,6 +1573,40 @@ class Usability(_Model):
         return self
 
 
+class VisualCheck(_Model):
+    """Measurable visual defects on the first screens of one passed GUI or web run (comfort.v1, pickfit/usability.py).
+
+    Muse Wonder looked at pickfit's own screenshots (the app right after start and at the end of its last passed
+    operation) and listed what a second person would find in the same spot: text cut off, overlaps, clipped controls,
+    bad wraps, low contrast, tiny text, raw markup, broken images, misalignment, cramping. Never taste, welcome
+    dialogs or what the sandbox causes. score: no app defect 2, minor ones only 1, any major 0.
+    """
+
+    version: Literal["comfort.v1"]
+    run_id: RunId = Field(description="The run whose screenshots were read; stale once that run is gone.")
+    score: int | None = Field(ge=0, le=2, description="Null when the sandbox broke the screen or no answer came.")
+    status: Literal["scored", "sandbox_broken", "not_seen"]
+    defects: list[EaseFinding] = Field(default=[], max_length=20)
+    screens: int = Field(ge=1, description="Screenshots read.")
+    model: str = Field(min_length=1, max_length=80)
+    effort: str = Field(min_length=1, max_length=20)
+    inputs_sha: str = Field(pattern=r"^[0-9a-f]{64}$", description="sha256 over the prompt and every image's sha256.")
+    checked_at: AwareDatetime
+    cost_usd: float = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _score_follows_defects(self) -> VisualCheck:
+        if (self.score is None) != (self.status != "scored"):
+            raise ValueError("a visual check has a score exactly when its status is scored")
+        app = [d for d in self.defects if d.cause == "app"]
+        if any(d.item != "comfortable" or d.kind is None or d.severity is None for d in self.defects):
+            raise ValueError("a visual defect is a comfortable finding with its kind and severity")
+        expected = 2 if not app else 0 if any(d.severity == "major" for d in app) else 1
+        if self.score is not None and self.score != expected:
+            raise ValueError(f"score must be {expected} for these defects")
+        return self
+
+
 class WebApp(_Model):
     """A hosted web app (kind web_app): where to open it. What a browser saw lives in verification.runs[].web."""
 
@@ -1691,6 +1730,11 @@ class SoftwareRecord(_Model):
         exclude_if=lambda value: value is None,
         description="Only for kind desktop_app and web_app: how easy pickfit's AI operator found it (ease.v1).",
     )
+    visual_check: VisualCheck | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="Only for kind desktop_app and web_app: measurable visual defects on pickfit's own screenshots.",
+    )
     scores: Scores | None = None
     outcomes: Outcomes = Field(default_factory=Outcomes)
     sources: list[Source] = Field(min_length=1)
@@ -1714,6 +1758,8 @@ class SoftwareRecord(_Model):
     def _check_usability(self) -> SoftwareRecord:
         if self.usability is not None and self.kind not in ("desktop_app", "web_app"):
             raise ValueError("usability belongs to kind desktop_app and web_app only")
+        if self.visual_check is not None and self.kind not in ("desktop_app", "web_app"):
+            raise ValueError("visual_check belongs to kind desktop_app and web_app only")
         return self
 
     @model_validator(mode="after")

@@ -71,6 +71,8 @@ def manifest(folder: Path) -> dict[str, str]:
 def copy_run(run: dict, roots: list[Path], *, dry_run: bool) -> dict:
     found = [(root, rel) for rel in run["dirs"] for root in roots if (root / rel).is_dir()]
     if not found:
+        if (EVIDENCE / run["run_id"] / "MANIFEST.sha256").exists():
+            return {"run_id": run["run_id"], "status": "kept"}  # copied earlier; its worktree is gone
         return {"run_id": run["run_id"], "status": "missing", "dirs": run["dirs"]}
     if len(run["dirs"]) != 1:
         return {"run_id": run["run_id"], "status": "several_dirs", "dirs": run["dirs"]}
@@ -113,14 +115,14 @@ def main() -> int:
     counts: dict[str, int] = {}
     for row in rows:
         counts[row["status"]] = counts.get(row["status"], 0) + 1
-        if row["status"] not in ("copied", "unchanged", "would_copy"):
+        if row["status"] not in ("copied", "unchanged", "kept", "would_copy"):
             print(json.dumps(row), file=sys.stderr)
     if not args.dry_run:
         index = {row["run_id"]: {k: v for k, v in row.items() if k != "run_id"} for row in rows}
         EVIDENCE.mkdir(parents=True, exist_ok=True)
         (EVIDENCE / "index.json").write_text(json.dumps(index, indent=2, sort_keys=True) + "\n")
     print(json.dumps({"runs": len(runs), **counts}))
-    return 0 if all(r["status"] in ("copied", "unchanged", "would_copy") for r in rows) else 1
+    return 0 if all(r["status"] in ("copied", "unchanged", "kept", "would_copy") for r in rows) else 1
 
 
 if __name__ == "__main__":

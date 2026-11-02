@@ -1785,6 +1785,18 @@
         "usage_outcomes": {
           "$ref": "#/$defs/QualityComponent",
           "description": "Only external reports count. <3 reports: weight 10, score null (dropped from the denominator); 3-9: 10; 10-29: 20; >=30: 30 (usage_outcomes_weight)."
+        },
+        "visual_quality": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/QualityComponent"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Formulas gui.v2 and web.v3 only: visual_check.score / 2, from measurable visual defects."
         }
       },
       "required": [
@@ -2921,6 +2933,91 @@
       "title": "VideoRaw",
       "type": "object"
     },
+    "VisualCheck": {
+      "additionalProperties": false,
+      "description": "Measurable visual defects on the first screens of one passed GUI or web run (comfort.v1, pickfit/usability.py).\n\nMuse Wonder looked at pickfit's own screenshots (the app right after start and at the end of its last passed\noperation) and listed what a second person would find in the same spot: text cut off, overlaps, clipped controls,\nbad wraps, low contrast, tiny text, raw markup, broken images, misalignment, cramping. Never taste, welcome\ndialogs or what the sandbox causes. score: no app defect 2, minor ones only 1, any major 0.",
+      "properties": {
+        "checked_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "cost_usd": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "defects": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/EaseFinding"
+          },
+          "maxItems": 20,
+          "type": "array"
+        },
+        "effort": {
+          "maxLength": 20,
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs_sha": {
+          "description": "sha256 over the prompt and every image's sha256.",
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "model": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "run_id": {
+          "$ref": "#/$defs/RunId",
+          "description": "The run whose screenshots were read; stale once that run is gone."
+        },
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 2,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Null when the sandbox broke the screen or no answer came."
+        },
+        "screens": {
+          "description": "Screenshots read.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "scored",
+            "sandbox_broken",
+            "not_seen"
+          ],
+          "type": "string"
+        },
+        "version": {
+          "const": "comfort.v1",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "run_id",
+        "score",
+        "status",
+        "screens",
+        "model",
+        "effort",
+        "inputs_sha",
+        "checked_at",
+        "cost_usd"
+      ],
+      "title": "VisualCheck",
+      "type": "object"
+    },
     "WebApp": {
       "additionalProperties": false,
       "description": "A hosted web app (kind web_app): where to open it. What a browser saw lives in verification.runs[].web.",
@@ -3437,6 +3534,18 @@
     },
     "verification": {
       "$ref": "#/$defs/Verification"
+    },
+    "visual_check": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/VisualCheck"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Only for kind desktop_app and web_app: measurable visual defects on pickfit's own screenshots."
     },
     "web": {
       "anyOf": [

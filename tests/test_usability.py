@@ -454,3 +454,36 @@ def test_judge_takes_comfortable_from_the_inspector_in_one_call(bundle: Bundle, 
     record = gui_record(tmp_path)
     record["usability"] = usability.model_dump(mode="json")
     SoftwareRecord.model_validate(record)
+
+
+def test_pickfit_visual_checks_once_writes_visual_check_and_skips_what_it_already_read(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import argparse
+
+    import pickfit.usability as usability
+    from pickfit.schema import SoftwareRecord as Record
+
+    data = tmp_path / "data"
+    data.mkdir()
+    record = gui_record(tmp_path / "evidence")
+    (data / "fixture-chat-tui.json").write_text(json.dumps(record), encoding="utf-8")
+    calls: list[str] = []
+
+    def fake_ask(*args: Any, **kwargs: Any) -> Any:
+        def ask(body: dict[str, Any], out: type, kind: str) -> Asked:
+            calls.append(kind)
+            return Asked(comfort_answer(defect("raw_markup", "minor", 1, "Chats")), 0.03, "muse-wonder-1.0")
+        return ask
+
+    monkeypatch.setattr(usability, "meta_ask", fake_ask)
+    monkeypatch.setattr(usability, "RESULTS_DIR", tmp_path / "results")
+    monkeypatch.setattr(usability, "TextFinder", lambda: TextFinder(fake_ocr))
+    real_bundle_for = usability.bundle_for
+    monkeypatch.setattr(usability, "bundle_for", lambda raw: real_bundle_for(raw, tmp_path / "evidence"))
+    args = argparse.Namespace(slug=["fixture-chat-tui"], pilot=False, all=False, data_dir=str(data), cap=1.0,
+                              force=False, write=True, dry_run=False, verbose=True)
+    assert usability.main_visual(args) == 0 and calls == ["comfort"]
+    written = Record.model_validate(json.loads((data / "fixture-chat-tui.json").read_text(encoding="utf-8")))
+    assert written.visual_check is not None and written.visual_check.score == 1
+    assert written.visual_check.defects[0].kind == "raw_markup" and written.visual_check.effort == "medium"
+    assert usability.main_visual(args) == 0 and calls == ["comfort"]  # same screens and prompt: no second call
