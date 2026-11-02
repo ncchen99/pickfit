@@ -72,7 +72,7 @@ docs/usability-pilot.md and the coordinating session says go):
 
 usability is the record's usability score / 100, while the run it read is still among the record's passed runs (a
 re-verified record drops it until it is judged again); without one it drops out of the denominator. A treasure under
-either formula also needs usability >= 0.70, which a first look alone (at most 0.6) never reaches. Other kinds, and
+either formula also needs usability >= 0.70; a first look alone has no usability score. Other kinds, and
 desktop apps with no GUI run, stay on b3.v5 and carry no usability component. refresh_scores moves records between
 b3.v5 and gui.v1, and between web.v1 and web.v2, with no call.
 

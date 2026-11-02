@@ -164,7 +164,7 @@ assert max(QUALITY_CAPS.values()) < TREASURE_MIN_QUALITY
 USAGE_MIN_REPORTS = 3
 
 # Formulas that score how easy a GUI or web app is to use (pickfit/usability.py, pickfit/score.py). Under them a
-# treasure also needs a run with a passed operation and usability >= 70; a first look alone counts at most 60.
+# treasure also needs a run with a passed operation and usability >= 70; a first look alone has no usability score.
 EASE_FORMULAS = frozenset({"gui.v1", "web.v2"})
 EASE_TREASURE_MIN = 0.70
 
@@ -1518,7 +1518,7 @@ class Usability(_Model):
     run_id: RunId = Field(description="The run whose screenshots and log were read; stale once that run is gone.")
     basis: Literal["operated", "first_look"] = Field(
         description="operated: an operation passed pickfit's check; first_look: only the first screens were seen.")
-    score: float | None = Field(ge=0, le=100, description="0-100; a first look alone counts at most 60.")
+    score: float | None = Field(ge=0, le=100, description="0-100; null for a first look alone.")
     verdict: EaseVerdict | None = Field(description=">=70 easy, 40-69 some friction, <40 hard; none for a first look.")
     dimensions: EaseDimensions
     findings: list[EaseFinding] = Field(default=[], max_length=8)
@@ -1537,15 +1537,13 @@ class Usability(_Model):
     @model_validator(mode="after")
     def _check_score(self) -> Usability:
         scored = [d.score for _, d in self.dimensions if d.score is not None]
-        if (self.score is None) != (not scored):
-            raise ValueError("usability has a score exactly when a dimension is scored")
         if self.basis == "first_look":
-            if self.verdict is not None:
-                raise ValueError("a first look alone gets no verdict")
-            if self.score is not None and self.score > 60:
-                raise ValueError("a first look alone counts at most 60")
+            if self.score is not None or self.verdict is not None:
+                raise ValueError("a first look alone gets no score and no verdict")
             if self.dimensions.findable.score is not None or self.dimensions.responsive.score is not None:
                 raise ValueError("findable and responsive need an operation that passed")
+        elif (self.score is None) != (not scored):
+            raise ValueError("usability has a score exactly when a dimension is scored")
         elif self.score is not None:
             band = "easy" if self.score >= 70 else "some_friction" if self.score >= 40 else "hard"
             if self.verdict != band:

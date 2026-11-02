@@ -13,6 +13,8 @@ from queue_fakes import ROOT
 
 from pickfit.schema import SoftwareRecord, Usability
 from pickfit.usability import (
+    COMFORT_CHECKS,
+    FIND_CHECKS,
     Asked,
     Bundle,
     FirstLookAnswer,
@@ -99,12 +101,22 @@ def cite(image: int, quote: str) -> dict[str, Any]:
     return {"image": image, "box": {"x_min": 0, "y_min": 0, "x_max": 500, "y_max": 200}, "quote": quote}
 
 
-def first_answer(ready: int | None = 2, comfortable: int | None = 2, *, quote: str = "New message",
-                 findings: list[dict[str, Any]] | None = None, broken: bool = False) -> FirstLookAnswer:
+OK = {"ok": True, "cause": None, "problem": None, "evidence": None}
+UNSEEN = {"ok": None, "cause": None, "problem": None, "evidence": None}
+
+
+def bad(image: int, quote: str, cause: str = "app", problem: str = "the toolbar is cramped") -> dict[str, Any]:
+    return {"ok": False, "cause": cause, "problem": problem, "evidence": cite(image, quote)}
+
+
+def first_answer(ready: int | None = 2, *, comfort: dict[str, Any] | None = None, seen: str | None = "New message",
+                 findings: list[dict[str, Any]] | None = None, broken: bool = False,
+                 every: dict[str, Any] = OK) -> FirstLookAnswer:
     return FirstLookAnswer.model_validate({
         "observed": "a chat window", "screen_broken": broken, "findings": findings or [],
         "ready": {"score": ready, "evidence": cite(1, "Chats") if ready is not None else None},
-        "comfortable": {"score": comfortable, "evidence": cite(1, quote) if comfortable is not None else None}})
+        "comfort_seen": cite(1, seen) if seen else None,
+        "comfort": dict.fromkeys(COMFORT_CHECKS, every) | (comfort or {})})
 
 
 def finding(item: str, cause: str, image: int, quote: str, operation: int | None = None,
@@ -112,13 +124,15 @@ def finding(item: str, cause: str, image: int, quote: str, operation: int | None
     return {"item": item, "operation": operation, "cause": cause, "problem": problem, "evidence": cite(image, quote)}
 
 
-def in_use_answer(scores: dict[int, tuple[int | None, int | None]], findings: list[dict[str, Any]] | None = None,
-                  quotes: dict[int, tuple[int, str]] | None = None) -> InUseAnswer:
-    quotes = quotes or {1: (2, "pickfit1 sent"), 2: (4, "No menu")}
-    ops = [{"operation": n, "findable": {"score": f, "evidence": cite(*quotes[n]) if f is not None else None},
-            "responsive": {"score": r, "evidence": cite(*quotes[n]) if r is not None else None}}
-           for n, (f, r) in scores.items()]
-    return InUseAnswer.model_validate({"operations": ops, "findings": findings or []})
+def op(n: int, seen: tuple[int, str] | None, find: dict[str, Any] | None = None,
+       respond: dict[str, Any] | None = None) -> dict[str, Any]:
+    return {"operation": n, "seen": cite(*seen) if seen else None,
+            "findable": dict.fromkeys(FIND_CHECKS, OK) | (find or {}),
+            "responsive": {"result_shown": OK, "errors_explain": UNSEEN} | (respond or {})}
+
+
+def in_use_answer(*ops: dict[str, Any], findings: list[dict[str, Any]] | None = None) -> InUseAnswer:
+    return InUseAnswer.model_validate({"operations": list(ops), "findings": findings or []})
 
 
 @pytest.fixture
@@ -180,46 +194,54 @@ def test_ready_starts_from_the_screen_judge_and_drops_one_level_only_on_an_app_p
     assert check_first_look(first_answer(ready=0, findings=sandbox), bundle, finder).first["ready"] == (2, "scored")
 
 
-def test_comfort_needs_found_text_an_app_problem_and_measured_small_text(bundle: Bundle) -> None:
+def test_comfort_comes_from_checks_with_found_text_and_measured_small_text(bundle: Bundle) -> None:
     finder = TextFinder(fake_ocr)
-    assert check_first_look(first_answer(comfortable=2, quote="Made up"), bundle, finder).first["comfortable"] == (
-        None, "unquoted")
-    assert check_first_look(first_answer(comfortable=1), bundle, finder).first["comfortable"] == (None, "not_app")
-    assert check_first_look(first_answer(comfortable=None), bundle, finder).first["comfortable"] == (None, "not_seen")
-    assert check_first_look(first_answer(broken=True), bundle, finder).first["comfortable"] == (None, "sandbox_broken")
-    tiny = [finding("comfortable", "app", 1, "v1.2 beta", problem="the version text is too small")]
-    checked = check_first_look(first_answer(comfortable=1, findings=tiny), bundle, finder)
-    assert checked.first["comfortable"] == (1, "scored")  # OCR measures it 8 px tall
-    big = [finding("comfortable", "app", 1, "New message", problem="labels are too small")]
-    checked = check_first_look(first_answer(comfortable=1, findings=big), bundle, finder)
-    assert checked.first["comfortable"] == (None, "not_app") and checked.findings[0]["cause"] == "unconfirmed"
+
+    def comfort(**kw: Any) -> tuple[int | None, str]:
+        return check_first_look(first_answer(**kw), bundle, finder).first["comfortable"]
+
+    assert comfort() == (2, "scored")
+    assert comfort(seen="Made up") == (None, "unquoted")
+    assert comfort(every=UNSEEN) == (None, "not_seen")
+    assert comfort(broken=True) == (None, "sandbox_broken")
+    # One app problem 1, two 0; its text may be the label next to it, but it must be on the screen.
+    assert comfort(comfort={"spacing_even": bad(1, "New message")}) == (1, "scored")
+    assert comfort(comfort={"spacing_even": bad(1, "New message"), "layout_intact": bad(1, "Chats")}) == (0, "scored")
+    assert comfort(comfort={"layout_intact": bad(1, "Broken banner")}) == (None, "unquoted")
+    # The sandbox's problems are listed, never counted.
+    checked = check_first_look(first_answer(comfort={"layout_intact": bad(1, "Chats", cause="sandbox")}), bundle, finder)
+    assert checked.first["comfortable"] == (2, "scored") and checked.findings[0]["cause"] == "sandbox"
+    # "Too small" holds only for text OCR measures under 11 px.
+    assert comfort(comfort={"text_readable": bad(1, "v1.2 beta", problem="tiny version text")}) == (1, "scored")
+    checked = check_first_look(first_answer(comfort={"text_readable": bad(1, "New message")}), bundle, finder)
+    assert checked.first["comfortable"] == (None, "unquoted") and checked.findings[0]["cause"] == "unconfirmed"
 
 
-def test_in_use_scores_cite_their_own_operation_and_follow_pickfits_check(bundle: Bundle) -> None:
+def test_in_use_scores_come_from_each_operations_own_checks_and_pickfits_check(bundle: Bundle) -> None:
     finder = TextFinder(fake_ocr)
-    checked = check_in_use(in_use_answer({1: (2, 0), 2: (2, 2)}, findings=[
-        finding("responsive", "app", 2, "pickfit1 sent", operation=1, problem="the result shows nowhere")]),
-        bundle, finder)
+    checked = check_in_use(in_use_answer(op(1, (2, "pickfit1 sent")), op(2, (4, "No menu"))), bundle, finder)
+    assert checked.ops[1] == {"findable": (2, "scored"), "responsive": (2, "scored")}
+    assert checked.ops[2]["responsive"] == (1, "scored")  # a file check whose screen did not change: at most 1
+    failing = {"result_shown": bad(2, "pickfit1 sent"), "errors_explain": bad(2, "pickfit1 sent")}
+    checked = check_in_use(in_use_answer(op(1, (2, "pickfit1 sent"), respond=failing),
+                                         op(2, (4, "No menu"), find={"visible": bad(4, "No menu")})), bundle, finder)
     assert checked.ops[1]["responsive"] == (1, "scored")  # pickfit read the result on the screen: at least 1
-    assert checked.ops[2]["findable"] == (2, "scored")
-    # A score citing another operation's image is dropped; so is a stuck operation blamed on the operator.
-    checked = check_in_use(in_use_answer({1: (2, 2), 2: (0, None)}, quotes={1: (4, "No menu"), 2: (4, "No menu")},
-                                         findings=[finding("findable", "operator", 4, "No menu", operation=2)]),
+    assert checked.ops[2]["findable"] == (1, "scored")
+    # Text from another operation's image counts for nothing; the operator's misses never count.
+    checked = check_in_use(in_use_answer(op(1, (4, "No menu")),
+                                         op(2, (4, "No menu"), find={"visible": bad(4, "No menu", cause="operator")})),
                            bundle, finder)
     assert checked.ops[1]["findable"] == (None, "unquoted")
-    assert checked.ops[2]["findable"] == (None, "not_app") and checked.ops[2]["responsive"] == (None, "not_seen")
-    # A file check whose screen did not change shows at most 1.
-    checked = check_in_use(in_use_answer({1: (2, 2), 2: (2, 2)}), bundle, finder)
-    assert checked.ops[2]["responsive"] == (1, "scored")
+    assert checked.ops[2]["findable"] == (2, "scored") and checked.findings[0]["cause"] == "operator"
 
 
-def test_two_samples_must_agree_and_a_first_look_alone_counts_six_tenths() -> None:
+def test_two_samples_must_agree_and_a_first_look_alone_is_not_scored() -> None:
     assert combine((2, "scored"), (1, "scored")) == (1.5, "scored")
     assert combine((2, "scored"), (0, "scored")) == (None, "disagree")
     assert combine((2, "scored"), (None, "unquoted")) == (None, "unquoted")
     dims = {"ready": {"score": 2}, "findable": {"score": 1}, "responsive": {"score": None}, "comfortable": {"score": 2}}
     assert usability_score(dims, operated=True) == 80.0  # (20 + 15 + 25) / 75
-    assert usability_score(dims, operated=False) == 60.0  # ready and comfortable only, times 0.6
+    assert usability_score(dims, operated=False) is None
     assert usability_score({k: {"score": None} for k in dims}, operated=True) is None
     assert [verdict(s, True) for s in (70, 69.9, 40, 39.9)] == ["easy", "some_friction", "some_friction", "hard"]
     assert verdict(55, False) is None
@@ -230,12 +252,11 @@ def test_two_samples_must_agree_and_a_first_look_alone_counts_six_tenths() -> No
 
 def test_judge_makes_both_calls_twice_and_its_result_fits_the_record(bundle: Bundle, tmp_path: Path) -> None:
     calls: list[tuple[str, dict[str, Any]]] = []
-    answers = {"first_look": [first_answer(), first_answer(comfortable=1, findings=[
-                   finding("comfortable", "app", 1, "v1.2 beta", problem="tiny version text")])],
-               "in_use": [in_use_answer({1: (2, 2), 2: (1, None)}, findings=[
-                   finding("findable", "app", 4, "No menu", operation=2, problem="open is in no menu")]),
-                   in_use_answer({1: (1, 2), 2: (1, None)}, findings=[
-                       finding("findable", "app", 4, "No menu", operation=2, problem="open is in no menu")])]}
+    hidden = {"visible": bad(4, "No menu", problem="open is in no menu")}
+    answers = {"first_look": [first_answer(), first_answer(comfort={"spacing_even": bad(1, "New message")})],
+               "in_use": [in_use_answer(op(1, (2, "pickfit1 sent")), op(2, (4, "No menu"), find=hidden)),
+                          in_use_answer(op(1, (2, "pickfit1 sent"), find={"labelled": bad(1, "Type a message")}),
+                                        op(2, (4, "No menu"), find=hidden))]}
 
     def ask(body: dict[str, Any], out: type, kind: str) -> Asked:
         calls.append((kind, body))
@@ -249,12 +270,12 @@ def test_judge_makes_both_calls_twice_and_its_result_fits_the_record(bundle: Bun
     assert all("Fixture Chat TUI" not in json.dumps(body) for _, body in calls)
     dims = result["dimensions"]
     assert dims["ready"] == {"score": 2.0, "status": "scored"} and dims["comfortable"]["score"] == 1.5
-    # op 1: sample 2's 1 blames nothing on the app, so op 1 has no findable score; op 2: 1 in both samples.
-    assert dims["findable"] == {"score": 1.0, "status": "scored"}
-    assert dims["responsive"]["score"] == 2.0  # op 2 not seen in either sample
-    assert result["score"] == round(100 * (20 * 1 + 25 * 0.75 + 30 * 0.5 + 25 * 1) / 100, 1)
+    assert dims["findable"] == {"score": 1.25, "status": "scored"}  # op 1: (2 + 1) / 2, op 2: 1
+    assert dims["responsive"]["score"] == 1.5  # op 1: 2; op 2: a file check on an unchanged screen, at most 1
+    assert result["score"] == round(100 * (20 * 1 + 30 * 0.625 + 25 * 0.75 + 25 * 0.75) / 100, 1)
     assert result["verdict"] == "easy" and result["cost_usd"] == 0.04
-    assert result["findings"][0]["cause"] == "app" and result["findings"][0]["samples"] == 2
+    top = result["findings"][0]
+    assert (top["cause"], top["item"], top["operation"], top["samples"]) == ("app", "findable", 2, 2)
     usability = Usability.model_validate(record_usability(result))
     record = gui_record(tmp_path)
     record["usability"] = usability.model_dump(mode="json")
@@ -264,17 +285,18 @@ def test_judge_makes_both_calls_twice_and_its_result_fits_the_record(bundle: Bun
         SoftwareRecord.model_validate(record)
 
 
-def test_a_first_look_alone_has_no_verdict_and_stays_under_sixty(tmp_path: Path) -> None:
+def test_a_first_look_alone_is_shown_but_gets_no_score_or_verdict(tmp_path: Path) -> None:
     found = bundle_for(gui_record(tmp_path, operated=False), tmp_path)
     assert found is not None
     result = judge(found, lambda body, out, kind: Asked(first_answer(), 0.005, "muse-spark-1.3"), TextFinder(fake_ocr))
-    assert result["basis"] == "first_look" and result["score"] == 60.0 and result["verdict"] is None
+    assert result["basis"] == "first_look" and result["score"] is None and result["verdict"] is None
+    assert result["dimensions"]["ready"]["score"] == 2.0 and result["dimensions"]["comfortable"]["score"] == 2.0
     assert result["dimensions"]["findable"]["status"] == "no_operation"
     usability = record_usability(result)
     Usability.model_validate(usability)
-    for bad in ({"verdict": "easy"}, {"score": 61.0}):
+    for wrong in ({"verdict": "easy"}, {"score": 50.0}):
         with pytest.raises(ValidationError):
-            Usability.model_validate(usability | bad)
+            Usability.model_validate(usability | wrong)
 
 
 def test_web_runs_quote_the_pages_own_text(tmp_path: Path) -> None:
