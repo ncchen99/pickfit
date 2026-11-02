@@ -391,6 +391,7 @@ async function askModel(
     // A retry fits in the cap checked above: the failed try was not charged.
     const result = await callMeta(settings.apiKey, body, {
       timeoutMs,
+      via: settings.via,
       fetch: deps.fetch,
       clock: () => deps.now().getTime(),
       sleep: deps.sleep,
