@@ -505,8 +505,8 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   const notes: string[] = [];
   if (candidates.length === 0) {
     notes.push(
-      `No verified ${what} in pickfit meets these conditions. Coverage today: developer CLI tools, local AI/LLM tools, MCP servers and some web apps. ` +
-        'pickfit lists only lesser-known tools, so a well-known one may still fit.',
+      `No verified ${what} in pickfit meets these conditions. Coverage today: developer CLI tools, local AI/LLM tools, MCP servers, desktop GUI apps and some web apps. ` +
+        'pickfit lists mostly lesser-known tools, so a well-known one may still fit.',
     );
   } else if (choice.emptyByModel) {
     notes.push(`None of the ${candidates.length} verified tools that meet the conditions fits this request.`);
@@ -518,7 +518,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
       choice.fitsBeyond
         ? `None of the listed ${what}s clearly does this job: judging by their profiles, ${miss}. They are listed as the top-ranked ${what}s; each pick's match says what it covers.`
         : `pickfit has no verified ${what} that clearly does this job. Judging by their profiles, the listed ${what}s are the closest it has, but ${miss}; each pick's match says what it covers. ` +
-            'pickfit lists only lesser-known tools, so a well-known one may still fit.',
+            'pickfit lists mostly lesser-known tools, so a well-known one may still fit.',
     );
   } else if (choice.matchQuality === 'partial') {
     const gaps = choice.gaps?.length ? `: the closest, ${choice.closest}, does not mention ${choice.gaps.join(', ')}` : '';
