@@ -384,6 +384,16 @@ export const script = () => `
     if (/linux|x11|cros/.test(p)) return 'linux';
     return '';
   })();
+  // How far pickfit got: the reader's own system (or the first) in view, the others folded under "Other systems".
+  for (const more of $$('[data-progress-more]')) {
+    const rows = $$('.progress-row[data-os]', more.parentElement);
+    const keep = rows.find((r) => r.dataset.os === mySystem) || rows[0];
+    rows[0].before(keep);
+    for (const r of rows) if (r !== keep) more.append(r);
+    const label = more.querySelector('summary');
+    for (const r of rows) if (r !== keep) label.lastElementChild.before(r.querySelector('.os').cloneNode(true));
+    more.hidden = false;
+  }
   for (const bar of $$('[data-os-tabs]')) {
     const tabs = $$('[role=tab]', bar);
     const panel = (t) => document.getElementById(t.getAttribute('aria-controls'));

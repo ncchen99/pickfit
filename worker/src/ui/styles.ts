@@ -173,7 +173,13 @@ background:var(--tag);color:var(--ink);border-radius:14px;box-shadow:var(--lift-
 .os-tabs .os{width:1.05em;height:1.05em}
 .os-tabs .arch{font-weight:500;font-size:.8rem;color:var(--ink-2)}
 .os-mine{font:600 .72rem/1 var(--sans);padding:3px 6px;border-radius:999px;background:var(--pass-soft);color:var(--pass)}
-.js .run-card[role=tabpanel] .run-head{display:none}
+.js .run-panel[role=tabpanel] .run-head{display:none}
+.run-panel[hidden]{display:none}
+.run-panel+.run-panel{margin-top:24px;padding-top:20px;border-top:1px solid var(--rule)}
+.install-card .run-head{margin-bottom:12px}
+.install-card .install-body{padding:0}
+.install-card .stage-tabs button[aria-current=step]{background:var(--sunk);box-shadow:none}
+@media (max-width:520px){.run-card.install-card{padding:18px 16px}.os-tabs .arch{display:none}.os-tabs button{padding:0 12px;gap:6px}}
 
 /* badges */
 .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:0;border-radius:999px;font:700 .8rem/1.1 var(--display);letter-spacing:0;white-space:nowrap}
@@ -652,7 +658,6 @@ body.is-results .home-only{display:none}
 .feat-list small{display:block;color:var(--ink-2);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .uses{columns:2;column-gap:32px}.uses li{break-inside:avoid;margin-bottom:6px}
 .run-card{background:var(--tag);border-radius:var(--r-card);padding:22px 24px;box-shadow:var(--lift-1);margin-bottom:20px}
-.run-card .install{background:color-mix(in srgb,var(--sunk) 55%,var(--tag))}
 .run-video{margin:14px 0 16px}
 .run-video video{display:block;width:100%;max-width:720px;height:auto;border-radius:var(--r-ctl);background:#000}
 .run-video figcaption{margin-top:8px;font-size:var(--t-small);color:var(--ink-2);max-width:720px}
@@ -685,6 +690,14 @@ body.is-results .home-only{display:none}
 .chap-time{min-width:3.2em;color:var(--ink-2);font-variant-numeric:tabular-nums}
 @media (max-width:520px){.player-time{display:none}.player-bar{gap:4px;padding:4px 6px}}
 .progress-row{margin-bottom:14px}
+.progress-more[hidden]{display:none}
+.progress-more{margin:0 0 14px}
+.progress-more>summary{display:inline-flex;align-items:center;gap:6px;list-style:none;font:600 var(--t-small)/1.4 var(--display);color:var(--ink-2)}
+.progress-more>summary::-webkit-details-marker{display:none}
+.progress-more>summary:hover{color:var(--ink)}
+.progress-more>summary .i{width:16px;height:16px;transition:transform .25s var(--ease-out)}
+.progress-more[open]>summary .i{transform:rotate(180deg)}
+.progress-more[open]>summary{margin-bottom:12px}
 .progress-sys{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-weight:600}
 .progress-sys .arch{font-weight:500;color:var(--ink-2);font-size:.9rem}
 .prog-stages{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px 8px;max-width:none}

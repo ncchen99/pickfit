@@ -168,7 +168,7 @@ function facts(pick: PickOut): string {
   return items.length ? `<ul class="run-facts">${items.join('')}</ul>` : '';
 }
 
-/** The steps get_install_guide returns, for a person instead of an agent. `inRun`: inside a run card that already names the system. */
+/** The steps get_install_guide returns, for a person instead of an agent. `inRun`: inside a run card that already names the system, so no fold of its own. */
 export function installSection(guide: InstallOutput, form: FormValues, open: boolean, inRun = false, stepper: { hint: string | null } | null = null): string {
   const v = guide.verification;
   if (guide.steps.length === 0) return '';
@@ -246,8 +246,10 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
         { name: L('Start using it', '開始使用'), html: first + agent + (stepper.hint ? `<p class="open-hint">${icon('arrow-right')}<span>${stepText(stepper.hint)}</span></p>` : '') },
       ])
     : `<div class="install-body">${[...cautions, stepList, manual, verify, first, agent, issues].join('')}</div>`;
+  // Inside a run card the steps sit straight in the card: a fold inside it would be a box inside a box.
+  if (inRun) return body;
   return (
-    `<details class="install"${open ? ' open' : ''}><summary><span>${inRun ? L('Install steps', '安裝步驟') : L(`Install steps that worked on ${sysSpan}`, `在 ${sysSpan} 上可行的安裝步驟`)}</span>${icon('chevron-down')}</summary>` +
+    `<details class="install"${open ? ' open' : ''}><summary><span>${L(`Install steps that worked on ${sysSpan}`, `在 ${sysSpan} 上可行的安裝步驟`)}</span>${icon('chevron-down')}</summary>` +
     `${body}</details>`
   );
 }
