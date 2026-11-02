@@ -348,7 +348,7 @@ button.badge{cursor:help}
 .more .i{transition:transform .2s var(--ease-out)}
 
 /* page head band (every page but home): mat, Fitz, title */
-.head{padding:28px 0 0;position:relative;overflow:hidden}
+.head{padding:28px 0 0;position:relative;z-index:4;overflow:clip visible}
 .head-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:24px;padding-bottom:28px}
 .head h1{font-size:clamp(2.1rem,4.2vw,3.4rem)}
 .head .lede{font-size:var(--t-lead);color:var(--on-mat-2);margin:12px 0 0;max-width:60ch}
@@ -557,7 +557,7 @@ details>summary{cursor:pointer}
 
 const PAGES = `
 /* home: hero on the mat */
-.hero{padding:36px 0 0;overflow:hidden}
+.hero{padding:36px 0 0;position:relative;z-index:4;overflow:clip visible}
 .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,300px);gap:24px 40px;align-items:end}
 .hero h1{max-width:13ch}
 :lang(zh) .hero h1{max-width:none}
