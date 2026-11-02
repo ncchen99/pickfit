@@ -11,22 +11,29 @@ import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './subm
 import { NO_INSTALL_LABEL } from './webapp.ts';
 
 const ABOUT =
-  'pickfit recommends lesser-known software it tested in a sandbox. Scope: dev CLIs, local AI tools, MCP servers, web apps. ' +
-  'well_known_option is not verified by pickfit; say so. ';
-const RULES = 'Ask at most 1-2 questions first (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars.';
+  'pickfit recommends lesser-known software it tested in a sandbox. Scope: dev CLIs, local AI tools, MCP servers, web apps. ';
+const RULES = "Ask 1-2 questions only if you can't guess (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars. ";
+/** How to write the answer to the user, from reading agents' answers: pick first, alternative before the steps, no narration. */
+const ANSWER =
+  'Answer: open with one pick for the likely setup and confirm hard limits in a few words; say "free" whenever it is (users may not know open source is free). ' +
+  'Next line, before any steps: "If your setup is X instead, use Y." ' +
+  "Keep drawbacks short; say why the obvious choice isn't recommended. " +
+  'Tag well_known_option "(not verified by pickfit)" beside its name. ' +
+  "Don't narrate the search or say pickfit found nothing; just answer. No disclaimers about what you didn't run.";
 
 export const INSTRUCTIONS =
   ABOUT +
-  'Flow: find_software (or find_alternatives to replace one) -> user picks -> get_install_guide -> run steps with consent -> report_outcome; ' +
-  'weeks later, with consent, its check_in. ' +
+  'Flow: find_software (or find_alternatives to replace one) -> get_install_guide -> run steps with consent -> report_outcome. ' +
   RULES +
+  ANSWER +
   ' submit_software adds a repo or a website.';
 
 /** TOOLS=readonly: no mention of the tools that are not registered. */
 export const READONLY_INSTRUCTIONS =
   ABOUT +
-  'Flow: find_software (or find_alternatives to replace a tool) -> user picks -> get_install_guide -> run steps with the user\'s consent. ' +
-  RULES;
+  'Flow: find_software (or find_alternatives to replace one) -> get_install_guide -> run steps with consent. ' +
+  RULES +
+  ANSWER;
 
 const os = z.enum(['macos', 'linux', 'windows']);
 const arch = z.enum(['arm64', 'x86_64']);
@@ -398,10 +405,11 @@ export function buildServer(deps: Deps): McpServer {
       title: 'Find software',
       description:
         'Use when the user wants a tool for a job and has not settled on a product (e.g. "a free offline CLI to transcribe audio on my Mac"). ' +
-        'Before calling, ask at most one or two questions, and only if unknown: which OS, and whether it must be free or run fully offline. ' +
-        'Returns up to 3 lesser-known tools pickfit actually ran, ranked by fit (not popularity), each with reasons tied to its verified profile, trade-offs, evidence and separate quality/popularity scores, plus the best free option. ' +
-        'If a well-known free tool pickfit does not list may fit better, well_known_option names it: tell the user pickfit has not verified it. ' +
-        'If clarifying_question is set, ask it and call again. When matched_by is "rules", match_quality and each pick\'s match say how well the profiles cover the request; present partial or weak picks as such. ' +
+        'Before calling, ask at most two questions, only if you cannot guess: which OS, and whether it must be free or run offline. ' +
+        'Returns up to 3 lesser-known tools pickfit actually ran, ranked by fit (not popularity), each with reasons, trade-offs, evidence and quality/popularity scores, plus the best free option. ' +
+        'well_known_option names a well-known free tool pickfit does not list that may fit better: tag it "(not verified by pickfit)" beside its name. ' +
+        'If clarifying_question is set, ask it and call again. When matched_by is "rules", match_quality and each pick\'s match say how well they cover the request; present partial or weak picks as such. ' +
+        'If no pick fits, answer without mentioning the search. ' +
         'Next: get_install_guide(slug, os, rec_id). Coverage: developer CLI tools, local AI/LLM tools, MCP servers and web apps (web_app set: open the URL, no install).',
       inputSchema: findInput,
       outputSchema: findOutput,
@@ -418,7 +426,8 @@ export function buildServer(deps: Deps): McpServer {
         'Use when the user already uses a specific tool and wants something different ("replace X", "X is too slow / too expensive / needs an account"). ' +
         'Requires the current tool\'s name and what the user dislikes about it: ask for the dislike if they have not said it; do not guess. Ask for the OS only if unknown. ' +
         'Returns up to 3 lesser-known tools whose install pickfit actually ran, each with reasons tied to its verified profile, trade-offs against the current tool and verification evidence, ' +
-        'or keep_current advice when nothing fits better, plus the best free option and, rarely, an unverified well-known free tool (well_known_option). Next: get_install_guide(slug, os, rec_id).',
+        'or keep_current advice when nothing fits better (then lead with "keep X" and why), plus the best free option and, rarely, a well-known free tool (well_known_option): tag it "(not verified by pickfit)" beside its name. ' +
+        'If no pick fits, answer without mentioning the search. Next: get_install_guide(slug, os, rec_id).',
       inputSchema: alternativesInput,
       outputSchema: alternativesOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
