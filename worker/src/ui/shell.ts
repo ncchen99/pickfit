@@ -8,7 +8,7 @@ import { esc } from './html.ts';
 import { icon, OS_SPRITE } from './icons.ts';
 import { fitz, FITZ_BASE, ICON_32, marksLegend, popover } from './kit.ts';
 import { script } from './script.ts';
-import { CSS } from './styles.ts';
+import { CSS, CSS_ZH } from './styles.ts';
 
 export type NavKey = 'find' | 'browse' | 'compare' | 'how' | 'agents' | null;
 
@@ -107,7 +107,7 @@ export function renderShell(input: ShellInput): string {
 <link rel="icon" href="${ICON_32}" type="image/svg+xml">
 <link rel="preload" href="/assets/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${FITZ_BASE}states/fitz-searching.svg" as="image" type="image/svg+xml">
-<style nonce="${nonce}">${CSS}</style>
+<style nonce="${nonce}">${CSS}${lang() === 'zh-TW' ? CSS_ZH : ''}</style>
 </head>
 <body class="${esc(input.bodyClass ?? '')}"${input.tray === false ? ' data-tray="off"' : ''}>
 <a class="skip" href="#main">${L('Skip to content', '跳到主要內容')}</a>
