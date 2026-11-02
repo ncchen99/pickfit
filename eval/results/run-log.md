@@ -209,6 +209,9 @@
 | q18 | fail | fail | L2-1: `pipx install ollmcp` exit 127 | L2-1: `uv tool install --upgrade ollmcp` exit 127 |
 | q19 | fail | fail | L2-1: `brew install uv` exit 127, `uv tool install --python 3.12 aider-chat` exit 127) | L2-1: `brew install aider` exit 127 |
 | q20 | pass | pass | — | — |
+| q08 | not run | not run | macOS 客體沒有巢狀虛擬化（另有對照官方文件的盲評筆記，不是 L2） | 同左 |
+| q11 | fail | fail | L2-1：要下載 app、拖進「應用程式」、打開，第一次開啟跳出授權對話框（GUI） | L2-1：安裝第 4 行  exit 1（伺服器晚 1 秒起來的 race；照 C7；不算 race 時是 L2-3 不過，解盲後問念誠） |
+| q12 | fail | fail | L2-2：（uv 裝到 ~/.local/bin，不在 PATH） | L2-2：同左（ 也是 exit 127） |
 
 - 通過：對照組 q10、q20（2 題）；實驗組 q04、q20（2 題）。安裝失敗的題照 C7 算實跑過、其餘 [L2] 都不過。
 - q15：兩組（同一個工具與做法）的轉錄每次都超過 600 秒。這個沙盒裡編出來的 whisper.cpp `system_info` 沒有列出任何 SIMD 功能，編碼器每 30 秒視窗約 232 秒，但沙盒 CPU 有 avx2／avx512（`l2/q15-cpu-flags/`），基準 openai-whisper small 同樣的沙盒 33–40 秒。可能是在 gVisor 裡編譯的問題、不是答案的錯；照第 2 節記不過，**請念誠決定**。
