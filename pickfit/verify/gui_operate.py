@@ -46,7 +46,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Protocol
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, create_model, field_validator
 
 from pickfit.env import get_env
 from pickfit.ledger import BudgetExceeded
@@ -701,11 +701,21 @@ class OperatorAction(BaseModel):
     why: str = Field(description="One short sentence: why this action, or why done or give_up.")
 
 
-class MacOperatorAction(OperatorAction):
-    """On a Mac the operator may name a numbered text pickfit read on the screen (marks.py) instead of aiming."""
+def _with_element() -> type[BaseModel]:
+    """OperatorAction with `element` right after x and y: on a Mac the operator may name a numbered text pickfit read
+    on the screen (marks.py) instead of aiming. Strict mode makes it required-but-nullable; written last, after why,
+    the model filled it with -1 or 0 on coordinate clicks (62 times in 10 operations, 11/2)."""
+    fields: dict[str, Any] = {}
+    for name, info in OperatorAction.model_fields.items():
+        fields[name] = (info.annotation, info)
+        if name == "y":
+            fields["element"] = (int | None, Field(description=(
+                "click: the number of a marked text to click the middle of (more precise than x and y, which are "
+                "then ignored); null when you give x and y or for any other action, never 0 or -1.")))
+    return create_model("MacOperatorAction", **fields)
 
-    element: int | None = Field(description="click: the number of a marked text to click the middle of (more "
-                                            "precise than x and y, which are then ignored); else null.")
+
+MacOperatorAction = _with_element()
 
 
 def normalize_key(name: str, mac: bool = False) -> str | None:
@@ -796,7 +806,9 @@ def to_action(answer: OperatorAction, view: View, mac: bool = False, marks: list
     if kind in ("done", "give_up"):
         return {"kind": kind}, None
     element = getattr(answer, "element", None)
-    if kind == "click" and element is not None:
+    # Marks are numbered from 1: an element below 1 is the model's "none" (it wrote -1 or 0 for null), so x and y
+    # decide; a number with no mark is refused.
+    if kind == "click" and element is not None and element >= 1:
         mark = next((m for m in marks if m.number == element), None)
         if mark is None:
             return None, f"no marked text numbered {element}"
@@ -897,6 +909,7 @@ class Step:
     observation: str = ""  # the operator's words: data, never a result
     why: str = ""
     refused: str | None = None  # why pickfit did not perform the answer
+    answer: dict[str, Any] | None = None  # a refused answer's own x, y, element, key and text, for later analysis
     at: list[float] | None = None  # when the action ran, [start, end], in its recording's clock (record.py)
 
 
@@ -1090,6 +1103,7 @@ def operate(display: Display, goal: str, *, model: str | None = None, max_steps:
         act, why = to_action(answer, view, mac, found)
         if act is None:
             step.refused = why
+            step.answer = {k: getattr(answer, k, None) for k in ("x", "y", "element", "key", "text")}
             steps.append(step)
             note = f"Your last answer could not be performed: {why}."
             previous = png  # nothing was done: the same screen is shown again
