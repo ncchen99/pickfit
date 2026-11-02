@@ -475,3 +475,46 @@ def test_apply_rules_skips_repos_without_details(tmp_path: Path) -> None:
     db = PipelineDB(tmp_path / "pipeline.db")
     db.upsert_repo(normalize_repo(repo_item(1)), category="dev_cli", query_id="q")
     assert apply_rules(db) == {}
+
+
+def test_star_band_option_keeps_the_default() -> None:
+    assert all("stars:5..300 " in q.q for q in build_queries(date(2026, 10, 28)))
+    banded = build_queries(date(2026, 10, 28), stars="301..5000")
+    assert all("stars:301..5000 " in q.q for q in banded)
+    assert [q.id for q in banded] == [q.id for q in build_queries(date(2026, 10, 28))]
+
+
+def test_capped_discover_takes_round_robin_by_rank_and_skips_records(tmp_path: Path) -> None:
+    readme = base64.b64encode(b"# tinyq\n\n## Install\n\n`brew install tinyq`\n").decode()
+
+    def route(request: httpx2.Request) -> httpx2.Response:
+        path = request.url.path
+        if path == "/search/repositories":
+            q = request.url.params["q"]
+            assert "stars:301..5000 " in q
+            if q.startswith("topic:cli "):
+                return json_response({"total_count": 3, "items": [repo_item(1, "a/one"), repo_item(2, "a/two"),
+                                                                  repo_item(3, "a/three")]})
+            if q.startswith("topic:tui "):
+                return json_response({"total_count": 2, "items": [repo_item(1, "a/one"), repo_item(4, "a/four")]})
+            if q.startswith("topic:ollama "):
+                return json_response({"total_count": 1, "items": [repo_item(5, "a/five")]})
+            return json_response({"total_count": 0, "items": []})
+        if path.endswith("/readme"):
+            return json_response({"path": "README.md", "encoding": "base64", "content": readme})
+        if path.endswith("/releases"):
+            return json_response([])
+        if "/git/trees/" in path:
+            return json_response({"tree": [{"path": "main.go", "type": "blob"}], "truncated": False})
+        raise AssertionError(path)
+
+    fake = FakeGitHub(route)
+    funnel = run_discover(token=TOKEN, db_path=tmp_path / "pipeline.db", per_query=10, today=date(2026, 10, 28),
+                          gh=fake.client(tmp_path, search_interval_s=0), stars="301..5000", cap=3,
+                          exclude={"gh:2"}, log=lambda line: None)
+    # Rank 1 of each query in query order (cli, tui repeats a/one, ollama), then rank 2 (cli's a/two has a
+    # record, tui's a/four) until the cap.
+    assert [(x["full_name"], x["query_id"], x["rank"]) for x in funnel["capped"]["repos"]] == [
+        ("a/one", "dev_cli:cli", 1), ("a/five", "local_ai:ollama", 1), ("a/four", "dev_cli:tui", 2)]
+    assert funnel["discover"]["candidates"] == 3
+    assert funnel["rules"]["checked"] == 3

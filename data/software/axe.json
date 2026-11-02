@@ -1,0 +1,572 @@
+{
+  "schema_version": "software.v1",
+  "slug": "axe",
+  "repo_id": "gh:1168117547",
+  "name": "axe",
+  "summary": "CLI for defining and running single-purpose LLM agents from TOML configs, composable via pipes and Unix tools.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": null,
+  "maturity": null,
+  "tags": [
+    "ai-agents",
+    "automation",
+    "cli",
+    "command-line",
+    "developer-tools",
+    "golang",
+    "llm"
+  ],
+  "use_cases": [],
+  "alternatives_to": [],
+  "features": [
+    "Define focused LLM agents in TOML with model, prompt, skills and context",
+    "Run agents from terminal, pipes, git hooks or cron",
+    "Delegate tasks to sub-agents with depth limiting and parallel execution",
+    "Connect to external MCP servers for additional tools"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://docs.getaxe.dev",
+  "repo": {
+    "url": "https://github.com/jrswab/axe",
+    "full_name": "jrswab/axe",
+    "created_at": "2026-02-27T03:04:23Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/jrswab/axe@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Initialize config directory before first use"
+      ],
+      "check": null,
+      "first_task": "axe config init"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-axe-20261102-174102-0b20",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/axe.tar.gz https://github.com/jrswab/axe/releases/download/v1.11.0/axe_1.11.0_linux_amd64.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/axe.tar.gz -C /tmp && cp /tmp/axe ~/.local/bin/axe && chmod +x ~/.local/bin/axe && ~/.local/bin/axe version",
+          "purpose": "download pre-built linux_amd64 binary from GitHub releases and install to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "axe version",
+        "expected_signal": "axe version 1.11.0"
+      },
+      "first_task": "axe version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/jrswab/axe@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Initialize config directory before first use"
+      ],
+      "check": null,
+      "first_task": "axe config init"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.11.0",
+    "published_at": "2026-10-22T00:25:22Z",
+    "url": "https://github.com/jrswab/axe/releases/tag/v1.11.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:43:03.724439+08:00",
+    "runs": [
+      {
+        "id": "verify-axe-20261102-174102-0b20",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:43:03.724439+08:00",
+        "tool_version": "1.11.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/axe.tar.gz https://github.com/jrswab/axe/releases/download/v1.11.0/axe_1.11.0_linux_amd64.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/axe.tar.gz -C /tmp && cp /tmp/axe ~/.local/bin/axe && chmod +x ~/.local/bin/axe && ~/.local/bin/axe version",
+            "purpose": "download pre-built linux_amd64 binary from GitHub releases and install to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "axe version",
+            "expected_signal": "axe version 1.11.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "axe version 1.11.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "axe agents list",
+            "expected_signal": "mcp-test - MCP test agent",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mcp-test - MCP test agent",
+            "setup": [
+              {
+                "command": "cat > /tmp/setup_agents.sh <<'EOS'\nset -e\n# F1 agent via scaffold\naxe agents init my-agent\ncat $(axe config path)/agents/my-agent.toml\necho \"---F1 scaffold done---\"\n\n# Create explicit test agent for F2 with minimal config\nmkdir -p $(axe config path)/agents\ncat > $(axe config path)/agents/test-pipe.toml <<'TOML'\nname = \"test-pipe\"\ndescription = \"Test pipe agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You are helpful.\"\nmax_turns = 5\nTOML\n\n# F3 parent + sub agent\ncat > $(axe config path)/agents/sub-child.toml <<'TOML'\nname = \"sub-child\"\ndescription = \"child agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You are a child.\"\nTOML\n\ncat > $(axe config path)/agents/parent-agent.toml <<'TOML'\nname = \"parent-agent\"\ndescription = \"parent that delegates\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You delegate.\"\nsub_agents = [\"sub-child\"]\n\n[sub_agents_config]\nmax_depth = 3\nparallel = true\ntimeout = 30\nTOML\n\n# F4 MCP agent\ncat > $(axe config path)/agents/mcp-test.toml <<'TOML'\nname = \"mcp-test\"\ndescription = \"MCP test agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You use MCP tools.\"\n\n[[mcp_servers]]\nname = \"my-tools\"\nurl = \"https://example.com/sse\"\ntransport = \"sse\"\n\n[[mcp_servers]]\nname = \"http-tools\"\nurl = \"https://example.com/mcp\"\ntransport = \"streamable-http\"\nTOML\n\necho \"setup complete\"\nls -l $(axe config path)/agents/\nEOS\nchmod +x /tmp/setup_agents.sh\n/tmp/setup_agents.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "axe agents show test-pipe",
+            "expected_signal": "Model: openai/gpt-4o-mini",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Model: openai/gpt-4o-mini",
+            "setup": [
+              {
+                "command": "cat > /tmp/setup_agents.sh <<'EOS'\nset -e\n# F1 agent via scaffold\naxe agents init my-agent\ncat $(axe config path)/agents/my-agent.toml\necho \"---F1 scaffold done---\"\n\n# Create explicit test agent for F2 with minimal config\nmkdir -p $(axe config path)/agents\ncat > $(axe config path)/agents/test-pipe.toml <<'TOML'\nname = \"test-pipe\"\ndescription = \"Test pipe agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You are helpful.\"\nmax_turns = 5\nTOML\n\n# F3 parent + sub agent\ncat > $(axe config path)/agents/sub-child.toml <<'TOML'\nname = \"sub-child\"\ndescription = \"child agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You are a child.\"\nTOML\n\ncat > $(axe config path)/agents/parent-agent.toml <<'TOML'\nname = \"parent-agent\"\ndescription = \"parent that delegates\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You delegate.\"\nsub_agents = [\"sub-child\"]\n\n[sub_agents_config]\nmax_depth = 3\nparallel = true\ntimeout = 30\nTOML\n\n# F4 MCP agent\ncat > $(axe config path)/agents/mcp-test.toml <<'TOML'\nname = \"mcp-test\"\ndescription = \"MCP test agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You use MCP tools.\"\n\n[[mcp_servers]]\nname = \"my-tools\"\nurl = \"https://example.com/sse\"\ntransport = \"sse\"\n\n[[mcp_servers]]\nname = \"http-tools\"\nurl = \"https://example.com/mcp\"\ntransport = \"streamable-http\"\nTOML\n\necho \"setup complete\"\nls -l $(axe config path)/agents/\nEOS\nchmod +x /tmp/setup_agents.sh\n/tmp/setup_agents.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "echo \"hello from pipe\" | axe run test-pipe --dry-run",
+            "expected_signal": "hello from pipe",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hello from pipe",
+            "setup": [
+              {
+                "command": "cat > /tmp/setup_agents.sh <<'EOS'\nset -e\n# F1 agent via scaffold\naxe agents init my-agent\ncat $(axe config path)/agents/my-agent.toml\necho \"---F1 scaffold done---\"\n\n# Create explicit test agent for F2 with minimal config\nmkdir -p $(axe config path)/agents\ncat > $(axe config path)/agents/test-pipe.toml <<'TOML'\nname = \"test-pipe\"\ndescription = \"Test pipe agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You are helpful.\"\nmax_turns = 5\nTOML\n\n# F3 parent + sub agent\ncat > $(axe config path)/agents/sub-child.toml <<'TOML'\nname = \"sub-child\"\ndescription = \"child agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You are a child.\"\nTOML\n\ncat > $(axe config path)/agents/parent-agent.toml <<'TOML'\nname = \"parent-agent\"\ndescription = \"parent that delegates\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You delegate.\"\nsub_agents = [\"sub-child\"]\n\n[sub_agents_config]\nmax_depth = 3\nparallel = true\ntimeout = 30\nTOML\n\n# F4 MCP agent\ncat > $(axe config path)/agents/mcp-test.toml <<'TOML'\nname = \"mcp-test\"\ndescription = \"MCP test agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You use MCP tools.\"\n\n[[mcp_servers]]\nname = \"my-tools\"\nurl = \"https://example.com/sse\"\ntransport = \"sse\"\n\n[[mcp_servers]]\nname = \"http-tools\"\nurl = \"https://example.com/mcp\"\ntransport = \"streamable-http\"\nTOML\n\necho \"setup complete\"\nls -l $(axe config path)/agents/\nEOS\nchmod +x /tmp/setup_agents.sh\n/tmp/setup_agents.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "axe agents show parent-agent",
+            "expected_signal": "Sub-Agents: sub-child",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Sub-Agents: sub-child",
+            "setup": [
+              {
+                "command": "cat > /tmp/setup_agents.sh <<'EOS'\nset -e\n# F1 agent via scaffold\naxe agents init my-agent\ncat $(axe config path)/agents/my-agent.toml\necho \"---F1 scaffold done---\"\n\n# Create explicit test agent for F2 with minimal config\nmkdir -p $(axe config path)/agents\ncat > $(axe config path)/agents/test-pipe.toml <<'TOML'\nname = \"test-pipe\"\ndescription = \"Test pipe agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You are helpful.\"\nmax_turns = 5\nTOML\n\n# F3 parent + sub agent\ncat > $(axe config path)/agents/sub-child.toml <<'TOML'\nname = \"sub-child\"\ndescription = \"child agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You are a child.\"\nTOML\n\ncat > $(axe config path)/agents/parent-agent.toml <<'TOML'\nname = \"parent-agent\"\ndescription = \"parent that delegates\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You delegate.\"\nsub_agents = [\"sub-child\"]\n\n[sub_agents_config]\nmax_depth = 3\nparallel = true\ntimeout = 30\nTOML\n\n# F4 MCP agent\ncat > $(axe config path)/agents/mcp-test.toml <<'TOML'\nname = \"mcp-test\"\ndescription = \"MCP test agent\"\nmodel = \"openai/gpt-4o-mini\"\nsystem_prompt = \"You use MCP tools.\"\n\n[[mcp_servers]]\nname = \"my-tools\"\nurl = \"https://example.com/sse\"\ntransport = \"sse\"\n\n[[mcp_servers]]\nname = \"http-tools\"\nurl = \"https://example.com/mcp\"\ntransport = \"streamable-http\"\nTOML\n\necho \"setup complete\"\nls -l $(axe config path)/agents/\nEOS\nchmod +x /tmp/setup_agents.sh\n/tmp/setup_agents.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Requires Go 1.25+ and go install / go build",
+            "actually_needed": "Box has no Go toolchain; installed pre-built binary axe_1.11.0_linux_amd64.tar.gz from GitHub Releases instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "axe run <agent> --dry-run shows resolved context without calling LLM",
+            "actually_needed": "With [[mcp_servers]] or sub_agents configured, axe run --dry-run attempts MCP connections / sub-agent resolution and hangs until timeout (observed 10-15s timeout, exit 124/137); axe agents show still validates TOML",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show axe listing agents including mcp-test, showing test-pipe details with model openai/gpt-4o-mini, and reporting version 1.11.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-axe-20261102-174102-0b20/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-axe-20261102-174102-0b20/check-1-cmd7.judged.png",
+            "runs/verify/verify-axe-20261102-174102-0b20/check-2-cmd8.judged.png",
+            "runs/verify/verify-axe-20261102-174102-0b20/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.068736,
+        "features": [
+          {
+            "feature": "Define focused LLM agents in TOML with model, prompt, skills and context",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Run agents from terminal, pipes, git hooks or cron",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output is only a dry-run preview, not an actual agent result from piped input."
+          },
+          {
+            "feature": "Delegate tasks to sub-agents with depth limiting and parallel execution",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists parent-agent config, no sub-agent delegation was executed."
+          },
+          {
+            "feature": "Connect to external MCP servers for additional tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only lists an agent name, with no MCP server connection or tools shown."
+          }
+        ]
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-02T18:24:15+08:00",
+    "quality": {
+      "total": 84.4,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8182,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 87.2,
+      "signals": {
+        "stars": 910,
+        "monthly_downloads": null,
+        "forks": 35,
+        "dependents": null,
+        "release_downloads": 536,
+        "hn_top_score": 227,
+        "registries_count": 0
+      },
+      "age_days": 248,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 10.8
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:24:15.053132+08:00",
+      "sources_sha": "29bbbbd668856178a52bb7fb757da20801314b289e2583328447da0353b38830",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A CLI tool for managing and running LLM-powered agents."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requires Go 1.25+."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "go install github.com/jrswab/axe@latest"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "axe run my-agent"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export ANTHROPIC_API_KEY=\"your-key-here\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "If this fails with `invalid go version`, your Go toolchain is older than 1.25."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "are available for Linux, macOS, and Windows on the [GitHub Releases page]"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/jrswab/axe",
+      "fetched_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/jrswab/axe/blob/master/README.md",
+      "fetched_at": "2026-11-02T17:28:13+08:00"
+    },
+    {
+      "id": "release:v1.11.0",
+      "kind": "release",
+      "url": "https://github.com/jrswab/axe/releases/tag/v1.11.0",
+      "fetched_at": "2026-11-02T17:28:13+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A CLI tool for managing and running LLM-powered agents.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:53+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A lightweight cli for running single-purpose AI agents. Define focused agents in TOML, trigger them from anywhere; pipes, git hooks, cron, or the terminal.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:53+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Axe",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:53+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.11.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:28:13+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Axe orchestrates LLM-powered agents defined via TOML configuration files.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:53+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Pipe data in, get results out. Chain agents together. Trigger them from cron, git hooks, or CI.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:53+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Sub-agent delegation — agents can call other agents via LLM tool use, with depth limiting and parallel execution",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:53+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "MCP tool support — connect to external MCP servers for additional tools via SSE or streamable-HTTP transport",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:53+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/jrswab/axe@latest",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:53+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/jrswab/axe@latest",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:53+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/jrswab/axe@latest",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:53+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-02T17:27:57+08:00",
+  "updated_at": "2026-11-02T18:24:15+08:00"
+}

@@ -9,6 +9,7 @@
 | Flathub | **可以，只走 flatpak 的套件庫** | 下載 `dl.flathub.org/repo/appstream/x86_64/appstream.xml.gz`（每台 flatpak 用戶端都下載的同一份 AppStream 目錄），一次執行一次。取 App 的 id、名稱、摘要、說明、授權、網址、版本與日期 | 不爬 flathub.org 網站、不打 `flathub.org/api`、**不用安裝數**（`/stats`） |
 | Homebrew Cask | **可以** | `formulae.brew.sh/api/cask.json`（cask 定義）與 `api/analytics/cask-install/{30d,90d,365d}.json`（安裝數），一次執行各一次 | 安裝數只當選樣訊號，不轉發原始數字 |
 | 網頁應用（Show HN、GitHub 上有線上網址的 repo） | **可以，每站先查 robots.txt 與使用條款** | 發現走既有的 HN API 與 GitHub API；每個網站只抓 robots.txt、首頁、一頁使用條款 | 禁止自動化存取的網站不收；首頁文字只在抽取前暫存，紀錄只留抽出的事實與短引用 |
+| GitHub 301–5000 星（較知名的工具，規則 `github-well-known.v1`） | **可以**（同既有 GitHub 管道的 API 與條款） | 見最後一節 | 不人工挑選 |
 | GitLab.com、Codeberg 等其他 forge | **不用**（沿用 [research/channels.md](research/channels.md) 1.1 節） | — | GitLab.com 的 API 條款禁止大量收集；Codeberg 的 robots.txt 擋 `/api/` |
 
 ## Flathub
@@ -96,3 +97,45 @@
 花費（帳本，`webapps-` 開頭的 run，含重查）：Muse Spark Open（Baseten）299 次 $0.80、muse-spark-1.3 複查 24 次 $0.12。
 
 抽取與紀錄（11/2 00:07–00:25）：選入的 100 個用 `muse-spark-1.3`（effort minimal）抽取，100 個都成功（6 個各丟掉一段對不上來源的引用），$0.82。寫出 95 筆 `web_app` 紀錄（47 筆沒有 repo，`repo_id` 是 `web:`；48 筆有 GitHub repo），5 個沒寫：4 個抽取判斷不是網頁應用（函式庫 1、看不出種類 3）、1 個沒有摘要。全部未驗證，交給 P3.12。首頁文字在寫完紀錄後用 `pickfit webapps purge` 刪掉。
+
+## 較知名的工具：GitHub 301–5000 星（規則 `github-well-known.v1`）
+
+2026-11-02 17:30（台北）登記，**在任何搜尋與模型呼叫之前 commit**。
+
+為什麼：既有的 GitHub 發現只收 5–300 星（冷門工具），常見的需求在目錄裡常常找不到東西。幾百到幾千星的工具通常較穩定、較多人用，驗證過一樣對使用者有用。這一批是**較知名的工具**，不是「冷門」的；它們的知名度分數照既有公式算，不另外調整。
+
+規則（機械式，不看主題、不人工挑選）：
+
+1. **查詢**：和 `pickfit/discover/github.py` 同一組 `TOPICS`（dev_cli 8 條、local_ai 22 條、mcp_server 6 條，共 36 條）與同樣的時間條件（`created:>=今年 1/1`、`pushed:>=今天 UTC 往前 14 天`、`fork:false archived:false`），只把星數從 `stars:5..300` 換成 `stars:301..5000`（`WELL_KNOWN_STARS`）。排序同既有的 `sort=updated`（最近更新的在前）。每條取 API 回傳的前 100 筆（預設的 `--per-query`）。
+2. **取樣**：照 API 回傳的順序，依名次在各條查詢間輪流取：先取每條查詢的第 1 名（照 `TOPICS` 的順序），再取每條的第 2 名，以此類推；跳過已經有紀錄（`data/software/` 的 `repo_id`）的 repo 與重複出現的 repo，取到 **150 筆**為止。輪流取是為了不讓排在前面的幾條查詢（`cli`、`tui`）把 150 筆占滿。
+3. **之後照平常的流程**：規則（`rules.py`）→ 初篩 → 抽取 → 沙盒驗證（Modal gVisor）→ 計分。沒過規則、初篩判定不是軟體、抽取判定不在目錄類別裡的，照平常的規則不寫紀錄；**不另外挑、不另外刪**。
+4. **模型**：Meta 的 credits 留給線上的 Worker。初篩與抽取用 Muse Spark Open（Baseten，`meta-models/muse-spark-open-1026`，比賽提供的 key）；驗證 agent 用 Muse Spark Open（Modal Shared Endpoint，帳本的 `modal-llm` 預算；Baseten 預算不夠時也用這個）。每筆紀錄記下各段用的模型。Modal 沙盒花費上限 $25。
+5. **指令**：`pickfit discover --stars 301..5000 --cap 150`，在全新的 `runs/pipeline.db` 上跑（只有這一批的候選）。每條查詢與時間記在 `runs/traces/github-<日期>.jsonl` 與 `queries` 表；取到的 150 筆（順序、查詢、名次、星數）跑完後 commit 到 `docs/discovery/github-well-known-v1.json`。
+
+### 結果（2026-11-02 20:50 台北）
+
+| 步驟 | 數量 | 模型 | 花費 |
+|---|---|---|---|
+| 36 條查詢的命中（含重複） | 1,642（mcp 459、cli 250、mcp-server 172、terminal 124…） | — | $0（36 次搜尋） |
+| 輪流取樣 | 150（dev_cli 48、local_ai 79、mcp_server 23；各查詢最多取到第 8 名；5 個已經有紀錄的跳過） | — | $0 |
+| 規則 | 過 139（tool 115、uncertain 24）；擋 11（不是軟體 8、沒有安裝或用法 2、疑似釣魚 1） | — | $0 |
+| 初篩 | 留 132、拒 7；複查 15（矛盾 2、kind other 5、固定 5% 抽樣 8） | Spark Open（Baseten）；複查 muse-spark-1.3 | $0.60 ＋ Meta $0.13 |
+| 抽取，第一輪 | 132 筆：可用 123，9 筆兩次都輸出超過上限（Spark Open 已知的重複輸出） | Spark Open（Baseten） | $3.35 |
+| 寫成紀錄，第一輪 | 55；沒寫 68（類別 other 20、kind other 21、函式庫 14、kind 不明 8、模型或資料集 3、框架 1、schema 不過 1） | — | $0 |
+| 抽取，第二輪 | 第一輪沒寫成紀錄的 77 筆（沒寫的 68 ＋ 超過上限的 9）**全部**重新抽取，77 筆都可用 | muse-spark-1.3 | Meta $1.20 |
+| 寫成紀錄，第二輪 | 47；沒寫 30（類別 other 17、不是工具 11、schema 不過 2） | — | $0 |
+| 去重 | `data/software/` 裡沒有重複的 `repo_id` 或 repo 網址 | — | — |
+| 沙盒驗證（Modal gVisor；桌面 App 用虛擬螢幕） | 102 筆跑 62：**通過 38**（function 21、service 8、install 8、inference 1），沒過 24 | agent Spark Open（第一輪 Baseten、第二輪 Modal 端點；GUI 操作 Baseten）；判讀 muse-spark-1.3 | Baseten $4.44、modal-llm $2.01、Meta $0.46；沙盒約 $0.81 |
+| 沒跑的 40 筆 | 只能在 Apple Silicon 或 macOS 15、需要 GPU 10、Linux 沙盒沒有可跑的安裝方式 10、只有 Windows 4、瀏覽器擴充 1 | — | — |
+| 計分（`b3.v5`） | 102 筆 | 文件 rubric muse-spark-1.3 | Meta $2.01 |
+
+| 類別 | function | service | install | inference | 未驗證 |
+|---|---|---|---|---|---|
+| dev_cli | 16 | 1 | 5 | 0 | 18 |
+| local_ai | 5 | 0 | 3 | 1 | 40 |
+| mcp_server | 0 | 7 | 0 | 0 | 6 |
+
+- 知名度分數 56–98（中位數 84.3；既有紀錄的中位數 46.2），**沒有一筆算寶藏**（寶藏要求知名度 ≤45），所以網頁不會標「Hidden gem」。
+- 合計（帳本，只算這一批的 run）：Baseten $8.39、Meta $3.79（初篩複查 0.13、第二輪抽取 1.20、判讀 0.46、計分 2.01）、`modal-llm` $2.01、Modal 沙盒約 $0.81（批次的估算）。
+- 第二輪抽取：Spark Open 抽取寫成紀錄的比例只有 55／123，常把類別或 kind 填成 other 或空白。第一輪沒寫成紀錄的 77 筆全部（不挑）改用 `muse-spark-1.3` 再抽一次，照同樣的規則寫紀錄（念誠 11/2 同意）。
+- 目錄：列出的紀錄 856 → 958，install 以上 610 → 648。

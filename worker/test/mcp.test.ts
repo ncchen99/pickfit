@@ -55,9 +55,9 @@ test('legacy clients: initialize, list and call without a session', async () => 
   assert.equal(init.status, 200);
   assert.equal(init.headers.get('mcp-session-id'), null);
   const initMsg = await message(init);
-  assert.match(initMsg.result.instructions, /^pickfit recommends lesser-known software/);
-  // Every client loads these each session: keep them short (they grew past 512 with the answer guidance).
-  assert.ok(initMsg.result.instructions.length <= 900);
+  assert.match(initMsg.result.instructions, /^pickfit recommends software it installed and tested in a sandbox, mostly lesser-known\. Scope: .*desktop GUI apps/);
+  // Every client loads these each session: keep them short (they grew past 512 with the answer guidance, past 900 with the GUI scope).
+  assert.ok(initMsg.result.instructions.length <= 920);
 
   const list = await message(
     await call(rpc({ jsonrpc: '2.0', id: 2, method: 'tools/list' }, { 'mcp-protocol-version': '2025-11-25' })),

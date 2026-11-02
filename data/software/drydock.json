@@ -1,0 +1,565 @@
+{
+  "schema_version": "software.v1",
+  "slug": "drydock",
+  "repo_id": "gh:1317155017",
+  "name": "drydock",
+  "summary": "TUI dashboard that shows uncommitted, unpushed and unreleased state across many git repositories.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "cli",
+    "dashboard",
+    "developer-tools",
+    "git",
+    "monorepo",
+    "ratatui",
+    "release-management",
+    "rust",
+    "terminal",
+    "tui"
+  ],
+  "use_cases": [
+    "view uncommitted and unpushed changes across all owned repos",
+    "filter repos touched recently and find work worth releasing"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "show unpushed commits across every local branch",
+    "browse live TUI table with filters, fuzzy search and detail history view"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://yetidevworks.com/drydock",
+  "repo": {
+    "url": "https://github.com/yetidevworks/drydock",
+    "full_name": "yetidevworks/drydock",
+    "created_at": "2026-07-30T10:43:37Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "rust"
+    ],
+    "system_packages": [
+      "git"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install yetidevworks/drydock/drydock",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "drydock",
+        "expected_signal": "drydock"
+      },
+      "first_task": "drydock"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-drydock-20261102-173836-55e5",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/yetidevworks/drydock/releases/download/v1.3.1/drydock-linux-x86_64.tar.gz -o /tmp/drydock.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/drydock.tar.gz -C /tmp && find /tmp -maxdepth 2 -name drydock -type f -exec cp {} ~/.local/bin/drydock \\; && chmod +x ~/.local/bin/drydock && ~/.local/bin/drydock --version",
+          "purpose": "download drydock-linux-x86_64 v1.3.1 and install to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "drydock --version",
+        "expected_signal": "drydock 1.3.1"
+      },
+      "first_task": "drydock list --root /tmp/fleet --json > /tmp/out2.json && cat /tmp/out2.json"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.3.1",
+    "published_at": "2026-11-02T05:48:04Z",
+    "url": "https://github.com/yetidevworks/drydock/releases/tag/v1.3.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:39:49.674903+08:00",
+    "runs": [
+      {
+        "id": "verify-drydock-20261102-173836-55e5",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:39:49.674903+08:00",
+        "tool_version": "1.3.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/yetidevworks/drydock/releases/download/v1.3.1/drydock-linux-x86_64.tar.gz -o /tmp/drydock.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/drydock.tar.gz -C /tmp && find /tmp -maxdepth 2 -name drydock -type f -exec cp {} ~/.local/bin/drydock \\; && chmod +x ~/.local/bin/drydock && ~/.local/bin/drydock --version",
+            "purpose": "download drydock-linux-x86_64 v1.3.1 and install to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "drydock --version",
+            "expected_signal": "drydock 1.3.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "drydock 1.3.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "drydock list --root /tmp/fleet --json > /tmp/out2.json && cat /tmp/out2.json",
+            "expected_signal": "\"unpushed\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"state\": \"unpushed\",",
+            "setup": [
+              {
+                "command": "cat <<'EOS' > /tmp/setup_repos.sh\n#!/bin/bash\nset -e\nrm -rf /tmp/fleet\nmkdir -p /tmp/fleet/group1\n# repo1: with remote and unpushed commits\nmkdir -p /tmp/remote.git\ngit init --bare /tmp/remote.git -q\n\n# repoA: clone, make commits, create side branch with unpushed\ngit clone /tmp/remote.git /tmp/fleet/group1/repoA -q\ngit -C /tmp/fleet/group1/repoA config user.email \"test@test.com\"\ngit -C /tmp/fleet/group1/repoA config user.name \"test\"\necho \"hello\" > /tmp/fleet/group1/repoA/file.txt\ngit -C /tmp/fleet/group1/repoA add . && git -C /tmp/fleet/group1/repoA commit -qm \"initial\"\ngit -C /tmp/fleet/group1/repoA push -q origin HEAD\n# unpushed commit on main\necho \"more\" >> /tmp/fleet/group1/repoA/file.txt\ngit -C /tmp/fleet/group1/repoA commit -am \"unpushed main\" -q\n# side branch with unpushed\ngit -C /tmp/fleet/group1/repoA checkout -b feature -q\necho \"feature\" > /tmp/fleet/group1/repoA/feature.txt\ngit -C /tmp/fleet/group1/repoA add . && git -C /tmp/fleet/group1/repoA commit -qm \"feature work\"\ngit -C /tmp/fleet/group1/repoA checkout master -q 2>&1 || git -C /tmp/fleet/group1/repoA checkout main -q\n\n# repoB: clean repo\ngit clone /tmp/remote.git /tmp/fleet/group1/repoB -q\ngit -C /tmp/fleet/group1/repoB config user.email \"test@test.com\"\ngit -C /tmp/fleet/group1/repoB config user.name \"test\"\necho \"repoB\" > /tmp/fleet/group1/repoB/readme.txt\ngit -C /tmp/fleet/group1/repoB add . && git -C /tmp/fleet/group1/repoB commit -qm \"repoB init\"\necho done\nEOS\nchmod +x /tmp/setup_repos.sh\n/tmp/setup_repos.sh\nls /tmp/fleet/group1/repoA/.git -d\ngit -C /tmp/fleet/group1/repoA log --all --oneline --graph",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "drydock list --cached --json --root /tmp/fleet > /tmp/cached2.json && cat /tmp/cached2.json",
+            "expected_signal": "\"path\": \"/tmp/fleet/group1/repoA\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"path\": \"/tmp/fleet/group1/repoA\",",
+            "setup": [
+              {
+                "command": "cat <<'EOS' > /tmp/setup_repos.sh\n#!/bin/bash\nset -e\nrm -rf /tmp/fleet\nmkdir -p /tmp/fleet/group1\n# repo1: with remote and unpushed commits\nmkdir -p /tmp/remote.git\ngit init --bare /tmp/remote.git -q\n\n# repoA: clone, make commits, create side branch with unpushed\ngit clone /tmp/remote.git /tmp/fleet/group1/repoA -q\ngit -C /tmp/fleet/group1/repoA config user.email \"test@test.com\"\ngit -C /tmp/fleet/group1/repoA config user.name \"test\"\necho \"hello\" > /tmp/fleet/group1/repoA/file.txt\ngit -C /tmp/fleet/group1/repoA add . && git -C /tmp/fleet/group1/repoA commit -qm \"initial\"\ngit -C /tmp/fleet/group1/repoA push -q origin HEAD\n# unpushed commit on main\necho \"more\" >> /tmp/fleet/group1/repoA/file.txt\ngit -C /tmp/fleet/group1/repoA commit -am \"unpushed main\" -q\n# side branch with unpushed\ngit -C /tmp/fleet/group1/repoA checkout -b feature -q\necho \"feature\" > /tmp/fleet/group1/repoA/feature.txt\ngit -C /tmp/fleet/group1/repoA add . && git -C /tmp/fleet/group1/repoA commit -qm \"feature work\"\ngit -C /tmp/fleet/group1/repoA checkout master -q 2>&1 || git -C /tmp/fleet/group1/repoA checkout main -q\n\n# repoB: clean repo\ngit clone /tmp/remote.git /tmp/fleet/group1/repoB -q\ngit -C /tmp/fleet/group1/repoB config user.email \"test@test.com\"\ngit -C /tmp/fleet/group1/repoB config user.name \"test\"\necho \"repoB\" > /tmp/fleet/group1/repoB/readme.txt\ngit -C /tmp/fleet/group1/repoB add . && git -C /tmp/fleet/group1/repoB commit -qm \"repoB init\"\necho done\nEOS\nchmod +x /tmp/setup_repos.sh\n/tmp/setup_repos.sh\nls /tmp/fleet/group1/repoA/.git -d\ngit -C /tmp/fleet/group1/repoA log --all --oneline --graph",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install drydock or make install from source (requires Rust)",
+            "actually_needed": "used prebuilt linux-x86_64 tarball from GitHub releases; no Rust toolchain needed",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show drydock list JSON reporting unpushed state, cached list JSON output, and version 1.3.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-drydock-20261102-173836-55e5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-drydock-20261102-173836-55e5/check-1-cmd12.judged.png",
+            "runs/verify/verify-drydock-20261102-173836-55e5/check-2-cmd13.judged.png",
+            "runs/verify/verify-drydock-20261102-173836-55e5/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.101855,
+        "features": [
+          {
+            "feature": "show unpushed commits across every local branch",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "browse live TUI table with filters, fuzzy search and detail history view",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Live TUI requires interactive terminal; --help confirms dashboard exists"
+          }
+        ]
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-02T18:24:15+08:00",
+    "quality": {
+      "total": 83.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.75,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 77.5,
+      "signals": {
+        "stars": 325,
+        "monthly_downloads": null,
+        "forks": 12,
+        "dependents": null,
+        "release_downloads": 1980,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 94,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 18.74
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:24:15.053132+08:00",
+      "sources_sha": "eeec4ef6da6f78bf9229a6891ac532d8964f76b87c2abf138a44308106f9921a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "What's uncommitted, unpushed, and unreleased across every repo you own."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "If you keep dozens or hundreds of checkouts on disk and lose track of which"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "depends on `gh` being installed"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "cargo install drydock"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "drydock"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "roots = [\"~/Projects\"]"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Works on macOS and Linux."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/yetidevworks/drydock",
+      "fetched_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/yetidevworks/drydock/blob/main/README.md",
+      "fetched_at": "2026-11-02T17:28:53+08:00"
+    },
+    {
+      "id": "release:v1.3.1",
+      "kind": "release",
+      "url": "https://github.com/yetidevworks/drydock/releases/tag/v1.3.1",
+      "fetched_at": "2026-11-02T17:28:53+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A live TUI dashboard for a fleet of git repos.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "If you keep dozens or hundreds of checkouts on disk",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A live TUI dashboard for a fleet of git repos.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "What's uncommitted, unpushed, and unreleased across every repo you own.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# drydock",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Works on macOS and Linux.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Written in Rust.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "It **shells out to `git`** rather than linking a git library,",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.3.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:28:53+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "release:v1.3.1",
+      "quote": "tag: v1.3.1",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "github_api",
+      "quote": "What's uncommitted, unpushed, and unreleased across every repo you own.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "What did I touch recently? Filter to the last hour, day, week or month.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "What have I not pushed?** Across *every* local branch",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Run it with no arguments for the live dashboard:",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install yetidevworks/drydock/drydock",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install drydock",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "MIT",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Written in Rust. Works on macOS and Linux.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:34:22+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-02T17:27:57+08:00",
+  "updated_at": "2026-11-02T18:24:15+08:00"
+}

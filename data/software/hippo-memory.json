@@ -1,0 +1,609 @@
+{
+  "schema_version": "software.v1",
+  "slug": "hippo-memory",
+  "repo_id": "gh:1182306628",
+  "name": "Hippo",
+  "summary": "Hippo is long-term local memory for coding agents across tools.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-memory",
+    "ai-agents",
+    "ai-memory",
+    "claude-code",
+    "claude-code-plugin",
+    "codex",
+    "coding-agent",
+    "cursor",
+    "llm",
+    "llm-memory"
+  ],
+  "use_cases": [
+    "recall past data pipeline issues",
+    "remember project errors for future sessions",
+    "import ChatGPT memories into shared store"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "store long-term memories with tags",
+    "recall relevant memories with search",
+    "consolidate memories with sleep",
+    "import memories from other tools"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://hippo-memory.com",
+  "repo": {
+    "url": "https://github.com/kitfunso/hippo-memory",
+    "full_name": "kitfunso/hippo-memory",
+    "created_at": "2026-03-15T10:40:26Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js 22.16+"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g hippo-memory",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "trust Hippo hooks once in Codex /hooks"
+      ],
+      "check": null,
+      "first_task": "hippo recall \"data pipeline issues\" --budget 2000"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-hippo-memory-20261102-184746-5c69",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g hippo-memory",
+          "purpose": "install hippo-memory globally via npm"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "hippo --version 2>&1 | cat -A\nnpm list -g hippo-memory 2>&1",
+        "expected_signal": "3.1.1"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g hippo-memory",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "trust Hippo hooks once in Codex /hooks"
+      ],
+      "check": null,
+      "first_task": "hippo recall \"data pipeline issues\" --budget 2000"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v3.1.0",
+    "published_at": "2026-11-01T19:58:55Z",
+    "url": "https://github.com/kitfunso/hippo-memory/releases/tag/v3.1.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:49:21.732985+08:00",
+    "runs": [
+      {
+        "id": "verify-hippo-memory-20261102-184746-5c69",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:49:21.732985+08:00",
+        "tool_version": "3.1.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g hippo-memory",
+            "purpose": "install hippo-memory globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "hippo --version 2>&1 | cat -A\nnpm list -g hippo-memory 2>&1",
+            "expected_signal": "3.1.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3.1.1$",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "hippo remember \"FRED cache silently dropped the tips_10y series\" --tag error 2>&1",
+            "expected_signal": "Remembered",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "No hippo store at /home/sbx/work/.hippo (searched /home/sbx/work and its parents up to your home directory). Run `hippo init` first.",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "hippo recall \"data pipeline issues\" --budget 2000 2>&1",
+            "expected_signal": "No memories found for:",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "No hippo store at /home/sbx/work/.hippo (searched /home/sbx/work and its parents up to your home directory). Run `hippo init` first.",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "hippo sleep 2>&1",
+            "expected_signal": "Running consolidation",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "No hippo store at /home/sbx/work/.hippo (searched /home/sbx/work and its parents up to your home directory). Run `hippo init` first.",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "hippo import --chatgpt /home/sbx/work/memories2.json 2>&1",
+            "expected_signal": "Imported:",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "No hippo store at /home/sbx/work/.hippo (searched /home/sbx/work and its parents up to your home directory). Run `hippo init` first.",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/memories2.json <<'EOF'\n[{\"title\": \"Another memory\", \"content\": \"Use Postgres JSONB for new services\"}]\nEOF\ncat /home/sbx/work/memories2.json",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows hippo --version printing 3.1.1 and npm list showing hippo-memory@3.1.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hippo-memory-20261102-184746-5c69/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hippo-memory-20261102-184746-5c69/check-1-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.068376,
+        "features": [
+          {
+            "feature": "store long-term memories with tags",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "recall relevant memories with search",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "consolidate memories with sleep",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "import memories from other tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          }
+        ]
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-02T19:44:20+08:00",
+    "quality": {
+      "total": 94.1,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 94.1,
+      "signals": {
+        "stars": 790,
+        "monthly_downloads": 9770,
+        "forks": 47,
+        "dependents": null,
+        "release_downloads": 26,
+        "hn_top_score": 128,
+        "registries_count": 1
+      },
+      "age_days": 231,
+      "packages": [
+        "npm:hippo-memory"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 5.55
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T19:44:20.304038+08:00",
+      "sources_sha": "944c446ca518aeb06f8a834c28b1e3f4375be8ba97469978686175bec574872e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Hippo is long-term memory for coding agents."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Stop re-teaching your agent."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Dependencies:  Zero runtime deps. Node.js 22.16+."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npm install -g hippo-memory && hippo init"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "# Initialized Hippo at /my-project/.hippo"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Configure `SLACK_SIGNING_SECRET` (validated on every request)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![license](https://img.shields.io/badge/license-MIT-blue)](https://github.com/kitfunso/hippo-memory/blob/master/LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/kitfunso/hippo-memory",
+      "fetched_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/kitfunso/hippo-memory/blob/master/README.md",
+      "fetched_at": "2026-11-02T17:28:18+08:00"
+    },
+    {
+      "id": "release:v3.1.0",
+      "kind": "release",
+      "url": "https://github.com/kitfunso/hippo-memory/releases/tag/v3.1.0",
+      "fetched_at": "2026-11-02T17:28:18+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "hippo remember \"FRED cache silently dropped the tips_10y series\" --tag error",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "npm install -g hippo-memory && hippo init",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Hippo is long-term memory for coding agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Hippo is long-term memory for coding agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# 🦛 Hippo",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "a crontab line on Linux and macOS, a scheduled task named `hippo-daily-runner` on Windows.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Dependencies:  Zero runtime deps. Node.js 22.16+.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v3.1.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:28:18+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "hippo recall \"data pipeline issues\" --budget 2000",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "hippo remember \"FRED cache silently dropped the tips_10y series\" --tag error",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "hippo import --chatgpt memories.json",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "hippo remember \"FRED cache silently dropped the tips_10y series\" --tag error",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "hippo recall \"data pipeline issues\" --budget 2000",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "hippo sleep",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "hippo import --chatgpt memories.json",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g hippo-memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g hippo-memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g hippo-memory",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "github_api",
+      "quote": "It keeps your proprietary data completely local",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-02T17:27:57+08:00",
+  "updated_at": "2026-11-02T19:44:20+08:00"
+}

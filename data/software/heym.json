@@ -1,0 +1,494 @@
+{
+  "schema_version": "software.v1",
+  "slug": "heym",
+  "repo_id": "gh:1194340608",
+  "name": "Heym",
+  "summary": "Self-hosted runtime for building, orchestrating, running and observing agentic workflows.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "self_hosted_web_app",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "a2a",
+    "a2a-mcp",
+    "a2a-server",
+    "agentic-ai",
+    "ai-agents",
+    "ai-agents-framework",
+    "ai-assistant",
+    "automation",
+    "coding-agent",
+    "evals"
+  ],
+  "use_cases": [
+    "build agent workflows visually or with AI",
+    "inspect execution history and model costs",
+    "evaluate prompts across models",
+    "publish workflow-backed chat interfaces",
+    "invoke workflows via REST, SSE and MCP"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "compose agents and deterministic workflows visually",
+    "coordinate agents and sub-workflows with branching",
+    "inspect execution history traces and costs",
+    "pause execution for human review checkpoints"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://heym.run",
+  "repo": {
+    "url": "https://github.com/heymrun/heym",
+    "full_name": "heymrun/heym",
+    "created_at": "2026-03-28T08:08:49Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Python 3.11+",
+      "Bun",
+      "UV"
+    ],
+    "system_packages": [
+      "Docker"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": null,
+  "last_release": {
+    "tag": "v0.0.143",
+    "published_at": "2026-11-01T19:46:52Z",
+    "url": "https://github.com/heymrun/heym/releases/tag/v0.0.143"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "needs_container",
+    "checked_at": "2026-11-02T19:00:14.049390+08:00",
+    "runs": [
+      {
+        "id": "verify-heym-20261102-185538-45d9",
+        "level": "unverified",
+        "unverified_reason": "needs_container",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T19:00:14.049390+08:00",
+        "tool_version": "0.0.143",
+        "install_method": "source",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "cd /home/sbx/work && rm -rf heym 2>&1; git clone https://github.com/heymrun/heym.git heym 2>&1 | tail -5; ls heym/run.sh heym/deploy.sh 2>&1",
+            "purpose": "clone repository to work dir"
+          }
+        ],
+        "smoke_tests": [],
+        "pitfalls": [
+          {
+            "readme_said": "Prerequisites: Python 3.11+, Bun, UV, Docker",
+            "actually_needed": "run.sh checks for docker, bun, uv and exits if missing; box has no docker or bun and cannot install them without root",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "./run.sh starts PostgreSQL, backend and frontend",
+            "actually_needed": "No npm/pip package exists; only source via run.sh/deploy.sh or Docker image ghcr.io/heymrun/heym:latest which requires Docker",
+            "kind": "note"
+          },
+          {
+            "readme_said": "MCP server at /api/mcp/sse",
+            "actually_needed": "MCP is served by the full web platform requiring PostgreSQL, not a standalone stdio MCP server that can be probed independently",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-heym-20261102-185538-45d9/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.078525
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": null,
+    "client_configs": [],
+    "env_vars": [],
+    "tools": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-02T19:44:20+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.5,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 76.9,
+      "signals": {
+        "stars": 1267,
+        "monthly_downloads": null,
+        "forks": 98,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 219,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 15.94
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T19:44:20.304038+08:00",
+      "sources_sha": "562e193557eead7c89602ace964d925b52a5629c87374f04ea24c57af8594ab6",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Heym is a self-hosted runtime and platform for building, orchestrating, running, observing, evaluating, and controlling agentic systems on your infrastructure."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**Prerequisites:** [Bun](https://bun.sh/), [Python 3.11+](https://python.org/), [UV]"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "git clone https://github.com/heymrun/heym.git && cd heym && ./run.sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Open **http://localhost:4017** to create your account and start building."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "See [ENVIRONMENT-VARIABLES.md](ENVIRONMENT-VARIABLES.md) for every setting and its default."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Follow the [version badge and releases](https://github.com/heymrun/heym/releases) for updates."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "License: MIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/heymrun/heym",
+      "fetched_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/heymrun/heym/blob/main/README.md",
+      "fetched_at": "2026-11-02T17:28:22+08:00"
+    },
+    {
+      "id": "release:v0.0.143",
+      "kind": "release",
+      "url": "https://github.com/heymrun/heym/releases/tag/v0.0.143",
+      "fetched_at": "2026-11-02T17:28:22+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Heym is a self-hosted runtime and platform for building, orchestrating, running, observing, evaluating, and controlling agentic systems on your infrastructure.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Open **http://localhost:4017** to create your account and start building.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Heym is a self-hosted runtime and platform for building, orchestrating, running, observing, evaluating, and controlling agentic systems on your infrastructure.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Heym",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/1",
+      "source_id": "readme",
+      "quote": "**Prerequisites:** [Bun](https://bun.sh/), [Python 3.11+](https://python.org/), [UV](https://github.com/astral-sh/uv), and [Docker](https://docker.com/).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/2",
+      "source_id": "readme",
+      "quote": "**Prerequisites:** [Bun](https://bun.sh/), [Python 3.11+](https://python.org/), [UV](https://github.com/astral-sh/uv), and [Docker](https://docker.com/).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "**Prerequisites:** [Bun](https://bun.sh/), [Python 3.11+](https://python.org/), [UV](https://github.com/astral-sh/uv), and [Docker](https://docker.com/).",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.0.143",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:28:22+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Compose agents and deterministic workflows visually, generate them with AI, or start from reusable templates and skills.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Inspect execution history, live state, traces, tool calls, tokens, latency, errors, and model costs.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Run repeatable prompt evaluations across models, compare expected and actual outputs, and review historical results.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Publish workflow-backed chat interfaces with streaming, uploads, and conversation history.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Invoke workflows from applications, stream execution events, or publish workflows as tools for MCP clients.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Compose agents and deterministic workflows visually, generate them with AI, or start from reusable templates and skills.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Coordinate agents, sub-agents, sub-workflows, and tools with explicit data flow, branching, and parallel execution where dependencies allow.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Inspect execution history, live state, traces, tool calls, tokens, latency, errors, and model costs.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Pause Agent execution at review checkpoints and resume from saved state after a human decision.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:55+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-02T17:27:57+08:00",
+  "updated_at": "2026-11-02T19:44:20+08:00"
+}

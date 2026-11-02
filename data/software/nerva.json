@@ -1,0 +1,566 @@
+{
+  "schema_version": "software.v1",
+  "slug": "nerva",
+  "repo_id": "gh:1141520429",
+  "name": "nerva",
+  "summary": "Fast service fingerprinting CLI that identifies 170+ network protocols across TCP, UDP and SCTP with metadata extraction.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": null,
+  "maturity": null,
+  "tags": [
+    "capability",
+    "cli-tool",
+    "external-network-security",
+    "go-library",
+    "network-scanner",
+    "pentesting",
+    "port-scanner",
+    "protocol-detection",
+    "reconnaissance",
+    "sctp"
+  ],
+  "use_cases": [
+    "fingerprint services discovered during penetration testing reconnaissance",
+    "build asset discovery pipelines with port scanners like Naabu",
+    "fingerprint Diameter nodes in LTE/5G telecom networks over SCTP"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "scan over TCP, UDP and SCTP transports with proxy support and fast mode",
+    "extract rich metadata and output as JSON, CSV or human-readable for pipeline use"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/praetorian-inc/nerva",
+    "full_name": "praetorian-inc/nerva",
+    "created_at": "2026-01-25T00:48:54Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "go"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/praetorian-inc/nerva/cmd/nerva@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "nerva -t example.com:22",
+        "expected_signal": "ssh://example.com:22"
+      },
+      "first_task": "nerva -t example.com:22"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-nerva-20261102-174303-e960",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL https://dl.google.com/go/go1.23.4.linux-amd64.tar.gz -o /tmp/go.tar.gz && mkdir -p $HOME/go-install && tar -xzf /tmp/go.tar.gz -C $HOME && $HOME/go/bin/go version",
+          "purpose": "install Go 1.23.4 toolchain to $HOME/go (required by README)"
+        },
+        {
+          "command": "export PATH=$HOME/go/bin:$PATH && go install github.com/praetorian-inc/nerva/cmd/nerva@latest && $HOME/go/bin/nerva -h 2>&1",
+          "purpose": "go install github.com/praetorian-inc/nerva/cmd/nerva@latest"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "export PATH=$HOME/go/bin:$PATH && which nerva && nerva -h",
+        "expected_signal": "Usage: nerva [flags]"
+      },
+      "first_task": "export PATH=$HOME/go/bin:$PATH && which nerva && nerva -h"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/praetorian-inc/nerva/cmd/nerva@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "nerva -t example.com:22",
+        "expected_signal": "ssh://example.com:22"
+      },
+      "first_task": "nerva -t example.com:22"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.84.0",
+    "published_at": "2026-10-29T17:10:43Z",
+    "url": "https://github.com/praetorian-inc/nerva/releases/tag/v1.84.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:46:19.638496+08:00",
+    "runs": [
+      {
+        "id": "verify-nerva-20261102-174303-e960",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:46:19.638496+08:00",
+        "tool_version": "v1.84.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://dl.google.com/go/go1.23.4.linux-amd64.tar.gz -o /tmp/go.tar.gz && mkdir -p $HOME/go-install && tar -xzf /tmp/go.tar.gz -C $HOME && $HOME/go/bin/go version",
+            "purpose": "install Go 1.23.4 toolchain to $HOME/go (required by README)"
+          },
+          {
+            "command": "export PATH=$HOME/go/bin:$PATH && go install github.com/praetorian-inc/nerva/cmd/nerva@latest && $HOME/go/bin/nerva -h 2>&1",
+            "purpose": "go install github.com/praetorian-inc/nerva/cmd/nerva@latest"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "export PATH=$HOME/go/bin:$PATH && which nerva && nerva -h",
+            "expected_signal": "Usage: nerva [flags]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "-W, --workers int number of concurrent scan workers (default 50)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=$HOME/go/bin:$PATH && timeout 15 nerva -t example.com:80 -w 5000",
+            "expected_signal": "http://example.com:80",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "http://example.com:80 (172.66.147.243)",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "export PATH=$HOME/go/bin:$PATH && timeout 15 nerva -t example.com:80 --json -w 5000",
+            "expected_signal": "\"host\":\"example.com\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"host\":\"example.com\",\"ip\":\"104.20.23.154\",\"port\":80,\"protocol\":\"http\",\"tls\":false,\"transport\":\"tcp\",\"version\":\"cloudflare\",\"metadata\":{\"status\":\"200 OK\",\"status_code\":200,\"title\":\"Example Domain\",\"response_headers\":{\"Age\":[\"3\"],\"Allow\":[\"GET, HEAD\"],\"Alt-Svc\":[\"h3=\\\":443\\\"; ma=86400\"],\"Cf-Cache-St…",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "export PATH=$HOME/go/bin:$PATH && timeout 15 nerva -t 8.8.8.8:53 -U --json -w 5000",
+            "expected_signal": "\"protocol\":\"dns\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"ip\":\"8.8.8.8\",\"port\":53,\"protocol\":\"dns\",\"tls\":false,\"transport\":\"udp\",\"metadata\":{}}",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "export PATH=$HOME/go/bin:$PATH && timeout 15 nerva -l /tmp/targets.txt --fast --json -w 5000",
+            "expected_signal": "\"protocol\":\"http\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"host\":\"example.com\",\"ip\":\"172.66.147.243\",\"port\":80,\"protocol\":\"http\",\"tls\":false,\"transport\":\"tcp\",\"version\":\"cloudflare\",\"metadata\":{\"status\":\"200 OK\",\"status_code\":200,\"title\":\"Example Domain\",\"response_headers\":{\"Age\":[\"2\"],\"Allow\":[\"GET, HEAD\"],\"Alt-Svc\":[\"h3=\\\":443\\\"; ma=86400\"],\"Cf-Cache-S…",
+            "setup": [
+              {
+                "command": "cat > /tmp/targets.txt <<'EOF'\nexample.com:80\nexample.com:22\nEOF\ncat /tmp/targets.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install github.com/praetorian-inc/nerva/cmd/nerva@latest requires go",
+            "actually_needed": "Go toolchain not pre-installed; downloaded Go 1.23.4 tarball from dl.google.com to $HOME/go and added $HOME/go/bin to PATH; install then auto-upgraded to go1.27.3 because nerva v1.84.0 requires go >=1.27.0",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "nerva --csv outputs CSV",
+            "actually_needed": "nerva --csv -t example.com:80 exits 1 with 'Error: invalid argument' (reproduced in commands 10,12,13)",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three screenshots show nerva scanning example.com:80 with text and JSON results and displaying its usage help.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nerva-20261102-174303-e960/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nerva-20261102-174303-e960/check-1-cmd6.judged.png",
+            "runs/verify/verify-nerva-20261102-174303-e960/check-2-cmd7.judged.png",
+            "runs/verify/verify-nerva-20261102-174303-e960/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.074706,
+        "features": [
+          {
+            "feature": "scan over TCP, UDP and SCTP transports with proxy support and fast mode",
+            "status": "checked",
+            "smoke_tests": [
+              3,
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "extract rich metadata and output as JSON, CSV or human-readable for pipeline use",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-02T18:24:15+08:00",
+    "quality": {
+      "total": 79.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7225,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.75,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 77.5,
+      "signals": {
+        "stars": 376,
+        "monthly_downloads": null,
+        "forks": 56,
+        "dependents": null,
+        "release_downloads": 672,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 281,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 17.93
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:24:15.053132+08:00",
+      "sources_sha": "e811f4b61db871114fcc3f9f8336638377c2ccc6112161220d88f2a505063f30",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "> **High-performance service fingerprinting written in Go.** Identify 170+ network protocols across TCP, UDP, and SCTP"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Rapidly fingerprint services discovered during reconnaissance to identify potential attack vectors."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "go install github.com/praetorian-inc/nerva/cmd/nerva@latest"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "nerva -t example.com:22\n# ssh://example.com:22"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "nerva -t target.internal:80 --proxy socks5://127.0.0.1:1080 --dns-order p"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "**Cause**: Port is closed or no supported service detected."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Apache 2.0 — see [LICENSE](LICENSE) for details."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/praetorian-inc/nerva",
+      "fetched_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/praetorian-inc/nerva/blob/main/README.md",
+      "fetched_at": "2026-11-02T17:28:05+08:00"
+    },
+    {
+      "id": "release:v1.84.0",
+      "kind": "release",
+      "url": "https://github.com/praetorian-inc/nerva/releases/tag/v1.84.0",
+      "fetched_at": "2026-11-02T17:28:05+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Fast service fingerprinting CLI for 170+ protocols",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:35:30+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "High-performance service fingerprinting written in Go. Identify 170+ network protocols across TCP, UDP, and SCTP",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:35:30+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Nerva",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:35:30+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "High-performance service fingerprinting written in Go",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:35:30+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.84.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:28:05+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Rapidly fingerprint services discovered during reconnaissance to identify potential attack vectors",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:35:30+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Combine with Naabu or Masscan for large-scale asset inventory",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:35:30+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Fingerprint Diameter nodes in LTE/5G networks using SCTP transport",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:35:30+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Multi-Transport Support — TCP (default), UDP (`--udp`), and SCTP (`--sctp`, Linux only)",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:35:30+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Rich Metadata — Extract versions, configurations, and security-relevant details from each service",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:35:30+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/praetorian-inc/nerva/cmd/nerva@latest",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:35:30+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/praetorian-inc/nerva/cmd/nerva@latest",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:35:30+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/praetorian-inc/nerva/cmd/nerva@latest",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:35:30+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-02T17:27:57+08:00",
+  "updated_at": "2026-11-02T18:24:15+08:00"
+}

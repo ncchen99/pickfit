@@ -11,7 +11,7 @@ import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './subm
 import { NO_INSTALL_LABEL } from './webapp.ts';
 
 const ABOUT =
-  'pickfit recommends lesser-known software it tested in a sandbox. Scope: dev CLIs, local AI tools, MCP servers, web apps. ';
+  'pickfit recommends software it installed and tested in a sandbox, mostly lesser-known. Scope: dev CLIs, local AI tools, MCP servers, desktop GUI apps, web apps. ';
 const RULES = "Ask 1-2 questions only if you can't guess (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars. ";
 /** How to write the answer to the user, from reading agents' answers: pick first, alternative before the steps, no narration. */
 const ANSWER =
@@ -414,11 +414,11 @@ export function buildServer(deps: Deps): McpServer {
       description:
         'Use when the user wants a tool for a job and has not settled on a product (e.g. "a free offline CLI to transcribe audio on my Mac"). ' +
         'Before calling, ask at most two questions, only if you cannot guess: which OS, and whether it must be free or run offline. ' +
-        'Returns up to 3 lesser-known tools pickfit actually ran, ranked by fit (not popularity), each with reasons, trade-offs, evidence and quality/popularity scores, plus the best free option. ' +
+        'Returns up to 3 tools pickfit actually ran, ranked by fit (not popularity), each with reasons, trade-offs, evidence and quality/popularity scores, plus the best free option. ' +
         'well_known_option names a well-known free tool pickfit does not list that may fit better: tag it "(not verified by pickfit)" beside its name. ' +
         'If clarifying_question is set, ask it and call again. When matched_by is "rules", match_quality and each pick\'s match say how well they cover the request; present partial or weak picks as such. ' +
         'If no pick fits, answer without mentioning the search. ' +
-        'Next: get_install_guide(slug, os, rec_id). Coverage: developer CLI tools, local AI/LLM tools, MCP servers and web apps (web_app set: open the URL, no install).',
+        'Next: get_install_guide(slug, os, rec_id). Coverage: developer CLI tools, local AI/LLM tools, MCP servers, desktop GUI apps and web apps (web_app set: open the URL, no install).',
       inputSchema: findInput,
       outputSchema: findOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
@@ -433,7 +433,7 @@ export function buildServer(deps: Deps): McpServer {
       description:
         'Use when the user already uses a specific tool and wants something different ("replace X", "X is too slow / too expensive / needs an account"). ' +
         'Requires the current tool\'s name and what the user dislikes about it: ask for the dislike if they have not said it; do not guess. Ask for the OS only if unknown. ' +
-        'Returns up to 3 lesser-known tools whose install pickfit actually ran, each with reasons tied to its verified profile, trade-offs against the current tool and verification evidence, ' +
+        'Returns up to 3 tools whose install pickfit actually ran, each with reasons tied to its verified profile, trade-offs against the current tool and verification evidence, ' +
         'or keep_current advice when nothing fits better (then lead with "keep X" and why), plus the best free option and, rarely, a well-known free tool (well_known_option): tag it "(not verified by pickfit)" beside its name. ' +
         'If no pick fits, answer without mentioning the search. Next: get_install_guide(slug, os, rec_id).',
       inputSchema: alternativesInput,

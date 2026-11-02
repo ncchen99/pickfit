@@ -1,0 +1,695 @@
+{
+  "schema_version": "software.v1",
+  "slug": "bigmoeonedge",
+  "repo_id": "gh:1296688895",
+  "name": "BigMoeOnEdge",
+  "summary": "Runs larger-than-RAM Mixture-of-Experts models locally by streaming experts from flash.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "android",
+    "cpp",
+    "edge-ai",
+    "gemma",
+    "gguf",
+    "inference",
+    "llama-cpp",
+    "llm",
+    "mixture-of-experts",
+    "moe"
+  ],
+  "use_cases": [
+    "Run 21GB MoE model on 12GB phone",
+    "Serve local OpenAI-compatible chat API",
+    "Run agent to read and edit folder files",
+    "Connect coding agents to local server"
+  ],
+  "alternatives_to": [
+    "Strata",
+    "ds4",
+    "colibri",
+    "KTransformers"
+  ],
+  "features": [
+    "Run MoE models larger than memory",
+    "Auto-configure cache and execution plan",
+    "Serve OpenAI-compatible API for coding agents",
+    "Run file-editing agent in folder"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/Helldez/BigMoeOnEdge",
+    "full_name": "Helldez/BigMoeOnEdge",
+    "created_at": "2026-07-10T16:19:44Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "WebKitGTK 4.1"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/Helldez/BigMoeOnEdge/releases/latest/download/install.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "bmoe-cli -m model.gguf --auto -p \"Explain MoE routing.\""
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-bigmoeonedge-20261102-184746-1889",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/Helldez/BigMoeOnEdge/releases/latest/download/install.sh -o /tmp/install.sh",
+          "purpose": "download install.sh from releases"
+        },
+        {
+          "command": "sh /tmp/install.sh",
+          "purpose": "run install.sh (installs bmoe-cli/bmoe-server to ~/.local/bin)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "bmoe-cli --version",
+        "expected_signal": "0.39.0"
+      },
+      "first_task": "bmoe-cli -m ~/models/SmolLM2-135M-Instruct-Q8_0.gguf --plan"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://github.com/Helldez/BigMoeOnEdge/releases/latest/download/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "bmoe-cli -m model.gguf --auto -p \"Explain MoE routing.\""
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.39.0",
+    "published_at": "2026-10-29T22:04:13Z",
+    "url": "https://github.com/Helldez/BigMoeOnEdge/releases/tag/v0.39.0"
+  },
+  "verification": {
+    "level": "inference",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:49:47.173682+08:00",
+    "runs": [
+      {
+        "id": "verify-bigmoeonedge-20261102-184746-1889",
+        "level": "inference",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:49:47.173682+08:00",
+        "tool_version": "0.39.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/Helldez/BigMoeOnEdge/releases/latest/download/install.sh -o /tmp/install.sh",
+            "purpose": "download install.sh from releases"
+          },
+          {
+            "command": "sh /tmp/install.sh",
+            "purpose": "run install.sh (installs bmoe-cli/bmoe-server to ~/.local/bin)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "bmoe-cli --version",
+            "expected_signal": "0.39.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.39.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "bmoe-cli -m ~/models/SmolLM2-135M-Instruct-Q8_0.gguf --plan",
+            "expected_signal": "plan:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "plan: machine 1 cores, 1876 MiB available of 2048 MiB, 20 GiB/s on this model's matmul",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/SmolLM2-135M-Instruct-Q8_0.gguf https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf && ls -lh ~/models/SmolLM2*.gguf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "bmoe-cli -m ~/models/SmolLM2-135M-Instruct-Q8_0.gguf -p \"Explain MoE routing.\" -n 16",
+            "expected_signal": "generation:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "generation: 16 tokens, 0.010 s/token (99.383 tok/s)",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/SmolLM2-135M-Instruct-Q8_0.gguf https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf && ls -lh ~/models/SmolLM2*.gguf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8766/v1/models > /tmp/models.json && cat /tmp/models.json\n",
+            "expected_signal": "SmolLM2-135M-Instruct-Q8_0.gguf",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"object\":\"list\",\"data\":[{\"id\":\"SmolLM2-135M-Instruct-Q8_0.gguf\",\"object\":\"model\",\"owned_by\":\"local\"}]}",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/SmolLM2-135M-Instruct-Q8_0.gguf https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf && ls -lh ~/models/SmolLM2*.gguf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "bmoe-server -m ~/models/SmolLM2-135M-Instruct-Q8_0.gguf -c 2048 --port 8766",
+                "background": true,
+                "port": 8766
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8765/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\":\"SmolLM2-135M-Instruct-Q8_0.gguf\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"max_tokens\":16,\"temperature\":0}'",
+            "expected_signal": "completion_tokens",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":\"chatcmpl-1\",\"object\":\"chat.completion\",\"created\":1793616574,\"model\":\"SmolLM2-135M-Instruct-Q8_0.gguf\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello! How can I help you today?\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":31,\"completion_tokens\":9,\"total_tokens\":40…",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/SmolLM2-135M-Instruct-Q8_0.gguf https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf && ls -lh ~/models/SmolLM2*.gguf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "bmoe-server -m ~/models/SmolLM2-135M-Instruct-Q8_0.gguf -c 2048 --port 8765",
+                "background": true,
+                "port": 8765
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "bmoe-cli -m model.gguf --auto -p \"Explain MoE routing.\" works with any model",
+            "actually_needed": "stories260K.gguf fails with 'failed to create context' due to K cache q8_0 block size; SmolLM2-135M-Instruct-Q8_0.gguf works and was used for verification",
+            "kind": "note"
+          },
+          {
+            "readme_said": "README examples use trailing pipes for brevity",
+            "actually_needed": "this box rejects trailing pipes (| head) for smoke tests because exit code is hidden; re-ran checks without pipes",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show plan details, a 16-token generation about MoE routing, and version 0.39.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-bigmoeonedge-20261102-184746-1889/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-bigmoeonedge-20261102-184746-1889/check-1-cmd17.judged.png",
+            "runs/verify/verify-bigmoeonedge-20261102-184746-1889/check-2-cmd18.judged.png",
+            "runs/verify/verify-bigmoeonedge-20261102-184746-1889/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.115286,
+        "features": [
+          {
+            "feature": "Run MoE models larger than memory",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only context and memory setup logs with no generated completion text."
+          },
+          {
+            "feature": "Auto-configure cache and execution plan",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Serve OpenAI-compatible API for coding agents",
+            "status": "checked",
+            "smoke_tests": [
+              3,
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Run file-editing agent in folder",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "file-editing agent runs in desktop app GUI and workspace UI, not via CLI alone"
+          }
+        ]
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-02T19:44:20+08:00",
+    "quality": {
+      "total": 93.1,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 81.7,
+      "signals": {
+        "stars": 698,
+        "monthly_downloads": null,
+        "forks": 81,
+        "dependents": null,
+        "release_downloads": 1564,
+        "hn_top_score": 1,
+        "registries_count": 0
+      },
+      "age_days": 114,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 17.04
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T19:44:20.304038+08:00",
+      "sources_sha": "0c686560d3b5473b963ccc5a104f51a1a97df2b8615c1b387522ba0d4e2608c3",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Run Mixture-of-Experts models larger than your device's memory."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "for coding agents."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "The window needs WebKitGTK 4.1;"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "curl -fsSL https://github.com/Helldez/BigMoeOnEdge/releases/latest/download/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "bmoe-cli -m model.gguf --auto -p \"Explain MoE routing.\"   # plan and run"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Add `--host 0.0.0.0 --api-key KEY` to"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Each release installs over the previous one."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Apache-2.0 ([LICENSE](LICENSE))."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Helldez/BigMoeOnEdge",
+      "fetched_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Helldez/BigMoeOnEdge/blob/main/README.md",
+      "fetched_at": "2026-11-02T17:28:50+08:00"
+    },
+    {
+      "id": "release:v0.39.0",
+      "kind": "release",
+      "url": "https://github.com/Helldez/BigMoeOnEdge/releases/tag/v0.39.0",
+      "fetched_at": "2026-11-02T17:28:50+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Command-line tools only (`bmoe-cli`, `bmoe-server`):",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Open the app and pick a model under **Models**.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Run Mixture-of-Experts models larger than your device's memory.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Run Mixture-of-Experts models larger than your device's memory. The experts are read from flash as",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<img src=\"docs/assets/logo/horizontal.svg\" width=\"320\" alt=\"BigMoeOnEdge\">",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Android, iOS, macOS, Windows and Linux, built on llama.cpp.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "The window needs WebKitGTK 4.1;",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.39.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:28:50+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Qwen3.6-35B-A3B (21 GB) in real time on each device. The model is larger than each device's memory.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "The server speaks the OpenAI API (`/v1/chat/completions`, `/v1/responses`) and the Anthropic one",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "it works in a folder you choose, reads and edits",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "For opencode, add the server as an OpenAI-compatible provider at `http://127.0.0.1:8765/v1`.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "| | **BigMoeOnEdge** | Strata | ds4 | colibri | KTransformers |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "| | **BigMoeOnEdge** | Strata | ds4 | colibri | KTransformers |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "| | **BigMoeOnEdge** | Strata | ds4 | colibri | KTransformers |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "| | **BigMoeOnEdge** | Strata | ds4 | colibri | KTransformers |",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "weights every token needs and the experts used most in memory, and reads the rest from flash.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "`--auto` measures the machine and the model and picks the cache size, the",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "for coding agents.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "it works in a folder you choose, reads and edits",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://github.com/Helldez/BigMoeOnEdge/releases/latest/download/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://github.com/Helldez/BigMoeOnEdge/releases/latest/download/install.sh | sh",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://github.com/Helldez/BigMoeOnEdge/releases/latest/download/install.ps1 | iex",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "github_api",
+      "quote": "behind a local OpenAI-compatible server.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:16+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-02T17:27:57+08:00",
+  "updated_at": "2026-11-02T19:44:20+08:00"
+}

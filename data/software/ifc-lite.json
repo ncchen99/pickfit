@@ -1,0 +1,555 @@
+{
+  "schema_version": "software.v1",
+  "slug": "ifc-lite",
+  "repo_id": "gh:1131742715",
+  "name": "IFClite",
+  "summary": "Toolkit to parse, view, query, edit, validate and export IFC building models.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "3d-viewer",
+    "bcf",
+    "cli",
+    "columnar",
+    "ids",
+    "ifc",
+    "ifc-parser",
+    "mcp",
+    "pointcloud",
+    "rust"
+  ],
+  "use_cases": [
+    "inspect schema, entities and storeys of a model",
+    "query entities with properties via CLI",
+    "validate a model against IDS requirements",
+    "detect clashes and export results to BCF",
+    "compare two versions of a model"
+  ],
+  "alternatives_to": [
+    "IfcOpenShell",
+    "web-ifc"
+  ],
+  "features": [
+    "parse IFC building model files",
+    "view models in 3D with WebGPU",
+    "export models to STEP glTF and Parquet"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://ifclite.dev",
+  "repo": {
+    "url": "https://github.com/LTplus-AG/ifc-lite",
+    "full_name": "LTplus-AG/ifc-lite",
+    "created_at": "2026-01-10T16:00:00Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ifc-lite-20261102-184746-0f12",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install @ifc-lite/sdk 2>&1",
+          "purpose": "Install SDK @ifc-lite/sdk"
+        },
+        {
+          "command": "npm install -g @ifc-lite/cli 2>&1",
+          "purpose": "Install CLI @ifc-lite/cli globally"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ifc-lite --version 2>&1",
+        "expected_signal": "ifc-lite 0.44.0"
+      },
+      "first_task": "ifc-lite info model.ifc 2>&1"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MPL-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v12.1.0",
+    "published_at": "2026-10-30T12:42:11Z",
+    "url": "https://github.com/LTplus-AG/ifc-lite/releases/tag/v12.1.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:50:18.464273+08:00",
+    "runs": [
+      {
+        "id": "verify-ifc-lite-20261102-184746-0f12",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:50:18.464273+08:00",
+        "tool_version": "0.44.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install @ifc-lite/sdk 2>&1",
+            "purpose": "Install SDK @ifc-lite/sdk"
+          },
+          {
+            "command": "npm install -g @ifc-lite/cli 2>&1",
+            "purpose": "Install CLI @ifc-lite/cli globally"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ifc-lite --version 2>&1",
+            "expected_signal": "ifc-lite 0.44.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ifc-lite 0.44.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ifc-lite info model.ifc 2>&1",
+            "expected_signal": "Schema: IFC4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Schema: IFC4",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/model.ifc << 'EOF'\nISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition [CoordinationView]'),'2;1');\nFILE_NAME('minimal.ifc','2024-01-01T00:00:00',(''),(''),'Test','Author','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCPERSON($,$,'Test',$,$,$,$,$);\n#2=IFCORGANIZATION($,'Test',$,$,$);\n#3=IFCPERSONANDORGANIZATION(#1,#2,$);\n#4=IFCAPPLICATION(#2,'1.0','Test','');\n#5=IFCOWNERHISTORY(#3,#4,$,.ADDED.,0,#3,#4,0);\n#6=IFCDIRECTION((1.,0.,0.));\n#7=IFCDIRECTION((0.,0.,1.));\n#8=IFCCARTESIANPOINT((0.,0.,0.));\n#9=IFCAXIS2PLACEMENT3D(#8,#7,#6);\n#10=IFCDIRECTION((0.,1.,0.));\n#11=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,1.E-05,#9,#10);\n#12=IFCDIMENSIONALEXPONENTS(0,0,0,0,0,0,0);\n#13=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);\n#14=IFCSIUNIT(*,.AREAUNIT.,$,.SQUARE_METRE.);\n#15=IFCSIUNIT(*,.VOLUMEUNIT.,$,.CUBIC_METRE.);\n#16=IFCSIUNIT(*,.PLANEANGLEUNIT.,$,.RADIAN.);\n#17=IFCUNITASSIGNMENT((#13,#14,#15,#16));\n#18=IFCPROJECT('0a1b2c3d4e5f6g7h8i9j0k1l',#5,'Test Project',$,$,$,$,(#11),#17);\nENDSEC;\nEND-ISO-10303-21;\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "ifc-lite create wall --out wall.ifc 2>&1 && ifc-lite export wall.ifc --format glb --out wall.glb 2>&1 && ls -lh wall.glb && echo \"export-ok\"",
+            "expected_signal": "Written to wall.glb",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Written to wall.glb",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "ifc-lite export to glb always succeeds",
+            "actually_needed": "Model must contain renderable geometry; empty project exports 0 meshes and CLI errors",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show version 0.44.0, IFC4 schema info, and successful wall creation plus GLB export.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ifc-lite-20261102-184746-0f12/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ifc-lite-20261102-184746-0f12/check-1-cmd14.judged.png",
+            "runs/verify/verify-ifc-lite-20261102-184746-0f12/check-2-cmd10.judged.png",
+            "runs/verify/verify-ifc-lite-20261102-184746-0f12/check-3-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.07137,
+        "features": [
+          {
+            "feature": "parse IFC building model files",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "view models in 3D with WebGPU",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_gpu",
+            "failure": null,
+            "note": "WebGPU 3D viewer requires GPU/browser, not available headless"
+          },
+          {
+            "feature": "export models to STEP glTF and Parquet",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-02T19:44:20+08:00",
+    "quality": {
+      "total": 86.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 87.1,
+      "signals": {
+        "stars": 455,
+        "monthly_downloads": 1524,
+        "forks": 121,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 295,
+      "packages": [
+        "npm:@ifc-lite/cli"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 11.13
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T19:44:20.304038+08:00",
+      "sources_sha": "7712da281132047611c607947eb50f87820db6e7b9dd61752c32f043b61fa73b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Parse, view, query, edit, validate and export building models."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "IFC data and geometry tools for developers."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "so a Rust\ntoolchain is required."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "npm install @ifc-lite/sdk"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "npx @ifc-lite/cli info model.ifc --json"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[MPL-2.0](LICENSE) - use, modify, redistribute."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/LTplus-AG/ifc-lite",
+      "fetched_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/LTplus-AG/ifc-lite/blob/main/README.md",
+      "fetched_at": "2026-11-02T17:28:03+08:00"
+    },
+    {
+      "id": "release:v12.1.0",
+      "kind": "release",
+      "url": "https://github.com/LTplus-AG/ifc-lite/releases/tag/v12.1.0",
+      "fetched_at": "2026-11-02T17:28:03+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Prefer the terminal? The whole toolkit is also a CLI:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:37+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "IFC data and geometry tools for developers.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:37+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Prefer the terminal? The whole toolkit is also a CLI:",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:37+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Parse, view, query, edit, validate and export building models. Browser-first WebGPU viewer, TypeScript SDK, CLI, MCP server and Rust/WASM core",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:37+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "IFClite",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:37+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v12.1.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:28:03+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "ifc-lite info model.ifc                                  # schema, entities, storeys",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:37+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "ifc-lite query model.ifc --type IfcWall --json           # entities with properties",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:37+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "ifc-lite ids model.ifc requirements.ids                  # IDS validation",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:37+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "ifc-lite clash model.ifc --matrix --bcf clashes.bcfzip   # clash detection to BCF",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:37+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "ifc-lite diff model-v1.ifc model-v2.ifc                  # model comparison",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:37+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "verified element-by-element against IfcOpenShell across the public benchmark corpus.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:37+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "native (server/CLI, multi-threaded) beats `web-ifc` on most of the benchmark corpus",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:37+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Parse, view, query, edit, validate, and export IFC files, entirely client-side.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:37+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "a WebGPU renderer puts it on screen",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:37+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "IFC STEP, applies any pending mutations",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:37+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Parse, view, query, edit, validate, and export IFC files, entirely client-side.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:46:37+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-02T17:27:57+08:00",
+  "updated_at": "2026-11-02T19:44:20+08:00"
+}

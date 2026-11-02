@@ -1,0 +1,582 @@
+{
+  "schema_version": "software.v1",
+  "slug": "reticle",
+  "repo_id": "gh:1265947881",
+  "name": "Reticle",
+  "summary": "Drives a running web app to verify changes and return pass-fail verdicts.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-skill",
+    "agent-skills",
+    "agent-testing",
+    "agent-verification",
+    "ai-testing-tool",
+    "automated-testing",
+    "claude-code",
+    "claude-skills",
+    "hacktoberfest",
+    "hacktoberfest-accepted"
+  ],
+  "use_cases": [],
+  "alternatives_to": [],
+  "features": [
+    "return pass fail verdict with evidence",
+    "observe network responses app state console",
+    "save and replay verification flows",
+    "gate code changes in CI"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://app.reticle.sh",
+  "repo": {
+    "url": "https://github.com/reticlehq/reticle",
+    "full_name": "reticlehq/reticle",
+    "created_at": "2026-06-11T07:53:01Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-reticle-20261102-185206-b29e",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @reticlehq/server 2>&1",
+          "purpose": "install reticle via npm -g"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "which reticle && ls -lh ~/.local/bin/reticle* 2>&1; reticle --version 2>&1",
+        "expected_signal": "3.9.0"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "local",
+  "last_release": {
+    "tag": "v3.9.0",
+    "published_at": "2026-10-29T09:58:05Z",
+    "url": "https://github.com/reticlehq/reticle/releases/tag/v3.9.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:53:28.235467+08:00",
+    "runs": [
+      {
+        "id": "verify-reticle-20261102-185206-b29e",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:53:28.235467+08:00",
+        "tool_version": "3.9.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @reticlehq/server 2>&1",
+            "purpose": "install reticle via npm -g"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "which reticle && ls -lh ~/.local/bin/reticle* 2>&1; reticle --version 2>&1",
+            "expected_signal": "3.9.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3.9.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- reticle mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call reticle_tools --args '{\"action\":\"list\"}' -- reticle mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=reticle_tools content=text text_chars=9513",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show reticle 3.9.0 installed, MCP handshake with 10 tools, and successful reticle_tools call.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-reticle-20261102-185206-b29e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-reticle-20261102-185206-b29e/check-1-cmd3.judged.png",
+            "runs/verify/verify-reticle-20261102-185206-b29e/check-2-cmd4.judged.png",
+            "runs/verify/verify-reticle-20261102-185206-b29e/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.049628,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "reticle",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "reticle",
+          "server_version": "3.9.0",
+          "tools": [
+            "reticle_navigate",
+            "reticle_act_and_wait",
+            "reticle_session",
+            "reticle_verify",
+            "reticle_look",
+            "reticle_observe",
+            "reticle_assert",
+            "reticle_act",
+            "reticle_tools",
+            "reticle_run"
+          ],
+          "tool_count": 10,
+          "called_tool": "reticle_tools",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "return pass fail verdict with evidence",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "verdict with evidence requires running app with dev SDK wired and driven session"
+          },
+          {
+            "feature": "observe network responses app state console",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "observe network/state/console requires connected app session via reticle_observe"
+          },
+          {
+            "feature": "save and replay verification flows",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "save/replay flows requires instrumented app and session history"
+          },
+          {
+            "feature": "gate code changes in CI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "gate in CI requires saved flows and git history, no standalone tool call"
+          }
+        ]
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": null,
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{ \"mcpServers\": { \"reticle\": { \"command\": \"npx\", \"args\": [\"@reticlehq/server\", \"mcp\"] } } }"
+      },
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add reticle -s user -- npx @reticlehq/server mcp"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "RETICLE_API_KEY",
+        "required": null,
+        "purpose": "link project in CI"
+      }
+    ],
+    "tools": [
+      "reticle_session",
+      "reticle_act_and_wait"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-02T19:44:20+08:00",
+    "quality": {
+      "total": 97.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.9375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 96.5,
+      "signals": {
+        "stars": 1301,
+        "monthly_downloads": 14297,
+        "forks": 241,
+        "dependents": null,
+        "release_downloads": 235,
+        "hn_top_score": 11,
+        "registries_count": 1
+      },
+      "age_days": 144,
+      "packages": [
+        "npm:@reticlehq/server"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.4
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T19:44:20.304038+08:00",
+      "sources_sha": "8dde5846b277839edad3287c3e4a25a054eefa7b4ad59a6d4dbee8603dbcd491",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "It drives your real, running app and reads what happened. Then it returns a verdict, **pass · fail · cannot tell**, with the `file:line` to fix."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Works with your agent**: Claude Code, Cursor, Codex, Windsurf, VS Code, Gemini CLI and anything else that speaks MCP."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**You need:** Node 20.11+ (no Node? `brew install node` or [nodejs.org](https://nodejs.org)) and a web app you run locally with a dev server."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/reticlehq/reticle/main/install/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "verified: no — 2 fault(s) on http://localhost:58473/"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`reticle telemetry disable`, `RETICLE_TELEMETRY=0` or `DO_NOT_TRACK=1` turns them off"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "**Undoing it.** Run `reticle hook uninstall`."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Every package is [Apache-2.0](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/reticlehq/reticle",
+      "fetched_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/reticlehq/reticle/blob/main/README.md",
+      "fetched_at": "2026-11-02T17:28:44+08:00"
+    },
+    {
+      "id": "release:v3.9.0",
+      "kind": "release",
+      "url": "https://github.com/reticlehq/reticle/releases/tag/v3.9.0",
+      "fetched_at": "2026-11-02T17:28:44+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "registers Reticle's MCP server with every coding agent",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Start with one command in your app's folder.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "anything else that speaks MCP",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "It drives your real, running app and reads what happened.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<img alt=\"Reticle\" src=\"assets/readme/lockup-on-light.png\" width=\"240\" />",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v3.9.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:28:44+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "A verdict, not a screenshot.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Sees what the screen hides.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Say _\"save that as a flow\"_. After that, one call re-verifies that journey deterministically.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "A gate in CI.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "create a free account",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Verdicts are made locally, with no account.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{ \"mcpServers\": { \"reticle\": { \"command\": \"npx\", \"args\": [\"@reticlehq/server\", \"mcp\"] } } }",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "claude mcp add reticle -s user -- npx @reticlehq/server mcp",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "RETICLE_API_KEY",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "The agent finds your app with `reticle_session`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "clicks and types with `reticle_act_and_wait`",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:45:41+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-02T17:27:57+08:00",
+  "updated_at": "2026-11-02T19:44:20+08:00"
+}

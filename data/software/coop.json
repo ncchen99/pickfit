@@ -1,0 +1,535 @@
+{
+  "schema_version": "software.v1",
+  "slug": "coop",
+  "repo_id": "gh:1199441815",
+  "name": "coop",
+  "summary": "Isolated VM environments for running Claude Code, Codex and Grok Build with full tool access without risk to host.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": null,
+  "maturity": null,
+  "tags": [
+    "claude-code",
+    "cli",
+    "codex",
+    "firecracker",
+    "kvm",
+    "lima",
+    "microvm",
+    "rust",
+    "sandbox",
+    "vm"
+  ],
+  "use_cases": [
+    "run Claude Code in isolated disposable VM",
+    "run Codex with full tool access isolated from host"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "manage disposable isolated VMs for AI coding agents",
+    "run Claude Code inside VM",
+    "run Codex inside VM",
+    "run Grok Build inside VM"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://github.com/trailofbits/coop/blob/main/docs/getting-started.md",
+  "repo": {
+    "url": "https://github.com/trailofbits/coop",
+    "full_name": "trailofbits/coop",
+    "created_at": "2026-04-02T10:56:32Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/trailofbits/coop/main/install.sh | bash\n",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Then build the VM template image via coop setup"
+      ],
+      "check": null,
+      "first_task": "coop setup\n"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-coop-20261102-174426-0ab3",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/trailofbits/coop/main/install.sh -o /tmp/install.sh",
+          "purpose": "download install.sh from GitHub"
+        },
+        {
+          "command": "bash /tmp/install.sh",
+          "purpose": "install coop via install.sh script to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "coop --version && echo \"---VERSION_OK---\"",
+        "expected_signal": "coop 0.9.2"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.9.2",
+    "published_at": "2026-10-30T12:25:14Z",
+    "url": "https://github.com/trailofbits/coop/releases/tag/v0.9.2"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:45:17.341030+08:00",
+    "runs": [
+      {
+        "id": "verify-coop-20261102-174426-0ab3",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:45:17.341030+08:00",
+        "tool_version": "0.9.2",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/trailofbits/coop/main/install.sh -o /tmp/install.sh",
+            "purpose": "download install.sh from GitHub"
+          },
+          {
+            "command": "bash /tmp/install.sh",
+            "purpose": "install coop via install.sh script to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "coop --version && echo \"---VERSION_OK---\"",
+            "expected_signal": "coop 0.9.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "coop 0.9.2 (092cdfe)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "coop --help; echo \"---HELP_EXIT:$?---\"; coop help",
+            "expected_signal": "Isolated VM environment for running Claude Code, Codex, and Grok Build",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Isolated VM environment for running Claude Code, Codex, and Grok Build",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "coop setup builds VM template, installs Firecracker and fetches guest kernel",
+            "actually_needed": "coop setup/up fails in clean sandbox with 'Private storage requires an owned directory: /home/sbx/.coop' (exit 1) before reaching backend checks; requires owned storage dir and then building VM template",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "curl -fsSL install.sh | bash",
+            "actually_needed": "download script first to /tmp/install.sh and inspect before bash, as required by task",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show coop printing version 0.9.2 and help describing an isolated VM environment for Claude Code, Codex, and Grok Build.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-coop-20261102-174426-0ab3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-coop-20261102-174426-0ab3/check-1-cmd3.judged.png",
+            "runs/verify/verify-coop-20261102-174426-0ab3/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.04546,
+        "features": [
+          {
+            "feature": "manage disposable isolated VMs for AI coding agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "manage VMs via coop up - needs coop setup VM template build, per task cannot be done here"
+          },
+          {
+            "feature": "run Claude Code inside VM",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "coop claude needs running VM"
+          },
+          {
+            "feature": "run Codex inside VM",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "coop codex needs running VM"
+          },
+          {
+            "feature": "run Grok Build inside VM",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "coop grok needs running VM"
+          }
+        ]
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-02T18:24:15+08:00",
+    "quality": {
+      "total": 70.1,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 88.5,
+      "signals": {
+        "stars": 804,
+        "monthly_downloads": null,
+        "forks": 44,
+        "dependents": null,
+        "release_downloads": 1606,
+        "hn_top_score": 71,
+        "registries_count": 0
+      },
+      "age_days": 213,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 8.06
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:24:15.053132+08:00",
+      "sources_sha": "d38073476f583800bcdc96628f798239cb617fc9345b5c0e0feb7c17afa2112c",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "coop is a Rust CLI that manages disposable virtual machines where Claude Code, Codex, and Grok Build have full tool access"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "On macOS, install Lima first (`brew install lima`) — setup fails without it."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/trailofbits/coop/main/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "coop setup"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "See [`coop update`](docs/commands.md#update) and the [`updates` config section](docs/configuration.md#updates-section)."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "For Homebrew installations, use `brew upgrade trailofbits/coop/coop`."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "coop is tested on macOS arm64 (Apple Silicon) and Linux x86_64; Linux arm64 builds are available but untested."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/trailofbits/coop",
+      "fetched_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/trailofbits/coop/blob/main/README.md",
+      "fetched_at": "2026-11-02T17:28:26+08:00"
+    },
+    {
+      "id": "release:v0.9.2",
+      "kind": "release",
+      "url": "https://github.com/trailofbits/coop/releases/tag/v0.9.2",
+      "fetched_at": "2026-11-02T17:28:26+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "coop is a Rust CLI that manages disposable virtual machines",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:04+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Isolated VM environments for running Claude Code, Codex, and Grok Build.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:04+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# coop",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:04+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "coop is tested on macOS arm64 (Apple Silicon) and Linux x86_64",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:04+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.9.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:28:26+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Isolated VM environments for running Claude Code, Codex, and Grok Build.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:04+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "where Claude Code, Codex, and Grok Build have full tool access: Docker, git, compilers, package managers, all without risk to your host machine.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:04+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "coop is a Rust CLI that manages disposable virtual machines where Claude Code, Codex, and Grok Build have full tool access",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:04+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "coop claude",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:04+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "coop codex",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:04+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "coop grok",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:04+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/trailofbits/coop/main/install.sh | bash\n",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:04+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/trailofbits/coop/main/install.sh | bash\n",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:04+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-02T17:27:57+08:00",
+  "updated_at": "2026-11-02T18:24:15+08:00"
+}

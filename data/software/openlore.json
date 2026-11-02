@@ -1,0 +1,670 @@
+{
+  "schema_version": "software.v1",
+  "slug": "openlore",
+  "repo_id": "gh:1146753014",
+  "name": "OpenLore",
+  "summary": "Deterministic local-first knowledge graph and guardrails for AI coding agents to orient tasks and certify changes without LLM in hot path.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "adr",
+    "agentic-workflows",
+    "ai-agents",
+    "call-graph",
+    "code-navigation",
+    "codebase-analysis",
+    "coding-agents",
+    "dead-code-detection",
+    "developer-tools",
+    "infrastructure-as-code"
+  ],
+  "use_cases": [
+    "orient coding agent to relevant functions and callers for a task",
+    "certify breaking changes and impact of a diff before merge"
+  ],
+  "alternatives_to": [],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/clay-good/OpenLore",
+    "full_name": "clay-good/OpenLore",
+    "created_at": "2026-01-31T16:15:38Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "node >=22.22"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g openlore",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-openlore-20261102-173845-e1f1",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g openlore",
+          "purpose": "npm install -g openlore"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "openlore --version",
+        "expected_signal": "3.5.0"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g openlore",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v3.5.0",
+    "published_at": "2026-10-25T21:28:39Z",
+    "url": "https://github.com/clay-good/OpenLore/releases/tag/v3.5.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T17:43:17.634720+08:00",
+    "runs": [
+      {
+        "id": "verify-openlore-20261102-173845-e1f1",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-02T17:43:17.634720+08:00",
+        "tool_version": "3.5.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g openlore",
+            "purpose": "npm install -g openlore"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "openlore --version",
+            "expected_signal": "3.5.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3.5.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- openlore mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call search_code --args '{\"directory\":\"/tmp/pickfit-openlore\",\"query\":\"hello\"}' -- openlore mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search_code content=text text_chars=1811",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/pickfit-openlore && cat > /tmp/pickfit-openlore/app.py <<'PY'\ndef hello(name):\n    return f\"hello {name}\"\ndef main():\n    print(hello(\"world\"))\nPY\ncat > /tmp/pickfit-openlore/package.json <<'JSON'\n{\"name\":\"pickfit-openlore-test\",\"version\":\"1.0.0\"}\nJSON\ncd /tmp/pickfit-openlore && openlore init 2>&1 | tail -n 5 && openlore analyze --no-embed 2>&1 | tail -n 5 && ls .openlore/analysis/ | head -n 10",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeeded: MCP handshake with 15 tools, search_code tool call returned results, and --version printed 3.5.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-openlore-20261102-173845-e1f1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-openlore-20261102-173845-e1f1/check-1-cmd7.judged.png",
+            "runs/verify/verify-openlore-20261102-173845-e1f1/check-2-cmd15.judged.png",
+            "runs/verify/verify-openlore-20261102-173845-e1f1/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.078344,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "openlore",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "openlore",
+          "server_version": "3.5.0",
+          "tools": [
+            "orient",
+            "prepare_spec_generation",
+            "prepare_spec_repair",
+            "get_subgraph",
+            "trace_execution_path",
+            "analyze_impact",
+            "blast_radius",
+            "verify_claim",
+            "get_function_skeleton",
+            "suggest_insertion_points",
+            "search_code",
+            "get_landmarks",
+            "get_map",
+            "find_path",
+            "recall"
+          ],
+          "tool_count": 15,
+          "called_tool": "search_code",
+          "offline": true
+        }
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [],
+    "launch_command": null,
+    "client_configs": [],
+    "env_vars": [],
+    "tools": [
+      "orient",
+      "search_code",
+      "analyze_impact",
+      "trace_execution_path",
+      "select_tests",
+      "find_dead_code",
+      "blast_radius",
+      "change_impact_certificate",
+      "certify_public_surface",
+      "verify_claim",
+      "verify_change",
+      "certify_provenance",
+      "certify_merge",
+      "fleet_status"
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-02T18:24:15+08:00",
+    "quality": {
+      "total": 92.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 95.5,
+      "signals": {
+        "stars": 356,
+        "monthly_downloads": 6229,
+        "forks": 51,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 5,
+        "registries_count": 2
+      },
+      "age_days": 274,
+      "packages": [
+        "npm:openlore",
+        "homebrew:openlore"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 4.15
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-02T18:24:15.053132+08:00",
+      "sources_sha": "9ba6f27aa2217b5e63337075bacb31af64a3eb4ccbc21ade293c7524aa47d52e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Deterministic, local-first memory and guardrails for AI coding agents with no LLM in the hot path."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "for AI coding agents"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "<img src=\"https://img.shields.io/node/v/openlore?color=339933&logo=node.js&logoColor=white\" alt=\"Node >=22.22\">"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npm install -g openlore && openlore install"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "openlore features"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "no API key, no config, no prompts."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Platform: Linux and Windows are exercised in CI; macOS is supported."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/clay-good/OpenLore",
+      "fetched_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/clay-good/OpenLore/blob/main/README.md",
+      "fetched_at": "2026-11-02T17:28:08+08:00"
+    },
+    {
+      "id": "release:v3.5.0",
+      "kind": "release",
+      "url": "https://github.com/clay-good/OpenLore/releases/tag/v3.5.0",
+      "fetched_at": "2026-11-02T17:28:08+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "npm install -g openlore && openlore install",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "github_api",
+      "quote": "Deterministic, local-first memory and guardrails for AI coding agents with no LLM in the hot path.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "mcp-server",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Deterministic, local-first memory and guardrails for AI coding agents with no LLM in the hot path.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">OpenLore</h1>",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Node >=22.22",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:27:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v3.5.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-02T17:28:08+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "npm install -g openlore",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "orient(task)` returns the relevant functions, callers, specs, tests, and insertion points",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Breaking-change verdict — `certify_public_surface` classifies every changed export `breaking / non-breaking / potentially-breaking`",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g openlore",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g openlore",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g openlore",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "MIT License",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "All local, no API key.",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "orient(task)",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "search_code",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "analyze_impact",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "trace_execution_path",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "select_tests",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "find_dead_code",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "blast_radius",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "change_impact_certificate",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "certify_public_surface",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "verify_claim",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "release:v3.5.0",
+      "quote": "`verify_change` — one actionable receipt for a working-tree diff",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "release:v3.5.0",
+      "quote": "`certify_provenance` — a reproducible, content-addressed",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "release:v3.5.0",
+      "quote": "`certify_merge` — a semantic merge-conflict certificate",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "release:v3.5.0",
+      "quote": "`fleet_status` — drift-aware verification memory across a fleet",
+      "method": "model",
+      "model": "meta-models/muse-spark-open-1026",
+      "checked_at": "2026-11-02T17:33:05+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-02T17:27:57+08:00",
+  "updated_at": "2026-11-02T18:24:15+08:00"
+}
