@@ -312,3 +312,12 @@ def test_the_ratings_template_reads_back_empty_and_a_filled_file_reads_its_value
     committed = read_ratings((ROOT / "data" / "calibration" / "ease-ratings.yaml").read_text(encoding="utf-8"))
     pilot = json.loads((ROOT / "data" / "calibration" / "ease-pilot.json").read_text(encoding="utf-8"))
     assert list(committed["apps"]) == [a["slug"] for a in pilot["apps"]]
+
+
+def test_the_comparison_ranks_ties_and_maps_overall_to_verdicts() -> None:
+    from scripts.ease_compare import human_verdict, ranks, spearman
+
+    assert ranks([3, 1, 1, 2]) == [4.0, 1.5, 1.5, 3.0]
+    assert spearman([1, 2, 3, 4], [1, 2, 3, 4]) == 1.0 and spearman([1, 2], [2, 1]) is None
+    assert [human_verdict(v) for v in (5, 4, 3, 2, 1, None, "cant_tell")] == [
+        "easy", "easy", "some_friction", "hard", "hard", None, None]
