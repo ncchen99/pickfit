@@ -101,9 +101,67 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "suspected_tool_fault",
+    "checked_at": "2026-11-02T18:57:26.671154+08:00",
+    "runs": [
+      {
+        "id": "verify-autolith-20261102-185157-586b",
+        "level": "unverified",
+        "unverified_reason": "suspected_tool_fault",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:57:26.671154+08:00",
+        "tool_version": "0.67.20",
+        "install_method": "binary",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "curl -fsSL https://sh.lambda-symbolics.com/autolith -o /tmp/autolith-install.sh && ls -la /tmp/autolith-install.sh && wc -l /tmp/autolith-install.sh",
+            "purpose": "download installer script for inspection"
+          },
+          {
+            "command": "chmod -R u+w /tmp/autolith-manual/autolith-v0.67.20-x86_64-linux && mv /tmp/autolith-manual/autolith-v0.67.20-x86_64-linux ~/.local/share/autolith/installation/releases/v0.67.20-x86_64-linux && ls -la ~/.local/share/autolith/installation/releases/ && mkdir -p ~/.local/bin && ln -sfn ~/.local/share/autolith/installation/releases/v0.67.20-x86_64-linux/bin/autolith ~/.local/bin/autolith && ls -la ~/.local/bin/autolith",
+            "purpose": "manually extract and install binary from release tarball to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "timeout 90 autolith --help 2>&1",
+            "expected_signal": "Autolith images",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Autolith images",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://sh.lambda-symbolics.com/autolith | sh installs on Linux",
+            "actually_needed": "installer requires bwrap (bubblewrap) on Linux; box has no bwrap and no sudo to install it, so had to manually download tarball from https://sh.lambda-symbolics.com/releases/v0.67.20/autolith-v0.67.20-x86_64-linux.tar.gz and verify checksum manually",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "autolith --help / autolith starts terminal agent",
+            "actually_needed": "binary invocation triggers building for this machine and then aborts with compilation error 'builds need locked dependencies; run ./script/bootstrap' and ieee-floats compile failure",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": "suspected tool fault, not proven: command 14 exits 1 (command 14 shows no error of the tool's own code); fresh box: command 11 exited 1 before the failing command; compilation unit aborted caught 2 fatal ERROR conditions when loading build-active.lisp, missing locked dependencies bootstrap",
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-autolith-20261102-185157-586b/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.095979
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -330,5 +388,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T18:47:21+08:00"
+  "updated_at": "2026-11-02T18:57:26.673004+08:00"
 }

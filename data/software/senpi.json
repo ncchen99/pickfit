@@ -51,7 +51,31 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-senpi-20261102-185328-17a4",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @code-yeongyu/senpi@2026.11.2-1 --ignore-scripts 2>&1",
+          "purpose": "install senpi core @2026.11.2-1 via npm"
+        },
+        {
+          "command": "senpi install git:github.com/code-yeongyu/pi-ast-grep 2>&1",
+          "purpose": "senpi install pi-ast-grep extension (candidate 1)"
+        },
+        {
+          "command": "senpi install git:github.com/code-yeongyu/pi-lsp-client 2>&1",
+          "purpose": "senpi install pi-lsp-client extension (candidate 2)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "senpi --version",
+        "expected_signal": "2026.11.02-1"
+      },
+      "first_task": "grep -r \"Intent Gate\" ~/.local/lib/node_modules/@code-yeongyu/senpi/dist/core/dynamic-prompt/intent-gate.js"
+    },
     "windows": null
   },
   "pricing": {
@@ -67,10 +91,141 @@
     "url": "https://github.com/code-yeongyu/senpi/releases/tag/v2026.11.02-1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:55:59.619761+08:00",
+    "runs": [
+      {
+        "id": "verify-senpi-20261102-185328-17a4",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:55:59.619761+08:00",
+        "tool_version": "2026.11.02-1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @code-yeongyu/senpi@2026.11.2-1 --ignore-scripts 2>&1",
+            "purpose": "install senpi core @2026.11.2-1 via npm"
+          },
+          {
+            "command": "senpi install git:github.com/code-yeongyu/pi-ast-grep 2>&1",
+            "purpose": "senpi install pi-ast-grep extension (candidate 1)"
+          },
+          {
+            "command": "senpi install git:github.com/code-yeongyu/pi-lsp-client 2>&1",
+            "purpose": "senpi install pi-lsp-client extension (candidate 2)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "senpi --version",
+            "expected_signal": "2026.11.02-1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2026.11.02-1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "grep -r \"Intent Gate\" ~/.local/lib/node_modules/@code-yeongyu/senpi/dist/core/dynamic-prompt/intent-gate.js",
+            "expected_signal": "## Intent Gate",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "return `## Intent Gate",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "grep -r \"todowrite\" ~/.local/lib/node_modules/@code-yeongyu/senpi/dist/core/extensions/builtin/todotools/",
+            "expected_signal": "todowrite",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/home/sbx/.local/lib/node_modules/@code-yeongyu/senpi/dist/core/extensions/builtin/todotools/todo-storage.js: // Legacy todowrite persisted arbitrary status strings (e.g. \"blocked\").",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "grep -r \"web_search\" ~/.local/lib/node_modules/@code-yeongyu/senpi/dist/core/extensions/builtin/websearch/",
+            "expected_signal": "web_search",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/home/sbx/.local/lib/node_modules/@code-yeongyu/senpi/dist/core/extensions/builtin/websearch/websearch/providers/anthropic.js: const webSearchTool = { type: \"web_search_20250305\", name: \"web_search\", max_uses: 8 };",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "senpi requires Node >=24",
+            "actually_needed": "installs and runs on Node 22.23.4 with engine warnings, --version works",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "npm install @code-yeongyu/senpi resolves",
+            "actually_needed": "latest tag fails ETARGET for pi-agent-core dependency; must pin @2026.11.2-1",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show Intent Gate string, todowrite handling code, and senpi version 2026.11.02-1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-senpi-20261102-185328-17a4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-senpi-20261102-185328-17a4/check-1-cmd18.judged.png",
+            "runs/verify/verify-senpi-20261102-185328-17a4/check-2-cmd19.judged.png",
+            "runs/verify/verify-senpi-20261102-185328-17a4/check-3-cmd17.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.111405,
+        "features": [
+          {
+            "feature": "enforce intent gate before tool use",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows the string \"Intent Gate\" exists in source code, not a gate blocking tool use."
+          },
+          {
+            "feature": "track todos with todowrite tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows code mentions of todowrite, not a todo actually written or read."
+          },
+          {
+            "feature": "run provider-backed web search",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows web_search handling in source code, not a search actually run."
+          },
+          {
+            "feature": "fetch URL content as markdown",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; webfetch builtin directory listed in builtin extensions"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -257,5 +412,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T18:47:21+08:00"
+  "updated_at": "2026-11-02T18:55:59.621916+08:00"
 }

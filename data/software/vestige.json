@@ -68,17 +68,24 @@
       "first_task": null
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-vestige-20261102-185328-6478",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/samvallad33/vestige/main/scripts/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://raw.githubusercontent.com/samvallad33/vestige/main/scripts/install.sh -o /tmp/install.sh",
+          "purpose": "download install script"
+        },
+        {
+          "command": "sh /tmp/install.sh",
+          "purpose": "run vestige install script"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "vestige-mcp --version && vestige-mcp --help",
+        "expected_signal": "vestige-mcp 6.0.0"
+      },
       "first_task": null
     },
     "windows": null
@@ -96,10 +103,182 @@
     "url": "https://github.com/samvallad33/vestige/releases/tag/v6.0.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:54:40.159073+08:00",
+    "runs": [
+      {
+        "id": "verify-vestige-20261102-185328-6478",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:54:40.159073+08:00",
+        "tool_version": "6.0.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/samvallad33/vestige/main/scripts/install.sh -o /tmp/install.sh",
+            "purpose": "download install script"
+          },
+          {
+            "command": "sh /tmp/install.sh",
+            "purpose": "run vestige install script"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "vestige-mcp --version && vestige-mcp --help",
+            "expected_signal": "vestige-mcp 6.0.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "vestige-mcp 6.0.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- vestige-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call smart_ingest --args '{\"items\":[{\"content\":\"Maya felt off after dinner at Bangkok Garden\"}]}' -- vestige-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=smart_ingest content=text text_chars=421",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call causal_walk --args '{}' -- vestige-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=causal_walk content=text text_chars=1486",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call memory_status --args '{}' -- vestige-mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=memory_status content=text text_chars=1306",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call backfill --args '{}' -- vestige-mcp 2>&1",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"backfill\", \"count\": 19, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"vestige-mcp\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"vestige\", \"tools\": [\"backfill\", \"causal_walk\", \"codebase\", \"dedup\", \"forgotten_lesson\", \"gather\", \"ghost…",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 19 tools, successful smart_ingest call, and version 6.0.0 with help text.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-vestige-20261102-185328-6478/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-vestige-20261102-185328-6478/check-1-cmd4.judged.png",
+            "runs/verify/verify-vestige-20261102-185328-6478/check-2-cmd10.judged.png",
+            "runs/verify/verify-vestige-20261102-185328-6478/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.085226,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "vestige-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "vestige",
+          "server_version": "6.0.0",
+          "tools": [
+            "backfill",
+            "causal_walk",
+            "codebase",
+            "dedup",
+            "forgotten_lesson",
+            "gather",
+            "ghostlink",
+            "intention",
+            "maintain",
+            "memory",
+            "memory_status",
+            "precedent",
+            "project",
+            "recall",
+            "receipt",
+            "selftest",
+            "session_start",
+            "smart_ingest",
+            "suppress"
+          ],
+          "tool_count": 19,
+          "called_tool": "smart_ingest",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "store agent memories with receipts",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "block unapproved tool calls before execution",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Operator guard is pre-execution hook (operator-gate.py), not an MCP tool; no block/evaluate tool in tools/list"
+          },
+          {
+            "feature": "trace memory links backward to cause",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows empty causes with no start point given, so no backward trace was performed."
+          },
+          {
+            "feature": "resurface older memories when relevant",
+            "status": "test_failed",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "backfill calls with {} and preview/status all returned call_error exit 5; correct trigger/receipt not documented for probe"
+          }
+        ]
+      }
+    ]
   },
   "mcp": {
     "transports": [],
@@ -361,5 +540,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T18:47:21+08:00"
+  "updated_at": "2026-11-02T18:54:40.160422+08:00"
 }

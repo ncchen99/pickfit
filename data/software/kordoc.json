@@ -69,18 +69,18 @@
       "first_task": "npx kordoc 문서.hwpx -o 문서.md"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-kordoc-20261102-184746-06ed",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install kordoc",
-          "purpose": null
+          "command": "npm install -g kordoc 2>&1",
+          "purpose": "install kordoc globally via npm"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "npx kordoc 문서.hwpx -o 문서.md"
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -110,10 +110,193 @@
     "url": "https://github.com/chrisryugj/kordoc/releases/tag/v4.24.37"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:50:39.577781+08:00",
+    "runs": [
+      {
+        "id": "verify-kordoc-20261102-184746-06ed",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:50:39.577781+08:00",
+        "tool_version": "4.24.38",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g kordoc 2>&1",
+            "purpose": "install kordoc globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "kordoc --version 2>&1; echo \"---\"; ls ~/.pickfit/mcp_probe.py 2>&1 | head\nkordoc --version 2>&1",
+            "expected_signal": "4.24.38",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "4.24.38",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- kordoc mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call generate_document --args '{\"markdown\": \"# Hello\\n\\nTest\", \"output_path\": \"/tmp/out.hwpx\"}' -- kordoc mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=generate_document content=text text_chars=41",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call parse_document --args '{\"file_path\": \"/tmp/out.hwpx\"}' -- kordoc mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=parse_document content=text text_chars=51",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call compare_documents --args '{\"file_path_a\": \"/tmp/out.hwpx\", \"file_path_b\": \"/tmp/out2.hwpx\"}' -- kordoc mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"compare_documents\", \"count\": 22, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"kordoc\", \"mcp\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"kordoc\", \"tools\": [\"parse_document\", \"detect_format\", \"parse_metadata\", \"parse_pages\", \"parse…",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call fill_form --args '{\"template\": \"gian\", \"fields\": {\"title\": \"test\"}, \"output_path\": \"/tmp/filled.hwpx\"}' -- kordoc mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=fill_form content=text text_chars=252",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call patch_document --args '{\"file_path\": \"/tmp/out.hwpx\", \"edited_markdown\": \"# Hello\\n\\nPatched content\", \"output_path\": \"/tmp/patched.hwpx\"}' -- kordoc mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=patch_document content=text text_chars=71",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show kordoc 4.24.38, MCP handshake with 22 tools, and successful generate_document creating /tmp/out.hwpx.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-kordoc-20261102-184746-06ed/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-kordoc-20261102-184746-06ed/check-1-cmd3.judged.png",
+            "runs/verify/verify-kordoc-20261102-184746-06ed/check-2-cmd4.judged.png",
+            "runs/verify/verify-kordoc-20261102-184746-06ed/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.080399,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "kordoc",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "kordoc",
+          "server_version": "4.24.38",
+          "tools": [
+            "parse_document",
+            "detect_format",
+            "parse_metadata",
+            "parse_pages",
+            "parse_table",
+            "compare_documents",
+            "parse_chunks",
+            "parse_form",
+            "fill_form",
+            "place_seal",
+            "add_memo",
+            "patch_document",
+            "redact_document",
+            "render_document",
+            "crop_regions",
+            "extract_tables",
+            "extract_profile",
+            "generate_document",
+            "build_agency_pack",
+            "agency_pack_info",
+            "lint_document",
+            "convert_to_hwpx"
+          ],
+          "tool_count": 22,
+          "called_tool": "generate_document",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "convert HWP PDF Office images to Markdown",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "generate HWPX from Markdown with presets",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "fill form fields and stamp documents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows 0 fields filled with title matching failure, so nothing was filled."
+          },
+          {
+            "feature": "compare documents and patch preserving formatting",
+            "status": "checked",
+            "smoke_tests": [
+              6
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
   },
   "mcp": {
     "transports": [],
@@ -374,5 +557,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T18:47:21+08:00"
+  "updated_at": "2026-11-02T18:50:39.580830+08:00"
 }

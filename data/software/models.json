@@ -65,18 +65,25 @@
       "first_task": "models"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "brew",
+      "basis": "replayed",
+      "run_id": "verify-models-20261102-185212-8295",
+      "method": "binary",
       "steps": [
         {
-          "command": "brew install models",
-          "purpose": null
+          "command": "mkdir -p ~/apps/models && curl -fsSL -o /tmp/models.tar.gz https://github.com/reyamira/models/releases/download/v0.14.1/models-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/models.tar.gz -C /tmp",
+          "purpose": "download prebuilt x86_64 linux binary from GitHub Releases v0.14.1"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && cp /tmp/models ~/.local/bin/models && chmod +x ~/.local/bin/models && ~/.local/bin/models --help 2>&1",
+          "purpose": "install binary to ~/.local/bin and verify --version"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "models"
+      "check": {
+        "command": "models --version",
+        "expected_signal": "models 0.14.1"
+      },
+      "first_task": "models agents status"
     },
     "windows": {
       "basis": "readme_claim",
@@ -106,10 +113,143 @@
     "url": "https://github.com/reyamira/models/releases/tag/v0.14.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:53:28.486008+08:00",
+    "runs": [
+      {
+        "id": "verify-models-20261102-185212-8295",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:53:28.486008+08:00",
+        "tool_version": "0.14.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/apps/models && curl -fsSL -o /tmp/models.tar.gz https://github.com/reyamira/models/releases/download/v0.14.1/models-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/models.tar.gz -C /tmp",
+            "purpose": "download prebuilt x86_64 linux binary from GitHub Releases v0.14.1"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && cp /tmp/models ~/.local/bin/models && chmod +x ~/.local/bin/models && ~/.local/bin/models --help 2>&1",
+            "purpose": "install binary to ~/.local/bin and verify --version"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "models --version",
+            "expected_signal": "models 0.14.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "models 0.14.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "models providers",
+            "expected_signal": "openai",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ openai ┆ OpenAI ┆ 51 │",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "models benchmarks list",
+            "expected_signal": "gpt-4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ gpt-4o-chatgpt ┆ GPT-4o ┆ OpenAI ┆ 2025-02-15 ┆ Closed ┆ Unknown ┆ 2025-02-15 │",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "models agents status",
+            "expected_signal": "Claude Code",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ Claude Code ┆ ┆ — ┆ — ┆ — ┆ — ┆ ? Unknown │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "models status list",
+            "expected_signal": "OpenAI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ OpenAI ┆ ? Unknown ┆ 0 │",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install modelsdev, nix run github:reyamira/models, paru -S models-bin",
+            "actually_needed": "Box has no Rust toolchain, Nix, or paru; used prebuilt binary from GitHub Releases (mentioned in README as available)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show providers table, benchmarks list containing gpt-4 entries, and version 0.14.1 output with exit 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-models-20261102-185212-8295/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-models-20261102-185212-8295/check-1-cmd10.judged.png",
+            "runs/verify/verify-models-20261102-185212-8295/check-2-cmd11.judged.png",
+            "runs/verify/verify-models-20261102-185212-8295/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.066641,
+        "features": [
+          {
+            "feature": "browse AI models across providers",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "compare model benchmarks head-to-head",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows a model catalog with dates and open/closed, not benchmark scores or comparison."
+          },
+          {
+            "feature": "track AI coding agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows all agents as Unknown with no versions detected."
+          },
+          {
+            "feature": "monitor AI provider health",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows all providers as Unknown health with 0 issues, nothing monitored."
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -336,5 +476,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T18:47:21+08:00"
+  "updated_at": "2026-11-02T18:53:28.487531+08:00"
 }

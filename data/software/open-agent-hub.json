@@ -50,7 +50,31 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-open-agent-hub-20261102-185039-65c2",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone https://github.com/guanyang/open-agent-hub.git ~/open-agent-hub 2>&1",
+          "purpose": "git clone https://github.com/guanyang/open-agent-hub.git ~/open-agent-hub"
+        },
+        {
+          "command": "cd ~/open-agent-hub && npm link 2>&1",
+          "purpose": "npm link registers oah/open-agent-hub aliases"
+        },
+        {
+          "command": "curl -L -o /tmp/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 2>&1 && chmod +x /tmp/jq && mkdir -p ~/.local/bin && cp /tmp/jq ~/.local/bin/jq && ~/.local/bin/jq --version 2>&1",
+          "purpose": "install jq to ~/.local/bin for oah sync dependency"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "which oah && oah --help 2>&1",
+        "expected_signal": "open-agent-hub 能力管理中心 CLI"
+      },
+      "first_task": "oah list 2>&1"
+    },
     "windows": null
   },
   "pricing": {
@@ -66,10 +90,142 @@
     "url": "https://github.com/guanyang/open-agent-hub/releases/tag/v3.0.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:51:58.146945+08:00",
+    "runs": [
+      {
+        "id": "verify-open-agent-hub-20261102-185039-65c2",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:51:58.146945+08:00",
+        "tool_version": "1.0.0",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/guanyang/open-agent-hub.git ~/open-agent-hub 2>&1",
+            "purpose": "git clone https://github.com/guanyang/open-agent-hub.git ~/open-agent-hub"
+          },
+          {
+            "command": "cd ~/open-agent-hub && npm link 2>&1",
+            "purpose": "npm link registers oah/open-agent-hub aliases"
+          },
+          {
+            "command": "curl -L -o /tmp/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 2>&1 && chmod +x /tmp/jq && mkdir -p ~/.local/bin && cp /tmp/jq ~/.local/bin/jq && ~/.local/bin/jq --version 2>&1",
+            "purpose": "install jq to ~/.local/bin for oah sync dependency"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "which oah && oah --help 2>&1",
+            "expected_signal": "open-agent-hub 能力管理中心 CLI",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[1mopen-agent-hub 能力管理中心 CLI (动态扫描版)\u001b[0m",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "oah list 2>&1",
+            "expected_signal": "SKILLS (104 个可用)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[36mcommit\u001b[0m, \u001b[36mreview\u001b[0m, \u001b[36mtest-tdd\u001b[0m",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "oah status 2>&1",
+            "expected_signal": "共 112 个组件，已激活 0 个",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[1m统计摘要:\u001b[0m 共 112 个组件，已激活 0 个。",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/oah-test-workspace && cd /tmp/oah-test-workspace && oah enable --path=/tmp/oah-test-target 2>&1 && echo \"---ENABLE_DONE---\" && ls -la /tmp/oah-test-target/ 2>&1 && ls -la /tmp/oah-test-target/skills 2>&1",
+            "expected_signal": "remotion-markup -> /home/sbx/open-agent-hub/skills/remotion-markup",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lrwxrwxrwx 1 sbx sbx 47 Nov 2 10:51 remotion-markup -> /home/sbx/open-agent-hub/skills/remotion-markup",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "oah sync works out of the box (zero-dependency)",
+            "actually_needed": "needs jq installed; without it oah sync exits with 'jq is required but not installed'",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "oah sync copies upstream skills",
+            "actually_needed": "script calls rsync which is missing on minimal Debian; it prints 'rsync: command not found' but still reports success",
+            "kind": "note"
+          },
+          {
+            "readme_said": "install step 3 runs jq",
+            "actually_needed": "nothing to change; a note: the box ran jq, downloaded, without reading it first, so pickfit did not inspect it",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show help title, 104 skills list, and 112-component status with 0 activated.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-open-agent-hub-20261102-185039-65c2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-open-agent-hub-20261102-185039-65c2/check-1-cmd5.judged.png",
+            "runs/verify/verify-open-agent-hub-20261102-185039-65c2/check-2-cmd6.judged.png",
+            "runs/verify/verify-open-agent-hub-20261102-185039-65c2/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.077367,
+        "features": [
+          {
+            "feature": "link skills agents commands to workspaces",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "list available skills agents commands",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "sync skills from upstream sources",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; oah sync completed after installing jq; synced 11 upstream sources"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -240,5 +396,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T18:47:21+08:00"
+  "updated_at": "2026-11-02T18:51:58.149987+08:00"
 }

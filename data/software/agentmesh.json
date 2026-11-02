@@ -73,19 +73,24 @@
       "first_task": null
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-agentmesh-20261102-185446-c855",
       "method": "script",
       "steps": [
         {
-          "command": "curl -sL https://google.github.io/agentmesh/install.sh | bash",
-          "purpose": null
+          "command": "curl -sL https://google.github.io/agentmesh/install.sh -o /tmp/install.sh",
+          "purpose": "download install.sh to /tmp/install.sh"
+        },
+        {
+          "command": "AGENTMESH_INSTALL_DIR=$HOME/.local/bin bash /tmp/install.sh",
+          "purpose": "install agentmesh binaries to ~/.local/bin via install.sh"
         }
       ],
-      "manual_steps": [
-        "complete one-time login to join mesh"
-      ],
-      "check": null,
+      "manual_steps": [],
+      "check": {
+        "command": "agentmesh-node --version",
+        "expected_signal": "agentmesh-node version v0.1.1"
+      },
       "first_task": null
     },
     "windows": null
@@ -103,10 +108,150 @@
     "url": "https://github.com/google/agentmesh/releases/tag/v0.1.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T19:06:03.610045+08:00",
+    "runs": [
+      {
+        "id": "verify-agentmesh-20261102-185446-c855",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T19:06:03.610045+08:00",
+        "tool_version": "v0.1.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sL https://google.github.io/agentmesh/install.sh -o /tmp/install.sh",
+            "purpose": "download install.sh to /tmp/install.sh"
+          },
+          {
+            "command": "AGENTMESH_INSTALL_DIR=$HOME/.local/bin bash /tmp/install.sh",
+            "purpose": "install agentmesh binaries to ~/.local/bin via install.sh"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "agentmesh-node --version",
+            "expected_signal": "agentmesh-node version v0.1.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "agentmesh-node version v0.1.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --url http://127.0.0.1:18080/mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "agentmesh-node run --data-dir /tmp/amdata --bind-addr 127.0.0.1:18080",
+                "background": true,
+                "port": 18080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call get_login_instructions --args '{}' --url http://127.0.0.1:18080/mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_login_instructions content=text text_chars=132",
+            "setup": [
+              {
+                "command": "agentmesh-node run --data-dir /tmp/amdata --bind-addr 127.0.0.1:18080",
+                "background": true,
+                "port": 18080
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -sL https://google.github.io/agentmesh/install.sh | bash",
+            "actually_needed": "Set AGENTMESH_INSTALL_DIR=$HOME/.local/bin to avoid /usr/local/bin requiring sudo",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake succeeding, get_login_instructions tool call returning instructions, and agentmesh-node version v0.1.1 printed.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-agentmesh-20261102-185446-c855/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-agentmesh-20261102-185446-c855/check-1-cmd16.judged.png",
+            "runs/verify/verify-agentmesh-20261102-185446-c855/check-2-cmd17.judged.png",
+            "runs/verify/verify-agentmesh-20261102-185446-c855/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.094675,
+        "mcp": {
+          "transport": "streamable_http",
+          "launch": [
+            "agentmesh-node",
+            "run",
+            "--data-dir",
+            "/tmp/amdata",
+            "--bind-addr",
+            "127.0.0.1:18080"
+          ],
+          "url": "http://127.0.0.1:18080/mcp",
+          "protocol_version": "2025-11-25",
+          "server_name": "agentmesh-node-mcp-unauth",
+          "server_version": "0.1.0",
+          "tools": [
+            "get_login_instructions"
+          ],
+          "tool_count": 1,
+          "called_tool": "get_login_instructions",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "publish tools and models to network",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "publish requires joined mesh identity; unauthenticated node only serves login instructions"
+          },
+          {
+            "feature": "find and call other nodes services",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "find/call other nodes requires one-time login to join mesh"
+          },
+          {
+            "feature": "expose mesh as local MCP server",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
   },
   "mcp": {
     "transports": [],
@@ -348,5 +493,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T18:47:21+08:00"
+  "updated_at": "2026-11-02T19:06:03.611420+08:00"
 }

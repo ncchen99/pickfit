@@ -80,9 +80,58 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_container",
+    "checked_at": "2026-11-02T19:00:14.049390+08:00",
+    "runs": [
+      {
+        "id": "verify-heym-20261102-185538-45d9",
+        "level": "unverified",
+        "unverified_reason": "needs_container",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T19:00:14.049390+08:00",
+        "tool_version": "0.0.143",
+        "install_method": "source",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "cd /home/sbx/work && rm -rf heym 2>&1; git clone https://github.com/heymrun/heym.git heym 2>&1 | tail -5; ls heym/run.sh heym/deploy.sh 2>&1",
+            "purpose": "clone repository to work dir"
+          }
+        ],
+        "smoke_tests": [],
+        "pitfalls": [
+          {
+            "readme_said": "Prerequisites: Python 3.11+, Bun, UV, Docker",
+            "actually_needed": "run.sh checks for docker, bun, uv and exits if missing; box has no docker or bun and cannot install them without root",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "./run.sh starts PostgreSQL, backend and frontend",
+            "actually_needed": "No npm/pip package exists; only source via run.sh/deploy.sh or Docker image ghcr.io/heymrun/heym:latest which requires Docker",
+            "kind": "note"
+          },
+          {
+            "readme_said": "MCP server at /api/mcp/sse",
+            "actually_needed": "MCP is served by the full web platform requiring PostgreSQL, not a standalone stdio MCP server that can be probed independently",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-heym-20261102-185538-45d9/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.078525
+      }
+    ]
   },
   "mcp": {
     "transports": [],
@@ -348,5 +397,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T18:47:21+08:00"
+  "updated_at": "2026-11-02T19:00:14.052954+08:00"
 }

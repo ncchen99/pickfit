@@ -81,18 +81,25 @@
       "first_task": "bmoe-cli -m model.gguf --auto -p \"Explain MoE routing.\""
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-bigmoeonedge-20261102-184746-1889",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://github.com/Helldez/BigMoeOnEdge/releases/latest/download/install.sh | sh",
-          "purpose": null
+          "command": "curl -fsSL https://github.com/Helldez/BigMoeOnEdge/releases/latest/download/install.sh -o /tmp/install.sh",
+          "purpose": "download install.sh from releases"
+        },
+        {
+          "command": "sh /tmp/install.sh",
+          "purpose": "run install.sh (installs bmoe-cli/bmoe-server to ~/.local/bin)"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "bmoe-cli -m model.gguf --auto -p \"Explain MoE routing.\""
+      "check": {
+        "command": "bmoe-cli --version",
+        "expected_signal": "0.39.0"
+      },
+      "first_task": "bmoe-cli -m ~/models/SmolLM2-135M-Instruct-Q8_0.gguf --plan"
     },
     "windows": {
       "basis": "readme_claim",
@@ -122,10 +129,185 @@
     "url": "https://github.com/Helldez/BigMoeOnEdge/releases/tag/v0.39.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "inference",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:49:47.173682+08:00",
+    "runs": [
+      {
+        "id": "verify-bigmoeonedge-20261102-184746-1889",
+        "level": "inference",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:49:47.173682+08:00",
+        "tool_version": "0.39.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/Helldez/BigMoeOnEdge/releases/latest/download/install.sh -o /tmp/install.sh",
+            "purpose": "download install.sh from releases"
+          },
+          {
+            "command": "sh /tmp/install.sh",
+            "purpose": "run install.sh (installs bmoe-cli/bmoe-server to ~/.local/bin)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "bmoe-cli --version",
+            "expected_signal": "0.39.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.39.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "bmoe-cli -m ~/models/SmolLM2-135M-Instruct-Q8_0.gguf --plan",
+            "expected_signal": "plan:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "plan: machine 1 cores, 1876 MiB available of 2048 MiB, 20 GiB/s on this model's matmul",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/SmolLM2-135M-Instruct-Q8_0.gguf https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf && ls -lh ~/models/SmolLM2*.gguf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "bmoe-cli -m ~/models/SmolLM2-135M-Instruct-Q8_0.gguf -p \"Explain MoE routing.\" -n 16",
+            "expected_signal": "generation:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "generation: 16 tokens, 0.010 s/token (99.383 tok/s)",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/SmolLM2-135M-Instruct-Q8_0.gguf https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf && ls -lh ~/models/SmolLM2*.gguf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8766/v1/models > /tmp/models.json && cat /tmp/models.json\n",
+            "expected_signal": "SmolLM2-135M-Instruct-Q8_0.gguf",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"object\":\"list\",\"data\":[{\"id\":\"SmolLM2-135M-Instruct-Q8_0.gguf\",\"object\":\"model\",\"owned_by\":\"local\"}]}",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/SmolLM2-135M-Instruct-Q8_0.gguf https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf && ls -lh ~/models/SmolLM2*.gguf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "bmoe-server -m ~/models/SmolLM2-135M-Instruct-Q8_0.gguf -c 2048 --port 8766",
+                "background": true,
+                "port": 8766
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://127.0.0.1:8765/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\":\"SmolLM2-135M-Instruct-Q8_0.gguf\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"max_tokens\":16,\"temperature\":0}'",
+            "expected_signal": "completion_tokens",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":\"chatcmpl-1\",\"object\":\"chat.completion\",\"created\":1793616574,\"model\":\"SmolLM2-135M-Instruct-Q8_0.gguf\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello! How can I help you today?\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":31,\"completion_tokens\":9,\"total_tokens\":40…",
+            "setup": [
+              {
+                "command": "mkdir -p ~/models && curl -fL -o ~/models/SmolLM2-135M-Instruct-Q8_0.gguf https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf && ls -lh ~/models/SmolLM2*.gguf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "bmoe-server -m ~/models/SmolLM2-135M-Instruct-Q8_0.gguf -c 2048 --port 8765",
+                "background": true,
+                "port": 8765
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "bmoe-cli -m model.gguf --auto -p \"Explain MoE routing.\" works with any model",
+            "actually_needed": "stories260K.gguf fails with 'failed to create context' due to K cache q8_0 block size; SmolLM2-135M-Instruct-Q8_0.gguf works and was used for verification",
+            "kind": "note"
+          },
+          {
+            "readme_said": "README examples use trailing pipes for brevity",
+            "actually_needed": "this box rejects trailing pipes (| head) for smoke tests because exit code is hidden; re-ran checks without pipes",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show plan details, a 16-token generation about MoE routing, and version 0.39.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-bigmoeonedge-20261102-184746-1889/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-bigmoeonedge-20261102-184746-1889/check-1-cmd17.judged.png",
+            "runs/verify/verify-bigmoeonedge-20261102-184746-1889/check-2-cmd18.judged.png",
+            "runs/verify/verify-bigmoeonedge-20261102-184746-1889/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.115286,
+        "features": [
+          {
+            "feature": "Run MoE models larger than memory",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only context and memory setup logs with no generated completion text."
+          },
+          {
+            "feature": "Auto-configure cache and execution plan",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Serve OpenAI-compatible API for coding agents",
+            "status": "checked",
+            "smoke_tests": [
+              3,
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Run file-editing agent in folder",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "file-editing agent runs in desktop app GUI and workspace UI, not via CLI alone"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -416,5 +598,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T18:47:21+08:00"
+  "updated_at": "2026-11-02T18:49:47.175292+08:00"
 }

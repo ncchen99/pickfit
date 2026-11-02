@@ -51,7 +51,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-reticle-20261102-185206-b29e",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @reticlehq/server 2>&1",
+          "purpose": "install reticle via npm -g"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "which reticle && ls -lh ~/.local/bin/reticle* 2>&1; reticle --version 2>&1",
+        "expected_signal": "3.9.0"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -67,10 +83,139 @@
     "url": "https://github.com/reticlehq/reticle/releases/tag/v3.9.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:53:28.235467+08:00",
+    "runs": [
+      {
+        "id": "verify-reticle-20261102-185206-b29e",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:53:28.235467+08:00",
+        "tool_version": "3.9.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @reticlehq/server 2>&1",
+            "purpose": "install reticle via npm -g"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "which reticle && ls -lh ~/.local/bin/reticle* 2>&1; reticle --version 2>&1",
+            "expected_signal": "3.9.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3.9.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- reticle mcp 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call reticle_tools --args '{\"action\":\"list\"}' -- reticle mcp 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=reticle_tools content=text text_chars=9513",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show reticle 3.9.0 installed, MCP handshake with 10 tools, and successful reticle_tools call.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-reticle-20261102-185206-b29e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-reticle-20261102-185206-b29e/check-1-cmd3.judged.png",
+            "runs/verify/verify-reticle-20261102-185206-b29e/check-2-cmd4.judged.png",
+            "runs/verify/verify-reticle-20261102-185206-b29e/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.049628,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "reticle",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "reticle",
+          "server_version": "3.9.0",
+          "tools": [
+            "reticle_navigate",
+            "reticle_act_and_wait",
+            "reticle_session",
+            "reticle_verify",
+            "reticle_look",
+            "reticle_observe",
+            "reticle_assert",
+            "reticle_act",
+            "reticle_tools",
+            "reticle_run"
+          ],
+          "tool_count": 10,
+          "called_tool": "reticle_tools",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "return pass fail verdict with evidence",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "verdict with evidence requires running app with dev SDK wired and driven session"
+          },
+          {
+            "feature": "observe network responses app state console",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "observe network/state/console requires connected app session via reticle_observe"
+          },
+          {
+            "feature": "save and replay verification flows",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "save/replay flows requires instrumented app and session history"
+          },
+          {
+            "feature": "gate code changes in CI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "gate in CI requires saved flows and git history, no standalone tool call"
+          }
+        ]
+      }
+    ]
   },
   "mcp": {
     "transports": [],
@@ -338,5 +483,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T18:47:21+08:00"
+  "updated_at": "2026-11-02T18:53:28.237309+08:00"
 }

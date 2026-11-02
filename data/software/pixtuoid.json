@@ -68,18 +68,21 @@
       "first_task": "pixtuoid"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-pixtuoid-20261102-184921-1cc2",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g pixtuoid",
-          "purpose": null
+          "command": "npm install -g pixtuoid 2>&1",
+          "purpose": "install pixtuoid via npm install -g pixtuoid"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "pixtuoid"
+      "check": {
+        "command": "pixtuoid --version 2>&1",
+        "expected_signal": "pixtuoid 0.21.0"
+      },
+      "first_task": "pixtuoid doctor 2>&1"
     },
     "windows": null
   },
@@ -96,10 +99,113 @@
     "url": "https://github.com/pixtuoid/pixtuoid/releases/tag/v0.21.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:50:19.581227+08:00",
+    "runs": [
+      {
+        "id": "verify-pixtuoid-20261102-184921-1cc2",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:50:19.581227+08:00",
+        "tool_version": "0.21.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g pixtuoid 2>&1",
+            "purpose": "install pixtuoid via npm install -g pixtuoid"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "pixtuoid --version 2>&1",
+            "expected_signal": "pixtuoid 0.21.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "pixtuoid 0.21.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "pixtuoid doctor 2>&1",
+            "expected_signal": "pixtuoid doctor",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "pixtuoid doctor",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "pixtuoid sources 2>&1\npixtuoid setup 2>&1",
+            "expected_signal": "No agent CLIs detected",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No agent CLIs detected on this machine — nothing to set up.",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show version 0.21.0, doctor diagnostics completing, and sources/setup reporting no agent CLIs detected.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-pixtuoid-20261102-184921-1cc2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-pixtuoid-20261102-184921-1cc2/check-1-cmd3.judged.png",
+            "runs/verify/verify-pixtuoid-20261102-184921-1cc2/check-2-cmd4.judged.png",
+            "runs/verify/verify-pixtuoid-20261102-184921-1cc2/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.039824,
+        "features": [
+          {
+            "feature": "show each agent session at desk",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "TUI multi-agent office requires interactive terminal and live agent sessions"
+          },
+          {
+            "feature": "animate coworkers typing and signaling",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "animated coworkers require interactive TUI rendering"
+          },
+          {
+            "feature": "view agent tree dashboard",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Tab dashboard requires interactive TUI"
+          },
+          {
+            "feature": "track token usage per desk",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "token paper piles require interactive TUI and live token data"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -318,5 +424,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T18:47:21+08:00"
+  "updated_at": "2026-11-02T18:50:19.583206+08:00"
 }

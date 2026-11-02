@@ -57,7 +57,35 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-opencode-swarm-20261102-185559-d66c",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "curl -fsSL https://bun.sh/install -o /tmp/bun-install.sh",
+          "purpose": "download bun installer"
+        },
+        {
+          "command": "bash /tmp/bun-install.sh 2>&1",
+          "purpose": "install bun to ~/.bun/bin"
+        },
+        {
+          "command": "npm install -g opencode-swarm 2>&1",
+          "purpose": "npm install -g opencode-swarm"
+        },
+        {
+          "command": "export PATH=\"$HOME/.bun/bin:$PATH\" && opencode-swarm install 2>&1",
+          "purpose": "run opencode-swarm install to register plugin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && opencode-swarm --version",
+        "expected_signal": "opencode-swarm 7.200.17"
+      },
+      "first_task": "export PATH=\"$HOME/.bun/bin:$PATH\" && opencode-swarm run guardrail explain \"rm -rf /etc/passwd\" 2>&1\necho \"---\"\nexport PATH=\"$HOME/.bun/bin:$PATH\" && opencode-swarm run preflight 2>&1"
+    },
     "windows": null
   },
   "pricing": {
@@ -73,10 +101,121 @@
     "url": "https://github.com/ZaxbyHub/opencode-swarm/releases/tag/v7.200.17"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T19:01:32.330499+08:00",
+    "runs": [
+      {
+        "id": "verify-opencode-swarm-20261102-185559-d66c",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T19:01:32.330499+08:00",
+        "tool_version": "7.200.17",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://bun.sh/install -o /tmp/bun-install.sh",
+            "purpose": "download bun installer"
+          },
+          {
+            "command": "bash /tmp/bun-install.sh 2>&1",
+            "purpose": "install bun to ~/.bun/bin"
+          },
+          {
+            "command": "npm install -g opencode-swarm 2>&1",
+            "purpose": "npm install -g opencode-swarm"
+          },
+          {
+            "command": "export PATH=\"$HOME/.bun/bin:$PATH\" && opencode-swarm install 2>&1",
+            "purpose": "run opencode-swarm install to register plugin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "export PATH=\"$HOME/.bun/bin:$HOME/.local/bin:$PATH\" && opencode-swarm --version",
+            "expected_signal": "opencode-swarm 7.200.17",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "opencode-swarm 7.200.17",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.bun/bin:$PATH\" && opencode-swarm run guardrail explain \"rm -rf /etc/passwd\" 2>&1\necho \"---\"\nexport PATH=\"$HOME/.bun/bin:$PATH\" && opencode-swarm run preflight 2>&1",
+            "expected_signal": "DESTRUCTIVE_TARGET_INVALID",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "| Firing Rule | DESTRUCTIVE_TARGET_INVALID: BLOCKED: Destructive command targets system path \"/etc/passwd\" which is under protected prefix \"/etc\" |",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm install requires Node.js >=22.13 and uses node:sqlite sidecar",
+            "actually_needed": "npm-installed binary is a bun shim (env: 'bun': No such file or directory) and still requires Bun >=1.3.13 in PATH; installed Bun via official install script and prepended ~/.bun/bin to PATH",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show guardrail blocking rm -rf /etc/passwd with DESTRUCTIVE_TARGET_INVALID and version printing 7.200.17.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-opencode-swarm-20261102-185559-d66c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-opencode-swarm-20261102-185559-d66c/check-1-cmd18.judged.png",
+            "runs/verify/verify-opencode-swarm-20261102-185559-d66c/check-2-cmd20.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.128302,
+        "features": [
+          {
+            "feature": "coordinate specialized architect-led agent team",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; config shows architect, coder, reviewer agents and auto_select_architect"
+          },
+          {
+            "feature": "enforce gated reviewer and test approval",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; evidence and qa-gates indicate gated pipeline; preflight shows reviewer/test gates"
+          },
+          {
+            "feature": "run security, secrets and dependency scans",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Preflight reports FAIL with secrets check failed on zero files scanned and no dependency audit shown."
+          },
+          {
+            "feature": "save and resume sessions in .swarm",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; .swarm directory with evolution/locks present, diagnose recognizes swarm state"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -287,5 +426,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T18:47:21+08:00"
+  "updated_at": "2026-11-02T19:01:32.333235+08:00"
 }

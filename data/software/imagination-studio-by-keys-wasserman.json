@@ -106,9 +106,64 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_gpu",
+    "checked_at": "2026-11-02T19:00:21.006379+08:00",
+    "runs": [
+      {
+        "id": "verify-imagination-studio-by-keys-wasserman-20261102-185726-8b45",
+        "level": "unverified",
+        "unverified_reason": "needs_gpu",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T19:00:21.006379+08:00",
+        "tool_version": null,
+        "install_method": "script",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "cd /tmp && rm -rf studio && git clone --depth 1 https://github.com/drowzeys/Imagination-Studio-by-keys-Wasserman.git studio 2>&1 | tail -n 20; ls /tmp/studio/*.sh 2>&1 | head\n",
+            "purpose": "clone Imagination Studio repo to fetch installers"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "bash /tmp/studio/oneshot-setup.sh 2>&1",
+            "expected_signal": "no nvidia-smi: this needs an NVIDIA GPU",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "✗ no nvidia-smi: this needs an NVIDIA GPU with its driver",
+            "setup": [
+              {
+                "command": "cd /tmp && rm -rf studio && git clone --depth 1 https://github.com/drowzeys/Imagination-Studio-by-keys-Wasserman.git studio 2>&1 | tail -n 20; ls /tmp/studio/*.sh 2>&1 | head\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "bash oneshot-setup.sh installs core studio on Linux",
+            "actually_needed": "Linux installer delegates to oneshot-setup-cuda.sh and requires nvidia-smi/NVIDIA GPU; fails with 'no nvidia-smi' on this box",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-imagination-studio-by-keys-wasserman-20261102-185726-8b45/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.073716
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -367,5 +422,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T18:47:21+08:00"
+  "updated_at": "2026-11-02T19:00:21.010283+08:00"
 }

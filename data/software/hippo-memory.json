@@ -77,20 +77,21 @@
       "first_task": "hippo recall \"data pipeline issues\" --budget 2000"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-hippo-memory-20261102-184746-5c69",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g hippo-memory",
-          "purpose": null
+          "purpose": "install hippo-memory globally via npm"
         }
       ],
-      "manual_steps": [
-        "trust Hippo hooks once in Codex /hooks"
-      ],
-      "check": null,
-      "first_task": "hippo recall \"data pipeline issues\" --budget 2000"
+      "manual_steps": [],
+      "check": {
+        "command": "hippo --version 2>&1 | cat -A\nnpm list -g hippo-memory 2>&1",
+        "expected_signal": "3.1.1"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -122,10 +123,135 @@
     "url": "https://github.com/kitfunso/hippo-memory/releases/tag/v3.1.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:49:21.732985+08:00",
+    "runs": [
+      {
+        "id": "verify-hippo-memory-20261102-184746-5c69",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:49:21.732985+08:00",
+        "tool_version": "3.1.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g hippo-memory",
+            "purpose": "install hippo-memory globally via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "hippo --version 2>&1 | cat -A\nnpm list -g hippo-memory 2>&1",
+            "expected_signal": "3.1.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3.1.1$",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "hippo remember \"FRED cache silently dropped the tips_10y series\" --tag error 2>&1",
+            "expected_signal": "Remembered",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "No hippo store at /home/sbx/work/.hippo (searched /home/sbx/work and its parents up to your home directory). Run `hippo init` first.",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "hippo recall \"data pipeline issues\" --budget 2000 2>&1",
+            "expected_signal": "No memories found for:",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "No hippo store at /home/sbx/work/.hippo (searched /home/sbx/work and its parents up to your home directory). Run `hippo init` first.",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "hippo sleep 2>&1",
+            "expected_signal": "Running consolidation",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "No hippo store at /home/sbx/work/.hippo (searched /home/sbx/work and its parents up to your home directory). Run `hippo init` first.",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "hippo import --chatgpt /home/sbx/work/memories2.json 2>&1",
+            "expected_signal": "Imported:",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "No hippo store at /home/sbx/work/.hippo (searched /home/sbx/work and its parents up to your home directory). Run `hippo init` first.",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/memories2.json <<'EOF'\n[{\"title\": \"Another memory\", \"content\": \"Use Postgres JSONB for new services\"}]\nEOF\ncat /home/sbx/work/memories2.json",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows hippo --version printing 3.1.1 and npm list showing hippo-memory@3.1.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hippo-memory-20261102-184746-5c69/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hippo-memory-20261102-184746-5c69/check-1-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.068376,
+        "features": [
+          {
+            "feature": "store long-term memories with tags",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "recall relevant memories with search",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "consolidate memories with sleep",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "import memories from other tools",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -384,5 +510,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T18:47:21+08:00"
+  "updated_at": "2026-11-02T18:49:21.735808+08:00"
 }

@@ -65,20 +65,21 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "other",
+      "basis": "replayed",
+      "run_id": "verify-speakoflow-20261102-185321-6e85",
+      "method": "binary",
       "steps": [
         {
-          "command": "yay -S speakoflow-bin",
-          "purpose": null
+          "command": "mkdir -p ~/apps && cd ~/apps && curl -fL -o SpeakoFlow.AppImage https://github.com/AbhishekBarali/SpeakoFlow/releases/download/v2.2.0/SpeakoFlow_2.2.0_amd64.AppImage && chmod +x SpeakoFlow.AppImage",
+          "purpose": "Download SpeakoFlow AppImage for Linux x86_64 v2.2.0"
         }
       ],
-      "manual_steps": [
-        "Grant Microphone and Accessibility permission on macOS"
-      ],
-      "check": null,
-      "first_task": "speakoflow --toggle-transcription"
+      "manual_steps": [],
+      "check": {
+        "command": "cd ~/apps && ./SpeakoFlow.AppImage --appimage-extract-and-run --help 2>&1",
+        "expected_signal": "SpeakoFlow - Speech to Text"
+      },
+      "first_task": "~/apps/SpeakoFlow.AppImage --appimage-extract-and-run"
     },
     "windows": null
   },
@@ -95,10 +96,116 @@
     "url": "https://github.com/AbhishekBarali/SpeakoFlow/releases/tag/v2.2.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-02T18:54:46.382567+08:00",
+    "runs": [
+      {
+        "id": "verify-speakoflow-20261102-185321-6e85",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-02T18:54:46.382567+08:00",
+        "tool_version": "2.2.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/apps && cd ~/apps && curl -fL -o SpeakoFlow.AppImage https://github.com/AbhishekBarali/SpeakoFlow/releases/download/v2.2.0/SpeakoFlow_2.2.0_amd64.AppImage && chmod +x SpeakoFlow.AppImage",
+            "purpose": "Download SpeakoFlow AppImage for Linux x86_64 v2.2.0"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd ~/apps && ./SpeakoFlow.AppImage --appimage-extract-and-run --help 2>&1",
+            "expected_signal": "SpeakoFlow - Speech to Text",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "SpeakoFlow - Speech to Text",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "~/apps/SpeakoFlow.AppImage --appimage-extract-and-run",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "README lists sudo apt install ./SpeakoFlow_*_amd64.deb and AppImage with chmod +x then run",
+            "actually_needed": "AppImage requires --appimage-extract-and-run on this system because FUSE is not available; plain ./SpeakoFlow.AppImage fails with fusermount error",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows SpeakoFlow - Speech to Text title with Usage and Options help text. / Screenshot shows SpeakoFlow branding with the tagline Talk, and it types. Ask, and it answers. on a light empty background.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-speakoflow-20261102-185321-6e85/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-speakoflow-20261102-185321-6e85/check-1-cmd5.judged.png",
+            "runs/verify/verify-speakoflow-20261102-185321-6e85/replay-7-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.057363,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "~/apps/SpeakoFlow.AppImage --appimage-extract-and-run",
+          "window_title": "SpeakoFlow",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "dictate voice to text at cursor",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "Dictation requires microphone to capture voice; box has no audio input"
+          },
+          {
+            "feature": "ask assistant about selected text",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "Ask assistant requires voice input; no microphone"
+          },
+          {
+            "feature": "converse hands-free with assistant",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "Conversation is hands-free voice chat; needs microphone/speaker"
+          },
+          {
+            "feature": "record meetings and write notes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "Meeting recording requires microphone and system audio capture"
+          }
+        ]
+      }
+    ]
   },
   "scores": null,
   "outcomes": {
@@ -373,5 +480,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-02T18:47:21+08:00"
+  "updated_at": "2026-11-02T18:54:46.384691+08:00"
 }
