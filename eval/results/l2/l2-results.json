@@ -530,6 +530,27 @@
      "the marker file was made by the before snapshot, before the first install line"
     ]
    }
+  },
+  "q11": {
+   "control": {
+    "pick": "Ollama + Llama-3-Taiwan-8B-Instruct (install: the macOS app from ollama.com/download, as extracted)",
+    "method": "agent, tart clone (16 GB, 8 vCPU), macOS 26.6.2 guest; attempt 3 (attempts 1-2 kept: grader errors and host swapping)",
+    "items": {
+     "1": "fail (the steps are not all in the terminal: download the app, drag it into Applications, open it; on first launch the app shows an authorization dialog (SecurityAgent) to install its command line tool, which needs a click and a password. The memory footprint was not measured: grader error, the watcher's stop file could not be written by the test user, so it never wrote its result)",
+     "2": "pass (guest network services off, offline check PASS before and after; all 15 prompts (P1-P5, 3 runs) got a non-empty reply in 7-126 s, exit 0)",
+     "3": "pass (2 of 3 runs; every run: P1, P2, P3, P5 at least 50 CJK, no 10-character substring more than 3 times, blind judge true)",
+     "4": "pass (Traditional ratio 1.0, 395 differing characters in run 1; the same in 2 of 3 runs)",
+     "5": "pass by hand mapping (P4 in all 3 runs is one line, '軟體、影片、網路、程式、資訊、預設、檔案、記憶體。', the 8 terms in the asked order separated by 、 instead of one per line, so score_replies could not map lines; mapped by hand in order: 8 of 8 Taiwan terms, no listed term, 'file' = 檔案. P5 passes in all 3 runs)"
+    },
+    "l2": "fail",
+    "notes": [
+     "the dialog's default was done by the grader (CLI link /usr/local/bin/ollama -> the app's binary, dialog closed with sudo, app restarted), so that the remaining items could be checked; L2-1 fails on the GUI steps either way",
+     "first run (`ollama run hf.co/phate334/…`) online under a pty, `/bye` typed once the prompt showed; no prompt sent",
+     "offline.sh: `ifconfig: command not found` (the grader's PATH lacked /sbin), so its address/bridge sub-check did not run; the network services were off and the other checks passed. Fixed for experimental",
+     "asked with the answer's first way, `ollama run tw`, prompt on stdin, a new run per prompt; temperature 0.6 in the answer's Modelfile, no documented seed setting: 3 runs, 2 of 3",
+     "L2-5 hand mapping to be confirmed by 念誠"
+    ]
+   }
   }
  }
 }

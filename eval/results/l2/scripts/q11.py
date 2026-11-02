@@ -110,7 +110,7 @@ with VM(f"q11-{GROUP}", OUT, [], name=clone_name(OUT), keep=PHASE != "score") as
         vm.sh(zsh(f"cd ~ && {CREATE}; echo create exit $?"), "ollama create tw -f Modelfile", timeout=1200)
         vm.sh(zsh("ollama list; ollama --version"), "models and version")
     elif PHASE == "ask":
-        vm.sh(f"sudo sh {FIX}/q11/mac/offline.sh off {R}/net-state.txt 2>&1 | tail -4", "L2-2 offline off (guest network services)")
+        vm.sh(f"PATH=/usr/bin:/bin:/usr/sbin:/sbin sudo sh {FIX}/q11/mac/offline.sh off {R}/net-state.txt 2>&1 | tail -4", "L2-2 offline off (guest network services)")
         for run in (1, 2, 3):
             free = subprocess.run("memory_pressure | tail -1", shell=True, capture_output=True, text=True).stdout.strip()
             swap = subprocess.run(["sysctl", "-n", "vm.swapusage"], capture_output=True, text=True).stdout.strip()
@@ -127,9 +127,9 @@ with VM(f"q11-{GROUP}", OUT, [], name=clone_name(OUT), keep=PHASE != "score") as
                 vm.sh(zsh(f"cd ~ && perl -e 'alarm shift; exec @ARGV' 600 ollama run tw < {FIX}/q11/prompts/P{p}.txt "
                           f"> {R}/replies/run{run}/P{p}.txt 2> {R}/replies/run{run}/P{p}.err; echo exit $?; wc -m < {R}/replies/run{run}/P{p}.txt"),
                       f"L2-2 run {run} P{p}", timeout=700, quiet=True)
-        vm.sh(f"sh {FIX}/q11/mac/offline.sh check 2>&1 | tail -2; sudo sh {FIX}/q11/mac/offline.sh on {R}/net-state.txt 2>&1 | tail -2",
+        vm.sh(f"PATH=/usr/bin:/bin:/usr/sbin:/sbin sh {FIX}/q11/mac/offline.sh check 2>&1 | tail -2; sudo sh {FIX}/q11/mac/offline.sh on {R}/net-state.txt 2>&1 | tail -2",
               "L2-2 offline check after the prompts, then network on")
-        vm.sh(f"touch {R}/footprint/stop; sleep 3; pgrep -u $(id -u) -fl tart-guest-agent; tail -3 {R}/footprint.log", "L2-1 footprint stop")
+        vm.sh(f"sudo touch {R}/footprint/stop; sleep 5; ls {R}/footprint; pgrep -u $(id -u) -fl tart-guest-agent; tail -3 {R}/footprint.log", "L2-1 footprint stop")
         vm.sh(f"python3 {FIX}/q11/score_replies.py --write-judge-requests {R}/judge-requests.jsonl "
               f"{R}/replies/run1 {R}/replies/run2 {R}/replies/run3", "L2-3 blind judge requests")
         keep_files(vm, R, OUT, "run-folder-after-ask.tgz")

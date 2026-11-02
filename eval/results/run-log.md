@@ -246,6 +246,11 @@
 - 主機記憶體（2026-11-02 約 17:50）：q11 對照組問第 1 題時主機嚴重換頁（swap 24.7/25.6 GB、可用記憶體約 130 MB、CPU 幾乎全滿；16 GB 的 VM 只有 4.5 GB 留在實體記憶體），第 1 題花了 8 分 50 秒（README 的上限是 10 分鐘）。照協調 session 的規則停下回報（`l2/q11-control/host-memory-stop.json`）；那兩則回覆移到 `replies-attempt1-hostswap`，之後從 P1 重做。協調 session 決定先做 q12、q11 等念誠釋出記憶體或晚上主機空閒時再做；q11 對照組的 clone 用 `tart suspend` 暫停（安裝、模型、記憶體狀態都保留）。
 - q12 改用 8 GB 的 clone（1.5B 測試模型用不到 16 GB；協調 session 同意）；之後新開的 clone 都加 `--suspendable`（停用音訊與熵裝置，兩組相同）。
 - q12 的評分 venv：映像的 Homebrew Python 移開後跑不起來，macOS 內建的 3.9 又低於 openai 3.42.1 要求的 3.10，改用固定版本的獨立 CPython 3.12.16（python-build-standalone 20261026，SHA-256 驗過），放在 `/var/eval-grader`，不在測試帳號的家目錄與 PATH 裡。對照組因此在 setup 之後先停下，答案的安裝行已在客體裡開始，就讓它自己跑完（每行的 exit code 在 steps.txt），再建 venv、跑檢查（`l2/q12-control/run-phase-stopped.log`）。
+- q11 對照組第 3 次（定案，2026-11-02 18:20 起，新 clone 從頭做；第 2 次的暫停狀態還原失敗：tart「failed to restore … invalid argument」，那台 clone 開機時沒加 `--suspendable`）。每組題目前的主機記憶體與每題花的時間（秒）：
+  - 第 1 組前：memory_pressure 可用 33%，swap 11.8／13.3 GB，壓力等級 2；P1–P5：97、97、121、16、72。
+  - 第 2 組前：可用 37%，swap 11.7／12.3 GB，等級 2；101、90、33、7、105。
+  - 第 3 組前：可用 36%，swap 11.6／12.3 GB，等級 2；126、97、42、8、110。
+  - 評分者失誤：記憶體量測的停止檔由測試帳號建立，但量測程式以 root 建的資料夾不讓它寫，量測一直到 VM 刪除都沒輸出結果，所以對照組的 footprint 沒量到。對照組的 L2-1 本來就因為要用 GUI 而不過，不影響判定；實驗組改用 sudo 建停止檔。`offline.sh` 的位址檢查因為 PATH 沒有 /sbin 而沒跑（`ifconfig: command not found`），其他斷網檢查都過；實驗組已修。
 - 評分者自己的操作失誤（答案不變，第一次保留）：q11 對照組第 1 次（`q11-control-attempt1-setupassistant/`）：關掉新帳號的設定助理會讓那個帳號登出，記憶體量測因此中斷，整台重來；同一次裡評分者用 `open -a Ollama` 代替「打開」，LaunchServices 還沒登記剛複製的 app 而失敗，重做時改成 `open /Applications/Ollama.app`（等於在 Finder 雙擊）。
 
 ### 凍結快照裡的產品錯誤：`gui.tier` 的輸出 schema（2026-11-02 協調 session 通報）
