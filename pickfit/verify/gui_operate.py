@@ -97,6 +97,15 @@ SEARCH_SKIP_DIRS = ("node_modules", "squashfs-root", ".npm", ".cargo", ".rustup"
 INPUT_DIR = f"{BOX_HOME}/pickfit-in"
 OUTPUT_DIR = f"{BOX_HOME}/pickfit-out"  # made before the app starts, for goals that save a file
 NONCE_FIELD = "{nonce}"
+# The feature's effect a check proves: computed (a value the app computed, converted or generated from the input),
+# converted_file (a file in another format), loaded (text of an input file the app opened, imported or found),
+# stored (something the app created or saved and keeps: the one kind that may hold text the operator typed).
+EFFECT_KINDS = ("computed", "converted_file", "loaded", "stored")
+# A file whose text pickfit's file check cannot read in its raw bytes: compressed containers, images and media.
+OPAQUE_FORMATS = ("png", "jpeg", "gif", "webp", "avif", "mp4", "pdf", "zip", "wav")
+OPAQUE_SUFFIXES = (".zip", ".epub", ".docx", ".xlsx", ".pptx", ".odt", ".ods", ".odp", ".cbz", ".cbr", ".cb7",
+                   ".jar", ".apk", ".gz", ".tgz", ".bz2", ".xz", ".7z", ".rar", ".pdf", ".png", ".jpg", ".jpeg",
+                   ".gif", ".webp", ".avif", ".mp4", ".wav", ".mp3", ".ogg")
 FORMATS = ("text", "json", "html", "svg", "csv", "srt", "png", "jpeg", "gif", "webp", "avif", "mp4", "pdf", "zip", "gguf",
            "wav")
 SAMPLES = ("png", "jpeg", "gif", "pdf", "wav", "mp4", "zip")
@@ -320,8 +329,12 @@ class GuiCheckSpec(BaseModel):
     path: str | None = Field(default=None, description="file: the file, or a folder to search (ending in /).")
     contains: list[str] = Field(default=[], max_length=4)
     format: str | None = None
+    # What the check proves the feature did (spec_problems requires both for a new operation; a replay of one
+    # recorded before them has neither).
+    effect: str | None = Field(default=None, max_length=200)
+    effect_kind: Literal["computed", "converted_file", "loaded", "stored"] | None = None  # EFFECT_KINDS
 
-    @field_validator("path", "format", mode="before")
+    @field_validator("path", "format", "effect", "effect_kind", mode="before")
     @classmethod
     def _nulls(cls, value: Any) -> Any:
         return _plain(value)
@@ -416,6 +429,44 @@ def spec_problems(args: OperateArgs, readme: str = "", home: str = BOX_HOME) -> 
         problems.append(f"a {check.kind} check needs the expected text (contains)")
     if check.kind != "file" and (check.path or check.format):
         problems.append(f"a {check.kind} check takes no path or format")
+    return problems + effect_problems(args)
+
+
+def typed_texts(args: OperateArgs) -> list[str]:
+    """Expected texts the goal holds, so the operator types or reads them out of the goal itself."""
+    goal = _norm(args.goal)  # case kept, as check_screen compares: typing hello is not seeing HELLO
+    return [c for c in args.check.contains if c.strip() and audio.SPOKEN_FIELD not in c
+            and re.search(r"(?<!\w)" + re.escape(_norm(c)) + r"(?!\w)", goal)]  # whole words: not x in .txt
+
+
+def effect_problems(args: OperateArgs) -> list[str]:
+    """A check must prove the feature's own effect, and one pickfit can see: never the text the goal gives the
+    operator (unless keeping it is the feature, in a file the app saved), never text inside a compressed file or
+    an image, and never only that something was written."""
+    check = args.check
+    problems: list[str] = []
+    if not check.effect or not check.effect.strip() or check.effect_kind is None:
+        problems.append("name the feature's effect this check proves: check.effect (a few words, e.g. 'the sum it "
+                        "computed', 'the PNG it exported', 'the playlist it saved') and check.effect_kind")
+        return problems
+    echoed = typed_texts(args)
+    if echoed and not (check.kind == "file" and check.effect_kind == "stored"):
+        problems.append(f"{echoed[0]!r} is in the goal, so the operator types it: seeing or copying it shows "
+                        "nothing. Expect what the app makes from the input (a value it computes or converts, text "
+                        "of an input file it opens or finds), or, when keeping what is typed is the feature, a "
+                        "file the app saves (effect_kind stored)")
+    inputs = " ".join(_norm(i.text or "") for i in args.inputs)
+    if check.effect_kind == "loaded" and not any(_norm(c) in inputs for c in check.contains):
+        problems.append("effect_kind loaded: expect text that is in an input file (e.g. {nonce} in its text), which "
+                        "the app shows or finds once it opens the file")
+    if check.effect_kind == "converted_file" and (check.kind != "file" or check.format is None):
+        problems.append("effect_kind converted_file: a file check with the format the app converts to")
+    if check.kind == "file" and check.contains:
+        opaque = check.format in OPAQUE_FORMATS or (check.path or "").lower().endswith(OPAQUE_SUFFIXES)
+        if opaque:
+            problems.append("pickfit reads the file's raw bytes, and text inside a compressed file, a PDF, an image "
+                            "or media is not there to read: check its format alone, or have the app save a plain "
+                            "text file")
     return problems
 
 
