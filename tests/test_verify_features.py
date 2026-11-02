@@ -442,3 +442,15 @@ def test_reason_other_needs_a_note():
     assert FeatureCheck(feature="sync", status="not_checked", reason="other", note="no sync server").note
     assert FeatureCheck(feature="sync", status="not_checked", reason="operator_limit").reason == "operator_limit"
 
+
+
+def test_the_apps_own_output_from_every_gui_launch_is_kept_under_its_command():
+    from pickfit.verify.pipeline import _gui_outputs
+
+    commands = [{"command_id": 3, "tool": "run_command", "command": "pipx install app"},
+                {"command_id": 4, "tool": "launch_gui", "command": "app", "gui": {"log_tail": "Gtk-WARNING: no bus\n"}},
+                {"command_id": 5, "tool": "operate_gui", "command": "app", "gui": {"log_tail": "  "}}]
+    replay = {"checks": [{"command_id": 4, "command": "app", "gui": {"log_tail": "Segmentation fault"}}]}
+    parts = _gui_outputs(commands, "agent") + _gui_outputs(replay, "replay")
+    assert parts == ["== agent [cmd 4] launch_gui: app ==\nGtk-WARNING: no bus\n",
+                     "== replay [cmd 4] gui: app ==\nSegmentation fault\n"]
