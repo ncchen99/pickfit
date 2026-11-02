@@ -154,33 +154,53 @@ def test_a_caption_may_name_only_numbers_and_words_from_pickfits_log():
     assert video.caption_problem("x" * 91, evidence) == "too long"
 
 
+CHANGES = [(3.5, 0.05), (5.3, 0.02), (9.75, 0.3), (14.0, 0.01)]
+
+
+def test_events_come_from_pickfits_log_and_its_change_points():
+    events = video.events_of(OP, CHANGES, 20.0)
+    assert [(e.number, e.t, e.kind) for e in events] == [
+        (1, 0.0, "start"), (2, 3.25, "click"), (3, 3.5, "change"), (4, 5.0, "type"), (5, 5.3, "change"),
+        (6, 9.5, "key"), (7, 9.75, "change"), (8, 14.0, "change")]
+    assert events[3].what == 'pickfit types "755"' and events[3].end == 5.2
+
+
+def test_a_segments_times_come_from_its_events_never_from_the_model():
+    events = video.events_of(OP, CHANGES, 20.0)
+    assert video.span(events, 2, 2, 20.0, False) == (2.65, 4.9)  # until the answer, not into pickfit's next action
+    assert video.span(events, 6, 7, 20.0, True) == (8.9, 12.75)  # the checked result stays 3 s
+    assert video.span(events, 1, 1, 20.0, False) == (0.0, 1.5)
+
+
+def S(first: int, last: int, caption: str, feature: str = "F1", result: bool = False, faster: bool = False):
+    return video.Segment(first=first, last=last, feature=feature, caption=caption, result_visible=result, faster=faster)
+
+
 def test_the_edit_list_keeps_whole_segments_in_order_and_only_checked_features():
-    answer = video.EditList(segments=[
-        video.Segment(start=12.0, end=16.0, feature="F1", caption="Symbolic now reads rwxr-xr-x", result_visible=True,
-                      faster=False),
-        video.Segment(start=2.0, end=6.5, feature="F1", caption="Type 755 in Numeric", result_visible=False,
-                      faster=False),
-        video.Segment(start=6.0, end=8.0, feature="F1", caption="Type 777 instead", result_visible=False, faster=False),
-        video.Segment(start=8.0, end=11.0, feature="F1", caption="Type 777 instead", result_visible=False, faster=True),
-        video.Segment(start=11.0, end=11.8, feature="F1", caption="Blink", result_visible=False, faster=False),
-        video.Segment(start=20.0, end=25.0, feature="F2", caption="Undo it", result_visible=True, faster=False),
-        video.Segment(start=30.0, end=99.0, feature="F1", caption="All 777 bits set", result_visible=True, faster=False),
-    ], notes="")
     label = "convert between symbolic and numeric permissions"
-    cuts, dropped = video.checked_cuts(answer, 0, 40.0, {"F1": label}, {"F1": video.evidence_text(OP, label)}, OP)
-    assert [(c.start, c.end) for c in cuts] == [(2.0, 6.5), (8.0, 11.0), (12.0, 16.0), (30.0, 40.0)]
-    assert cuts[1].caption == "pickfit: press Return" and "777" in cuts[1].note  # its own log, not the model's claim
+    events = video.events_of(OP, CHANGES, 20.0)
+    answer = video.EditList(segments=[
+        S(6, 7, "Symbolic now reads rwxr-xr-x", result=True), S(1, 3, "Click Numeric", faster=True),
+        S(4, 5, "Type 777 instead"), S(5, 6, "Again"), S(8, 8, "Undo it", feature="F2", result=True),
+        S(9, 9, "Nothing"), S(8, 8, "All 777 bits set", result=True)], notes="")
+    cuts, dropped = video.checked_cuts(answer, 0, 20.0, events, {"F1": label}, {"F1": video.evidence_text(OP, label)})
+    assert [(c.start, c.end) for c in cuts] == [(0.0, 4.9), (4.9, 6.8), (8.9, 12.75), (13.4, 17.0)]  # never overlapping
+    assert cuts[1].caption == 'pickfit: type "755"' and "777" in cuts[1].note  # its own log, not the model's claim
     assert cuts[3].caption == "Convert between symbolic and numeric permissions"  # shows the checked result
-    assert cuts[1].seconds == pytest.approx(1.5)  # 2x counts half
-    assert any("F2" in d for d in dropped) and any("shorter" in d for d in dropped)
-    assert any("did nothing" in d for d in dropped)  # 6.5-8.0: a wrong caption and no action of pickfit's
+    assert cuts[0].seconds == pytest.approx(2.45)  # 2x counts half
+    assert any("overlaps" in d for d in dropped) and any("F2" in d for d in dropped)
+    assert any("not events" in d for d in dropped)
+    short, why = video.checked_cuts(video.EditList(segments=[S(1, 1, "Wait")], notes=""), 0, 1.0, events,
+                                    {"F1": label}, {"F1": label})
+    assert not short and "shorter" in why[0]
 
 
 def test_a_long_caption_is_cut_to_its_first_clause_or_told_from_pickfits_log():
     long = "Clicking in the editor and typing two lines creates a heading; the document now shows it with the word"
     assert video.shorten(long) == "Clicking in the editor and typing two lines creates a heading"
-    assert video.logged_caption(OP, 0.0, 6.0) == 'pickfit: click, then type "755"'
-    assert video.logged_caption(OP, 6.0, 9.0) is None
+    events = video.events_of(OP, CHANGES, 20.0)
+    assert video.logged_caption(events[1:4]) == 'pickfit: click, then type "755"'
+    assert video.logged_caption(events[2:3]) is None
 
 
 def _video(**over: Any) -> dict[str, Any]:
@@ -296,4 +316,10 @@ def test_the_mac_recorder_writes_frames_at_its_rate_and_ends_the_file(tmp_path: 
     from PIL import Image
     import io
 
-    assert max(Image.open(io.BytesIO(last)).convert("L").getdata()) > 20  # later frames are kept, not the black first
+    assert Image.open(io.BytesIO(last)).convert("L").getextrema()[1] > 20  # later frames are kept, not the black first
+
+
+def test_a_video_of_known_length_is_reserved_by_its_length():
+    clip = {"messages": [{"role": "user", "content": [
+        {"type": "video_url", "video_url": {"url": "data:video/mp4;base64,AAAA"}}]}]}
+    assert 6 * 250 < estimate_input_tokens(clip, video_seconds=6.0) < 3_000

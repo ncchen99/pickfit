@@ -292,7 +292,10 @@ class VncRecorder:
             screen = self.box.screen() if hasattr(self.box, "screen") else None
             width, height = screen.size if screen is not None else client.capture()[:2]
             self.rec.width, self.rec.height = width, height
-            frame = fit(*client.capture(), width, height)
+            first = client.capture()
+            if first[:2] != (width, height):  # that odd first answer: ask once more for the screen as it is
+                first = client.capture()
+            frame = fit(*first, width, height)
             self.host_path.parent.mkdir(parents=True, exist_ok=True)
             self.host_path.unlink(missing_ok=True)
             self._proc = subprocess.Popen(
