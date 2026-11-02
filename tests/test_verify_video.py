@@ -160,17 +160,27 @@ def test_the_edit_list_keeps_whole_segments_in_order_and_only_checked_features()
                       faster=False),
         video.Segment(start=2.0, end=6.5, feature="F1", caption="Type 755 in Numeric", result_visible=False,
                       faster=False),
-        video.Segment(start=6.0, end=9.0, feature="F1", caption="Type 777 instead", result_visible=False, faster=True),
-        video.Segment(start=9.0, end=9.8, feature="F1", caption="Blink", result_visible=False, faster=False),
+        video.Segment(start=6.0, end=8.0, feature="F1", caption="Type 777 instead", result_visible=False, faster=False),
+        video.Segment(start=8.0, end=11.0, feature="F1", caption="Type 777 instead", result_visible=False, faster=True),
+        video.Segment(start=11.0, end=11.8, feature="F1", caption="Blink", result_visible=False, faster=False),
         video.Segment(start=20.0, end=25.0, feature="F2", caption="Undo it", result_visible=True, faster=False),
-        video.Segment(start=30.0, end=99.0, feature="F1", caption="Done", result_visible=True, faster=False),
+        video.Segment(start=30.0, end=99.0, feature="F1", caption="All 777 bits set", result_visible=True, faster=False),
     ], notes="")
     label = "convert between symbolic and numeric permissions"
-    cuts, dropped = video.checked_cuts(answer, 0, 40.0, {"F1": label}, {"F1": video.evidence_text(OP, label)})
-    assert [(c.start, c.end) for c in cuts] == [(2.0, 6.5), (6.5, 9.0), (12.0, 16.0), (30.0, 40.0)]
-    assert cuts[1].caption == "Convert between symbolic and numeric permissions" and "777" in cuts[1].note
-    assert cuts[1].seconds == pytest.approx(1.25)  # 2x counts half
+    cuts, dropped = video.checked_cuts(answer, 0, 40.0, {"F1": label}, {"F1": video.evidence_text(OP, label)}, OP)
+    assert [(c.start, c.end) for c in cuts] == [(2.0, 6.5), (8.0, 11.0), (12.0, 16.0), (30.0, 40.0)]
+    assert cuts[1].caption == "pickfit: press Return" and "777" in cuts[1].note  # its own log, not the model's claim
+    assert cuts[3].caption == "Convert between symbolic and numeric permissions"  # shows the checked result
+    assert cuts[1].seconds == pytest.approx(1.5)  # 2x counts half
     assert any("F2" in d for d in dropped) and any("shorter" in d for d in dropped)
+    assert any("did nothing" in d for d in dropped)  # 6.5-8.0: a wrong caption and no action of pickfit's
+
+
+def test_a_long_caption_is_cut_to_its_first_clause_or_told_from_pickfits_log():
+    long = "Clicking in the editor and typing two lines creates a heading; the document now shows it with the word"
+    assert video.shorten(long) == "Clicking in the editor and typing two lines creates a heading"
+    assert video.logged_caption(OP, 0.0, 6.0) == 'pickfit: click, then type "755"'
+    assert video.logged_caption(OP, 6.0, 9.0) is None
 
 
 def _video(**over: Any) -> dict[str, Any]:
