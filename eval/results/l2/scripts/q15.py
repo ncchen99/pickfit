@@ -7,7 +7,8 @@ placeholder `meeting.m4a` is filled with /work/input/meeting.wav (the clip), bec
 step writes `meeting.wav` and the fixture's fixed name would make ffmpeg overwrite its input; the run starts in
 the whisper.cpp folder the install ends in; every timed or traced run is in a --block-network namespace
 (section 2: egress blocked after setup); the baseline pins come from eval/fixtures/pins.json (calibration.md's
-baseline table is blank); the scorers run in T after the answer's runs, with pinned srt and OpenCC dictionaries.
+baseline table is blank); `-t 8` is filled with this box's core count (4): both answers say to set it to
+the CPU's physical cores (nproc); the scorers run in T after the answer's runs, with pinned srt and OpenCC dictionaries.
 """
 
 from __future__ import annotations
@@ -35,7 +36,7 @@ cmake --build build -j --config Release
 sh ./models/download-ggml-model.sh large-v3-turbo-q5_0"""
     RUN = """cd /work/whisper.cpp
 ffmpeg -i /work/input/meeting.wav -ar 16000 -ac 1 -c:a pcm_s16le meeting.wav
-./build/bin/whisper-cli -m models/ggml-large-v3-turbo-q5_0.bin -f meeting.wav -l zh -t 8 --prompt "以下是一場會議的逐字稿，使用繁體中文與全形標點符號。" -osrt
+./build/bin/whisper-cli -m models/ggml-large-v3-turbo-q5_0.bin -f meeting.wav -l zh -t 4 --prompt "以下是一場會議的逐字稿，使用繁體中文與全形標點符號。" -osrt
 opencc -i meeting.wav.srt -o meeting.zh-TW.srt -c s2twp.json"""
     OUTPUTS = "meeting.wav meeting.wav.srt meeting.zh-TW.srt"
 else:
@@ -48,7 +49,7 @@ sh ./models/download-ggml-model.sh large-v3-turbo-q5_0
 sh ./models/download-vad-model.sh silero-v5.1.2"""
     RUN = """cd /work/whisper.cpp
 ffmpeg -i /work/input/meeting.wav -ar 16000 -ac 1 -c:a pcm_s16le meeting.wav
-./build/bin/whisper-cli -m models/ggml-large-v3-turbo-q5_0.bin -f meeting.wav -l zh -t 8 --prompt "以下是繁體中文的會議逐字稿。" --vad -vm models/ggml-silero-v5.1.2.bin -osrt -of meeting
+./build/bin/whisper-cli -m models/ggml-large-v3-turbo-q5_0.bin -f meeting.wav -l zh -t 4 --prompt "以下是繁體中文的會議逐字稿。" --vad -vm models/ggml-silero-v5.1.2.bin -osrt -of meeting
 opencc -i meeting.srt -o meeting.zh-TW.srt -c s2twp.json"""
     OUTPUTS = "meeting.wav meeting.srt meeting.zh-TW.srt"
 FINAL = "/work/whisper.cpp/meeting.zh-TW.srt"

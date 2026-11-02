@@ -182,3 +182,29 @@
 - 需要做的題：只有 q01（A0099 的主要結論是沒有單一工具全部做到）。b09 的兩則依 b09 自己的檢查項目改記為組合首選，不需要 C6。
 - 另開的 agent session：`run.py c6 q01`（新增；`c6_no_fit_search.md` 的固定英文提示原文送出，對照組的隔離，不接 pickfit），valid，$0.241（算進評分上限）。最後一行：`FOUND: cc-switch-cli https://github.com/SaladDay/cc-switch-cli`。結果在 `runs/c6/q01/control/attempt-1/`。
 - 還要做：念誠的 30 分鐘搜尋（記錄查詢與看過的連結）；cc-switch-cli 與其他答案的 q01 首選由念誠判 L1——任何一個通過 L1，q01 的「沒有工具符合」就被推翻（C6）。
+
+#### L2 結果（Linux 17 題，第 1 次；Mac 題 q08、q11、q12 等念誠親手做）
+
+| 題 | 對照組 | 實驗組 | 對照組沒過的第一個原因 | 實驗組沒過的第一個原因 |
+|---|---|---|---|---|
+| q01 | fail | fail | L2-3: claude lists fixture-echo | L2-1: `brew install uv` exit 127 |
+| q02 | fail | fail | L2-1: rustup under a pty with the default accepted | L2-2: the pipeline `cat app.log | leakguard > clean.log` exit 127 |
+| q03 | fail | fail | L2-1: base image | L2-1: base image |
+| q04 | fail | pass | L2-1: `sops encrypt .env > secrets.enc.env` exit 1 | — |
+| q05 | fail | fail | L2-1: `python3 -m venv ~/docling-env` exit 1 | L2-1: `python3 -m venv ~/.venvs/docling` exit 1 |
+| q06 | fail | fail | L2-2: the stdio server `npx -y @ivotoby/openapi-mcp-server ...` cannot start | L2-1: `node --version` exit 127, then the answer's `brew install node` exit 127) |
+| q07 | fail | fail | L2-1: `brew install bruno` exit 127, `npm install -g @usebruno/cli` exit 127 | L2-1: `brew install --cask bruno` exit 127, `npm install -g @usebruno/cli` exit 127) |
+| q09 | fail | fail | L2-1: `brew install backlog-md` exit 127 | L2-1: method A `go install github.com/steveyegge/beads/cmd/bd@latest` exit 127 |
+| q10 | pass | fail | — | L2-4: after `git config --global diff.markdown.wordRegex ...`, `*.md diff=markdown` and `alias.w |
+| q13 | fail | fail | L2-1: the answer names `llama-<build>-bin-ubuntu-x64.zip` and says to unzip it | L2-1: downloaded and extracted llama-b12032-bin-ubuntu-x64.tar.gz as the prose says |
+| q14 | fail | fail | L2-1: `docker run ...` exit 127 | L2-1: `docker run ...` exit 127 |
+| q15 | fail | fail | L2-2: Run A, B and C each stopped at the 600 s limit, exit 124 | L2-2: Run A, B and C each stopped at the 600 s limit, exit 124 |
+| q16 | fail | fail | L2-1: `curl -fsSL https | L2-2: the server cannot load the model |
+| q17 | fail | fail | L2-1: `curl -fsSL https | L2-1: `less ollama-install.sh && sh ollama-install.sh` exit 127 |
+| q18 | fail | fail | L2-1: `pipx install ollmcp` exit 127 | L2-1: `uv tool install --upgrade ollmcp` exit 127 |
+| q19 | fail | fail | L2-1: `brew install uv` exit 127, `uv tool install --python 3.12 aider-chat` exit 127) | L2-1: `brew install aider` exit 127 |
+| q20 | pass | pass | — | — |
+
+- 通過：對照組 q10、q20（2 題）；實驗組 q04、q20（2 題）。安裝失敗的題照 C7 算實跑過、其餘 [L2] 都不過。
+- q15：兩組（同一個工具與做法）的轉錄每次都超過 600 秒。這個沙盒裡編出來的 whisper.cpp `system_info` 沒有列出任何 SIMD 功能，編碼器每 30 秒視窗約 232 秒，但沙盒 CPU 有 avx2／avx512（`l2/q15-cpu-flags/`），基準 openai-whisper small 同樣的沙盒 33–40 秒。可能是在 gVisor 裡編譯的問題、不是答案的錯；照第 2 節記不過，**請念誠決定**。
+- 截止（2026-11-03 12:00）前 Linux 17 題兩組都做完，沒有「未實跑」。

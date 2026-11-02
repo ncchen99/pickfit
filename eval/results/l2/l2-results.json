@@ -309,6 +309,23 @@
     },
     "l2": "fail",
     "notes": []
+   },
+   "experimental": {
+    "pick": "llama.cpp llama-server + EuroLLM-9B-Instruct (Q4 GGUF via -hf) + the answer's md2ptpt.py",
+    "items": {
+     "1": "pass (`sudo apt install build-essential cmake git libcurl4-openssl-dev python3` with the default accepted, clone, `cmake -B build && cmake --build build --config Release -j`: all exit 0)",
+     "2": "fail (the server cannot load the model: `get_repo_commit: error: HTTPS is not supported. Please rebuild with ...` — the build the answer gives has no HTTPS support for -hf, so the model never downloads; the script then gets connection refused; the egress report itself is pass)",
+     "3": "fail (no output files)",
+     "4": "fail (no output)",
+     "5": "fail (no output; the pinned language identifier was also never chosen in calibration.md)",
+     "6": "fail (no output)",
+     "7": "fail (no output; the meaning judge was also never chosen)"
+    },
+    "l2": "fail",
+    "notes": [
+     "first run (q16-experimental-attempt1-harness): the grader's line runner skipped the last install line (cmake --build); rerun with the fix",
+     "the answer's script is 96 lines (the question allows glue code up to 50 lines; an L1 matter, recorded here only)"
+    ]
    }
   },
   "q17": {
@@ -410,6 +427,42 @@
     "l2": "pass",
     "notes": [
      "the answer's main way: OPENAI_BASE_URL and OPENAI_API_KEY=ollama as environment variables, the model string changed to the frozen fixture model qwen2.5:0.5b (9.3 C); environment = calibration C1-C2 (pinned Ollama, venv with pinned openai); L2-3 in the same box with Ollama stopped and a fresh --block-network namespace, as calibration C5"
+    ]
+   }
+  },
+  "q15": {
+   "control": {
+    "pick": "whisper.cpp (large-v3-turbo-q5_0) + OpenCC s2twp",
+    "items": {
+     "1": "pass (install exit 0 in one shell; warmup exit 0 with an SRT; check_no_torch exit 0)",
+     "2": "fail (Run A, B and C each stopped at the 600 s limit, exit 124: no SRT)",
+     "3": "fail (no SRT)",
+     "4": "fail (no SRT)",
+     "5": "fail (Run A timed out at 600 s; baseline openai-whisper small 40.1 s)",
+     "6": "fail (probes blocked before and after, egress report pass, but Run B exit 124, and the item needs exit 0)"
+    },
+    "l2": "fail",
+    "notes": [
+     "SPEED ARTIFACT TO REVIEW: whisper.cpp built in this sandbox prints `system_info: ... CPU : OPENMP = 1 | REPACK = 1` with no SIMD features, and its encoder takes ~232 s per 30 s window (warmup, 10 s clip) at -t 4 and -t 8 alike, although the sandbox CPU reports avx2/avx512 (q15-cpu-flags) and openai-whisper small runs the 60 s clip in 33-40 s in an identical box. This may be an artifact of building inside gVisor rather than of the answer; both groups picked the same tool and setup, so it does not separate them. Recorded as measured (README section 2: a timed-out run fails); for 念誠 to decide",
+     "attempts: attempt1-harness (the line runner skipped the model download), attempt2-t8 (the grader left -t 8; both answers say to set -t to the CPU's physical core count, nproc = 4), this run with -t 4",
+     "input placeholder meeting.m4a filled with /work/input/meeting.wav; the run starts in /work/whisper.cpp; experimental's optional VAD model downloaded because its run command uses --vad; CPU model name is 'unknown' in every box (gVisor), so 'same CPU model' could only be recorded as unknown on both sides"
+    ]
+   },
+   "experimental": {
+    "pick": "whisper.cpp (large-v3-turbo-q5_0) + OpenCC s2twp",
+    "items": {
+     "1": "pass (install exit 0 in one shell; warmup exit 0 with an SRT; check_no_torch exit 0)",
+     "2": "fail (Run A, B and C each stopped at the 600 s limit, exit 124: no SRT)",
+     "3": "fail (no SRT)",
+     "4": "fail (no SRT)",
+     "5": "fail (Run A timed out at 600 s; baseline openai-whisper small 32.6 s)",
+     "6": "fail (probes blocked before and after, egress report pass, but Run B exit 124, and the item needs exit 0)"
+    },
+    "l2": "fail",
+    "notes": [
+     "SPEED ARTIFACT TO REVIEW: whisper.cpp built in this sandbox prints `system_info: ... CPU : OPENMP = 1 | REPACK = 1` with no SIMD features, and its encoder takes ~232 s per 30 s window (warmup, 10 s clip) at -t 4 and -t 8 alike, although the sandbox CPU reports avx2/avx512 (q15-cpu-flags) and openai-whisper small runs the 60 s clip in 33-40 s in an identical box. This may be an artifact of building inside gVisor rather than of the answer; both groups picked the same tool and setup, so it does not separate them. Recorded as measured (README section 2: a timed-out run fails); for 念誠 to decide",
+     "attempts: attempt1-harness (the line runner skipped the model download), attempt2-t8 (the grader left -t 8; both answers say to set -t to the CPU's physical core count, nproc = 4), this run with -t 4",
+     "input placeholder meeting.m4a filled with /work/input/meeting.wav; the run starts in /work/whisper.cpp; experimental's optional VAD model downloaded because its run command uses --vad; CPU model name is 'unknown' in every box (gVisor), so 'same CPU model' could only be recorded as unknown on both sides"
     ]
    }
   }
