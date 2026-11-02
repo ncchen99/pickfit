@@ -135,7 +135,7 @@ test('a search is find_software plus get_install_guide: reasons, verification, s
   assert.match(first, /<details class="install" open><summary><span>Install steps that worked on <span class="sys"><svg class="os os-macos"[^>]*>.*?<\/svg>macOS arm64/);
   assert.match(first, /brew install fixture\/tap\/fixture-llm-runner/);
   assert.match(first, /You do these yourself<\/h4><ul><li>Allow incoming connections/);
-  assert.match(first, /The output should contain “fixture-llm-runner 0\.4\.1”/);
+  assert.match(first, /The output should contain <code translate="no">fixture-llm-runner 0\.4\.1<\/code>/);
   assert.match(first, /fixture-llm-runner serve --model tiny-test/);
   // Only run on Linux: said plainly, with the Linux steps labelled as such.
   assert.match(second, /Fixture Chat TUI/);

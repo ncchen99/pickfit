@@ -512,7 +512,7 @@ details>summary{cursor:pointer}
 .install-body{padding:0 16px 14px}
 .install-body h4{font:700 .95rem/1.3 var(--display);margin:18px 0 6px}
 [data-stepper]{scroll-margin-top:16px}
-.stage-tabs{display:flex;flex-wrap:wrap;align-items:center;gap:4px;list-style:none;padding:0;margin:0 0 6px}
+.stage-tabs{display:flex;flex-wrap:wrap;align-items:center;gap:4px;list-style:none;padding:0;margin:0 0 20px}
 .stage-tabs li{display:flex;align-items:center;gap:4px}
 .stage-tabs li+li::before{content:"";width:16px;height:2px;border-radius:1px;background:color-mix(in srgb,var(--ink-2) 35%,transparent)}
 .stage-tabs button{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:0 12px 0 5px;border:0;border-radius:999px;background:none;color:var(--ink-2);font:600 .9rem/1 var(--display);cursor:pointer}
@@ -524,12 +524,23 @@ details>summary{cursor:pointer}
 .stage-tabs button:focus-visible{outline:3px solid var(--stitch);outline-offset:1px}
 .inst-stage[hidden]{display:none}
 .inst-stage+.inst-stage{margin-top:6px}
+.inst-stage>:first-child,.js .inst-check>h4:first-child+*{margin-top:0}
 .js .inst-check>h4:first-child{display:none}
 .js .inst-stage .open-hint:first-child{margin-top:10px}
-.stage-nav{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:20px;padding-top:14px;border-top:1px solid color-mix(in srgb,var(--ink-2) 18%,transparent)}
+.stage-nav{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:24px;padding-top:16px;border-top:1px solid color-mix(in srgb,var(--ink-2) 18%,transparent)}
 .stage-nav .stage-next{margin-left:auto}
 @media (max-width:520px){.stage-tabs{flex-wrap:nowrap}.stage-tabs button:not([aria-current]) .lbl{display:none}.stage-tabs button:not([aria-current]){padding-right:5px}}
-.steps{padding-left:24px;margin:0}.steps li{margin-bottom:12px}.steps li::marker{font:700 .9rem var(--display);color:var(--ink-2)}.steps li p{margin-bottom:4px}
+/* each step: its number in a column of its own, the purpose and command lined up beside it; a lone step has no number */
+.steps{list-style:none;padding:0;margin:0;counter-reset:step;display:grid;gap:20px}
+.steps>li{counter-increment:step;display:grid;grid-template-columns:26px minmax(0,1fr);column-gap:12px}
+.steps>li::before{content:counter(step);grid-row:1/span 3;align-self:start;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--sunk);color:var(--ink-2);font:700 .8rem/1 var(--display)}
+.steps>li>*{grid-column:2}
+.steps>li:only-child{display:block}.steps>li:only-child::before{content:none}
+.steps li p{margin:2px 0 8px;font-weight:600;line-height:1.45}
+.steps li p code{font-weight:500;overflow-wrap:anywhere}
+.steps .cmd{margin:0}.steps .caution{margin:8px 0 0}
+.expect{margin:10px 0 0;font-size:var(--t-small);color:var(--ink-2)}
+.expect code{color:var(--ink);overflow-wrap:anywhere}
 .caution{color:var(--caution)}
 .issues{list-style:none;padding:0}.issues li{padding:10px 12px;margin-bottom:8px;border-radius:var(--r-ctl);background:var(--tag)}
 .t-foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:18px}
@@ -734,8 +745,9 @@ body.is-results .home-only{display:none}
 .watch .i{width:14px;height:14px}
 .open-hint{display:flex;gap:8px;align-items:flex-start;margin:14px 0 0}
 .open-hint .i{flex:none;margin-top:3px;color:var(--pass)}
-.prereq{margin-bottom:16px}
-.prereq h4{margin-top:0}
+.prereq{margin:0 0 20px;padding:12px 16px;border-radius:var(--r-ctl);background:color-mix(in srgb,var(--sunk) 65%,transparent)}
+.prereq h4{margin:0 0 6px;font:700 var(--t-small)/1.3 var(--display);color:var(--ink-2)}
+.prereq ul{list-style:none;padding:0;margin:0;display:grid;gap:4px}
 .tested>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none}
 .tested>summary::-webkit-details-marker{display:none}
 .tested>summary h2{font-size:1.25rem;margin:0}

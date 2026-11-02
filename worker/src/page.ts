@@ -194,7 +194,7 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
     if (step.needs_sudo) notes.push(L('Uses sudo.', '需要 sudo。'));
     if (PIPE_TO_SHELL.test(step.command)) notes.push(L('Runs a downloaded script: read it before you run it.', '會執行下載來的腳本，執行前請先看過內容。'));
     return (
-      `<li>${step.purpose ? `<p>${esc(step.purpose)}</p>` : ''}${command(step.command)}` +
+      `<li>${step.purpose ? `<p>${purposeText(step.purpose, step.command)}</p>` : ''}${command(step.command)}` +
       `${notes.length ? `<p class="caution small">${notes.join(' ')}</p>` : ''}</li>`
     );
   });
@@ -204,9 +204,9 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
     : '';
   const verify = guide.verify
     ? `<h4>${L('Check that it works', '確認能用')}</h4>${command(guide.verify.command)}` +
-      `<p class="quiet small">${L(
-        `The output should contain “${esc(guide.verify.expected_contains)}”.`,
-        `輸出應包含「${esc(guide.verify.expected_contains)}」。`,
+      `<p class="expect">${L(
+        `The output should contain <code translate="no">${esc(guide.verify.expected_contains)}</code>`,
+        `輸出應包含 <code translate="no">${esc(guide.verify.expected_contains)}</code>`,
       )}</p>`
     : '';
   const first = guide.first_task
@@ -256,6 +256,12 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
 
 /** `code` spans in generated text; everything else escaped. */
 export const stepText = (s: string) => esc(s).replace(/`([^`]+)`/g, '<code translate="no">$1</code>');
+
+/** A step's purpose, with the command it names (often the whole command) set as code. */
+const purposeText = (purpose: string, cmd: string) => {
+  const at = purpose.indexOf(cmd);
+  return at < 0 ? stepText(purpose) : `${stepText(purpose.slice(0, at))}<code translate="no">${esc(cmd)}</code>${stepText(purpose.slice(at + cmd.length))}`;
+};
 
 /**
  * The guide one stage at a time (install, check, use), with Back and Next naming the stage they go to.
