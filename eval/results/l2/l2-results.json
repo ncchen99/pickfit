@@ -109,6 +109,58 @@
      "the answer gives sops for Ubuntu only in prose ('download the binary or .deb from releases ... check it against the published checksums'); the grader downloaded sops_3.13.3_amd64.deb, ran `sha256sum --ignore-missing -c sops-v3.13.3.checksums.txt` (no file was verified: the checksums file has no entry for the .deb) and `dpkg -i` (exit 0). `apt install age` ran verbatim with the default accepted. For 念誠 to confirm that following the prose this way counts"
     ]
    }
+  },
+  "q05": {
+   "control": {
+    "pick": "Docling",
+    "items": {
+     "1": "fail (`python3 -m venv ~/docling-env` exit 1: ensurepip is not available, the dev image has no python3-venv; every later line fails: source exit 1, pip/docling exit 127)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   },
+   "experimental": {
+    "pick": "Docling",
+    "items": {
+     "1": "fail (`python3 -m venv ~/.venvs/docling` exit 1: no python3-venv; later lines fail the same way)",
+     "2": "fail (install failed, C7)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)",
+     "5": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
+  },
+  "q06": {
+   "control": {
+    "pick": "@ivotoby/openapi-mcp-server",
+    "items": {
+     "1": "pass (nothing to install: the answer says `npx -y` fetches the package and assumes Node.js 18+)",
+     "2": "fail (the stdio server `npx -y @ivotoby/openapi-mcp-server ...` cannot start: npx not found, the dev image has no Node.js and the answer installs none; reference client FileNotFoundError)",
+     "3": "fail (no session)",
+     "4": "fail (no session)"
+    },
+    "l2": "fail",
+    "notes": [
+     "config values filled per README section 3: spec /work/api/openapi.yaml, base URL http://127.0.0.1:18080, a fake bearer token generated at run time"
+    ]
+   },
+   "experimental": {
+    "pick": "@ivotoby/openapi-mcp-server",
+    "items": {
+     "1": "fail (`node --version` exit 127, then the answer's `brew install node` exit 127)",
+     "2": "fail (install failed, C7; the session also could not start npx)",
+     "3": "fail (install failed, C7)",
+     "4": "fail (install failed, C7)"
+    },
+    "l2": "fail",
+    "notes": []
+   }
   }
  }
 }
