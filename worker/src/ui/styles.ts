@@ -733,6 +733,9 @@ details[open]:not(.menu)>summary:not(:has(>.i))::before{transform:rotate(180deg)
 .issues-fold{margin:18px 0 6px}
 .issues-fold>summary{font:700 .95rem/1.3 var(--display)}
 .issues-fold>.issues{margin-top:6px}
+/* Opened, a fold's contents start under its words, not under its chevron (the chevron is 1.1em of the summary's size, plus 6px). */
+.issues-fold>:not(summary){margin-left:calc(1.1 * .95rem + 6px)}
+.as-run>:not(summary){margin-left:calc(1.1 * var(--t-small) + 6px)}
 .issues{list-style:none;padding:0;margin:0}
 .issues li{padding:8px 0;margin:0}
 .issues li+li{border-top:1px solid var(--hair,var(--rule))}
