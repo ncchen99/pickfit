@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { z } from 'zod';
 import { loadCatalog, type GuiEvidence } from '../src/catalog.ts';
 import { ranSentence } from '../src/evidence.ts';
 import { guiSentence, levelLabel } from '../src/ui/facts.ts';
@@ -83,4 +84,20 @@ test("the tools' output schema accepts every GUI tier a record can carry (a func
   const tiers = [...py.match(/type GuiTier = Literal\[([^\]]*)\]/)![1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
   assert.ok(tiers.includes('action_checked'));
   for (const tier of tiers) assert.ok(gui.safeParse({ ...GUI, tier }).success, tier);
+});
+
+test("the tools' published output schema allows every key an operated GUI app carries (openpets broke find_software)", () => {
+  const operated: GuiEvidence = {
+    ...GUI,
+    tier: 'action_checked',
+    operations: [{ feature: 'set reminders', check: 'screen_text', passed: true, replay: 'operated', goal: 'Right-click the pet.', observed: 'on screen: yes' }],
+  };
+  // A client checks structured content against this JSON Schema, where every object forbids other keys.
+  const schema = z.toJSONSchema(gui, { io: 'output' }) as { anyOf: Array<{ type?: string; properties?: Record<string, any>; additionalProperties?: boolean }> };
+  const object = schema.anyOf.find((s) => s.type === 'object')!;
+  assert.equal(object.additionalProperties, false);
+  assert.deepEqual(Object.keys(operated).filter((k) => !(k in object.properties!)), []);
+  const item = object.properties!.operations.items;
+  assert.deepEqual(Object.keys(operated.operations![0]).filter((k) => !(k in item.properties)), []);
+  assert.ok(gui.safeParse(operated).success);
 });

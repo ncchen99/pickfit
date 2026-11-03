@@ -100,6 +100,23 @@ export const gui = z
       .describe("What that model saw in a screenshot of the app's own windows"),
     display: z.string().describe('The virtual display it ran on'),
     launch_offline: z.boolean().nullable().describe('The launch passed again with the network off in a fresh sandbox'),
+    operations: z
+      .array(
+        z.object({
+          feature: z.string().nullable().describe('The listed feature this goal exercised'),
+          check: z
+            .enum(['file', 'clipboard', 'screen_text'])
+            .describe("What pickfit checked: a file the app wrote, the clipboard, or text read off pickfit's screenshot"),
+          passed: z.boolean(),
+          replay: z
+            .enum(['actions', 'operated'])
+            .describe('actions = the recorded clicks and keys passed again; operated = the operator reached the goal again'),
+          goal: z.string(),
+          observed: z.string().describe("pickfit's own line about what the check found"),
+        }),
+      )
+      .optional()
+      .describe('Goals pickfit operated the app toward in the fresh-sandbox replay; absent when none ran'),
   })
   .nullable()
   .describe('A GUI app: what pickfit saw when it launched it. null for other software');
