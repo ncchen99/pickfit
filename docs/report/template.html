@@ -68,7 +68,9 @@ a:hover{text-decoration-color:var(--ink)}
 
 /* layout */
 .layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:64px;padding:48px 0 96px}
-.toc{position:sticky;top:24px;align-self:start;max-height:calc(100vh - 48px);overflow:auto;font-size:.9rem;padding-right:8px}
+.toc{position:sticky;top:24px;align-self:start;font-size:.9rem}
+/* one scroll area: the list scrolls, the details element around it never does */
+.toc-scroll{max-height:calc(100vh - 84px);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;padding-right:8px}
 .toc summary{font:700 15px/1 var(--display);cursor:pointer;list-style:none;margin-bottom:12px}
 .toc summary::-webkit-details-marker{display:none}
 .toc ul{list-style:none;margin:0;padding:0}
@@ -105,6 +107,12 @@ article th{font:600 .84rem/1.25 var(--display);text-align:left;color:var(--ink-3
 article td{padding:9px 14px 9px 0;border-bottom:1px solid var(--rule);vertical-align:top}
 article td:first-child{font-weight:550}
 article img{max-width:100%;height:auto}
+.fig{margin:12px 0 32px}
+.fig svg{display:block;width:100%;height:auto}
+.fig figcaption{font-size:.875rem;color:var(--ink-3);margin-top:8px;line-height:1.45}
+@media (max-width:640px){.fig{overflow-x:auto;-webkit-overflow-scrolling:touch}.fig svg{min-width:600px}}
+.video{position:relative;aspect-ratio:16/9;margin:40px 0 8px;background:#000;border-radius:4px;overflow:hidden}
+.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 pre.mermaid{border:0;padding:16px 0;text-align:center;background:none;font-family:var(--sans)}
 .summary-box{background:var(--voice);border:1px solid var(--voice-edge);border-radius:4px;border-top-right-radius:16px;padding:20px 24px;margin:0 0 24px}
 
@@ -113,7 +121,8 @@ footer img{width:28px;height:28px}
 
 @media (max-width:960px){
   .layout{grid-template-columns:1fr;gap:24px;padding-top:24px}
-  .toc{position:static;max-height:none;border-bottom:1px solid var(--rule);padding-bottom:16px}
+  .toc{position:static;border-bottom:1px solid var(--rule);padding-bottom:16px}
+  .toc-scroll{max-height:none;overflow:visible}
   .toc:not([open]) summary{margin-bottom:0}
   .hero{grid-template-columns:1fr;padding:48px 0 32px}
   .hero img.fitz{display:none}
@@ -146,12 +155,15 @@ footer img{width:28px;height:28px}
       <p class="lede">{{description}}</p>
       <div class="actions">
         <a class="btn btn-primary" href="{{site}}">Open pickfit.app</a>
+        <a class="btn btn-quiet" href="https://www.youtube.com/watch?v=jr1R0Ld0kOc">Watch the 3-minute demo</a>
         <a class="btn btn-quiet" href="{{site}}/agents">Connect your agent</a>
         <a class="btn btn-quiet" href="https://github.com/ncchen99/pickfit">Source on GitHub</a>
       </div>
     </div>
     <img class="fitz" src="assets/fitz-success.svg" alt="Fitz the tailorbird, pickfit's mascot, with a green check">
   </section>
+
+  <div class="video"><iframe src="https://www.youtube-nocookie.com/embed/jr1R0Ld0kOc" title="pickfit demo video (2:57)" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
 
   <section class="shots" aria-label="Screenshots">
     <figure><img src="assets/home.png" alt="pickfit home page: an 'I need…' search box over a ruler, with filters for OS, CPU, free, offline and data stays local" loading="lazy"><figcaption>Ask in one sentence. pickfit answers only with tools it has run.</figcaption></figure>
@@ -161,7 +173,7 @@ footer img{width:28px;height:28px}
   <div class="layout">
     <details class="toc" open>
       <summary>Contents</summary>
-      {{toc}}
+      <div class="toc-scroll">{{toc}}</div>
     </details>
     <article id="report">
 {{body}}
