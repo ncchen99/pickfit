@@ -86,7 +86,7 @@
 | 0:30 | pickfit.app（英文、淺色）。在請求欄打：「My Mac's disk is full. I want a free cleaner I can trust.」勾 macOS、Free。捲尺在字下展開。按 Find tools | **Seven p.m., again. This time, just say what you need.** | |
 | 0:36 | 結果到：Fitz 的回答（橄欖卡）＝MangoDisk，量身單：Tested on macOS、how far it got、free；下面是安全提醒（紅盾牌：9 known advisories，OSV.dev）；Also fits 幾列 | **pickfit matches it against software it has installed and tested itself. Ranked by fit, not stars. No ads.** | Meta：即時配對（畫面小標「matching: Muse Spark 1.3」）；Impact：中立 |
 | 0:44 | 點進 MangoDisk 的工具頁。影片「Recorded by pickfit」在第一屏；點章節「Find and clear largest files」，直接跳過去播放 | **Want to see it first? This is pickfit using MangoDisk on a fresh macOS VM. One chapter per feature it checked. The hands are Muse Spark Open, Meta's open-weight model.** | Meta：開放權重模型操作桌面 GUI；Impact：不用再去找 YouTube |
-| 0:58 | 切到 Claude app（鏡頭從網頁面板滑到旁邊另一塊面板）。使用者打：「Install MangoDisk for me, the one pickfit tested.」工具呼叫 pickfit · get_install_guide 展開；agent 先說 9 則已知公告與修正版，再提出安裝 | **Hand it to your agent. It gets the exact steps that worked in the sandbox. It warns you about known vulnerabilities first.** | 技術：只回重播過的步驟；安全檢查 |
+| 0:58 | 切到 Claude app（鏡頭從網頁面板滑到旁邊另一塊面板）。使用者打：「Install MangoDisk for me, the one pickfit tested.」工具呼叫 pickfit · get_install_guide 展開；agent 先說 pickfit 的安全檢查標出已知漏洞、問要不要照樣安裝（實錄：念誠選 Install anyway） | **Hand it to your agent. It gets the exact steps that worked in the sandbox. It warns you about known vulnerabilities first.** | 技術：只回重播過的步驟；安全檢查 |
 | 1:07 | Claude 真正的權限提示跳出來（`brew tap … && brew install --cask --appdir=$HOME/Applications …`），使用者按 Allow（1×）；下載與安裝加速（標「8×」）；完成後 `open ~/Applications/MangoDisk.app` | **And it asks before it runs anything.** | 母題：先問你，再執行 |
 | 1:13 | 切到 MangoDisk（真實錄影）：開始掃描（加速、標倍速）→ Large files 列出事先放好的大檔 → 勾選 → 清除，可用空間跳回 | **Scan. Find the big ones. Clear them. Your evening is back.** | Demo：從需求到能用，中間不剪 |
 
@@ -97,8 +97,8 @@
 | 秒 | 畫面（真實錄影） | 旁白 |
 |---|---|---|
 | 1:24 | 標題卡，3D 小動畫：一隻 agent 游標的手，四周是它「沒有的工具」的空插槽 | **You're not the only one looking for software. So is your agent.** |
-| 1:28 | CLI：使用者問「Has the latest npm supply-chain attack reached my Mac?」agent 沒有這種工具 → pickfit · find_software → patient-zero（free、MIT、tested on macOS）→ 權限提示（1×）→ 掃描輸出「no known indicators」 | **Ask it something it has no tool for. pickfit finds a scanner that was tested on a Mac. Your agent asks first, then runs it.** |
-| 1:40 | MCP：「Find a public-domain book about the sea and read me the opening.」→ pickfit → gutenberg-mcp-server → 同意加入 → agent 用它搜書、讀出第一段 | **Or it gives itself a new skill: a Project Gutenberg server, added with your okay, and used on the spot.** |
+| 1:28 | CLI：使用者說「Scan my Mac for npm and PyPI supply-chain malware. Use pickfit to find a scanner and run it for me.」（第一、二次用 latest 的問法，agent 先去查新聞、自己掃，改成這句才照 pickfit 的工具跑） → pickfit · find_software → patient-zero（free、MIT、tested on macOS）→ 權限提示（1×）→ agent 先下載套件讀過才跑 → 結果「0 findings」，並照實說 IoC 清單沒有套件層的指標 | **Ask it something it has no tool for. pickfit finds a scanner that was tested on a Mac. Your agent asks first, then runs it.** |
+| 1:40 | MCP：「Give yourself a tool for searching and reading Project Gutenberg books, then read me the opening of a book about the sea.」→ pickfit → gutenberg-mcp-server → 同意安裝 → 新 session 才載入工具（Claude Code 的限制）→ 讀出 Moby Dick 開頭 | **Or it gives itself a new skill: a Project Gutenberg server, installed with your okay, then put to work.** |
 
 三拍的同意提示都是 client 真正跳出的，而且都不加速。自然帶出：Impact（agent 也是使用者）、Demo（三種軟體都能動）、Meta（配對）。
 
@@ -173,3 +173,12 @@ story.md 第 5 節的主張檢查照舊適用。這版另外要確認：
 2. 錄 Claude app 與 MangoDisk 時需要念誠讓出螢幕約 20 分鐘，由我用 Computer Use 操作；MangoDisk 1.2.2 會照 pickfit 的步驟裝進 `~/Applications`，不動 `/Applications` 裡現有的 1.1.7。
 3. 片中要不要呼叫 report_outcome（見第 4 節）。
 4. 標語：**The right software, for the person who needs it.**（11/3 定位更正後 story.md 建議的版本）或其他。
+
+## 8. 實際製作紀錄（11/3 晚上）
+
+- 旁白：11 段＋2 段重錄（揭露改成 idea and planning notes；安全那句拿掉數字，因為網頁的結果頁寫 15 個、agent 的安裝指南寫 9 則；Gutenberg 那句改成 installed … then put to work，因為要開新 session 才看得到新工具）。各段切成句子，位置在 `edit/timeline.json`。
+- 錄影：Claude app 由念誠操作（Computer Use 不能操作 Claude app 本身），我錄螢幕。用的是第一次錄影（主線安裝、MangoDisk 英文介面的清除、Gutenberg）與第三次錄影（patient-zero）。Claude app 介面是中文，同意提示旁加英文字幕。
+- 每段加速都在畫面上標出倍速（由 `edit/edl.json` 的片段自動算），同意提示一律 1×。
+- MangoDisk 的安全檢查：網頁寫「15 known vulnerabilities」（筆數），get_install_guide 用不重複公告數 9。兩個數字不一致是網站的問題，另外處理；旁白不講數字。
+- 片尾時鐘 7:05 PM：從 7:02 開始，實際流程約 3 分鐘（網頁 1 分鐘、安裝 1.5 分鐘、清除與回報 0.5 分鐘）。
+- report_outcome：demo 資料夾的 pickfit MCP 帶 `X-Pickfit-Reporter: demo`，回報不算進計分，不必事後排除。
