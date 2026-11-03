@@ -87,6 +87,11 @@ total before it and the number of app defects. A record with no check (no screen
 check read a run the record no longer has, keeps b3.v5 or web.v1 with nothing added or taken. The treasure rule does
 not change. refresh_scores applies and removes the deduction with no call.
 
+Known vulnerabilities (record field security, sec.v1, pickfit/security.py; 念誠 11/3) bound quality like the other caps:
+a record whose check found any high or critical OSV advisory in what a fresh install brings is capped at 79
+(known_vulnerability), so it cannot be a treasure. The formula does not change and nothing is deducted below the cap.
+A record not checked, or whose sources pickfit cannot read, keeps its score; its page says it was not checked.
+
 Inputs are the record, the GitHub snapshot it was built from (runs/pipeline.db; fetched live
 when the pipeline database does not hold the repo), one REST call for issues and the registry
 lookups. Ages are measured at the snapshot time, so the same snapshot gives the same quality.
@@ -865,12 +870,12 @@ def web_formula(verification: Verification, usability: Any) -> tuple[str, dict[s
 
 
 def _web_quality(verification: Verification, outcomes: Outcomes, kind: str, archived: bool,
-                 usability: Any = None, visual: Any = None) -> tuple[str, dict[str, Any]]:
+                 usability: Any = None, visual: Any = None, security: Any = None) -> tuple[str, dict[str, Any]]:
     """The web app's formula and its quality (web_formula picks it; apply_visual takes a visual defect off)."""
     version, nominal, extra = web_formula(verification, usability)
     components = {"sandbox_verification": web_sandbox_score(verification), "browser_facts": browser_facts_score(verification),
                   "usage_outcomes": usage_score(outcomes)} | extra
-    cap_reason = binding_cap(kind, archived, verification.level)
+    cap_reason = binding_cap(kind, archived, verification.level, security)
     quality = compose_web_quality(components, usage_outcomes_weight(outcomes.external.total()), cap_reason, nominal)
     quality, version = apply_visual(quality, version, kind, verification, visual)
     return version, quality
@@ -881,7 +886,7 @@ def build_web_scores(record: SoftwareRecord, *, stars: int | None, hn: int | Non
     Stars only with a repository; HN points only without one."""
     archived = record.repo is not None and record.repo.archived
     version, quality = _web_quality(record.verification, record.outcomes, record.kind, archived, record.usability,
-                                    record.visual_check)
+                                    record.visual_check, record.security)
     signals: dict[str, int | None] = dict.fromkeys(POPULARITY_WEIGHTS)
     if record.repo is not None:
         signals["stars"] = stars
@@ -937,7 +942,7 @@ def build_scores(record: SoftwareRecord, snapshot: dict[str, Any] | None, issues
         "usage_outcomes": usage_score(record.outcomes),
     }
     archived = record.repo is not None and record.repo.archived
-    cap_reason = binding_cap(record.kind, archived, record.verification.level)
+    cap_reason = binding_cap(record.kind, archived, record.verification.level, record.security)
     version, nominal, extra = tool_formula(record.kind, record.verification, record.usability)
     components |= extra
     quality = compose_quality(components, usage_outcomes_weight(record.outcomes.external.total()), cap_reason, nominal)
@@ -966,7 +971,7 @@ def _refresh_web(data: dict[str, Any], scores: dict[str, Any], now: datetime) ->
     verification = Verification.model_validate(data["verification"])
     outcomes = Outcomes.model_validate(data.get("outcomes") or {})
     target, quality = _web_quality(verification, outcomes, data["kind"], bool((data.get("repo") or {}).get("archived")),
-                                   data.get("usability"), data.get("visual_check"))
+                                   data.get("usability"), data.get("visual_check"), data.get("security"))
     if quality == scores["quality"] and version == target:
         return None
     scores["formula_version"] = target
@@ -997,7 +1002,8 @@ def refresh_scores(data: dict[str, Any], now: datetime) -> str | None:
                   if name not in ("usability", "visual_quality")} | extra  # visual_quality: gui.v2, branch only
     components["sandbox_verification"] = sandbox_score(verification, data["category"])
     components["usage_outcomes"] = usage_score(outcomes)
-    cap_reason = binding_cap(data["kind"], bool((data.get("repo") or {}).get("archived")), verification.level)
+    cap_reason = binding_cap(data["kind"], bool((data.get("repo") or {}).get("archived")), verification.level,
+                             data.get("security"))
     quality = compose_quality(components, usage_outcomes_weight(outcomes.external.total()), cap_reason, nominal)
     quality, target = apply_visual(quality, target, data["kind"], verification, data.get("visual_check"))
     if quality == scores["quality"] and version == target:

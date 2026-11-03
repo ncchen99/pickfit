@@ -58,7 +58,8 @@
         "archived",
         "verification_failed",
         "not_a_tool",
-        "unverified"
+        "unverified",
+        "known_vulnerability"
       ],
       "type": "string"
     },
@@ -2092,6 +2093,144 @@
       "title": "Scores",
       "type": "object"
     },
+    "SecurityCheck": {
+      "additionalProperties": false,
+      "description": "Known vulnerabilities in what a fresh install brings (sec.v1, pickfit/security.py; 念誠 11/3).\n\nNo model call: the dependencies are resolved the way a person installing it today gets them (a published package\nthrough npm --package-lock-only --ignore-scripts or uv pip compile --no-build, neither runs package code; else the\nrepository's lockfiles, Python re-resolved from pyproject.toml since pip and uv do not read uv.lock), without\ndevelopment dependencies and without lockfiles of parts the person does not install (docs sites, editor extensions,\nCI actions). Every resolved version is looked up on OSV.dev; any high or critical advisory, fixed or not, counts.",
+      "properties": {
+        "checked_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "database": {
+          "const": "OSV.dev",
+          "default": "OSV.dev",
+          "type": "string"
+        },
+        "findings": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SecurityFinding"
+          },
+          "maxItems": 60,
+          "type": "array"
+        },
+        "packages_checked": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "sources": {
+          "default": [],
+          "description": "What was resolved, e.g. 'npm:x@1.2.0' or a lockfile path.",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "vulnerable",
+            "clean",
+            "unchecked"
+          ],
+          "type": "string"
+        },
+        "unchecked_reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "no_source",
+                "no_lockfile",
+                "lockfile_not_supported",
+                "resolve_failed"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "version": {
+          "const": "sec.v1",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "status",
+        "packages_checked",
+        "checked_at"
+      ],
+      "title": "SecurityCheck",
+      "type": "object"
+    },
+    "SecurityFinding": {
+      "additionalProperties": false,
+      "description": "One high or critical OSV advisory (or a malicious-package report) on a package a fresh install brings.",
+      "properties": {
+        "advisory": {
+          "description": "OSV id, e.g. GHSA-xxxx-xxxx-xxxx or MAL-2025-1.",
+          "pattern": "^[A-Z][A-Z0-9]*-[\\w-]+$",
+          "type": "string"
+        },
+        "cves": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "type": "array"
+        },
+        "fixed_in": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The lowest fixed version above the installed one; null when none is out."
+        },
+        "malicious": {
+          "default": false,
+          "type": "boolean"
+        },
+        "package": {
+          "description": "Ecosystem and name, e.g. 'npm:undici'.",
+          "pattern": "^(npm|pypi|crates|go):\\S+$",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "CRITICAL",
+            "HIGH"
+          ],
+          "type": "string"
+        },
+        "summary": {
+          "maxLength": 200,
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "package",
+        "version",
+        "advisory",
+        "severity",
+        "fixed_in",
+        "summary"
+      ],
+      "title": "SecurityFinding",
+      "type": "object"
+    },
     "SetupStep": {
       "additionalProperties": false,
       "description": "A command a smoke test needs first: an input file, a server to query.",
@@ -3489,6 +3628,18 @@
         }
       ],
       "default": null
+    },
+    "security": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SecurityCheck"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Known high or critical vulnerabilities in what a fresh install brings (OSV.dev); null: not run yet."
     },
     "slug": {
       "$ref": "#/$defs/Slug",
