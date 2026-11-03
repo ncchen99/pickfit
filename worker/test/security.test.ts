@@ -96,7 +96,7 @@ test('tool page, vulnerable: a red shield with the count and its source, jumping
   for (const advisory of ['GHSA-abcd-1234-wxyz', 'RUSTSEC-2020-0071', 'GHSA-efgh-5678-wxyz']) {
     assert.equal(notice.split(`>${advisory}</a>`).length - 1, 1, `${advisory} is listed once`);
   }
-  assert.match(fold, /4 more not listed here\./);
+  assert.match(fold, /4 more findings not listed here\./);
   assert.doesNotMatch(fold, /Another one/); // the fold leaves out each advisory's own summary
   assert.doesNotMatch(notice, /capped|hidden gem|79/);
 
@@ -105,7 +105,7 @@ test('tool page, vulnerable: a red shield with the count and its source, jumping
   assert.match(zh, /GHSA-abcd-1234-wxyz<\/a>，高風險，8\.12\.2 已修正）<\/li>/);
   assert.match(zh, /RUSTSEC-2020-0071<\/a>，嚴重，尚無修正版本）<\/li>/);
   assert.match(zh, /GHSA-efgh-5678-wxyz<\/a>（高風險），8\.12\.2 已修正<\/li>/);
-  assert.match(zh, /另有 4 個未列出。/);
+  assert.match(zh, /另有 4 筆未列出。/);
   assert.doesNotMatch(zh, /寶藏|品質最高/);
 
   // One finding: singular, nothing more to list or fold; a malicious package is named as such.
@@ -178,6 +178,7 @@ test('get_install_guide: the security field, and a warning to tell the user befo
     reason: null,
     checked_at: '2026-11-03',
     count: 7,
+    advisories: 7,
     findings: [
       { package: 'npm:undici', version: '8.9.0', advisory: 'GHSA-abcd-1234-wxyz', severity: 'HIGH', fixed_in: '8.12.2', malicious: false },
       { package: 'crates.io:time', version: '0.1.0', advisory: 'RUSTSEC-2020-0071', severity: 'CRITICAL', fixed_in: null, malicious: false },
@@ -185,8 +186,12 @@ test('get_install_guide: the security field, and a warning to tell the user befo
   });
   assert.deepEqual(out.warnings, [
     'Known vulnerabilities (7 high or critical): npm:undici 8.9.0 GHSA-abcd-1234-wxyz (HIGH), fixed in 8.12.2; ' +
-      'crates.io:time 0.1.0 RUSTSEC-2020-0071 (CRITICAL), no fix yet; 5 more. Tell the user before installing.',
+      'crates.io:time 0.1.0 RUSTSEC-2020-0071 (CRITICAL), no fix yet; 5 more findings. Tell the user before installing.',
   ]);
+  // One advisory on several packages counts once in the headline; the rest are still findings.
+  const shared = installGuide(loadCatalog(indexWith({ ...VULNERABLE, advisories: 4 })), { slug: SLUG, os: 'macos', arch: 'arm64' });
+  assert.equal(shared.security.advisories, 4);
+  assert.match(shared.warnings[0], /^Known vulnerabilities \(4 high or critical\): .*; 5 more findings\. /);
 
   const single = installGuide(loadCatalog(indexWith({ ...VULNERABLE, count: 1, findings: [VULNERABLE.findings![0]] })), { slug: SLUG, os: 'macos', arch: 'arm64' });
   assert.deepEqual(single.warnings, ['Known vulnerability: npm:undici 8.9.0 GHSA-abcd-1234-wxyz (HIGH), fixed in 8.12.2. Tell the user before installing.']);
@@ -202,11 +207,11 @@ test('get_install_guide: the security field, and a warning to tell the user befo
   assert.equal(installGuide(loadCatalog(indexWith(many)), { slug: SLUG, os: 'macos' }).security.findings.length, 5);
 
   const clean = installGuide(loadCatalog(indexWith(CLEAN)), { slug: SLUG, os: 'macos', arch: 'arm64' });
-  assert.deepEqual(clean.security, { status: 'clean', reason: null, checked_at: '2026-11-03', count: 0, findings: [] });
+  assert.deepEqual(clean.security, { status: 'clean', reason: null, checked_at: '2026-11-03', count: 0, advisories: 0, findings: [] });
   assert.deepEqual(clean.warnings, []);
 
   const unchecked = installGuide(loadCatalog(indexWith(undefined)), { slug: SLUG, os: 'macos', arch: 'arm64' });
-  assert.deepEqual(unchecked.security, { status: 'unchecked', reason: 'not_run', checked_at: null, count: 0, findings: [] });
+  assert.deepEqual(unchecked.security, { status: 'unchecked', reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] });
   assert.deepEqual(unchecked.warnings, []);
 
   // A web app's guide carries it too.
@@ -235,7 +240,7 @@ test('find_software: each pick carries its security check', async () => {
   });
   assert.ok(!('summary' in runner.security.findings[0]));
   const other = out.picks.find((p) => p.slug !== SLUG)!;
-  assert.deepEqual(other.security, { status: 'unchecked', reason: 'not_run', checked_at: null, count: 0, findings: [] });
+  assert.deepEqual(other.security, { status: 'unchecked', reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] });
 });
 
 test('results: a vulnerable pick is flagged before its commands, with the count, the source and the list; others are not', async () => {
@@ -311,7 +316,7 @@ test('tool page, vulnerable: a badge by the title that jumps to the list, and a 
   assert.match(html, /<code>npm:undici 8\.9\.0<\/code> A &lt;b&gt;bad&lt;\/b&gt; parser\. \(<a [^>]*href="https:\/\/osv\.dev\/vulnerability\/GHSA-abcd-1234-wxyz"[^>]*>GHSA-abcd-1234-wxyz<\/a>, high, fixed in 8\.12\.2\)/);
   assert.match(html, /RUSTSEC-2020-0071<\/a>, critical, no fix yet\)/);
   // The two named above are all the check kept, so nothing folds; the rest of the count is said, not hidden.
-  assert.match(html, /<p class="small quiet">5 more not listed here\.<\/p>/);
+  assert.match(html, /<p class="small quiet">5 more findings not listed here\.<\/p>/);
   assert.doesNotMatch(html, />See all|<details class="vuln-list/);
   const zh = await (await get(`/tool/${SLUG}?lang=zh-TW`)).text();
   assert.match(zh, /有已知漏洞<\/span><\/a>/);
@@ -339,4 +344,14 @@ test('get_install_guide for a web app: the warning speaks of using the site, not
   const catalog = loadCatalog(indexWith(VULNERABLE, 'fixture-web-sketch'));
   const out = installGuide(catalog, { slug: 'fixture-web-sketch', os: 'linux' }) as unknown as { warnings: string[] };
   assert.match(out.warnings[0], /^Known vulnerabilities \(7 high or critical\): .*Tell the user before they use it\.$/);
+});
+
+test('tool page: one advisory on several packages counts once, and the notice says how many findings there are', () => {
+  // 11/3, MangoDisk: 9 distinct advisories in 15 findings (zip 4.6.1 and 8.6.0 share four; one vue-i18n advisory sits on three packages).
+  const shared = { ...VULNERABLE, count: 7, advisories: 5 };
+  assert.match(markFor(shared), /5 known high or critical vulnerabilities in packages it installs/);
+  assert.match(noticeFor(shared), /pickfit found 5 known high or critical vulnerabilities \(7 findings, one per affected package version\) in the packages a fresh install brings/);
+  assert.match(noticeFor(shared, 'zh-TW'), /找到 5 個已知的高風險或嚴重漏洞（共 7 筆，每個受影響的套件版本一筆）/);
+  // A check from before the count of distinct advisories reads as its findings.
+  assert.match(noticeFor(VULNERABLE), /pickfit found 7 known high or critical vulnerabilities in the packages/);
 });

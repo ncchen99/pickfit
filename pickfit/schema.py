@@ -1661,7 +1661,11 @@ class SecurityCheck(_Model):
     unchecked_reason: Literal["no_source", "no_lockfile", "lockfile_not_supported", "resolve_failed"] | None = None
     sources: list[str] = Field(default=[], max_length=20, description="What was resolved, e.g. 'npm:x@1.2.0' or a lockfile path.")
     packages_checked: int = Field(ge=0)
-    findings_total: int = Field(default=0, ge=0, description="Every finding, though findings keeps at most 60.")
+    findings_total: int = Field(default=0, ge=0, description="Every finding (one per advisory on each package version), "
+                                                             "though findings keeps at most 60.")
+    advisories_total: int | None = Field(default=None, ge=0, exclude_if=lambda value: value is None, description=(
+        "Distinct vulnerabilities among the findings: one advisory (with its aliases) on several packages or versions "
+        "counts once. Absent on a check written before 11/3 evening."))
     findings: list[SecurityFinding] = Field(default=[], max_length=60)
     database: Literal["OSV.dev"] = "OSV.dev"
     checked_at: AwareDatetime
@@ -1676,6 +1680,9 @@ class SecurityCheck(_Model):
             raise ValueError("status is vulnerable exactly when there are findings")
         if self.findings_total < len(self.findings) or (self.status != "vulnerable") != (self.findings_total == 0):
             raise ValueError("findings_total counts every finding kept, and is 0 exactly when not vulnerable")
+        if self.advisories_total is not None and (
+                self.advisories_total > self.findings_total or (self.advisories_total == 0) != (self.findings_total == 0)):
+            raise ValueError("advisories_total is at most findings_total, and is 0 exactly when findings_total is")
         if self.status == "clean" and not (self.packages_checked and self.sources):
             raise ValueError("clean needs what was read: packages_checked and sources")
         return self

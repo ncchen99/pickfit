@@ -98,7 +98,11 @@ const security = z
       .nullable()
       .describe('unchecked only: why pickfit could not check it'),
     checked_at: z.string().nullable(),
-    count: z.number().int().describe('vulnerable: how many in all; findings lists at most 5'),
+    count: z.number().int().describe('vulnerable: findings in all, one per advisory on each package version; findings lists at most 5'),
+    advisories: z
+      .number()
+      .int()
+      .describe('vulnerable: distinct vulnerabilities among the findings (one advisory on several packages or versions counts once)'),
     findings: z.array(
       z.object({
         package: z.string().describe('Ecosystem and name, e.g. npm:undici'),

@@ -2098,6 +2098,19 @@
       "additionalProperties": false,
       "description": "Known vulnerabilities in what a fresh install brings (sec.v1, pickfit/security.py; 念誠 11/3).\n\nNo model call: the dependencies are resolved the way a person installing it today gets them (a published package\nthrough npm --package-lock-only --ignore-scripts or uv pip compile --no-build, neither runs package code; else the\nrepository's lockfiles, Python re-resolved from pyproject.toml since pip and uv do not read uv.lock), without\ndevelopment dependencies and without lockfiles of parts the person does not install (docs sites, editor extensions,\nCI actions). Every resolved version is looked up on OSV.dev; any high or critical advisory, fixed or not, counts.",
       "properties": {
+        "advisories_total": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Distinct vulnerabilities among the findings: one advisory (with its aliases) on several packages or versions counts once. Absent on a check written before 11/3 evening."
+        },
         "checked_at": {
           "format": "date-time",
           "type": "string"
@@ -2117,7 +2130,7 @@
         },
         "findings_total": {
           "default": 0,
-          "description": "Every finding, though findings keeps at most 60.",
+          "description": "Every finding (one per advisory on each package version), though findings keeps at most 60.",
           "minimum": 0,
           "type": "integer"
         },

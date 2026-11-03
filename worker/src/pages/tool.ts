@@ -8,6 +8,7 @@
  */
 import { bestGuide, isVerified, isWebApp, OSES, securityOf, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo, type SecurityFinding } from '../catalog.ts';
 import { featuresOut, type FeaturesOut, type NotCheckedReason } from '../features.ts';
+import { advisoriesOf } from '../security.ts';
 import { L } from '../i18n.ts';
 import { installGuide, type InstallOutput } from '../install.ts';
 import { EMPTY_FORM, installSection, levelLine, stepText, webFactList } from '../page.ts';
@@ -219,16 +220,16 @@ export function securityMark(entry: Entry): string {
       why ? L(`Not checked for known vulnerabilities: ${why}`, `沒有檢查已知漏洞：${why}`) : L('Not checked for known vulnerabilities yet', '尚未檢查已知漏洞'),
     );
   }
-  const count = Math.max(s.count ?? 0, s.findings?.length ?? 0, 1);
+  const vulns = advisoriesOf(s, Math.max(s.count ?? 0, s.findings?.length ?? 0, 1));
   return checkMark(
     'fail',
     'shield-alert',
     SECURITY(),
     L(
-      `${count} known high or critical ${count === 1 ? 'vulnerability' : 'vulnerabilities'} in ${isWebApp(entry) ? 'the packages the site is built from' : 'packages it installs'} (OSV.dev${date ? `, ${date}` : ''}). See the list`,
-      `${isWebApp(entry) ? '這個網站用到的' : '它安裝的'}套件有 ${count} 個已知的高風險或嚴重漏洞（OSV.dev${date ? `，${date}` : ''}）。看清單`,
+      `${vulns} known high or critical ${vulns === 1 ? 'vulnerability' : 'vulnerabilities'} in ${isWebApp(entry) ? 'the packages the site is built from' : 'packages it installs'} (OSV.dev${date ? `, ${date}` : ''}). See the list`,
+      `${isWebApp(entry) ? '這個網站用到的' : '它安裝的'}套件有 ${vulns} 個已知的高風險或嚴重漏洞（OSV.dev${date ? `，${date}` : ''}）。看清單`,
     ),
-    { count, href: '#security' },
+    { count: vulns, href: '#security' },
   );
 }
 
@@ -251,6 +252,7 @@ export function securityNotice(entry: Entry): string {
   if (s.status !== 'vulnerable') return '';
   const all = s.findings ?? [];
   const count = Math.max(s.count ?? 0, all.length, 1);
+  const vulns = advisoriesOf(s, count);
   const web = isWebApp(entry);
   // The worst of the first two packages (findings come worst first), so two advisories on one package do not hide a second.
   const worst = all.filter((f, i) => all.findIndex((g) => g.package === f.package) === i).slice(0, 2);
@@ -259,7 +261,8 @@ export function securityNotice(entry: Entry): string {
     .join('');
   // The rest the check kept (at most 10 in all), and how many more it counted: the count above stays the full one.
   const rest = count - all.length;
-  const more = (cls: string) => (rest > 0 ? `<p class="${cls}">${L(`${rest} more not listed here.`, `另有 ${rest} 個未列出。`)}</p>` : '');
+  const more = (cls: string) =>
+    rest > 0 ? `<p class="${cls}">${L(`${rest} more ${rest === 1 ? 'finding' : 'findings'} not listed here.`, `另有 ${rest} 筆未列出。`)}</p>` : '';
   // The fold holds the ones not named above, so no advisory is listed twice.
   const others = all.filter((f) => !worst.includes(f));
   const list = others.length
@@ -272,8 +275,8 @@ export function securityNotice(entry: Entry): string {
     `<div class="notice error security-notice" role="note" id="security">${fitz('sorry', 64)}<div>` +
     `<h3>${web ? L('Before you use it: known vulnerabilities', '使用前先知道：有已知漏洞') : L('Before you install: known vulnerabilities', '安裝前先知道：有已知漏洞')}</h3>` +
     `<p>${L(
-      `pickfit found ${count} known high or critical ${count === 1 ? 'vulnerability' : 'vulnerabilities'} in ${web ? 'the packages this site is built with' : 'the packages a fresh install brings'}${date ? ` (OSV.dev, ${esc(date)})` : ''}. Weigh this before you ${web ? 'use it' : 'install it'}.`,
-      `pickfit 在${web ? '這個網站用到的套件' : '安裝時會一併裝上的套件'}裡找到 ${count} 個已知的高風險或嚴重漏洞${date ? `（OSV.dev，${esc(date)}）` : ''}，${web ? '使用' : '安裝'}前請先考慮。`,
+      `pickfit found ${vulns} known high or critical ${vulns === 1 ? 'vulnerability' : 'vulnerabilities'}${count > vulns ? ` (${count} findings, one per affected package version)` : ''} in ${web ? 'the packages this site is built with' : 'the packages a fresh install brings'}${date ? ` (OSV.dev, ${esc(date)})` : ''}. Weigh this before you ${web ? 'use it' : 'install it'}.`,
+      `pickfit 在${web ? '這個網站用到的套件' : '安裝時會一併裝上的套件'}裡找到 ${vulns} 個已知的高風險或嚴重漏洞${count > vulns ? `（共 ${count} 筆，每個受影響的套件版本一筆）` : ''}${date ? `（OSV.dev，${esc(date)}）` : ''}，${web ? '使用' : '安裝'}前請先考慮。`,
     )}</p>` +
     (items ? `<ul class="small">${items}</ul>` : '') +
     list +
