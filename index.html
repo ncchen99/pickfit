@@ -1,0 +1,1378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>pickfit: project report</title>
+<meta name="description" content="Meta Global AI Developer Hackathon, 27 Oct – 4 Nov 2026 (ET). Indie Developer track. Solo project by 念誠 (GitHub ncchen99).">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="pickfit">
+<meta property="og:title" content="pickfit: project report">
+<meta property="og:description" content="Meta Global AI Developer Hackathon, 27 Oct – 4 Nov 2026 (ET). Indie Developer track. Solo project by 念誠 (GitHub ncchen99).">
+<meta property="og:image" content="https://pickfit.app/assets/og/pickfit-en.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/fitz-favicon.svg" type="image/svg+xml">
+<style>
+@font-face{font-family:"Bricolage Grotesque";src:url(assets/bricolage-grotesque.woff2) format("woff2");font-weight:200 800;font-display:swap}
+:root{
+  --paper:#F7F7F4;--raised:#FFFFFF;--voice:#F1F6E2;--voice-edge:#A9B77E;--sunk:#F0F1EC;--rule:#DEDFD9;--line-ctl:#80817A;
+  --ink:#1A1D17;--ink-2:#4F5149;--ink-3:#65655E;--tape:#F5C243;--tape-edge:#A57710;--tape-ink:#3A2905;
+  --stitch:#C4552D;--fitz-line:#4A2E22;--pass:#2E7A35;--info:#28698A;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,"PingFang TC","Noto Sans TC",sans-serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang TC","Noto Sans TC",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#161613;--raised:#2E2E29;--voice:#1E2413;--voice-edge:#5E6B40;--sunk:#0E0F0C;--rule:#393A34;--line-ctl:#7A7B74;
+  --ink:#EBEAE2;--ink-2:#BFBEB6;--ink-3:#A5A59D;--tape-edge:#F5C243;--stitch:#E07A4F;--fitz-line:#93938A;--pass:#7CCB7A;--info:#86C4E6;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#161613;--raised:#2E2E29;--voice:#1E2413;--voice-edge:#5E6B40;--sunk:#0E0F0C;--rule:#393A34;--line-ctl:#7A7B74;
+  --ink:#EBEAE2;--ink-2:#BFBEB6;--ink-3:#A5A59D;--tape-edge:#F5C243;--stitch:#E07A4F;--fitz-line:#93938A;--pass:#7CCB7A;--info:#86C4E6;
+  color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:24px;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.6 var(--sans);text-rendering:optimizeLegibility}
+a{color:inherit;text-decoration-color:var(--line-ctl);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--ink)}
+:focus-visible{outline:3px solid var(--stitch);outline-offset:2px;border-radius:2px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+
+/* header */
+.top{display:flex;align-items:center;gap:16px;padding:18px 0;border-bottom:1px solid var(--rule)}
+.brand{display:flex;align-items:center;gap:10px;font:800 24px/1 var(--display);letter-spacing:-.03em;text-decoration:none}
+.brand img{width:32px;height:32px}
+.i-dot{position:relative}
+.i-dot::after{content:"";position:absolute;left:50%;top:.02em;width:.26em;height:.26em;border-radius:50%;background:var(--stitch);transform:translateX(-50%);box-shadow:0 0 0 .07em var(--paper)}
+.top nav{margin-left:auto;display:flex;gap:20px;font:600 15px/1 var(--display)}
+.top nav a{text-decoration:none;color:var(--ink-2)}
+.top nav a:hover{color:var(--ink)}
+.btn{display:inline-block;padding:10px 16px;border-radius:4px;font:700 15px/1 var(--display);text-decoration:none}
+.btn-primary{background:var(--tape);color:var(--tape-ink);border:1px solid var(--tape-edge)}
+.btn-quiet{border:1px solid var(--line-ctl);color:var(--ink)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:32px;align-items:center;padding:72px 0 48px;border-bottom:1px solid var(--rule)}
+.eyebrow{font:600 14px/1.3 var(--display);color:var(--ink-3);letter-spacing:.02em;margin:0 0 16px}
+.hero h1{font:700 clamp(2.3rem,4.6vw,3.8rem)/1.03 var(--display);letter-spacing:-.03em;margin:0;max-width:18ch}
+.hero .lede{font-size:1.2rem;line-height:1.55;color:var(--ink-2);max-width:62ch;margin:20px 0 28px}
+.hero .actions{display:flex;flex-wrap:wrap;gap:12px}
+.hero img.fitz{width:220px;height:220px}
+.shots{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:40px 0 8px}
+.shots figure{margin:0}
+.shots img{width:100%;height:auto;display:block;border:1px solid var(--rule);border-radius:4px}
+.shots figcaption{font-size:.875rem;color:var(--ink-3);margin-top:8px}
+
+/* layout */
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:64px;padding:48px 0 96px}
+.toc{position:sticky;top:24px;align-self:start;max-height:calc(100vh - 48px);overflow:auto;font-size:.9rem;padding-right:8px}
+.toc summary{font:700 15px/1 var(--display);cursor:pointer;list-style:none;margin-bottom:12px}
+.toc summary::-webkit-details-marker{display:none}
+.toc ul{list-style:none;margin:0;padding:0}
+.toc li{margin:0}
+.toc a{display:block;padding:5px 0 5px 12px;border-left:2px solid var(--rule);text-decoration:none;color:var(--ink-2);line-height:1.35}
+.toc a:hover{color:var(--ink);border-left-color:var(--line-ctl)}
+.toc a.on{color:var(--ink);border-left-color:var(--stitch);font-weight:600}
+.toc ul ul a{padding-left:24px;font-size:.84rem;color:var(--ink-3)}
+
+/* article */
+article{max-width:72ch;min-width:0}
+article h2{font:700 clamp(1.6rem,2.6vw,2.2rem)/1.12 var(--display);letter-spacing:-.02em;margin:80px 0 20px;padding-top:28px;border-top:1px solid var(--rule)}
+article h2:first-child{margin-top:0}
+article h3{font:700 1.3rem/1.25 var(--display);margin:48px 0 12px}
+article h4{font:700 1.05rem/1.3 var(--display);margin:32px 0 8px}
+article p,article li{color:var(--ink)}
+article p{margin:0 0 16px}
+article ul,article ol{padding-left:1.4em;margin:0 0 16px}
+article li{margin:4px 0}
+article li::marker{color:var(--ink-3)}
+article strong{font-weight:650}
+.anchor{margin-left:.4em;text-decoration:none;color:var(--line-ctl);opacity:0;font-weight:400}
+h2:hover .anchor,h3:hover .anchor,h4:hover .anchor,.anchor:focus{opacity:1}
+article code{font:500 .86em/1.4 var(--mono);background:var(--sunk);padding:.1em .35em;border-radius:3px}
+article pre{margin:0 0 20px;padding:4px 0 4px 16px;border-left:2px solid var(--line-ctl);overflow-x:auto;font:400 .86rem/1.55 var(--mono)}
+article pre code{background:none;padding:0;font-size:inherit}
+/* verbatim and asides: a ruled margin, like the site's quotes */
+article blockquote{margin:0 0 20px;padding:2px 0 2px 18px;border-left:2px solid var(--line-ctl);color:var(--ink-2)}
+article hr{display:none} /* every h2 already starts on a rule */
+/* tables read like the measurement sheet: rows on hairlines, no boxes */
+.table{overflow-x:auto;margin:0 0 24px;-webkit-overflow-scrolling:touch}
+article table{border-collapse:collapse;width:100%;font-size:.92rem;line-height:1.45;font-variant-numeric:tabular-nums}
+article th{font:600 .84rem/1.25 var(--display);text-align:left;color:var(--ink-3);padding:8px 14px 8px 0;border-bottom:1px solid var(--line-ctl);vertical-align:bottom}
+article td{padding:9px 14px 9px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+article td:first-child{font-weight:550}
+article img{max-width:100%;height:auto}
+pre.mermaid{border:0;padding:16px 0;text-align:center;background:none;font-family:var(--sans)}
+.summary-box{background:var(--voice);border:1px solid var(--voice-edge);border-radius:4px;border-top-right-radius:16px;padding:20px 24px;margin:0 0 24px}
+
+footer{border-top:1px solid var(--rule);padding:32px 0 48px;color:var(--ink-3);font-size:.9rem;display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+footer img{width:28px;height:28px}
+
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr;gap:24px;padding-top:24px}
+  .toc{position:static;max-height:none;border-bottom:1px solid var(--rule);padding-bottom:16px}
+  .toc:not([open]) summary{margin-bottom:0}
+  .hero{grid-template-columns:1fr;padding:48px 0 32px}
+  .hero img.fitz{display:none}
+}
+@media (max-width:640px){
+  .wrap{padding:0 16px}
+  body{font-size:16px}
+  .top nav a.hide-s{display:none}
+  .shots{grid-template-columns:1fr}
+  article h2{margin-top:56px}
+}
+@media print{.toc,.top nav,.hero .actions{display:none}.layout{display:block}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="https://pickfit.app"><img src="assets/fitz-64.svg" alt=""><span>pickf<span class="i-dot">i</span>t</span></a>
+    <nav aria-label="Links">
+      <a href="https://pickfit.app">Try pickfit</a>
+      <a class="hide-s" href="https://pickfit.app/agents">For agents</a>
+      <a href="https://github.com/ncchen99/pickfit">GitHub</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Final report · Meta Global AI Developer Hackathon · Oct 27 – Nov 4, 2026</p>
+      <h1>pickfit: project report</h1>
+      <p class="lede">Meta Global AI Developer Hackathon, 27 Oct – 4 Nov 2026 (ET). Indie Developer track. Solo project by 念誠 (GitHub ncchen99).</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="https://pickfit.app">Open pickfit.app</a>
+        <a class="btn btn-quiet" href="https://pickfit.app/agents">Connect your agent</a>
+        <a class="btn btn-quiet" href="https://github.com/ncchen99/pickfit">Source on GitHub</a>
+      </div>
+    </div>
+    <img class="fitz" src="assets/fitz-success.svg" alt="Fitz the tailorbird, pickfit's mascot, with a green check">
+  </section>
+
+  <section class="shots" aria-label="Screenshots">
+    <figure><img src="assets/home.png" alt="pickfit home page: an 'I need…' search box over a ruler, with filters for OS, CPU, free, offline and data stays local" loading="lazy"><figcaption>Ask in one sentence. pickfit answers only with tools it has run.</figcaption></figure>
+    <figure><img src="assets/tool-page.png" alt="A pickfit tool page for OpenPets: tested on macOS, a video recorded by pickfit with a chapter for each checked feature" loading="lazy"><figcaption>Every tool page starts with pickfit's own recording of the run.</figcaption></figure>
+  </section>
+
+  <div class="layout">
+    <details class="toc" open>
+      <summary>Contents</summary>
+      <div class="toc">
+<ul>
+<li><a href="#1-summary">1. Summary</a></li>
+<li><a href="#2-origin-and-the-problem">2. Origin and the problem</a><ul>
+<li><a href="#21-what-we-saw">2.1 What we saw</a></li>
+<li><a href="#22-the-desire-not-only-the-problem">2.2 The desire, not only the problem</a></li>
+<li><a href="#23-why-existing-platforms-dont-cover-this">2.3 Why existing platforms don't cover this</a></li>
+<li><a href="#24-positioning">2.4 Positioning</a></li>
+<li><a href="#25-brand-fitz-the-tailorbird">2.5 Brand: Fitz the tailorbird</a></li>
+</ul>
+</li>
+<li><a href="#3-hypotheses">3. Hypotheses</a></li>
+<li><a href="#4-system-overview">4. System overview</a><ul>
+<li><a href="#41-the-pipeline">4.1 The pipeline</a></li>
+<li><a href="#42-discovery-pickfitdiscover">4.2 Discovery (pickfit/discover/)</a></li>
+<li><a href="#43-prescreen">4.3 Prescreen</a></li>
+<li><a href="#44-extraction-extractpy">4.4 Extraction (extract.py)</a></li>
+<li><a href="#45-sandbox-verification-pickfitverify">4.5 Sandbox verification (pickfit/verify/)</a></li>
+<li><a href="#46-judges-verdict-and-replay">4.6 Judges, verdict and replay</a></li>
+<li><a href="#47-scoring-security-and-visual-check">4.7 Scoring, security and visual check</a></li>
+<li><a href="#48-publish-worker-and-mcp-tools">4.8 Publish, Worker and MCP tools</a></li>
+<li><a href="#49-website">4.9 Website</a></li>
+</ul>
+</li>
+<li><a href="#5-how-meta-models-are-used">5. How Meta models are used</a><ul>
+<li><a href="#51-which-model-does-what">5.1 Which model does what</a></li>
+<li><a href="#52-spend">5.2 Spend</a></li>
+<li><a href="#53-the-switch-to-openrouter-113">5.3 The switch to OpenRouter (11/3)</a></li>
+<li><a href="#54-where-non-meta-models-were-used">5.4 Where non-Meta models were used</a></li>
+</ul>
+</li>
+<li><a href="#6-experiments">6. Experiments</a><ul>
+<li><a href="#61-the-frozen-20-question-evaluation">6.1 The frozen 20-question evaluation</a></li>
+<li><a href="#62-prescreen-agreement-muse-spark-open-vs-muse-spark-13">6.2 Prescreen agreement: Muse Spark Open vs muse-spark-1.3</a></li>
+<li><a href="#63-muse-spark-open-vs-muse-spark-13-for-extraction-and-verification">6.3 Muse Spark Open vs muse-spark-1.3 for extraction and verification</a></li>
+<li><a href="#64-threaded-vs-resend-history-agent-loop">6.4 Threaded vs resend-history agent loop</a></li>
+<li><a href="#65-verification-batches-and-pass-rates">6.5 Verification batches and pass rates</a></li>
+<li><a href="#66-treasure-score-calibration-b3v1-b3v5">6.6 Treasure-score calibration (b3.v1 → b3.v5)</a></li>
+<li><a href="#67-gui-step-cap-muse-wonder-and-reasoning-effort-the-linux-gui-comparison">6.7 GUI step cap, Muse Wonder and reasoning effort (the Linux GUI comparison)</a></li>
+<li><a href="#68-sam-31-as-a-click-locator">6.8 SAM 3.1 as a click locator</a></li>
+<li><a href="#69-aimed-clicks-zoom-and-re-aim">6.9 Aimed clicks (zoom and re-aim)</a></li>
+<li><a href="#610-mangodisk-rounds-the-demo-app">6.10 MangoDisk rounds (the demo app)</a></li>
+<li><a href="#611-usability-pilot-two-rounds-failed-not-shipped">6.11 Usability pilot: two rounds failed, not shipped</a></li>
+<li><a href="#612-visual-defect-deduction-shipped-at-5">6.12 Visual-defect deduction: shipped at 5%</a></li>
+<li><a href="#613-severity-based-deductions-failed-the-pre-registered-bar">6.13 Severity-based deductions: failed the pre-registered bar</a></li>
+<li><a href="#614-planning-agent-goals-and-checks-before-and-after">6.14 Planning agent: goals and checks before and after</a></li>
+<li><a href="#615-relevance-ranking-fit-labels-and-negation-1031">6.15 Relevance ranking, fit labels and negation (10/31)</a></li>
+<li><a href="#616-the-jobs-phrases-experiment-not-merged">6.16 The jobs phrases experiment (not merged)</a></li>
+<li><a href="#617-translation-model-comparison">6.17 Translation model comparison</a></li>
+<li><a href="#618-security-relevance-pilot-and-rescans">6.18 Security relevance pilot and rescans</a></li>
+<li><a href="#619-well-known-tools-pilot-vs-well_known_option">6.19 Well-known tools: pilot vs well_known_option</a></li>
+<li><a href="#620-demo-shortlist-re-test">6.20 Demo shortlist re-test</a></li>
+<li><a href="#621-smaller-measurements">6.21 Smaller measurements</a></li>
+</ul>
+</li>
+<li><a href="#7-iterations-day-by-day">7. Iterations: day by day</a></li>
+<li><a href="#8-designs-that-keep-quality-and-trust">8. Designs that keep quality and trust</a><ul>
+<li><a href="#81-evidence-quoted-extraction">8.1 Evidence-quoted extraction</a></li>
+<li><a href="#82-verification-levels-are-earned-from-the-command-log">8.2 Verification levels are earned from the command log</a></li>
+<li><a href="#83-replay-in-a-fresh-box-before-write-back">8.3 Replay in a fresh box before write-back</a></li>
+<li><a href="#84-answers-say-how-they-know">8.4 Answers say how they know</a></li>
+<li><a href="#85-well-known-tools-are-never-dressed-up">8.5 Well-known tools are never dressed up</a></li>
+<li><a href="#86-security-per-version-surfaced-before-install">8.6 Security per version, surfaced before install</a></li>
+<li><a href="#87-guarded-write-back">8.7 Guarded write-back</a></li>
+<li><a href="#88-pre-registration">8.8 Pre-registration</a></li>
+<li><a href="#89-evaluation-isolation">8.9 Evaluation isolation</a></li>
+<li><a href="#810-one-ledger-hard-caps">8.10 One ledger, hard caps</a></li>
+<li><a href="#811-prompt-injection-and-sandbox-safety">8.11 Prompt-injection and sandbox safety</a></li>
+<li><a href="#812-no-fabricated-outcomes">8.12 No fabricated outcomes</a></li>
+<li><a href="#813-privacy">8.13 Privacy</a></li>
+<li><a href="#814-honest-wording">8.14 Honest wording</a></li>
+</ul>
+</li>
+<li><a href="#9-usability-and-the-product-surface">9. Usability and the product surface</a></li>
+<li><a href="#10-results-in-numbers">10. Results in numbers</a></li>
+<li><a href="#11-limitations-and-open-questions">11. Limitations and open questions</a><ul>
+<li><a href="#111-measured-limits">11.1 Measured limits</a></li>
+<li><a href="#112-what-the-evaluation-does-and-does-not-prove">11.2 What the evaluation does and does not prove</a></li>
+<li><a href="#113-observations-small-samples">11.3 Observations (small samples)</a></li>
+<li><a href="#114-hypotheses-still-untested">11.4 Hypotheses still untested</a></li>
+</ul>
+</li>
+<li><a href="#12-whats-next">12. What's next</a></li>
+<li><a href="#13-appendix">13. Appendix</a><ul>
+<li><a href="#131-repository-map">13.1 Repository map</a></li>
+<li><a href="#132-verification-levels">13.2 Verification levels</a></li>
+<li><a href="#133-score-formulas">13.3 Score formulas</a></li>
+<li><a href="#134-archived-experiment-tags">13.4 Archived experiment tags</a></li>
+<li><a href="#135-licences-and-third-parties">13.5 Licences and third parties</a></li>
+<li><a href="#136-hackathon-compliance">13.6 Hackathon compliance</a></li>
+<li><a href="#137-glossary">13.7 Glossary</a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+    </details>
+    <article id="report">
+
+<p>This report covers pickfit from its origin to the end of the hackathon: why it was built, the bets it rested on, how the system works, how Meta's models are used, every experiment we ran (including the ones that failed), how the system changed day by day, and what is still unknown. Every number comes from the repository's own records (<code>docs/plan.md</code>, <code>eval/</code>, <code>data/software/</code>, the working documents under <code>docs/</code>) or from a read-only count made for this report; where sources disagree, the latest value is given with its date. All times are Taipei time (UTC+8) unless marked ET.</p>
+<p>Claude Code was the development tool. Meta's models run the product.</p>
+<hr />
+<h2 id="1-summary">1. Summary<a class="anchor" href="#1-summary" title="Permanent link">#</a></h2>
+<p>pickfit is a software advisor for people and their AI agents. It discovers software (developer CLIs, local AI tools, MCP servers, desktop apps on Linux and macOS, and web apps), reads each project, <strong>installs and tests it in a sandbox, replays the steps in a fresh offline sandbox</strong>, scores quality separately from popularity, and only then lets it be recommended. People ask in one sentence on the web at <a href="https://pickfit.app">https://pickfit.app</a>; agents ask over a stateless MCP server at <code>https://pickfit.app/mcp</code> (also served at <code>https://pickfit-mcp.ncchen99.workers.dev/mcp</code>). The answer carries the steps that actually worked, where each claim came from, and plain labels for anything pickfit did not verify. pickfit belongs to no vendor, shows no ads and carries no referral links; results are ranked by fit, not stars.</p>
+<p>Meta's models make every product decision: <strong>Muse Spark 1.3</strong> extracts facts with checked quotes, judges what passed, grades install docs and matches requests live; <strong>Muse Spark Open</strong> (open weights, served on Baseten and on a Modal shared endpoint) does the first-cut prescreen, runs much of the sandbox agent, operates desktop apps from screenshots and drives a browser for web apps; <strong>Muse Wonder</strong> checks screenshots for measurable visual defects.</p>
+<p><strong>Headline numbers</strong> (count of <code>data/software/*.json</code> at commit <code>4cf9a747</code>, 4 Nov 00:55):</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th></th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Records in the catalogue</td>
+<td>970 (963 listed, 7 hidden by the developer's decision)</td>
+</tr>
+<tr>
+<td>Listed records verified at least through <code>install</code></td>
+<td>652 (330 <code>function</code>, 156 <code>service</code>, 149 <code>install</code>, 17 <code>inference</code>)</td>
+</tr>
+<tr>
+<td>Listed records with a passing run replayed in a fresh sandbox</td>
+<td>567</td>
+</tr>
+<tr>
+<td>Web apps tried in a sandboxed browser</td>
+<td>85</td>
+</tr>
+<tr>
+<td>Listed records <code>unverified</code> (each with a reason code) / <code>failed</code> (human-confirmed)</td>
+<td>310 / 1</td>
+</tr>
+<tr>
+<td>Hidden gems ("treasures": verified, quality ≥ 80, popularity ≤ 45)</td>
+<td>132</td>
+</tr>
+<tr>
+<td>Security check: clean / known high-or-critical vulnerability / unchecked</td>
+<td>436 / 264 / 263</td>
+</tr>
+<tr>
+<td>Model spend on Meta models, 28 Oct – 3 Nov (shared ledger, as of 3 Nov 04:12)</td>
+<td>$290.60, about <strong>$0.45 per verified tool</strong></td>
+</tr>
+<tr>
+<td>Python tests collected (this report's run) / Worker tests (status log, 3 Nov)</td>
+<td>1,640 / 282</td>
+</tr>
+</tbody>
+</table></div>
+<p>The pre-registered evaluation did <strong>not</strong> prove pickfit better: on the 12 medium and hard questions, the agent with pickfit passed 8 and the web-search-only agent 6, short of the pre-set lead of 3 (Section 6.1).</p>
+<p><strong>Links.</strong> Site: <a href="https://pickfit.app">https://pickfit.app</a>. MCP: <code>https://pickfit.app/mcp</code>. Code: <a href="https://github.com/ncchen99/pickfit">https://github.com/ncchen99/pickfit</a> (per <code>video/YOUTUBE.md</code>; public at submission). Demo video: 2:57, rendered at <code>video/out/pickfit-demo.mp4</code> (not in git); the YouTube text is in <code>video/YOUTUBE.md</code>, but no public video URL is recorded in the repository yet.</p>
+<hr />
+<h2 id="2-origin-and-the-problem">2. Origin and the problem<a class="anchor" href="#2-origin-and-the-problem" title="Permanent link">#</a></h2>
+<h3 id="21-what-we-saw">2.1 What we saw<a class="anchor" href="#21-what-we-saw" title="Permanent link">#</a></h3>
+<p>AI coding agents made software cheap to build. Independent developers, students and small teams publish new tools every day on GitHub, Show HN, Flathub and the web. The number of tools exploded, but finding the one that fits got harder (<code>docs/brief.md</code> §1):</p>
+<ul>
+<li><strong>It cannot be found.</strong> Search and ad rankings reflect who markets best, not who fits you. Good projects sit on GitHub with casual names and no promotion.</li>
+<li><strong>Agents don't know it either.</strong> A model's training data has a cutoff, so this year's projects are mostly absent; when an agent searches the web, it finds the same heavily marketed tools.</li>
+<li><strong>It won't install.</strong> Small projects often have incomplete docs; the working install steps are known only to the author.</li>
+</ul>
+<p>The result is that everyone keeps reinventing the wheel. Building your own is not free: after the first version comes maintenance, and now an AI token bill as well. The same effort is spent again and again on problems that already have good, maintained answers.</p>
+<h3 id="22-the-desire-not-only-the-problem">2.2 The desire, not only the problem<a class="anchor" href="#22-the-desire-not-only-the-problem" title="Permanent link">#</a></h3>
+<p>The brief deliberately states the project from both sides. The problem explains why it is urgent; the desire explains why someone would use it and stay. The developer's own wish, in the brief's words: an AI that helps <em>find the right software that already exists, instead of building everything myself</em>. The story notes (<code>docs/submission/story.md</code> §2) list the concrete pains: comparing across many tabs, watching a video to see one button, finding that the ideal tool is Windows-only, installing three or four to keep one, reading subjective reviews, and agents that stitch answers from scattered pages of uneven quality. A real example in the brief: a team member spent half a month comparing dictation tools before stumbling on a friend's app in a GitHub feed; it fit perfectly, and a direct search almost never surfaced it.</p>
+<h3 id="23-why-existing-platforms-dont-cover-this">2.3 Why existing platforms don't cover this<a class="anchor" href="#23-why-existing-platforms-dont-cover-this" title="Permanent link">#</a></h3>
+<p>Well-known software is already well organised: review sites (G2, Capterra), tool directories with MCP servers (Toolradar), and vendors' own plugin directories mostly list commercial SaaS and earn from vendors. <strong>High-quality, little-known long-tail software is not collected systematically by anyone</strong> (<code>brief.md</code> §1). Large vendors can recommend software too, but they have a conflict of interest: their agents rarely recommend a rival, a free local tool, or "you don't need anything new."</p>
+<h3 id="24-positioning">2.4 Positioning<a class="anchor" href="#24-positioning" title="Permanent link">#</a></h3>
+<p>Principles kept from the start (<code>brief.md</code> §2):</p>
+<ul>
+<li><strong>We are the knowledge, not the hands.</strong> The agent runs commands; pickfit tells it what to use and how. ("We don't build the navigation app; we build the map data.")</li>
+<li><strong>Recommendation is matching, not ranking.</strong> There is no best software, only the best fit for an OS, budget, privacy need, language and workflow.</li>
+<li><strong>Neutral.</strong> Not owned by any vendor or agent ecosystem, so it can say "the built-in one is enough." Neutrality is kept only by keeping the rules: no ads, no paid placement, no building the software it recommends.</li>
+<li><strong>Outcomes over reviews.</strong> The most credible signals are "did it install, is it still used, what replaced it."</li>
+</ul>
+<p>Two revisions during the week sharpened this. On 11/1 the developer restated pickfit as <em>a person's software advisor, delivered through the person's agent</em>: GUI apps came into scope, and source integration (Flathub, Homebrew Cask, Show HN, GitHub, submissions) became a core value. On 11/3 the developer corrected the positioning again (<code>story.md</code> §1): <strong>pickfit collects any software</strong>; collecting lesser-known, not-yet-famous software first was a choice of <em>validation order</em>, to prove the hardest case (that such software can be found, tested and trusted, and that hidden gems exist), not the product's definition. The MCP server description and the site were changed to match, and <code>submit_software</code> dropped its star cap.</p>
+<p>The pre-hackathon idea was narrower: a Traditional Chinese desktop dictation tool for Taiwanese developers, hand-written records, 10–20 users. For this hackathon the brief widened it to global users, any category, and agent-driven discovery and verification (<code>brief.md</code> §2). Only the idea and planning notes predate the event; none of that material is in the repository (Section 13.6).</p>
+<h3 id="25-brand-fitz-the-tailorbird">2.5 Brand: Fitz the tailorbird<a class="anchor" href="#25-brand-fitz-the-tailorbird" title="Permanent link">#</a></h3>
+<p>Fitz is a tailorbird, original artwork made during the hackathon (<code>brand/mascot/</code>). Real tailorbirds pick leaves and stitch them into a nest that fits; pickfit takes your measurements (OS, CPU, budget, offline), tries each tool on, and hands you only what fits. The site is designed as a tailor's fitting room (<code>DESIGN.md</code>): a stitch marks a record pickfit ran, and a missing stitch is the label for anything it has not verified. Fitz is happy only next to something that passed a test; an unverified option gets no Fitz at all.</p>
+<hr />
+<h2 id="3-hypotheses">3. Hypotheses<a class="anchor" href="#3-hypotheses" title="Permanent link">#</a></h2>
+<p>The architecture research (<code>docs/research/architecture.md</code>, written 28 Oct by several agents directed by the developer, before any API key existed) recorded a design and the bets it rested on, plus a list of things it could not confirm. The table states each bet as written there or in the brief, and what the week showed.</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Bet</th>
+<th>What we learned</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H1</td>
+<td>Meta's API is usable from a Taiwan account and supports strict JSON schema, tool calling and images (the "G0" gate)</td>
+<td>Key valid on 10/28; 9 models listed (no embedding model); json_schema, tools and image all passed on 10/28</td>
+<td>Confirmed</td>
+</tr>
+<tr>
+<td>H2</td>
+<td>Sandbox verification is both the core selling point and the biggest risk: READMEs are often wrong, and an agent can fix them</td>
+<td>On 10/28 the agent fixed <code>evnx</code> after the README failed. Of 650 passing non-web runs in today's catalogue, 148 needed at least one fix tagged <code>readme_wrong</code> (184 such fixes in total; this report's count)</td>
+<td>Confirmed</td>
+</tr>
+<tr>
+<td>H3</td>
+<td>Rule-based quality saturates (small tools and <code>bat</code> both score 80–100), so quality must come from sandbox depth and a model rubric</td>
+<td>The first formula <code>b3.v1</code> marked 22 of 25 verified tools as treasures; separating them needed verification depth, install difficulty and a pool-relative popularity reference (<code>b3.v3</code>–<code>b3.v5</code>)</td>
+<td>Confirmed</td>
+</tr>
+<tr>
+<td>H4</td>
+<td>An open-weight model is good enough for a cheap first-cut prescreen</td>
+<td>Muse Spark Open agreed with <code>muse-spark-1.3</code> on a fixed 5% sample: 34/34 (10/29) and 100/100 (expanded batch, 10/31)</td>
+<td>Confirmed</td>
+</tr>
+<tr>
+<td>H5</td>
+<td>Open weights are not cheaper, so use them only for prescreen</td>
+<td>Muse Spark Open later also ran most sandbox agents and the GUI operator after a 20-repo comparison (0.92 pass ratio); it did <strong>not</strong> pass the extraction bar (62–71% field agreement vs 90%)</td>
+<td>Partly refuted: wider role than planned, but not for extraction</td>
+</tr>
+<tr>
+<td>H6</td>
+<td>A threaded Responses loop (<code>previous_response_id</code>) is the right agent loop</td>
+<td>Threaded turns took 11–25 s and once returned 400 "response not found"; resending the full history took 1–7 s per turn</td>
+<td>Refuted; resend became the default</td>
+</tr>
+<tr>
+<td>H7</td>
+<td>No vector search: hard filters plus one model call over ≤ 60 candidate cards is enough</td>
+<td>Held for small categories. Once a category passed 60 cards, the 60 sent were the highest treasure scores, not the most relevant; a model keyword step plus BM25 shortlist was added (10/31)</td>
+<td>Confirmed with an amendment</td>
+</tr>
+<tr>
+<td>H8</td>
+<td>A tool can go from submission to recommendable in about 10 minutes</td>
+<td><code>matchify</code> was submitted at 11:40:14 on 11/1 and recommended first by <code>find_software</code> at about 11:43:05: about 2 min 51 s</td>
+<td>Confirmed (one case)</td>
+</tr>
+<tr>
+<td>H9</td>
+<td>The same agent with pickfit recommends tools that fit hard conditions more often than with web search alone</td>
+<td>Pre-registered evaluation: 8 vs 6 on 12 questions, below the bar of +3. The main losses were catalogue coverage, not matching</td>
+<td>Not shown</td>
+</tr>
+<tr>
+<td>H10</td>
+<td>High-quality, low-popularity software exists in quantity (treasures)</td>
+<td>132 listed treasures after the security cap; they span CLI tools (53), web apps (34), MCP servers (34), TUIs (6) and daemons (5)</td>
+<td>Confirmed</td>
+</tr>
+<tr>
+<td>H11</td>
+<td>Real usage outcomes (installed, still used, replaced) will make ranking better over time</td>
+<td>The loop is built (report → re-verify → diff, consented check-in) but no tool has reached the 3 external reports needed to count</td>
+<td>Untested</td>
+</tr>
+<tr>
+<td>H12</td>
+<td>Desktop GUI apps can reach <code>function</code> with a Meta model operating from screenshots</td>
+<td>Yes but rarely: 16 desktop apps at <code>function</code> today; most unchecked features were never attempted or hit environment limits; the step cap was not the bottleneck</td>
+<td>Partly confirmed</td>
+</tr>
+<tr>
+<td>H13</td>
+<td>A model can judge how easy an app is to use</td>
+<td>Two pre-registered rounds failed; a third model (Muse Wonder) failed a new bar; only measurable visual defects were shipped</td>
+<td>Refuted for now</td>
+</tr>
+<tr>
+<td>H14</td>
+<td>Videos and the web show the brand, which agents hide</td>
+<td>Built: the website became mandatory on 10/29 and was redesigned twice; pickfit-recorded videos are on 10 records</td>
+<td>Built, not measured</td>
+</tr>
+</tbody>
+</table></div>
+<p>The research also listed unconfirmed items (D.4): whether a screenshot in a tool output is visible to the model (yes), whether <code>text.format</code> and tools can share a request (yes), real reasoning-token use (measured and logged), whether Baseten's <code>muse-spark-open-1026</code> existed (yes, approved 10/29), and whether Modal credits could pay a shared endpoint (yes, confirmed 11/1).</p>
+<hr />
+<h2 id="4-system-overview">4. System overview<a class="anchor" href="#4-system-overview" title="Permanent link">#</a></h2>
+<h3 id="41-the-pipeline">4.1 The pipeline<a class="anchor" href="#41-the-pipeline" title="Permanent link">#</a></h3>
+<pre class="mermaid">flowchart LR
+  A[Discover&lt;br&gt;GitHub search · Show HN&lt;br&gt;Flathub · Homebrew Cask&lt;br&gt;web apps · submit_software] --&gt; B[Rule prescreen&lt;br&gt;fork, archived, template,&lt;br&gt;library signals]
+  B --&gt; C[Open-weight prescreen&lt;br&gt;Muse Spark Open&lt;br&gt;+ 1.3 audit]
+  C --&gt; D[Extraction&lt;br&gt;muse-spark-1.3&lt;br&gt;quotes checked vs source]
+  D --&gt; E[Sandbox agent&lt;br&gt;Linux gVisor / VM · macOS tart&lt;br&gt;Windows VirtualBox · browser]
+  E --&gt; F[Judges&lt;br&gt;screen, output, feature]
+  F --&gt; G[Replay&lt;br&gt;fresh box, no model,&lt;br&gt;network off]
+  G --&gt; H[Score&lt;br&gt;quality · popularity · treasure&lt;br&gt;security · visual]
+  H --&gt; I[Publish&lt;br&gt;index → Cloudflare Worker&lt;br&gt;D1 events · R2 videos]
+  I --&gt; J[MCP tools + pickfit.app]
+  J --&gt;|report_outcome failures| E
+</pre>
+
+<p>The pipeline is a Python package (<code>pickfit/</code>, CLI <code>uv run pickfit</code>) run from the developer's machine; sandboxes run on Modal, in local tart VMs and in a VirtualBox VM; the product runs on a Cloudflare Worker (<code>worker/</code>). The canonical data is one JSON file per tool in git (<code>data/software/&lt;slug&gt;.json</code>, schema <code>software.v1</code>, generated from pydantic into <code>schema/software.v1.json</code>).</p>
+<h3 id="42-discovery-pickfitdiscover">4.2 Discovery (<code>pickfit/discover/</code>)<a class="anchor" href="#42-discovery-pickfitdiscover" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>GitHub search</strong> (<code>github.py</code>): per-category queries (dev CLI, local AI, MCP server topics; 36 topic queries by 11/2), with <code>created:</code> this year, <code>pushed:</code> within 14 days, 5–300 stars, serialized at ≥ 2.1 s intervals. Each query and its time is stored in <code>runs/pipeline.db</code>. The queries were written by sessions that never read <code>eval/</code> (Section 8.9). A second rule, <code>github-well-known.v1</code> (11/2), took 301–5000 stars with the same date conditions.</li>
+<li><strong>Show HN</strong> (<code>showhn.py</code>, 11/1): the last 60 days of Show HN posts via the Algolia HN Search API and the official HN API; only posts linking a GitHub repo with category words and ≤ 300 stars. The post only says where to look; every field comes from the repo. Funnel: 7,893 posts → 598 repos (511 new) → 45 extracted → 44 records → 32 verified.</li>
+<li><strong>Flathub and Homebrew Cask</strong> (<code>flathub.py</code>, <code>cask.py</code>, <code>listings.py</code>, 11/1): only the AppStream catalogue that flatpak clients download, and <code>formulae.brew.sh</code> cask definitions; never the Flathub website, API or install statistics. A neutral sampling rule (<code>docs/source-terms.md</code>): software, open source, maintained within 365 days, no account mentioned, popularity in the source's middle half, fixed-seed hash sampling. 92 listed records cite Flathub and 33 cite Homebrew Cask.</li>
+<li><strong>Web apps</strong> (<code>webapps.py</code>, 11/1–11/2): Show HN posts and GitHub repos with a live homepage; each site's robots.txt and terms were checked first. Of 15,516 posts and 9,593 repos, 100 sites were selected (55 and 45), 95 became <code>web_app</code> records; 7 were hidden by the developer (possible infringement, medical, or unsuitable).</li>
+<li><strong>Submissions</strong>: <code>submit_software</code> queues a GitHub repo (and, from 11/2, a web app URL) in D1; <code>pickfit watch</code> polls every 60 seconds and runs the same single-record pipeline. On 11/3 it was opened to any kind the catalogue lists (desktop and web apps included), libraries still rejected.</li>
+</ul>
+<h3 id="43-prescreen">4.3 Prescreen<a class="anchor" href="#43-prescreen" title="Permanent link">#</a></h3>
+<ol>
+<li><strong>Rules</strong> (<code>rules.py</code>): forks, archived repos, templates, no README, library signals, README-only phishing-style repos, binary-only repos without a licence. Rule v2 passed 452 of 496 (91.1%) on 10/29.</li>
+<li><strong>Open-weight prescreen</strong> (<code>prescreen.py</code>): Muse Spark Open on Baseten, <code>reasoning_effort: low</code>, forced tool call, no star counts given (to avoid popularity bias). Low confidence, contradictions, kind <code>other</code> or failures go to <code>muse-spark-1.3</code>, which overrides; a fixed 5% sample is always re-checked to measure agreement. About $0.004 and 1–2 s per candidate.</li>
+</ol>
+<h3 id="44-extraction-extractpy">4.4 Extraction (<code>extract.py</code>)<a class="anchor" href="#44-extraction-extractpy" title="Permanent link">#</a></h3>
+<p><code>muse-spark-1.3</code> reads the README, manifests and release notes wrapped in <code>&lt;source&gt;</code> tags (data, not instructions) and fills a strict JSON schema (the Meta API accepted an 11.7K-character schema on 10/28). Every field carries a verbatim quote, and <strong>the program checks that each quote really appears in the source</strong>; quotes that don't are dropped. Licence, releases and stars come from APIs, never from the model. Unknowns are <code>null</code>. Average cost about $0.014 per repo (10/29).</p>
+<h3 id="45-sandbox-verification-pickfitverify">4.5 Sandbox verification (<code>pickfit/verify/</code>)<a class="anchor" href="#45-sandbox-verification-pickfitverify" title="Permanent link">#</a></h3>
+<p>The verification agent (<code>agent.py</code>) is a tool-calling loop with <code>list_dir</code>, <code>read_file</code>, <code>run_command</code>, <code>run_background</code>, <code>launch_gui</code>, <code>operate_gui</code> and <code>finish</code>, reasoning effort <code>medium</code>. Stop conditions: 25 turns, 15 commands, 20 minutes, $0.50 per tool (later raised per task), or the same error three times. It picks an install method (package manager, then release binary, then source), reads errors, repairs steps and runs smoke tests and feature checks.</p>
+<p>Boxes (<code>box.py</code> and siblings), each started fresh with <strong>no API keys inside</strong> and cloud metadata and private address ranges blocked:</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Box</th>
+<th>Use</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DockerBox</code></td>
+<td>Local development</td>
+<td>Non-root, cap-drop ALL, CPU/memory/disk/pids/time limits</td>
+</tr>
+<tr>
+<td><code>ModalBox</code> gVisor</td>
+<td>Linux CLI, local AI, MCP servers</td>
+<td>3–4 s start; network open for install, then cut; limits test 12/12 at first, 22/22 after the DNS fix</td>
+</tr>
+<tr>
+<td><code>ModalBox</code> VM + Xvfb</td>
+<td>Linux desktop apps</td>
+<td>Separate-uid evidence capture, nonce, seccomp blocking <code>AF_VSOCK</code> and <code>io_uring</code>, no user namespaces</td>
+</tr>
+<tr>
+<td>GPU boxes</td>
+<td>Tools that need CUDA</td>
+<td>T4/L4 on Modal</td>
+</tr>
+<tr>
+<td><code>tart_box.py</code></td>
+<td>macOS arm64 (macOS 26)</td>
+<td>Host-side softnet blocks host and multicast when online, all traffic when offline; 27/27 limits checks after 4 adversarial review rounds</td>
+</tr>
+<tr>
+<td><code>vbox_box.py</code></td>
+<td>Windows 11 x86_64</td>
+<td>Evaluation VM behind an Alpine router VM, standard user, PowerShell 7</td>
+</tr>
+<tr>
+<td><code>web_box.py</code></td>
+<td>Web apps</td>
+<td>browser-use (MIT) in a Modal microVM behind a mitmproxy network guard</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>GUI apps</strong> (<code>gui.py</code>, <code>gui_operate.py</code>, <code>gui_mac.py</code>): the app launches on a virtual display; a separate screen judge reads pickfit's own screenshot crop (<code>main_ui</code>, <code>first_run</code>, <code>sign_in_wall</code>, <code>crash_or_error</code>); the operator model then proposes clicks, typing, keys and scrolls, which pickfit executes (<code>xdotool</code> on Linux, VNC on macOS). A run injects a fresh random nonce into goals and inputs, and <strong>pickfit, not the app, checks the result</strong>: the clipboard, a file written by the app, text the screen judge reads back, or (from 11/3) a file that should be gone. macOS adds Vision OCR text marks so the operator can click by number.</p>
+<p><strong>Web apps</strong> (<code>web_verify.py</code>): opens = <code>install</code>; a core task with a checkable result = <code>function</code>; offline reload only for PWAs. It records account walls, ads, trackers and whether input left the browser, never submits side-effect forms, never registers, and runs each site once.</p>
+<p><strong>Simulated microphone</strong> (<code>audio.py</code>): a virtual audio device plays speech with a fresh random word; the check passes only if that word appears in the app's output.</p>
+<p><strong>Videos</strong> (<code>video.py</code>, <code>web_video.py</code>): GUI and web runs can be recorded; Muse Spark Open selects segments and writes captions; clips are chaptered by feature and served from R2. 10 listed records carry a video today.</p>
+<h3 id="46-judges-verdict-and-replay">4.6 Judges, verdict and replay<a class="anchor" href="#46-judges-verdict-and-replay" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Screen judge</strong> (<code>judge.py</code>): <code>muse-spark-1.3</code> reads the redrawn terminal screenshot (Pillow) or the GUI crop and returns a verdict with evidence boxes in 0–1000 coordinates.</li>
+<li><strong>Feature judge</strong> (<code>feature_judge.py</code>): a second model call confirms that a passing smoke test's output shows the advertised feature; if that call fails, no feature counts.</li>
+<li><strong>Verdict</strong> (<code>verdict.py</code>): the level comes only from the recorded command log. Steps whose exit code was masked (<code>|| true</code>, <code>; echo</code>, trailing <code>| head</code>/<code>| tail</code>) do not count; from 11/1 <code>run_command</code> strips those suffixes before running.</li>
+<li><strong>Replay</strong> (<code>replay.py</code>): a brand-new box re-runs the recorded install with <strong>no model</strong>, cuts the network (and DNS), and re-runs the smoke tests. If an offline check fails, the network is restored and the test retried, to record <code>works_offline</code> honestly. Only replayed steps are written back. (Web app runs are not replayed this way; a 11/2 "second visit" replays recorded actions only for videos.)</li>
+</ul>
+<h3 id="47-scoring-security-and-visual-check">4.7 Scoring, security and visual check<a class="anchor" href="#47-scoring-security-and-visual-check" title="Permanent link">#</a></h3>
+<ul>
+<li><code>score.py</code>: quality, popularity and treasure scored separately (Section 13.3 for formulas). The install-docs rubric is one <code>muse-spark-1.3</code> call per record (8 items, 0/1/2, each non-zero item with a checked quote), reused when the README is unchanged.</li>
+<li><code>security.py</code> (<code>sec.v1</code>, 11/3): resolve what a fresh install would pull in (<code>npm --package-lock-only --ignore-scripts</code>, <code>uv pip compile --no-build</code>, or the repo's lockfile), query OSV.dev, cap quality at 79 for any high or critical advisory, hide records with malicious packages. No model, $0.</li>
+<li>Visual check (<code>comfort.v1</code> / <code>visual.v1</code>, 11/3): Muse Wonder lists measurable visual defects on pickfit's own screenshots; any app-caused defect multiplies quality by 0.95.</li>
+</ul>
+<h3 id="48-publish-worker-and-mcp-tools">4.8 Publish, Worker and MCP tools<a class="anchor" href="#48-publish-worker-and-mcp-tools" title="Permanent link">#</a></h3>
+<p><code>pickfit publish</code> validates every record against <code>software.v1</code>, builds the index, translates missing zh-TW sentences, and deploys the Worker with <code>wrangler</code>; bad data blocks the deploy. D1 holds <code>events</code>, <code>submissions</code>, <code>reverify_queue</code> and <code>meta_budget</code> (migrations 0001–0005). R2 bucket <code>pickfit-videos</code> serves clips with Range support, only for files a record lists. The status log records 47 distinct Worker version IDs between 10/29 and 11/3.</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Model?</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>find_software</code></td>
+<td><code>muse-spark-1.3</code> once (plus a small keyword call when &gt; 60 cards)</td>
+<td>Hard filters → candidate cards → one strict-schema call (slug enum = the candidates) → program guard → 1–3 picks with reasons citing card fields, tradeoffs, best free option, "built-in is enough," <code>well_known_option</code>, at most one question</td>
+</tr>
+<tr>
+<td><code>find_alternatives</code></td>
+<td>Same path</td>
+<td>Takes <code>current_software</code>, <code>pain_points</code>, <code>must_keep</code>; may answer <code>keep_current</code></td>
+</tr>
+<tr>
+<td><code>get_install_guide</code></td>
+<td>None</td>
+<td>Only replayed or human-verified steps for the user's OS and arch, MCP client config, the consented <code>check_in</code></td>
+</tr>
+<tr>
+<td><code>report_outcome</code></td>
+<td>None</td>
+<td>Stages <code>installed</code> … <code>abandoned</code>; counted only with a valid <code>rec_id</code>; real failures queue a fresh run</td>
+</tr>
+<tr>
+<td><code>submit_software</code></td>
+<td>None</td>
+<td>Queues a repo or web URL for <code>pickfit watch</code>; resubmitting reads status</td>
+</tr>
+</tbody>
+</table></div>
+<p>Matching details (<code>worker/README.md</code>): hard conditions never relax; if the model is off, over budget, times out, fails twice on retryable errors, or all its picks are rejected by the guard, the answer falls back to a rules ranking (BM25 with a static 258-word Chinese–English lexicon and negation handling), labelled <code>matched_by: rules</code>, <code>degraded: true</code>, with <code>degraded_reason</code>. Results are never cached on the MCP path.</p>
+<h3 id="49-website">4.9 Website<a class="anchor" href="#49-website" title="Permanent link">#</a></h3>
+<p>The same Worker serves the website: natural-language search (<code>POST /search</code>, running the MCP's own <code>findSoftware</code> and <code>installGuide</code>), <code>/browse</code>, <code>/compare</code>, <code>/tool/&lt;slug&gt;</code>, <code>/how</code> and <code>/agents</code>. It is server-rendered, works without JavaScript, uses a per-response nonce CSP, and escapes every value. Since 11/2 it is bilingual (English and Traditional Chinese). Since 11/2 23:39 it is served at <code>pickfit.app</code>; workers.dev HTML requests redirect there with 301 while <code>/mcp</code> keeps working on both hosts.</p>
+<hr />
+<h2 id="5-how-meta-models-are-used">5. How Meta models are used<a class="anchor" href="#5-how-meta-models-are-used" title="Permanent link">#</a></h2>
+<h3 id="51-which-model-does-what">5.1 Which model does what<a class="anchor" href="#51-which-model-does-what" title="Permanent link">#</a></h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Model</th>
+<th>Why this model</th>
+<th>Record</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Prescreen</td>
+<td>Muse Spark Open (<code>meta-models/muse-spark-open-1026</code>, Baseten); audit by <code>muse-spark-1.3</code></td>
+<td>High volume, cheap per call, open weights; 1.3 audits low-confidence, contradictory and a fixed 5% sample</td>
+<td>957 candidates on 10/29 for $3.80</td>
+</tr>
+<tr>
+<td>Extraction with checked quotes</td>
+<td><code>muse-spark-1.3</code>; <code>-contributor</code> only in development on public data</td>
+<td>Strict schema adherence; Spark Open's field agreement was only 62–71%</td>
+<td>~$0.014/repo</td>
+</tr>
+<tr>
+<td>Sandbox verification agent</td>
+<td><code>muse-spark-1.3</code> and Muse Spark Open (Baseten and Modal)</td>
+<td>1.3 first; Spark Open after the 20-repo comparison (0.92 pass ratio) for MCP expansion, feature coverage and the 301–5000 batch; GUI install agent moved back to 1.3 on 11/1</td>
+<td>Actor model across listed runs: 1.3 425, Spark Open Baseten 280, Spark Open Modal 98, contributor 3</td>
+</tr>
+<tr>
+<td>Screen, output and feature judges</td>
+<td><code>muse-spark-1.3</code> (vision + strict schema)</td>
+<td>Kept on 1.3 even when the agent is Spark Open (<code>judge_model_for</code>)</td>
+<td>733 listed runs judged by 1.3</td>
+</tr>
+<tr>
+<td>Install-docs rubric</td>
+<td><code>muse-spark-1.3</code></td>
+<td>Quote-checked 8-item rubric</td>
+<td>Reused when README unchanged</td>
+</tr>
+<tr>
+<td>GUI operator</td>
+<td>Muse Spark Open (Baseten, then the Modal shared endpoint <code>Muse-Spark-Open-816B-A42B</code>)</td>
+<td>Screenshot reading and actions; Modal steps took 1.4–5 s where Baseten that day took 100–300 s (11/3)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Aimed clicks (re-aim on a 4× crop)</td>
+<td>Muse Spark Open (Modal)</td>
+<td>Same model points again at the zoomed target</td>
+<td>~$0.004 per aim</td>
+</tr>
+<tr>
+<td>Web app operator</td>
+<td>Muse Spark Open via browser-use</td>
+<td>OpenAI-compatible model in an MIT browser agent</td>
+<td>~$0.04 per site for recording</td>
+</tr>
+<tr>
+<td>Video segment selection and captions</td>
+<td>Muse Spark Open (Modal)</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Live matching and keyword expansion</td>
+<td><code>muse-spark-1.3</code> in the Worker (<code>store: false</code>, effort <code>low</code>; keyword call effort <code>minimal</code>, ≤ 5 s)</td>
+<td>User needs are private, so never the contributor model</td>
+<td>$0.029–0.038 per match (10/31)</td>
+</tr>
+<tr>
+<td>zh-TW translation (from 11/2 22:10)</td>
+<td>Muse Spark Open (Modal, effort medium)</td>
+<td>After a blind comparison (Section 6.17)</td>
+<td>~$0.0045 per tool</td>
+</tr>
+<tr>
+<td>Visual defects (<code>comfort.v1</code>, shipped)</td>
+<td>Muse Wonder 1.0</td>
+<td>Better at listing visual defects than the usability judges</td>
+<td>~$0.03 per app</td>
+</tr>
+<tr>
+<td>GUI rescue comparison, usability rerun</td>
+<td>Muse Wonder 1.0</td>
+<td>Experiments only</td>
+<td>Section 6</td>
+</tr>
+<tr>
+<td>GUI click-locator probe</td>
+<td>SAM 3.1</td>
+<td>Experiment, not adopted</td>
+<td>$0.078</td>
+</tr>
+<tr>
+<td>Evaluation third grader (descriptive)</td>
+<td>Muse Spark Open (Baseten)</td>
+<td>Pre-registered; never overrides</td>
+<td>$1.17</td>
+</tr>
+<tr>
+<td>Test-set writing and labels for ranking experiments</td>
+<td>Muse Spark Open (Baseten)</td>
+<td>Written without seeing tool data</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<p>Not used in the product: Muse Image, Muse Voice Transcribe and Muse Glimmer (no per-token serving from partners, per <code>architecture.md</code> D.2).</p>
+<h3 id="52-spend">5.2 Spend<a class="anchor" href="#52-spend" title="Permanent link">#</a></h3>
+<p>All calls go through one wrapper (<code>call_meta</code> in <code>pickfit/meta.py</code>; <code>callMeta</code> in <code>worker/src/meta.ts</code>) that prices <code>usage</code>, writes a trace, caches identical requests in development, retries transient errors, and enforces hard caps from a <strong>single shared ledger</strong> (<code>~/.pickfit/ledger.sqlite</code>, locked writes) used by every worktree. The Worker keeps its own budget in D1.</p>
+<p>From the ledger, as written in <code>docs/submission/README.draft.md</code> (snapshot 3 Nov 04:12): every Meta-model call from 28 Oct to 3 Nov, including experiments and runs that did not pass, came to <strong>$290.60</strong>: <code>muse-spark-1.3</code> $146.79 and <code>muse-wonder-1.0</code> $16.82 on the Meta Model API, Muse Spark Open $97.39 on Baseten and $29.52 on Modal, SAM 3.1 $0.08. The sandbox verification agent was the largest stage ($143.28). Over 650 verified records that is about <strong>$0.45 of model spend per verified tool</strong>, not counting sandbox compute. The status log adds that by 3 Nov 15:20 the total was "about $320," including later OpenRouter and Modal calls; no later ledger total is recorded in the repository.</p>
+<p>Earlier reference points: on 10/29, 1,429 requests across sessions with an 80% development-cache hit rate, and 79 sandbox verifications with 63 passing and replayed (median 73 s, $0.048 each). On 10/31 the median Meta cost per verified tool in the large expansion was $0.107.</p>
+<p>The developer set the caps and raised them by explicit decision several times as the scope grew (pipeline total from $100 on 10/28 to $225 on 11/2); a Windows host kept its own ledger capped at $5, and the Worker was capped at $3/day and $15 for the judging period.</p>
+<h3 id="53-the-switch-to-openrouter-113">5.3 The switch to OpenRouter (11/3)<a class="anchor" href="#53-the-switch-to-openrouter-113" title="Permanent link">#</a></h3>
+<p>From 3 Nov 04:21, Meta's API returned 402 <code>billing_not_configured</code> for the team's key, and live search fell back to rules ranking. From 05:47 the same models (<code>meta/muse-spark-1.3</code>, <code>meta/muse-wonder</code>) were called through OpenRouter with every request pinned to Meta as the only provider and data collection denied (<code>provider: {order: ["meta"], allow_fallbacks: false, data_collection: "deny"}</code>). OpenRouter's Meta endpoint offers no zero-retention option, so pickfit does not claim zero retention. Records still name the Meta model id; the ledger notes the provider. The contributor model is not on OpenRouter; SAM 3.1, Muse Image and Muse Voice Transcribe do not go through it. A side effect found later: OpenRouter lists no cached-input price, so pickfit priced cached input at full price and 1.3 verification agents reached the per-tool cap after about 17 turns (<code>docs/plan.md</code>, 11/3 19:34).</p>
+<h3 id="54-where-non-meta-models-were-used">5.4 Where non-Meta models were used<a class="anchor" href="#54-where-non-meta-models-were-used" title="Permanent link">#</a></h3>
+<p>As stated in the detailed README (<code>docs/README.zh-TW.md</code>) and the status log:</p>
+<ul>
+<li><strong>Tool-page how-to text</strong> (<code>usage_guide</code>): on 2 Nov, the records that existed then were filled by Anthropic's <code>claude-opus-5-5</code>, with the developer's agreement, rewriting only what the record and its runs already held and writing steps only for features a run verified. Each record names its model. The generator defaults to Meta models for new records. (Counts differ by source: 667 in the README, 669 in the status log; this report's count is 666 records by <code>claude-opus-5-5</code> and 5 by <code>muse-spark-1.3</code>.)</li>
+<li><strong>Website translation</strong>: the first zh-TW pass (11/2 21:07, 10,333 sentences for 859 tools) used Claude, and the interface strings were converted by Claude Opus 5.5. From 11/2 22:10 translation moved to Muse Spark Open; 1,307 sentences were retranslated with it, and <code>pickfit publish</code> now fills missing sentences with it. The detailed README still says translation uses Claude; the status log is the later source.</li>
+<li><strong>Evaluation</strong>: the agent under test (Claude Opus 5.5 in Claude Code headless; Claude Haiku 5.5 for a small-model arm) and the L1 grader. Not part of the product flow.</li>
+<li><strong>Development</strong>: Claude Code and its subagents wrote the code and ran reviews; review subagents never called paid APIs in loops.</li>
+</ul>
+<hr />
+<h2 id="6-experiments">6. Experiments<a class="anchor" href="#6-experiments" title="Permanent link">#</a></h2>
+<p>Each experiment lists its question, setup (including whether criteria were committed before any paid call), result and decision. Branches that were not merged are preserved as git tags under <code>archive/*</code> (<code>git tag -l 'archive/*' -n3</code>): <code>baseten-404-fallback</code>, <code>mac-operator-element</code>, <code>mangodisk-round7</code>, <code>planning-goals-checks</code>, <code>severity-deductions</code>, <code>tool-jobs</code>, <code>usage-steps-layout</code>, <code>well-known-pilot</code>.</p>
+<h3 id="61-the-frozen-20-question-evaluation">6.1 The frozen 20-question evaluation<a class="anchor" href="#61-the-frozen-20-question-evaluation" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Question.</strong> Does the same agent, given pickfit's MCP, recommend software that fits the user's hard conditions, installs and runs, more often than with web search alone, and does it say "built-in is enough" when it should?</li>
+<li><strong>Setup.</strong> 20 questions frozen on 10/28 17:06 (<code>5ac62ca</code>), <strong>before any data was written</strong>. Drafted by AI agents (42 drafts from three angles, cut to 20, reviewed for fairness, measurability and realism), then reviewed question by question and frozen by the developer; the questions state needs and checkable conditions, never expected answers. 10 dev-CLI and 10 local-AI questions; 5 in Traditional Chinese; difficulty groups fixed in advance. Arms: control (Claude Code headless with WebSearch and WebFetch), pickfit (same plus the MCP), rules-only (model matching off). Each run in an empty temporary HOME and working directory with <code>--strict-mcp-config</code>, so the developer's own MCP servers could not leak in. Further pre-registration before the first run: thresholds, supplementary reruns, blind grading, loss tags (9.1, 10/29 00:25); budget, third grader, Haiku arm, B set (9.2, 10/31); L2 environments with pinned images, network blocking, test models (9.3). Two frozen read-only deployments (<code>pickfit-eval</code>, <code>pickfit-eval-rules</code>), and a code-and-data freeze on main for the whole run. Levels: L1 right software meeting every hard condition; L2 install and run in a clean environment; L3 honesty on built-in questions.</li>
+<li><strong>Result</strong> (<code>eval/results/final/report.md</code>, 11/2). <strong>Medium + hard, L1: pickfit 8, control 6 (one run per question per arm).</strong> D1 (lead ≥ 3): not met, so per the pre-written wording, <em>these 20 questions did not prove pickfit better</em>. D2 no regression on easy: 8 vs 8, met. D3 L2: 2 vs 2, met. D4 built-in honesty: 2 vs 2, met. D5 no overclaiming: <strong>1 violation in 518 checkable claims</strong> (a check command split across setup lines in <code>jevalt</code>'s record), not met. Rules-only passed 6 of 12. Over 20 questions L1: control 14, pickfit 16, rules-only 14.</li>
+<li><strong>Descriptive results.</strong> Supplementary reruns: 6 vs 6 and 7 vs 7. Haiku as the agent: pickfit 5, control 7 on the 12. B set (12 public questions sampled by committed queries and seed from 3,834 posts): 3 vs 3. The developer's blind preference: 7–7 with 6 ties, with the caveat that phrasing left in the de-identified answers let them recognise the pickfit arm in many cases.</li>
+<li><strong>Deviations</strong> (recorded in <code>eval/README.md</code> 9.4): the developer decided not to fill the L1 sheet and to use the already-run Claude grader (<code>claude-opus-5-5</code>, blind, no web access) as the primary L1 judge; this grader is the same model as the agent under test. <code>unknown</code> verdicts count as fails; if all <code>unknown</code>s were passes the 12-question result would be 12, 11, 11, so <strong>the conclusion is sensitive to that choice</strong>. Mac L2 moved from human runs to fresh tart VMs; L2 stopped on 11/2 22:15.</li>
+<li><strong>Why pickfit lost.</strong> Of 17 tagged questions, 10 were <code>tool_error</code> (pickfit returned nothing). Across 82 pickfit responses, 51 were empty, and <strong>all 51 were correct for pickfit's own data</strong>: no tool that passed L1 was in the catalogue; none was missed. A post-hoc coverage check (no model calls, after seeing results) found <strong>0 of the 26 correct answers in the catalogue</strong>, all excluded by the discovery rules themselves (23 created before 2026, 15 over 5,000 stars; Bruno, Docling, SOPS, DuckDB, Ollama, whisper.cpp and so on). The 301–5000-star batch kept the 2026 and 14-day conditions, so it added none of them.</li>
+<li><strong>Decision.</strong> Reported as is; no count, bar or question was changed. Covering well-known tools means widening the creation-year and star rules, and any re-test after that would be exploratory.</li>
+</ul>
+<p><strong>Known-item test (exploratory, registered 11/2 17:05).</strong> 15 catalogue tools, questions written only from upstream READMEs: hit@1 11/15, hit@3 13/15 on the live service (Anthropic $1.81, Meta $0.66). With only 856 records at the time, the numbers are optimistic.</p>
+<h3 id="62-prescreen-agreement-muse-spark-open-vs-muse-spark-13">6.2 Prescreen agreement: Muse Spark Open vs <code>muse-spark-1.3</code><a class="anchor" href="#62-prescreen-agreement-muse-spark-open-vs-muse-spark-13" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Setup.</strong> All 957 rule-passing candidates (10/29), scaled 1 → 5 → 30 → all; fixed 5% sample re-checked by 1.3.</li>
+<li><strong>Result.</strong> Kept 907, rejected 50 (29 libraries, 10 research or benchmarks, 3 demos, 3 frameworks, …). 83 audited, 18 overturned, all among flagged cases. <strong>5% sample: 34/34 agreement</strong>; in the 10/31 expansion 100/100. Confidence was almost always ≥ 0.9, so the low-confidence trigger fired once. Baseten $3.80, Meta audits $0.66.</li>
+<li><strong>Decision.</strong> Open-weight prescreen kept for every source. A later review (11/3) found that forced tool calling on Baseten produced no reasoning at all in prescreen; noted, not fixed.</li>
+</ul>
+<h3 id="63-muse-spark-open-vs-muse-spark-13-for-extraction-and-verification">6.3 Muse Spark Open vs <code>muse-spark-1.3</code> for extraction and verification<a class="anchor" href="#63-muse-spark-open-vs-muse-spark-13-for-extraction-and-verification" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Question.</strong> "If the interface is compatible, use Muse Spark Open" (the developer, 10/31). Can it take over extraction and the sandbox agent?</li>
+<li><strong>Setup.</strong> 20 MCP-server repos, both models; bars set before: verification pass ratio ≥ 0.85 of 1.3's; extraction field agreement ≥ 90%. Compatibility probe first: strict json_schema, strict function tools, multi-turn reasoning resend and <code>prompt_cache_key</code> worked on Baseten <code>/v1/responses</code>; <code>previous_response_id</code> did not.</li>
+<li><strong>Result.</strong> Agent passes 11/20 vs 12/20 (ratio 0.92, above 0.85); the two extra Spark Open passes (<code>ken</code>, <code>vibes-plug</code>) were confirmed by hand, and every false claim was caught by the command-log guards. Extraction main fields agreed only 62–71%; in the first round 11 of 20 violated enums (Baseten does not enforce json_schema). Cost Baseten $2.27, Meta $0.075.</li>
+<li><strong>Decision.</strong> Hybrid: Spark Open runs the sandbox agent and later the GUI operator; 1.3 extracts, judges and scores.</li>
+</ul>
+<h3 id="64-threaded-vs-resend-history-agent-loop">6.4 Threaded vs resend-history agent loop<a class="anchor" href="#64-threaded-vs-resend-history-agent-loop" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Setup.</strong> P0.3 measured threaded turns (<code>previous_response_id</code>) at 15–18 s; P3.3 compared 3–5 turns of threading against resending the full history (<code>store: false</code>).</li>
+<li><strong>Result.</strong> Resend: 1–7 s per turn. Threaded: 11–25 s and one 400 "response not found."</li>
+<li><strong>Decision.</strong> Resend plus <code>prompt_cache_key</code> is the default (also the only option on Baseten).</li>
+</ul>
+<h3 id="65-verification-batches-and-pass-rates">6.5 Verification batches and pass rates<a class="anchor" href="#65-verification-batches-and-pass-rates" title="Permanent link">#</a></h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Batch</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10/29 00:58</td>
+<td>10 test candidates on Modal</td>
+<td>First round 7/10; after 3 fixes 10/10 passed and replayed; median 91 s, ~$0.08 each</td>
+</tr>
+<tr>
+<td>10/29 02:18</td>
+<td>39 profiles</td>
+<td>11 could not run in a Linux sandbox (mostly GUI); 25 of the other 28 passed and replayed; <strong>G2 gate met 10/10</strong> (bar ≥ 5) two days early; 9 README or profile errors found</td>
+</tr>
+<tr>
+<td>10/29 12:12</td>
+<td>Local-AI branch</td>
+<td>Verified local AI 4 → 28; <code>goinfer</code> and <code>xyntetik-runner</code> loaded a small model and ran inference in the sandbox</td>
+</tr>
+<tr>
+<td>10/30 23:12</td>
+<td>First macOS runs (tart)</td>
+<td>6 tools passed on real macOS arm64</td>
+</tr>
+<tr>
+<td>10/31 02:24</td>
+<td>MCP servers</td>
+<td>520 discovered → 471 rules → 442 prescreen → 69 extracted → <strong>49 verified</strong> (38 <code>service</code>, 11 <code>function</code>), 46 also offline</td>
+</tr>
+<tr>
+<td>10/31 02:57</td>
+<td>Expansion</td>
+<td>Verified 67 → 268 (dev CLI 181, local AI 87); 503 records with MCP; median Meta cost per verified tool $0.107</td>
+</tr>
+<tr>
+<td>11/1 00:48–01:28</td>
+<td>Windows (VirtualBox)</td>
+<td>9 tools, 8 <code>function</code>, 1 <code>install</code></td>
+</tr>
+<tr>
+<td>11/1 01:52</td>
+<td>MCP batch</td>
+<td>+100 records, 58 verified</td>
+</tr>
+<tr>
+<td>11/1 01:59</td>
+<td>Show HN</td>
+<td>44 records, 32 verified, 16 treasures</td>
+</tr>
+<tr>
+<td>11/1 22:57</td>
+<td>Mac batch</td>
+<td>60 of 82 treasures passed on macOS</td>
+</tr>
+<tr>
+<td>11/2 17:14</td>
+<td>Web apps</td>
+<td>56 <code>function</code>, 27 <code>install</code>, 5 <code>unverified</code></td>
+</tr>
+<tr>
+<td>11/2 17:14</td>
+<td>GPU and simulated microphone</td>
+<td>2 to <code>inference</code>, 6 to <code>function</code>, 3 to <code>install</code></td>
+</tr>
+<tr>
+<td>11/2 22:15</td>
+<td>301–5000 stars</td>
+<td>102 records; 62 run, 38 passed</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Feature coverage</strong> (which advertised features a run actually exercised, confirmed by a feature judge): round 1 (11/1 01:06) checked 232 of 882 features on 237 records, 28 tests failed (26 explained by sandbox limits); round 2 (11/1 15:20, Spark Open agent) raised records with feature results 237 → 305 and checked features 232 → 303, but 82 of 165 runs were unverified, 45 of them because the agent piped quoted steps into <code>head</code>/<code>tail</code>, masking exit codes; round 3 (11/1 17:17) stripped those suffixes before running, rewrote 356 commands, exposed 3 real failures that had been masked, cut unverified runs to 36 of 110, and raised checked features to 354. Today, across listed records' passing runs: 499 features checked, 37 test failed, 1,630 not checked (this report's count).</p>
+<p><strong>Failure records</strong> (10/29, four adversarial review rounds): the pipeline never writes <code>failed</code> on its own. Sandbox errors become <code>unverified</code> with a concrete reason or <code>suspected_tool_fault</code>; <code>failed</code> comes only from a human or a human check of a published artifact (<code>hillock</code>: its PyPI wheel contained only dist-info).</p>
+<h3 id="66-treasure-score-calibration-b3v1-b3v5">6.6 Treasure-score calibration (<code>b3.v1</code> → <code>b3.v5</code>)<a class="anchor" href="#66-treasure-score-calibration-b3v1-b3v5" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>b3.v1</strong> (10/29 12:07): all 39 records scored; verified quality median 85; <strong>22 of 25 verified were treasures</strong> (no separation); step-count tiers had no effect; 4 of 7 popularity signals empty.</li>
+<li><strong>b3.v3</strong> (10/29 14:31; the developer chose option 1 and a treasure bar of 80): sandbox score by verification depth and install difficulty, README penalty only for real fixes, popularity against the category pool's 95th percentile, downloads, registries and HN added. 96 records, 67 verified, quality median 81.2, treasures 28 → 15. Run by a session that had not read <code>eval/</code>.</li>
+<li><strong>b3.v4</strong> (10/29 14:47): fixed 10 issues found by a review workflow: README-fix detection 21 → 15, check commands no longer counted as install steps, unknown downloads recorded as <code>null</code> instead of 0; 5 recomputed qualities matched the reviewers' values.</li>
+<li><strong>b3.v5</strong> (10/31 13:18): only pitfalls tagged <code>readme_wrong</code> count as README fixes (the old text rule also counted 66 notes, 28 sandbox items and 1 tool-handled). README fixes 164 → 88 of 328 passing runs; 86 quality scores changed (median +6.0); treasures 71 → 81. No model calls.</li>
+<li>Later modifiers: visual <code>×0.95</code> (treasures 162 → 161), the security cap at 79 (161 → 134, then 132 after pnpm support).</li>
+</ul>
+<h3 id="67-gui-step-cap-muse-wonder-and-reasoning-effort-the-linux-gui-comparison">6.7 GUI step cap, Muse Wonder and reasoning effort (the Linux GUI comparison)<a class="anchor" href="#67-gui-step-cap-muse-wonder-and-reasoning-effort-the-linux-gui-comparison" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Question.</strong> Is the 28-step operator cap why GUI checks fail?</li>
+<li><strong>Setup</strong> (11/3, measurement only, no write-back). The same 12 stuck Linux apps rerun with 60 steps, with Muse Wonder, with Spark Open at medium effort, and with a desktop session bus and GTK portal. Comparison flags <code>PICKFIT_GUI_DESKTOP</code> and <code>PICKFIT_OPERATOR_EFFORT</code> default off.</li>
+<li><strong>Result.</strong> <strong>No.</strong> Operations the operator finished and passed took ≤ 15 steps (median 8 on Linux, 11 on Mac); 38 of 40 Linux runs that hit the cap were looping. 60 steps rescued 0 of 12. Muse Wonder rescued 2 of 12 at about 4× the cost per step (0 of 4 at 60 steps). Spark Open at medium effort rescued 1; the session bus and portal rescued 1 of 6 (a Flatpak file chooser). From pickfit's own stop records over 117 GUI runs, 59 reached the cap (12 passed on the last step) and 44 ended with the operator saying it was done. The largest cause sat upstream: the planning agent's goals and checks expected text the operator typed itself, named shortcuts the app lacks, or needed outside services. Cost Meta $8.02, Modal LLM $4.20, boxes about $0.77.</li>
+<li><strong>Decision.</strong> Cap kept at 28; flags off. Unchecked features now record pickfit's own stop reason (<code>operator_limit</code>, <code>check_not_met</code>, <code>app_error</code>, <code>needs_desktop</code>, <code>not_attempted</code>), every run keeps the app's output in <code>app.log</code>, and 93 features with unclear causes were classified by hand.</li>
+</ul>
+<p>Earlier context (11/1 23:45): the first Linux GUI batch had 15 apps and 0 at <code>function</code>. Of those, 9 needed multi-GB models, a GPU, a microphone or an account; 5 failed install (Muse Spark Open as install agent often truncated output); 1 operated but missed the listed feature; only <code>flint</code> looped in a dialog. The response was to pick apps whose features need none of those, move the GUI install agent to 1.3, and try MIT-licensed <code>cua-driver</code> element lists for half a day. <code>cua-driver</code> was not used: on Linux it had no documented element list and install path, and the failures were environment problems, not mis-clicks; on macOS it needs Accessibility and Screen Recording grants that require disabling SIP or an admin password. macOS used host Vision OCR marks instead. Linux GUI then reached 5 at <code>function</code> (concessio, nip4, portfolio, qelectrotech, waywallen) and macOS 4 (neon-vision-editor, itsypad-macos, breaktimer-app, sigil) before the evaluation snapshot.</p>
+<p>A related fix (<code>archive/mac-operator-element</code>, cherry-picked): under strict schema the Mac operator filled <code>element</code> with 0 or −1 on coordinate clicks; 62 steps across 10 operations were refused and wasted. Elements below 1 now mean "none."</p>
+<h3 id="68-sam-31-as-a-click-locator">6.8 SAM 3.1 as a click locator<a class="anchor" href="#68-sam-31-as-a-click-locator" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Setup</strong> (11/3). 29 existing verification screenshots (17 apps), each a valid operator click; noun phrases written before any call.</li>
+<li><strong>Result.</strong> Icons: 8 of 19 found, 9 returned no box. Text: 4 of 10. Many boxes for repeated icons (8 boxes for a gear). About 1 s per call; $0.078.</li>
+<li><strong>Decision.</strong> Not added (<code>docs/research/notes/sam-3-1-gui-probe.md</code>).</li>
+</ul>
+<h3 id="69-aimed-clicks-zoom-and-re-aim">6.9 Aimed clicks (zoom and re-aim)<a class="anchor" href="#69-aimed-clicks-zoom-and-re-aim" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Question.</strong> The operator missed small checkboxes in MangoDisk by about 30 px. Is pickfit's coordinate mapping wrong?</li>
+<li><strong>Diagnosis.</strong> No: the 1280×800 Mac screenshot is unscaled and OCR-mark clicks land exactly. On a synthetic test image the model's x error was ≤ 2 px and its y drifted low by up to 37 px mid-screen; padding to a square removed it there, but on real screenshots padding made things worse (5 vs 7 hits of 18), so it was rejected.</li>
+<li><strong>Change.</strong> For an x/y click, pickfit crops 200×125 px around the point, enlarges it 4×, draws a crosshair and asks the same model, with the operator's new <code>target</code> description, to point again; failures fall back to the original point; both points are logged and replay uses the aimed one.</li>
+<li><strong>Result.</strong> Offline on 18 hand-labelled small controls from rounds 5–6: x/y clicks went from <strong>5 of 14 to 13 of 14</strong> hits (two reruns agreed); median distance from the centre 30.5 px → 4–6 px. About $0.004 per aim.</li>
+<li><strong>Decision.</strong> Merged (11/3 22:05).</li>
+</ul>
+<h3 id="610-mangodisk-rounds-the-demo-app">6.10 MangoDisk rounds (the demo app)<a class="anchor" href="#610-mangodisk-rounds-the-demo-app" title="Permanent link">#</a></h3>
+<p>MangoDisk was submitted through <code>submit_software</code> on 11/3 at 18:04:23; rules, prescreen (2 s), extraction (13 s) and a Linux run (124 s; the <code>.deb</code> needs root, so <code>listed_unverified</code>) were written at 18:07:18. A macOS run (tart GUI VM, Homebrew cask, 18:30–18:48) reached <code>function</code> with offline replay and <strong>4 of 4 listed features checked</strong>: pickfit planted a 150 MB file, a duplicate pair and a fake Node project, and each page found them (the check is that the scan finds them, not that it deletes). A new GUI check kind, <code>gone</code>, was added. Two manual fixes were recorded as sandbox pitfalls (Spotlight off in the VM; <code>--appdir</code> and tap trust from pickfit's Mac rules). Security: vulnerable (later counted as 9 advisories in 15 findings), so quality capped at 79, not a treasure. Round 7 (with aimed clicks, 40 steps): all three deletions passed with <code>gone</code> in both the agent box and an offline fresh-VM replay, but the space-analysis feature judge found only file names, so the round was not better overall and <strong>was not written back</strong> under the pre-set rule (<code>archive/mangodisk-round7</code>). Round 8: duplicates ran out of steps in the location picker twice; stopped early, not written back. Across rounds 7 and 8 every deletion passed at least once, but no single round passed all four with deletions confirmed in replay.</p>
+<h3 id="611-usability-pilot-two-rounds-failed-not-shipped">6.11 Usability pilot: two rounds failed, not shipped<a class="anchor" href="#611-usability-pilot-two-rounds-failed-not-shipped" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Question.</strong> "Opens and operates" does not mean easy to use. Can <code>muse-spark-1.3</code> score four dimensions (ready on open, findable, responsive, looks comfortable) from pickfit's screenshots and operation logs, with each judgement quoting on-screen text that OCR or the DOM must find?</li>
+<li><strong>Setup.</strong> Sampling rule (seeded hash), 12 apps, and four pass bars committed <strong>before any paid call and before the developer graded</strong> (<code>docs/usability-pilot.md</code>): per-dimension agreement within one grade ≥ 10/12; Spearman with the developer's overall grade ≥ 0.5; two "pretty but hard" probes ≤ 50; no verdict two levels apart. One allowed revision.</li>
+<li><strong>Result.</strong> Both rounds failed. "Looks comfortable" 9/11 → 8/10; Spearman −0.40 → −0.73; probes 87.5 and 91.7 → 87.5 and 95.8; usdx was two verdict levels apart both times. The three mechanical dimensions agreed within one grade on every comparable app (12/12, 8/8, 9/9); the gap was visual polish and overall impression. Cost $0.83.</li>
+<li><strong>Follow-ups.</strong> A 2×2 (registered before paid calls): changing the judge to Claude Opus moved Spearman by +0.57, removing "don't judge style" by +0.01; all four cells failed. A Muse Wonder rerun under the developer's new bar "never the opposite," committed at 02:39:56 before the first paid call at 02:40:01: 0 of 8 cells passed; usdx came out as the overall opposite under every judge, prompt and effort; Wonder often omitted required quotes. Meta $8.51.</li>
+<li><strong>Decision.</strong> <code>EASE_SCORED</code> stays off; usability never touches quality, ranking or treasure. What was learned: the gap is in visual and experiential judgement, which multimodal models are still improving at; the pipeline is not tied to a model, so the same checklist and 12 blind grades can calibrate a stronger model later.</li>
+</ul>
+<h3 id="612-visual-defect-deduction-shipped-at-5">6.12 Visual-defect deduction: shipped at 5%<a class="anchor" href="#612-visual-defect-deduction-shipped-at-5" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Setup.</strong> <code>comfort.v1</code>: Muse Wonder lists only measurable defects (truncated text, overlap, clipped controls, mid-word breaks, low contrast, tiny text, raw code shown, broken images, misalignment, crowding), each with reason and location; no taste. Pilot on the 12 apps: 9 defects, all quotes found by OCR; versus the developer 5 same, 4 one level off, 2 opposite. Calibration before shipping (two independent Claude reviewers, 14 apps, controls drawn by a pre-committed rule): 18 of 24 listed defects were real, and only 4 of 12 "major" ones held up; web pages had fewer defects per 100 lines of text than desktop apps, not stricter grading; an earlier bonus variant would have pushed 71 apps without screenshots down, so it became deduction-only.</li>
+<li><strong>Result.</strong> Any app-caused defect multiplies quality by 0.95 (<code>b3.v5+visual.v1</code>, <code>web.v1+visual.v1</code>); no defect or no check changes nothing. 186 apps checked (~$6.4); 69 deducted; median change 0, mean −1.42; treasures 162 → 161; no app moved more than 5 points. Tool pages say "defects found −5%," "no defects found" or "not checked yet, so no deduction."</li>
+<li><strong>Decision.</strong> Shipped 11/3 11:47. Today 188 records have a visual check, 70 with defects (this report's count).</li>
+</ul>
+<h3 id="613-severity-based-deductions-failed-the-pre-registered-bar">6.13 Severity-based deductions: failed the pre-registered bar<a class="anchor" href="#613-severity-based-deductions-failed-the-pre-registered-bar" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Setup.</strong> Major −10%, minor −5%, with "major" requiring a second judge (<code>muse-spark-1.3</code> via OpenRouter) to agree. Bar committed before: keep ≥ 3 of the 4 confirmed majors and demote ≥ 6 of the 8 disputed.</li>
+<li><strong>Result.</strong> The second judge answered major 10, minor 9, none 21 for 40 majors; kept <strong>1 of 4</strong> confirmed (astrobservatories) and demoted 7 of 8 disputed. Bar missed. The developer reviewed the 12 judgements side by side and agreed with the Claude reviewers.</li>
+<li><strong>Decision.</strong> Stay at a flat 5%. Code in <code>archive/severity-deductions</code>; only the records were merged.</li>
+</ul>
+<h3 id="614-planning-agent-goals-and-checks-before-and-after">6.14 Planning agent: goals and checks before and after<a class="anchor" href="#614-planning-agent-goals-and-checks-before-and-after" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Question.</strong> Following 6.7, does fixing the planning agent's goals and checks rescue more GUI features than more steps or a bigger model?</li>
+<li><strong>Change.</strong> The planning agent sees the app's window before writing goals; impossible checks are refused at spec time (expected text the operator could type or read off the goal; text already on the launch screen; text expected in compressed, PDF or media files); every check names the effect it proves (<code>computed</code>, <code>converted_file</code>, <code>loaded</code>, <code>stored</code>).</li>
+<li><strong>Setup.</strong> 24 features on 10 apps without GPUs, one run per arm per app, same boxes and window, write-back off. Pass 1 on Muse Spark Open (Modal) because Meta's API was returning 402; pass 2 on <code>muse-spark-1.3</code> via OpenRouter, capped at $0.55 per run.</li>
+<li><strong>Result.</strong> Pass 1: operations passing pickfit's check 17 vs 6; features checked 1 vs 0. Pass 2: operations passing 8 vs 5, check or goal failures 2 vs 5, but only 3 of 10 apps recorded vs 7, because the extra turns pushed the new agent over the per-run cap; features checked 0 vs 1. A spot check was inconclusive. OpenRouter $7.75.</li>
+<li><strong>Decision.</strong> Not merged: it came after the freeze and the feature-level result is not better. Preserved in <code>archive/planning-goals-checks</code>. The hypothesis stays open (Section 11).</li>
+</ul>
+<h3 id="615-relevance-ranking-fit-labels-and-negation-1031">6.15 Relevance ranking, fit labels and negation (10/31)<a class="anchor" href="#615-relevance-ranking-fit-labels-and-negation-1031" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Relevance-first cards.</strong> When more than 60 cards pass hard filters, a <code>muse-spark-1.3</code> keyword call (minimal effort, 5 s limit) produces English keywords; BM25 picks 50 relevant cards plus 10 by treasure score. Live check: 5 needs (English and Chinese, 130–322 candidates) all matched by the model in 7.7–15.4 s, $0.029–0.038 each.</li>
+<li><strong>Rules ranking.</strong> Generic-word down-weighting, coverage multiplier, a 258-word static Chinese→English lexicon committed before any test set, and negation. Test set: Muse Spark Open wrote 30 English and 20 Chinese needs without seeing tool data, split by fixed seed. Held-out 25: Precision@5 25.9% → 32.9%, at least one relevant in top 5 58.8% → 82.4%, MRR 0.506 → 0.628, Recall@60 unchanged at 97.3%; Chinese P@5 13.3% → 26.7%. The model path was byte-identical on 1,268 replayed requests.</li>
+<li><strong>Fit labels</strong> (good / partial / weak). Three rounds; the first two removed weak picks and told 33% of needs that had a fitting tool that nothing fit, which failed the bar, so the developer chose labels only. On a fresh 60-query held-out set committed before any judgement: "good" held 50% (7/14), "weak" was truly unfit 93%.</li>
+<li><strong>Negation.</strong> "不需要 GPU" / "without GPU" no longer counts GPU as wanted. 42 of 1,268 replayed requests got different cards; on 20 sent to the model twice, the model's own variance (5/20 differing between two identical runs) was about as large as the change.</li>
+</ul>
+<h3 id="616-the-jobs-phrases-experiment-not-merged">6.16 The <code>jobs</code> phrases experiment (not merged)<a class="anchor" href="#616-the-jobs-phrases-experiment-not-merged" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Setup</strong> (10/31–11/1). A new 60-query test set (36 English, 24 Chinese) with Muse Spark Open labels was committed <strong>before any jobs existed</strong>. Then Muse Spark Open wrote 3,477 "jobs" in users' words for 504 tools, each backed by a README or profile quote ($1.74), matched in BM25 and rules relevance at weight 0.5 fixed on the tuning sets.</li>
+<li><strong>Result.</strong> The repository records the setup and the benches (<code>worker/bench/shortlist_recall.ts</code>) on the tag, but no merged result table; this report could not confirm the measured effect.</li>
+<li><strong>Decision.</strong> Not merged; preserved in <code>archive/tool-jobs</code>.</li>
+</ul>
+<h3 id="617-translation-model-comparison">6.17 Translation model comparison<a class="anchor" href="#617-translation-model-comparison" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Setup</strong> (11/2). Blind comparison, Claude as judge (which may favour its own output), 20 held-out tools, 246 sentences.</li>
+<li><strong>Result.</strong> Muse Spark Open (Modal, effort medium) had 5 sentences marked as meaning errors, 2 of which (box → 沙盒) were actually correct in pickfit's context; Claude had 2. Preferences: Claude better 63, Spark Open 27, tie 156. About $0.0045 per tool. At effort low, Spark Open's error rate was about 3%, so medium was chosen.</li>
+<li><strong>Decision.</strong> Translation moved to Muse Spark Open, integrated into <code>pickfit publish</code> with a $1 cap; failures fall back to English for that sentence. A UI review aligned the glossary, and 1,307 sentences were retranslated.</li>
+</ul>
+<h3 id="618-security-relevance-pilot-and-rescans">6.18 Security relevance pilot and rescans<a class="anchor" href="#618-security-relevance-pilot-and-rescans" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Pilot</strong> (11/3, read-only). Of 161 treasures, 119 could be scanned (64 by fresh-install resolution, 55 by repo lockfile); 0 malicious packages. Counting a repo's lockfile directly gave 25 treasures with fixable high/critical advisories; resolving Python projects at today's versions took Python hits from 139 to 0; removing dev dependencies, peripheral files and DoS-only issues left 15. Biggest false-positive source: stale lockfiles. Then <code>muse-spark-1.3</code> judged 129 package–treasure pairs for exposure (45 rule-flagged plus 84 controls): it matched a Claude-written reference on 38 and 39 of 45 in two runs, flagged 0 of 84 controls, and differed between runs on 1 pair; $0.22 per run. Only 1 treasure looked exposed in normal use.</li>
+<li><strong>Decision.</strong> The developer chose not to use AI exposure judgement ("would rather lose a treasure than recommend something with a known vulnerability," and it would face the same calibration problem as visual severity). <code>sec.v1</code> is a yes/no rule: any high or critical advisory in what a user installs caps quality at 79; "clean" only when the dependency set was fully read; otherwise "unchecked" with a reason.</li>
+<li><strong>Rescans.</strong> 961 records: 248 vulnerable, 433 clean, 280 unchecked; treasures 161 → 134. pnpm-lock support: 259 / 440 / 263; treasures → 132. A count fix after MangoDisk's manual review (dedup by package version, distinct advisory counts): 963 records, <strong>436 clean, 264 vulnerable, 263 unchecked</strong>; 4 records turned vulnerable from a new calamine advisory unrelated to the fix.</li>
+</ul>
+<h3 id="619-well-known-tools-pilot-vs-well_known_option">6.19 Well-known tools: pilot vs <code>well_known_option</code><a class="anchor" href="#619-well-known-tools-pilot-vs-well_known_option" title="Permanent link">#</a></h3>
+<p>The <code>archive/well-known-pilot</code> tag holds 4 reference records for well-known local AI tools (ollama, llama.cpp, whisper, whisper.cpp), kept off main by decision. Instead <code>well_known_option</code> shipped (10/29): when a well-known free tool fits better than every pick, the model may name one, marked <code>verified: false</code>, with <code>how_we_know</code> written by the program. On 8 self-written needs (not evaluation questions), 3 named one, 5 returned null, and no tool was invented; the Ollama sentence claimed it "comes with models," which is wrong, which is exactly why it is labelled unverified.</p>
+<h3 id="620-demo-shortlist-re-test">6.20 Demo shortlist re-test<a class="anchor" href="#620-demo-shortlist-re-test" title="Permanent link">#</a></h3>
+<p>On 11/2 a demo-selection session found a live bug: any answer containing a <code>function</code>-level GUI app failed output validation (<code>gui.tier</code> enum lacked <code>action_checked</code>); the evaluation snapshot had the same issue and was flagged for the evaluation session's <code>tool_error</code> check. After the hotfix, the same 4 needs × 3 runs gave <code>breaktimer-app</code> <strong>rank 1 in all 6 runs</strong> as the only pick, while <code>neon-vision-editor</code> ranked 2, 2, — and —, —, —. The CLI-first shortlist earlier had <code>mcp-audit</code>, <code>tcount</code>, <code>pando</code> and <code>shine</code> at rank 1 in 3 of 3 runs each. A similar schema gap (<code>operations</code>) surfaced on 11/3 with OpenPets and was fixed with a JSON Schema check against the live answer. The final video used MangoDisk, patient-zero and gutenberg-mcp-server.</p>
+<h3 id="621-smaller-measurements">6.21 Smaller measurements<a class="anchor" href="#621-smaller-measurements" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Worker retry</strong> (10/29): Meta intermittently returned 404 "model not found"; one retry within the timeout for 429, 5xx and that 404, recorded in <code>events</code>. A Baseten fallback was tried and superseded by OpenRouter (<code>archive/baseten-404-fallback</code>).</li>
+<li><strong>gVisor DNS after network cut</strong> (11/1): sandbox users could still resolve DNS offline; fixed with per-user network namespaces; rerunning 305 + 234 gVisor records changed only one smoke test.</li>
+<li><strong>Submission round trip</strong> (11/1): 2 min 51 s for <code>matchify</code>; <code>docvet</code> stayed unverified because the agent gave up before <code>git init</code> (an agent problem, not the tool's).</li>
+</ul>
+<hr />
+<h2 id="7-iterations-day-by-day">7. Iterations: day by day<a class="anchor" href="#7-iterations-day-by-day" title="Permanent link">#</a></h2>
+<p>Times are when the row's commit landed in <code>docs/plan.md</code> (Taipei).</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Day</th>
+<th>What changed and why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>10/28</strong> (10/27 ET)</td>
+<td>Repo created 03:23. Architecture research written by agents (no keys yet). P0 validation: Meta key valid, 9 models, one 1.3 call ~$0.0002; <strong>G0 passed</strong> (json_schema, tools, image); Modal gVisor 16.4 s to ready; hello MCP on workers.dev reached by Claude Code headless. <strong>Evaluation frozen 17:06</strong> before any data. Skeleton, <code>software.v1</code> schema, <code>call_meta</code> + shared ledger + traces + cache (122 tests). Three parallel sessions merged at 23:24: 496 candidates, 466 past rules, 36 extractions; <code>evnx</code> repaired by 1.3 after its README failed; resend-history loop chosen.</td>
+</tr>
+<tr>
+<td><strong>10/29</strong></td>
+<td>Evaluation pre-registration 9.1 (00:25), reviewed by three independent reviewers first. 39 profiles; 10/10 test candidates on Modal; <strong>G2 met 10/10 at 02:18</strong> (gate was 10/31). Baseten approved, key working 11:55. Scoring <code>b3.v1</code>, run page, usage report. Open-weight prescreen over 957 candidates (34/34). Local AI branch: 96 profiles. <strong>First Worker deploy 13:06</strong> (96 records). <code>b3.v3</code>, <code>b3.v4</code>. Brief updated: the cost of rebuilding, the user's desire, two intake paths, and the <strong>website made mandatory</strong>. Worker retries, output-schema conformance tests (126 live guides validated). Failure handling: the pipeline never writes <code>failed</code>. <code>well_known_option</code> and arch-aware <code>verified_on_user_os</code>.</td>
+</tr>
+<tr>
+<td><strong>10/30</strong></td>
+<td>Evaluation runner committed (no question run yet). <strong>macOS verifier</strong> (tart, macOS 26) merged after 4 adversarial review rounds; 6 tools verified on real macOS arm64.</td>
+</tr>
+<tr>
+<td><strong>10/31</strong></td>
+<td>Evaluation 9.2 pre-registration; B set frozen (3,834 posts → 12 questions). <strong>MCP servers</strong> as a third category (49 verified). <strong>Expansion: verified 67 → 268, 503 records.</strong> Linux GUI launch check (VM + Xvfb) after two isolation review rounds closed evidence-forgery paths. Relevance-first BM25 shortlist; rules ranking, fit labels, negation. <code>b3.v5</code>. <strong>Submission and re-verify loop</strong> (<code>pickfit watch</code>, <code>pickfit reverify</code>). <strong>Product website live</strong> on workers.dev. Hybrid Spark Open / 1.3 model mix. Evaluation L2 fixtures and 9.3 pre-registration.</td>
+</tr>
+<tr>
+<td><strong>11/1</strong></td>
+<td><strong>Windows verifier</strong> (VirtualBox) and 9 Windows records. <strong>Feature coverage</strong> rounds 1–3. MCP batch (+100). gVisor DNS fix (604 records, 387 verified). <strong>Show HN source</strong> (648 records). <strong>11/1 criterion met at 11:48: a third-party repo submitted and recommended in 2 min 51 s.</strong> Developer's scope revision 16:11: person-first positioning, GUI apps to <code>function</code>, Flathub and Homebrew Cask as sources, freeze for these moved to 11/3 12:00. <strong>Modal shared endpoint</strong> for Muse Spark Open. Usage check-in (<code>check_in</code>, <code>last_used</code>). <strong>Site redesign with Fitz</strong> (19:30). Four branches merged (650 → 689 records): outcomes sync, new sources, Linux GUI operation, Mac batch. <strong>Web apps brought into scope</strong> 23:19 (browser-use, MIT). GUI approach adjusted; GPU and simulated microphone started.</td>
+</tr>
+<tr>
+<td><strong>11/2</strong></td>
+<td>Evaluation deployments created; snapshot moved to 09:00. Pre-snapshot merge 07:48 (768 records; Linux GUI <code>function</code> 0 → 5; macOS GUI <code>function</code> 4); <strong>main frozen during the evaluation</strong>. Post-evaluation merge 17:14: 8 branches, 856 records (web sources, web verification, Cask round 2, GPU/microphone, verification videos, answer-style rules). Hotfix for GUI tier; <strong>videos on tool pages</strong> via R2 (17:57). <strong>Bilingual site</strong> (21:07, 859). Translation moved to Muse Spark Open (22:10). <strong>Tool-page redesign</strong> with video on top, feature ticks and usage guide; 301–5000-star batch → <strong>961 records</strong> (22:15). Evaluation finalized (23:31). <strong>pickfit.app</strong> custom domain (23:39). Usability pilot not shipped; post-hoc coverage check (23:59).</td>
+</tr>
+<tr>
+<td><strong>11/3</strong></td>
+<td>UI polish (00:12–01:52): feature list, web app open card, canonical host redirect, share cards, favicon. <strong>Positioning corrected</strong> (00:24): pickfit collects any software. SAM 3.1 probe. README section on environment limits; step-cap correction. Linux GUI comparison; unchecked causes. Usability Muse Wonder rerun; <code>comfort.v1</code>. <strong>04:21 Meta API returns 402; 05:47 switch to OpenRouter (Meta-only, no data collection).</strong> Visual deduction shipped (11:47); severity deductions not shipped (12:47). Submission story section 7 and README draft rewrite. <strong>OpenPets</strong> added as a demo app; right-click and Mac scroll for the operator. <strong>Security check <code>sec.v1</code></strong> with the 79 cap (16:52); pnpm support; user-facing <code>$HOME</code> paths instead of the sandbox's. Demo MCP and CLI re-verified on Mac (gutenberg-mcp-server). <strong>MangoDisk</strong> submitted and verified on macOS; submissions opened to desktop and web apps. <strong>Second site redesign</strong> (21:40): one ground, colour only in the conversation, no box-in-box. Security count fix and full rescan; aimed clicks; MangoDisk rounds 7–8 not written back.</td>
+</tr>
+<tr>
+<td><strong>11/4</strong></td>
+<td><strong>Demo video merged</strong> (00:50): 2:57, three.js + GSAP scenes with a clay Fitz, real recordings of pickfit.app, Claude Code installing MangoDisk after warning about known vulnerabilities, MangoDisk's first use, and the agent finding patient-zero and gutenberg-mcp-server; narration in the developer's voice via ElevenLabs. Demo shortlist re-test merged (00:55).</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Gates and freezes.</strong> G0 (10/28, Meta API usable): passed the same evening. G2 (hard gate for 10/31 evening: ≥ 5 of 10 demo candidates pass on Modal and replay): met on 10/29 with 10/10. The feature freeze was planned for the evening of 11/2; GUI operation checks and new sources were extended to 11/3 12:00; web apps and GPU work were developed on branches and merged only after the evaluation snapshot.</p>
+<p><strong>Catalogue growth</strong> (records): 39 (10/29 00:58) → 96 (10/29 12:12) → 165 (10/31 02:24) → 503 (10/31 02:57) → 604 (11/1 01:52) → 648 (11/1 01:59) → 689 (11/1 22:57) → 768 (11/2 07:48) → 856 (11/2 17:14) → 961 (11/2 22:15) → 963 listed (11/3 20:16; 970 files including 7 hidden). The repository has 1,525 commits up to <code>4cf9a747</code>, 212 of them merges; commits per day peaked at 454 on 11/2.</p>
+<hr />
+<h2 id="8-designs-that-keep-quality-and-trust">8. Designs that keep quality and trust<a class="anchor" href="#8-designs-that-keep-quality-and-trust" title="Permanent link">#</a></h2>
+<h3 id="81-evidence-quoted-extraction">8.1 Evidence-quoted extraction<a class="anchor" href="#81-evidence-quoted-extraction" title="Permanent link">#</a></h3>
+<p>Every extracted field carries a verbatim quote, and the program checks that the quote appears in the source text; mismatched quotes are dropped (6 of 100 web extractions lost one quote each). API facts (licence, release, stars) are filled from APIs. The install-docs rubric gives a non-zero item only with a checked quote. A known limit, written down on 10/29: a quote proves the sentence exists, not that it supports the value filled in.</p>
+<h3 id="82-verification-levels-are-earned-from-the-command-log">8.2 Verification levels are earned from the command log<a class="anchor" href="#82-verification-levels-are-earned-from-the-command-log" title="Permanent link">#</a></h3>
+<p>Levels (<code>install</code>, <code>function</code>, <code>service</code>, <code>inference</code>) are computed by code from what actually ran and exited 0, capped by the independent judge. Masked exit codes don't count. Category depth matters: <code>install</code> alone does not count as a pass for an MCP server; a desktop app at <code>install</code> means its own window rendered its main UI, not that its features work. Tools that need a key to start stay unverified; pickfit never uses fake keys.</p>
+<h3 id="83-replay-in-a-fresh-box-before-write-back">8.3 Replay in a fresh box before write-back<a class="anchor" href="#83-replay-in-a-fresh-box-before-write-back" title="Permanent link">#</a></h3>
+<p>Install steps are written back only after a new box replays them with no model, then runs the checks with the network and DNS cut. <code>get_install_guide</code> serves only replayed or human steps, verbatim. On 11/3 a rule-based (no model) user version replaces sandbox home paths with <code>$HOME</code>, while the verbatim command stays available under "Verified in pickfit"; OpenPets' user command was tested in a VM with a home path containing a space.</p>
+<h3 id="84-answers-say-how-they-know">8.4 Answers say how they know<a class="anchor" href="#84-answers-say-how-they-know" title="Permanent link">#</a></h3>
+<p>Responses carry <code>how_we_know</code>, <code>evidence_url</code>, <code>matched_by</code> (model or rules), <code>degraded</code> with a reason, the OS and arch actually verified (and <code>verified_on_user_os</code> matching arch), feature ticks with reasons for unchecked ones, and GUI evidence. A GUI app's window title is set by the app, so it is deliberately left out of responses.</p>
+<h3 id="85-well-known-tools-are-never-dressed-up">8.5 Well-known tools are never dressed up<a class="anchor" href="#85-well-known-tools-are-never-dressed-up" title="Permanent link">#</a></h3>
+<p><code>well_known_option</code> is marked <code>verified: false</code>; its <code>how_we_know</code> is written by the program (who suggested it, that pickfit never installed it, that there is no install guide, what was not checked). The name and "why" pass strict filters: no URLs, commands or markdown, must say free, must not say verified or tested, must not be a catalogue entry under another name. The site shows it without stitch, badge, steps or link. Treasure is never given to well-known tools: the treasure rule requires popularity ≤ 45 against the category pool.</p>
+<h3 id="86-security-per-version-surfaced-before-install">8.6 Security per version, surfaced before install<a class="anchor" href="#86-security-per-version-surfaced-before-install" title="Permanent link">#</a></h3>
+<p>Advisories are counted per package version with a distinct advisory count; vulnerable records get a red mark and a notice before the install steps, and <code>get_install_guide</code>'s first warning asks the agent to tell the user. The MCP server instructions say: if <code>vulnerable</code>, warn first; if <code>unchecked</code>, don't call it safe. "Clean" is written only when the dependency set was fully read.</p>
+<h3 id="87-guarded-write-back">8.7 Guarded write-back<a class="anchor" href="#87-guarded-write-back" title="Permanent link">#</a></h3>
+<p>The pipeline never writes <code>failed</code>. A weaker pass never overwrites a stronger one; among equal levels the newer run wins (the developer chose this over picking runs by score, even when it cost four treasures on 11/1). Before and after every merge, records were compared one by one: no level drops, no lost OS runs. Steps from re-verification are written back only if every package name and URL appears in the README, pickfit's earlier steps or the repo; otherwise <code>held</code> for a human. <code>--reverify</code> cannot be combined with <code>--publish</code>.</p>
+<h3 id="88-pre-registration">8.8 Pre-registration<a class="anchor" href="#88-pre-registration" title="Permanent link">#</a></h3>
+<p>Evaluation thresholds, rerun budgets, grading procedure, loss tags and cut order were committed before the first run; deviations were logged afterwards as deviations. Calibration criteria for usability, <code>comfort.v1</code>, severity deductions, the B set, the 301–5000 rule, the known-item test, the fit-label held-out set and the jobs test set were committed before the first paid call or before any judgement. Bars missed were reported as missed.</p>
+<h3 id="89-evaluation-isolation">8.9 Evaluation isolation<a class="anchor" href="#89-evaluation-isolation" title="Permanent link">#</a></h3>
+<p>Data-building and matching sessions (discovery, extraction, verification, scoring, Worker matching) never read <code>eval/</code> and were never forked from a conversation that had. Discovery queries were written per category, not from questions. During the evaluation, main was frozen: no merges, no publish, no <code>pickfit watch</code>.</p>
+<h3 id="810-one-ledger-hard-caps">8.10 One ledger, hard caps<a class="anchor" href="#810-one-ledger-hard-caps" title="Permanent link">#</a></h3>
+<p>A single locked ledger shared by every worktree; daily and total caps per provider enforced in code (because spend-limit notices only email); the Worker checks the worst-case cost before every call and falls back to rules when over budget; the website stops calling Meta after $2 of the Worker's $3 daily cap, reserves two calls per search, and allows 6 searches per visitor per minute; submissions are capped at 20 per hour. Claude Code subagents never call paid APIs in loops.</p>
+<h3 id="811-prompt-injection-and-sandbox-safety">8.11 Prompt-injection and sandbox safety<a class="anchor" href="#811-prompt-injection-and-sandbox-safety" title="Permanent link">#</a></h3>
+<p>READMEs, posts and tool output are wrapped in <code>&lt;source&gt;</code> and treated as data. Sandboxes contain no keys; model calls happen outside. Cloud metadata and private ranges are blocked; GUI evidence is captured by another uid with absolute paths, into a 0700 directory, with a nonce passed on stdin; seccomp blocks <code>AF_VSOCK</code> and <code>io_uring</code>. MCP servers' tool descriptions never leave the sandbox; pickfit only checks them for instructions aimed at agents (4 flagged descriptions were read in full and none asked the model to hide things from users). Report text and notes from <code>report_outcome</code> are never sent to a model and never appear in responses. The Mac and Windows verifiers each went through multiple adversarial reviews (root escalation via the admin desktop session, host reachability, multicast, VM failure detection by host state rather than guest text).</p>
+<h3 id="812-no-fabricated-outcomes">8.12 No fabricated outcomes<a class="anchor" href="#812-no-fabricated-outcomes" title="Permanent link">#</a></h3>
+<p>Only real failures may be used to demonstrate re-verification; no fake failure reports. Our own tests, evaluation and the demo send <code>X-Pickfit-Reporter</code> (<code>dev</code>, <code>eval</code>, <code>demo</code>) so they never count; only <code>external</code> reports count, and only with a valid <code>rec_id</code> (7 days for install and first run, 120 days for still using / replaced / abandoned).</p>
+<h3 id="813-privacy">8.13 Privacy<a class="anchor" href="#813-privacy" title="Permanent link">#</a></h3>
+<p>No IP addresses are stored; the raw request text is not stored, only conditions the model parsed (and no keyword text). <code>last_used</code> accepts four coarse values only. The check-in runs only after the user agrees, with read-only commands generated from recorded steps (not by a model), and never sends command output, exact times, paths or other software. <code>error_excerpt</code> and <code>note</code> are scrubbed (home user names, emails, tokens). Compare selections live in the visitor's browser, and no query string carries the need.</p>
+<h3 id="814-honest-wording">8.14 Honest wording<a class="anchor" href="#814-honest-wording" title="Permanent link">#</a></h3>
+<p>Environment limits are written as "pickfit's test environment lacks X, so it wasn't tested," never "the software doesn't work." Each claim is labelled measured, small-sample observation or hypothesis (<code>story.md</code> §7). Numbers in the video use "about," and "verified" is phrased as "at least through install."</p>
+<hr />
+<h2 id="9-usability-and-the-product-surface">9. Usability and the product surface<a class="anchor" href="#9-usability-and-the-product-surface" title="Permanent link">#</a></h2>
+<p><strong>Website pages</strong> (<code>PRODUCT.md</code>): <code>/</code> persuades and starts a search from the first viewport; <code>/search</code> shows the first pick as Fitz's answer with all install steps and one Copy button, a line like "On Linux instead? Use X," then "Also fits"; <code>/tool/&lt;slug&gt;</code> leads with pickfit's own video and its chapters when there is one, then "what it can do" with each feature ticked (tested / not tested / failed, reasons in tooltips), then "Use it" with OS tabs preselected to the visitor's system and the stages install → check it works → start using; <code>/compare</code> sets facts side by side and marks rows that are the same for every tool; <code>/browse</code> explores by kind, OS and hidden gems; <code>/how</code> explains verification, matching and scoring (score weights and thresholds live only here); <code>/agents</code> shows MCP setup.</p>
+<p><strong>Natural-language search</strong> runs the same <code>findSoftware</code> and <code>installGuide</code> as the MCP, with filters for OS, CPU, free, offline and "data stays local." Very broad Chinese queries with over 300 candidates can still exceed 25 s and fall back to rules.</p>
+<p><strong>Bilingual EN / zh-TW.</strong> Interface strings are written <code>L('English', '中文')</code>; the language comes from <code>?lang=</code>, a cookie, or <code>Accept-Language</code>. Tool sentences are shown in Chinese only when the English source sentence is unchanged, so stale translations never appear; commands, names and URLs are never translated. Matching and MCP answers stay in English. A UI review set Chinese-specific typography and Taiwanese product wording.</p>
+<p><strong>Design system</strong> (<code>DESIGN.md</code>). Bricolage Grotesque (OFL 1.1) and Lucide icons (ISC). After the 11/3 redesign: one ground colour; only two surfaces (your request and Fitz's answer, top-right corner cut like a tailor's label); measuring-tape yellow for the one action per screen; rufous stitching for verification; facts written as a measurement sheet with dotted leaders; a dressmaker's pin for Compare; one Fitz per screen. Works without JavaScript; WCAG AA contrast, keyboard paths, <code>prefers-reduced-motion</code> and colour-scheme respected. The redesign came from four agents proposing layout, colour, identity and cognitive-load directions, two judges merging them, and visual and code reviewers per round; it was checked by rendering the Worker's HTML directly with fake model answers ($0 model spend).</p>
+<p><strong>Agent onboarding.</strong> <code>/agents</code> and the README show <code>claude mcp add --transport http pickfit https://pickfit.app/mcp</code> and an <code>mcpServers</code> JSON snippet. The server instructions tell agents how to answer: open with one pick for the likely setup, say "free" when it is, put "If your setup is X instead, use Y" before the steps, tag well-known options "(not verified by pickfit)," don't narrate the search, warn first on known vulnerabilities, and run steps only with consent. <code>get_install_guide</code> returns <code>claude mcp add</code> and <code>mcpServers</code> config for MCP servers.</p>
+<hr />
+<h2 id="10-results-in-numbers">10. Results in numbers<a class="anchor" href="#10-results-in-numbers" title="Permanent link">#</a></h2>
+<p>All counts below are this report's read-only count of <code>data/software/*.json</code> at <code>4cf9a747</code> unless marked.</p>
+<p><strong>By kind (listed, 963)</strong></p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Listed</th>
+<th><code>function</code></th>
+<th><code>service</code></th>
+<th><code>install</code></th>
+<th><code>inference</code></th>
+<th><code>unverified</code></th>
+<th><code>failed</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CLI tool</td>
+<td>335</td>
+<td>191</td>
+<td>34</td>
+<td>14</td>
+<td>11</td>
+<td>84</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Desktop app</td>
+<td>195</td>
+<td>16</td>
+<td>0</td>
+<td>99</td>
+<td>0</td>
+<td>80</td>
+<td>0</td>
+</tr>
+<tr>
+<td>MCP server or agent plugin</td>
+<td>194</td>
+<td>25</td>
+<td>104</td>
+<td>0</td>
+<td>0</td>
+<td>65</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Web app</td>
+<td>90</td>
+<td>58</td>
+<td>0</td>
+<td>27</td>
+<td>0</td>
+<td>5</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Server daemon</td>
+<td>82</td>
+<td>11</td>
+<td>9</td>
+<td>2</td>
+<td>6</td>
+<td>54</td>
+<td>0</td>
+</tr>
+<tr>
+<td>TUI</td>
+<td>34</td>
+<td>26</td>
+<td>1</td>
+<td>5</td>
+<td>0</td>
+<td>2</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Self-hosted web app</td>
+<td>32</td>
+<td>3</td>
+<td>8</td>
+<td>2</td>
+<td>0</td>
+<td>19</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Browser extension</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>963</strong></td>
+<td><strong>330</strong></td>
+<td><strong>156</strong></td>
+<td><strong>149</strong></td>
+<td><strong>17</strong></td>
+<td><strong>310</strong></td>
+<td><strong>1</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>By category: local AI 287 (all records), dev CLI 276, other 209, MCP server 198.</p>
+<p><strong>Platforms.</strong> Listed records with a passing run on Linux x86_64: 620; macOS arm64: 106; Windows x86_64: 9. 79 records passed on two OSes, 2 on three. Runs by runner: Modal gVisor 586, tart 114, Modal VM with Chromium (web) 85, Modal VM (GUI) 12, VirtualBox 9. GUI tiers in listed runs: 98 <code>ui_rendered</code>, 16 <code>action_checked</code>. 566 of the 652 verified records have at least one smoke test that passed with the network off.</p>
+<p><strong>Unverified reasons</strong> (all 317 unverified records): <code>not_run</code> 249, <code>needs_toolchain</code> 15, <code>needs_root</code> 14, <code>needs_account</code> 11, <code>suspected_tool_fault</code> 11, <code>needs_more_resources</code> 6, <code>needs_container</code> 4, <code>needs_gpu</code> 4, <code>gui_only</code> 2, <code>model_too_large</code> 1.</p>
+<p><strong>Features</strong> (union over passing runs): 499 checked, 37 test failed, 1,630 not checked, on 585 records with feature results. The detailed README's 11/3 breakdown for 193 desktop apps' unchecked features: never attempted 169 (Linux) / 17 (Mac); environment 63 / 21 (of which truly missing hardware or GPU 18 / 3); operator steps or looping as noted by the agent 13 / 2; needs account 13 / 3; other or unclear 32 / 28.</p>
+<p><strong>Scores.</strong> Treasures 132 (CLI 53, web app 34, MCP 34, TUI 6, daemon 5). Quality caps: <code>unverified</code> 310, <code>known_vulnerability</code> 163, <code>verification_failed</code> 1. Formula versions: <code>b3.v5</code> 770, <code>b3.v5+visual.v1</code> 103, <code>web.v1+visual.v1</code> 85, <code>web.v1</code> 12. Visual checks 188 (70 with defects). Usage guide on 671 records.</p>
+<p><strong>Security.</strong> Clean 436, vulnerable 264, unchecked 263 (no lockfile 151, resolve failed 58, no source 46, lockfile not supported 8); 0 malicious.</p>
+<p><strong>Sources cited</strong> (listed records): GitHub API 917, README 917, release 800, package registry 125 (Flathub 92, Homebrew 33), Hacker News 92, website 90.</p>
+<p><strong>Tests.</strong> 1,640 Python tests collected (<code>pytest --collect-only</code>, this report); 282 Worker tests (status log, 11/3 21:57); 78 evaluation-runner tests (11/2).</p>
+<p><strong>Cost.</strong> Meta models $290.60 to 3 Nov 04:12 (about $320 by 3 Nov afternoon per the status log); about $0.45 of model spend per verified tool. Evaluation (Anthropic): runner $19.21, grading $5.54; Baseten third grader $1.17. Other Anthropic spend recorded: usage guides $7.17, first translation pass about $10.24, translation blind comparison $1.89, usability 2×2 $4.47, known-item test $1.81.</p>
+<hr />
+<h2 id="11-limitations-and-open-questions">11. Limitations and open questions<a class="anchor" href="#11-limitations-and-open-questions" title="Permanent link">#</a></h2>
+<h3 id="111-measured-limits">11.1 Measured limits<a class="anchor" href="#111-measured-limits" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Coverage.</strong> Discovery deliberately started with the hardest case: new software nobody knows yet (created in 2026, pushed within 14 days, ≤ 300 stars, later ≤ 5,000). Most well-known tools are therefore missing. When one fits better, <code>find_software</code> names it as <code>well_known_option</code>, unverified, with no install guide.</li>
+<li><strong>Verification environment.</strong> Linux runs in Modal gVisor (no root, no kernel modules, no Docker; 1280×800 display with no window manager, file dialogs, URL handlers or Wayland; GPU only in gVisor, not microVMs); macOS in tart (virtual GPU, no camera, sound off); Windows in VirtualBox (no real GPU; 3D, sound and USB off for isolation). Environment limits cost coverage, recorded as <code>unverified</code> with reasons; they never blame the software.</li>
+<li><strong>GUI depth.</strong> Only 16 desktop apps reached <code>function</code>; most unchecked features were never attempted because the run stopped at install. On Mac, Muse Spark Open's coordinate clicks landed tens of pixels off until aimed clicks were added.</li>
+<li><strong>Usage outcomes.</strong> No tool has 3 external <code>report_outcome</code> reports, so the usage component of the score is not active anywhere.</li>
+<li><strong>Query edges.</strong> Broad Chinese queries with over 300 candidates can time out and fall back to rules; rules relevance misses Chinese words outside its lexicon and some negation patterns ("GPU 不需要," "without Docker and Kubernetes").</li>
+<li><strong>Security.</strong> 263 records are unchecked (mostly no lockfile; yarn and bun not supported); platform-specific dependencies (Windows-only crates) are not yet separated; MangoDisk's page and its install guide showed different numbers (15 findings vs 9 advisories) until the count fix, and the video avoids stating either.</li>
+<li><strong>Visual check.</strong> Defect descriptions are model-written English, also shown on Chinese pages; severity is not used because only a third of "major" defects held up; 104 apps have no visual check.</li>
+<li><strong>Re-verification</strong> runs only in Linux sandboxes, even for macOS or Windows reports.</li>
+</ul>
+<h3 id="112-what-the-evaluation-does-and-does-not-prove">11.2 What the evaluation does and does not prove<a class="anchor" href="#112-what-the-evaluation-does-and-does-not-prove" title="Permanent link">#</a></h3>
+<p>It shows that on these 20 questions pickfit did not regress on easy questions, matched the control on L2 and built-in honesty, and made 1 overclaim in 518 checkable claims. It does <strong>not</strong> show that pickfit beats web search: the lead was 2, not 3, with one run per question per arm. The questions were drafted by AI and frozen by pickfit's own developer; the L1 grader was the same model as the agent under test; <code>unknown</code> counted as fail, and the conclusion flips under the other reading; the blind preference may be partly unblinded. The losses trace to catalogue coverage, and the coverage check was made after seeing results, so any improvement measured on these questions after widening discovery would be exploratory. Supplementary reruns, rules-only, Haiku, the B set and preferences are descriptive only.</p>
+<h3 id="113-observations-small-samples">11.3 Observations (small samples)<a class="anchor" href="#113-observations-small-samples" title="Permanent link">#</a></h3>
+<ul>
+<li>Muse Wonder rescued 2 of 12 stuck GUI runs where more steps rescued none, at about 4× the cost per step.</li>
+<li>Muse Spark Open made more translation meaning errors than Claude on 246 sentences (5 vs 2, 2 of the 5 arguably correct).</li>
+<li>Muse Spark Open as a GUI install agent often truncated command output.</li>
+<li>The developer's view that "1.3 does much better than Spark Open" at testing features and operating GUIs has no side-by-side measurement on the same task; it is recorded as an observation (<code>story.md</code> §6.2).</li>
+</ul>
+<h3 id="114-hypotheses-still-untested">11.4 Hypotheses still untested<a class="anchor" href="#114-hypotheses-still-untested" title="Permanent link">#</a></h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Hypothesis</th>
+<th>How to test it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Widening the discovery rules (repos created before 2026, more than 5,000 stars) would remove most evaluation losses</td>
+<td>A fresh question set written after the change, reported as exploratory</td>
+</tr>
+<tr>
+<td>Fixing the planning agent's goals and checks would rescue more GUI features than more steps or a bigger operator</td>
+<td>Rerun the same 24 features with the per-run cap raised so the new agent can finish (pass 2 was cut short by the cap)</td>
+</tr>
+<tr>
+<td>GUI and feature checks get deeper as models improve, without changing the pipeline</td>
+<td>Rerun the same apps and the same 12 blind grades with the next operator model</td>
+</tr>
+<tr>
+<td>Usage outcomes make ranking better over time</td>
+<td>Needs real external reports above the threshold</td>
+</tr>
+<tr>
+<td><code>jobs</code> phrases improve shortlist recall</td>
+<td>Merge the bench results from <code>archive/tool-jobs</code> and run on a fresh set</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="12-whats-next">12. What's next<a class="anchor" href="#12-whats-next" title="Permanent link">#</a></h2>
+<p>From the brief, story notes and README (post-hackathon; not done during the event):</p>
+<ul>
+<li><strong>Coverage.</strong> Widen discovery beyond 2026-created and ≤ 5,000-star repos so well-known tools are verified too; long-term, much of the supply comes from developer submissions through the same agentic review, with concrete failure reasons sent back to authors.</li>
+<li><strong>Verification environments.</strong> Linux and Windows on full cloud GPU VMs with a real desktop (window manager, file dialogs, PipeWire) behind Amazon DCV virtual displays at 1920×1080, restored from snapshots per check; Mac mostly on tart, with AWS EC2 Mac for apps that need a full GPU or real display; a small set of physical machines with PiKVM V4 only to re-check apps that went unverified purely because of the environment.</li>
+<li><strong>Agentic depth.</strong> Ship the planning-agent fix after a fair rerun; keep calibrating usability and visual severity against human grades with stronger models; support yarn and bun lockfiles and platform-specific dependencies in the security check.</li>
+<li><strong>Outcomes.</strong> Accumulate external reports so retention and replacement rates enter the score; a consented local inventory tool and a "demand map" of needs nobody serves are longer-term ideas in the brief (§3.2), not built.</li>
+<li><strong>Submission.</strong> Repo public, video uploaded with a link anyone can open, Indie Developer track, X post (<code>docs/hackathon-rules.md</code> §11).</li>
+</ul>
+<hr />
+<h2 id="13-appendix">13. Appendix<a class="anchor" href="#13-appendix" title="Permanent link">#</a></h2>
+<h3 id="131-repository-map">13.1 Repository map<a class="anchor" href="#131-repository-map" title="Permanent link">#</a></h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pickfit/</code></td>
+<td>Python pipeline: <code>meta.py</code> (<code>call_meta</code>), <code>ledger.py</code>, <code>schema.py</code>, <code>discover/</code> (github, showhn, flathub, cask, listings, webapps, rules, shortlist), <code>prescreen.py</code>, <code>extract.py</code>, <code>verify/</code> (agent, box, modal_box, tart_box, vbox_box, web_box, gui, gui_operate, gui_mac, judge, feature_judge, verdict, replay, audio, video, mcp_probe, web_guard, …), <code>score.py</code>, <code>security.py</code>, <code>usability.py</code>, <code>usage_guide.py</code>, <code>translate.py</code>, <code>userpaths.py</code>, <code>watch.py</code>, <code>reverify.py</code>, <code>outcomes.py</code>, <code>publish.py</code>, <code>cli.py</code></td>
+</tr>
+<tr>
+<td><code>worker/</code></td>
+<td>Cloudflare Worker: MCP server (<code>server.ts</code>, <code>find.ts</code>, <code>filter.ts</code>, <code>relevance.ts</code>, <code>expand.ts</code>, <code>fit.ts</code>, <code>guard.ts</code>, <code>install.ts</code>, <code>checkin.ts</code>, <code>outcome.ts</code>, <code>submit.ts</code>, <code>budget.ts</code>, <code>meta.ts</code>), website (<code>page.ts</code>, <code>pages/</code>, <code>ui/</code>, <code>i18n.ts</code>), <code>migrations/</code> (D1), <code>public/</code> (Fitz, fonts)</td>
+</tr>
+<tr>
+<td><code>data/software/</code></td>
+<td>Catalogue, one JSON per tool; <code>data/i18n/zh-TW/</code> translations; <code>data/calibration/</code> human grades and pilot answers</td>
+</tr>
+<tr>
+<td><code>schema/</code></td>
+<td><code>software.v1.json</code>, <code>extraction.v1.json</code> generated from pydantic</td>
+</tr>
+<tr>
+<td><code>eval/</code></td>
+<td>Frozen questions (<code>questions.yaml</code>, <code>questions-b.yaml</code>), rules (<code>README.md</code>), runner, fixtures, results</td>
+</tr>
+<tr>
+<td><code>scripts/</code></td>
+<td>Index build, run page, usage report, translation, probes, check-in</td>
+</tr>
+<tr>
+<td><code>spikes/</code></td>
+<td>Research spikes from 10/28 (not product code)</td>
+</tr>
+<tr>
+<td><code>brand/</code></td>
+<td>Fitz mascot, share cards, screenshots</td>
+</tr>
+<tr>
+<td><code>video/</code></td>
+<td>Demo script, three.js scene kit, cut list, mix and assembly</td>
+</tr>
+<tr>
+<td><code>docs/</code></td>
+<td><code>brief.md</code>, <code>plan.md</code> (status log), <code>research/</code>, <code>submission/</code>, pilots and proposals, <code>README.zh-TW.md</code> (detailed Chinese README)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="132-verification-levels">13.2 Verification levels<a class="anchor" href="#132-verification-levels" title="Permanent link">#</a></h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>inference</code></td>
+<td>A local AI tool loaded a real small weight file in the sandbox and returned a completion</td>
+</tr>
+<tr>
+<td><code>service</code></td>
+<td>A daemon or server started and answered a live local request; for MCP servers, handshake plus a real account-free <code>tools/call</code> without <code>isError</code></td>
+</tr>
+<tr>
+<td><code>function</code></td>
+<td>A real task from the README ran on sample inputs with exit 0 and the expected output; MCP: <code>initialize</code> + <code>tools/list</code>; GUI: an operation checked by pickfit; web: a core task with a checkable result</td>
+</tr>
+<tr>
+<td><code>install</code></td>
+<td>Clean install and a basic launch or <code>--version</code>; GUI: its own window rendered the main UI or first-run screen; web: the page opened to its main UI (does not count for MCP servers)</td>
+</tr>
+<tr>
+<td><code>unverified</code></td>
+<td>Not verified, with a reason code (<code>not_run</code>, <code>needs_gpu</code>, <code>needs_root</code>, <code>needs_account</code>, <code>suspected_tool_fault</code>, …)</td>
+</tr>
+<tr>
+<td><code>failed</code></td>
+<td>Confirmed broken by a human or a human check of the published artifact only</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>works_offline</code> is recorded from the offline replay; PWAs separately as <code>verified</code> / <code>not_offline</code> / <code>not_tested</code>. GUI tiers: <code>window</code>, <code>ui_rendered</code>, <code>action_checked</code>.</p>
+<h3 id="133-score-formulas">13.3 Score formulas<a class="anchor" href="#133-score-formulas" title="Permanent link">#</a></h3>
+<p>From <code>docs/submission/README.draft.md</code> (formula <code>b3.v5</code>, <code>pickfit/score.py</code>):</p>
+<ul>
+<li><strong>Quality (0–100)</strong>: weighted mean of components; missing components leave the denominator and lower <code>confidence</code>. Sandbox verification 40% (best passed run's depth for its category × install-step tier 1.0 / 0.85 / 0.7 for ≤ 3 / 4–6 / &gt; 6 actions × 0.85 per genuine <code>readme_wrong</code> fix); install-docs rubric 25% (8 items × 0/1/2 with checked quotes); maintenance 10%; responsiveness 10% (external issues, ≥ 2 needed); engineering hygiene 5%; usage outcomes 10% and up, only after ≥ 3 external reports. Caps: archived 30, human-confirmed failed 40, not an end-user kind 50, unverified 69, known high/critical vulnerability 79 (<code>sec.v1</code>). Visual: × 0.95 if an app-caused defect was found (<code>+visual.v1</code>). Web apps use <code>web.v1</code>.</li>
+<li><strong>Popularity (0–100)</strong>: log-normalized stars, forks, release downloads, monthly package downloads, registry count and top HN score, relative to the 95th percentile of the category pool, plus star velocity for repos ≥ 3 months old.</li>
+<li><strong>Treasure</strong>: verified, quality ≥ 80, popularity ≤ 45; ordered by <code>T = quality × (1 − popularity/100)</code>. (The research draft used quality ≥ 70 and different weights; the bar was raised to 80 on 10/29.)</li>
+</ul>
+<h3 id="134-archived-experiment-tags">13.4 Archived experiment tags<a class="anchor" href="#134-archived-experiment-tags" title="Permanent link">#</a></h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Tag</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>archive/baseten-404-fallback</code></td>
+<td>Worker falling back once to Muse Spark Open on Baseten after a Meta 404 (11/1); superseded by OpenRouter</td>
+</tr>
+<tr>
+<td><code>archive/mac-operator-element</code></td>
+<td>Mac operator element &lt; 1 fix; cherry-picked into main with OpenPets</td>
+</tr>
+<tr>
+<td><code>archive/mangodisk-round7</code></td>
+<td>MangoDisk round 7 (11/3); not written back under the pre-set rule</td>
+</tr>
+<tr>
+<td><code>archive/planning-goals-checks</code></td>
+<td>Planning agent sees the window before writing goals (11/3); before/after measured; not merged after the freeze</td>
+</tr>
+<tr>
+<td><code>archive/severity-deductions</code></td>
+<td><code>visual.v2</code> severity deductions with a second judge; missed the pre-registered bar; only records merged (<code>7bde0bcc</code>)</td>
+</tr>
+<tr>
+<td><code>archive/tool-jobs</code></td>
+<td>Per-tool <code>jobs</code> phrases for shortlist BM25 and rules relevance (10/31–11/1); not merged</td>
+</tr>
+<tr>
+<td><code>archive/usage-steps-layout</code></td>
+<td>Usage-steps layout iteration (11/3); superseded by the tool-page redesign</td>
+</tr>
+<tr>
+<td><code>archive/well-known-pilot</code></td>
+<td>4 well-known reference records (10/29); kept off main; <code>well_known_option</code> shipped instead</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="135-licences-and-third-parties">13.5 Licences and third parties<a class="anchor" href="#135-licences-and-third-parties" title="Permanent link">#</a></h3>
+<p>pickfit's code is MIT (<code>LICENSE</code>); third parties are listed in <code>NOTICE</code>: Python dependencies (httpx, openai, pydantic, Pillow, modal), the sandbox image (Python, Node.js, uv, pipx, slirp4netns, the simulated-microphone packages such as flite and PulseAudio, VirtualGL), the web verifier image (browser-use 0.13.14 MIT with telemetry off, mitmproxy, Chromium, Noto fonts, nftables), Bricolage Grotesque (OFL 1.1) and Lucide icons (ISC). Data sources and their terms are in <code>docs/source-terms.md</code>: GitHub REST API (short quotes ≤ 300 characters, remaining under upstream licences), Show HN via the Algolia and official HN APIs (no post text or comments copied), Flathub's AppStream catalogue only, Homebrew cask definitions (install counts only as transient sampling signals, never stored), npm, PyPI and crates.io download counts, OSV.dev. Deliberately not used: Product Hunt, AlternativeTo and the Reddit API (terms), Flathub's website, API and statistics, GitLab.com and Codeberg APIs, and ecosyste.ms (its terms forbid scripted access without written consent; it appears only in pre-product research spikes, which carry a warning). Narration, music and effects in the video are ElevenLabs output; the 3D scenes use three.js and GSAP.</p>
+<h3 id="136-hackathon-compliance">13.6 Hackathon compliance<a class="anchor" href="#136-hackathon-compliance" title="Permanent link">#</a></h3>
+<ul>
+<li>The repository was created on 2026-10-28 03:23 Taipei (27 Oct ET), inside the development period, and contains only in-period work. Pre-hackathon material (idea, user and market research, decision notes, draft data fields, draft evaluation questions, a placeholder icon, from 2026-10-05) is kept outside the repository and is not presented as hackathon work (<code>docs/hackathon-rules.md</code> §8). The evaluation questions were written fresh on 10/28 without the pre-event drafts.</li>
+<li>No commit times or history were rewritten; commits were small and frequent (1,525 to <code>4cf9a747</code>).</li>
+<li>Meta's models are the working core of the product (Section 5); non-Meta model use is listed in 5.4.</li>
+<li>No API keys or credit and billing details are in the repository; credentials live in <code>.env</code>, which is git-ignored.</li>
+<li>Every session worked in its own worktree and branch; only the coordinating session merged to main and wrote the status log.</li>
+<li>The video's first sentence discloses what existed before the event ("idea and planning notes").</li>
+</ul>
+<h3 id="137-glossary">13.7 Glossary<a class="anchor" href="#137-glossary" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Treasure / hidden gem</strong>: verified, high quality, low popularity (13.3).</li>
+<li><strong>Replay</strong>: re-running recorded steps in a fresh box with no model, then offline.</li>
+<li><strong>Degraded</strong>: an answer ranked by rules because the model was off, failed or over budget.</li>
+<li><strong><code>rec_id</code></strong>: an id pickfit issues with a recommendation or install guide; outcomes count only with a valid one.</li>
+<li><strong>G0 / G2</strong>: the plan's two gates (Meta API usable on 10/28; ≥ 5 of 10 demo candidates verified and replayed on Modal by 10/31).</li>
+<li><strong>L1 / L2 / L3</strong>: evaluation levels (right software; installs and runs; built-in honesty).</li>
+<li><strong>D1–D6</strong>: the evaluation's pre-registered thresholds.</li>
+</ul>
+    </article>
+  </div>
+
+  <footer>
+    <img src="assets/fitz-64.svg" alt="">
+    <span>pickfit · every tool, tested first · <a href="https://pickfit.app">pickfit.app</a> · <a href="https://github.com/ncchen99/pickfit">github.com/ncchen99/pickfit</a></span>
+  </footer>
+</div>
+<script>
+// Contents: open on wide screens, folded on narrow ones; mark the section in view.
+const toc = document.querySelector('.toc');
+const narrow = matchMedia('(max-width:960px)');
+const fold = () => { toc.open = !narrow.matches; };
+fold(); narrow.addEventListener('change', fold);
+const links = new Map([...toc.querySelectorAll('a[href^="#"]')].map((a) => [decodeURIComponent(a.hash.slice(1)), a]));
+const io = new IntersectionObserver((entries) => {
+  for (const e of entries) if (e.isIntersecting) {
+    toc.querySelectorAll('a.on').forEach((a) => a.classList.remove('on'));
+    links.get(e.target.id)?.classList.add('on');
+  }
+}, { rootMargin: '0px 0px -75% 0px' });
+document.querySelectorAll('article h2[id], article h3[id]').forEach((h) => io.observe(h));
+</script>
+<script type="module">
+if (document.querySelector('pre.mermaid')) {
+  const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs');
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  mermaid.initialize({ startOnLoad: false, theme: 'base', fontFamily: 'system-ui, sans-serif', themeVariables: dark
+    ? { background: '#161613', primaryColor: '#2E2E29', primaryTextColor: '#EBEAE2', primaryBorderColor: '#93938A', lineColor: '#7A7B74', secondaryColor: '#1E2413', tertiaryColor: '#242521' }
+    : { background: '#F7F7F4', primaryColor: '#FFFFFF', primaryTextColor: '#1A1D17', primaryBorderColor: '#4A2E22', lineColor: '#80817A', secondaryColor: '#F1F6E2', tertiaryColor: '#F0F1EC' } });
+  await mermaid.run({ querySelector: 'pre.mermaid' });
+}
+</script>
+</body>
+</html>
