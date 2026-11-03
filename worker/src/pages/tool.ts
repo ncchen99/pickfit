@@ -14,7 +14,7 @@ import { EMPTY_FORM, installSection, levelLine, stepText, webFactList } from '..
 import { day, guiSentence, KIND, KIND_PLURAL, levelLabel, OS_NAME, PRICE, PROCESSING, passed, webLevelLabel } from '../ui/facts.ts';
 import { esc, link, listOf, safeUrl } from '../ui/html.ts';
 import { icon, osMark, type IconName } from '../ui/icons.ts';
-import { age, badge, compareToggle, coverage, fitz, kindTag, levelIcon, osList, runFacts, tape, type FitzName } from '../ui/kit.ts';
+import { age, badge, compareToggle, coverage, fitz, kindTag, levelIcon, measure, osList, runFacts, tape, type FitzName, type MeasureRow } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 import { posterOf, videoPath } from '../video.ts';
 import { NO_INSTALL_LABEL, noInstallLabel, webRanSentence } from '../webapp.ts';
@@ -36,32 +36,48 @@ function faceFor(entry: Entry): FitzName {
   return guide.run.level === 'install' ? 'testing' : 'success';
 }
 
+/** Where it runs, as the value of the sheet's "Runs" row (PROCESSING's words would repeat the label). */
+const RUNS: Record<string, string> = {
+  get local() { return L('On your machine', '在你的電腦上'); },
+  get cloud() { return L('In the cloud', '雲端'); },
+  get hybrid() { return L('Locally and in the cloud', '本機與雲端'); },
+};
+
+/**
+ * At a glance, as a tailor's measurement record (measure()): one fact a row, the label joined to its value by a dotted
+ * leader. Every fact keeps a value: what the profile does not say reads "not stated" (quiet), and a tool pickfit has
+ * not run reads "Not verified yet" (caution), never an empty row.
+ */
 function factSheet(entry: Entry, now: Date): string {
-  const unknown = `<span class="unknown">${L('not stated', '未說明')}</span>`;
   const web = isWebApp(entry);
   const check = webCheck(entry);
-  const verifiedCell = web
+  /** A fact the profile has, or "not stated" in the quiet tone: a row never goes empty. */
+  const fact = (label: string, value: string | null | undefined, html: (v: string) => string): MeasureRow =>
+    value ? { label, value: html(value) } : { label, value: `<span class="unknown">${L('not stated', '未說明')}</span>`, tone: 'quiet' };
+  /** The systems as their marks, named on hover and for screen readers (osList): three names would not fit a row. */
+  const systems = (oses: OS[], tone: 'pass' | 'quiet') => osList(oses, { tone });
+  const notYet: MeasureRow = { label: L('Verified on', '已驗證於'), value: esc(L('Not verified yet', '尚未驗證')), tone: 'caution' };
+  const verified: MeasureRow = web
     ? check
-      ? L(`In a browser, ${esc(day(check.checked_at))}`, `在瀏覽器中，${esc(day(check.checked_at))}`)
-      : `<span class="no">${L('Not verified yet', '尚未驗證')}</span>`
+      ? { label: notYet.label, value: L(`In a browser, ${esc(day(check.checked_at))}`, `在瀏覽器中，${esc(day(check.checked_at))}`), tone: 'pass' }
+      : notYet
     : verifiedOn(entry).length
-      ? osList(verifiedOn(entry), { tone: 'pass' })
-      : `<span class="no">${L('Not verified yet', '尚未驗證')}</span>`;
-  const runsLabel = L('Runs', '執行位置');
-  const lastReleaseLabel = L('Last release', '最新版本');
-  const rows: [string, string][] = [
-    [L('Kind', '類型'), kindTag(entry)],
-    [L('Verified on', '已驗證於'), verifiedCell],
+      ? { label: notYet.label, value: systems(verifiedOn(entry), 'pass'), tone: 'pass' }
+      : notYet;
+  const rows: MeasureRow[] = [
+    { label: L('Kind', '類型'), value: kindTag(entry) },
+    verified,
     web
-      ? [L('Runs in', '執行環境'), L('Any modern browser, nothing to install', '任何現代瀏覽器，免安裝')]
-      : [L('Claims to run on', '宣稱支援'), entry.platforms.length ? osList(entry.platforms, { tone: 'quiet' }) : unknown],
-    [L('Price', '價格'), entry.pricing ? esc(PRICE[entry.pricing]) + (entry.pricing_note ? `<div class="small quiet">${esc(entry.pricing_note)}</div>` : '') : unknown],
-    [runsLabel, entry.processing ? esc(PROCESSING[entry.processing]) : unknown],
-    [L('Licence', '授權'), entry.license ? `<code>${esc(entry.license)}</code>${entry.open_source ? ` <span class="small quiet">${L('open source', '開源')}</span>` : ''}` : unknown],
-    [lastReleaseLabel, entry.last_release ? `${esc(day(entry.last_release))} <span class="small quiet">(${esc(age(entry.last_release, now) ?? '')})</span>` : unknown],
-  ].filter(([k]) => !web || (k !== runsLabel && k !== lastReleaseLabel)) as [string, string][];
-  if (entry.maturity) rows.push([L('Maturity', '成熟度'), esc(MATURITY[entry.maturity] ?? entry.maturity)]);
-  return `<dl class="facts-dl">${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join('')}</dl>`;
+      ? { label: L('Runs in', '執行環境'), value: esc(L('Any modern browser, nothing to install', '任何現代瀏覽器，免安裝')) }
+      : // The README's claim, not a run: quiet either way.
+        { ...fact(L('Claims to run on', '宣稱支援'), entry.platforms.length ? systems(entry.platforms, 'quiet') : null, (named) => named), tone: 'quiet' },
+    fact(L('Price', '價格'), entry.pricing, (p) => esc(PRICE[p] ?? p) + (entry.pricing_note ? ` <small>${esc(entry.pricing_note)}</small>` : '')),
+    ...(web ? [] : [fact(L('Runs', '執行位置'), entry.processing, (p) => esc(RUNS[p] ?? PROCESSING[p] ?? p))]),
+    fact(L('Licence', '授權'), entry.license, (l) => `<code>${esc(l)}</code>${entry.open_source ? ` <small>${L('open source', '開源')}</small>` : ''}`),
+    ...(web ? [] : [fact(L('Last release', '最新版本'), entry.last_release, (d) => `${esc(day(d))} <small>(${esc(age(d, now) ?? '')})</small>`)]),
+  ];
+  if (entry.maturity) rows.push({ label: L('Maturity', '成熟度'), value: esc(MATURITY[entry.maturity] ?? entry.maturity) });
+  return measure(rows, { cls: 'glance-sheet' });
 }
 
 /** What the README says you need first; nothing when it lists nothing. */
@@ -416,7 +432,7 @@ function install(catalog: Catalog, entry: Entry): string {
     const arch = entry.install[os]!.run.arch;
     return `${osMark(os)}${esc(OS_NAME[os])}${arch ? ` <span class="arch">${esc(arch)}</span>` : ''}`;
   };
-  // One card: the systems as tabs across its top, then that system's steps straight in it (no box inside the box).
+  // One section on the page ground: the systems as text tabs across its top, then that system's steps (no card).
   const panels = oses.map((os: OS) => {
     const g = entry.install[os]!;
     const out = readerGuide(installGuide(catalog, { slug: entry.slug, os }), hint, !!g.run.gui);
@@ -428,13 +444,13 @@ function install(catalog: Catalog, entry: Entry): string {
     );
   });
   // More than one system: tabs, which the page script shows and turns to the reader's own system.
-  // Without the script every card stays, one under the other.
+  // Without the script every system's steps stay, one under the other.
   const tabs = tabbed
     ? `<div class="os-tabs" role="tablist" aria-label="${L('Your system', '你的系統')}" data-os-tabs hidden>` +
       oses.map((os, i) => `<button type="button" role="tab" id="tab-${os}" aria-controls="install-${os}" aria-selected="${i === 0}" data-os="${os}"${i ? ' tabindex="-1"' : ''}>${sysLabel(os)}</button>`).join('') +
       `</div>`
     : '';
-  return `<section class="block" aria-labelledby="install-title">${installTitle('Use it', '使用')}<article class="run-card install-card">${tabs}${panels.join('')}</article></section>`;
+  return `<section class="block" aria-labelledby="install-title">${installTitle('Use it', '使用')}<div class="use-it">${tabs}${panels.join('')}</div></section>`;
 }
 
 /** A web app: open it, and the facts a person weighs before typing anything in. */
@@ -455,13 +471,13 @@ function webRun(entry: Entry): string {
   }
   return (
     `<section class="block" aria-labelledby="install-title">${installTitle('Open it', '開啟')}` +
-    `<article class="run-card" id="run-web"><div class="run-head"><h3>${esc(noInstallLabel())}</h3></div>` +
-    // Where it opens, as a browser's address bar with the one action at its end; then what pickfit's browser saw.
+    `<div class="use-it use-web" id="run-web"><div class="run-head"><h3>${esc(noInstallLabel())}</h3></div>` +
+    // Where it opens, the address written on a ruled line with the one action at its end; then what pickfit's browser saw.
     (open
       ? `<div class="web-bar"><span class="web-addr">${icon('globe')}<span translate="no">${esc(url.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</span></span>${open}</div>`
       : '') +
     webFactList(entry, 'web-facts-grid') +
-    `</article></section>`
+    `</div></section>`
   );
 }
 
@@ -594,7 +610,7 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
     (features.checked.length + features.not_checked.length ? goodFor(entry, true) : '') +
     tested(catalog, entry) +
     `</div></div><aside class="side" aria-label="${L('At a glance', '一覽')}">` +
-    `<div class="panel"><h2>${L('At a glance', '一覽')}</h2>${factSheet(entry, now)}<div class="t-measure panel-measure">` +
+    `<div class="panel"><h2>${L('At a glance', '一覽')}</h2>${factSheet(entry, now)}<div class="panel-measure">` +
     tape(L('Quality', '品質'), entry.scores?.quality ?? null, { pop: 'pop-quality' }) +
     tape(L('Popularity', '知名度'), entry.scores?.popularity ?? null, { pop: 'pop-popularity', tone: 'quiet' }) +
     coverage(features, { pop: 'pop-features' }) +

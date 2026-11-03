@@ -3,13 +3,16 @@
  * components, then page layouts. One string, sent inline under the CSP nonce.
  */
 
+import { MEASURE_FITS } from './kit.ts';
+
 const TOKENS = `
 @font-face{font-family:"Bricolage Grotesque";src:url(/assets/fonts/bricolage-grotesque.woff2) format("woff2");font-weight:400 800;font-display:swap}
 /* One ground per page; colour lives only in the conversation (DESIGN.md §2). Every pair below is checked
-   for contrast in both schemes (redesign tokens.py). Grounds: paper < tag (cards) < raised (your request, popovers);
-   voice is Fitz's olive, only for Fitz's answer and his waiting words. */
+   for contrast in both schemes (redesign tokens.py). Grounds: paper < tag (soft tints mix into it) < raised (your request,
+   popovers); voice is Fitz's olive, only for Fitz's answer and his waiting words. --voice-line is the hairline inside his
+   answer; --voice-edge is the answer's own edge (2:1 light, 3.15:1 dark), so its cut corner reads beside your request's. */
 :root{
---paper:#F7F7F4;--tag:#FFFFFF;--raised:#FFFFFF;--voice:#F1F6E2;--voice-line:#CDD7AB;
+--paper:#F7F7F4;--tag:#FFFFFF;--raised:#FFFFFF;--voice:#F1F6E2;--voice-line:#CDD7AB;--voice-edge:#A9B77E;
 --sunk:#F0F1EC;--code-bg:#FFFFFF;--rule:#DEDFD9;--line-ctl:#80817A;
 --ink:#1A1D17;--ink-2:#4F5149;--ink-3:#65655E;
 --tape:#F5C243;--tape-edge:#A57710;--tape-deep:#D9A21B;--tape-ink:#3A2905;--tape-tab:#C3CAD2;
@@ -24,7 +27,13 @@ const TOKENS = `
 --lift-2:0 2px 4px rgb(26 29 23/.07),0 16px 32px -16px rgb(26 29 23/.32);
 --lift-3:0 4px 10px rgb(26 29 23/.10),0 28px 56px -20px rgb(26 29 23/.42);
 --scrim:color-mix(in srgb,var(--ink) 42%,transparent);
---r-card:14px;--r-ctl:10px;
+/* Straight edges (11/3 owner): 4px for everything but the switches, which are the only pills (--r-pill).
+   The two conversation surfaces (your request, Fitz's answer) get one cut corner, --r-cut, top right. */
+--r-card:4px;--r-ctl:4px;--r-pill:999px;--r-cut:16px;
+/* The compare tray's height: a page that must keep something in the first view (the clip's play bar) takes it off. */
+--tray-h:58px;
+/* The measuring sheet's dotted leader: decoration, so it may sit under 3:1; light enough to recede, dark enough to read as dots on --voice. */
+--leader:color-mix(in srgb,var(--line-ctl) 55%,transparent);
 --display:"Bricolage Grotesque",ui-sans-serif,system-ui,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
 --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
 --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
@@ -33,7 +42,7 @@ const TOKENS = `
 --gap:clamp(64px,9vw,128px)}
 /* Dark: the more it matters, the lighter it is. Shadows don't show on a dark page, so lifts are hairlines. */
 @media (prefers-color-scheme:dark){:root{
---paper:#161613;--tag:#242521;--raised:#2E2E29;--voice:#1E2413;--voice-line:#394129;
+--paper:#161613;--tag:#242521;--raised:#2E2E29;--voice:#1E2413;--voice-line:#394129;--voice-edge:#5E6B40;
 --sunk:#0E0F0C;--code-bg:#0E0F0C;--rule:#393A34;--line-ctl:#7A7B74;
 --ink:#EBEAE2;--ink-2:#BFBEB6;--ink-3:#A5A59D;
 --tape-edge:#F5C243;--stitch:#E07A4F;--fitz-line:#93938A;--fitz-ink:#93938A;
@@ -105,7 +114,7 @@ const COMPONENTS = `
 .nav a[aria-current=page]{color:var(--ink);border-bottom-color:var(--ink)}
 .nav a:focus-visible,.lang-switch:focus-visible{outline-offset:4px}
 .menu-nav a[aria-current=page]{color:var(--ink);text-decoration-line:underline;text-decoration-thickness:2px;text-underline-offset:6px}
-.count{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--ink);color:var(--paper);font:700 .75rem/20px var(--sans);text-align:center}
+.count{min-width:20px;height:20px;padding:0 6px;border-radius:var(--r-ctl);background:var(--ink);color:var(--paper);font:700 .75rem/20px var(--sans);text-align:center}
 .lang-switch{display:inline-flex;align-items:center;padding:3px 0 3px 20px;border-left:1px solid var(--rule);text-decoration:none;font:500 .95rem/1.2 var(--sans);color:var(--ink-2);white-space:nowrap}
 .lang-switch:hover{color:var(--ink);text-decoration:underline}
 .top-end{display:flex;align-items:center;gap:12px}
@@ -125,9 +134,9 @@ transition:transform .12s var(--ease-out),box-shadow .2s var(--ease-out),backgro
 /* The one action on a screen is solid tape; its 1px edge carries it on the light page, where tape on white is only 1.66:1. */
 .btn-primary{background:var(--tape);color:var(--tape-ink);box-shadow:0 1px 0 var(--tape-deep),inset 0 0 0 1px var(--tape-edge)}
 .btn-primary:hover{background:color-mix(in srgb,var(--tape) 88%,#fff);box-shadow:0 1px 0 var(--tape-deep),inset 0 0 0 1px var(--tape-edge)}
-/* Everything else is quiet: no fill, a 1px control line (3:1 on every ground). .btn-on-mat is the retired band's button, now the same. */
-.btn-quiet,.btn-on-mat{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-ctl)}
-.btn-quiet:hover,.btn-on-mat:hover{background:color-mix(in srgb,var(--ink) 6%,transparent);box-shadow:inset 0 0 0 1px var(--ink-2)}
+/* Everything else is quiet: no fill, a 1px control line (3:1 on every ground). */
+.btn-quiet{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-ctl)}
+.btn-quiet:hover{background:color-mix(in srgb,var(--ink) 6%,transparent);box-shadow:inset 0 0 0 1px var(--ink-2)}
 .btn-ghost{background:transparent;color:inherit}
 .btn-ghost:hover{background:color-mix(in srgb,currentColor 8%,transparent)}
 /* The results' "How to read a tool card" and "Compare these" are ways to go, so they read as links. */
@@ -144,7 +153,7 @@ transition:transform .12s var(--ease-out),box-shadow .2s var(--ease-out),backgro
    A transparent ground and a 1px control line (3:1 on every ground). On is the same for a chip and a segment: a faint ink
    tint and an ink ring, 2px of ink where off is 1px of --line-ctl (3.5:1 apart or more), and a chip adds a check and bolder
    words, so the state is never colour alone and never outweighs the screen's one solid yellow. */
-.chip{position:relative;display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border:1px solid var(--line-ctl);border-radius:999px;cursor:pointer;
+.chip{position:relative;display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border:1px solid var(--line-ctl);border-radius:var(--r-pill);cursor:pointer;
 font:500 .9rem/1 var(--sans);background:transparent;color:var(--ink);transition:background .2s,color .2s,border-color .2s;user-select:none}
 .chip input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
 .chip:hover{background:color-mix(in srgb,var(--ink) 8%,transparent)}
@@ -154,17 +163,23 @@ font:500 .9rem/1 var(--sans);background:transparent;color:var(--ink);transition:
 mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/contain no-repeat}
 .chip:has(input:focus-visible){outline:3px solid var(--stitch);outline-offset:2px}
 .chip .i,.chip .os{width:1em;height:1em}
-/* A chip's word says it; its icon would say it twice. Compare keeps its mark: on narrow Browse cards it is the whole button. */
+/* A chip's word says it; its icon would say it twice. Compare keeps its mark, the dressmaker's pin (Compare is pinning),
+   and on narrow Browse cards the pin is the whole button. Pinned, it is on like every chip: the check takes the pin's place. */
 .chip:not(.chip-compare) .i{display:none}
+.i-pin .pin-head{fill:currentColor}
+.chip-compare .i-pin{width:1.1em;height:1.1em}
+.chip-compare:has(input:checked) .i-pin{display:none}
 a.chip{text-decoration:none}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.seg{display:inline-flex;padding:3px;gap:2px;border:1px solid var(--line-ctl);border-radius:999px;background:transparent}
-.seg label{position:relative;display:inline-flex;align-items:center;min-height:32px;padding:0 14px;border-radius:999px;cursor:pointer;font:500 .9rem/1 var(--sans);color:var(--ink-2);transition:background .2s,color .2s}
+/* The segmented control's options sit straight on the ground (no outline around the group: inside the request that would be a
+   box in a box); only the chosen one is ringed, a pill, since it is a switch. The marks themselves are 3:1 or more. */
+.seg{display:inline-flex;padding:0;gap:2px;border:0;background:transparent}
+.seg label{position:relative;display:inline-flex;align-items:center;min-height:32px;padding:0 14px;border-radius:var(--r-pill);cursor:pointer;font:500 .9rem/1 var(--sans);color:var(--ink-2);transition:background .2s,color .2s}
 .seg input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
 .seg label:hover{color:var(--ink)}
 .seg label:has(input:checked){background:color-mix(in srgb,var(--ink) 11%,transparent);color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .seg label:has(input:focus-visible){outline:3px solid var(--stitch);outline-offset:1px}
-.select{appearance:none;font:500 .9rem/1 var(--sans);color:var(--ink);background:transparent no-repeat right 12px center/14px;min-height:40px;padding:0 34px 0 14px;border:1px solid var(--line-ctl);border-radius:999px;cursor:pointer;
+.select{appearance:none;font:500 .9rem/1 var(--sans);color:var(--ink);background:transparent no-repeat right 12px center/14px;min-height:40px;padding:0 34px 0 14px;border:1px solid var(--line-ctl);border-radius:var(--r-pill);cursor:pointer;
 background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234F5149' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")}
 @media (prefers-color-scheme:dark){.select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23BFBEB6' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")}}
 .select:hover{background-color:color-mix(in srgb,var(--ink) 8%,transparent)}
@@ -175,10 +190,10 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/sv
 .dd-btn{display:inline-flex;align-items:center;text-align:left}
 .dd-btn[aria-expanded=true]{background-color:color-mix(in srgb,var(--ink) 8%,transparent)}
 .dd-list{position:absolute;left:0;top:calc(100% + 6px);z-index:30;min-width:100%;width:max-content;max-width:min(360px,calc(100vw - 32px));max-height:300px;overflow-y:auto;margin:0;padding:6px;list-style:none;
-background:var(--raised);color:var(--ink);border-radius:14px;box-shadow:var(--lift-3);outline:0}
+background:var(--raised);color:var(--ink);border-radius:var(--r-card);box-shadow:var(--lift-3);outline:0}
 .dd-list.up{top:auto;bottom:calc(100% + 6px)}
 .dd-list[hidden]{display:none}
-.dd-list li{display:flex;align-items:center;gap:8px;padding:9px 12px 9px 10px;border-radius:9px;font:500 .95rem/1.25 var(--sans);cursor:pointer}
+.dd-list li{display:flex;align-items:center;gap:8px;padding:9px 12px 9px 10px;border-radius:var(--r-ctl);font:500 .95rem/1.25 var(--sans);cursor:pointer}
 .dd-list li .i{width:15px;height:15px;flex:none;visibility:hidden;color:var(--pass)}
 .dd-list li[aria-selected=true]{font-weight:600}
 .dd-list li[aria-selected=true] .i{visibility:visible}
@@ -189,23 +204,23 @@ background:var(--raised);color:var(--ink);border-radius:14px;box-shadow:var(--li
 .combo input{width:100%}
 .combo .dd-list{width:100%;max-width:none}
 .combo .dd-list li{display:block}
-/* install steps per system, as tabs */
-.os-tabs{display:flex;flex-wrap:wrap;gap:2px;padding:3px;margin:0 0 14px;border:1px solid var(--line-ctl);border-radius:999px;background:transparent;width:max-content;max-width:100%}
+/* install steps per system (the tool page's Use it): text tabs on a hairline, as a worksheet's tabs are. A tab is not a
+   switch, so no pill and no box: the chosen system is in ink, underlined 2px in ink (never colour alone); the others are
+   --ink-2 and show a --line-ctl underline on hover. The weight stays the same, so nothing shifts as you choose. */
+.os-tabs{display:flex;flex-wrap:wrap;gap:0 28px;margin:0 0 18px;padding:0;border-bottom:1px solid var(--rule)}
 .os-tabs[hidden]{display:none}
-.os-tabs button{display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:0 16px;border:0;border-radius:999px;background:none;color:var(--ink-2);font:500 .92rem/1 var(--sans);cursor:pointer}
-.os-tabs button:hover{color:var(--ink)}
-.os-tabs button[aria-selected=true]{background:color-mix(in srgb,var(--ink) 11%,transparent);color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
-.os-tabs button:focus-visible{outline:3px solid var(--stitch);outline-offset:1px}
+.os-tabs button{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0;margin-bottom:-1px;border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--ink-2);font:500 1rem/1 var(--sans);cursor:pointer;transition:color .2s,border-color .2s}
+.os-tabs button:hover{color:var(--ink);border-bottom-color:var(--line-ctl)}
+.os-tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ink)}
+.os-tabs button:focus-visible{outline:3px solid var(--stitch);outline-offset:2px}
 .os-tabs .os{width:1.05em;height:1.05em}
 .os-tabs .arch{font-weight:500;font-size:.8rem;color:var(--ink-3)}
 .os-mine{font:600 .78rem/1 var(--sans);color:var(--pass)}
 .js .run-panel[role=tabpanel] .run-head{display:none}
 .run-panel[hidden]{display:none}
-.run-panel+.run-panel{margin-top:24px;padding-top:20px;border-top:1px solid var(--rule)}
-.install-card .run-head{margin-bottom:12px}
-.install-card .install-body{padding:0}
-.install-card .stage-tabs button[aria-current=step]{background:var(--sunk);box-shadow:none}
-@media (max-width:520px){.run-card.install-card{padding:18px 16px}.os-tabs .arch{display:none}.os-tabs button{padding:0 12px;gap:6px}}
+.run-panel+.run-panel{margin-top:28px;padding-top:24px;border-top:1px solid var(--rule)}
+.use-it .run-head{margin-bottom:14px}
+@media (max-width:520px){.os-tabs{gap:0 20px}.os-tabs .arch{display:none}.os-tabs button{gap:6px}}
 
 /* badges: facts, so plain text in their tone (pills are only for switches). The icon goes when the words say
    the same; a short badge (its text is a tooltip) keeps its marks, since they are all it shows. */
@@ -241,7 +256,7 @@ button.badge{cursor:help;min-height:24px;text-decoration:underline dotted;text-d
 @media (hover:hover){
 [data-tip]{position:relative}
 [data-tip]:hover::after{content:attr(data-tip)}
-[data-tip]:hover::after,.cat-card .chip-compare:hover::after{position:absolute;left:0;bottom:calc(100% + 6px);z-index:3;padding:6px 9px;border-radius:6px;background:var(--ink);color:var(--paper);font:600 .78rem/1.3 var(--sans);width:max-content;max-width:220px;white-space:normal;pointer-events:none}
+[data-tip]:hover::after,.cat-card .chip-compare:hover::after{position:absolute;left:0;bottom:calc(100% + 6px);z-index:3;padding:6px 9px;border-radius:var(--r-ctl);background:var(--ink);color:var(--paper);font:600 .78rem/1.3 var(--sans);width:max-content;max-width:220px;white-space:normal;pointer-events:none}
 }
 
 /* tape meters */
@@ -262,25 +277,14 @@ button.badge{cursor:help;min-height:24px;text-decoration:underline dotted;text-d
 .tape-mark{stroke:var(--ink);stroke-width:2.5;vector-effect:non-scaling-stroke}
 .cov-ok{fill:var(--pass)}.cov-fail{fill:var(--fail)}.cov-open{fill:color-mix(in srgb,var(--ink) 18%,var(--sunk))}
 
-/* at-a-glance cells */
-.glance{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:2px;border-radius:var(--r-ctl);overflow:hidden;background:var(--rule);margin:0}
-.gl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 8px;align-content:start;align-items:start;padding:12px;background:var(--tag)}
-.gl .i,.gl .os{width:17px;height:17px;margin-top:1px;color:var(--ink-2)}
-.gl-value{grid-column:2;font:600 .92rem/1.3 var(--sans);color:var(--ink)}
-.gl-pass .i,.gl-pass .os,.gl-pass .gl-value{color:var(--pass)}
-.gl-pass .gl-value small{color:var(--ink-2)}
-.gl-caution .i,.gl-caution .os,.gl-caution .gl-value{color:var(--caution)}
-.gl-fail .i,.gl-fail .gl-value{color:var(--fail)}
-.gl-quiet .gl-value{color:var(--ink-2);font-weight:500}
-
 /* Fitz says */
 .says{display:flex;align-items:flex-end;gap:12px}
 .says .fitz{flex:none}
 /* Fitz's words are in Fitz's own olive (--voice); the 2px outline belongs to your request only. */
-.bubble{position:relative;background:var(--voice);color:var(--ink);border:1px solid var(--voice-line);border-radius:16px 16px 16px 6px;padding:16px 20px;margin-bottom:18px;max-width:62ch}
+.bubble{position:relative;background:var(--voice);color:var(--ink);border:1px solid var(--voice-edge);border-radius:var(--r-card);padding:16px 20px;margin-bottom:18px;max-width:62ch}
 /* The tail: an outline triangle, and a fill triangle inset 1px from its outer edges that also covers the bubble's border where they meet */
 .bubble::before,.bubble::after{content:"";position:absolute;left:-18px;bottom:4px;width:20px;height:20px}
-.bubble::before{background:var(--voice-line);clip-path:polygon(18px 2.2px,18px 15.6px,0 20px)}
+.bubble::before{background:var(--voice-edge);clip-path:polygon(18px 2.2px,18px 15.6px,0 20px)}
 .bubble::after{background:var(--voice);clip-path:polygon(20px 1.6px,20px 14.1px,3.3px 18.2px)}
 .bubble p:last-child{margin-bottom:0}
 .bubble h2,.bubble h3{margin-bottom:4px}
@@ -292,27 +296,32 @@ button.badge{cursor:help;min-height:24px;text-decoration:underline dotted;text-d
 .cov-sample{background:linear-gradient(90deg,var(--pass) 0 50%,var(--fail) 50% 62%,color-mix(in srgb,var(--ink) 18%,var(--sunk)) 62%)}
 
 /* commands */
-/* A command wraps instead of scrolling, so all of it shows; Copy still copies the text exactly as printed.
-   It wraps as a terminal does (to the edge, not at a hyphen), and a wrapped part hangs 2ch in, so it never reads as
-   the next command; each line of several is its own block (.ln) and starts flush. */
-.cmd{display:flex;align-items:center;background:var(--code-bg);color:var(--ink);border:1px solid var(--rule);border-radius:var(--r-ctl);margin:6px 0 10px;min-width:0}
-.cmd pre{flex:1;min-width:0;margin:0;padding:12px 14px 12px calc(14px + 2ch);text-indent:-2ch;overflow-x:auto;line-height:1.6;white-space:pre-wrap;word-break:break-all;scrollbar-color:color-mix(in srgb,var(--ink) 30%,transparent) transparent}
+/* A command is a left-ruled block of monospace on whatever ground it sits on: no box, no fill, a 2px rule in the
+   control line (--line-ctl) down its left side (the rule means "verbatim from the run": commands and README quotes).
+   It wraps instead of scrolling, so all of it shows, and Copy still copies the text exactly as printed. It wraps at a
+   space, so an option or a path stays whole (never "--" on one line and "appdir" on the next); only a word longer than
+   the line breaks inside it. A wrapped part
+   hangs 2ch in, so it never reads as the next command; each line of several is its own block (.ln) and starts flush.
+   Copy is a quiet text button right after the command, on the first line's baseline (align-items:baseline). */
+.cmd{display:flex;align-items:baseline;gap:4px 16px;margin:8px 0 12px;min-width:0;padding:0;background:none;border:0;border-left:2px solid var(--line-ctl);border-radius:0;color:var(--ink)}
+.cmd pre{flex:0 1 auto;min-width:0;margin:0;padding:3px 0 3px calc(14px + 2ch);text-indent:-2ch;line-height:1.6;white-space:pre-wrap;word-break:normal;overflow-wrap:anywhere}
 .cmd .ln{display:block}
-.copy{display:none;align-items:center;gap:6px;flex:none;min-height:32px;font:600 .85rem/1 var(--sans);color:var(--ink);background:transparent;border:1px solid var(--line-ctl);border-radius:8px;padding:0 12px;margin:0 8px 0 0;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+/* A word with a hyphen or a slash in it is one piece (command() marks it): the line wraps at the space before it. Only a
+   word longer than the line breaks, inside itself; its own text-indent is reset, so the hanging indent stays the block's. */
+.cmd .w{display:inline-block;max-width:100%;text-indent:0}
+.copy{display:none;align-items:center;flex:none;min-width:24px;min-height:24px;padding:0 4px;margin:0;border:0;border-radius:var(--r-ctl);background:none;color:var(--ink-2);
+font:600 .85rem/1.6 var(--sans);text-decoration:underline;text-decoration-color:var(--line-ctl);text-decoration-thickness:1px;text-underline-offset:4px;cursor:pointer;transition:color .2s,text-decoration-color .2s,background .2s}
 .copy .i{display:none}
 .js .copy{display:inline-flex}
-.cmd-multi{align-items:flex-start}
-.cmd-multi .copy{margin-top:8px}
-.copy:hover{background:color-mix(in srgb,var(--ink) 8%,transparent)}
-.copy.done{color:var(--pass);border-color:var(--pass)}
+.copy:hover{color:var(--ink);text-decoration-color:var(--stitch)}
+.copy.done{color:var(--pass);text-decoration-color:var(--pass)}
 
 /* notices */
-.notice{display:flex;align-items:center;gap:18px;border-radius:var(--r-card);padding:18px 22px;margin:28px 0;background:var(--tag);box-shadow:var(--lift-1)}
+/* On the page ground between two hairlines; the title says busy or error in its tone, Fitz says the rest. */
+.notice{display:flex;align-items:center;gap:18px;padding:18px 0;margin:28px 0;border-block:1px solid var(--rule)}
 .notice h2{font-size:var(--t-head);margin-bottom:4px}
 .notice p{margin:0}
-.notice.busy{background:var(--caution-soft)}
 .notice.busy h2{color:var(--caution)}
-.notice.error{background:var(--fail-soft)}
 .notice.error h2{color:var(--fail)}
 .notice .fitz{flex:none}
 
@@ -321,24 +330,25 @@ button.badge{cursor:help;min-height:24px;text-decoration:underline dotted;text-d
 .pop:popover-open{animation:pop-in .2s var(--ease-out)}
 .pop p{margin:0 0 8px}.pop p:last-child{margin:0}
 .pop-title{font:700 1rem/1.2 var(--display)}
-.pop-close{position:absolute;top:8px;right:8px;display:grid;place-items:center;width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:var(--ink-2);cursor:pointer}
+.pop-close{position:absolute;top:8px;right:8px;display:grid;place-items:center;width:30px;height:30px;border:0;border-radius:var(--r-ctl);background:transparent;color:var(--ink-2);cursor:pointer}
 .pop-close:hover{background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink)}
-.help{display:inline-grid;place-items:center;width:24px;height:24px;margin:-4px 0;padding:0;border:0;border-radius:50%;background:transparent;color:var(--ink-2);cursor:help}
+.help{display:inline-grid;place-items:center;width:24px;height:24px;margin:-4px 0;padding:0;border:0;border-radius:var(--r-ctl);background:transparent;color:var(--ink-2);cursor:help}
 .help:hover{background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink)}
 .help .i{width:16px;height:16px}
-.sheet{width:min(640px,calc(100vw - 32px));max-height:calc(100dvh - 48px);padding:28px;border:0;border-radius:20px;background:var(--raised);color:var(--ink);box-shadow:var(--lift-3)}
+.sheet{width:min(640px,calc(100vw - 32px));max-height:calc(100dvh - 48px);padding:28px;border:0;border-radius:var(--r-card);background:var(--raised);color:var(--ink);box-shadow:var(--lift-3)}
 /* A neutral scrim from the page's own tokens (an older browser, where ::backdrop inherits nothing, gets the near-black one). */
 .sheet::backdrop{background:var(--scrim,rgb(14 15 12/.55));backdrop-filter:blur(2px)}.sheet[open]{animation:pop-in .25s var(--ease-out)}
 .sheet-close{position:absolute;top:12px;right:12px;margin:0}
-.sheet-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.sheet-head{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-right:44px}
+/* The legend reads as a worksheet: one row per mark, between hairlines. */
 .legend{margin:0;display:grid;gap:14px}
+.legend>div+div{padding-top:14px;border-top:1px solid var(--rule)}
+.prose .legend{padding-block:14px;border-block:1px solid var(--rule)}
 .legend div{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px;align-items:start}
 .legend dt{font:600 .95rem/1.3 var(--display)}
 .legend dd{margin:0;color:var(--ink-2);font-size:.95rem}
 .legend dt:has(.mark-sample){display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .mark-sample{display:inline-flex;align-items:center;gap:6px;color:var(--ink-2)}
-/* Browse cards show the gem as its outline only, so the legend shows that outline beside its name. */
-.legend .badge-gem>.i{display:inline-block}
 .mark-sample.rf .i{width:18px;height:18px}
 .mark-sample .oses .os{width:18px;height:18px}
 
@@ -346,42 +356,71 @@ button.badge{cursor:help;min-height:24px;text-decoration:underline dotted;text-d
 .tray{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:10px 0;background:var(--raised);color:var(--ink);border-top:1px solid var(--rule);box-shadow:0 -12px 30px -18px rgb(0 0 0/.35);animation:tray-in .35s var(--ease-out)}
 .tray[hidden]{display:none}
 .tray-row{display:flex;align-items:center;gap:12px}
+/* The tray holds the pinned tools: each name carries its pin (the script clones .tray-mark's). On a phone the names
+   hide, and the one pin at the tray's start says what the count counts. */
+.tray-mark{display:none;color:var(--ink-2)}
+.tray-mark .i{width:20px;height:20px}
+.tray-list li>.i-pin{margin-right:6px;color:var(--ink-2)}
 /* The tools in the tray are names with a remove button, not pills: pills are switches. */
 .tray-list{display:flex;flex-wrap:wrap;gap:4px 18px;list-style:none;padding:0;margin:0;flex:1;min-width:0}
 .tray-list li{display:inline-flex;align-items:center;gap:2px;font:600 .92rem/1.2 var(--sans)}
-.tray-list button{display:grid;place-items:center;width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:var(--ink-2);cursor:pointer}
+.tray-list button{display:grid;place-items:center;width:28px;height:28px;border:0;border-radius:var(--r-ctl);background:transparent;color:var(--ink-2);cursor:pointer}
 .tray-list button:hover{background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink)}
 .tray-list .i{width:16px;height:16px}
 .tray-note{font-size:var(--t-small);color:var(--ink-2)}
 .tray .btn-ghost{color:var(--ink-2)}
-.toasts{position:fixed;left:50%;bottom:84px;z-index:40;display:flex;flex-direction:column;align-items:center;gap:8px;transform:translateX(-50%);pointer-events:none}
-.toast{padding:10px 16px;border-radius:var(--r-ctl);background:var(--raised);color:var(--ink);font:500 .92rem/1.3 var(--sans);box-shadow:var(--lift-2);animation:toast 2.4s var(--ease-out) both}
+/* The toasts span the window less a gutter (centred), so a toast on a phone stays one line where it can. */
+.toasts{position:fixed;left:16px;right:16px;bottom:84px;z-index:40;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.toast{max-width:min(480px,100%);padding:10px 16px;border-radius:var(--r-ctl);background:var(--raised);color:var(--ink);font:500 .92rem/1.3 var(--sans);box-shadow:var(--lift-2);animation:toast 2.4s var(--ease-out) both}
 
-/* skeleton */
-/* skeleton: one dashed outline in the answer's shape (a name, the fit, a line, the command). It doesn't pulse:
+/* skeleton: where the answer will land, its shape on the page ground under a hairline (no outline: only your request and
+   Fitz's words are surfaces): the name, the fit, a measurement row's dotted leader, the ruled command. It doesn't pulse:
    the tape unrolling above it is the only motion while Fitz looks. */
-.skel{border-radius:var(--r-card);border:1px dashed var(--line-ctl);padding:22px 24px;display:grid;gap:12px}
+.skel{display:grid;gap:12px;padding:24px 0 0;border-top:1px solid var(--rule)}
 .skel+.skel{display:none}
-.skel i{display:block;height:12px;border-radius:6px;background:color-mix(in srgb,var(--ink) 9%,transparent)}
-.skel i:nth-child(1){width:34%;height:20px}.skel i:nth-child(2){width:78%}.skel i:nth-child(3){width:58%}.skel i:nth-child(4){width:100%;height:44px;border-radius:var(--r-ctl);margin-top:6px}
+.skel i{display:block;height:12px;border-radius:2px;background:color-mix(in srgb,var(--ink) 9%,transparent)}
+.skel i:nth-child(1){width:34%;height:20px}.skel i:nth-child(2){width:78%}
+.skel i:nth-child(3){width:58%;height:2px;margin:8px 0;border-radius:0;background:radial-gradient(circle,var(--leader) 0 1px,transparent 1.25px) 0 0/6px 2px repeat-x}
+.skel i:nth-child(4){width:100%;height:40px;margin-top:6px;border-radius:0;background:none;border-left:2px solid color-mix(in srgb,var(--ink) 14%,transparent)}
 
-/* fact sheets */
-.facts-dl{margin:0;display:grid;gap:0}
-.facts-dl div{display:grid;grid-template-columns:minmax(110px,40%) minmax(0,1fr);gap:12px;padding:9px 0;border-bottom:1px solid var(--rule)}
-.facts-dl div:last-child{border-bottom:0}
-.facts-dl dt{color:var(--ink-3);font-size:var(--t-small)}
-.facts-dl .kind .i{display:none}
-.facts-dl dd{margin:0;font-size:.95rem}
+/* a fact the profile does not state (in a measurement sheet, a table cell or a line) */
 .unknown{color:var(--ink-2);font-style:normal}
 
+/* the measurement sheet (measure() in kit.ts): facts as a tailor's measurement record. One row per fact, the label
+   (--ink-3, system face) and its value (--ink, tabular figures) joined by a dotted leader; no box, so it reads on the
+   page and on --voice alike. The leader is the row's ::after, a flex item between the two (order:1) whose dots sit on
+   the baseline. measure() tags a row with the width it needs (m-fit190: 19rem) and the sheet puts that row's value
+   under its label once it is narrower than that (container queries below); should the estimate fall short, a value
+   that cannot fit moves to the next line, right-aligned under the leader. */
+.measure{width:100%;max-width:30rem;margin:0;container:measure/inline-size;font-variant-numeric:tabular-nums}
+.measure>div{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 10px;padding:5px 0;break-inside:avoid}
+.measure dt{flex:0 1 auto;min-width:0;color:var(--ink-3);font:400 .92rem/1.45 var(--sans)}
+.measure>div::after{content:"";order:1;flex:1 1 24px;min-width:24px;height:2px;align-self:baseline;
+background:radial-gradient(circle,var(--leader) 0 1px,transparent 1.25px) 0 0/6px 2px repeat-x}
+.measure dd{order:2;flex:0 1 auto;min-width:0;margin:0 0 0 auto;color:var(--ink);font:500 .95rem/1.45 var(--sans)}
+.measure dd small{font:400 .85rem/1.4 var(--sans);color:var(--ink-2)}
+.measure .os{width:1em;height:1em;margin-right:5px;vertical-align:-.12em}
+.measure .oses .os{margin-right:0}
+.m-pass dd{color:var(--pass)}.m-caution dd{color:var(--caution)}.m-fail dd{color:var(--fail)}
+.m-quiet dd{color:var(--ink-2);font-weight:400}
+/* Stacked: the label, then the value under it, no leader (a row tagged m-fit190 in a sheet under 19rem, and so on). */
+${MEASURE_FITS.map((w, i) => {
+  const rows = MEASURE_FITS.slice(i).map((v) => `.m-fit${Math.round(v * 10)}`).join(',');
+  return `@container measure (width<${w}rem){.measure :is(${rows}){display:block}.measure :is(${rows})::after{content:none}}`;
+}).join('\n')}
+
+/* No cards (11/3): only two surfaces exist, your request (.ask-card) and Fitz's answer (--voice). Every other group
+   sits on the page ground, set apart by a 1px --rule and space, never a box inside a box. */
+
 /* data tables */
-.table-wrap{overflow-x:auto;border-radius:var(--r-card);background:var(--tag);box-shadow:var(--lift-1)}
+/* A table sits on the page ground: rows on hairlines, the head under a heavier ink line. */
+.table-wrap{overflow-x:auto}
 .dt{width:100%;border-collapse:collapse;font-size:.95rem}
 .dt th,.dt td{text-align:left;vertical-align:top;padding:12px 16px;border-bottom:1px solid var(--rule)}
-.dt thead th{font:700 .85rem/1.2 var(--display);color:var(--ink-2);background:var(--sunk);position:sticky;top:0}
+.dt thead th{font:700 .85rem/1.2 var(--display);color:var(--ink-2);background:var(--paper);border-bottom:1px solid var(--line-ctl);position:sticky;top:0}
 .dt tbody tr:last-child td,.dt tbody tr:last-child th{border-bottom:0}
 .dt tbody th{font:600 .85rem/1.3 var(--display);color:var(--ink-2);white-space:nowrap}
-.dt .grp th{background:color-mix(in srgb,var(--sunk) 60%,var(--tag));font:700 .8rem/1 var(--display);color:var(--ink);padding:10px 16px;letter-spacing:.02em}
+.dt .grp th{background:none;font:700 .8rem/1 var(--display);color:var(--ink);padding:10px 16px;letter-spacing:.02em}
 .best{display:inline-flex;align-items:center;gap:4px;margin-left:6px;font:700 .72rem/1 var(--display);color:var(--pass)}
 .best .i{width:.9em;height:.9em;stroke-width:2.4}
 
@@ -417,10 +456,10 @@ button.badge{cursor:help;min-height:24px;text-decoration:underline dotted;text-d
 
 const RESULTS = `
 /* the request: where you talk to Fitz. The one raised surface, outlined in Fitz's own line colour. */
-.ask-card{position:relative;background:var(--raised);color:var(--ink);border:2px solid var(--fitz-line);border-radius:16px;padding:16px 22px;box-shadow:var(--lift-1);transition:box-shadow .2s var(--ease-out)}
-/* Typing: the outline thickens (2px to 3px, drawn as a ring so nothing shifts), so focus never rests on the yellow alone. */
-.ask-card:focus-within{box-shadow:0 0 0 1px var(--fitz-line),var(--lift-1)}
-@media (prefers-color-scheme:dark){.ask-card{box-shadow:none}.ask-card:focus-within{box-shadow:0 0 0 1px var(--fitz-line)}}
+.ask-card{position:relative;background:var(--raised);color:var(--ink);border:2px solid var(--fitz-line);border-radius:var(--r-card);padding:16px 22px;transition:box-shadow .2s var(--ease-out)}
+/* Flat, like a cut label: no shadow. Typing: the outline thickens (2px to 3px, drawn as a ring so nothing shifts), so focus
+   never rests on the yellow alone. */
+.ask-card:focus-within{box-shadow:0 0 0 1px var(--fitz-line)}
 .ask{position:relative;display:flex;align-items:baseline;gap:12px;padding:2px 0 22px}
 /* The signature: Fitz's measuring tape is the request's baseline. At rest, fine ticks on a 2px line (no numbers:
    decoration must not look like data); while you type, the whole tape unrolls under your words, its metal tab at the end. */
@@ -471,10 +510,10 @@ clip-path:inset(0 100% 0 0);transition:clip-path .45s var(--ease-out)}
 .results-title{font-size:var(--t-title)}
 .match-line{color:var(--ink-3);margin:6px 0 0;font-size:var(--t-small)}
 .res-tools{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
-.ask-note,.aside{background:var(--tag);border-radius:var(--r-card);padding:18px 22px;margin:20px 0;box-shadow:var(--lift-1);max-width:none}
-.ask-note{display:flex;gap:14px;align-items:center;background:var(--info-soft)}
-.ask-note .fitz{flex:none}
-.ask-note p{margin:0}
+/* Asides (built-in may be enough, the best free option) are groups on the page ground under a hairline, not cards. */
+.aside{margin:32px 0;padding:20px 0 0;border-top:1px solid var(--rule);max-width:none}
+.ask-note{margin-top:0}
+.ask-note p{margin:0 0 6px}
 .aside h3{margin-bottom:8px}
 .lead-in{font-weight:700;font-family:var(--display)}
 .picks{display:grid;grid-template-columns:minmax(0,1fr);gap:28px}
@@ -483,17 +522,17 @@ clip-path:inset(0 100% 0 0);transition:clip-path .45s var(--ease-out)}
    and the one solid yellow (Copy); the others follow on the page under "Also fits", each a few lines of text with
    a three-stitch seam (pickfit ran it). A row of wrapping flex items, so "Why it fits" and the foot share a line
    until the fold opens. */
-.pick{position:relative;display:flex;flex-wrap:wrap;align-items:center;background:var(--tag);border-radius:var(--r-card);box-shadow:var(--lift-1);padding:26px 28px 22px;animation:rise .6s var(--ease-out) both}
+.pick{position:relative;display:flex;flex-wrap:wrap;align-items:center;padding:20px 0 0;animation:rise .6s var(--ease-out) both;--hair:var(--rule)}
 .pick>*{flex:0 0 100%;min-width:0}
 .pick>.t-more:not([open]){flex:0 0 auto;margin-right:18px}
 .pick>.t-foot{flex:1 1 auto}
 .picks>:nth-child(n+2){animation-delay:.1s}
-.pick:target{box-shadow:0 0 0 3px var(--stitch)}
-.picks .pick:first-child{background:var(--voice);border:1px solid var(--voice-line);box-shadow:none;padding:28px 32px 22px}
+/* Fitz's answer: the one --voice surface on the results, with nothing boxed inside it. Its hairlines are his line colour. */
+.picks .pick:first-child{background:var(--voice);border:1px solid var(--voice-edge);border-radius:var(--r-card);padding:28px 32px 22px;--hair:var(--voice-line)}
 .picks .pick:first-child:target{box-shadow:0 0 0 3px var(--stitch)}
 .also{font:600 1rem/1.3 var(--sans);letter-spacing:0;color:var(--ink-2);margin:16px 0 -16px;animation:rise .6s .1s var(--ease-out) both}
-.picks .pick:not(:first-child){background:none;box-shadow:none;border-radius:0;border-top:1px solid var(--rule);padding:20px 0 0}
-.picks .pick:not(:first-child):target{box-shadow:none;outline:3px solid var(--stitch);outline-offset:6px}
+.picks .pick:not(:first-child){border-top:1px solid var(--rule)}
+.picks .pick:not(:first-child):target{outline:3px solid var(--stitch);outline-offset:6px}
 .t-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 16px;align-items:start}
 .t-name{font-size:1.6rem;letter-spacing:-.025em}
 .t-name a{text-decoration:none}.t-name a:hover{text-decoration:underline;text-decoration-color:var(--stitch)}
@@ -504,14 +543,19 @@ clip-path:inset(0 100% 0 0);transition:clip-path .45s var(--ease-out)}
 .fit{font:600 1.3rem/1.4 var(--display);letter-spacing:-.015em;margin:12px 0 20px;max-width:56ch;text-wrap:balance}
 /* Fitz's answer in the system face: it is often Chinese, and the tool's name above already carries the display face. */
 .pick .fit{font:500 1.2rem/1.45 var(--sans);letter-spacing:0;max-width:60ch}
-.t-glance{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin:0}
-.gl-value small{display:block;font:500 .8rem/1.3 var(--sans);color:var(--ink-2)}
-/* The verdict strip as plain facts between two hairlines: only the OS keeps its mark, the words say the rest. */
-.picks .t-glance{gap:0 24px;background:none;border-radius:0;overflow:visible;border-block:1px solid var(--voice-line)}
-.picks .gl{display:block;padding:12px 0;background:none;line-height:1.3}
-.picks .gl .i{display:none}
-.picks .gl .os{display:inline-block;width:16px;height:16px;margin:0 6px 0 0;vertical-align:-2px}
-.picks .gl-value small{margin-top:2px}
+/* The verdict is a measurement sheet (measure()): one fact per row, label, dotted leader, value. On a wide first pick
+   it stands beside the fit sentence, the measurements column of a tailor's worksheet (the grid below). */
+.t-sheet{margin:0 0 4px}
+@media (min-width:1100px){
+.picks .pick:first-child{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,26rem);column-gap:64px;align-items:start}
+.picks .pick:first-child>*{grid-column:1/-1}
+.picks .pick:first-child>:is(.fit,.instead){grid-column:1}
+.picks .pick:first-child>.instead{margin-top:0}
+.picks .pick:first-child>.t-sheet{grid-column:2;grid-row:2/span 4;margin-top:10px}
+.picks .pick:first-child>.t-more:not([open]){grid-column:1;justify-self:start}
+.picks .pick:first-child>.t-foot{grid-column:2}
+.picks .pick:first-child>.t-more[open]~.t-foot{grid-column:1/-1}
+}
 .instead{margin:16px 0 0;color:var(--ink-2);max-width:68ch}
 .instead a{color:var(--ink);font-weight:600}
 .pick .seam{margin:18px 0 16px}
@@ -520,19 +564,19 @@ clip-path:inset(0 100% 0 0);transition:clip-path .45s var(--ease-out)}
 .t-install-label .i{display:none}
 .t-install .cmd{margin:0}
 .t-install .caution{margin:8px 0 0}
-.t-fix{display:flex;gap:8px;align-items:flex-start;margin:10px 0 0;font-size:var(--t-small);color:var(--ink-2);max-width:68ch}
-.t-fix .i{display:none}
+/* The README fix: a plain paragraph under the command, its words verbatim. */
+.t-fix{margin:12px 0 0;font-size:var(--t-small);color:var(--ink-2);max-width:68ch}
 .t-fix b{color:var(--ink)}
-.t-install .cmd pre{font-size:.95rem;padding:14px 16px 14px calc(16px + 2ch)}
+.t-install .cmd pre{font-size:.95rem;padding:3px 0 3px calc(16px + 2ch)}
+/* In Fitz's answer the command takes the row, so its Copy stands at the answer's right edge, under the sheet's values. */
+.picks .pick:first-child .t-install .cmd pre{flex:1 1 auto}
 /* The one solid yellow on the results: the first pick's (first) Copy. Not for steps that ran on another OS than
    the one chosen (t-elsewhere): those are said with a caution and stay quiet. Every Copy in the fold is quiet. */
-.picks .pick:first-child .t-install:not(.t-elsewhere) .cmd:first-of-type .copy{background:var(--tape);color:var(--tape-ink);border-color:var(--tape-edge);min-height:36px;padding:0 16px}
+.picks .pick:first-child .t-install:not(.t-elsewhere) .cmd:first-of-type .copy{background:var(--tape);color:var(--tape-ink);border:1px solid var(--tape-edge);text-decoration:none;min-height:32px;padding:0 14px;font-weight:700}
 .picks .pick:first-child .t-install:not(.t-elsewhere) .cmd:first-of-type .copy:hover{background:color-mix(in srgb,var(--tape) 88%,#fff)}
 .picks .pick:first-child .t-install:not(.t-elsewhere) .cmd:first-of-type .copy.done{background:transparent;color:var(--pass);border-color:var(--pass)}
 .t-install-label+.caution{margin:0 0 8px}
 .t-install .cmd+.cmd{margin-top:8px}
-/* Inside the fold, boxes are a tint of the ground they sit on, so they read on the olive and on the page alike. */
-.pick .t-measure,.pick .install,.pick .issues li{background:color-mix(in srgb,var(--ink) 4%,transparent)}
 .t-open{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0;max-width:none}
 .t-open .quiet{overflow-wrap:anywhere}
 /* Also fits: name, kind and fit sentence, the three stitches, then one line of facts; the steps and the README fix
@@ -541,12 +585,13 @@ clip-path:inset(0 100% 0 0);transition:clip-path .45s var(--ease-out)}
 .picks .pick:not(:first-child)>.seam{order:-1;clip-path:inset(0 calc(100% - 31px) 0 0);margin:0 0 10px}
 .picks .pick:not(:first-child) .t-name{font-size:1.25rem}
 .picks .pick:not(:first-child) .fit{font-size:1rem;font-weight:400;margin:6px 0 12px}
-.picks .pick:not(:first-child) .t-glance{display:flex;flex-wrap:wrap;gap:4px 18px;border:0}
-.picks .pick:not(:first-child) .gl{padding:0}
-.picks .pick:not(:first-child) .gl:has(>.i-terminal){display:none}
-.picks .pick:not(:first-child) .gl-value{font-weight:500;font-size:.92rem}
-.picks .pick:not(:first-child) .gl-plain .gl-value{color:var(--ink-2)}
-.picks .pick:not(:first-child) .gl-value small{display:inline;margin:0 0 0 18px;font:inherit;color:var(--ink-2)}
+/* Their sheet is one line of values: the labels are there for screen readers (the values say enough), no leaders. */
+.picks .pick:not(:first-child) .t-sheet{display:flex;flex-wrap:wrap;gap:4px 18px;max-width:none;margin:0}
+.picks .pick:not(:first-child) .t-sheet>div{display:block;padding:0}
+.picks .pick:not(:first-child) .t-sheet>div::after{content:none}
+.picks .pick:not(:first-child) .t-sheet dt{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.picks .pick:not(:first-child) .t-sheet dd{font-size:.92rem}
+.picks .pick:not(:first-child) .t-sheet>div:not(.m-pass,.m-caution,.m-fail) dd{color:var(--ink-2)}
 .picks .pick:not(:first-child) .t-install{display:none}
 .picks .pick:not(:first-child) .t-more{margin-top:8px}
 .picks .pick:not(:first-child) .t-foot{margin-top:8px}
@@ -554,43 +599,43 @@ clip-path:inset(0 100% 0 0);transition:clip-path .45s var(--ease-out)}
 .web-facts li{display:flex;gap:8px;align-items:flex-start;font-size:var(--t-small)}
 .web-facts .i{flex:none;width:16px;height:16px;margin-top:2px}
 .web-facts li:not(.yes):not(.no){color:var(--ink-2)}
-/* a web app's "open it" card: an address bar ending in the button, then the facts two to a row */
-.web-bar{display:flex;align-items:center;gap:12px;margin:16px 0 20px;padding:6px 6px 6px 16px;border-radius:999px;background:var(--sunk)}
-.web-addr{flex:1;min-width:0;display:flex;align-items:center;gap:10px;color:var(--ink-2);font:500 .92rem/1.3 var(--mono)}
+/* A web app's "Open it" (tool page): the address written on a ruled line, the one yellow button at its end; then what
+   pickfit's browser saw, each fact a line with its mark, two to a row (no tinted tiles). */
+.web-bar{display:flex;align-items:center;gap:12px;margin:12px 0 18px;padding:0 0 10px;border-bottom:1px solid var(--rule)}
+.web-addr{flex:1;min-width:0;display:flex;align-items:center;gap:10px;color:var(--ink);font:500 .92rem/1.3 var(--mono)}
 .web-addr .i{flex:none;width:18px;height:18px}
 .web-addr span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.web-bar .btn{flex:none;border-radius:999px}
+.web-bar .btn{flex:none;border-radius:var(--r-ctl)}
 .web-facts-grid{grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:12px 24px;margin:0}
 .web-facts-grid li,.web-facts-grid li:not(.yes):not(.no){align-items:center;gap:10px;font:500 .95rem/1.35 var(--sans);color:var(--ink)}
-.web-facts-grid .i,.web-facts-grid .yes .i,.web-facts-grid .no .i{box-sizing:content-box;width:16px;height:16px;margin:0;padding:6px;border-radius:50%;background:var(--sunk);color:var(--ink-2)}
-.web-facts-grid .yes .i{background:var(--pass-soft);color:var(--pass)}
-.web-facts-grid .no .i{background:var(--caution-soft);color:var(--caution)}
-@media (max-width:520px){.web-bar{flex-direction:column;align-items:stretch;gap:8px;padding:12px;border-radius:var(--r-ctl)}.web-bar .btn{justify-content:center}}
-.t-more{margin-top:16px;border-radius:var(--r-ctl)}
+.web-facts-grid .i{width:16px;height:16px;margin:0;color:var(--ink-2)}
+.web-facts-grid .yes .i{color:var(--pass)}
+.web-facts-grid .no .i{color:var(--caution)}
+@media (max-width:520px){.web-bar{flex-direction:column;align-items:stretch;gap:8px;padding:0 0 12px}.web-bar .btn{justify-content:center}}
+.t-more{margin-top:16px}
 .t-more>summary{display:inline-flex;align-items:center;gap:8px;list-style:none;padding:8px 0;font:600 .95rem/1.3 var(--sans);color:var(--ink-2)}
 .t-more>summary::-webkit-details-marker{display:none}
 .t-more>summary:hover{color:var(--ink)}
 .t-more>summary .i{transition:transform .25s var(--ease-out)}
 .t-more[open]>summary .i{transform:rotate(180deg)}
-.t-more-body{padding-top:12px;display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
-.t-more-body .record{padding-top:20px;border-top:1px solid var(--rule)}
+/* The fold opens to rows on the ground it sits on (the olive or the page), a hairline between them: the reasons with
+   their readings, the test record, the full steps; then the links. Nothing in it is a box. */
+.t-more-body{padding-top:8px;display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+.pick .t-more-body>*+*{margin-top:20px;padding-top:20px;border-top:1px solid var(--hair)}
+.pick .t-more-body>.t-links{border-top:0;padding-top:0}
 .t-links{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0}
 .t-links a{display:inline-flex;align-items:center;gap:6px;font:600 .9rem/1 var(--display)}
 .t-links a .i{display:none}
 .t-body{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:28px 40px}
 .t-body h4:first-child{margin-top:0}
-.t-measure{display:grid;gap:18px;align-content:start;align-self:start;padding:18px;border-radius:var(--r-ctl);background:color-mix(in srgb,var(--sunk) 55%,var(--tag))}
+.t-measure{display:grid;gap:18px;align-content:start;align-self:start;max-width:24rem}
+/* On the olive the meter track takes a tint of the ink, so the reading shows against it. */
+.pick .tape-track{fill:color-mix(in srgb,var(--ink) 6%,transparent)}
 .coverage{color:var(--ink-2);font-size:var(--t-small)}
+/* A reason is its words; the file mark after them says the citation opens. No tile, no tick: the words say it. */
 .why{list-style:none;padding:0;margin:0 0 8px}
-.why li{position:relative;padding-left:30px;margin-bottom:12px}
-.why li::before{content:"";position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:var(--pass-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232E7A35' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/12px no-repeat}
+.why li{margin-bottom:10px}
 .cite{display:block;font-size:var(--t-small);color:var(--ink-2);margin-top:2px}
-.why-marks li{display:block;padding-left:0;margin-bottom:10px}
-.why-marks li::before{content:none}
-/* The reason's words say what its mark said; the file mark after them stays: it says the citation opens. */
-.why-marks .why-i{display:none}
-.why-i{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--pass-soft);color:var(--pass)}
-.why-i .i,.why-i .os{width:13px;height:13px}
 .why-src summary{list-style:none;cursor:pointer}
 .why-src summary::-webkit-details-marker{display:none}
 .why-src summary .i{width:.85em;height:.85em;margin-left:6px;vertical-align:-.1em;color:var(--ink-2);opacity:.75}
@@ -603,23 +648,25 @@ clip-path:inset(0 100% 0 0);transition:clip-path .45s var(--ease-out)}
 .vs{margin-top:14px}
 .level{display:flex;align-items:center;gap:8px;font:700 1.05rem/1.3 var(--display);margin:0 0 6px}
 .level-caution{color:var(--caution)}
-.check{width:22px;height:22px;flex:none;border-radius:50%;background:var(--pass);padding:4px}
-.level-i{display:grid;place-items:center;width:22px;height:22px;flex:none;border-radius:50%;background:var(--pass);color:var(--tag)}
-.level-i .i{width:13px;height:13px;stroke-width:2.4}
-.check path{fill:none;stroke:var(--tag);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+/* A run's level: its mark drawn in --pass beside the words, never on a filled tile (the legend and /how too). */
+.check{width:18px;height:18px;flex:none}
+.level-i{display:inline-grid;place-items:center;flex:none;color:var(--pass)}
+.level-i .i{width:18px;height:18px;stroke-width:2}
+.check path{fill:none;stroke:var(--pass);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 .record{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:8px 40px}
 .record>*{grid-column:1}
 .record .mine{grid-column:2;grid-row:1/span 3;align-self:start}
 .record:not(:has(.mine)){grid-template-columns:minmax(0,1fr)}
 .record p{margin:0 0 6px}
 /* A label in text ink: --stitch is for stitches and focus, and is under 4.5:1 as text on the light grounds. */
-.record-title{display:flex;align-items:center;gap:8px;font:700 .8rem/1 var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin:0 0 10px}
+.record-title{display:flex;align-items:center;gap:8px;font:700 1rem/1.3 var(--display);letter-spacing:-.01em;color:var(--ink);margin:0 0 10px}
 .record-title .i{display:none}
-.mine{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:var(--r-ctl);font-weight:600;max-width:none}
+/* Whether it ran on your system, said in its tone as a plain line: no tinted box. */
+.mine{display:flex;gap:10px;align-items:flex-start;padding:0;font-weight:600;max-width:none}
 .mine .i{margin-top:2px}
-.mine-yes{background:var(--pass-soft);color:var(--pass)}
-.mine-no{background:var(--caution-soft);color:var(--caution)}
-.mine-unknown{background:var(--sunk);color:var(--ink)}
+.mine-yes{color:var(--pass)}
+.mine-no{color:var(--caution)}
+.mine-unknown{color:var(--ink)}
 details>summary{cursor:pointer}
 /* One disclosure mark on every page: a chevron before the words, pointing down, up once open (as "Why it fits").
    A summary without its own icon draws it here; the ones with a chevron icon put it first (order:-1). */
@@ -631,45 +678,55 @@ mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='
 details[open]:not(.menu)>summary:not(:has(>.i))::before{transform:rotate(180deg)}
 .how summary{font:600 var(--t-small)/1.4 var(--display);color:var(--ink-2);margin-top:4px}
 .how p{font-size:var(--t-small);color:var(--ink-2);margin-top:6px}
-.install{margin:16px 0 0;border-radius:var(--r-ctl);background:color-mix(in srgb,var(--sunk) 55%,var(--tag))}
-.install>summary{display:flex;align-items:center;gap:10px;list-style:none;padding:14px 16px;font:700 1rem/1.3 var(--display)}
+/* The full steps in the fold: a row like the others, its summary a heading with the disclosure chevron. */
+.install{margin:0}
+.install>summary{display:flex;align-items:center;gap:8px;list-style:none;padding:0;font:700 1rem/1.3 var(--display)}
 .install>summary::-webkit-details-marker{display:none}
 .install>summary .i:last-child{order:-1;transition:transform .25s var(--ease-out)}
 .install[open]>summary .i:last-child{transform:rotate(180deg)}
-.install-body{padding:0 16px 14px}
+.install-body{padding:0}
+.pick .install-body{padding:4px 0 0}
 .install-body h4{font:700 .95rem/1.3 var(--display);margin:18px 0 6px}
 [data-stepper]{scroll-margin-top:16px}
-.stage-tabs{display:flex;flex-wrap:wrap;align-items:center;gap:4px;list-style:none;padding:0;margin:0 0 6px}
-.stage-tabs li{display:flex;align-items:center;gap:4px}
-.stage-tabs li+li::before{content:"";width:16px;height:2px;border-radius:1px;background:color-mix(in srgb,var(--ink-2) 35%,transparent)}
-.stage-tabs button{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:0 12px 0 5px;border:0;border-radius:999px;background:none;color:var(--ink-2);font:600 .9rem/1 var(--display);cursor:pointer}
-.stage-tabs button:hover{color:var(--ink)}
-.stage-tabs .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--sunk);font-size:.78rem}
-.stage-tabs button[aria-current=step]{background:var(--tag);color:var(--ink);box-shadow:var(--lift-1)}
-.stage-tabs button[aria-current=step] .n{background:var(--ink);color:var(--paper)}
-.stage-tabs button.done .n{background:var(--pass-soft);color:var(--pass)}
-.stage-tabs button:focus-visible{outline:3px solid var(--stitch);outline-offset:1px}
+/* The guide's stages (tool page only): numbered text tabs, no box. The current stage is in ink, underlined 2px in ink;
+   a finished stage's number turns --pass; the rest are --ink-2. */
+.stage-tabs{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 24px;list-style:none;padding:0;margin:0 0 14px}
+.stage-tabs li{display:flex;align-items:baseline}
+.stage-tabs button{display:inline-flex;align-items:baseline;justify-content:center;gap:7px;min-width:24px;min-height:40px;padding:10px 0 8px;border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--ink-2);font:500 .95rem/1.2 var(--sans);cursor:pointer;transition:color .2s,border-color .2s}
+.stage-tabs button:hover{color:var(--ink);border-bottom-color:var(--line-ctl)}
+.stage-tabs .n{font:600 .85rem/1.2 var(--sans);font-variant-numeric:tabular-nums;color:var(--ink-3)}
+.stage-tabs button[aria-current=step]{color:var(--ink);border-bottom-color:var(--ink)}
+.stage-tabs button[aria-current=step] .n{color:var(--ink)}
+.stage-tabs button.done .n{color:var(--pass)}
+.stage-tabs button:focus-visible{outline:3px solid var(--stitch);outline-offset:2px}
 .inst-stage[hidden]{display:none}
 .inst-stage+.inst-stage{margin-top:6px}
 .js .inst-check>h4:first-child{display:none}
 .js .inst-stage .open-hint:first-child{margin-top:10px}
-.stage-nav{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:20px;padding-top:14px;border-top:1px solid color-mix(in srgb,var(--ink-2) 18%,transparent)}
+.stage-nav{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--rule)}
 .stage-nav .stage-next{margin-left:auto}
-@media (max-width:520px){.stage-tabs{flex-wrap:nowrap}.stage-tabs button:not([aria-current]) .lbl{display:none}.stage-tabs button:not([aria-current]){padding-right:5px}}
+/* On a phone every stage keeps its name (a bare number reads as a stray digit); the row wraps if it must. */
+@media (max-width:520px){.stage-tabs{gap:0 18px}}
 .steps{padding-left:24px;margin:0}.steps li{margin-bottom:12px}.steps li::marker{font:700 .9rem var(--display);color:var(--ink-2)}.steps li p{margin-bottom:4px}
 .caution{color:var(--caution)}
-.issues{list-style:none;padding:0}.issues li{padding:10px 12px;margin-bottom:8px;border-radius:var(--r-ctl);background:var(--tag)}
+/* README against reality: rows on hairlines (in his answer, his line colour), never tiles. */
+.issues{list-style:none;padding:0;margin:0}
+.issues li{padding:8px 0;margin:0}
+.issues li+li{border-top:1px solid var(--hair,var(--rule))}
 .t-foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:16px}
 .t-foot a{display:inline-flex;align-items:center;gap:6px;font:500 .95rem/1.3 var(--sans);text-underline-offset:4px}
 .t-foot .grow{flex:1}
-.t-foot .more .i,.pick .chip-compare .i{display:none}
+.t-foot .more .i{display:none}
 .chip-compare{min-height:36px}
-.outside{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 18px;margin:36px 0 0;padding:22px;border-radius:var(--r-card);border:2px dashed var(--rule);color:var(--ink-2);max-width:none}
-.outside>.i{grid-row:1/5;width:28px;height:28px;color:var(--ink-2)}
+/* The unverified option: on the page ground under a hairline, not a card. No stitch, no badge, no steps, no link:
+   the missing record is the label, and the line under its name says so in the caution tone. */
+.outside{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 16px;margin:40px 0 0;padding:20px 0 0;border-top:1px solid var(--rule);color:var(--ink-2);max-width:none}
+.outside>.i{grid-row:1/5;width:24px;height:24px;margin-top:2px;color:var(--ink-2)}
 .outside h3{font:600 1.1rem/1.35 var(--sans);letter-spacing:0;color:var(--ink);margin-bottom:6px}
-.unchecked{display:inline-block;background:var(--caution-soft);color:var(--caution);border-radius:var(--r-ctl);padding:8px 12px;font-weight:600;max-width:none}
+.unchecked{color:var(--caution);font-weight:600;max-width:none}
 .nofit{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:40px;align-items:start}
-.nofit .outside{margin:0}
+/* Beside Fitz's note, the unverified option's hairline lines up with the top of the head (its 40px margin). */
+.nofit .outside{margin:40px 0 0}
 .best-free{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 40px;align-items:start}
 .best-free>p:first-child{grid-row:span 2}
 .sbs{margin-top:24px}
@@ -687,7 +744,7 @@ details[open]:not(.menu)>summary:not(:has(>.i))::before{transform:rotate(180deg)
 .loading .bubble h2{font-size:1.35rem}
 .loading ol{color:var(--ink-2);padding-left:20px;margin:10px 0 8px;font-size:.95rem}
 .loading .quiet{color:var(--ink-3)}
-/* the outline lines up under the bubble: Fitz (104px) and the 12px gap */
+/* The skeleton lines up under the bubble (Fitz's 104px and the 12px gap). */
 .loading .skel{max-width:760px;margin-left:116px}
 @media (max-width:640px){.loading .skel{margin-left:0}}
 .unroll{position:relative;height:12px;max-width:420px;margin-top:14px;background:
@@ -699,6 +756,10 @@ repeating-linear-gradient(90deg,color-mix(in srgb,var(--tape-ink) 65%,transparen
 linear-gradient(var(--tape-tab),var(--tape-tab)) left/12px 100% no-repeat,
 var(--tape);
 clip-path:inset(0 40% 0 0);animation:unroll 2.4s var(--ease-io) infinite alternate}
+/* The cut corner: only the two conversation surfaces, your request and Fitz's answer (the first pick, his waiting words),
+   have their top-right corner cut off like a tailor's label. Nothing else gets it. Where corner-shape is not supported
+   the corner is the plain 4px one. (.res-head .bubble has no surface, so the cut does not show there.) */
+@supports (corner-shape:bevel){.ask-card,.bubble,.picks .pick:first-child{border-top-right-radius:var(--r-cut);corner-top-right-shape:bevel}}
 `;
 
 const PAGES = `
@@ -746,67 +807,61 @@ body.is-results .home-only{display:none}
 .home-only .stages::before,.home-only .stage-fitz{display:none}
 .home-only .stage{text-align:left;justify-items:start;align-items:start;padding-top:16px;border-top:1px solid var(--rule)}
 .home-only .stage h3::before{content:counter(stage);counter-increment:stage;display:block;margin-bottom:10px;font:600 .9rem/1 var(--sans);letter-spacing:0;color:var(--ink-3)}
-.stage-ui{background:var(--tag);border-radius:var(--r-card);padding:14px 16px;box-shadow:var(--lift-1);font-size:var(--t-small);min-height:180px}
-.stage-ui .ui-title{font:700 .85rem/1.3 var(--display);color:var(--ink-2);margin-bottom:10px}
-.stage-ui dl{margin:0}.stage-ui dl div{display:grid;grid-template-columns:84px minmax(0,1fr);gap:8px;padding:3px 0}
-.stage-ui dt{color:var(--ink-2)}.stage-ui dd{margin:0}
-.stage-ui pre{background:var(--code-bg);color:var(--ink);border:1px solid var(--rule);border-radius:8px;padding:8px 10px 8px calc(10px + 2ch);text-indent:-2ch;margin:0 0 8px;white-space:pre-wrap;word-break:break-all;font-size:.8rem}
-.stage-ui .why li{margin-bottom:8px}
-.stage-ui .level{font-size:.9rem}
 .diff{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;margin:8px 0 0}
 
-/* fresh runs */
-.fresh{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:40px;align-items:start}
-.fix-card{background:var(--tag);border-radius:var(--r-card);padding:20px 22px;box-shadow:var(--lift-1)}
-.fix-card h3{margin-bottom:10px}
-.fix-kicker{display:flex;align-items:center;gap:8px;font:600 .85rem/1.2 var(--sans);color:var(--ink-2);margin:0 0 6px}
-.fix-kicker .i,.run-row .kind .i{display:none}
-.fix-card pre{background:var(--code-bg);color:var(--ink);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px calc(12px + 2ch);text-indent:-2ch;margin:10px 0 0;white-space:pre-wrap;word-break:break-all;font-size:.85rem}
-.fix-card figcaption{font-size:var(--t-small);color:var(--ink-2);margin-top:10px}
-.readme-vs{display:grid;gap:6px;margin:10px 0 0;padding:0;list-style:none}
-.readme-vs li{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px;font-size:.92rem}
-.readme-vs b{font:700 .8rem/1.6 var(--display)}
-.readme-vs .was b{color:var(--fail)}.readme-vs .now b{color:var(--pass)}
-.runs-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.run-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;align-items:center;padding:14px 18px;background:var(--tag);border-radius:var(--r-card);box-shadow:var(--lift-1);transition:box-shadow .2s,transform .2s var(--ease-out)}
-.run-row:hover{box-shadow:var(--lift-2);transform:translateY(-1px)}
-.run-row a.name{font:700 1.1rem/1.2 var(--display);text-decoration:none}
+/* Recently tested: a ledger on the page ground, no cards. One row per run between hairlines: the day it ran (tabular,
+   like a fitting book), the tool and its line, then its kind and the system it ran on; the whole row opens the tool.
+   Beside it, one README the run corrected, as a left-ruled quote (the same 2px rule as a command: verbatim from the run). */
+.fresh{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:40px 64px;align-items:start}
+.runs-list{list-style:none;margin:0;padding:0;border-bottom:1px solid var(--rule)}
+.run-row{position:relative;display:grid;grid-template-columns:4.75rem minmax(0,1fr) auto;grid-template-areas:"when what meta";gap:4px 24px;align-items:baseline;padding:16px 0;border-top:1px solid var(--rule)}
+.run-row .when{grid-area:when;font:500 .9rem/1.4 var(--sans);color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.run-row .what{grid-area:what;min-width:0}
+.name-line{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:0}
+.run-row a.name{font:700 1.15rem/1.25 var(--display);text-decoration:none}
 .run-row a.name::after{content:"";position:absolute;inset:0}
-.run-row{position:relative}
-.run-row .meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:var(--t-small);color:var(--ink-2)}
-.run-row .meta span{display:inline-flex;align-items:center;gap:5px}
-.run-row .meta{position:relative;z-index:1}
-.run-row .sum{grid-column:1/-1;margin:0;color:var(--ink-2);font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.run-row:hover a.name{text-decoration:underline;text-decoration-color:var(--stitch);text-decoration-thickness:2px;text-underline-offset:4px}
+.run-row .sum{margin:4px 0 0;max-width:none;color:var(--ink-2);font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.run-row .meta{grid-area:meta;position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin:0;font-size:var(--t-small);color:var(--ink-2);white-space:nowrap}
+.run-row .kind .i{display:none}
+.fix{padding-top:16px;border-top:1px solid var(--rule)}
+.fix-kicker{font:500 .9rem/1.4 var(--sans);color:var(--ink-3);margin:0 0 2px}
+.fix h3{font-size:1.15rem;margin:0 0 16px}
+.fix h3 a{text-decoration-color:var(--line-ctl)}
+.fix h3 a:hover{text-decoration-color:var(--stitch)}
+.readme-vs{display:grid;gap:14px;margin:0;padding:2px 0 2px 18px;list-style:none;border-left:2px solid var(--line-ctl)}
+.readme-vs li{display:grid;gap:2px;margin:0}
+.readme-vs b{font:600 .85rem/1.4 var(--sans)}
+.readme-vs .was b{color:var(--fail)}.readme-vs .now b{color:var(--pass)}
+.readme-vs .was span{color:var(--ink-2);font-size:.95rem}
+.readme-vs .now span{color:var(--ink);font-size:1.05rem;line-height:1.5}
+.fix figcaption{margin-top:14px;font-size:var(--t-small);color:var(--ink-3)}
 
-/* care label: Fitz's rules */
-.care{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:48px;align-items:center}
+/* Fitz is on your side: the rules as a plain list between hairlines on the page ground (no card, no icons: the words say it) */
+.care{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:32px 64px;align-items:start}
 .care h2{margin-bottom:14px}
-.agents-band h2{margin-bottom:10px}
-/* Fitz's rules: a plain card, the rules one per line on hairlines (no tilt, no punched hole, no capitals) */
-.label-tag{position:relative;background:var(--tag);border-radius:var(--r-card);padding:24px 28px;box-shadow:var(--lift-1)}
-.rules{list-style:none;margin:0;padding:0;display:grid;gap:0}
-.rules li{display:block;padding:12px 0;border-top:1px solid var(--rule)}
-.rules li:first-child{border-top:0;padding-top:0}
-.rules li:last-child{padding-bottom:0}
-.rules .i{display:none}
-.rules b{display:block;font:600 1.05rem/1.35 var(--display)}
-.rules span{color:var(--ink-2);font-size:.95rem}
+.rules{list-style:none;margin:0;padding:0;border-bottom:1px solid var(--rule)}
+.rules li{margin:0;padding:12px 0;border-top:1px solid var(--rule);font:600 1.05rem/1.35 var(--display)}
 
-/* agents: an ordinary card on the page (no mat) */
-.agents-band{background:var(--tag);color:var(--ink);box-shadow:var(--lift-1);border-radius:var(--r-card);padding:clamp(24px,3.5vw,40px);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px 40px;align-items:center}
-.agents-band h2{color:var(--ink)}
-.agents-band p{color:var(--ink-2);font-size:var(--t-lead)}
-.agents-band .cmd{max-width:780px;margin-top:18px}
-.agents-band .btn>.i{display:none}
+/* Use it from your agent: a section on the ground under a hairline; the command is the left-ruled block, its way on a link */
+.agents-band{padding-top:32px;border-top:1px solid var(--rule)}
+.agents-band .sec-head{margin-bottom:20px}
+.agents-band .cmd{max-width:780px;margin:0}
 
 /* detail and compare */
 .layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:40px;align-items:start;margin-top:40px}
 .side{position:sticky;top:20px;display:grid;gap:20px}
-.panel{background:var(--tag);border-radius:var(--r-card);padding:20px 22px;box-shadow:var(--lift-1)}
+/* A panel is a group on the page ground under a hairline, not a card. */
+.panel{background:none;border-radius:0;box-shadow:none;padding:16px 0 0;border-top:1px solid var(--rule)}
 .panel h2,.panel h3{font-size:1.1rem;margin-bottom:12px}
-/* The scores sit in At a glance as quiet readings: the tape's ticks and the number stay, the yellow is kept for the screen's one action. */
-.panel-measure{margin-top:16px;padding:16px 0 0;background:none;border-radius:0;border-top:1px solid var(--rule);gap:14px}
+/* At a glance is a measurement sheet (measure()); a kind says its name, so its mark goes. */
+.glance-sheet .kind .i{display:none}
+.glance-sheet .kind{display:inline;vertical-align:baseline}
+/* The scores sit under the sheet as quiet readings: the tape's ticks and the number stay, the yellow is kept for the screen's one action. */
+.panel-measure{display:grid;gap:14px;margin-top:14px;padding:16px 0 0;border-top:1px solid var(--rule)}
 .panel-measure .meter-label{font:500 .85rem/1.2 var(--sans);color:var(--ink-3)}
+/* Every reading's track is the same length: the number's column is kept even where a reading has no number (Features checked). */
+.panel-measure .meter{grid-template-columns:minmax(0,1fr) minmax(2.4rem,auto)}
 .panel-measure .meter .tape{height:8px}
 .panel-measure .meter-read{font:600 1.05rem/1 var(--sans)}
 .panel-measure .meter .meter-wide,.panel-measure .meter-none .meter-read{font:500 var(--t-small)/1.3 var(--sans);color:var(--ink-2)}
@@ -819,7 +874,10 @@ body.is-results .home-only{display:none}
 .block{margin-bottom:48px}
 .block>h2{font-size:1.5rem;margin-bottom:14px}
 .block h3{margin:24px 0 8px}
-.block .run-card h3,.block .run-head h3{margin:0}
+.block .run-head h3{margin:0}
+/* A tool page is a worksheet: each section sits on the page ground under a hairline (no cards), the aside's groups
+   under theirs, so the two columns start on one ruled line. */
+.tool-main .block{padding-top:20px;border-top:1px solid var(--rule)}
 /* tool page: a quiet head on the page ground (name, one sentence, the facts and links in a line), then the clip */
 .tool-head{padding-top:16px}
 .tool-head .head-row{align-items:end;padding-bottom:24px}
@@ -841,7 +899,6 @@ body.is-results .home-only{display:none}
 .tool-link{font:500 .92rem/1.4 var(--sans);color:var(--ink);text-decoration:underline;text-decoration-color:var(--line-ctl);text-underline-offset:4px}
 .tool-link:hover{text-decoration-color:var(--stitch)}
 .tool-head .chip-compare{min-height:32px;padding:0 12px;font-size:.85rem}
-.tool-head .chip-compare .i{display:none}
 .tool-head .fitz{flex:none;margin:0}
 @media (max-width:640px){.tool-links{padding-left:0;border-left:0}.tool-head .lede{font-size:1.02rem}}
 /* The clip with chapters gets its own row: the player as wide as the clip can be in the first view; right beside it,
@@ -857,14 +914,17 @@ body.is-results .home-only{display:none}
 /* The clip gives up width, never its bar: at any window height the head, the clip and its bar (play, chapters) fit
    in the first view, down to a 280px-tall clip. The player shrinks to the clip, so there are no black bars beside it. */
 .showcase video{display:block;width:auto;max-width:100%;height:auto;max-height:max(280px,calc(100svh - 356px));object-fit:contain;background:#000}
+/* With tools pinned, the compare tray covers the window's foot: the clip gives up the tray's height too, so its bar stays in view. */
+body.has-tray .showcase video{max-height:max(280px,calc(100svh - 356px - var(--tray-h)))}
 .showcase figcaption{margin-top:8px;font-size:var(--t-small);color:var(--ink-3)}
-.player{width:fit-content;max-width:100%;border-radius:12px;overflow:hidden;background:#000}
+/* Media, not a card: the player keeps its dark frame with straight edges. */
+.player{width:fit-content;max-width:100%;border-radius:0;overflow:hidden;background:#000}
 .player:fullscreen{display:flex;flex-direction:column;justify-content:center;width:100%;max-width:none;border-radius:0}
 .player:fullscreen video{flex:1;width:100%;min-height:0;max-height:none}
 /* The player's own bar is dark in both schemes, as a player is; its fill is Fitz's tape running along the chapters. */
 .player-bar{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#0E0F0C;color:#EBEAE2}
 .player-bar[hidden]{display:none}
-.player-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border:0;border-radius:8px;background:none;color:inherit;cursor:pointer;flex:none}
+.player-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border:0;border-radius:var(--r-ctl);background:none;color:inherit;cursor:pointer;flex:none}
 .player-btn:hover{background:rgb(235 234 226/.12)}
 .player-btn .i{width:20px;height:20px}
 .player-btn .i+.i,.player-btn.is-playing .i:first-child,.player-btn.is-muted .i:first-child{display:none}
@@ -874,7 +934,7 @@ body.is-results .home-only{display:none}
 .chap-seg{position:relative;flex:1 1 0;min-width:4px;height:6px;border-radius:2px;background:rgb(235 234 226/.5);overflow:hidden;transition:height .12s}
 .chap-track:hover .chap-seg,.chap-track:focus-visible .chap-seg{height:10px}
 .chap-fill{position:absolute;inset:0;background:var(--tape);transform-origin:left center;transform:scaleX(0)}
-.chap-tip{position:absolute;bottom:30px;transform:translateX(-50%);padding:4px 8px;border-radius:6px;background:var(--raised);color:var(--ink);font-size:.8rem;white-space:nowrap;box-shadow:var(--lift-2);pointer-events:none}
+.chap-tip{position:absolute;bottom:30px;transform:translateX(-50%);padding:4px 8px;border-radius:var(--r-ctl);background:var(--raised);color:var(--ink);font-size:.8rem;white-space:nowrap;box-shadow:var(--lift-2);pointer-events:none}
 .player-time{font-size:.85rem;font-variant-numeric:tabular-nums;white-space:nowrap}
 .chap-head{font:600 .85rem/1.2 var(--sans);letter-spacing:0;color:var(--ink-3);margin:0 0 8px}
 .chapters{list-style:none;padding:0;margin:0;display:grid;gap:0;border-bottom:1px solid var(--rule)}
@@ -888,7 +948,7 @@ body.is-results .home-only{display:none}
 @media (max-width:520px){.player-time{display:none}.player-bar{gap:4px;padding:4px 6px}}
 /* What it does: each feature a line on the page, its state in words at the end (green when a run ticked it) */
 .about .fit{font:500 1.1rem/1.5 var(--sans);letter-spacing:0;color:var(--ink-2);margin:0 0 16px;max-width:62ch}
-.feat-list{list-style:none;padding:0;margin:0;display:grid;gap:0;border-bottom:1px solid var(--rule)}
+.feat-list{list-style:none;padding:0;margin:0;display:grid;gap:0}
 .feat-list>li{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:11px 2px;border-top:1px solid var(--rule)}
 .feat-list>li:has(.how-to[open]){align-items:start}
 .feat-state{display:inline-flex;align-items:center;gap:6px;font:600 .88rem/1.3 var(--sans);white-space:nowrap}
@@ -899,25 +959,21 @@ body.is-results .home-only{display:none}
 .feat-state[data-tip]{text-decoration:underline dotted;text-decoration-color:var(--line-ctl);text-underline-offset:4px}
 .feat-state:focus-visible{outline:3px solid var(--stitch);outline-offset:2px}
 .feat-state[data-tip]{position:relative}
-.feat-state[data-tip]:hover::after,.feat-state[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:auto;right:0;bottom:calc(100% + 6px);z-index:3;padding:6px 9px;border-radius:6px;background:var(--ink);color:var(--paper);font:600 .78rem/1.3 var(--sans);width:max-content;max-width:260px;white-space:normal;pointer-events:none}
+.feat-state[data-tip]:hover::after,.feat-state[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:auto;right:0;bottom:calc(100% + 6px);z-index:3;padding:6px 9px;border-radius:var(--r-ctl);background:var(--ink);color:var(--paper);font:600 .78rem/1.3 var(--sans);width:max-content;max-width:260px;white-space:normal;pointer-events:none}
 .feat-open .feat-title{color:var(--ink-2)}
 @media (hover:none){.feat-state[data-tip]{cursor:default}}
-.feat-check summary{font-size:var(--t-small);color:var(--pass);font-weight:600}
-.feat-check code{display:block;margin-top:6px;padding:8px 10px;border-radius:8px;background:var(--code-bg);color:var(--ink);font-size:.8rem;overflow-x:auto;white-space:pre}
 .side a{overflow-wrap:anywhere}
 .uses{columns:2;column-gap:32px}.uses li{break-inside:avoid;margin-bottom:6px}
-.run-card{background:var(--tag);border-radius:var(--r-card);padding:22px 24px;box-shadow:var(--lift-1);margin-bottom:20px}
-.run-video{margin:14px 0 16px}
-.run-video video{display:block;width:100%;max-width:720px;height:auto;border-radius:var(--r-ctl);background:#000}
-.run-video figcaption{margin-top:8px;font-size:var(--t-small);color:var(--ink-2);max-width:720px}
-.run-video .raw ul{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:6px}
-.run-video .hash{overflow-wrap:anywhere;word-break:break-all;font-size:.8rem}
-/* A web app's "Open it": the address in a quiet frame on the card, the one yellow button at its end */
-.run-card .web-bar{background:transparent;box-shadow:inset 0 0 0 1px var(--rule);border-radius:var(--r-ctl)}
-.run-card .web-bar .btn{border-radius:var(--r-ctl)}
-.run-card .web-facts-grid .i,.run-card .web-facts-grid .yes .i,.run-card .web-facts-grid .no .i{padding:0;background:none}
+/* Use it: a section on the page ground, no card. The steps are a numbered list (the number in --ink-3, tabular), each
+   command a left-ruled block under its purpose; where the README and reality differ, each difference is a row on a hairline. */
+.use-it .steps{padding-left:30px}
+.use-it .steps>li{margin-bottom:18px}
+.use-it .steps>li::marker{font:600 .95rem/1.55 var(--sans);font-variant-numeric:tabular-nums;color:var(--ink-3)}
+.use-it .steps li p{margin-bottom:2px}
+.use-it .prereq ul{margin-bottom:4px}
+/* On a phone the step number and the command's indent give back room, so a command runs about 30 characters a line. */
+@media (max-width:640px){.use-it .steps{padding-left:22px}.use-it .cmd pre{padding-left:calc(10px + 2ch)}}
 /* How far pickfit got, Good for and How pickfit tested it: below how to use it, quieter, still open to read */
-.tool-more{padding-top:36px;border-top:1px solid var(--rule)}
 .tool-more:empty{display:none}
 .tool-more .block{margin-bottom:36px}
 .tool-more .block>h2{font-size:1.25rem;margin-bottom:12px}
@@ -957,6 +1013,7 @@ body.is-results .home-only{display:none}
 .tested>summary h2{font-size:1.25rem;margin:0}
 .tested>summary .i{order:-1;color:var(--ink-2);transition:transform .25s var(--ease-out)}
 .tested[open]>summary .i{transform:rotate(180deg)}
+.tested[open]>summary{margin-bottom:10px}
 .tested-run{padding:16px 0;border-top:1px solid var(--rule)}
 .tested-run h3{display:flex;align-items:center;gap:8px;margin:0 0 8px}
 .raw-list{list-style:none;padding:0;display:grid;gap:6px}
@@ -964,15 +1021,19 @@ body.is-results .home-only{display:none}
 .run-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:center}
 .run-head h3{display:flex;align-items:center;gap:10px;font-size:1.25rem}
 .run-head .arch{font:500 .9rem/1 var(--sans);color:var(--ink-2)}
-.empty{display:flex;align-items:center;gap:20px;padding:24px;border-radius:var(--r-card);background:var(--tag);box-shadow:var(--lift-1)}
+/* An empty or not-yet-verified note: words on the page ground between two hairlines, no card (the head's Fitz is the screen's one). */
+.empty{display:flex;align-items:center;gap:20px;padding:18px 0;border-block:1px solid var(--rule)}
+.tool-main .block>.empty,.sec-tight>.empty{border-top:0;padding-top:4px}
+.tool-main .block>.empty{border-bottom:0}
 .empty .fitz{flex:none}
 .empty p{margin:0}
 .empty h2{font-size:var(--t-head);margin-bottom:6px}
 /* compare: the same grammar as the rest: plain-text facts, quiet readings, pills only for the system switch */
 .cmp-pick{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:20px}
-.cmp-pick input[list],.cmp-pick input[type=text]{min-height:44px;padding:0 14px;border:0;border-radius:var(--r-ctl);background:var(--tag);color:var(--ink);font:500 1rem var(--sans);min-width:min(320px,100%);box-shadow:inset 0 0 0 1px var(--line-ctl)}
+/* The name field is a control: no fill, its 1px --line-ctl edge (3:1) is the boundary. */
+.cmp-pick input[list],.cmp-pick input[type=text]{min-height:44px;padding:0 14px;border:0;border-radius:var(--r-ctl);background:transparent;color:var(--ink);font:500 1rem var(--sans);min-width:min(320px,100%);box-shadow:inset 0 0 0 1px var(--line-ctl)}
 .cmp-pick input::placeholder{color:var(--ink-3)}
-.cmp-table thead th,.cmp-table thead td{background:var(--tag)}
+.cmp-table thead th,.cmp-table thead td{background:var(--paper)}
 .cmp-table th[scope=col]{min-width:200px}
 .cmp-table th[scope=col] a{font:700 1.1rem/1.2 var(--display);color:var(--ink);text-decoration:none}
 .cmp-table th[scope=col] a:hover{text-decoration:underline}
@@ -989,13 +1050,11 @@ body.is-results .home-only{display:none}
 .cmp-table .meter-label{display:none}
 .cmp-table th[scope=col] a.cmp-remove{color:var(--ink-2)}
 .cmp-table th[scope=col] a.cmp-remove .i{width:16px;height:16px}
-.cmp-links{display:inline-flex;gap:8px}
-.icon-link{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:8px;background:transparent;box-shadow:inset 0 0 0 1px var(--line-ctl);color:var(--ink)}
-.icon-link:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
-.icon-link .i{width:17px;height:17px}
+/* The outside links in words, as on a tool page: no boxed marks. */
+.cmp-links{display:inline-flex;flex-wrap:wrap;gap:4px 14px}
 body.has-tray{padding-bottom:72px}
 /* Remove sits in the column head's top-right corner (the sticky head anchors it); the name keeps clear of it. */
-.cmp-remove{position:absolute;top:8px;right:8px;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;color:var(--ink-2)}
+.cmp-remove{position:absolute;top:8px;right:8px;display:grid;place-items:center;width:28px;height:28px;border-radius:var(--r-ctl);color:var(--ink-2)}
 .cmp-table th[scope=col]:has(.cmp-remove){padding-right:44px}
 .cmp-remove[data-tip]:hover::after{bottom:auto;top:calc(100% + 4px);left:auto;right:0}
 .cmp-remove:hover{background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink)}
@@ -1017,19 +1076,21 @@ body.has-tray{padding-bottom:72px}
 .filters legend{font:600 .85rem/1 var(--sans);color:var(--ink-3);margin-bottom:10px;padding:0}
 .filters .chips{display:flex;flex-wrap:wrap;gap:6px}
 .filters .chip{min-height:34px;padding:0 12px;font-size:.86rem}
-.find-in{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:var(--r-ctl);background:var(--tag);box-shadow:inset 0 0 0 1px var(--line-ctl)}
+.find-in{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:var(--r-ctl);background:transparent;box-shadow:inset 0 0 0 1px var(--line-ctl)}
 .find-in .i{color:var(--ink-3)}
 .find-in input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:500 1rem var(--sans)}
 .find-in input::placeholder{color:var(--ink-3)}
 .find-in input:focus{outline:none}
 .find-in:focus-within{outline:3px solid var(--stitch);outline-offset:2px}
-/* A card answers three things: what it is, where pickfit ran it (three stitches and the green OS marks), and whether it costs money */
-.cat-grid{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-.cat-card{position:relative;display:flex;flex-direction:column;gap:6px;padding:18px 20px 14px;background:var(--tag);border-radius:var(--r-card);box-shadow:var(--lift-1);transition:box-shadow .2s}
-.cat-card:hover{box-shadow:var(--lift-1),0 0 0 1px var(--line-ctl)}
+/* Browse is a catalogue, not a card grid: each entry sits on the page ground under a hairline, in columns where there is
+   room (one on a phone). An entry answers three things: what it is, where pickfit ran it (three stitches and the green OS
+   marks), and whether it costs money. The whole entry opens the tool; hovering it underlines the name. */
+.cat-grid{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0 36px;border-bottom:1px solid var(--rule)}
+.cat-card{position:relative;display:flex;flex-direction:column;gap:6px;padding:16px 0 18px;border-top:1px solid var(--rule)}
 .cat-card h3{font-size:1.1rem}
 .cat-card h3 a{text-decoration:none}
-.cat-card h3 a::after{content:"";position:absolute;inset:0;border-radius:var(--r-card)}
+.cat-card:hover h3 a{text-decoration:underline;text-decoration-color:var(--stitch);text-decoration-thickness:2px}
+.cat-card h3 a::after{content:"";position:absolute;inset:0}
 .cat-card p{margin:0;color:var(--ink-2);font-size:.92rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .cat-card p.small{color:var(--ink-3);font-size:.86rem;margin-bottom:4px}
 .cat-card .kind .i{display:none}
@@ -1037,40 +1098,52 @@ body.has-tray{padding-bottom:72px}
 .cat-card .row .badge{position:relative;z-index:1;padding:0;background:none;border-radius:0;font:600 .85rem/1.3 var(--sans)}
 .cat-card .badge-pass{color:var(--pass)}
 .cat-card .badge-gem{color:var(--ink-3)}
-/* The gem is the badge's only content (its name is the tooltip and the label); a little larger than a text icon. */
-.cat-card .badge-gem .i{width:17px;height:17px;stroke-width:1.75}
 .cat-card .badge-free{color:var(--ink-2)}
 .cat-card .badge-quiet{color:var(--ink-3);font-weight:500}
 .cat-card .badge-quiet .i{display:none}
 /* Compare: an icon-only switch at the row's end, shown on hover or keyboard focus (always on touch, and once ticked) */
-.cat-card .chip-compare{position:relative;z-index:1;margin-left:auto;width:32px;min-height:32px;padding:0;justify-content:center;border-radius:8px;opacity:0;transition:opacity .15s}
+.cat-card .chip-compare{position:relative;z-index:1;margin-left:auto;width:32px;min-height:32px;padding:0;justify-content:center;border-radius:var(--r-pill);opacity:0;transition:opacity .15s}
 .cat-card .chip-compare span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .cat-card:hover .chip-compare,.cat-card:focus-within .chip-compare,.cat-card .chip-compare:has(input:checked){opacity:1}
 @media (hover:none){.cat-card .chip-compare{opacity:1}}
-/* Ticked, the icon-only button shows the check in place of its mark. */
-.cat-card .chip-compare:has(input:checked) .i{display:none}
+/* Pinned, the icon-only button shows the check in place of its pin. */
 .cat-card .chip-compare::before{margin:0}
 @media (hover:hover){.cat-card .chip-compare:hover::after{content:"Compare";left:auto;right:0}}
 .cat-card .seam{width:31px;margin:8px 0 0;animation:none}
-.cat-card.unverified{background:transparent;box-shadow:none;border:2px dashed var(--rule)}
+/* Not verified: no stitch, and its line is dashed (a basting line, not a seam); the words say "Not verified". */
+.cat-card.unverified{border-top-style:dashed;border-top-color:var(--line-ctl)}
 .cat-count{color:var(--ink-3);margin:0 0 16px}
+/* Filtered to nothing, the catalogue's closing line is the note's top line. */
+.cat-grid~.empty{border-top:0}
 .js .cat-card.later{display:none}.js .filtering .cat-card.later{display:flex}
 .more-filters>summary{font:600 .9rem/1 var(--sans);color:var(--ink-2);padding:6px 0;cursor:pointer}
 .more-filters>summary:hover{color:var(--ink)}
 .more-filters[open]>summary{margin-bottom:14px}
 .more-filters{display:grid;gap:18px}
+.more-filters>fieldset+fieldset{margin-top:20px}
 .pager{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:32px}
-/* how + agents (reading pages) */
+/* While the text filter runs, every match shows, so Show more has nothing to add. */
+.cat-grid.filtering+.pager{display:none}
+/* how + agents (reading pages): all on the page ground; groups are set apart by hairlines and space, never boxed */
 .prose{max-width:72ch}
 .prose h2{margin:56px 0 14px}
 .prose h3{margin:28px 0 8px}
 .prose li{margin-bottom:6px}
-.levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;list-style:none;padding:0;margin:20px 0}
-.levels li{background:var(--tag);border-radius:var(--r-card);padding:16px 18px;box-shadow:var(--lift-1)}
-.levels b{display:flex;align-items:center;gap:8px;font:700 1.05rem/1.3 var(--display);margin-bottom:6px}
-.tip{position:relative;margin:56px 0 24px;padding:22px 24px 20px;border-radius:var(--r-card);background:var(--tag);box-shadow:var(--lift-1)}
+.levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 32px;list-style:none;padding:0;margin:20px 0}
+/* What "verified" means: one row per level between hairlines, the level with its mark, then what it proves */
+ul.levels{display:block;border-bottom:1px solid var(--rule)}
+ul.levels li{display:grid;grid-template-columns:minmax(0,15rem) minmax(0,1fr);gap:4px 24px;align-items:baseline;margin:0;padding:12px 0;border-top:1px solid var(--rule);color:var(--ink-2)}
+.levels b{display:flex;align-items:center;gap:8px;font:700 1.05rem/1.3 var(--display);color:var(--ink)}
+/* A note from Fitz: on the ground under a hairline, Fitz peeking over the line */
+.tip{position:relative;margin:88px 0 24px;padding:20px 0 0;border-top:1px solid var(--rule)}
 .tip .fitz-peek{position:absolute;top:-52px;right:28px;width:94px;height:auto}
-.tip h3{margin-bottom:6px}
+.tip h3{margin:0 0 6px}
+/* A sentence to say to your agent: still verbatim and copied exactly, but it wraps between words like prose, with no hanging indent */
+.prompt .cmd pre{word-break:normal;overflow-wrap:anywhere;text-indent:0;padding-left:14px}
+/* /agents: its one action is copying the first command, so that Copy is the screen's one solid yellow (as on results) */
+.agents-doc>.cmd:first-of-type .copy{background:var(--tape);color:var(--tape-ink);border:1px solid var(--tape-edge);text-decoration:none;min-height:32px;padding:0 14px;font-weight:700}
+.agents-doc>.cmd:first-of-type .copy:hover{background:color-mix(in srgb,var(--tape) 88%,#fff)}
+.agents-doc>.cmd:first-of-type .copy.done{background:transparent;color:var(--pass);border-color:var(--pass)}
 .nf{display:grid;place-items:center;text-align:center;gap:16px;padding:48px 0}
 `;
 
@@ -1111,6 +1184,9 @@ body:not(.is-results) .hero-fitz .fitz{width:clamp(150px,16vw,220px)}
 }
 @media (max-width:900px){
 .nav{display:none}.menu{display:block}
+/* One column: the list above already ends on a hairline, so the next group does not draw its own (never two rules in a row). */
+.fix{border-top:0;padding-top:0}
+.agents-band{border-top:0;padding-top:0}
 .lang-switch{padding-left:0;border-left:0}
 .hero-grid{grid-template-columns:minmax(0,1fr)}
 .hero-fitz{order:-1;justify-self:start;margin:0;translate:none}
@@ -1121,7 +1197,6 @@ body.is-results .hero-fitz{display:none}
 .t-top{grid-template-columns:minmax(0,1fr)}
 .t-top .badges{justify-content:flex-start;max-width:none}
 .fresh,.care,.nofit,.best-free{grid-template-columns:minmax(0,1fr)}
-.agents-band{grid-template-columns:minmax(0,1fr)}
 .foot-row{grid-template-columns:minmax(0,1fr)}
 .res-head{grid-template-columns:minmax(0,1fr)}.res-tools{justify-content:flex-start}
 .head-row{grid-template-columns:minmax(0,1fr)}
@@ -1139,25 +1214,34 @@ body.is-results .hero-fitz{display:none}
 .stages{gap:28px 12px}
 .stage-fitz{height:100px}.stage-fitz .fitz{height:90px}
 .stage h3{font-size:1.1rem}.stage>p{font-size:.9rem}
-.pick,.picks .pick:first-child{padding:22px 18px 18px}
+.picks .pick:first-child{padding:22px 18px 18px}
 .picks .pick:first-child .fit{font-size:1.1rem}
-.t-install .cmd pre{font-size:.85rem;padding:12px 12px 12px calc(12px + 2ch)}
+.t-install .cmd pre{font-size:.85rem;padding:3px 0 3px calc(12px + 2ch)}
+/* On a phone the one yellow Copy moves up to the Install line when the block is one command (the steps joined), so
+   the command gets the full width; steps run one at a time (sudo) keep a Copy beside each. */
+.picks .pick:first-child .t-install:not(.t-elsewhere):has(>.cmd:only-of-type){position:relative}
+.js .picks .pick:first-child .t-install:not(.t-elsewhere):has(>.cmd:only-of-type)>.t-install-label{padding-right:84px;min-height:32px}
+.picks .pick:first-child .t-install:not(.t-elsewhere):has(>.cmd:only-of-type)>.cmd .copy{position:absolute;top:0;right:0}
+/* When the clipboard refuses, the Copy says to select the text, a longer word: the label makes room for it. */
+.js .picks .pick:first-child .t-install:not(.t-elsewhere):has(>.cmd:only-of-type .copy.fail)>.t-install-label{padding-right:150px}
+.cmd{column-gap:10px}
 .res-head .says{align-items:flex-start;gap:8px}
 .res-head .fitz{width:72px}
 .t-name{font-size:1.35rem}
-.glance{grid-template-columns:1fr 1fr}
-.gl{padding:11px 12px}
-.gl-value{font-size:.88rem}
 .legend div{grid-template-columns:minmax(0,1fr);gap:4px}
+ul.levels li{grid-template-columns:minmax(0,1fr)}
 .uses{columns:1}
 .says{flex-direction:column;align-items:flex-start}
 .bubble::before,.bubble::after{display:none}
 .notice{flex-direction:column;align-items:flex-start}
 .tray-list{display:none}
+.tray-mark{display:inline-flex}
 .tray-note{flex:1}
 .toasts{bottom:96px}
-.label-tag{transform:none;padding:26px 22px}
-.readme-vs li{grid-template-columns:minmax(0,1fr);gap:2px}
+/* Recently tested on a phone: the tool and its day on one line, its line under it (two at most), then kind and system in a row */
+.run-row{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"what when" "meta meta";gap:6px 16px;padding:14px 0}
+.run-row .sum{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.run-row .meta{flex-direction:row;flex-wrap:wrap;gap:4px 16px;align-items:center}
 .dt th,.dt td{padding:10px 12px}
 .cmp-table th[scope=col]{min-width:150px}
 .dt tbody th{white-space:normal;min-width:84px}
@@ -1181,13 +1265,14 @@ h1{letter-spacing:0;line-height:1.18}
 .hero .lede{max-width:none}
 h2{line-height:1.3}
 p,li,dd,summary,.lede,.st span{text-wrap:pretty}
-.gl-value{text-wrap:balance}
 .ask label,.ask textarea,.fit{letter-spacing:0}
 .fit{line-height:1.5}
 .nav a,.menu-nav a,.seg label,.chip,.btn,.res-tools .btn,.tries a,.proof li{white-space:nowrap}
 .stage>p{max-width:15em;text-wrap:balance}
-.record-title{letter-spacing:.02em}
 @media (hover:hover){.cat-card .chip-compare:hover::after{content:"比較"}}
 /* the taller Chinese head: the clip gives up the difference, so its bar stays in the first view */
 .showcase video{max-height:max(280px,calc(100svh - 372px))}
+body.has-tray .showcase video{max-height:max(280px,calc(100svh - 372px - var(--tray-h)))}
+/* The Chinese example fits one line on a phone, so the field does not hold a second empty one above the tape. */
+@media (max-width:640px){.ask textarea{min-height:1.3em}}
 `;

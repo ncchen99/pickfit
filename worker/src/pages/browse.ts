@@ -84,7 +84,8 @@ function card(entry: Entry, i: number): string {
             title: guide ? levelLabel(guide.run.level, { gui: guide.run.gui, mcp: guide.mcp }) : undefined,
           })
         : badge('quiet', L('Not verified', '未驗證'), { icon: 'circle-dashed' })) +
-    (entry.scores?.treasure ? badge('gem', L('Hidden gem', '寶藏'), { icon: 'gem', marks: '', pop: 'pop-gem' }) : '') +
+    // The gem is said in words: a stock glyph on every row was wallpaper, not a fact.
+    (entry.scores?.treasure ? badge('gem', L('Hidden gem', '寶藏'), { pop: 'pop-gem' }) : '') +
     (entry.pricing === 'free' ? badge('free', PRICE.free) : '') +
     (verified ? compareToggle(entry.slug, entry.name) : '') +
     `</div></li>`

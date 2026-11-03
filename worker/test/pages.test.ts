@@ -13,7 +13,7 @@ import { loadCatalog, type Entry } from '../src/catalog.ts';
 import { compareTable, slugsFrom } from '../src/pages/compare.ts';
 import { visualLine } from '../src/pages/tool.ts';
 import { makeWorker } from '../src/worker.ts';
-import { fixtureCatalog, fixtureIndex, makeD1 } from './helpers.ts';
+import { commandText, fixtureCatalog, fixtureIndex, makeD1 } from './helpers.ts';
 
 function site(env: Partial<Env> = {}) {
   const d1 = makeD1();
@@ -75,15 +75,15 @@ test('a tool page shows how far each verified run got, its install steps, and th
   assert.match(html, /<details class="progress-more" data-progress-more hidden><summary>Other systems/, 'the script folds the other systems');
   assert.match(html, /<li class="prog-stage prog-done"[^>]*><span class="prog-bar"><\/span><span class="prog-label">.*Installs<\/span><\/li>/);
   assert.match(html, /data-tip="Tested on macOS and Linux"><svg class="i[^"]*"[^>]*>.*?<\/svg><span aria-hidden="true">Tested<\/span><svg class="os os-macos"/, 'the systems as marks, their names in the tooltip');
-  // One install card, no fold inside it.
-  assert.match(html, /<article class="run-card install-card"><div class="os-tabs"/);
-  assert.ok(!html.includes('<details class="install"'), 'no install fold inside the run card');
+  // Use it is one section on the page ground (no card), the systems as tabs across its top, no fold inside it.
+  assert.match(html, /<div class="use-it"><div class="os-tabs"/);
+  assert.ok(!html.includes('<details class="install"'), 'no install fold inside Use it');
   assert.match(html, /<details class="block tested"><summary><h2>How pickfit tested it<\/h2>/);
   // Each run card names its system once, in the heading, with the OS mark.
   assert.match(html, /<h3><svg class="os os-macos"[^>]*><use href="#os-macos"\/><\/svg>macOS <span class="arch">arm64<\/span><\/h3>/);
   assert.match(html, /<h3><svg class="os os-linux"[^>]*><use href="#os-linux"\/><\/svg>Linux <span class="arch">x86_64<\/span><\/h3>/);
   assert.match(html, /<symbol id="os-linux"/, 'the page carries the OS marks it points at');
-  assert.match(html, /brew install fixture\/tap\/fixture-llm-runner/);
+  assert.match(commandText(html), /brew install fixture\/tap\/fixture-llm-runner/);
   // The gem badge comes from the score.
   assert.match(html, /Hidden gem/);
   assert.match(html, /aria-label="Quality: \d+ out of 100/);
@@ -98,6 +98,26 @@ test('Compare is in the nav only on /compare (the script adds it while the tray 
     assert.match(html, /<footer class="foot">.*<a href="\/compare">Compare tools<\/a>/s, path);
   }
   assert.match(navOf(await (await s.get('/compare')).text()), /<a href="\/compare" aria-current="page" data-tray-link data-tray-nav>/);
+});
+
+test('At a glance is a measurement sheet that never drops a fact: unverified and unstated stay visible, in words', async () => {
+  const sheet = (html: string) => /<dl class="measure glance-sheet">(.*?)<\/dl>/s.exec(html)?.[1] ?? '';
+  const row = (html: string, label: string) => new RegExp(`<div class="m[^"]*"><dt>${label}</dt><dd>(.*?)</dd></div>`, 's').exec(sheet(html));
+  const verified = await (await site().get('/tool/fixture-llm-runner')).text();
+  assert.ok(sheet(verified), 'the facts are one measure() sheet');
+  // What a run proved: the OS marks, each system named on hover and for screen readers (three names would not fit a row).
+  assert.match(sheet(verified), /<div class="m m-pass[^"]*"><dt>Verified on<\/dt><dd><span class="oses oses-pass" data-tip="macOS and Linux">.*?<span class="sr">macOS and Linux<\/span><\/span><\/dd>/s, 'what a run proved: marks, named');
+  // The same tool with no run and no price: both rows stay, said in words.
+  const index = fixtureIndex() as { entries: { slug: string; install: Record<string, unknown>; pricing: string | null }[] };
+  const entry = index.entries.find((e) => e.slug === 'fixture-llm-runner')!;
+  entry.install = {};
+  entry.pricing = null;
+  const worker = makeWorker(index, { fetch: (async () => { throw new Error('no model call expected'); }) as unknown as typeof fetch, now: () => new Date('2026-10-30T12:00:00Z') });
+  const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
+  const raw = await (await worker.fetch(new Request('http://127.0.0.1:8787/tool/fixture-llm-runner', { headers: { accept: 'text/html' } }), { DB: makeD1().db, MODEL_API_KEY: 'k' } as Env, ctx)).text();
+  assert.match(sheet(raw), /<div class="m m-caution[^"]*"><dt>Verified on<\/dt><dd>Not verified yet<\/dd>/);
+  assert.match(row(raw, 'Price')?.[0] ?? '', /m-quiet/);
+  assert.equal(row(raw, 'Price')?.[1], '<span class="unknown">not stated</span>');
 });
 
 test('a verified tool page leads with how to use it (how far each run got below it); an unverified one leads with that fact', async () => {

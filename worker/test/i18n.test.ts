@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import type { Env } from '../src/env.ts';
 import { L, lang, pickLang, translateWith, withLang, type Translations } from '../src/i18n.ts';
 import { makeWorker } from '../src/worker.ts';
-import { answer, fixtureIndex, makeD1, metaResponse } from './helpers.ts';
+import { answer, commandText, fixtureIndex, makeD1, metaResponse } from './helpers.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const translations = JSON.parse(readFileSync(join(HERE, 'generated', 'zh-TW.json'), 'utf8')) as Translations;
@@ -90,7 +90,7 @@ test('a tool page in zh-TW shows the translated sentences, the same command and 
   assert.match(page, /<html lang="zh-Hant-TW">/);
   assert.ok(page.includes(SUMMARY_ZH));
   assert.ok(page.includes('從專案的 tap 安裝'));
-  assert.ok(page.includes('brew install fixture/tap/fixture-llm-runner'));
+  assert.ok(commandText(page).includes('brew install fixture/tap/fixture-llm-runner'));
   assert.ok(!page.includes(SUMMARY_EN));
 
   const en = await (await send('/tool/fixture-llm-runner')).text();

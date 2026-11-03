@@ -12,7 +12,7 @@ import { catalogStats, EMPTY_FORM, esc, guiSentence, levelLabel, ranSentence, re
 import { BODY_MAX_BYTES, MAX_IN_FLIGHT, SEARCHES_PER_MINUTE, visitorKey } from '../src/web.ts';
 import { command } from '../src/ui/kit.ts';
 import { makeWorker } from '../src/worker.ts';
-import { answer, fixtureCatalog, fixtureIndex, makeD1, metaResponse } from './helpers.ts';
+import { answer, commandText, fixtureCatalog, fixtureIndex, makeD1, metaResponse } from './helpers.ts';
 
 const MAC_LLM = { need: 'run a language model offline on my laptop', os: 'macos', offline: '1' };
 const NOW = new Date('2026-10-30T12:00:00Z');
@@ -76,7 +76,7 @@ test('GET / is the page for a browser; anything else still gets the JSON health 
   assert.equal(page.headers.get('vary'), 'Accept, Cookie, Accept-Language');
   const html = await page.text();
   assert.match(html, /<form id="search"[^>]*method="post" action="\/search#results"/);
-  assert.match(html, /claude mcp add --transport http pickfit http:\/\/127\.0\.0\.1:8787\/mcp/);
+  assert.match(commandText(html), /claude mcp add --transport http pickfit http:\/\/127\.0\.0\.1:8787\/mcp/);
   // Inline script and style run only under this response's nonce.
   const nonce = /script-src 'nonce-([0-9a-f]+)'/.exec(page.headers.get('content-security-policy')!)![1];
   assert.ok(html.includes(`<script nonce="${nonce}">`) && html.includes(`<style nonce="${nonce}">`));
@@ -121,7 +121,8 @@ test('a search is find_software plus get_install_guide: reasons, verification, s
   assert.match(html, /\d+ verified tools meet your conditions; Meta’s muse-spark-1\.3 picked 2\. Code checked every reason/);
 
   // Ranked picks with the fit, cited reasons, tradeoffs, best_free and the comparison.
-  const [first, second] = html.split('<article class="pick"').slice(1);
+  // Commands read as their text (commandText: the word spans add none).
+  const [first, second] = commandText(html).split('<article class="pick"').slice(1);
   assert.match(first, /Fixture LLM Runner/);
   assert.match(first, /Serves a local model offline through an OpenAI-compatible API\./);
   assert.match(first, /<summary>Runs offline on your machine<svg[^>]*>.*?<\/svg><\/summary><p class="cite">From its profile: <code>processing<\/code> is “local”/);
@@ -315,14 +316,18 @@ test('before any search the page shows real catalog runs, never invented ones', 
   const how = html.slice(html.indexOf('<section id="how"'), html.indexOf('<section id="recent"'));
   assert.equal(how.split('<li class="stage">').length - 1, 4);
   // A README the run corrected: a real pitfall from the index, the newest hidden gem that has one.
-  const fix = html.slice(html.indexOf('<figure class="fix-card">'), html.indexOf('</figure>'));
+  const fix = html.slice(html.indexOf('<figure class="fix">'), html.indexOf('</figure>'));
   assert.match(fix, /<a href="\/tool\/fixture-llm-runner">Fixture LLM Runner<\/a>/);
   assert.match(fix, /<b>README said<\/b><span>make install<\/span>/);
   assert.match(fix, /<b>What worked<\/b><span>the install script/);
   // The newest runs: three rows, each a verified tool with where and when, linking to its profile.
-  const runs = html.slice(html.indexOf('<ul class="runs-list">'), html.indexOf('</ul></div></section>'));
+  const runsAt = html.indexOf('<ul class="runs-list">');
+  const runs = html.slice(runsAt, html.indexOf('</ul>', runsAt));
   assert.equal(runs.split('<li class="run-row">').length - 1, 3);
   assert.match(runs, /<a class="name" href="\/tool\/[a-z0-9-]+">/);
+  // Each row says when it ran (a ledger's day column) and where (the system's mark).
+  assert.equal(runs.split('<time class="when" datetime="').length - 1, 3);
+  assert.equal(runs.split('<span class="sys"').length - 1, 3);
   assert.match(html, /Of 7 tools, 6 have been installed and rerun, and 1 web app has been used in a browser\. pickfit only suggests these\./);
   // The counts in the hero are the catalog's.
   assert.match(html, /<strong>7<\/strong> READMEs read/);
@@ -335,8 +340,8 @@ test('results: claim beside evidence, no rank numerals, and "built-in is enough"
   assert.ok(html.indexOf('You may not need to install anything') < html.indexOf('<article class="pick"'));
   assert.ok(!html.includes('class="rank"') && !html.includes('t-rank'));
   for (const pick of html.split('<article class="pick"').slice(1)) {
-    // The claim and the verdict, then the stitches, the command that worked, and the record behind one expander.
-    assert.match(pick, /<p class="fit">[\s\S]*<div class="glance t-glance">[\s\S]*<div class="seam" aria-hidden="true"><\/div><div class="t-install(?: t-elsewhere)?">[\s\S]*<details class="t-more">[\s\S]*<section class="record" aria-label="Test record">/);
+    // The claim and the verdict (a measurement sheet), then the stitches, the command that worked, and the record behind one expander.
+    assert.match(pick, /<p class="fit">[\s\S]*<dl class="measure t-sheet">[\s\S]*<div class="seam" aria-hidden="true"><\/div><div class="t-install(?: t-elsewhere)?">[\s\S]*<details class="t-more">[\s\S]*<section class="record" aria-label="Test record">/);
   }
 });
 
@@ -345,7 +350,7 @@ test('the answer comes first: every step, "On X instead? Use Y." from a verified
   const transcribe = { slug: 'fixture-transcribe', fit: 'Transcribes recordings offline.', reasons: [{ claim: 'Free to use', field: 'pricing', value: 'free' }], tradeoffs: [], vs_well_known: null };
   const s = site({}, () => metaResponse(answer({ picks: [transcribe, answer().picks[0]] })));
   const need = 'transcribe a recording offline';
-  const [first, second] = (await (await s.search({ need })).text()).split('<article class="pick"').slice(1);
+  const [first, second] = commandText(await (await s.search({ need })).text()).split('<article class="pick"').slice(1);
   // A step with sudo gets a Copy of its own: pasted together, sudo's password prompt can swallow the next line.
   assert.match(first, /<div class="t-install"><p class="t-install-label">.*?<b>Install<\/b><span class="quiet">2 steps, as pickfit ran them on Linux x86_64<\/span><\/p><div class="cmd"><pre translate="no"><code>sudo apt-get install -y ffmpeg<\/code><\/pre>.*?<\/div><div class="cmd"><pre translate="no"><code>pipx install fixture-transcribe<\/code><\/pre>/);
   assert.match(first, /<p class="caution small">Uses sudo, so run the steps one at a time\.<\/p>/);
@@ -370,7 +375,8 @@ test('the answer comes first: every step, "On X instead? Use Y." from a verified
 test('a command of several lines: each line is its own block, and the text Copy reads is the command exactly', () => {
   const text = 'brew tap pasrom/meeting-transcriber\nbrew install --cask meeting-transcriber 2>&1\n\necho "<done>" && it\'s';
   const html = command(text);
-  assert.match(html, /^<div class="cmd cmd-multi"><pre translate="no"><code><span class="ln">brew tap pasrom\/meeting-transcriber\n<\/span><span class="ln">brew install --cask meeting-transcriber 2&gt;&amp;1\n<\/span>/);
+  // Each line is its own block; a word that could break at a hyphen or slash is one piece inside it.
+  assert.match(html, /^<div class="cmd cmd-multi"><pre translate="no"><code><span class="ln">brew tap <span class="w">pasrom\/meeting-transcriber<\/span>\n<\/span><span class="ln">brew install <span class="w">--cask<\/span> <span class="w">meeting-transcriber<\/span> 2&gt;&amp;1\n<\/span>/);
   const shown = /<code>(.*)<\/code>/s.exec(html)![1].replace(/<[^>]+>/g, '');
   const unesc = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'" } as Record<string, string>;
   assert.equal(shown.replace(/&(amp|lt|gt|quot|#39);/g, (m) => unesc[m]), text);

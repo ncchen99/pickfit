@@ -109,8 +109,10 @@ ${marksLegend()}
 </dl>
 </dialog>`;
 
+/** The compare tray: the pinned tools, under one filled pin (Compare is pinning). */
 const TRAY = () => `<aside class="tray" id="tray" aria-label="${L('Compare tray', '比較匣')}" hidden>
 <div class="wrap tray-row">
+<span class="tray-mark" aria-hidden="true">${icon('pin')}</span>
 <ul class="tray-list" data-tray-list></ul>
 <span class="tray-note" data-tray-note></span>
 <button type="button" class="btn btn-ghost btn-sm" data-tray-clear>${L('Clear', '清除')}</button>
