@@ -169,7 +169,8 @@ test('the how page states the scoring as score.py computes it', async () => {
   const html = await (await site().get('/how')).text();
   assert.match(html, /40%/);
   assert.match(html, /25%/);
-  assert.match(html, /quality score drops by 5%; finding none adds nothing/);
+  assert.match(html, /a major one .* takes 10% off the quality score, but only when a second, independent check/);
+  assert.match(html, /any other defect takes 5% off\. Finding none adds nothing/);
   assert.match(html, /not visually checked and keeps its score/);
   assert.doesNotMatch(html, /15%/);
   assert.match(html, /quality 80 or more and popularity 45 or less/);
@@ -197,16 +198,22 @@ test('a web app opens from an address bar that ends in the button, its facts two
 });
 
 
-test('a desktop or web app says what the visual check found: a defect and its -5%, none, or not checked', async () => {
+test('a desktop or web app says what the visual check found: a major defect -10%, minor ones -5%, none, or not checked', async () => {
   const base = fixtureIndex() as { entries: Entry[] };
   const render = (visual: Entry['visual']) => {
     const index = structuredClone(base);
     index.entries.find((e) => e.slug === 'fixture-web-sketch')!.visual = visual;
     return visualLine(loadCatalog(index).bySlug.get('fixture-web-sketch')!);
   };
-  const defect = render({ status: 'defect', factor: 0.95, defects: [{ kind: 'overlap', problem: 'A <b>button</b> covers the title.', quote: 'Sketch' }] });
-  assert.match(defect, /Visual check found a defect: −5%/);
+  const defect = render({ status: 'defect', factor: 0.95, worst: 'minor', defects: [{ kind: 'overlap', problem: 'A <b>button</b> covers the title.', quote: 'Sketch', major: false }] });
+  assert.match(defect, /Visual check found only minor defects: −5%/);
   assert.match(defect, /<li>A &lt;b&gt;button&lt;\/b&gt; covers the title\.<\/li>/);
+  assert.doesNotMatch(defect, /10%|Major:/);
+  const major = render({ status: 'defect', factor: 0.9, worst: 'major', defects: [
+    { kind: 'text_cut_off', problem: 'The status is cut off.', quote: 'Setup not', major: true },
+    { kind: 'bad_wrap', problem: 'A name breaks mid-word.', quote: 'Gottheim', major: false }] });
+  assert.match(major, /Visual check found a major defect: −10%/);
+  assert.match(major, /<li><b>Major:<\/b> The status is cut off\.<\/li><li>A name breaks mid-word\.<\/li>/);
   assert.match(render({ status: 'clean', factor: 1, defects: [] }), /Visual check: no defect found\./);
   const none = render({ status: 'not_checked' });
   assert.match(none, /Not visually checked/);

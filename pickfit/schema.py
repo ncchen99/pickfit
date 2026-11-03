@@ -1259,9 +1259,12 @@ class QualityComponents(_Model):
 
 
 class VisualDeduction(_Model):
-    """What the visual check did to the total (formulas ending +visual.v1, pickfit/score.py apply_visual)."""
+    """What the visual check did to the total (formulas ending +visual.v2, or +visual.v1 before severity counted;
+    pickfit/score.py apply_visual)."""
 
-    factor: float = Field(gt=0, le=1, description="1.0 for a clean check; 0.95 when it found an app-caused defect.")
+    factor: float = Field(gt=0, le=1, description=(
+        "1.0 for a clean check; 0.90 for an app-caused major defect a second judge agreed was major; 0.95 for any "
+        "other app-caused defect."))
     before: float | None = Field(ge=0, le=100, description="The formula's total before the factor.")
     defects: int = Field(ge=0, description="App-caused defects the check listed.")
 
@@ -1282,7 +1285,7 @@ class Quality(_Model):
     components: QualityComponents
     visual: VisualDeduction | None = Field(
         default=None, exclude_if=lambda value: value is None,
-        description="Formulas ending +visual.v1: the visual check's factor, the total before it, its app defects.")
+        description="Formulas ending +visual.v2: the visual check's factor, the total before it, its app defects.")
 
     @model_validator(mode="after")
     def _check_visual(self) -> Quality:
@@ -1422,8 +1425,8 @@ class Scores(_Model):
 
     @model_validator(mode="after")
     def _check_visual_formula(self) -> Scores:
-        if self.formula_version.endswith("+visual.v1") != (self.quality.visual is not None):
-            raise ValueError("a +visual.v1 formula carries quality.visual, and only it does")
+        if self.formula_version.endswith(("+visual.v1", "+visual.v2")) != (self.quality.visual is not None):
+            raise ValueError("a +visual formula carries quality.visual, and only it does")
         return self
 
     @model_validator(mode="after")
@@ -1552,6 +1555,11 @@ class EaseFinding(_Model):
     severity: Literal["major", "minor"] | None = Field(
         default=None, exclude_if=lambda value: value is None,
         description="comfort.v1: major hides, garbles or makes hard to read content a user needs; minor does not.")
+    second_severity: Literal["major", "minor", "none"] | None = Field(
+        default=None, exclude_if=lambda value: value is None,
+        description=("guard.v1: a second, independent judge's severity for an app-caused major defect, given the "
+                     "screenshot, kind, quote and box but not the first severity; the defect counts as major only "
+                     "when this is major."))
 
 
 class Usability(_Model):
@@ -1600,23 +1608,58 @@ class Usability(_Model):
         return self
 
 
-# A visual check that found an app-caused defect multiplies the quality total by this (pickfit/score.py apply_visual).
+# A visual check multiplies the quality total by one of these (visual.v2, pickfit/score.py apply_visual): its worst
+# app-caused defect decides, and a major one counts only when the second judge (guard.v1) agreed it is major.
+VISUAL_MAJOR_FACTOR = 0.90
 VISUAL_FACTOR = 0.95
 
 
+def _get(obj: Any, name: str) -> Any:
+    return obj.get(name) if isinstance(obj, dict) else getattr(obj, name, None)
+
+
+def confirmed_major(defect: Any) -> bool:
+    """An app-caused defect the first judge called major and the second judge, not told that, also called major."""
+    return (_get(defect, "cause") == "app" and _get(defect, "severity") == "major"
+            and _get(defect, "second_severity") == "major")
+
+
 def visual_check_factor(visual: Any, verification: Any) -> float | None:
-    """1.0 for a clean visual check, VISUAL_FACTOR for one that found an app-caused defect; None without a current
+    """1.0 for a clean visual check; VISUAL_MAJOR_FACTOR when an app-caused defect is a confirmed major; VISUAL_FACTOR
+    for any other app-caused defect (minor, or major without the second judge's agreement); None without a current
     check (none, one that read a run the record no longer has, or one the sandbox broke). Takes models or dicts."""
     if visual is None:
         return None
-    if isinstance(visual, dict):
-        run_id, score = visual.get("run_id"), visual.get("score")
-    else:
-        run_id, score = visual.run_id, visual.score
+    run_id, score = _get(visual, "run_id"), _get(visual, "score")
     runs = {run.id for run in verification.runs if (run.gui or run.web) and is_passed(run.level)}
     if score is None or run_id not in runs:
         return None
-    return 1.0 if score == 2 else VISUAL_FACTOR
+    if score == 2:
+        return 1.0
+    return VISUAL_MAJOR_FACTOR if any(confirmed_major(d) for d in _get(visual, "defects") or []) else VISUAL_FACTOR
+
+
+class SeverityGuard(_Model):
+    """The second judgment on a visual check's app-caused major defects (guard.v1, pickfit/usability.py).
+
+    A different Meta model (Muse Spark 1.3) with its own prompt saw each such defect's screenshot, with and without
+    its box drawn, the defect's kind, quote and box and the severity definitions, but not the first judge's severity
+    or wording. Its answer is the defect's second_severity; only "major" keeps the defect major
+    (docs/usability-pilot.md section 13)."""
+
+    version: Literal["guard.v1"]
+    model: str = Field(min_length=1, max_length=80)
+    effort: str = Field(min_length=1, max_length=20)
+    asked: int = Field(ge=0, description="App-caused major defects sent to the second judge.")
+    answered: int = Field(ge=0, description="Of those, the ones that got a usable answer (second_severity set).")
+    checked_at: AwareDatetime
+    cost_usd: float = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _answered_at_most_asked(self) -> SeverityGuard:
+        if self.answered > self.asked:
+            raise ValueError("the second judge cannot answer more defects than it was asked")
+        return self
 
 
 class VisualCheck(_Model):
@@ -1625,7 +1668,8 @@ class VisualCheck(_Model):
     Muse Wonder looked at pickfit's own screenshots (the app right after start and at the end of its last passed
     operation) and listed what a second person would find in the same spot: text cut off, overlaps, clipped controls,
     bad wraps, low contrast, tiny text, raw markup, broken images, misalignment, cramping. Never taste, welcome
-    dialogs or what the sandbox causes. score: no app defect 2, minor ones only 1, any major 0.
+    dialogs or what the sandbox causes. score: no app defect 2, minor ones only 1, any major 0 (the first judge's
+    severity). guard: the second judgment on the app-caused major defects, which decides whether one counts as major.
     """
 
     version: Literal["comfort.v1"]
@@ -1639,6 +1683,7 @@ class VisualCheck(_Model):
     inputs_sha: str = Field(pattern=r"^[0-9a-f]{64}$", description="sha256 over the prompt and every image's sha256.")
     checked_at: AwareDatetime
     cost_usd: float = Field(ge=0)
+    guard: SeverityGuard | None = Field(default=None, exclude_if=lambda value: value is None)
 
     @model_validator(mode="after")
     def _score_follows_defects(self) -> VisualCheck:
@@ -1650,6 +1695,14 @@ class VisualCheck(_Model):
         expected = 2 if not app else 0 if any(d.severity == "major" for d in app) else 1
         if self.score is not None and self.score != expected:
             raise ValueError(f"score must be {expected} for these defects")
+        judged = [d for d in self.defects if d.second_severity is not None]
+        if any(d.cause != "app" or d.severity != "major" for d in judged):
+            raise ValueError("only an app-caused major defect gets a second severity")
+        if self.guard is None and judged:
+            raise ValueError("a second severity comes with visual_check.guard")
+        majors = sum(1 for d in app if d.severity == "major")
+        if self.guard is not None and (self.guard.asked != majors or self.guard.answered != len(judged)):
+            raise ValueError("visual_check.guard must count the app-caused major defects asked and answered")
         return self
 
 

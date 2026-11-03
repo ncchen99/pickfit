@@ -332,6 +332,23 @@
           "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.-]*\\.png$",
           "type": "string"
         },
+        "second_severity": {
+          "anyOf": [
+            {
+              "enum": [
+                "major",
+                "minor",
+                "none"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "guard.v1: a second, independent judge's severity for an app-caused major defect, given the screenshot, kind, quote and box but not the first severity; the defect counts as major only when this is major."
+        },
         "severity": {
           "anyOf": [
             {
@@ -1708,7 +1725,7 @@
             }
           ],
           "default": null,
-          "description": "Formulas ending +visual.v1: the visual check's factor, the total before it, its app defects."
+          "description": "Formulas ending +visual.v2: the visual check's factor, the total before it, its app defects."
         }
       },
       "required": [
@@ -2125,6 +2142,55 @@
         "command"
       ],
       "title": "SetupStep",
+      "type": "object"
+    },
+    "SeverityGuard": {
+      "additionalProperties": false,
+      "description": "The second judgment on a visual check's app-caused major defects (guard.v1, pickfit/usability.py).\n\nA different Meta model (Muse Spark 1.3) with its own prompt saw each such defect's screenshot, with and without\nits box drawn, the defect's kind, quote and box and the severity definitions, but not the first judge's severity\nor wording. Its answer is the defect's second_severity; only \"major\" keeps the defect major\n(docs/usability-pilot.md section 13).",
+      "properties": {
+        "answered": {
+          "description": "Of those, the ones that got a usable answer (second_severity set).",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "asked": {
+          "description": "App-caused major defects sent to the second judge.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "checked_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "cost_usd": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "effort": {
+          "maxLength": 20,
+          "minLength": 1,
+          "type": "string"
+        },
+        "model": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "version": {
+          "const": "guard.v1",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "model",
+        "effort",
+        "asked",
+        "answered",
+        "checked_at",
+        "cost_usd"
+      ],
+      "title": "SeverityGuard",
       "type": "object"
     },
     "Slug": {
@@ -2935,7 +3001,7 @@
     },
     "VisualCheck": {
       "additionalProperties": false,
-      "description": "Measurable visual defects on the first screens of one passed GUI or web run (comfort.v1, pickfit/usability.py).\n\nMuse Wonder looked at pickfit's own screenshots (the app right after start and at the end of its last passed\noperation) and listed what a second person would find in the same spot: text cut off, overlaps, clipped controls,\nbad wraps, low contrast, tiny text, raw markup, broken images, misalignment, cramping. Never taste, welcome\ndialogs or what the sandbox causes. score: no app defect 2, minor ones only 1, any major 0.",
+      "description": "Measurable visual defects on the first screens of one passed GUI or web run (comfort.v1, pickfit/usability.py).\n\nMuse Wonder looked at pickfit's own screenshots (the app right after start and at the end of its last passed\noperation) and listed what a second person would find in the same spot: text cut off, overlaps, clipped controls,\nbad wraps, low contrast, tiny text, raw markup, broken images, misalignment, cramping. Never taste, welcome\ndialogs or what the sandbox causes. score: no app defect 2, minor ones only 1, any major 0 (the first judge's\nseverity). guard: the second judgment on the app-caused major defects, which decides whether one counts as major.",
       "properties": {
         "checked_at": {
           "format": "date-time",
@@ -2957,6 +3023,17 @@
           "maxLength": 20,
           "minLength": 1,
           "type": "string"
+        },
+        "guard": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SeverityGuard"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "inputs_sha": {
           "description": "sha256 over the prompt and every image's sha256.",
@@ -3020,7 +3097,7 @@
     },
     "VisualDeduction": {
       "additionalProperties": false,
-      "description": "What the visual check did to the total (formulas ending +visual.v1, pickfit/score.py apply_visual).",
+      "description": "What the visual check did to the total (formulas ending +visual.v2, or +visual.v1 before severity counted;\npickfit/score.py apply_visual).",
       "properties": {
         "before": {
           "anyOf": [
@@ -3041,7 +3118,7 @@
           "type": "integer"
         },
         "factor": {
-          "description": "1.0 for a clean check; 0.95 when it found an app-caused defect.",
+          "description": "1.0 for a clean check; 0.90 for an app-caused major defect a second judge agreed was major; 0.95 for any other app-caused defect.",
           "exclusiveMinimum": 0,
           "maximum": 1,
           "type": "number"

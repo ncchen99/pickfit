@@ -308,15 +308,19 @@ def _add_score_command(sub: argparse._SubParsersAction) -> None:
 
 
 def _add_visual_command(sub: argparse._SubParsersAction) -> None:
-    from pickfit.usability import VISUAL_CAP_USD, main_visual
+    from pickfit.usability import GUARD_CAP_USD, VISUAL_CAP_USD, main_visual
 
     v = sub.add_parser("visual", help="measurable visual defects of desktop and web apps from pickfit's own "
-                                      "screenshots (Muse Wonder, one call each, paid); --write adds visual_check")
+                                      "screenshots (Muse Wonder, one call each, and Muse Spark 1.3 as a second judge "
+                                      "on each major defect; paid); --write adds visual_check")
     v.add_argument("--slug", action="append", help="check this record (repeatable)")
     v.add_argument("--pilot", action="store_true", help="the 12 apps in data/calibration/ease-pilot.json")
     v.add_argument("--all", action="store_true", help="every desktop_app and web_app with copied evidence")
     v.add_argument("--data-dir", default=None, help="records (default data/software)")
     v.add_argument("--cap", type=float, default=VISUAL_CAP_USD, help="the stage's ledger cap in USD, across runs")
+    v.add_argument("--guard-cap", type=float, default=GUARD_CAP_USD,
+                   help="the second judge's ledger cap in USD, across runs")
+    v.add_argument("--no-guard", action="store_true", help="skip the second judge (majors then count as minor)")
     v.add_argument("--force", action="store_true", help="check again even when the screens and prompt are the same")
     v.add_argument("--write", action="store_true", help="add each result to its record as visual_check")
     v.add_argument("--dry-run", action="store_true", help="count what would be checked and estimate the cost")

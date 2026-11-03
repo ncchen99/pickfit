@@ -481,7 +481,7 @@ def test_pickfit_visual_checks_once_writes_visual_check_and_skips_what_it_alread
     real_bundle_for = usability.bundle_for
     monkeypatch.setattr(usability, "bundle_for", lambda raw: real_bundle_for(raw, tmp_path / "evidence"))
     args = argparse.Namespace(slug=["fixture-chat-tui"], pilot=False, all=False, data_dir=str(data), cap=1.0,
-                              force=False, write=True, dry_run=False, verbose=True)
+                              guard_cap=1.0, no_guard=False, force=False, write=True, dry_run=False, verbose=True)
     assert usability.main_visual(args) == 0 and calls == ["comfort"]
     written = Record.model_validate(json.loads((data / "fixture-chat-tui.json").read_text(encoding="utf-8")))
     assert written.visual_check is not None and written.visual_check.score == 1
@@ -520,7 +520,7 @@ def test_a_defect_with_no_text_is_dropped_and_one_bad_app_does_not_stop_the_batc
     real_bundle_for = usability.bundle_for
     monkeypatch.setattr(usability, "bundle_for", lambda raw: real_bundle_for(raw, tmp_path / "evidence"))
     args = argparse.Namespace(slug=["app-a", "app-b"], pilot=False, all=False, data_dir=str(data), cap=1.0,
-                              force=False, write=True, dry_run=False, verbose=True)
+                              guard_cap=1.0, no_guard=False, force=False, write=True, dry_run=False, verbose=True)
     assert usability.main_visual(args) == 1 and seen == ["app-a", "app-b"]
     assert "visual_check" not in json.loads((data / "app-a.json").read_text())
     written = json.loads((data / "app-b.json").read_text())
@@ -551,5 +551,65 @@ def test_writing_a_visual_check_refreshes_the_score_so_the_deduction_follows_at_
              "checked_at": "2026-11-03T20:00:00+08:00", "cost_usd": 0.03}
     write_visual_check(path, check)
     written = SoftwareRecord.model_validate(json.loads(path.read_text(encoding="utf-8")))
-    assert written.scores.formula_version == "b3.v5+visual.v1"
+    assert written.scores.formula_version == "b3.v5+visual.v2"
     assert written.scores.quality.total == round(before * 0.95, 1) and written.scores.quality.visual.before == before
+
+
+def test_a_major_defect_goes_to_a_second_judge_who_never_sees_the_first_severity(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import argparse
+
+    import pickfit.usability as usability
+    from pickfit.schema import SoftwareRecord as Record
+    from pickfit.usability import GuardAnswer
+
+    from datetime import datetime
+
+    from pickfit.ledger import TAIPEI
+    from pickfit.score import build_scores
+
+    data = tmp_path / "data"
+    data.mkdir()
+    record = gui_record(tmp_path / "evidence")
+    record["scores"] = build_scores(Record.model_validate(record | {"scores": None}), None, None, None,
+                                    now=datetime(2026, 11, 3, 21, tzinfo=TAIPEI))
+    (data / "fixture-chat-tui.json").write_text(json.dumps(record), encoding="utf-8")
+    calls: list[str] = []
+    bodies: list[dict[str, Any]] = []
+    answers = iter([None, "major", "minor"])  # the first guard call gets no usable answer and is retried
+
+    def fake_ask(model: str, *args: Any, **kwargs: Any) -> Any:
+        def ask(body: dict[str, Any], out: type, kind: str) -> Asked:
+            calls.append(kind)
+            if kind == "comfort":
+                return Asked(comfort_answer(defect("overlap", "major", 1, "Chats"), defect("clipped", "major", 2, "pickfit1 sent"),
+                                            defect("bad_wrap", "minor", 1, "New message")), 0.03, "muse-wonder-1.0")
+            bodies.append(body)
+            severity = next(answers)
+            if severity is None:
+                return Asked(None, 0.001, "muse-spark-1.3", error="no answer: incomplete")
+            return Asked(GuardAnswer(severity=severity, reason="r"), 0.01, "muse-spark-1.3")
+        return ask
+
+    monkeypatch.setattr(usability, "meta_ask", fake_ask)
+    monkeypatch.setattr(usability, "RESULTS_DIR", tmp_path / "results")
+    monkeypatch.setattr(usability, "TextFinder", lambda: TextFinder(fake_ocr))
+    real_bundle_for = usability.bundle_for
+    monkeypatch.setattr(usability, "bundle_for", lambda raw: real_bundle_for(raw, tmp_path / "evidence"))
+    args = argparse.Namespace(slug=["fixture-chat-tui"], pilot=False, all=False, data_dir=str(data), cap=1.0,
+                              guard_cap=1.0, no_guard=False, force=False, write=True, dry_run=False, verbose=True)
+    assert usability.main_visual(args) == 0 and calls == ["comfort", "guard", "guard", "guard"]
+    # The second judge reads the kind, box and quote with two images, never the first severity or the problem text.
+    text = bodies[0]["input"][0]["content"][0]["text"]
+    assert "overlap" in text and "Chats" in text and "major" not in text and "overlap near" not in text
+    assert [c["type"] for c in bodies[0]["input"][0]["content"]] == ["input_text", "input_image", "input_image"]
+    assert "second reviewer" in bodies[0]["instructions"]
+    written = Record.model_validate(json.loads((data / "fixture-chat-tui.json").read_text(encoding="utf-8")))
+    check = written.visual_check
+    assert [d.second_severity for d in check.defects] == ["major", "minor", None]
+    assert check.guard.asked == 2 and check.guard.answered == 2 and check.guard.model == "muse-spark-1.3"
+    assert written.scores.quality.visual.factor == 0.9  # one major both judges called major
+    saved = json.loads((tmp_path / "results" / "visual" / "fixture-chat-tui.guard.json").read_text(encoding="utf-8"))
+    assert [a["attempt"] for a in saved[0]["answers"]] == [1, 2, 1]
+    # Nothing is asked again: same screens, and both majors answered.
+    assert usability.main_visual(args) == 0 and len(calls) == 4

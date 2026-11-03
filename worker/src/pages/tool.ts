@@ -111,9 +111,8 @@ export interface Chapter {
   title: string;
 }
 
-/** The clip's chapters for the page: a feature's plain title when there is one, fixed words for the two cards. */
-/** Desktop and web apps: the visual deduction that is in the quality score. An app not checked yet says so plainly:
- * nothing is taken off for that. */
+/** Desktop and web apps: the visual deduction that is in the quality score, by its worst defect (a major one both
+ * judges agreed on −10%, any other −5%). An app not checked yet says so plainly: nothing is taken off for that. */
 export function visualLine(entry: Entry): string {
   const v = entry.visual;
   if (!v) return '';
@@ -123,11 +122,15 @@ export function visualLine(entry: Entry): string {
   if (v.status === 'clean') {
     return `<p class="small visual-check">${L('Visual check: no defect found.', '視覺檢查：沒有發現缺陷。')}</p>`;
   }
-  const items = (v.defects ?? []).map((d) => `<li>${esc(d.problem)}</li>`).join('');
-  return `<div class="small visual-check"><p>${L('Visual check found a defect: −5%', '視覺檢查發現缺陷：−5%')}</p>` +
-    (items ? `<ul>${items}</ul>` : '') + `</div>`;
+  const items = (v.defects ?? [])
+    .map((d) => `<li>${d.major ? `<b>${L('Major:', '嚴重：')}</b> ` : ''}${esc(d.problem)}</li>`).join('');
+  const head = v.worst === 'major'
+    ? L('Visual check found a major defect: −10%', '視覺檢查發現嚴重缺陷：−10%')
+    : L('Visual check found only minor defects: −5%', '視覺檢查只發現輕微缺陷：−5%');
+  return `<div class="small visual-check"><p>${head}</p>` + (items ? `<ul>${items}</ul>` : '') + `</div>`;
 }
 
+/** The clip's chapters for the page: a feature's plain title when there is one, fixed words for the two cards. */
 export function chaptersOf(entry: Entry, video: RunVideo): Chapter[] {
   const list = [...(video.chapters ?? [])].filter((c) => c.start_s >= 0 && c.start_s < video.seconds).sort((a, b) => a.start_s - b.start_s);
   return list.map((c, i) => ({

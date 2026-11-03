@@ -78,12 +78,14 @@ b3.v5 and gui.v1, and between web.v1 and web.v2, with no call.
 
 Measurable visual defects (record field visual_check, comfort.v1: Muse Wonder lists text cut off, overlaps, clipped
 controls, bad wraps, low contrast, tiny text, raw markup, broken images, misalignment and cramping on pickfit's own
-first screens; never taste) only ever lower quality (念誠 11/3, docs/usability-pilot.md sections 11 and 12). A
+first screens; never taste) only ever lower quality (念誠 11/3, docs/usability-pilot.md sections 11 to 13). A
 desktop_app or web_app with a visual check of a passed run still on the record keeps its usual formula, b3.v5 or
-web.v1; when the check found at least one app-caused defect its total is multiplied by VISUAL_FACTOR (0.95), and a clean
-check leaves it as it is. Severity is not used until it is calibrated (section 11: the model's "major" held up in 4 of
-12 reviews). formula_version then reads b3.v5+visual.v1 or web.v1+visual.v1, and quality.visual keeps the factor, the
-total before it and the number of app defects. A record with no check (no screenshots of pickfit's own), or one whose
+web.v1, and its worst app-caused defect sets a factor on the total: VISUAL_MAJOR_FACTOR (0.90) for a major one that a
+second judge (visual_check.guard, a different Meta model not told the first severity) also called major, else
+VISUAL_FACTOR (0.95); a clean check leaves the total as it is. (Section 11: the first judge's "major" held up in 4 of 12
+reviews, hence the second judge.) formula_version then reads b3.v5+visual.v2 or web.v1+visual.v2 (+visual.v1, 0.95 for
+any defect, is refreshed to it), and quality.visual keeps the factor, the total before it and the number of app
+defects. A record with no check (no screenshots of pickfit's own), or one whose
 check read a run the record no longer has, keeps b3.v5 or web.v1 with nothing added or taken. The treasure rule does
 not change. refresh_scores applies and removes the deduction with no call.
 
@@ -118,6 +120,7 @@ from pickfit.ledger import BudgetExceeded, taipei_now
 from pickfit.schema import (
     EASE_TREASURE_MIN,
     VISUAL_FACTOR,
+    VISUAL_MAJOR_FACTOR,
     PASSED_LEVELS,
     QUALITY_CAPS,
     TREASURE_MAX_POPULARITY,
@@ -150,14 +153,17 @@ EASE_SCORED = False
 GUI_FORMULA_VERSION = "gui.v1"
 WEB2_FORMULA_VERSION = "web.v2"
 # Measurable visual defects (record field visual_check, comfort.v1; 念誠 11/3, docs/usability-pilot.md sections 11
-# and 12): a checked desktop or web app keeps its formula, named with VISUAL_SUFFIX, and an app-caused defect multiplies
-# its total by VISUAL_FACTOR. gui.v2 and web.v3 (an additive 15% share) were tried on a branch only; refresh moves them.
+# to 13): a checked desktop or web app keeps its formula, named with VISUAL_SUFFIX, and its worst app-caused defect
+# multiplies its total by VISUAL_MAJOR_FACTOR (a major the second judge agreed with) or VISUAL_FACTOR. +visual.v1 (0.95
+# for any defect, 11/3) and gui.v2 and web.v3 (an additive 15% share, a branch only) are refreshed to it.
 VISUAL_SCORED = True
-VISUAL_SUFFIX = "+visual.v1"
+VISUAL_SUFFIX = "+visual.v2"
 GUI_VISUAL_VERSION = FORMULA_VERSION + VISUAL_SUFFIX
 WEB_VISUAL_VERSION = WEB_FORMULA_VERSION + VISUAL_SUFFIX
-TOOL_FORMULAS = frozenset({FORMULA_VERSION, GUI_FORMULA_VERSION, GUI_VISUAL_VERSION, "gui.v2", *REFRESHABLE_FROM})
-WEB_FORMULAS = frozenset({WEB_FORMULA_VERSION, WEB2_FORMULA_VERSION, WEB_VISUAL_VERSION, "web.v3"})
+TOOL_FORMULAS = frozenset({FORMULA_VERSION, GUI_FORMULA_VERSION, GUI_VISUAL_VERSION, FORMULA_VERSION + "+visual.v1",
+                           "gui.v2", *REFRESHABLE_FROM})
+WEB_FORMULAS = frozenset({WEB_FORMULA_VERSION, WEB2_FORMULA_VERSION, WEB_VISUAL_VERSION,
+                          WEB_FORMULA_VERSION + "+visual.v1", "web.v3"})
 STAGE = "score-rubric"
 REASONING_EFFORT = "low"
 MAX_OUTPUT_TOKENS = 8_000  # reasoning shares it; at effort low one call used 4,000 and ran out
@@ -734,8 +740,8 @@ def gui_formula(kind: str, verification: Verification) -> bool:
 
 
 def visual_factor(visual: Any, verification: Verification) -> float | None:
-    """1.0 for a clean visual check, VISUAL_FACTOR for one that found an app-caused defect; None without a current
-    check (schema.visual_check_factor, which the record's validation uses too)."""
+    """1.0 for a clean visual check, VISUAL_MAJOR_FACTOR for a confirmed major app-caused defect, VISUAL_FACTOR for any
+    other; None without a current check (schema.visual_check_factor, which the record's validation uses too)."""
     return visual_check_factor(visual, verification)
 
 
@@ -746,8 +752,8 @@ def _app_defects(visual: Any) -> int:
 
 def apply_visual(quality: dict[str, Any], version: str, kind: str, verification: Verification, visual: Any
                  ) -> tuple[dict[str, Any], str]:
-    """The quality and formula after the visual check: b3.v5 or web.v1 named +visual.v1, its total times
-    VISUAL_FACTOR when the check found an app-caused defect; unchanged without a current check."""
+    """The quality and formula after the visual check: b3.v5 or web.v1 named +visual.v2, its total times the factor
+    of its worst app-caused defect (visual_factor); unchanged without a current check."""
     if not VISUAL_SCORED or kind not in ("desktop_app", "web_app") or version not in (FORMULA_VERSION, WEB_FORMULA_VERSION):
         return quality, version
     factor = visual_factor(visual, verification)
@@ -877,7 +883,7 @@ def _web_quality(verification: Verification, outcomes: Outcomes, kind: str, arch
 
 
 def build_web_scores(record: SoftwareRecord, *, stars: int | None, hn: int | None, now: datetime) -> dict[str, Any]:
-    """The scores object for a web app (web.v1, named web.v1+visual.v1 with a visual check; web.v2 with usability, off).
+    """The scores object for a web app (web.v1, named web.v1+visual.v2 with a visual check; web.v2 with usability, off).
     Stars only with a repository; HN points only without one."""
     archived = record.repo is not None and record.repo.archived
     version, quality = _web_quality(record.verification, record.outcomes, record.kind, archived, record.usability,

@@ -251,12 +251,14 @@ export interface Entry {
   sources: string[];
 }
 
-/** A desktop or web app's visual check, as the quality score applied it: "defect" took 5% off, "clean" changed nothing,
- * "not_checked" means no current check (nothing is taken off for that). */
+/** A desktop or web app's visual check, as the quality score applied it: "defect" took 10% off (worst "major": both
+ * judges called a defect major) or 5% (worst "minor"), "clean" changed nothing, "not_checked" means no current check
+ * (nothing is taken off for that). */
 export interface VisualCheck {
   status: 'defect' | 'clean' | 'not_checked';
   factor?: number;
-  defects?: { kind: string; problem: string; quote: string }[];
+  worst?: 'major' | 'minor' | null;
+  defects?: { kind: string; problem: string; quote: string; major?: boolean }[];
   checked_at?: string;
   model?: string;
 }

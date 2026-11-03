@@ -293,8 +293,21 @@ def test_desktop_and_web_apps_show_the_visual_deduction_that_is_in_the_score(dat
     assert visual_of() == {"status": "not_checked"}
     edit(data_dir / "fixture-web-sketch.json", scored)
     visual = visual_of()
-    assert visual["status"] == "defect" and visual["factor"] == 0.95
-    assert visual["defects"] == [{"kind": "overlap", "problem": "A button covers the title.", "quote": "Sketch"}]
+    assert visual["status"] == "defect" and visual["factor"] == 0.95 and visual["worst"] == "minor"
+    assert visual["defects"] == [{"kind": "overlap", "problem": "A button covers the title.", "quote": "Sketch",
+                                  "major": False}]
+    # A major both judges agree on: 10% off, listed first and marked.
+    major = defect | {"kind": "text_cut_off", "problem": "The status is cut off.", "severity": "major",
+                      "second_severity": "major"}
+    guard = {"version": "guard.v1", "model": "muse-spark-1.3", "effort": "medium", "asked": 1, "answered": 1,
+             "checked_at": "2026-11-03T22:00:00+08:00", "cost_usd": 0.01}
+    edit(data_dir / "fixture-web-sketch.json",
+         lambda r: r["visual_check"].update(score=0, defects=[defect, major, sandbox], guard=guard) or scored(r))
+    visual = visual_of()
+    assert visual["worst"] == "major" and visual["factor"] == 0.9
+    assert [(d["kind"], d["major"]) for d in visual["defects"]] == [("text_cut_off", True), ("overlap", False)]
+    edit(data_dir / "fixture-web-sketch.json", lambda r: r["visual_check"].pop("guard") or r["visual_check"].update(
+        score=1, defects=[defect, sandbox]) or scored(r))
     edit(data_dir / "fixture-web-sketch.json",
          lambda r: r["visual_check"].update(score=2, defects=[sandbox]) or scored(r))
     assert visual_of()["status"] == "clean" and visual_of()["defects"] == []

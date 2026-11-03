@@ -34,7 +34,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from pickfit.schema import SCHEMA_VERSION, SoftwareRecord, VerificationRun, is_passed
+from pickfit.schema import SCHEMA_VERSION, SoftwareRecord, VerificationRun, confirmed_major, is_passed
 from pickfit.usage_guide import shown_guide
 
 INDEX_VERSION = "pickfit-index.v1"
@@ -110,17 +110,20 @@ def _gui(run: VerificationRun) -> dict[str, Any] | None:
 
 def _visual(record: SoftwareRecord) -> dict[str, Any] | None:
     """Desktop and web apps: the visual deduction that is in the quality score (scores.quality.visual, which the
-    record's validation ties to its own current visual check): "defect" (the total took 5% off, with the app-caused
-    defects listed), "clean", or "not_checked" (no current check, so nothing is taken off). None for other kinds."""
+    record's validation ties to its own current visual check): "defect" (worst "major", 10% off, when both judges
+    called a defect major, else "minor", 5% off; the app-caused defects listed, confirmed majors first), "clean", or
+    "not_checked" (no current check, so nothing is taken off). None for other kinds."""
     if record.kind not in ("desktop_app", "web_app"):
         return None
     visual = record.scores.quality.visual if record.scores else None
     check = record.visual_check
     if visual is None or check is None:
         return {"status": "not_checked"}
-    defects = [{"kind": d.kind, "problem": d.problem, "quote": d.quote} for d in check.defects if d.cause == "app"]
-    return {"status": "defect" if visual.factor < 1 else "clean", "factor": visual.factor, "defects": defects[:6],
-            "checked_at": _iso(check.checked_at)[:10], "model": check.model}
+    app = sorted((d for d in check.defects if d.cause == "app"), key=lambda d: not confirmed_major(d))
+    defects = [{"kind": d.kind, "problem": d.problem, "quote": d.quote, "major": confirmed_major(d)} for d in app]
+    worst = None if visual.factor == 1 else "major" if any(d["major"] for d in defects) else "minor"
+    return {"status": "defect" if visual.factor < 1 else "clean", "factor": visual.factor, "worst": worst,
+            "defects": defects[:6], "checked_at": _iso(check.checked_at)[:10], "model": check.model}
 
 
 def _web(record: SoftwareRecord) -> dict[str, Any] | None:
