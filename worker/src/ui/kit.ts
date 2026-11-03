@@ -37,6 +37,8 @@ const FITZ = {
 export type FitzName = keyof typeof FITZ;
 export const FITZ_BASE = '/assets/fitz/';
 export const ICON_32 = `${FITZ_BASE}icons/fitz-32.svg`;
+/** The same icon with a cream outline, so the silhouette holds on the dark page (brand/mascot/README.md). */
+export const ICON_32_DARK = `${FITZ_BASE}icons/fitz-32-dark.svg`;
 export const ICON_64 = `${FITZ_BASE}icons/fitz-64.svg`;
 
 /** Fitz at a given height (px). Decorative by default: the text beside it says what happened. */
@@ -192,23 +194,14 @@ export function marksLegend(): string {
     row(
       `<span class="mark-sample">${lvl('install')}${lvl('function')}${lvl('service')}${lvl('inference')}</span>${L('How far the run got', '測試進行到哪一步')}`,
       L(
-        'Installs and starts, its main function works, its service answers, it produces model output. A window means a desktop app opened; a plug, an MCP client used it.',
-        '能安裝並啟動、主要功能可用、服務有回應、能產生模型輸出。視窗代表桌面應用程式已開啟；插頭代表 MCP 用戶端用過它。',
+        'Installs and starts, its main function works, its service answers, it produces model output. A window means a desktop app opened; a plug, an MCP client used it. The mark sits beside the run’s result, under “Why it fits and how we know” and in “How pickfit tested it”.',
+        '能安裝並啟動、主要功能可用、服務有回應、能產生模型輸出。視窗代表桌面應用程式已開啟；插頭代表 MCP 用戶端用過它。標記在測試結果旁邊：展開「為什麼適合、我們怎麼知道」，或在「pickfit 怎麼測的」裡。',
       ),
     ) +
+    // Everything else about a run (replayed, offline, the kind of tool) is said in words, so only these two marks remain.
     row(
-      `<span class="mark-sample rf">${icon('refresh-cw')}${icon('hand')}${icon('wifi-off')}${icon('calendar')}</span>${L('About the run', '關於這次測試')}`,
-      L(
-        'Replayed from scratch in a new sandbox, or installed by hand; passed again with the network off; the day it ran.',
-        '在新沙盒裡從頭重跑，或手動安裝；斷網後仍通過；測試日期。',
-      ),
-    ) +
-    row(
-      `<span class="mark-sample rf">${icon('terminal')}${icon('cpu')}${icon('plug')}</span>${L('Kind of tool', '工具類型')}`,
-      L(
-        'Developer CLI, local AI tool, MCP server. The words after the mark say its form: command-line tool, desktop app, local server.',
-        '開發者 CLI、本機 AI 工具、MCP 伺服器。標記後的文字說明它的形式：命令列工具、桌面應用程式、本機伺服器。',
-      ),
+      `<span class="mark-sample rf">${icon('calendar')}${icon('package')}</span>${L('About the run', '關於這次測試')}`,
+      L('The day it ran, and the version that ran.', '測試日期，以及測到的版本。'),
     ) +
     row(
       `<span class="mark-sample rf">${icon('file-text')}</span>${L('Source of a reason', '理由的來源')}`,
@@ -233,9 +226,20 @@ export function helpButton(id: string, label: string): string {
   return `<button type="button" class="help" popovertarget="${id}" aria-label="${esc(label)}">${icon('circle-help')}</button>`;
 }
 
-/** A command with a copy button (the button shows once the script runs); a one-line command centres it, a longer one keeps it at the top. */
+/**
+ * A command with a copy button (the button shows once the script runs); a one-line command centres it, a longer one keeps it at the top.
+ * Several lines: each is its own block, so a long one wraps under itself (a hanging indent) and the next starts flush.
+ * The newlines stay in the text, so Copy copies exactly what was run.
+ */
 export function command(text: string): string {
-  return `<div class="cmd${text.includes('\n') ? ' cmd-multi' : ''}"><pre translate="no"><code>${esc(text)}</code></pre><button type="button" class="copy" aria-label="${L('Copy command', '複製指令')}">${icon('copy')}<span>${L('Copy', '複製')}</span></button></div>`;
+  const multi = text.includes('\n');
+  const body = multi
+    ? text
+        .split('\n')
+        .map((line, i, all) => `<span class="ln">${esc(line)}${i < all.length - 1 ? '\n' : ''}</span>`)
+        .join('')
+    : esc(text);
+  return `<div class="cmd${multi ? ' cmd-multi' : ''}"><pre translate="no"><code>${body}</code></pre><button type="button" class="copy" aria-label="${L('Copy command', '複製指令')}">${icon('copy')}<span>${L('Copy', '複製')}</span></button></div>`;
 }
 
 /** The stitch: drawn only on verified evidence. */

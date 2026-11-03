@@ -89,6 +89,37 @@ test('a tool page shows how far each verified run got, its install steps, and th
   assert.match(html, /aria-label="Quality: \d+ out of 100/);
 });
 
+test('Compare is in the nav only on /compare (the script adds it while the tray holds tools); the footer always links to it', async () => {
+  const s = site();
+  const navOf = (html: string) => /<nav class="nav"[^>]*>(.*?)<\/nav>/s.exec(html)![1];
+  for (const path of ['/', '/browse', '/how', '/tool/fixture-llm-runner']) {
+    const html = await (await s.get(path)).text();
+    assert.match(navOf(html), /<a href="\/compare" data-tray-link data-tray-nav hidden>/, path);
+    assert.match(html, /<footer class="foot">.*<a href="\/compare">Compare tools<\/a>/s, path);
+  }
+  assert.match(navOf(await (await s.get('/compare')).text()), /<a href="\/compare" aria-current="page" data-tray-link data-tray-nav>/);
+});
+
+test('a verified tool page leads with how to use it (how far each run got below it); an unverified one leads with that fact', async () => {
+  const s = site();
+  const at = (html: string, id: string) => html.indexOf(`id="${id}"`);
+  const html = await (await s.get('/tool/fixture-llm-runner')).text();
+  assert.ok(at(html, 'install-title') > 0 && at(html, 'install-title') < at(html, 'progress-title'), 'install before progress');
+  // Without a clip, how to use it comes before what it does.
+  if (at(html, 'about-title') > 0) assert.ok(at(html, 'install-title') < at(html, 'about-title'), 'install before what it does');
+  assert.ok(html.split('>Good for</h').length <= 2, 'Good for once');
+  // The same tool with no run: the page says so first.
+  const index = fixtureIndex() as { entries: { slug: string; install: Record<string, unknown> }[] };
+  index.entries.find((e) => e.slug === 'fixture-llm-runner')!.install = {};
+  const worker = makeWorker(index, { fetch: (async () => { throw new Error('no model call expected'); }) as unknown as typeof fetch, now: () => new Date('2026-10-30T12:00:00Z') });
+  const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
+  const res = await worker.fetch(new Request('http://127.0.0.1:8787/tool/fixture-llm-runner', { headers: { accept: 'text/html' } }), { DB: makeD1().db, MODEL_API_KEY: 'k' } as Env, ctx);
+  const raw = await res.text();
+  assert.match(raw, /pickfit hasn’t verified Fixture LLM Runner yet/);
+  const install = at(raw, 'install-title');
+  assert.ok(at(raw, 'progress-title') > 0 && (install < 0 || at(raw, 'progress-title') < install), 'progress first');
+});
+
 test('install steps come one stage at a time: install, then check, each with Back and Next naming the other', async () => {
   const html = await (await site().get('/tool/fixture-llm-runner')).text();
   assert.match(html, /<div class="install-body" data-stepper><ol class="stage-tabs js-only">.*?<span class="lbl">Install<\/span>.*?<span class="lbl">Check it works<\/span>/);

@@ -238,26 +238,26 @@ export function renderCompare(catalog: Catalog, params: URLSearchParams, nonce: 
         (os ? `<input type="hidden" name="os" value="${os}">` : '') +
         `<label class="sr" for="add-tool">${L('Add a verified tool', '加入已驗證的工具')}</label>` +
         `<input id="add-tool" type="text" name="add" list="tool-names" data-combo required autocomplete="off" placeholder="${L('Add a verified tool by name…', '輸入名稱加入工具…')}"><datalist id="tool-names">${options}</datalist>` +
-        `<button class="btn btn-quiet" type="submit">${icon('plus')}${L('Add', '加入')}</button></form>`
+        `<button class="btn btn-quiet" type="submit">${L('Add', '加入')}</button></form>`
       : '';
   const body =
     entries.length >= 2
       ? `<div class="sec-head"><div class="chips" role="group" aria-label="${L('Show the runs for', '顯示哪個系統的測試')}">${osLinks}</div>` +
-        `<button type="button" class="btn btn-quiet btn-sm js-only" data-open-legend>${icon('circle-help')}${L('How to read this', '怎麼看這張表')}</button></div>` +
+        `<button type="button" class="btn btn-quiet btn-sm js-only" data-open-legend>${L('How to read this', '怎麼看這張表')}</button></div>` +
         compareTable(entries, { os, arch, now: new Date(catalog.built_at), removable: slugs }) +
         `<p class="small quiet">${L(
           '“Best here” marks only a plain comparison of recorded values: fewest install commands, highest quality score, most features checked, newest release. Everything comes from pickfit’s run records and profiles; nothing was asked of a model.',
           '「最佳」只是把紀錄裡的數值直接比大小：安裝指令最少、品質分數最高、檢查過的功能最多、版本最新。所有內容都來自 pickfit 的測試紀錄與簡介，沒有問過任何模型。',
         )}</p>`
-      : `<div class="empty">${fitz('comparing', 96)}<div><h2>${entries.length ? L(`Add one more to compare with ${esc(entries[0].name)}`, `再加一款來和 ${esc(entries[0].name)} 比較`) : L('Pick two to four tools', '挑兩到四款工具')}</h2>` +
+      : `<div class="empty"><div><h2>${entries.length ? L(`Add one more to compare with ${esc(entries[0].name)}`, `再加一款來和 ${esc(entries[0].name)} 比較`) : L('Pick two to four tools', '挑兩到四款工具')}</h2>` +
         `<p class="quiet">${L(
           'Tick <b>Compare</b> on a result or in <a href="/browse">Browse</a>, or add tools here.',
           '在搜尋結果或<a href="/browse">瀏覽</a>頁勾選<b>比較</b>，或在這裡加入工具。',
         )}</p></div></div>`;
   const main =
-    `<section class="head mat after-top"><div class="wrap head-row"><div>` +
+    `<section class="head"><div class="wrap head-row"><div>` +
     `<h1>${L('Compare tools', '比較工具')}</h1><p class="lede">${L('Only the differences, from pickfit’s own runs', '只列出不一樣的地方，資料都來自 pickfit 實測')}</p>` +
-    `${add}</div>${fitz('comparing', 150, { eager: true })}</div><div class="ruler" aria-hidden="true"></div></section>` +
+    `${add}</div>${fitz('comparing', 96, { eager: true })}</div></section>` +
     `<div class="wrap sec-tight">${body}</div>` +
     `<script type="application/json" data-compare-shown>${JSON.stringify(entries.map((e) => ({ slug: e.slug, name: e.name }))).replace(/</g, '\\u003c')}</script>`;
   return renderShell({

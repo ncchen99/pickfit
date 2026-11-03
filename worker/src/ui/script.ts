@@ -139,6 +139,8 @@ export const script = () => `
     const items = read();
     for (const n of $$('[data-tray-count]')) { n.hidden = !items.length; n.textContent = String(items.length); }
     for (const a of $$('[data-tray-link]')) a.href = items.length ? href(items) : '/compare';
+    // The nav names Compare only while the tray holds tools (and always on /compare itself).
+    for (const a of $$('[data-tray-nav]')) a.hidden = !items.length && a.getAttribute('aria-current') !== 'page';
     if (!tray) return;
     const onCompare = location.pathname === '/compare';
     tray.hidden = !items.length || onCompare || document.body.dataset.tray === 'off';

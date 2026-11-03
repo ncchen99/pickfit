@@ -165,12 +165,14 @@ function showcase(entry: Entry): string {
       `<button type="button" class="player-btn" data-full aria-label="${L('Full screen', '全螢幕')}">${icon('maximize')}</button>` +
       `</div>`
     : '';
+  // The chapters sit beside the clip on a wide screen (one column with it), under it on a narrow one.
   const list = chapters.length
-    ? `<ol class="chapters" aria-label="${L('Chapters', '段落')}">` +
+    ? `<div class="chap-list"><h2 class="chap-head" id="chapters-title">${L('Chapters', '段落')}</h2>` +
+      `<ol class="chapters" aria-labelledby="chapters-title">` +
       chapters
         .map((c, i) => `<li><a href="${esc(atTime(slug, video, c.start))}" data-seek="${c.start}"${i === 0 ? ' aria-current="true"' : ''}><span class="chap-time">${clock(c.start)}</span><span class="chap-title">${esc(c.title)}</span></a></li>`)
         .join('') +
-      `</ol>`
+      `</ol></div>`
     : '';
   return (
     `<figure class="showcase"${chapters.length ? ' data-player' : ''}>` +
@@ -275,8 +277,9 @@ function progress(entry: Entry): string {
   const oses = OSES.filter((os) => entry.install[os]);
   if (!oses.length) {
     return (
+      // The head's Fitz already wears the thinking face: one Fitz on the screen.
       `<section class="block" aria-labelledby="progress-title">${progressTitle()}` +
-      `<div class="empty">${fitz('thinking', 80)}<div><p>` +
+      `<div class="empty"><div><p>` +
       L(
         `<b>pickfit hasn’t verified ${esc(entry.name)} yet</b>, so it gives no install steps and never suggests it.`,
         `<b>pickfit 還沒驗證過 ${esc(entry.name)}</b>，所以不提供安裝步驟，也不會推薦它。`,
@@ -325,12 +328,12 @@ function featureClip(entry: Entry, feature: string): string {
   if (!video) return '';
   const chapter = video.chapters?.find((c) => c.feature === feature);
   if (chapter) {
-    return `<a class="watch" href="${esc(atTime(entry.slug, video, chapter.start_s))}" data-seek="${chapter.start_s}">${icon('play')}${L(`Watch it at ${clock(chapter.start_s)}`, `從 ${clock(chapter.start_s)} 開始看`)}</a>`;
+    return `<a class="watch" href="${esc(atTime(entry.slug, video, chapter.start_s))}" data-seek="${chapter.start_s}">${L(`Watch it at ${clock(chapter.start_s)}`, `從 ${clock(chapter.start_s)} 開始看`)}</a>`;
   }
   const at = video.features.indexOf(feature);
   const raw = at < 0 ? undefined : video.raw.find((r) => r.feature_index === at);
   return raw
-    ? `<a class="watch" href="${esc(videoPath(entry.slug, raw.file))}">${icon('play')}${L(`Watch it (${Math.round(raw.seconds)} s)`, `觀看（${Math.round(raw.seconds)} 秒）`)}</a>`
+    ? `<a class="watch" href="${esc(videoPath(entry.slug, raw.file))}">${L(`Watch it (${Math.round(raw.seconds)} s)`, `觀看（${Math.round(raw.seconds)} 秒）`)}</a>`
     : '';
 }
 
@@ -365,14 +368,22 @@ function featureList(entry: Entry, f: FeaturesOut): string {
   return `${from}<ul class="feat-list">${items.join('')}</ul>`;
 }
 
+/** What the project says it is good for, and what it stands in for: README words, so quieter than the features a run ticked. */
+function goodFor(entry: Entry, heading: boolean): string {
+  const uses = entry.use_cases.length ? `<ul class="uses">${entry.use_cases.map((u) => `<li>${esc(u)}</li>`).join('')}</ul>` : '';
+  const alt = entry.alternatives_to.length ? `<p><span class="lead-in">${L('An alternative to', '可替代')}</span> ${esc(listOf(entry.alternatives_to))}${L('.', '。')}</p>` : '';
+  if (!uses && !alt) return '';
+  const title = L('Good for', '適合用來');
+  return heading
+    ? `<section class="block good-for" aria-labelledby="uses-title"><h2 id="uses-title">${title}</h2>${uses}${alt}</section>`
+    : `${uses ? `<h3>${title}</h3>${uses}` : ''}${alt}`;
+}
+
+/** What it does: the features, each ticked when a run checked it. With no feature list, what it is good for says what it does instead. */
 function about(entry: Entry, f: FeaturesOut): string {
-  const parts = [
-    entry.why_worth_it ? `<p class="fit">${esc(entry.why_worth_it)}</p>` : '',
-    featureList(entry, f),
-    entry.use_cases.length ? `<h3>${L('Good for', '適合用來')}</h3><ul class="uses">${entry.use_cases.map((u) => `<li>${esc(u)}</li>`).join('')}</ul>` : '',
-    entry.alternatives_to.length ? `<p><span class="lead-in">${L('An alternative to', '可替代')}</span> ${esc(listOf(entry.alternatives_to))}${L('.', '。')}</p>` : '',
-  ].join('');
-  return parts ? `<section class="block" aria-labelledby="about-title"><h2 id="about-title">${L('What it does', '它能做什麼')}</h2>${parts}</section>` : '';
+  const features = featureList(entry, f);
+  const parts = [entry.why_worth_it ? `<p class="fit">${esc(entry.why_worth_it)}</p>` : '', features, features ? '' : goodFor(entry, false)].join('');
+  return parts ? `<section class="block about" aria-labelledby="about-title"><h2 id="about-title">${L('What it does', '它能做什麼')}</h2>${parts}</section>` : '';
 }
 
 // ---------------------------------------------------------------- install
@@ -430,11 +441,11 @@ function install(catalog: Catalog, entry: Entry): string {
 function webRun(entry: Entry): string {
   const check = webCheck(entry);
   const url = entry.web!.url;
-  const open = link(url, `${icon('external-link')}${L('Open the site', '開啟網站')}`, 'btn btn-primary btn-sm');
+  const open = link(url, L('Open the site', '開啟網站'), 'btn btn-primary btn-sm');
   if (!check) {
     return (
       `<section class="block" aria-labelledby="install-title">${installTitle('Open it', '開啟')}` +
-      `<div class="empty">${fitz('thinking', 80)}<div><p>` +
+      `<div class="empty"><div><p>` +
       L(
         `<b>pickfit hasn’t checked ${esc(entry.name)} in its browser yet</b>, so it never suggests it.`,
         `<b>pickfit 還沒在瀏覽器中檢查過 ${esc(entry.name)}</b>，所以不會推薦它。`,
@@ -475,7 +486,7 @@ function rawList(slug: string, video: RunVideo): string {
 /** Everything a skeptic wants and a user doesn't: where each run ran, who looked, the raw recordings, the sandbox-only differences. */
 function tested(catalog: Catalog, entry: Entry): string {
   const parts: string[] = [];
-  const recordLink = (url: string | null) => (url ? `<p>${link(url, `${icon('external-link')} ${L('Run record', '測試紀錄')}`)}</p>` : '');
+  const recordLink = (url: string | null) => (url ? `<p>${link(url, L('Run record', '測試紀錄'))}</p>` : '');
   if (isWebApp(entry)) {
     const check = webCheck(entry);
     if (!check) return '';
@@ -547,30 +558,42 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
     entry.scores?.treasure ? badge('gem', L('Hidden gem', '寶藏'), { icon: 'gem', pop: 'pop-gem' }) : '',
   ].join('');
   const webUrl = entry.web?.url ?? null;
+  // Links are underlined words; the one switch (Compare) keeps its pill.
   const links = [
-    webUrl ? link(webUrl, `${icon('external-link')}${L('Open it', '開啟')}`, 'btn btn-on-mat btn-sm') : '',
-    !web && OSES.some((os) => entry.install[os]) ? `<a class="btn btn-on-mat btn-sm" href="#install-title">${icon('arrow-right')}${L('Install', '安裝')}</a>` : '',
-    link(entry.repo_url, `${icon('external-link')}${L('Source code', '原始碼')}`, 'btn btn-on-mat btn-sm'),
-    entry.homepage && entry.homepage !== entry.repo_url && entry.homepage !== webUrl ? link(entry.homepage, `${icon('external-link')}${L('Homepage', '首頁')}`, 'btn btn-on-mat btn-sm') : '',
+    webUrl ? link(webUrl, L('Open it', '開啟'), 'tool-link') : '',
+    !web && OSES.some((os) => entry.install[os]) ? `<a class="tool-link" href="#install-title">${L('Install', '安裝')}</a>` : '',
+    link(entry.repo_url, L('Source code', '原始碼'), 'tool-link'),
+    entry.homepage && entry.homepage !== entry.repo_url && entry.homepage !== webUrl ? link(entry.homepage, L('Homepage', '首頁'), 'tool-link') : '',
   ].join('');
   const sources = entry.sources
     .map((s) => safeUrl(s))
     .filter((s): s is string => !!s)
     .map((s) => `<li>${link(s, esc(s.replace(/^https?:\/\//, '').replace(/^api\.github\.com\/repos\//, 'github.com/')))}</li>`)
     .join('');
+  // The clip is the page's focal point: with chapters it gets its own row, the chapters beside it where
+  // At a glance would be; a clip without chapters leads the main column. Without a clip, how to use it leads
+  // (the screen's one action), then what it does.
+  const video = firstVideo(entry);
+  const wide = !!video && chaptersOf(entry, video).length > 0;
+  const clip = showcase(entry);
+  // An unverified tool leads with that fact; a verified one keeps how far pickfit got below how to use it.
+  const ran = OSES.some((os) => entry.install[os]) || !!web;
   const main =
-    `<section class="head mat after-top"><div class="wrap">` +
-    `<p class="crumbs"><a href="/browse">${L('Browse', '瀏覽')}</a>${icon('arrow-right')}${crumb(entry)}</p>` +
-    `<div class="head-row"><div><h1>${esc(entry.name)}</h1><p class="lede">${esc(entry.summary)}</p>` +
-    `<p class="badges">${badges}</p><p class="badges">${links}${verified ? compareToggle(entry.slug, entry.name) : ''}</p></div>` +
-    `${fitz(faceFor(entry), 150, { eager: true })}</div></div><div class="ruler" aria-hidden="true"></div></section>` +
-    `<div class="wrap layout"><div>` +
-    showcase(entry) +
-    progress(entry) +
-    about(entry, features) +
-    install(catalog, entry) +
+    `<section class="head tool-head"><div class="wrap head-row"><div>` +
+    `<p class="crumbs"><a href="/browse">${L('Browse', '瀏覽')}</a><span class="crumb-sep" aria-hidden="true">/</span>${crumb(entry)}</p>` +
+    `<h1>${esc(entry.name)}</h1><p class="lede">${esc(entry.summary)}</p>` +
+    `<div class="tool-facts"><p class="badges">${badges}</p><p class="tool-links">${links}${verified ? compareToggle(entry.slug, entry.name) : ''}</p></div></div>` +
+    `${fitz(faceFor(entry), 96, { eager: true })}</div></section>` +
+    (wide ? `<div class="wrap tool-clip">${clip}</div>` : '') +
+    `<div class="wrap layout tool-layout"><div class="tool-main">` +
+    (wide ? '' : clip) +
+    (ran ? '' : progress(entry)) +
+    (clip ? about(entry, features) + install(catalog, entry) : install(catalog, entry) + about(entry, features)) +
+    `<div class="tool-more">` +
+    (ran ? progress(entry) : '') +
+    (features.checked.length + features.not_checked.length ? goodFor(entry, true) : '') +
     tested(catalog, entry) +
-    `</div><aside class="side" aria-label="${L('At a glance', '一覽')}">` +
+    `</div></div><aside class="side" aria-label="${L('At a glance', '一覽')}">` +
     `<div class="panel"><h2>${L('At a glance', '一覽')}</h2>${factSheet(entry, now)}<div class="t-measure panel-measure">` +
     tape(L('Quality', '品質'), entry.scores?.quality ?? null, { pop: 'pop-quality' }) +
     tape(L('Popularity', '知名度'), entry.scores?.popularity ?? null, { pop: 'pop-popularity', tone: 'quiet' }) +

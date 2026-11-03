@@ -190,7 +190,8 @@ test('a clip with chapters gets a seek bar cut into them and a chapter list, nam
     ['17', '20.25', 'Unedited recordings'],
   ]);
   // Each chapter is a link to the clip at its time, so it works without the page script too.
-  assert.ok(html.includes(`<ol class="chapters" aria-label="Chapters"><li><a href="/video/${SLUG}/${CLIP}#t=0" data-seek="0" aria-current="true"><span class="chap-time">0:00</span><span class="chap-title">Recorded by pickfit</span></a>`));
+  // A visible heading names the list (beside the clip on a wide screen, under it on a narrow one).
+  assert.ok(html.includes(`<h2 class="chap-head" id="chapters-title">Chapters</h2><ol class="chapters" aria-labelledby="chapters-title"><li><a href="/video/${SLUG}/${CLIP}#t=0" data-seek="0" aria-current="true"><span class="chap-time">0:00</span><span class="chap-title">Recorded by pickfit</span></a>`));
   assert.ok(html.includes(`<a href="/video/${SLUG}/${CLIP}#t=3.5" data-seek="3.5"><span class="chap-time">0:03</span><span class="chap-title">Chat with a model on your machine</span></a>`));
   assert.ok(!html.includes('<button type="button" data-seek'), 'no control that needs the script to do anything');
   // The feature's "how to use it" jumps to its chapter.
@@ -199,6 +200,7 @@ test('a clip with chapters gets a seek bar cut into them and a chapter list, nam
   const zh = await (await site(undefined, chaptered())(`/tool/${SLUG}?lang=zh-TW`, { headers: { accept: 'text/html' } })).text();
   assert.match(zh, /data-title="pickfit 錄製"/);
   assert.match(zh, /data-title="原始錄影"/);
+  assert.match(zh, /<h2 class="chap-head" id="chapters-title">段落<\/h2>/);
 });
 
 test('a clip without chapters keeps the browser’s own player and no chapter list', async () => {

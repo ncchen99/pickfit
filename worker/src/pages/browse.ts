@@ -9,7 +9,7 @@ import { L } from '../i18n.ts';
 import { formOf, KIND, KIND_PLURAL, levelLabel, OS_NAME, osName, PRICE } from '../ui/facts.ts';
 import { esc, listOf } from '../ui/html.ts';
 import { icon, osMark } from '../ui/icons.ts';
-import { badge, compareToggle, fitz, kindIcon, kindTag } from '../ui/kit.ts';
+import { badge, compareToggle, fitz, kindTag } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 
 /** The three categories, and web apps (a kind, across categories). */
@@ -50,8 +50,9 @@ function href(q: BrowseQuery, change: Partial<BrowseQuery>): string {
   return `/browse${s ? `?${s.replace(/&/g, '&amp;')}` : ''}`;
 }
 
-const chipLink = (on: boolean, to: string, text: string, mark = '') =>
-  `<a class="chip${on ? ' on' : ''}" href="${to}"${on ? ' aria-current="true"' : ''}>${on ? icon('check') : mark}${esc(text)}</a>`;
+/** A filter is a switch, so a pill; its words say what it is, so no mark beside them. */
+const chipLink = (on: boolean, to: string, text: string) =>
+  `<a class="chip${on ? ' on' : ''}" href="${to}"${on ? ' aria-current="true"' : ''}>${esc(text)}</a>`;
 
 /** Cards shown before "Show more" (with the script; without it, all of them). */
 const FIRST = 30;
@@ -107,8 +108,8 @@ export function renderBrowse(catalog: Catalog, params: URLSearchParams, nonce: s
   const filters =
     `<form class="filters" method="get" action="/browse" role="search" aria-label="${L('Filter the catalog', '篩選目錄')}">` +
     `<label class="find-in">${icon('search')}<span class="sr">${L('Filter these tools', '篩選這些工具')}</span><input type="search" data-filter placeholder="${L('Filter by name or task', '依名稱或任務篩選')}" autocomplete="off"></label>` +
-    `<fieldset><legend>${L('Kind', '類型')}</legend><div class="chips">${chipLink(!q.kind, href(q, { kind: '' }), L('All', '全部'))}${KINDS.map((k) => chipLink(q.kind === k, href(q, { kind: k }), KIND_PLURAL[k], icon(kindIcon(k)))).join('')}</div></fieldset>` +
-    `<fieldset><legend>${L('Verified on', '已驗證於')}</legend><div class="chips">${chipLink(!q.os, href(q, { os: '' }), L('Any OS', '不限'))}${OSES.map((o) => chipLink(q.os === o, href(q, { os: o }), OS_NAME[o], osMark(o))).join('')}</div></fieldset>` +
+    `<fieldset><legend>${L('Kind', '類型')}</legend><div class="chips">${chipLink(!q.kind, href(q, { kind: '' }), L('All', '全部'))}${KINDS.map((k) => chipLink(q.kind === k, href(q, { kind: k }), KIND_PLURAL[k])).join('')}</div></fieldset>` +
+    `<fieldset><legend>${L('Verified on', '已驗證於')}</legend><div class="chips">${chipLink(!q.os, href(q, { os: '' }), L('Any OS', '不限'))}${OSES.map((o) => chipLink(q.os === o, href(q, { os: o }), OS_NAME[o])).join('')}</div></fieldset>` +
     `<details class="more-filters"${q.gem || q.all || q.sort !== 'gems' ? ' open' : ''}><summary>${L('More filters', '更多篩選')}</summary>` +
     `<fieldset><legend>${L('Show', '顯示')}</legend><div class="chips">${chipLink(q.gem, href(q, { gem: !q.gem }), L('Hidden gems only', '只看寶藏'))}${chipLink(q.all, href(q, { all: !q.all }), L(`Include ${unverified} not yet verified`, `含 ${unverified} 款未驗證工具`))}</div></fieldset>` +
     `<fieldset><legend>${L('Order', '排序')}</legend><div class="chips">${chipLink(q.sort === 'gems', href(q, { sort: 'gems' }), L('Hidden gems first', '寶藏優先'))}${chipLink(q.sort === 'newest', href(q, { sort: 'newest' }), L('Newest runs', '最新測試'))}${chipLink(q.sort === 'name', href(q, { sort: 'name' }), L('A to Z', 'A 到 Z'))}</div></fieldset></details>` +
@@ -116,9 +117,9 @@ export function renderBrowse(catalog: Catalog, params: URLSearchParams, nonce: s
   const kindPart = q.kind ? ` · ${esc(KIND_PLURAL[q.kind])}` : '';
   const osPart = q.os ? L(` · verified on ${esc(OS_NAME[q.os])}`, ` · 已在 ${esc(OS_NAME[q.os])} 驗證`) : '';
   const main =
-    `<section class="head mat after-top"><div class="wrap head-row"><div><h1>${L('Browse verified tools', '所有驗證過的工具')}</h1>` +
+    `<section class="head"><div class="wrap head-row"><div><h1>${L('Browse verified tools', '所有驗證過的工具')}</h1>` +
     `<p class="lede">${L('Every tool here was installed by pickfit in a fresh sandbox; every web app was opened and used in a sandboxed browser', '這裡的每款工具，pickfit 都在全新沙盒裡裝過；網頁應用也都在瀏覽器裡實際用過')}</p></div>` +
-    `${fitz('idle', 150, { eager: true })}</div><div class="ruler" aria-hidden="true"></div></section>` +
+    `${fitz('idle', 96, { eager: true })}</div></section>` +
     `<div class="wrap layout layout-browse"><aside class="side side-left">${filters}</aside><div>` +
     `<p class="cat-count">${L(
       `<span data-shown>${list.length}</span> of ${list.length} ${q.all ? 'tools' : 'verified tools'}`,
@@ -129,7 +130,8 @@ export function renderBrowse(catalog: Catalog, params: URLSearchParams, nonce: s
       ? `<ul class="cat-grid" data-grid>${list.map(card).join('')}</ul>` +
         (list.length > FIRST ? `<p class="pager js-only"><button type="button" class="btn btn-quiet" data-more>${L(`Show ${Math.min(FIRST, list.length - FIRST)} more`, `再顯示 ${Math.min(FIRST, list.length - FIRST)} 款`)}</button></p>` : '')
       : '') +
-    `<div class="empty"${list.length ? ' hidden' : ''} data-filter-empty>${fitz('sorry', 80)}<div><p><b>${L('Nothing here fits that filter.', '沒有符合這個篩選條件的工具。')}</b></p><p class="quiet">${L('Try fewer filters, or <a href="/">describe the job</a> and let Fitz look.', '試著減少篩選條件，或<a href="/">描述你要做的事</a>，讓 Fitz 幫你找。')}</p></div></div>` +
+    // The head's Fitz is the one on this screen; the empty note is words only.
+    `<div class="empty"${list.length ? ' hidden' : ''} data-filter-empty><div><p><b>${L('Nothing here fits that filter.', '沒有符合這個篩選條件的工具。')}</b></p><p class="quiet">${L('Try fewer filters, or <a href="/">describe the job</a> and let Fitz look.', '試著減少篩選條件，或<a href="/">描述你要做的事</a>，讓 Fitz 幫你找。')}</p></div></div>` +
     `</div></div>`;
   return renderShell({
     nonce,

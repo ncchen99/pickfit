@@ -6,7 +6,7 @@
 import { L, lang } from '../i18n.ts';
 import { esc } from './html.ts';
 import { icon, OS_SPRITE } from './icons.ts';
-import { fitz, FITZ_BASE, ICON_32, marksLegend, popover } from './kit.ts';
+import { FITZ_BASE, ICON_32, ICON_32_DARK, marksLegend, popover } from './kit.ts';
 import { script } from './script.ts';
 import { CSS, CSS_ZH } from './styles.ts';
 
@@ -24,16 +24,16 @@ export interface ShellInput {
   main: string;
 }
 
+/** The logo is the way home, so the nav has no "Find". Compare shows only when the tray holds tools (or on /compare itself): see nav(). */
 const NAV = (): [Exclude<NavKey, null>, string, string][] => [
-  ['find', '/', L('Find', '搜尋')],
   ['browse', '/browse', L('Browse', '瀏覽')],
   ['compare', '/compare', L('Compare', '比較')],
   ['how', '/how', L('How it works', '運作方式')],
   ['agents', '/agents', L('For agents', '給 agent')],
 ];
 
-/** The wordmark: Fitz's 32 px icon and the name, with the cap-rufous dot over the i. */
-export const BRAND = `<a class="brand" href="/" translate="no"><img src="${ICON_32}" width="32" height="32" alt=""><span>pickf<span class="i-dot">i</span>t</span></a>`;
+/** The wordmark: Fitz's 32 px icon (cream outline on the dark page) and the name, with the cap-rufous dot over the i. */
+export const BRAND = `<a class="brand" href="/" translate="no"><picture><source srcset="${ICON_32_DARK}" media="(prefers-color-scheme: dark)"><img src="${ICON_32}" width="32" height="32" alt=""></picture><span>pickf<span class="i-dot">i</span>t</span></a>`;
 
 /** The tab icon: Fitz without tuft and tail, cropped so the bird fills the tab (brand/mascot/build.py favicon). */
 const FAVICON = `${FITZ_BASE}icons/fitz-favicon.svg`;
@@ -64,17 +64,20 @@ function shareMeta(input: ShellInput): string {
 /** The other language, on the same page: ?lang= is remembered in a cookie (i18n.ts); the script keeps the page's other query parameters. */
 function langSwitch(): string {
   const [to, tag, text] = lang() === 'zh-TW' ? ['en', 'en', 'English'] : ['zh-TW', 'zh-Hant-TW', '中文'];
-  return `<a class="lang-switch" href="?lang=${to}" data-lang="${to}" hreflang="${tag}" lang="${tag}">${icon('globe')}${text}</a>`;
+  return `<a class="lang-switch" href="?lang=${to}" data-lang="${to}" hreflang="${tag}" lang="${tag}">${text}</a>`;
 }
 
 function nav(active: NavKey): string {
+  // Compare is in the nav only while the compare tray holds tools: the script shows it (data-tray-nav).
+  // Without the script it stays hidden, except on /compare itself; the footer always links to it.
   const links = NAV().map(
     ([key, href, text]) =>
-      `<a href="${href}"${key === active ? ' aria-current="page"' : ''}${key === 'compare' ? ' data-tray-link' : ''}>${esc(text)}` +
+      `<a href="${href}"${key === active ? ' aria-current="page"' : ''}` +
+      `${key === 'compare' ? ` data-tray-link data-tray-nav${key === active ? '' : ' hidden'}` : ''}>${esc(text)}` +
       `${key === 'compare' ? '<span class="count" data-tray-count hidden></span>' : ''}</a>`,
   ).join('');
   return (
-    `<header class="top mat"><div class="wrap top-row">${BRAND}` +
+    `<header class="top"><div class="wrap top-row">${BRAND}` +
     `<nav class="nav" aria-label="${L('Main', '主選單')}">${links}</nav>` +
     `<div class="top-end">${langSwitch()}` +
     `<details class="menu"><summary aria-label="${L('Menu', '選單')}">${icon('menu')}</summary><nav class="menu-nav" aria-label="${L('Main, small screens', '主選單（小螢幕）')}">${links}</nav></details>` +
@@ -82,23 +85,19 @@ function nav(active: NavKey): string {
   );
 }
 
-const FOOTER = () => `<footer class="foot mat">
-<div class="wrap foot-grid">
-<div class="foot-brand">${BRAND}<p>${L('Every tool, tested first. pickfit installs every tool it suggests in a fresh sandbox, and hands you the steps that worked.', '先幫你試過推薦的軟體。pickfit 推薦的每款工具都先在全新沙盒裡裝過，再把可行的步驟交給你。')}</p></div>
-<nav class="foot-links" aria-label="${L('Footer', '頁尾')}"><p class="foot-h">${L('Use pickfit', '使用 pickfit')}</p><a href="/">${L('Find software', '搜尋軟體')}</a><a href="/browse">${L('Browse verified tools', '瀏覽已驗證的工具')}</a><a href="/compare">${L('Compare tools', '比較工具')}</a><a href="/agents">${L('Connect your agent', '接上你的 agent')}</a></nav>
-<nav class="foot-links" aria-label="${L('About', '關於')}"><p class="foot-h">${L('Why trust it', '為什麼可以信任')}</p><a href="/how">${L('How Fitz checks a tool', 'Fitz 如何檢查工具')}</a><a href="/how#labels">${L('What the labels mean', '標籤說明')}</a><a href="/how#rules">${L('Fitz’s rules', 'Fitz 的原則')}</a></nav>
-</div>
-<div class="wrap foot-notes">
+/** The footer: one quiet row on the page ground. The links (Compare among them, for visitors without the script) and the two trust sentences. */
+const FOOTER = () => `<footer class="foot">
+<div class="wrap foot-row">
+<nav class="foot-links" aria-label="${L('Footer', '頁尾')}"><a href="/">${L('Find software', '搜尋軟體')}</a><a href="/browse">${L('Browse verified tools', '瀏覽已驗證的工具')}</a><a href="/compare">${L('Compare tools', '比較工具')}</a><a href="/agents">${L('Connect your agent', '接上你的 agent')}</a><a href="/how">${L('How Fitz checks a tool', 'Fitz 如何檢查工具')}</a><a href="/how#labels">${L('What the labels mean', '標籤說明')}</a><a href="/how#rules">${L('Fitz’s rules', 'Fitz 的原則')}</a></nav>
 <p>${L('pickfit ranks by fit, not stars. No ads, no paid placement, no referral links, and it doesn’t make any of the software it suggests.', 'pickfit 看合不合身排序，不看星數。沒有廣告、付費排名或推薦連結，推薦的軟體也沒有一款是自家做的。')}</p>
 <p>${L('No account and no IP address stored. Your sentence goes to Meta’s Muse Spark (served by Meta, reached directly or through OpenRouter) with storage turned off; pickfit keeps only the conditions it parsed, such as the task and the OS.', '免帳號，也不記錄 IP。你輸入的句子會送到 Meta 的 Muse Spark（由 Meta 提供，直接或經 OpenRouter 轉送；已關閉資料保存）；pickfit 只保留從中解析出的條件，例如任務和作業系統。')}</p>
 </div>
-<div class="ruler" aria-hidden="true"></div>
 </footer>`;
 
-/** The legend for a fitting ticket, opened from results and tool pages. */
+/** The legend for a fitting ticket, opened from results and tool pages. No Fitz of its own: the page's Fitz is already on the screen behind it. */
 const LEGEND = () => `<dialog class="sheet" id="legend" aria-labelledby="legend-title">
 <form method="dialog" class="sheet-close"><button class="btn btn-ghost btn-icon" aria-label="${L('Close', '關閉')}">${icon('x')}</button></form>
-<div class="sheet-head">${fitz('neutral', 72)}<h2 id="legend-title">${L('How to read a tool card', '怎麼看工具卡')}</h2></div>
+<div class="sheet-head"><h2 id="legend-title">${L('How to read a tool card', '怎麼看工具卡')}</h2></div>
 <dl class="legend">
 <div><dt><span class="seam-sample" aria-hidden="true"></span>${L('Stitching', '縫線')}</dt><dd>${L('pickfit installed this tool itself. Everything under the stitches comes from that run. A tool pickfit has not run never gets stitches.', 'pickfit 親自安裝過這款工具，縫線下方的內容都來自那次測試。沒測過的工具，一律沒有縫線。')}</dd></div>
 <div><dt><span class="badge badge-pass">${icon('check')}${L('Verified on your OS', '已在你的作業系統上驗證')}</span></dt><dd>${L('The install steps ran on the system you chose. “Ran on Linux only” means it has not been run on yours yet.', '安裝步驟在你選的系統上跑過。「只在 Linux 上執行過」表示還沒在你的系統上跑過。')}</dd></div>
@@ -111,11 +110,11 @@ ${marksLegend()}
 </dialog>`;
 
 const TRAY = () => `<aside class="tray" id="tray" aria-label="${L('Compare tray', '比較匣')}" hidden>
-<div class="wrap tray-row">${fitz('comparing', 44)}
+<div class="wrap tray-row">
 <ul class="tray-list" data-tray-list></ul>
 <span class="tray-note" data-tray-note></span>
 <button type="button" class="btn btn-ghost btn-sm" data-tray-clear>${L('Clear', '清除')}</button>
-<a class="btn btn-primary btn-sm" data-tray-go href="/compare">${icon('scale')}${L('Compare', '比較')}</a>
+<a class="btn btn-quiet btn-sm" data-tray-go href="/compare">${L('Compare', '比較')}</a>
 </div></aside>
 <div class="toasts" role="status" aria-live="polite" data-toasts></div>`;
 
@@ -129,7 +128,8 @@ export function renderShell(input: ShellInput): string {
 <title>${esc(input.title)}</title>
 <meta name="description" content="${esc(input.description)}">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#1D3D2A">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F7F7F4">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#161613">
 <link rel="icon" href="${FAVICON}" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/assets/og/apple-touch-icon.png">
 ${shareMeta(input)}

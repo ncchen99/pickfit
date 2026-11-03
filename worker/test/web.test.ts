@@ -10,6 +10,7 @@ import type { FindOutput, PickOut } from '../src/find.ts';
 import { runDay } from '../src/evidence.ts';
 import { catalogStats, EMPTY_FORM, esc, guiSentence, levelLabel, ranSentence, renderResults, safeUrl, yourSystem, type FormValues } from '../src/page.ts';
 import { BODY_MAX_BYTES, MAX_IN_FLIGHT, SEARCHES_PER_MINUTE, visitorKey } from '../src/web.ts';
+import { command } from '../src/ui/kit.ts';
 import { makeWorker } from '../src/worker.ts';
 import { answer, fixtureCatalog, fixtureIndex, makeD1, metaResponse } from './helpers.ts';
 
@@ -132,7 +133,8 @@ test('a search is find_software plus get_install_guide: reasons, verification, s
   assert.match(first, /<li class="rf rf-yes" data-tip="Verified on your OS"><svg class="os os-macos"[^>]*>.*?<\/svg>macOS arm64<\/li><li class="rf">.*?Installed by hand<\/li>/);
   assert.match(first, /<span class="sr">Checked on <\/span>28 Oct 2026/);
   assert.ok(!first.includes('mine-yes'), 'a run on your OS is said by its mark, not again in words');
-  assert.match(first, /<details class="install" open><summary><span>Install steps that worked on <span class="sys"><svg class="os os-macos"[^>]*>.*?<\/svg>macOS arm64/);
+  // Its one step is already above the fold, so the full steps (with the check and the steps by hand) stay folded there.
+  assert.match(first, /<details class="install"><summary><span>Install steps that worked on <span class="sys"><svg class="os os-macos"[^>]*>.*?<\/svg>macOS arm64/);
   assert.match(first, /brew install fixture\/tap\/fixture-llm-runner/);
   assert.match(first, /You do these yourself<\/h4><ul><li>Allow incoming connections/);
   assert.match(first, /The output should contain “fixture-llm-runner 0\.4\.1”/);
@@ -334,8 +336,46 @@ test('results: claim beside evidence, no rank numerals, and "built-in is enough"
   assert.ok(!html.includes('class="rank"') && !html.includes('t-rank'));
   for (const pick of html.split('<article class="pick"').slice(1)) {
     // The claim and the verdict, then the stitches, the command that worked, and the record behind one expander.
-    assert.match(pick, /<p class="fit">[\s\S]*<div class="glance t-glance">[\s\S]*<div class="seam" aria-hidden="true"><\/div><div class="t-install">[\s\S]*<details class="t-more">[\s\S]*<section class="record" aria-label="Test record">/);
+    assert.match(pick, /<p class="fit">[\s\S]*<div class="glance t-glance">[\s\S]*<div class="seam" aria-hidden="true"><\/div><div class="t-install(?: t-elsewhere)?">[\s\S]*<details class="t-more">[\s\S]*<section class="record" aria-label="Test record">/);
   }
+});
+
+test('the answer comes first: every step, "On X instead? Use Y." from a verified run, then "Also fits"', async () => {
+  // fixture-transcribe ran on Linux only (2 steps, one with sudo); fixture-llm-runner also ran on macOS arm64.
+  const transcribe = { slug: 'fixture-transcribe', fit: 'Transcribes recordings offline.', reasons: [{ claim: 'Free to use', field: 'pricing', value: 'free' }], tradeoffs: [], vs_well_known: null };
+  const s = site({}, () => metaResponse(answer({ picks: [transcribe, answer().picks[0]] })));
+  const need = 'transcribe a recording offline';
+  const [first, second] = (await (await s.search({ need })).text()).split('<article class="pick"').slice(1);
+  // A step with sudo gets a Copy of its own: pasted together, sudo's password prompt can swallow the next line.
+  assert.match(first, /<div class="t-install"><p class="t-install-label">.*?<b>Install<\/b><span class="quiet">2 steps, as pickfit ran them on Linux x86_64<\/span><\/p><div class="cmd"><pre translate="no"><code>sudo apt-get install -y ffmpeg<\/code><\/pre>.*?<\/div><div class="cmd"><pre translate="no"><code>pipx install fixture-transcribe<\/code><\/pre>/);
+  assert.match(first, /<p class="caution small">Uses sudo, so run the steps one at a time\.<\/p>/);
+  // All of them are above the fold, so the fold's own steps stay closed instead of repeating them.
+  assert.match(first, /<details class="install"><summary>/);
+  // The second half is the run's own level label, and the line comes before the stitches.
+  assert.match(first, /<p class="instead">On macOS instead\? Use <a href="\/tool\/fixture-llm-runner">Fixture LLM Runner<\/a>\. Its main function works on macOS arm64\.<\/p><div class="seam"/);
+  assert.match(first, /<h3 class="also">Also fits<\/h3>$/);
+  assert.ok(!second.includes('class="instead"') && !second.includes('as pickfit ran'), 'the others keep their first command only');
+  // Only the person's own system is said once they chose one; nothing when the first pick ran there.
+  const mac = (await (await s.search({ need, os: 'macos' })).text()).split('<article class="pick"')[1];
+  assert.match(mac, /<p class="instead">On macOS\? Use <a href="\/tool\/fixture-llm-runner">/);
+  // Steps from another OS say so before the command, and their Copy is not the screen's one solid yellow.
+  assert.match(mac, /<div class="t-install t-elsewhere"><p class="t-install-label">.*?<\/p><p class="caution">These steps ran on Linux x86_64\. pickfit hasn’t run them on macOS, so expect differences\.<\/p><div class="cmd">/);
+  assert.ok(!(await (await s.search({ need, os: 'linux' })).text()).includes('class="instead"'));
+  // In Chinese: the same two lines, in fixed words.
+  const zh = await (await s.search({ need }, { cookie: 'pickfit_lang=zh-TW' })).text();
+  assert.match(zh, /<p class="instead">如果你用 macOS，改用 <a href="\/tool\/fixture-llm-runner">Fixture LLM Runner<\/a>：在 macOS arm64 上，/);
+  assert.match(zh, /<h3 class="also">也適合<\/h3>/);
+});
+
+test('a command of several lines: each line is its own block, and the text Copy reads is the command exactly', () => {
+  const text = 'brew tap pasrom/meeting-transcriber\nbrew install --cask meeting-transcriber 2>&1\n\necho "<done>" && it\'s';
+  const html = command(text);
+  assert.match(html, /^<div class="cmd cmd-multi"><pre translate="no"><code><span class="ln">brew tap pasrom\/meeting-transcriber\n<\/span><span class="ln">brew install --cask meeting-transcriber 2&gt;&amp;1\n<\/span>/);
+  const shown = /<code>(.*)<\/code>/s.exec(html)![1].replace(/<[^>]+>/g, '');
+  const unesc = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'" } as Record<string, string>;
+  assert.equal(shown.replace(/&(amp|lt|gt|quot|#39);/g, (m) => unesc[m]), text);
+  // One line stays plain text in the code element.
+  assert.ok(command('pipx install x').includes('<code>pipx install x</code>'));
 });
 
 /** A Meta answer that arrives after a tick, so searches overlap. */

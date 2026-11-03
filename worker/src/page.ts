@@ -168,27 +168,34 @@ function facts(pick: PickOut): string {
   return items.length ? `<ul class="run-facts">${items.join('')}</ul>` : '';
 }
 
+/** When the steps ran on another system than the one the person chose: said in words, before the steps. */
+function systemCaution(guide: InstallOutput, form: FormValues): string {
+  const v = guide.verification;
+  const match = guide.applies_to_user_system.match;
+  if (match === 'other_os' && form.os) {
+    return `<p class="caution">${L(
+      `These steps ran on ${esc(system(v.os, v.arch))}. pickfit hasn’t run them on ${esc(osName(form.os))}, so expect differences.`,
+      `這些步驟是在 ${esc(system(v.os, v.arch))} 上跑的；pickfit 還沒在 ${esc(osName(form.os))} 上試過，結果可能不同。`,
+    )}</p>`;
+  }
+  if (match === 'same_os_other_arch' && form.arch) {
+    return `<p class="caution">${L(
+      `These steps ran on ${esc(system(v.os, v.arch))}, not ${esc(form.arch)}. A download may need the other build.`,
+      `這些步驟是在 ${esc(system(v.os, v.arch))} 上跑的，不是 ${esc(form.arch)}；下載時可能要換另一個版本。`,
+    )}</p>`;
+  }
+  return '';
+}
+
+/** The first pick shows every step of the run that worked above its fold when there are this many or fewer. */
+const STEPS_SHOWN = 3;
+
 /** The steps get_install_guide returns, for a person instead of an agent. `inRun`: inside a run card that already names the system, so no fold of its own. */
 export function installSection(guide: InstallOutput, form: FormValues, open: boolean, inRun = false, stepper: { hint: string | null; needs?: string } | null = null): string {
   const v = guide.verification;
   if (guide.steps.length === 0) return '';
-  const cautions: string[] = [];
-  const match = guide.applies_to_user_system.match;
-  if (match === 'other_os' && form.os) {
-    cautions.push(
-      `<p class="caution">${L(
-        `These steps ran on ${esc(system(v.os, v.arch))}. pickfit hasn’t run them on ${esc(osName(form.os))}, so expect differences.`,
-        `這些步驟是在 ${esc(system(v.os, v.arch))} 上跑的；pickfit 還沒在 ${esc(osName(form.os))} 上試過，結果可能不同。`,
-      )}</p>`,
-    );
-  } else if (match === 'same_os_other_arch' && form.arch) {
-    cautions.push(
-      `<p class="caution">${L(
-        `These steps ran on ${esc(system(v.os, v.arch))}, not ${esc(form.arch)}. A download may need the other build.`,
-        `這些步驟是在 ${esc(system(v.os, v.arch))} 上跑的，不是 ${esc(form.arch)}；下載時可能要換另一個版本。`,
-      )}</p>`,
-    );
-  }
+  const caution = systemCaution(guide, form);
+  const cautions: string[] = caution ? [caution] : [];
   const steps = guide.steps.map((step) => {
     const notes: string[] = [];
     if (step.needs_sudo) notes.push(L('Uses sudo.', '需要 sudo。'));
@@ -393,16 +400,45 @@ function readmeFix(guide: InstallOutput): string {
     : '';
 }
 
-/** The one action on a ticket: the first command of the run that worked, ready to copy. */
-function quickInstall(guide: InstallOutput | undefined, form: FormValues): string {
+/**
+ * The one action on a ticket. The first pick shows every command of the run that worked (up to three) in one
+ * block with one Copy, named by the system it ran on; the others show the first command of it.
+ * Steps that ran on another OS than the one chosen say so before the command, and their Copy is not the
+ * screen's one solid yellow (t-elsewhere). Steps with sudo get a Copy each: pasted together into a shell
+ * without bracketed paste, sudo's password prompt would swallow the lines after it.
+ */
+function quickInstall(guide: InstallOutput | undefined, form: FormValues, index: number): string {
   const first = guide?.steps[0];
   if (!guide || !first) return '';
   const v = guide.verification;
-  const elsewhere = guide.applies_to_user_system.match === 'other_os' && form.os;
+  const elsewhere = guide.applies_to_user_system.match === 'other_os' && !!form.os;
+  const cls = `t-install${elsewhere ? ' t-elsewhere' : ''}`;
+  if (index === 0 && guide.steps.length <= STEPS_SHOWN) {
+    const n = guide.steps.length;
+    const where = esc(system(v.os, v.arch));
+    const byHand = guide.manual_steps.length;
+    const sudo = guide.steps.some((s) => s.needs_sudo);
+    const apart = sudo && n > 1;
+    // The same cautions the full steps carry, said once under the block.
+    const notes: string[] = [];
+    if (sudo) notes.push(apart ? L('Uses sudo, so run the steps one at a time.', '需要 sudo，請一次執行一個步驟。') : L('Uses sudo.', '需要 sudo。'));
+    if (guide.steps.some((s) => PIPE_TO_SHELL.test(s.command)))
+      notes.push(L('Runs a downloaded script: read it before you run it.', '會執行下載來的腳本，執行前請先看過內容。'));
+    return (
+      `<div class="${cls}"><p class="t-install-label">${icon('terminal')}<b>${L('Install', '安裝')}</b><span class="quiet">${
+        n === 1 ? L(`1 step, as pickfit ran it on ${where}`, `pickfit 在 ${where} 上跑的 1 個步驟`) : L(`${n} steps, as pickfit ran them on ${where}`, `pickfit 在 ${where} 上跑的 ${n} 個步驟`)
+      }${byHand ? L(`, plus ${byHand} by hand`, `，另有 ${byHand} 個手動步驟`) : ''}</span></p>` +
+      systemCaution(guide, form) +
+      (apart ? guide.steps.map((s) => command(s.command)).join('') : command(guide.steps.map((s) => s.command).join('\n'))) +
+      (notes.length ? `<p class="caution small">${notes.join(' ')}</p>` : '') +
+      readmeFix(guide) +
+      `</div>`
+    );
+  }
   const more = guide.steps.length - 1 + guide.manual_steps.length;
   const total = guide.steps.length + guide.manual_steps.length;
   return (
-    `<div class="t-install"><p class="t-install-label">${icon('terminal')}${L('Install', '安裝')}${
+    `<div class="${cls}"><p class="t-install-label">${icon('terminal')}${L('Install', '安裝')}${
       elsewhere ? L(`, as it ran on ${esc(system(v.os, v.arch))}`, `（${esc(system(v.os, v.arch))} 上的步驟）`) : ''
     }` +
     `${more ? `<span class="quiet">${L(` · step 1 of ${total}`, ` · 第 1 步，共 ${total} 步`)}</span>` : ''}</p>${command(first.command)}` +
@@ -463,7 +499,7 @@ function webOpen(pick: PickOut): string {
     : '';
 }
 
-function pickHtml(pick: PickOut, index: number, result: SearchResult, form: FormValues, catalog: Catalog): string {
+function pickHtml(pick: PickOut, index: number, result: SearchResult, form: FormValues, catalog: Catalog, instead = ''): string {
   const { out } = result;
   const entry = catalog.bySlug.get(pick.slug);
   const best = out.best_free?.slug === pick.slug ? out.best_free : null;
@@ -513,8 +549,9 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
     `</div>` +
     `<p class="fit">${esc(pick.fit)}</p>` +
     (web ? webGlance(pick, entry) : glanceStrip(pick, guide, form)) +
+    instead +
     SEAM +
-    (web ? webOpen(pick) : quickInstall(guide, form)) +
+    (web ? webOpen(pick) : quickInstall(guide, form, index)) +
     `<details class="t-more"><summary>${icon('chevron-down')}${L('Why it fits and how we know', '為什麼適合、我們怎麼知道')}</summary><div class="t-more-body">` +
     `<div class="t-body"><div class="t-claim">` +
     // On the rules path the fit sentence is the summary: say it once.
@@ -532,7 +569,8 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
     coverage(pick.features, { pop: 'pop-features' }) +
     `</div></div>` +
     (web ? webRecord(pick, entry) : record(pick, guide, form)) +
-    (guide && !web ? installSection(guide, form, index === 0) : '') +
+    // Open for the first pick only when the steps above it are not all of them; otherwise it would repeat them.
+    (guide && !web ? installSection(guide, form, index === 0 && guide.steps.length > STEPS_SHOWN) : '') +
     (links.length ? `<p class="t-links">${links.join('')}</p>` : '') +
     `</div></details>` +
     `<div class="t-foot"><a class="more" href="/tool/${esc(pick.slug)}">${L('Full profile', '完整介紹')}${icon('arrow-right')}</a><span class="grow"></span>${compareToggle(pick.slug, pick.name)}</div>` +
@@ -715,6 +753,39 @@ function resultsFitz(out: FindOutput): FitzName {
   return 'recommending';
 }
 
+/**
+ * The answer's second line, as the MCP answer gives it: "On Linux instead? Use babelscribe." Only for a system
+ * another pick ran on and the first did not (a run that passed), and only the person's own system when they chose
+ * one. What follows the name is that run's level label, verbatim, so nothing is guessed.
+ */
+function insteadLines(picks: PickOut[], catalog: Catalog, form: FormValues): string {
+  const [top, ...rest] = picks;
+  const topEntry = top ? catalog.bySlug.get(top.slug) : undefined;
+  if (!topEntry || top.web_app || rest.length === 0) return '';
+  const covered = new Set<OS>(verifiedOn(topEntry));
+  const lines: string[] = [];
+  for (const pick of rest) {
+    const entry = catalog.bySlug.get(pick.slug);
+    if (!entry || pick.web_app) continue;
+    for (const os of verifiedOn(entry)) {
+      const guide = entry.install[os]!;
+      if (covered.has(os) || (form.os && os !== form.os) || !passed(guide.run.gui)) continue;
+      covered.add(os);
+      const name = `<a href="/tool/${esc(entry.slug)}">${esc(pick.name)}</a>`;
+      const said = esc(levelLabel(guide.run.level, { gui: guide.run.gui, mcp: guide.mcp }));
+      const where = esc(system(guide.run.os, guide.run.arch));
+      const on = esc(osName(os));
+      lines.push(
+        `<p class="instead">${L(
+          `On ${on}${form.os ? '' : ' instead'}? Use ${name}. ${said} on ${where}.`,
+          `如果你用 ${on}，改用 ${name}：在 ${where} 上，${said}。`,
+        )}</p>`,
+      );
+    }
+  }
+  return lines.join('');
+}
+
 /** The results area for one search. `catalog` names a best free option that is not among the picks. */
 export function renderResults(
   result: SearchResult,
@@ -780,12 +851,18 @@ export function renderResults(
     );
   }
   if (out.picks.length) {
-    parts.push(`<div class="picks">${out.picks.map((pick, i) => pickHtml(pick, i, result, form, catalog)).join('')}</div>`);
+    // The answer first: one pick in full, then the others under their own heading.
+    const instead = insteadLines(out.picks, catalog, form);
+    const close = out.matched_by === 'rules' && out.match_quality !== undefined && out.match_quality !== 'good';
+    const also = out.picks.length > 1 ? `<h3 class="also">${close ? L('Also close', '其他接近的') : L('Also fits', '也適合')}</h3>` : '';
+    parts.push(
+      `<div class="picks">${out.picks.map((pick, i) => (i === 1 ? also : '') + pickHtml(pick, i, result, form, catalog, i === 0 ? instead : '')).join('')}</div>`,
+    );
     if (out.coverage_note && !fitFirst) parts.push(`<p class="quiet small">${esc(coverageNote(out.coverage_note))}</p>`);
     const entries = slugs.map((s) => catalog.bySlug.get(s)).filter((e): e is Entry => !!e);
     if (entries.length > 1) {
       parts.push(
-        `<details class="sbs"><summary>${icon('columns-3')}${L('See these side by side', '並排比較')}</summary>` +
+        `<details class="sbs"><summary>${icon('chevron-down')}${L('See these side by side', '並排比較')}</summary>` +
           compareTable(entries, { os: form.os || undefined, arch: form.arch || undefined, now: new Date(catalog.built_at) }) +
           `</details>`,
       );
