@@ -1,6 +1,6 @@
 # 安全檢查上線前的分數變化（2026-11-03）
 
-跑完 `pickfit security --all --write` 之後，和加入安全檢查之前（`d44a4113`）比較，列出分數有變化的 79 款軟體：寶藏在前，再依原本的分數由高到低排。這份是照協調 session 的審查修正後重掃的結果。
+跑完 `pickfit security --all --write` 之後，和加入安全檢查之前（`d44a4113`）比較，列出分數有變化的 81 款軟體：寶藏在前，再依原本的分數由高到低排。這份是照協調 session 的審查修正後重掃的結果。
 
 - 「最嚴重的一筆」是每款排序後的第一筆弱點；完整清單在每筆紀錄的 `security.findings`，工具頁也看得到。
 - 分數變成 75.0 的幾款網頁，原本就有視覺缺陷：先套 79 分上限，再乘上視覺扣分的 0.95。
@@ -28,6 +28,8 @@
 | mergegate | self_hosted_web_app | 86.6 → 79.0 | 是 → **否** | 2 | crates:wasmtime 48.0.6：GHSA-mghf-wjfp-p5xm（CRITICAL，48.0.7 已修正） |
 | free-online-tools-for-video-audio-pdfs-images-and-ai | web_app | 86.5 → 75.0 | 是 → **否** | 25 | npm:dompurify 3.4.12：GHSA-cg2g-xh64-v4q7（CRITICAL，3.4.17 已修正） |
 | paintracker-ca | web_app | 86.5 → 75.0 | 是 → **否** | 41 | npm:next 16.2.4：GHSA-2464-fhr4-w9xw（CRITICAL，16.4.1 已修正） |
+| stegmoji | web_app | 86.5 → 75.0 | 是 → **否** | 32 | npm:next 14.2.33：GHSA-2464-fhr4-w9xw（CRITICAL，15.5.28 已修正） |
+| xprite | web_app | 86.5 → 75.0 | 是 → **否** | 2 | npm:dompurify 3.4.16：GHSA-cg2g-xh64-v4q7（CRITICAL，3.4.17 已修正） |
 | goatedcontext | cli_tool | 83.1 → 79.0 | 是 → **否** | 1 | npm:zod 3.25.76：GHSA-mrhx-c7xc-m3w5（HIGH，4.6.6 已修正） |
 | rvpm | cli_tool | 83.1 → 79.0 | 是 → **否** | 7 | crates:zip 6.0.0：GHSA-m665-v7pm-7grj（CRITICAL，9.0.5 已修正） |
 | fetchira | cli_tool | 82.7 → 79.0 | 是 → **否** | 4 | crates:quinn-proto 0.11.15：RUSTSEC-2026-0340（HIGH，0.11.18 已修正） |
