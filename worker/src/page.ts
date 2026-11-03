@@ -14,12 +14,12 @@ import { fitNote } from './fit.ts';
 import { isZh, L, withLang } from './i18n.ts';
 import { PIPE_TO_SHELL, type InstallOutput, type VerifiedInPickfit } from './install.ts';
 import { compareTable } from './pages/compare.ts';
-import { day, guiSentence, howRan, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system, webLevelLabel } from './ui/facts.ts';
+import { day, guiSentence, howRan, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system, webLevelLabel, webRunWords } from './ui/facts.ts';
 import { esc, link, listOf } from './ui/html.ts';
 import { icon, osMark, type IconName } from './ui/icons.ts';
-import { badge, command, compareToggle, coverage, fitz, glance, kindTag, levelIcon, notice, osList, runFacts, says, SEAM, sysTag, tape, type FitzName } from './ui/kit.ts';
+import { badge, command, compareToggle, coverage, fitz, kindTag, levelIcon, measure, notice, osList, runFacts, says, SEAM, sysTag, tape, type FitzName, type MeasureRow } from './ui/kit.ts';
 import { renderShell } from './ui/shell.ts';
-import { NO_INSTALL_LABEL, noInstallLabel, webFacts, webRanSentence } from './webapp.ts';
+import { NO_INSTALL_LABEL, noInstallLabel, webFacts } from './webapp.ts';
 
 export { esc, safeUrl } from './ui/html.ts';
 export { guiSentence, LEVEL_LABEL, levelLabel, osName } from './ui/facts.ts';
@@ -168,27 +168,34 @@ function facts(pick: PickOut): string {
   return items.length ? `<ul class="run-facts">${items.join('')}</ul>` : '';
 }
 
+/** When the steps ran on another system than the one the person chose: said in words, before the steps. */
+function systemCaution(guide: InstallOutput, form: FormValues): string {
+  const v = guide.verification;
+  const match = guide.applies_to_user_system.match;
+  if (match === 'other_os' && form.os) {
+    return `<p class="caution">${L(
+      `These steps ran on ${esc(system(v.os, v.arch))}. pickfit hasn’t run them on ${esc(osName(form.os))}, so expect differences.`,
+      `這些步驟是在 ${esc(system(v.os, v.arch))} 上跑的；pickfit 還沒在 ${esc(osName(form.os))} 上試過，結果可能不同。`,
+    )}</p>`;
+  }
+  if (match === 'same_os_other_arch' && form.arch) {
+    return `<p class="caution">${L(
+      `These steps ran on ${esc(system(v.os, v.arch))}, not ${esc(form.arch)}. A download may need the other build.`,
+      `這些步驟是在 ${esc(system(v.os, v.arch))} 上跑的，不是 ${esc(form.arch)}；下載時可能要換另一個版本。`,
+    )}</p>`;
+  }
+  return '';
+}
+
+/** The first pick shows every step of the run that worked above its fold when there are this many or fewer. */
+const STEPS_SHOWN = 3;
+
 /** The steps get_install_guide returns, for a person instead of an agent. `inRun`: inside a run card that already names the system, so no fold of its own. */
 export function installSection(guide: InstallOutput, form: FormValues, open: boolean, inRun = false, stepper: { hint: string | null; needs?: string } | null = null): string {
   const v = guide.verification;
   if (guide.steps.length === 0) return '';
-  const cautions: string[] = [];
-  const match = guide.applies_to_user_system.match;
-  if (match === 'other_os' && form.os) {
-    cautions.push(
-      `<p class="caution">${L(
-        `These steps ran on ${esc(system(v.os, v.arch))}. pickfit hasn’t run them on ${esc(osName(form.os))}, so expect differences.`,
-        `這些步驟是在 ${esc(system(v.os, v.arch))} 上跑的；pickfit 還沒在 ${esc(osName(form.os))} 上試過，結果可能不同。`,
-      )}</p>`,
-    );
-  } else if (match === 'same_os_other_arch' && form.arch) {
-    cautions.push(
-      `<p class="caution">${L(
-        `These steps ran on ${esc(system(v.os, v.arch))}, not ${esc(form.arch)}. A download may need the other build.`,
-        `這些步驟是在 ${esc(system(v.os, v.arch))} 上跑的，不是 ${esc(form.arch)}；下載時可能要換另一個版本。`,
-      )}</p>`,
-    );
-  }
+  const caution = systemCaution(guide, form);
+  const cautions: string[] = caution ? [caution] : [];
   const steps = guide.steps.map((step) => {
     const notes: string[] = [];
     if (step.needs_sudo) notes.push(L('Uses sudo.', '需要 sudo。'));
@@ -231,12 +238,13 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
   }
   const issueList = readerIssues(guide.known_issues);
   const issues = issueList.length
-    ? `<h4>${L('Where the README and reality differ', 'README 與實測不符之處')}</h4><ul class="issues">${issueList
+    ? // Folded: the steps above already work as written; the differences are for the curious.
+      `<details class="issues-fold"><summary>${L('Where the README and reality differ', 'README 與實測不符之處')}</summary><ul class="issues">${issueList
         .map(
           (i) =>
             `<li><span class="quiet">${L('README:', 'README 寫：')}</span> ${esc(i.readme_said)}<br><span class="quiet">${L('What worked:', '實際可行：')}</span> ${esc(i.actually_needed)}</li>`,
         )
-        .join('')}</ul>`
+        .join('')}</ul></details>`
     : '';
   const ran = guide.verified_in_pickfit;
   if (ran) cautions.push(...sandboxNotes(ran));
@@ -257,15 +265,11 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
   );
 }
 
-/** What a reader needs to know when the run's commands named pickfit's sandbox: how they were adapted, and what was not. */
+/** What a reader must act on when the run's commands named pickfit's sandbox: a path $HOME could not replace, a folder to make.
+ *  (That the sandbox's home became $HOME goes unsaid; the fold below keeps the commands exactly as run.) */
 function sandboxNotes(ran: VerifiedInPickfit): string[] {
   const home = `<code translate="no">${esc(ran.sandbox_home)}</code>`;
-  const notes = [
-    `<p class="quiet small">${L(
-      `pickfit ran these steps in its sandbox, whose home folder is ${home}. Here that folder is written as <code translate="no">$HOME</code>, so the commands use yours.`,
-      `pickfit 是在沙盒裡跑這些步驟的，沙盒的家目錄是 ${home}；這裡改寫成 <code translate="no">$HOME</code>，指令會用你自己的家目錄。`,
-    )}</p>`,
-  ];
+  const notes: string[] = [];
   if (ran.not_portable.length) {
     notes.push(
       `<p class="caution small">${L(
@@ -277,7 +281,7 @@ function sandboxNotes(ran: VerifiedInPickfit): string[] {
   if (ran.needs_workdir) {
     notes.push(
       `<p class="caution small">${L(
-        'These steps ran from a folder named <code translate="no">work</code> in that home folder, which already existed. Make it and run them from there:',
+        'These steps ran from a folder named <code translate="no">work</code> in the home folder, which already existed. Make it and run them from there:',
         '這些步驟是在家目錄裡一個已經存在的 <code translate="no">work</code> 資料夾裡跑的。請先建立它，再從那裡執行：',
       )}</p>${command('mkdir -p "$HOME/work" && cd "$HOME/work"')}`,
     );
@@ -322,7 +326,7 @@ function installStages(all: { name: string; html: string; cls?: string }[]): str
 }
 
 /** The run record: the evidence half of a pick, under the seam. Each fact once, as a mark; only a mismatch with the reader's OS is said in words. */
-function record(pick: PickOut, guide: InstallOutput | undefined, form: FormValues): string {
+function record(pick: PickOut, guide: InstallOutput | undefined, form: FormValues, entry: Entry | undefined): string {
   const v = pick.verification;
   const mine = yourSystem(v, form);
   const mcp = guide?.mcp_client_config ?? null;
@@ -344,39 +348,10 @@ function record(pick: PickOut, guide: InstallOutput | undefined, form: FormValue
     levelLine(levelLabel(v.level, { gui: v.gui, mcp }), passed(v.gui), levelIcon(v.level, { gui: v.gui, mcp })) +
     (v.os ? runFacts(v, { offline, mine: v.verified_on_user_os, askedOffline: form.offline && !v.gui }) : `<p>${esc(ranSentence(v))}</p>`) +
     (mcpLine ? `<p>${esc(mcpLine)}</p>` : '') +
-    (v.gui ? `<p>${esc(guiSentence(v.gui))}</p>` : '') +
+    (v.gui ? `<p>${esc(guiSentence(v.gui, { entry, features: pick.features }))}</p>` : '') +
     (mine.state === 'no' ? `<p class="mine mine-no">${esc(mine.text)}</p>` : mine.state === 'unknown' ? `<p class="small quiet">${esc(mine.text)}</p>` : '') +
-    `<details class="how"><summary>${L('How we know', '我們怎麼知道的')}</summary><p>${esc(pick.how_we_know)}</p></details>` +
     `</section>`
   );
-}
-
-/** The mark for the profile field a reason cites; a run on an OS gets that OS's mark. */
-const FIELD_MARK: Record<string, IconName> = {
-  platforms: 'monitor',
-  use_cases: 'target',
-  features_checked: 'list',
-  processing: 'laptop',
-  network: 'wifi-off',
-  pricing: 'tag',
-  pricing_note: 'tag',
-  open_source: 'scroll-text',
-  license: 'scroll-text',
-  gpu: 'cpu',
-  apple_silicon_only: 'cpu',
-  min_ram_gb: 'cpu',
-  runtimes: 'package',
-  system_packages: 'package',
-  install_method_user_os: 'terminal',
-  last_release: 'calendar',
-  mcp_tools: 'plug',
-  mcp_env_vars: 'plug',
-  quality: 'ruler',
-};
-function reasonMark(field: string, value: string): string {
-  const os = /^(linux|macos|windows)\b/.exec(value)?.[1] as OS | undefined;
-  if ((field === 'verified_on' || field === 'verified_on_user_os') && os) return osMark(os);
-  return icon(FIELD_MARK[field] ?? 'check');
 }
 
 const MATCH_LABEL = {
@@ -405,49 +380,93 @@ function matchCoverage(match: NonNullable<PickOut['match']>): string {
 /** find.ts adds this tradeoff for agents when the run was on another system; the test record says it in full. */
 const RAN_ELSEWHERE = /^Verified on \S+(?: \S+)? only; pickfit has not run its /;
 
-/** The verdict strip: the four things people decide on first, each from a field or the run. */
-function glanceStrip(pick: PickOut, guide: InstallOutput | undefined, form: FormValues): string {
+/** The rows every pick's sheet ends with: how far the run got is said by the caller; the price is a field. */
+const priceRow = (pick: PickOut): MeasureRow => ({
+  label: L('Price', '價格'),
+  value: esc(PRICE[pick.pricing]),
+  tone: pick.pricing === 'unknown' ? 'quiet' : undefined,
+});
+/** Offline, when a run checked it; the label says offline, so the value says only whether it worked. */
+const offlineRow = (works: boolean): MeasureRow => ({
+  label: L('Offline', '離線'),
+  value: works ? L('Works', '可用') : L('Needed the network', '需要網路'),
+  tone: works ? 'pass' : 'caution',
+});
+
+/**
+ * The verdict as a measurement sheet (measure()): the facts people decide on first, one row each, each from a field
+ * or the run. The first pick shows it as a sheet beside its fit sentence; "Also fits" shows the same values on one
+ * line, without the setup row (their steps are in the fold and on the tool page).
+ */
+function verdictSheet(pick: PickOut, guide: InstallOutput | undefined, form: FormValues, first: boolean): string {
   const v = pick.verification;
-  const where = system(v.os, v.arch);
-  const cells: string[] = [];
-  const sys = v.os ? { svg: osMark(v.os) } : 'monitor';
-  if (v.verified_on_user_os === true) cells.push(glance(sys, L('Your system', '你的系統'), L(`Ran on ${esc(where)}`, `在 ${esc(where)} 上執行過`), 'pass'));
-  else if (v.verified_on_user_os === false)
-    cells.push(glance(sys, L('Your system', '你的系統'), L(`Ran on ${esc(where)} only`, `只在 ${esc(where)} 上執行過`), 'caution'));
-  else cells.push(glance(sys, L('Ran on', '測試環境'), v.os ? esc(where) : L('No run', '尚未測試'), 'plain'));
-  const off = guide?.verification.works_offline;
-  const offline =
-    off === true
-      ? `<small>${L('Works offline', '可離線使用')}</small>`
-      : off === false && form.offline
-        ? `<small>${L('Needed the network', '需要網路')}</small>`
-        : '';
+  const where = esc(system(v.os, v.arch));
+  const mark = v.os ? osMark(v.os) : '';
+  const yours = L('Your system', '你的系統');
+  const rows: MeasureRow[] = [
+    v.verified_on_user_os === true
+      ? { label: yours, value: mark + L(`Ran on ${where}`, `在 ${where} 上執行過`), tone: 'pass' }
+      : v.verified_on_user_os === false
+        ? { label: yours, value: mark + L(`Ran on ${where} only`, `只在 ${where} 上執行過`), tone: 'caution' }
+        : { label: L('Ran on', '測試環境'), value: v.os ? mark + where : L('No run', '尚未測試') },
+  ];
   const evidence = { gui: v.gui, mcp: guide?.mcp_client_config ?? null };
-  cells.push(glance(levelIcon(v.level, evidence), L('Proof', '證據'), esc(levelLabel(v.level, evidence)) + offline, passed(v.gui) ? 'pass' : 'caution'));
-  if (guide && guide.steps.length) cells.push(glance('terminal', L('Setup', '安裝'), esc(setupWords(guide.steps.length, guide.manual_steps.length)), 'plain'));
-  cells.push(glance('tag', L('Price', '價格'), esc(PRICE[pick.pricing]), pick.pricing === 'unknown' ? 'quiet' : 'plain'));
-  return `<div class="glance t-glance">${cells.join('')}</div>`;
+  rows.push({ label: L('How far the run got', '測試進行到哪一步'), value: esc(levelLabel(v.level, evidence)), tone: passed(v.gui) ? 'pass' : 'caution' });
+  // Offline when the run checked it; a failed check only when the person asked for offline.
+  const off = guide?.verification.works_offline;
+  if (off === true || (off === false && form.offline)) rows.push(offlineRow(off));
+  if (first && guide && guide.steps.length)
+    rows.push({ label: L('Setup steps', '安裝步驟'), value: esc(setupWords(guide.steps.length, guide.manual_steps.length)) });
+  rows.push(priceRow(pick));
+  return measure(rows, { cls: 't-sheet' });
 }
 
-/** The evidence no one else has, in one line: what the README got wrong and what worked. */
+/** The evidence no one else has, in one plain line: what the README got wrong and what worked, verbatim. */
 function readmeFix(guide: InstallOutput): string {
   const issues = readerIssues(guide.known_issues);
   const fix = issues.find((i) => i.kind === 'readme_wrong') ?? issues[0];
-  return fix
-    ? `<p class="t-fix">${icon('scissors')}<span><b>${L('README fix:', 'README 修正：')}</b> ${esc(fix.actually_needed)}</span></p>`
-    : '';
+  return fix ? `<p class="t-fix"><b>${L('README fix:', 'README 修正：')}</b> ${esc(fix.actually_needed)}</p>` : '';
 }
 
-/** The one action on a ticket: the first command of the run that worked, ready to copy. */
-function quickInstall(guide: InstallOutput | undefined, form: FormValues): string {
+/**
+ * The one action on a ticket. The first pick shows every command of the run that worked (up to three) in one
+ * block with one Copy, named by the system it ran on; the others show the first command of it.
+ * Steps that ran on another OS than the one chosen say so before the command, and their Copy is not the
+ * screen's one solid yellow (t-elsewhere). Steps with sudo get a Copy each: pasted together into a shell
+ * without bracketed paste, sudo's password prompt would swallow the lines after it.
+ */
+function quickInstall(guide: InstallOutput | undefined, form: FormValues, index: number): string {
   const first = guide?.steps[0];
   if (!guide || !first) return '';
   const v = guide.verification;
-  const elsewhere = guide.applies_to_user_system.match === 'other_os' && form.os;
+  const elsewhere = guide.applies_to_user_system.match === 'other_os' && !!form.os;
+  const cls = `t-install${elsewhere ? ' t-elsewhere' : ''}`;
+  if (index === 0 && guide.steps.length <= STEPS_SHOWN) {
+    const n = guide.steps.length;
+    const where = esc(system(v.os, v.arch));
+    const byHand = guide.manual_steps.length;
+    const sudo = guide.steps.some((s) => s.needs_sudo);
+    const apart = sudo && n > 1;
+    // The same cautions the full steps carry, said once under the block.
+    const notes: string[] = [];
+    if (sudo) notes.push(apart ? L('Uses sudo, so run the steps one at a time.', '需要 sudo，請一次執行一個步驟。') : L('Uses sudo.', '需要 sudo。'));
+    if (guide.steps.some((s) => PIPE_TO_SHELL.test(s.command)))
+      notes.push(L('Runs a downloaded script: read it before you run it.', '會執行下載來的腳本，執行前請先看過內容。'));
+    return (
+      `<div class="${cls}"><p class="t-install-label">${icon('terminal')}<b>${L('Install', '安裝')}</b><span class="quiet">${
+        n === 1 ? L(`1 step, as pickfit ran it on ${where}`, `pickfit 在 ${where} 上跑的 1 個步驟`) : L(`${n} steps, as pickfit ran them on ${where}`, `pickfit 在 ${where} 上跑的 ${n} 個步驟`)
+      }${byHand ? L(`, plus ${byHand} by hand`, `，另有 ${byHand} 個手動步驟`) : ''}</span></p>` +
+      systemCaution(guide, form) +
+      (apart ? guide.steps.map((s) => command(s.command)).join('') : command(guide.steps.map((s) => s.command).join('\n'))) +
+      (notes.length ? `<p class="caution small">${notes.join(' ')}</p>` : '') +
+      readmeFix(guide) +
+      `</div>`
+    );
+  }
   const more = guide.steps.length - 1 + guide.manual_steps.length;
   const total = guide.steps.length + guide.manual_steps.length;
   return (
-    `<div class="t-install"><p class="t-install-label">${icon('terminal')}${L('Install', '安裝')}${
+    `<div class="${cls}"><p class="t-install-label">${icon('terminal')}${L('Install', '安裝')}${
       elsewhere ? L(`, as it ran on ${esc(system(v.os, v.arch))}`, `（${esc(system(v.os, v.arch))} 上的步驟）`) : ''
     }` +
     `${more ? `<span class="quiet">${L(` · step 1 of ${total}`, ` · 第 1 步，共 ${total} 步`)}</span>` : ''}</p>${command(first.command)}` +
@@ -469,33 +488,53 @@ export function webFactList(entry: Entry, cls = ''): string {
 }
 
 /** The run record of a web app: what pickfit's browser saw, under the seam. */
-function webRecord(pick: PickOut, entry: Entry | undefined): string {
+function webRecord(entry: Entry | undefined): string {
   const check = entry ? webCheck(entry) : null;
   if (!check || !entry) return '';
   return (
     `<section class="record" aria-label="${L('Test record', '測試紀錄')}">` +
     `<p class="record-title">${icon('badge-check')}${L('Test record', '測試紀錄')}</p>` +
     levelLine(webLevelLabel(check), true) +
-    `<p>${esc(webRanSentence(check))}</p>` +
+    `<p>${esc(webRunWords(entry, check))}</p>` +
     webFactList(entry) +
     `<p class="mine mine-yes">${esc(L('Nothing to install: it opens in a browser on any OS.', '免安裝：任何系統的瀏覽器都能打開。'))}</p>` +
-    `<details class="how"><summary>${L('How we know', '我們怎麼知道的')}</summary><p>${esc(pick.how_we_know)}</p></details>` +
     `</section>`
   );
 }
 
-/** A web app's verdict strip: where it runs, the proof, the setup (none) and the price. */
-function webGlance(pick: PickOut, entry: Entry | undefined): string {
+/** A web app's verdict sheet: where it runs, how far the browser run got, offline when checked, the setup (none) and the price. */
+function webSheet(pick: PickOut, entry: Entry | undefined, first: boolean): string {
   const check = entry ? webCheck(entry) : null;
   const web = pick.web_app!;
-  const offline = web.works_offline === 'verified' ? `<small>${L('Works offline', '可離線使用')}</small>` : '';
+  const rows: MeasureRow[] = [
+    { label: L('Runs in', '執行環境'), value: L('Any browser', '任何瀏覽器'), tone: 'pass' },
+    { label: L('How far the run got', '測試進行到哪一步'), value: check ? esc(webLevelLabel(check)) : L('No run', '尚未測試'), tone: check ? 'pass' : 'caution' },
+  ];
+  if (web.works_offline === 'verified') rows.push(offlineRow(true));
+  if (first) rows.push({ label: L('Setup steps', '安裝步驟'), value: L('Nothing to install', '免安裝') });
+  rows.push(priceRow(pick));
+  return measure(rows, { cls: 't-sheet' });
+}
+
+/**
+ * A vulnerable pick says so before its commands (or its address), as the tool page's warning does before its steps: the
+ * red shield with the count, the source and day, and a link to the list on the tool page. Clean and unchecked add
+ * nothing here, so a ticket never reads as checked clean when it was not; the tool page's shield says which it is.
+ */
+function vulnLine(pick: PickOut): string {
+  const s = pick.security;
+  if (s?.status !== 'vulnerable') return '';
+  const n = Math.max(s.count, s.findings.length, 1);
+  const date = s.checked_at ? day(s.checked_at) : '';
+  const web = !!pick.web_app;
+  const what = L(
+    `${n} known ${n === 1 ? 'vulnerability' : 'vulnerabilities'} in ${web ? 'the packages the site is built from' : 'packages it installs'}`,
+    `${web ? '這個網站用到的' : '它安裝的'}套件有 ${n} 個已知漏洞`,
+  );
+  const source = L(`high or critical; OSV.dev${date ? `, ${esc(date)}` : ''}`, `高風險或嚴重；OSV.dev${date ? `，${esc(date)}` : ''}`);
   return (
-    `<div class="glance t-glance">` +
-    glance('globe', L('Runs in', '執行環境'), L('Any browser', '任何瀏覽器'), 'pass') +
-    glance('badge-check', L('Proof', '證據'), (check ? esc(webLevelLabel(check)) : L('No run', '尚未測試')) + offline, check ? 'pass' : 'caution') +
-    glance('terminal', L('Setup', '安裝'), L('Nothing to install', '免安裝'), 'plain') +
-    glance('tag', L('Price', '價格'), esc(PRICE[pick.pricing]), pick.pricing === 'unknown' ? 'quiet' : 'plain') +
-    `</div>`
+    `<p class="t-vuln" role="note">${icon('shield-alert')}<span><b>${esc(what)}</b>${L(` (${source}). `, `（${source}）。`)}` +
+    `<a href="/tool/${esc(pick.slug)}#security">${L('See the list', '看清單')}</a></span></p>`
   );
 }
 
@@ -508,7 +547,7 @@ function webOpen(pick: PickOut): string {
     : '';
 }
 
-function pickHtml(pick: PickOut, index: number, result: SearchResult, form: FormValues, catalog: Catalog): string {
+function pickHtml(pick: PickOut, index: number, result: SearchResult, form: FormValues, catalog: Catalog, instead = ''): string {
   const { out } = result;
   const entry = catalog.bySlug.get(pick.slug);
   const best = out.best_free?.slug === pick.slug ? out.best_free : null;
@@ -523,7 +562,7 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
   const why = pick.why
     .map(
       (r) =>
-        `<li><span class="why-i">${reasonMark(r.field, r.value)}</span><details class="why-src"><summary>${esc(r.claim)}${icon('file-text')}</summary>` +
+        `<li><details class="why-src"><summary>${esc(r.claim)}${icon('file-text')}</summary>` +
         `<p class="cite">${L(
           `From its profile: <code>${esc(r.field)}</code> is “${esc(r.value)}”`,
           `依據簡介：<code>${esc(r.field)}</code> 是「${esc(r.value)}」`,
@@ -557,9 +596,11 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
     (badges ? `<p class="badges">${badges}</p>` : '') +
     `</div>` +
     `<p class="fit">${esc(pick.fit)}</p>` +
-    (web ? webGlance(pick, entry) : glanceStrip(pick, guide, form)) +
+    (web ? webSheet(pick, entry, index === 0) : verdictSheet(pick, guide, form, index === 0)) +
+    instead +
     SEAM +
-    (web ? webOpen(pick) : quickInstall(guide, form)) +
+    vulnLine(pick) +
+    (web ? webOpen(pick) : quickInstall(guide, form, index)) +
     `<details class="t-more"><summary>${icon('chevron-down')}${L('Why it fits and how we know', '為什麼適合、我們怎麼知道')}</summary><div class="t-more-body">` +
     `<div class="t-body"><div class="t-claim">` +
     // On the rules path the fit sentence is the summary: say it once.
@@ -576,8 +617,9 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
     tape(L('Popularity', '知名度'), pick.scores.popularity, { pop: 'pop-popularity', tone: 'quiet', note: gemNote }) +
     coverage(pick.features, { pop: 'pop-features' }) +
     `</div></div>` +
-    (web ? webRecord(pick, entry) : record(pick, guide, form)) +
-    (guide && !web ? installSection(guide, form, index === 0) : '') +
+    (web ? webRecord(entry) : record(pick, guide, form, entry)) +
+    // Open for the first pick only when the steps above it are not all of them; otherwise it would repeat them.
+    (guide && !web ? installSection(guide, form, index === 0 && guide.steps.length > STEPS_SHOWN) : '') +
     (links.length ? `<p class="t-links">${links.join('')}</p>` : '') +
     `</div></details>` +
     `<div class="t-foot"><a class="more" href="/tool/${esc(pick.slug)}">${L('Full profile', '完整介紹')}${icon('arrow-right')}</a><span class="grow"></span>${compareToggle(pick.slug, pick.name)}</div>` +
@@ -585,69 +627,37 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
   );
 }
 
-const BY_RULES = () =>
+/** What a search without the model matched on, said once in the status line; how the rules rank is on /how. */
+const WORDS_ONLY = () =>
   L(
-    'these results are ranked by rules (the words in your request, then no-install web apps among close fits, then verification on your OS, then the hidden-gem score) without Muse Spark',
-    '這次改用規則排序、沒有用 Muse Spark（依序看需求裡的字詞、相近結果中免安裝的網頁應用、是否在你的作業系統上驗證過、寶藏分數）',
+    'These are matched on the words in your request only, so the fit may be rougher.',
+    '這次只比對需求裡的字詞，結果可能比較粗略。',
   );
 const BUDGET: Record<BudgetStop | 'other', { title: string; text: string }> = {
   get web_daily() {
-    return {
-      title: L('Model matching paused until 00:00 UTC', '模型比對暫停至 UTC 00:00'),
-      text: L(
-        `Today’s Meta spend, by this page and by agents together, has reached the share this page may use, so ${BY_RULES()}.`,
-        `今天本頁和 agent 合計的 Meta 花費已用完本頁的額度，因此${BY_RULES()}。`,
-      ),
-    };
+    return { title: L('Model matching paused until 00:00 UTC', '模型比對暫停至 UTC 00:00'), text: WORDS_ONLY() };
   },
   get total() {
-    return {
-      title: L('Model matching is paused', '模型比對已暫停'),
-      text: L(
-        `pickfit’s overall budget for Meta model calls is used up, so ${BY_RULES()}.`,
-        `pickfit 呼叫 Meta 模型的總預算已用完，因此${BY_RULES()}。`,
-      ),
-    };
+    return { title: L('Model matching is paused', '模型比對已暫停'), text: WORDS_ONLY() };
   },
   get unavailable() {
     return {
       title: L('Ranked without the model this time', '這次沒用模型排序'),
-      text: L(
-        `pickfit couldn’t check its model budget, so it didn’t call Muse Spark: ${BY_RULES()}. Search again in a minute.`,
-        `pickfit 無法確認模型預算，所以${BY_RULES()}。請過一分鐘再搜尋一次。`,
-      ),
+      text: `${WORDS_ONLY()}${L(' Search again in a minute.', '請過一分鐘再搜尋一次。')}`,
     };
   },
   get other() {
-    return {
-      title: L('Model matching is paused for now', '模型比對暫時停止'),
-      text: L(
-        `pickfit’s budget for Meta model calls is used up for now, so ${BY_RULES()}.`,
-        `pickfit 呼叫 Meta 模型的預算目前已用完，因此${BY_RULES()}。`,
-      ),
-    };
+    return { title: L('Model matching is paused for now', '模型比對暫時停止'), text: WORDS_ONLY() };
   },
 };
 
 // Every entry is a getter so its text follows the render's language (no_api_key and model_timeout included).
 const DEGRADED: Record<string, { title: string; text: string }> = {
   get budget_unavailable() {
-    return {
-      title: L('Ranked without the model this time', '這次沒用模型排序'),
-      text: L(
-        'pickfit couldn’t check its model budget, so it didn’t call Muse Spark and ranked these by rules. Search again in a minute.',
-        'pickfit 無法確認模型預算，這次沒呼叫 Muse Spark，改用規則排序。請過一分鐘再搜尋一次。',
-      ),
-    };
+    return BUDGET.unavailable;
   },
   get model_off() {
-    return {
-      title: L('Model matching is off on this server', '這台伺服器未啟用模型比對'),
-      text: L(
-        'These results are ranked by rules: the words in your request, then no-install web apps among close fits, then verification on your OS, then the hidden-gem score.',
-        '這些結果依規則排序，依序看需求裡的字詞、相近結果中免安裝的網頁應用、是否在你的作業系統上驗證過、寶藏分數。',
-      ),
-    };
+    return { title: L('Model matching is off on this server', '這台伺服器未啟用模型比對'), text: WORDS_ONLY() };
   },
   get no_api_key() {
     return DEGRADED.model_off;
@@ -656,8 +666,8 @@ const DEGRADED: Record<string, { title: string; text: string }> = {
     return {
       title: L('Ranked without the model this time', '這次沒用模型排序'),
       text: L(
-        'Muse Spark didn’t answer in time, so these results are ranked by rules. Search again to retry.',
-        'Muse Spark 沒有及時回應，這次改用規則排序。再搜尋一次就會重試。',
+        'Muse Spark didn’t answer in time, so these are matched on the words in your request only. Search again to retry.',
+        'Muse Spark 沒有及時回應，這次只比對需求裡的字詞。再搜尋一次就會重試。',
       ),
     };
   },
@@ -665,38 +675,42 @@ const DEGRADED: Record<string, { title: string; text: string }> = {
 const MODEL_FAILED = () => ({
   title: L('Ranked without the model this time', '這次沒用模型排序'),
   text: L(
-    'Muse Spark didn’t return a usable answer, so these results are ranked by rules. Search again to retry.',
-    'Muse Spark 的回答無法使用，這次改用規則排序。再搜尋一次就會重試。',
+    'Muse Spark didn’t return a usable answer, so these are matched on the words in your request only. Search again to retry.',
+    'Muse Spark 的回答無法使用，這次只比對需求裡的字詞。再搜尋一次就會重試。',
   ),
 });
 
-/** The results heading says what came back, in words. */
+/** The results heading says what came back, in words; without the model, how close the fits are. */
 function resultsTitle(out: FindOutput): string {
   const n = out.picks.length;
   if (n === 0) return L('Nothing fits yet', '目前沒有合適的工具');
   const tools = `${n} ${n === 1 ? 'tool' : 'tools'}`;
   if (out.matched_by === 'rules') {
-    if (out.match_quality === 'none') return L('No clear fit, ranked by rules', '沒有明顯合適的，依規則排序');
-    if (out.match_quality === 'partial') return L('Partial fits, ranked by rules', '部分符合，依規則排序');
-    return L(`${tools} ranked by rules`, `${n} 款工具，依規則排序`);
+    if (out.match_quality === 'none') return L('No clear fit', '沒有明顯合適的');
+    if (out.match_quality === 'partial') return L('Partial fits', '部分符合');
+    return L(`${tools} that may fit`, `${n} 款可能合適的工具`);
   }
   return L(`${tools} ${n === 1 ? 'fits' : 'fit'} your need`, `${n} 款工具符合你的需求`);
 }
 
-function matchLine(out: FindOutput): string {
-  const n = out.picks.length;
-  const meet = L(
-    `${out.considered} verified ${out.considered === 1 ? 'tool meets' : 'tools meet'} your conditions`,
-    `${out.considered} 款已驗證工具符合你的條件`,
-  );
-  if (out.matched_by === 'rules') return L(`${meet}; these are ranked by rules, without a model.`, `${meet}；以下依規則排序，沒有用模型。`);
-  // When more than the card limit meet them, coverage_note says how many the model compared.
-  return (
-    L(
-      `${meet}; Meta’s ${esc(out.matched_by)} ${n === 0 ? 'found none that fits' : `picked ${n === 1 ? 'one' : n}`}.`,
-      `${meet}；Meta 的 ${esc(out.matched_by)} ${n === 0 ? '沒有找到合適的' : `挑出了 ${n} 款`}。`,
-    ) + (n ? L(' Code checked every reason against the tool’s profile.', '每個理由都已由程式對照簡介查核。') : '')
-  );
+/**
+ * find_software's coverage_note for agents also says how the shortlist was drawn (how many met the conditions, which
+ * were compared): pickfit's own process, so the page leaves those sentences out and keeps the ones about the fit.
+ */
+const SHORTLIST_NOTE = [
+  /\s*\d+ tools met the conditions; the \d+ compared were the \d+ whose profiles best match the request's words and the \d+ other tools with the highest treasure scores\./g,
+  /\s*\d+ tools met the conditions; no profile matched the request's words, so the \d+ with the highest treasure scores were compared\./g,
+];
+/** A sentence about the shortlist in any wording, so a change to find.ts's words cannot bring it back on the page. */
+const SHORTLIST_WORDS = /\bmet the conditions\b|\btreasure scores?\b/i;
+function readerNote(note: string | null): string | null {
+  if (!note) return null;
+  const said = SHORTLIST_NOTE.reduce((rest, re) => rest.replace(re, ''), note)
+    .split(/(?<=\.)\s+/)
+    .filter((sentence) => !SHORTLIST_WORDS.test(sentence))
+    .join(' ')
+    .trim();
+  return said || null;
 }
 
 /**
@@ -726,10 +740,6 @@ const NOTE_ZH: [RegExp, (m: RegExpMatchArray) => string][] = (() => {
       (m) => `pickfit 沒有明顯能完成這件事的已驗證${what(m[1])}。從簡介看，列出的是最接近的，但${miss(m[2]) ?? '\u0000'}；${each}${known}`],
     [/^No listed (tool|alternative) covers the whole request(?:: the closest, (.+?), does not mention (.+?))?\. Each pick's match says what it covers\./,
       (m) => `沒有一款${what(m[1])}涵蓋你的全部需求${m[2] ? `：最接近的 ${m[2]} 沒有提到 ${words(m[3])}` : ''}。${each}`],
-    [/^(\d+) tools met the conditions; the (\d+) compared were the (\d+) whose profiles best match the request's words and the (\d+) other tools with the highest treasure scores\./,
-      (m) => `有 ${m[1]} 款工具符合條件；比較的 ${m[2]} 款是簡介最符合需求字詞的 ${m[3]} 款，加上寶藏分數最高的另外 ${m[4]} 款。`],
-    [/^(\d+) tools met the conditions; no profile matched the request's words, so the (\d+) with the highest treasure scores were compared\./,
-      (m) => `有 ${m[1]} 款工具符合條件；沒有簡介符合需求字詞，所以比較的是寶藏分數最高的 ${m[2]} 款。`],
   ];
 })();
 
@@ -760,6 +770,59 @@ function resultsFitz(out: FindOutput): FitzName {
   return 'recommending';
 }
 
+/**
+ * The answer's second line, as the MCP answer gives it: "On Linux instead? Use babelscribe." Only for a system
+ * another pick ran on and the first did not (a run that passed), and only the person's own system when they chose
+ * one. What follows the name is that run's level label, verbatim, so nothing is guessed.
+ */
+function insteadLines(picks: PickOut[], catalog: Catalog, form: FormValues): string {
+  const [top, ...rest] = picks;
+  const topEntry = top ? catalog.bySlug.get(top.slug) : undefined;
+  if (!topEntry || top.web_app || rest.length === 0) return '';
+  const covered = new Set<OS>(verifiedOn(topEntry));
+  const lines: string[] = [];
+  for (const pick of rest) {
+    const entry = catalog.bySlug.get(pick.slug);
+    if (!entry || pick.web_app) continue;
+    for (const os of verifiedOn(entry)) {
+      const guide = entry.install[os]!;
+      if (covered.has(os) || (form.os && os !== form.os) || !passed(guide.run.gui)) continue;
+      covered.add(os);
+      const name = `<a href="/tool/${esc(entry.slug)}">${esc(pick.name)}</a>`;
+      const said = esc(levelLabel(guide.run.level, { gui: guide.run.gui, mcp: guide.mcp }));
+      const where = esc(system(guide.run.os, guide.run.arch));
+      const on = esc(osName(os));
+      lines.push(
+        `<p class="instead">${L(
+          `On ${on}${form.os ? '' : ' instead'}? Use ${name}. ${said} on ${where}.`,
+          `如果你用 ${on}，改用 ${name}：在 ${where} 上，${said}。`,
+        )}</p>`,
+      );
+    }
+  }
+  return lines.join('');
+}
+
+/**
+ * What pickfit has not checked about a tool it only names, in the page's language. find_software's how_we_know for it
+ * (written for agents) opens with which model named it; the page keeps only the unchecked facts at its end, and says
+ * nothing more when they do not read as expected (the line above already says it is not installed or tested).
+ */
+function outsideUnchecked(howWeKnow: string): string {
+  const m = /has not checked (.+)\.$/.exec(howWeKnow);
+  if (!m) return '';
+  const said: string[] = [];
+  for (const item of m[1].split(/, | or /)) {
+    const on = /^that it runs on (macos|linux|windows)$/.exec(item);
+    if (item === 'its price') said.push(L('its price', '它的價格'));
+    else if (on) said.push(L(`that it runs on ${osName(on[1] as OS)}`, `能否在 ${osName(on[1] as OS)} 上執行`));
+    else if (item === 'that it works offline') said.push(L('that it works offline', '能否離線使用'));
+    else return '';
+  }
+  const list = isZh() ? said.join('、') : said.length > 1 ? `${said.slice(0, -1).join(', ')} or ${said[said.length - 1]}` : said[0];
+  return `<p class="quiet small">${esc(L(`pickfit also hasn’t checked ${list}.`, `pickfit 也沒有確認${list}。`))}</p>`;
+}
+
 /** The results area for one search. `catalog` names a best free option that is not among the picks. */
 export function renderResults(
   result: SearchResult,
@@ -770,11 +833,12 @@ export function renderResults(
   const { out } = result;
   const parts: string[] = [];
   const said: string[] = [`<h2 class="results-title">${esc(resultsTitle(out))}</h2>`];
-  if (out.considered > 0) said.push(`<p class="match-line">${matchLine(out)}</p>`);
+  // The heading says what came back; the note under it only when nothing did.
+  const readerSaid = readerNote(out.coverage_note);
   if (out.picks.length === 0) {
     said.push(
       `<p class="match-line">${esc(
-        (out.coverage_note ? coverageNote(out.coverage_note) : null) ??
+        (readerSaid ? coverageNote(readerSaid) : null) ??
           L(
             'pickfit covers developer CLI tools, local AI tools, MCP servers and some web apps today.',
             'pickfit 目前涵蓋開發者 CLI 工具、本機 AI 工具、MCP 伺服器和部分網頁應用。',
@@ -783,12 +847,12 @@ export function renderResults(
     );
   }
   // A partial or missing fit is said before the picks, not after them.
-  const fitFirst = out.picks.length > 0 && (out.match_quality === 'partial' || out.match_quality === 'none') && out.coverage_note;
+  const fitFirst = out.picks.length > 0 && (out.match_quality === 'partial' || out.match_quality === 'none') && readerSaid;
   const slugs = out.picks.map((p) => p.slug);
   const cmpHref = `/compare?tools=${slugs.map(encodeURIComponent).join(',')}${form.os ? `&amp;os=${form.os}` : ''}${form.arch ? `&amp;arch=${form.arch}` : ''}`;
   const tools = out.picks.length
     ? `<div class="res-tools"><button type="button" class="btn btn-quiet btn-sm js-only" data-open-legend>${icon('circle-help')}${L('How to read a tool card', '怎麼看工具卡')}</button>` +
-      (out.picks.length > 1 ? `<a class="btn btn-quiet btn-sm" href="${cmpHref}">${icon('scale')}${L('Compare these', '比較這幾款')}</a>` : '') +
+      (out.picks.length > 1 ? `<a class="btn btn-quiet btn-sm" href="${cmpHref}">${icon('pin')}${L('Compare these', '比較這幾款')}</a>` : '') +
       `</div>`
     : '';
   // Everything else the search has to say goes in one quiet status list under Fitz: one Fitz per screen.
@@ -798,9 +862,9 @@ export function renderResults(
     status.push(`<li class="st st-busy" role="status">${icon('clock')}<span><strong>${esc(d.title)}${L('.', '。')}</strong> ${esc(d.text)}</span></li>`);
   }
   if (fitFirst) {
-    const note = coverageNote(out.coverage_note!);
+    const note = coverageNote(readerSaid!);
     // The first sentence is the summary; Chinese ends it with 。 and needs no space after it.
-    const zh = note !== out.coverage_note;
+    const zh = note !== readerSaid;
     const cut = zh ? note.indexOf('。') : note.indexOf('. ');
     const gap = zh ? 1 : 2;
     status.push(
@@ -820,17 +884,24 @@ export function renderResults(
   // "Built-in is enough" is said before anything is sold.
   if (out.no_install_option) {
     parts.push(
-      `<div class="aside ask-note">${fitz('surprised', 64)}<div><h3>${L('You may not need to install anything', '也許不用另外安裝')}</h3><p>${esc(out.no_install_option)}</p>` +
-        `<p class="quiet small">${L('From Muse Spark’s general knowledge; pickfit hasn’t checked it.', '這是 Muse Spark 的一般知識，pickfit 沒有驗證過。')}</p></div></div>`,
+      // No Fitz of its own: the one over the results says it (one Fitz per screen).
+      `<div class="aside ask-note"><h3>${L('You may not need to install anything', '也許不用另外安裝')}</h3><p>${esc(out.no_install_option)}</p>` +
+        `<p class="quiet small">${L('pickfit hasn’t checked it.', 'pickfit 沒有驗證過。')}</p></div>`,
     );
   }
   if (out.picks.length) {
-    parts.push(`<div class="picks">${out.picks.map((pick, i) => pickHtml(pick, i, result, form, catalog)).join('')}</div>`);
-    if (out.coverage_note && !fitFirst) parts.push(`<p class="quiet small">${esc(coverageNote(out.coverage_note))}</p>`);
+    // The answer first: one pick in full, then the others under their own heading.
+    const instead = insteadLines(out.picks, catalog, form);
+    const close = out.matched_by === 'rules' && out.match_quality !== undefined && out.match_quality !== 'good';
+    const also = out.picks.length > 1 ? `<h3 class="also">${close ? L('Also close', '其他接近的') : L('Also fits', '也適合')}</h3>` : '';
+    parts.push(
+      `<div class="picks">${out.picks.map((pick, i) => (i === 1 ? also : '') + pickHtml(pick, i, result, form, catalog, i === 0 ? instead : '')).join('')}</div>`,
+    );
+    if (readerSaid && !fitFirst) parts.push(`<p class="quiet small">${esc(coverageNote(readerSaid))}</p>`);
     const entries = slugs.map((s) => catalog.bySlug.get(s)).filter((e): e is Entry => !!e);
     if (entries.length > 1) {
       parts.push(
-        `<details class="sbs"><summary>${icon('columns-3')}${L('See these side by side', '並排比較')}</summary>` +
+        `<details class="sbs"><summary>${icon('chevron-down')}${L('See these side by side', '並排比較')}</summary>` +
           compareTable(entries, { os: form.os || undefined, arch: form.arch || undefined, now: new Date(catalog.built_at) }) +
           `</details>`,
       );
@@ -842,7 +913,7 @@ export function renderResults(
     parts.push(
       `<div class="aside best-free"><p><span class="lead-in">${L('Best free option:', '最佳免費選擇：')}</span> ` +
         `<a href="/tool/${esc(free.slug)}">${esc(free.name)}</a>. ${esc(out.best_free.reason)}</p>` +
-        (freeWeb ? `<p class="quiet">${esc(webRanSentence(freeWeb))}</p>` : '') +
+        (freeWeb ? `<p class="quiet">${esc(webRunWords(free, freeWeb))}</p>` : '') +
         `<p class="mine mine-yes">${esc(L(`${NO_INSTALL_LABEL}: it opens in a browser.`, '免安裝，用瀏覽器打開就能用。'))}</p></div>`,
     );
   } else if (free && out.best_free) {
@@ -875,7 +946,7 @@ export function renderResults(
         'pickfit has not installed or tested it. There is no run record and no install guide.',
         'pickfit 沒有安裝或測試過它，所以沒有測試紀錄和安裝指南。',
       )}</p>` +
-      `<p>${esc(wk.why)}</p><p class="quiet small">${esc(wk.how_we_know)}</p></aside>`
+      `<p>${esc(wk.why)}</p>${outsideUnchecked(wk.how_we_know)}</aside>`
     : '';
   if (outside && out.picks.length === 0) {
     // Nothing fits: Fitz's note on the left, the unverified option beside it.
@@ -957,7 +1028,7 @@ function stagesSection(): string {
     {
       name: L('Match', '比對'),
       who: 'searching',
-      text: L('Your sentence meets every verified profile. Each reason is checked.', '你的需求逐一比對已驗證的簡介，理由都會查核。'),
+      text: L('Your sentence is matched against every tool pickfit has tested.', '你的需求會和 pickfit 測過的每款工具逐一比對。'),
     },
     { name: L('Get the steps', '交給你'), who: 'recommending', text: L('You get the commands that worked.', '交給你真的能用的指令。') },
   ];
@@ -970,15 +1041,18 @@ function stagesSection(): string {
   );
 }
 
-/** "Fresh off the fitting table": the newest runs, and one README the run corrected. */
+/**
+ * "Recently tested": the newest runs as a ledger (the day, the tool, where it ran), one row per run on hairlines,
+ * and beside it one README the run corrected, as a left-ruled quote: what the README said, then what worked.
+ */
 function freshSection(showcase: Showcase): string {
   const { stats, recent, fix } = showcase;
   if (!recent.length) return '';
   const issue = fix ?? showcase.featured;
   const fixIssue = issue ? readerIssues(issue.guide.pitfalls)[0] : null;
-  const fixCard =
+  const fixNote =
     issue && fixIssue
-      ? `<figure class="fix-card"><p class="fix-kicker">${icon('scissors')}${L('A README the run corrected', '實測糾正的 README')}</p>` +
+      ? `<figure class="fix"><p class="fix-kicker">${L('A README the run corrected', '實測糾正的 README')}</p>` +
         `<h3><a href="/tool/${esc(issue.entry.slug)}">${esc(issue.entry.name)}</a></h3>` +
         `<ul class="readme-vs"><li class="was"><b>${L('README said', 'README 寫的')}</b><span>${esc(fixIssue.readme_said)}</span></li>` +
         `<li class="now"><b>${L('What worked', '實際可行')}</b><span>${esc(fixIssue.actually_needed)}</span></li></ul>` +
@@ -988,64 +1062,37 @@ function freshSection(showcase: Showcase): string {
     .map(({ entry, guide }) => {
       const r = guide.run;
       return (
-        `<li class="run-row"><a class="name" href="/tool/${esc(entry.slug)}">${esc(entry.name)}</a>` +
-        (entry.scores?.treasure ? badge('gem', L('Hidden gem', '寶藏'), { icon: 'gem' }) : '<span></span>') +
-        `<p class="sum">${esc(entry.summary)}</p>` +
-        `<p class="meta">${kindTag(entry)}<span>${sysTag(r.os, r.arch)} · ${esc(day(r.checked_at, SHORT_DAY))}</span></p></li>`
+        `<li class="run-row"><time class="when" datetime="${esc(r.checked_at.slice(0, 10))}">${esc(day(r.checked_at, SHORT_DAY))}</time>` +
+        `<div class="what"><p class="name-line"><a class="name" href="/tool/${esc(entry.slug)}">${esc(entry.name)}</a>` +
+        (entry.scores?.treasure ? badge('gem', L('Hidden gem', '寶藏'), { icon: 'gem' }) : '') +
+        `</p><p class="sum">${esc(entry.summary)}</p></div>` +
+        `<p class="meta">${kindTag(entry)}${sysTag(r.os, r.arch)}</p></li>`
       );
     })
     .join('');
   return (
     `<section id="recent" class="sec wrap home-only" aria-labelledby="recent-title">` +
     `<div class="sec-head"><div><h2 id="recent-title">${L('Recently tested', '最近試過的工具')}</h2>` +
-    `<p>${L(
-      `Of ${stats.listed} tools, ${stats.replayed} have been installed and rerun${stats.web ? `, and ${stats.web} web ${stats.web === 1 ? 'app has' : 'apps have'} been used in a browser` : ''}. pickfit only suggests these.`,
-      `收錄的 ${stats.listed} 款工具裡，${stats.replayed} 款已經實際裝過、重跑過${stats.web ? `，另外 ${stats.web} 款網頁應用也在瀏覽器裡用過` : ''}。只有這些會被推薦。`,
-    )}</p></div>` +
+    `<p>${L('pickfit only suggests tools it has installed and tested itself. These are the newest runs.', 'pickfit 只推薦親自裝過、測過的工具。這些是最新的測試。')}</p></div>` +
     `<a class="more" href="/browse">${L(`Browse all ${stats.verified}`, `瀏覽全部 ${stats.verified} 款`)}${icon('arrow-right')}</a></div>` +
-    `<div class="fresh"><div>${fixCard}</div><ul class="runs-list">${rows}</ul></div></section>`
+    `<div class="fresh"><ul class="runs-list">${rows}</ul>${fixNote}</div></section>`
   );
 }
 
-const RULES = (): [Parameters<typeof icon>[0], string, string][] => [
-  [
-    'shield-check',
-    L('Tested before it’s suggested', '試過才推薦'),
-    L(
-      'Only tools pickfit installed in a sandbox are ever suggested, with the steps that worked.',
-      'pickfit 只推薦在沙盒裡裝過的工具，並附上真的可行的步驟。',
-    ),
-  ],
-  [
-    'scale',
-    L('Ranked by fit, not stars', '看適不適合你，不看星星數'),
-    L('Quality and popularity are scored apart. Nobody can pay to rank.', '品質和知名度分開計分。沒有人能付費買排名。'),
-  ],
-  [
-    'circle-dashed',
-    L('Untested tools are labeled', '沒試過就老實說'),
-    L('A well-known option Fitz hasn’t run is marked as such: no stitches, no steps.', 'Fitz 沒測過的知名工具會明白標出：沒有縫線，也沒有步驟。'),
-  ],
-  [
-    'leaf',
-    L('Says when built-in tools will do', '內建的夠用，就不叫你裝'),
-    L('When you don’t need to install anything, Fitz says so first.', '如果根本不用裝新東西，Fitz 會先說。'),
-  ],
-  [
-    'tag',
-    L('No ads, no referral links', '沒有廣告，也沒有推薦連結'),
-    L(
-      'pickfit doesn’t make any of the software it suggests, and keeps no account of you.',
-      'pickfit 推薦的軟體沒有一款是自家做的，也不需要你註冊。',
-    ),
-  ],
+/** Fitz's rules, one line each: the words say it, so no marks. */
+const RULES = (): string[] => [
+  L('Tested before it’s suggested', '試過才推薦'),
+  L('Ranked by fit, not stars', '看適不適合你，不看星星數'),
+  L('Untested tools are labeled', '沒試過就老實說'),
+  L('Says when built-in tools will do', '內建的夠用，就不叫你裝'),
+  L('No ads, no referral links', '沒有廣告，也沒有推薦連結'),
 ];
 
 export function rulesLabel(): string {
   return (
-    `<div class="label-tag"><ul class="rules" aria-label="${L('Fitz’s rules', 'Fitz 的原則')}">` +
-    RULES().map(([ico, title]) => `<li>${icon(ico)}<b>${esc(title)}</b></li>`).join('') +
-    `</ul></div>`
+    `<ul class="rules" aria-label="${L('Fitz’s rules', 'Fitz 的原則')}">` +
+    RULES().map((title) => `<li>${esc(title)}</li>`).join('') +
+    `</ul>`
   );
 }
 
@@ -1098,23 +1145,18 @@ export function renderPage(input: PageInput): string {
     `<h2 id="rules-title">${L('Fitz is on your side', 'Fitz 只站你這邊')}</h2>` +
     `<p class="quiet">${L('No ads, no paid placement, no commissions', '不打廣告、不收業配，也不抽佣金')}</p>` +
     `<a class="more" href="/how#rules">${L('Why you can trust a pick', '為什麼可以放心參考')}${icon('arrow-right')}</a></div>${rulesLabel()}</div></section>` +
-    `<section id="agents" class="sec wrap" aria-labelledby="agents-title"><div class="agents-band mat"><div>` +
-    `<h2 id="agents-title">${L('Use it from your agent', '在 agent 裡也能用')}</h2>` +
-    `<p>${L('Connect over MCP and get the same suggestions in Claude Code or any other client', '接上 MCP，Claude Code 和其他用戶端都能拿到一樣的推薦')}</p>` +
+    // On the ground under a hairline, like every group; its way on is a link, since Find tools is the screen's one yellow.
+    `<section id="agents" class="sec wrap" aria-labelledby="agents-title"><div class="agents-band">` +
+    `<div class="sec-head"><div><h2 id="agents-title">${L('Use it from your agent', '在 agent 裡也能用')}</h2>` +
+    `<p>${L('Connect over MCP and get the same suggestions in Claude Code or any other client', '接上 MCP，Claude Code 和其他用戶端都能拿到一樣的推薦')}</p></div>` +
+    `<a class="more" href="/agents">${L('Connect your agent', '接上你的 agent')}</a></div>` +
     command(`claude mcp add --transport http pickfit ${mcp}`) +
-    `</div><a class="btn btn-primary" href="/agents">${icon('bot')}${L('Connect your agent', '接上你的 agent')}</a></div></section>` +
+    `</div></section>` +
     `</div>` +
     `<template id="loading"><div class="loading" role="status">` +
     says(
       'searching',
       `<h2>${L(`Checking ${stats.verified} verified tools for you…`, `正在從 ${stats.verified} 款驗證過的工具裡幫你挑…`)}</h2>` +
-        `<ol><li>${L(
-          'Keep the tools that meet your OS, price, offline and privacy conditions',
-          '篩出符合你的系統、價格、離線與隱私條件的工具',
-        )}</li><li>${L(
-          'Muse Spark reads every remaining profile and picks the best fits',
-          'Muse Spark 閱讀剩下的每份簡介，挑出最合適的',
-        )}</li><li>${L('Code checks each reason against the profile', '程式對照簡介檢查每個理由')}</li></ol>` +
         `<p class="quiet small">${L('Usually 5 to 15 seconds.', '通常需要 5 到 15 秒。')}</p><div class="unroll" aria-hidden="true"></div>`,
       { size: 104 },
     ) +

@@ -7,7 +7,7 @@ import { installGuide } from '../src/install.ts';
 import { installSection, type FormValues } from '../src/page.ts';
 import { renderTool } from '../src/pages/tool.ts';
 import { installOutput } from '../src/server.ts';
-import { fixtureIndex } from './helpers.ts';
+import { commandText, fixtureIndex } from './helpers.ts';
 
 const RAN = 'cargo install --root /home/sbx/.local fixture-chat-tui';
 const CHECK = '/home/sbx/.local/bin/fixture-chat-tui --version';
@@ -80,13 +80,13 @@ test("the published output schema allows every key of verified_in_pickfit (a cli
 
 test('the tool page shows a user\'s commands first and the run\'s own only in the folded record', () => {
   const catalog = loadCatalog(withSandboxPaths());
-  const html = renderTool(catalog, catalog.bySlug.get('fixture-chat-tui')!, 'n0nce');
+  // Commands wrap words in spans that add no text; read them as plain text.
+  const html = commandText(renderTool(catalog, catalog.bySlug.get('fixture-chat-tui')!, 'n0nce'));
   const fold = html.indexOf('<details class="as-run">');
   assert.ok(fold > 0, 'the verified commands are on the page');
-  // Above the fold the sandbox home is named once, in the note that says how the commands were adapted; no command has it.
-  const note = /<p class="quiet small">pickfit ran these steps in its sandbox, whose home folder is <code translate="no">\/home\/sbx<\/code>\.[^<]*<code[^>]*>\$HOME<\/code>[^<]*<\/p>/;
-  assert.match(html.slice(0, fold), note);
-  assert.doesNotMatch(html.slice(0, fold).replace(note, ''), SANDBOX, 'the sandbox home is in no command above the fold');
+  // Above the fold nothing names the sandbox home: no command, and no note about how the commands were adapted.
+  assert.doesNotMatch(html.slice(0, fold), /whose home folder is/);
+  assert.doesNotMatch(html.slice(0, fold), SANDBOX, 'the sandbox home is nowhere above the fold');
   assert.match(html, /cargo install --root &quot;\$HOME&quot;\/.local fixture-chat-tui/);
   assert.match(html, /mkdir -p &quot;\$HOME\/work&quot; &amp;&amp; cd &quot;\$HOME\/work&quot;/);
   const section = installSection(installGuide(catalog, { slug: 'fixture-chat-tui', os: 'linux' }), FORM, true);

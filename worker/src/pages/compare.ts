@@ -10,7 +10,7 @@ import { featuresOut } from '../features.ts';
 import { isZh, L } from '../i18n.ts';
 import { day, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, webLevelLabel } from '../ui/facts.ts';
 import { esc, link, listOf, SLUG } from '../ui/html.ts';
-import { icon, type IconName } from '../ui/icons.ts';
+import { icon } from '../ui/icons.ts';
 import { age, badge, coverage, fitz, kindTag, levelIcon, osList, sysTag, tape } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 
@@ -24,8 +24,10 @@ interface Opts {
   removable?: string[];
 }
 
-// A function so the label follows the render's language.
-const BEST = () => `<span class="best">${icon('check')}${L('best here', '最佳')}</span>`;
+/** The "best here" mark; `tip` says in what (fewest install commands...), on hover, on focus (a tap on a touch screen) and
+ * to screen readers. A function so the label follows the render's language. */
+const BEST = (tip: string) =>
+  `<span class="best" tabindex="0" data-tip="${esc(tip)}">${icon('check')}${L('best here', '最佳')}<span class="sr">${L(`: ${esc(tip.toLowerCase())}`, `：${esc(tip)}`)}</span></span>`;
 
 /** The compare table for these entries; `os` decides which run each column shows. */
 export function compareTable(entries: Entry[], opts: Opts): string {
@@ -42,10 +44,10 @@ export function compareTable(entries: Entry[], opts: Opts): string {
     return known.filter(([v]) => v === top[0]).length === 1 ? top[1] : -1;
   };
   /** A row where every tool says the same thing is one cell across the columns, marked "same for all": only differences compete. */
-  const row = (label: string, cells: string[], best = -1) => {
+  const row = (label: string, cells: string[], best = -1, bestTip = '') => {
     if (cols > 1 && cells.every((c) => c === cells[0]))
       return `<tr class="same"><th scope="row">${esc(label)}</th><td colspan="${cols}">${cells[0]}<span class="same-tag">${L('Same for all', '都一樣')}</span></td></tr>`;
-    return `<tr><th scope="row">${esc(label)}</th>${cells.map((c, i) => `<td>${c}${i === best ? BEST() : ''}</td>`).join('')}</tr>`;
+    return `<tr><th scope="row">${esc(label)}</th>${cells.map((c, i) => `<td>${c}${i === best ? BEST(bestTip) : ''}</td>`).join('')}</tr>`;
   };
   const group = (label: string) => `<tr class="grp"><th colspan="${cols + 1}" scope="colgroup">${esc(label)}</th></tr>`;
 
@@ -134,7 +136,7 @@ export function compareTable(entries: Entry[], opts: Opts): string {
       ? `${esc(setupWords(g.steps.length, g.manual_steps.length))}<div class="small quiet">${esc(g.method)}</div>`
       : `<span class="unknown">${L('no recorded steps', '沒有步驟紀錄')}</span>`;
   });
-  rows.push(row(L('Install', '安裝'), install, bestOf(stepCounts, true)));
+  rows.push(row(L('Install', '安裝'), install, bestOf(stepCounts, true), L('Fewest install commands', '安裝指令最少')));
   rows.push(
     row(
       L('Needs first', '需先準備'),
@@ -168,28 +170,25 @@ export function compareTable(entries: Entry[], opts: Opts): string {
   );
 
   rows.push(group(L('Measures', '分數')));
-  rows.push(row(L('Quality', '品質'), entries.map((e) => tape(L('Quality', '品質'), e.scores?.quality ?? null)), bestOf(entries.map((e) => e.scores?.quality ?? null))));
+  rows.push(row(L('Quality', '品質'), entries.map((e) => tape(L('Quality', '品質'), e.scores?.quality ?? null)), bestOf(entries.map((e) => e.scores?.quality ?? null)), L('Highest quality score', '品質分數最高')));
   rows.push(row(L('Popularity', '知名度'), entries.map((e) => tape(L('Popularity', '知名度'), e.scores?.popularity ?? null, { tone: 'quiet' }))));
-  rows.push(row(L('Features', '功能'), feats.map((f) => coverage(f)), bestOf(feats.map((f) => (f.recorded && f.checked.length + f.not_checked.length ? f.checked.length : null)))));
+  rows.push(row(L('Features', '功能'), feats.map((f) => coverage(f)), bestOf(feats.map((f) => (f.recorded && f.checked.length + f.not_checked.length ? f.checked.length : null))), L('Most features checked', '檢查過的功能最多')));
 
   rows.push(group(L('Cost, licence, upkeep', '費用、授權、維護')));
   rows.push(row(L('Price', '價格'), entries.map((e) => (e.pricing ? esc(PRICE[e.pricing]) : unknown) + (e.pricing_note ? `<div class="small quiet">${esc(e.pricing_note)}</div>` : ''))));
   rows.push(row(L('Runs', '執行位置'), entries.map((e) => (e.processing ? esc(PROCESSING[e.processing]) : unknown))));
   rows.push(row(L('Licence', '授權'), entries.map((e) => (e.license ? `<code>${esc(e.license)}</code>` : unknown) + (e.open_source === true ? ` <span class="small quiet">${L('open source', '開源')}</span>` : ''))));
   const releases = entries.map((e) => (e.last_release ? new Date(e.last_release).getTime() : null)).map((t) => (t !== null && Number.isNaN(t) ? null : t));
-  rows.push(row(L('Last release', '最新版本'), entries.map((e) => (e.last_release ? `${esc(day(e.last_release))}<div class="small quiet">${esc(age(e.last_release, opts.now) ?? '')}</div>` : unknown)), bestOf(releases)));
-  // The name at the top of each column already links to the profile; these are the outside links, as marks.
-  const outLink = (url: string | null | undefined, mark: IconName, name: string) => {
-    const a = link(url, `${icon(mark)}<span class="sr">${name}</span>`, 'icon-link');
-    return a ? `<span data-tip="${name}">${a}</span>` : '';
-  };
+  rows.push(row(L('Last release', '最新版本'), entries.map((e) => (e.last_release ? `${esc(day(e.last_release))}<div class="small quiet">${esc(age(e.last_release, opts.now) ?? '')}</div>` : unknown)), bestOf(releases), L('Newest release', '版本最新')));
+  // The name at the top of each column already links to the profile; these are the outside links, in words.
+  const outLink = (url: string | null | undefined, name: string) => link(url, name, 'tool-link');
   rows.push(
     row(
       L('Links', '連結'),
       entries.map(
         (e) =>
-          `<span class="cmp-links">${outLink(e.web?.url, 'external-link', L('Open it', '開啟'))}${outLink(e.repo_url, 'code', L('Source code', '原始碼'))}` +
-          `${e.homepage && e.homepage !== e.repo_url && e.homepage !== e.web?.url ? outLink(e.homepage, 'globe', L('Homepage', '首頁')) : ''}</span>`,
+          `<span class="cmp-links">${outLink(e.web?.url, L('Open it', '開啟'))}${outLink(e.repo_url, L('Source code', '原始碼'))}` +
+          `${e.homepage && e.homepage !== e.repo_url && e.homepage !== e.web?.url ? outLink(e.homepage, L('Homepage', '首頁')) : ''}</span>`,
       ),
     ),
   );
@@ -238,26 +237,22 @@ export function renderCompare(catalog: Catalog, params: URLSearchParams, nonce: 
         (os ? `<input type="hidden" name="os" value="${os}">` : '') +
         `<label class="sr" for="add-tool">${L('Add a verified tool', '加入已驗證的工具')}</label>` +
         `<input id="add-tool" type="text" name="add" list="tool-names" data-combo required autocomplete="off" placeholder="${L('Add a verified tool by name…', '輸入名稱加入工具…')}"><datalist id="tool-names">${options}</datalist>` +
-        `<button class="btn btn-quiet" type="submit">${icon('plus')}${L('Add', '加入')}</button></form>`
+        `<button class="btn btn-quiet" type="submit">${L('Add', '加入')}</button></form>`
       : '';
   const body =
     entries.length >= 2
       ? `<div class="sec-head"><div class="chips" role="group" aria-label="${L('Show the runs for', '顯示哪個系統的測試')}">${osLinks}</div>` +
-        `<button type="button" class="btn btn-quiet btn-sm js-only" data-open-legend>${icon('circle-help')}${L('How to read this', '怎麼看這張表')}</button></div>` +
-        compareTable(entries, { os, arch, now: new Date(catalog.built_at), removable: slugs }) +
-        `<p class="small quiet">${L(
-          '“Best here” marks only a plain comparison of recorded values: fewest install commands, highest quality score, most features checked, newest release. Everything comes from pickfit’s run records and profiles; nothing was asked of a model.',
-          '「最佳」只是把紀錄裡的數值直接比大小：安裝指令最少、品質分數最高、檢查過的功能最多、版本最新。所有內容都來自 pickfit 的測試紀錄與簡介，沒有問過任何模型。',
-        )}</p>`
-      : `<div class="empty">${fitz('comparing', 96)}<div><h2>${entries.length ? L(`Add one more to compare with ${esc(entries[0].name)}`, `再加一款來和 ${esc(entries[0].name)} 比較`) : L('Pick two to four tools', '挑兩到四款工具')}</h2>` +
+        `<button type="button" class="btn btn-quiet btn-sm js-only" data-open-legend>${L('How to read this', '怎麼看這張表')}</button></div>` +
+        compareTable(entries, { os, arch, now: new Date(catalog.built_at), removable: slugs })
+      : `<div class="empty"><div><h2>${entries.length ? L(`Add one more to compare with ${esc(entries[0].name)}`, `再加一款來和 ${esc(entries[0].name)} 比較`) : L('Pick two to four tools', '挑兩到四款工具')}</h2>` +
         `<p class="quiet">${L(
           'Tick <b>Compare</b> on a result or in <a href="/browse">Browse</a>, or add tools here.',
           '在搜尋結果或<a href="/browse">瀏覽</a>頁勾選<b>比較</b>，或在這裡加入工具。',
         )}</p></div></div>`;
   const main =
-    `<section class="head mat after-top"><div class="wrap head-row"><div>` +
+    `<section class="head"><div class="wrap head-row"><div>` +
     `<h1>${L('Compare tools', '比較工具')}</h1><p class="lede">${L('Only the differences, from pickfit’s own runs', '只列出不一樣的地方，資料都來自 pickfit 實測')}</p>` +
-    `${add}</div>${fitz('comparing', 150, { eager: true })}</div><div class="ruler" aria-hidden="true"></div></section>` +
+    `${add}</div>${fitz('comparing', 96, { eager: true })}</div></section>` +
     `<div class="wrap sec-tight">${body}</div>` +
     `<script type="application/json" data-compare-shown>${JSON.stringify(entries.map((e) => ({ slug: e.slug, name: e.name }))).replace(/</g, '\\u003c')}</script>`;
   return renderShell({

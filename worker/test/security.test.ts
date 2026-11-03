@@ -1,6 +1,6 @@
 /**
  * The known-vulnerability check (OSV.dev, pickfit/index.py _security): the tool
- * page's line in both languages, the How page, and the security field that
+ * page's mark and its warning before the install steps in both languages, the How page, and the security field that
  * find_software, find_alternatives and get_install_guide carry, with the
  * install guide's warning. A vulnerable tool is capped at 79 quality upstream;
  * an unchecked one keeps its score and says so.
@@ -12,7 +12,8 @@ import type { Env } from '../src/env.ts';
 import { findSoftware } from '../src/find.ts';
 import { withLang } from '../src/i18n.ts';
 import { installGuide } from '../src/install.ts';
-import { securityLine } from '../src/pages/tool.ts';
+import { EMPTY_FORM, renderResults } from '../src/page.ts';
+import { securityMark, securityNotice } from '../src/pages/tool.ts';
 import { makeWorker } from '../src/worker.ts';
 import { answer, fixtureIndex, harness, makeD1, metaResponse } from './helpers.ts';
 
@@ -39,8 +40,19 @@ function indexWith(security: SecurityCheck | null | undefined, slug = SLUG) {
   return index;
 }
 
-const lineFor = (security: SecurityCheck | null | undefined, language: 'en' | 'zh-TW' = 'en') =>
-  withLang(language, () => securityLine(loadCatalog(indexWith(security)).bySlug.get(SLUG)!));
+const markFor = (security: SecurityCheck | null | undefined, language: 'en' | 'zh-TW' = 'en') =>
+  withLang(language, () => securityMark(loadCatalog(indexWith(security)).bySlug.get(SLUG)!));
+const noticeFor = (security: SecurityCheck | null | undefined, language: 'en' | 'zh-TW' = 'en') =>
+  withLang(language, () => securityNotice(loadCatalog(indexWith(security)).bySlug.get(SLUG)!));
+
+/** Three findings on two packages: the warning names the worst two packages and folds all three. */
+const THREE: SecurityCheck = {
+  ...VULNERABLE,
+  findings: [
+    ...VULNERABLE.findings!,
+    { package: 'npm:undici', version: '8.9.0', advisory: 'GHSA-efgh-5678-wxyz', severity: 'HIGH', fixed_in: '8.12.2', summary: 'Another one.', malicious: false },
+  ],
+};
 
 function site(index: unknown) {
   const d1 = makeD1();
@@ -55,70 +67,105 @@ function site(index: unknown) {
     worker.fetch(new Request(`http://127.0.0.1:8787${path}`, { headers: { accept: 'text/html' } }), { DB: d1.db, MODEL_API_KEY: 'k', MATCH_MODE: 'off' } as Env, ctx);
 }
 
-test('tool page, vulnerable: a warning with the count, the 79 cap and each advisory linked to OSV.dev', () => {
-  const html = lineFor(VULNERABLE);
-  assert.match(html, /class="badge badge-fail"><svg[^>]*>.*?<\/svg>Known vulnerabilities<\/span>/);
-  assert.match(html, /7 known high or critical vulnerabilities in packages it installs\. That keeps it out of hidden gems: quality is capped at 79\./);
+test('tool page, vulnerable: a red shield with the count and its source, jumping to the warning that lists each advisory', () => {
+  const mark = markFor(VULNERABLE);
+  const say = '7 known high or critical vulnerabilities in packages it installs \\(OSV\\.dev, 3 Nov 2026\\)\\. See the list';
+  assert.match(mark, new RegExp(`^<a class="check-mark mark-fail" href="#security" data-tip="${say}"><svg class="i i-shield-alert"`));
+  assert.match(mark, new RegExp(`<span class="check-label" aria-hidden="true">Security check</span><span class="check-count" aria-hidden="true">7</span><span class="sr">${say}</span></a>$`));
+  // The score's rules are the How page's: the mark says what is vulnerable, not what it does to the score.
+  assert.doesNotMatch(mark, /capped|79|hidden gem/);
+  const zhMark = markFor(VULNERABLE, 'zh-TW');
+  assert.match(zhMark, /data-tip="它安裝的套件有 7 個已知的高風險或嚴重漏洞（OSV\.dev，2026年11月3日）。看清單"/);
+  assert.doesNotMatch(zhMark, /寶藏|79/);
+
+  // The warning names the worst two packages, folds the rest the check kept (each once, linked to OSV.dev), and says how
+  // many more it counted.
+  const notice = noticeFor(THREE);
+  const at = notice.indexOf('<details class="vuln-list small">');
+  const top = notice.slice(0, at);
+  const fold = notice.slice(at);
+  assert.match(top, /<code>npm:undici 8\.9\.0<\/code> A &lt;b&gt;bad&lt;\/b&gt; parser\. \(<a [^>]*>GHSA-abcd-1234-wxyz<\/a>, high, fixed in 8\.12\.2\)<\/li>/);
+  assert.match(top, /RUSTSEC-2020-0071<\/a>, critical, no fix yet\)<\/li>/);
+  assert.match(fold, /^<details class="vuln-list small"><summary>See 1 more<\/summary><ul>/);
   assert.match(
-    html,
-    /<li><code>npm:undici 8\.9\.0<\/code> — <a href="https:\/\/osv\.dev\/vulnerability\/GHSA-abcd-1234-wxyz" target="_blank" rel="noopener noreferrer">GHSA-abcd-1234-wxyz<\/a> \(high\), fixed in 8\.12\.2<\/li>/,
+    fold,
+    /<li><code>npm:undici 8\.9\.0<\/code> — <a href="https:\/\/osv\.dev\/vulnerability\/GHSA-efgh-5678-wxyz" target="_blank" rel="noopener noreferrer">GHSA-efgh-5678-wxyz<\/a> \(high\), fixed in 8\.12\.2<\/li>/,
   );
-  assert.match(html, /RUSTSEC-2020-0071<\/a> \(critical\), no fix yet<\/li>/);
-  assert.match(html, /5 more not listed here\./);
-  assert.doesNotMatch(html, /parser/); // the advisory's own summary is not shown
-
-  const zh = lineFor(VULNERABLE, 'zh-TW');
-  assert.match(zh, />已知漏洞<\/span>/);
-  assert.match(zh, /它安裝的套件有 7 個已知的高風險或嚴重漏洞，所以不列為寶藏：品質最高 79 分。/);
-  assert.match(zh, /GHSA-abcd-1234-wxyz<\/a>（高風險），8\.12\.2 已修正<\/li>/);
-  assert.match(zh, /RUSTSEC-2020-0071<\/a>（嚴重），尚無修正版本<\/li>/);
-  assert.match(zh, /另有 5 個未列出。/);
-
-  // One finding: singular, nothing more to list; a malicious package is named as such.
-  const one = lineFor({ ...VULNERABLE, count: 1, findings: [{ ...VULNERABLE.findings![0], advisory: 'MAL-2026-1', malicious: true }] });
-  assert.match(one, /1 known high or critical vulnerability in packages it installs/);
-  assert.match(one, /MAL-2026-1<\/a> \(malicious package\)<\/li>/);
-  assert.doesNotMatch(one, /more not listed/);
-});
-
-test('tool page, clean: none known, with the date and how many packages', () => {
-  assert.equal(
-    lineFor(CLEAN),
-    '<p class="small security-check">No known high or critical vulnerabilities (OSV.dev, checked 3 Nov 2026, 115 packages).</p>',
-  );
-  assert.match(lineFor(CLEAN, 'zh-TW'), /沒有已知的高風險或嚴重漏洞（OSV\.dev，2026年11月3日 檢查，共 115 個套件）。/);
-});
-
-test('tool page, unchecked: why, and that its score is unchanged; an older index reads as not checked yet', () => {
-  const lockfile = lineFor({ status: 'unchecked', reason: 'no_lockfile', checked_at: '2026-11-03' });
-  assert.equal(lockfile, '<p class="small quiet security-check">Not checked for known vulnerabilities: there is no lockfile to read. Its score is unchanged.</p>');
-  assert.match(lineFor({ status: 'unchecked', reason: 'no_lockfile' }, 'zh-TW'), /沒有檢查已知漏洞：沒有可讀取的 lockfile，分數不變。/);
-  assert.match(lineFor({ status: 'unchecked', reason: 'no_source' }), /there is no repository or package to read\./);
-  assert.match(lineFor({ status: 'unchecked', reason: 'lockfile_not_supported' }), /it uses a lockfile pickfit cannot read yet\./);
-  assert.match(lineFor({ status: 'unchecked', reason: 'resolve_failed' }), /its dependencies could not be resolved\./);
-  for (const security of [{ status: 'unchecked', reason: 'not_run' } as SecurityCheck, null, undefined]) {
-    const line = lineFor(security);
-    assert.match(line, /Not checked for known vulnerabilities yet\. Its score is unchanged\./);
-    assert.doesNotMatch(line, /badge-fail|capped/);
+  // No advisory is listed twice: the two named above are not in the fold.
+  assert.doesNotMatch(fold, /GHSA-abcd-1234-wxyz|RUSTSEC-2020-0071/);
+  for (const advisory of ['GHSA-abcd-1234-wxyz', 'RUSTSEC-2020-0071', 'GHSA-efgh-5678-wxyz']) {
+    assert.equal(notice.split(`>${advisory}</a>`).length - 1, 1, `${advisory} is listed once`);
   }
-  assert.match(lineFor(undefined, 'zh-TW'), /尚未檢查已知漏洞，分數不變。/);
+  assert.match(fold, /4 more not listed here\./);
+  assert.doesNotMatch(fold, /Another one/); // the fold leaves out each advisory's own summary
+  assert.doesNotMatch(notice, /capped|hidden gem|79/);
+
+  const zh = noticeFor(THREE, 'zh-TW');
+  assert.match(zh, /<summary>再看 1 個<\/summary>/);
+  assert.match(zh, /GHSA-abcd-1234-wxyz<\/a>，高風險，8\.12\.2 已修正）<\/li>/);
+  assert.match(zh, /RUSTSEC-2020-0071<\/a>，嚴重，尚無修正版本）<\/li>/);
+  assert.match(zh, /GHSA-efgh-5678-wxyz<\/a>（高風險），8\.12\.2 已修正<\/li>/);
+  assert.match(zh, /另有 4 個未列出。/);
+  assert.doesNotMatch(zh, /寶藏|品質最高/);
+
+  // One finding: singular, nothing more to list or fold; a malicious package is named as such.
+  const single = { ...VULNERABLE, count: 1, findings: [{ ...VULNERABLE.findings![0], advisory: 'MAL-2026-1', malicious: true }] };
+  assert.match(markFor(single), /data-tip="1 known high or critical vulnerability in packages it installs/);
+  const one = noticeFor(single);
+  assert.match(one, /MAL-2026-1<\/a>, malicious package\)<\/li>/);
+  assert.doesNotMatch(one, /more not listed|vuln-list/);
 });
 
-test('the tool page shows the line from the index, and the How page explains the check and the 79 cap', async () => {
+test('tool page, clean: a green shield, with the source, the date and how many packages', () => {
+  const say = 'No known high or critical vulnerabilities \\(OSV\\.dev, checked 3 Nov 2026, 115 packages\\)';
+  const mark = markFor(CLEAN);
+  assert.match(mark, new RegExp(`^<span class="check-mark mark-pass" tabindex="0" data-tip="${say}"><svg class="i i-shield-check"`));
+  assert.match(mark, new RegExp(`<span class="sr">${say}</span></span>$`));
+  assert.match(markFor(CLEAN, 'zh-TW'), /data-tip="沒有已知的高風險或嚴重漏洞（OSV\.dev，2026年11月3日 檢查，共 115 個套件）"/);
+  assert.equal(noticeFor(CLEAN), '');
+});
+
+test('tool page, unchecked: a grey, dashed shield that says so and why; an older index reads as not checked yet', () => {
+  const lockfile = markFor({ status: 'unchecked', reason: 'no_lockfile', checked_at: '2026-11-03' });
+  assert.match(lockfile, /^<span class="check-mark mark-open" tabindex="0" data-tip="Not checked for known vulnerabilities: there is no lockfile to read"><svg class="i i-shield"/);
+  assert.match(lockfile, /<span class="sr">Not checked for known vulnerabilities: there is no lockfile to read<\/span>/);
+  assert.match(markFor({ status: 'unchecked', reason: 'no_lockfile' }, 'zh-TW'), /data-tip="沒有檢查已知漏洞：沒有可讀取的 lockfile"/);
+  assert.match(markFor({ status: 'unchecked', reason: 'no_source' }), /: there is no repository or package to read"/);
+  assert.match(markFor({ status: 'unchecked', reason: 'lockfile_not_supported' }), /: it uses a lockfile pickfit cannot read yet"/);
+  assert.match(markFor({ status: 'unchecked', reason: 'resolve_failed' }), /: its dependencies could not be resolved"/);
+  for (const security of [{ status: 'unchecked', reason: 'not_run' } as SecurityCheck, null, undefined]) {
+    const mark = markFor(security);
+    assert.match(mark, /data-tip="Not checked for known vulnerabilities yet"/);
+    // Never clean or vulnerable, and no word about the score.
+    assert.doesNotMatch(mark, /mark-fail|mark-pass|shield-check|score|capped/);
+    assert.equal(noticeFor(security), '');
+  }
+  const zh = markFor(undefined, 'zh-TW');
+  assert.match(zh, /data-tip="尚未檢查已知漏洞"/);
+  assert.doesNotMatch(zh, /分數不變/);
+});
+
+test('the tool page shows the mark from the index, and the How page explains the check and the 79 cap', async () => {
   const get = site(indexWith(VULNERABLE));
   const html = await (await get(`/tool/${SLUG}`)).text();
-  assert.match(html, /<div class="small security-check" id="security"><p><span class="badge badge-fail">/);
+  const aside = (page: string) => page.slice(page.indexOf('<aside class="side"'), page.indexOf('</aside>'));
+  assert.match(aside(html), /<ul class="check-marks" aria-label="Checks"><li><a class="check-mark mark-fail" href="#security"/);
+  assert.match(html, /<div class="notice error security-notice" role="note" id="security">/);
   assert.match(html, /href="https:\/\/osv\.dev\/vulnerability\/GHSA-abcd-1234-wxyz"/);
+  assert.doesNotMatch(aside(html), /Scored apart|capped|hidden gems/);
   const zh = await (await get(`/tool/${SLUG}?lang=zh-TW`)).text();
-  assert.match(zh, /所以不列為寶藏：品質最高 79 分/);
+  assert.match(aside(zh), /<ul class="check-marks" aria-label="檢查">/);
+  assert.doesNotMatch(aside(zh), /寶藏|品質最高 79 分|兩項分開計分/);
   // Another fixture with no check run yet.
-  assert.match(await (await get('/tool/fixture-chat-tui')).text(), /class="small quiet security-check">Not checked for known vulnerabilities yet\./);
+  assert.match(aside(await (await get('/tool/fixture-chat-tui')).text()), /class="check-mark mark-open" tabindex="0" data-tip="Not checked for known vulnerabilities yet"/);
 
   const how = await (await get('/how')).text();
   assert.match(how, /against OSV\.dev, the public database of known vulnerabilities/);
   assert.match(how, /caps quality at 79, so the tool can’t be a hidden gem/);
   assert.match(how, /keeps its score, and its page says it was not checked/);
-  assert.match(how, /A known high or critical vulnerability in what it installs caps quality at 79\./); // the quality popover
+  // The cap is the How page's to explain: the quality popover every page carries no longer states it.
+  assert.match(how, /A known high or critical vulnerability in any of them caps quality at 79/);
+  assert.doesNotMatch(how, /in what it installs caps quality at 79/);
   const howZh = await (await get('/how?lang=zh-TW')).text();
   assert.match(howZh, /比對公開的已知漏洞資料庫 OSV\.dev/);
   assert.match(howZh, /品質最高只算 79 分，因此不會列為寶藏/);
@@ -191,6 +238,37 @@ test('find_software: each pick carries its security check', async () => {
   assert.deepEqual(other.security, { status: 'unchecked', reason: 'not_run', checked_at: null, count: 0, findings: [] });
 });
 
+test('results: a vulnerable pick is flagged before its commands, with the count, the source and the list; others are not', async () => {
+  const h = harness(() => metaResponse(answer()));
+  const catalog = loadCatalog(indexWith(VULNERABLE));
+  h.deps.catalog = catalog;
+  const out = await findSoftware({ need: 'run a language model offline on my laptop', os: 'macos', must_run_locally: true }, h.deps);
+  await h.settle();
+  const guides = Object.fromEntries(out.picks.map((p) => [p.slug, installGuide(catalog, { slug: p.slug, os: 'macos' })]));
+  const ticketOf = (html: string, slug: string) => html.slice(html.indexOf(`id="pick-${slug}"`), html.indexOf('</article>', html.indexOf(`id="pick-${slug}"`)));
+  for (const language of ['en', 'zh-TW'] as const) {
+    const html = withLang(language, () => renderResults({ out, guides }, { ...EMPTY_FORM, os: 'macos' }, catalog));
+    const ticket = ticketOf(html, SLUG);
+    const flag = ticket.indexOf('<p class="t-vuln" role="note">');
+    assert.ok(flag > 0, 'the vulnerable pick is flagged');
+    const install = ticket.indexOf('class="t-install');
+    assert.ok(install < 0 || flag < install, 'the flag comes before the commands');
+    assert.ok(flag < ticket.indexOf('<details class="t-more">'), 'and before the steps in the fold');
+    const line = ticket.slice(flag, ticket.indexOf('</p>', flag));
+    assert.match(line, /<svg class="i i-shield-alert"/);
+    assert.match(line, /href="\/tool\/fixture-llm-runner#security"/);
+    assert.match(
+      line,
+      language === 'en'
+        ? /<b>7 known vulnerabilities in packages it installs<\/b> \(high or critical; OSV\.dev, 3 Nov 2026\)\. <a [^>]*>See the list<\/a>/
+        : /<b>它安裝的套件有 7 個已知漏洞<\/b>（高風險或嚴重；OSV\.dev，2026年11月3日）。<a [^>]*>看清單<\/a>/,
+    );
+    assert.doesNotMatch(line, /79|capped|hidden gem|寶藏/);
+    // An unchecked pick says nothing here, so it never reads as checked clean.
+    for (const other of out.picks.filter((p) => p.slug !== SLUG)) assert.ok(!ticketOf(html, other.slug).includes('t-vuln'));
+  }
+});
+
 test('over MCP, a vulnerable tool passes the find_software and get_install_guide output schemas', async () => {
   const { db } = makeD1();
   const worker = makeWorker(indexWith(VULNERABLE), {
@@ -226,13 +304,15 @@ test('tool page, vulnerable: a badge by the title that jumps to the list, and a 
   const head = html.slice(0, html.indexOf('class="wrap layout"'));
   assert.match(head, /<a class="badge-link" href="#security"><span class="badge badge-fail"><svg[^>]*>.*?<\/svg>Known vulnerabilities<\/span><\/a>/);
   const notice = html.indexOf('class="notice error security-notice"');
-  assert.ok(notice > 0 && notice < html.indexOf('class="run-card install-card"'), 'the notice comes before the install card');
+  assert.ok(notice > 0 && notice < html.indexOf('class="use-it"'), 'the notice comes before the install steps');
   assert.match(html, /<h3>Before you install: known vulnerabilities<\/h3>/);
   assert.match(html, /found 7 known high or critical vulnerabilities in the packages a fresh install brings \(OSV\.dev, /);
   // The two worst, escaped, each with its advisory, severity and fix; then a link to the whole list.
   assert.match(html, /<code>npm:undici 8\.9\.0<\/code> A &lt;b&gt;bad&lt;\/b&gt; parser\. \(<a [^>]*href="https:\/\/osv\.dev\/vulnerability\/GHSA-abcd-1234-wxyz"[^>]*>GHSA-abcd-1234-wxyz<\/a>, high, fixed in 8\.12\.2\)/);
   assert.match(html, /RUSTSEC-2020-0071<\/a>, critical, no fix yet\)/);
-  assert.match(html, /<a href="#security">See all 7<\/a>/);
+  // The two named above are all the check kept, so nothing folds; the rest of the count is said, not hidden.
+  assert.match(html, /<p class="small quiet">5 more not listed here\.<\/p>/);
+  assert.doesNotMatch(html, />See all|<details class="vuln-list/);
   const zh = await (await get(`/tool/${SLUG}?lang=zh-TW`)).text();
   assert.match(zh, /有已知漏洞<\/span><\/a>/);
   assert.match(zh, /<h3>安裝前先知道：有已知漏洞<\/h3>/);

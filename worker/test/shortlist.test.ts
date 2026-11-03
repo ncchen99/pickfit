@@ -4,6 +4,8 @@ import type { Catalog, Entry } from '../src/catalog.ts';
 import { findAlternatives, findSoftware } from '../src/find.ts';
 import { hardFilter, MAX_CARDS, TREASURE_SLOTS } from '../src/filter.ts';
 import { MATCH_MODEL } from '../src/meta.ts';
+import { EMPTY_FORM, renderResults } from '../src/page.ts';
+import { withLang } from '../src/i18n.ts';
 import { queryTerms, relevance, terms } from '../src/relevance.ts';
 import { rankByRules } from '../src/rules.ts';
 import { answer, fixtureCatalog, harness, metaResponse } from './helpers.ts';
@@ -181,6 +183,34 @@ test('when the keyword call fails the rules scorer chooses the cards (Chinese th
   const out = await findSoftware({ need: '我想要一個好用的東西 (secret-xyz)' }, h.deps);
   assert.ok(!h.requests[1].body.text.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
   assert.match(out.coverage_note ?? '', /no profile matched the request's words/);
+});
+
+test('the results page leaves out how find_software drew the shortlist, in both of the wordings it writes', async () => {
+  // find_software's own output for a catalog over MAX_CARDS: the note for agents says how many met the conditions and
+  // which were compared; the page shows neither (pickfit's process, on /how), in English or in Chinese.
+  const catalog = asCatalog(bulk());
+  const byWords = harness(twoCalls(() => metaResponse({ keywords: ['transcribe audio', 'speech to text', 'recordings'] })));
+  byWords.deps.catalog = catalog;
+  const noWords = harness(twoCalls(() => new Response('{}', { status: 500 }), 'sheet-69'));
+  noWords.deps.catalog = catalog;
+  const rules = harness(null, { modelEnabled: false });
+  rules.deps.catalog = catalog;
+  const outs = [
+    await findSoftware({ need: ZH_NEED }, byWords.deps),
+    await findSoftware({ need: '我想要一個好用的東西 (secret-xyz)' }, noWords.deps),
+    await findSoftware({ need: 'tidy a spreadsheet in the terminal' }, rules.deps),
+  ];
+  await Promise.all([byWords.settle(), noWords.settle(), rules.settle()]);
+  assert.match(outs[0].coverage_note ?? '', /tools met the conditions; the \d+ compared were/);
+  assert.match(outs[1].coverage_note ?? '', /tools met the conditions; no profile matched the request's words/);
+  for (const out of outs) {
+    assert.ok(out.picks.length > 0);
+    for (const language of ['en', 'zh-TW'] as const) {
+      const html = withLang(language, () => renderResults({ out, guides: {} }, EMPTY_FORM, catalog));
+      assert.match(html, /<article class="pick"/);
+      assert.doesNotMatch(html, /met the conditions|treasure score|were compared|寶藏分數/);
+    }
+  }
 });
 
 test('English requests get keywords too (synonyms); none when at most MAX_CARDS tools meet the conditions', async () => {

@@ -9,6 +9,12 @@ import type { ModelAnswer } from '../src/prompt.ts';
 
 const HERE = import.meta.dirname;
 
+/**
+ * A page as its commands read: command() (kit.ts) keeps a word it could break at a hyphen or slash whole in a
+ * <span class="w">, which adds no text. This drops those spans, so a test can look for a command exactly as run.
+ */
+export const commandText = (html: string) => html.replace(/<span class="w">([^<]*)<\/span>/g, '$1');
+
 /** Built from test/fixtures/software by `npm run build:fixtures` (part of `npm test`). */
 export function fixtureIndex(): unknown {
   return JSON.parse(readFileSync(join(HERE, 'generated', 'index.json'), 'utf8'));

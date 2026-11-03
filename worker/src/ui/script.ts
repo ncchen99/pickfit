@@ -117,8 +117,8 @@ export const script = () => `
     try {
       await navigator.clipboard.writeText(text);
       b.classList.add('done'); span.textContent = ${J('Copied', '已複製')}; toast(${J('Copied to the clipboard', '已複製到剪貼簿')});
-    } catch { span.textContent = ${J('Select to copy', '請選取文字後複製')}; }
-    setTimeout(() => { b.classList.remove('done'); span.textContent = ${J('Copy', '複製')}; }, 1800);
+    } catch { b.classList.add('fail'); span.textContent = ${J('Select to copy', '請選取文字後複製')}; }
+    setTimeout(() => { b.classList.remove('done', 'fail'); span.textContent = ${J('Copy', '複製')}; }, 1800);
   });
 
   // ---------------------------------------------------------------- compare tray
@@ -139,6 +139,8 @@ export const script = () => `
     const items = read();
     for (const n of $$('[data-tray-count]')) { n.hidden = !items.length; n.textContent = String(items.length); }
     for (const a of $$('[data-tray-link]')) a.href = items.length ? href(items) : '/compare';
+    // The nav names Compare only while the tray holds tools (and always on /compare itself).
+    for (const a of $$('[data-tray-nav]')) a.hidden = !items.length && a.getAttribute('aria-current') !== 'page';
     if (!tray) return;
     const onCompare = location.pathname === '/compare';
     tray.hidden = !items.length || onCompare || document.body.dataset.tray === 'off';
@@ -146,6 +148,9 @@ export const script = () => `
     list.replaceChildren(...items.map((i) => {
       const li = document.createElement('li');
       li.textContent = i.name;
+      // Each tool in the tray is pinned: it carries the tray's own pin (shell.ts), cloned, so the drawing lives in one place.
+      const pin = tray.querySelector('.tray-mark .i');
+      if (pin) li.prepend(pin.cloneNode(true));
       const x = document.createElement('button');
       x.type = 'button'; x.dataset.trayRemove = i.slug; x.setAttribute('aria-label', ${J('Remove ', '移除 ')} + i.name);
       x.innerHTML = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';

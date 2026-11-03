@@ -37,6 +37,8 @@ const FITZ = {
 export type FitzName = keyof typeof FITZ;
 export const FITZ_BASE = '/assets/fitz/';
 export const ICON_32 = `${FITZ_BASE}icons/fitz-32.svg`;
+/** The same icon with a cream outline, so the silhouette holds on the dark page (brand/mascot/README.md). */
+export const ICON_32_DARK = `${FITZ_BASE}icons/fitz-32-dark.svg`;
 export const ICON_64 = `${FITZ_BASE}icons/fitz-64.svg`;
 
 /** Fitz at a given height (px). Decorative by default: the text beside it says what happened. */
@@ -181,6 +183,8 @@ export function runFacts(run: RunFacts, opts: { offline?: boolean | null; mine?:
 export function marksLegend(): string {
   const row = (dt: string, dd: string) => `<div><dt>${dt}</dt><dd>${dd}</dd></div>`;
   const lvl = (level: string, evidence = {}) => `<span class="level-i">${icon(levelIcon(level, evidence))}</span>`;
+  const chk = (tone: 'pass' | 'caution' | 'fail' | 'open', name: IconName, count = 0) =>
+    `<span class="mark-${tone}">${icon(name)}${count ? `<span class="check-count">${count}</span>` : ''}</span>`;
   return (
     row(
       `<span class="mark-sample">${osList(['macos', 'linux', 'windows'], { tone: 'pass' })}</span>${L('Where it ran', '在哪裡測過')}`,
@@ -192,23 +196,31 @@ export function marksLegend(): string {
     row(
       `<span class="mark-sample">${lvl('install')}${lvl('function')}${lvl('service')}${lvl('inference')}</span>${L('How far the run got', '測試進行到哪一步')}`,
       L(
-        'Installs and starts, its main function works, its service answers, it produces model output. A window means a desktop app opened; a plug, an MCP client used it.',
-        '能安裝並啟動、主要功能可用、服務有回應、能產生模型輸出。視窗代表桌面應用程式已開啟；插頭代表 MCP 用戶端用過它。',
+        'Installs and starts, its main function works, its service answers, it produces model output. A window means a desktop app opened; a plug, an MCP client used it. The mark sits beside the run’s result, under “Why it fits and how we know” and in “How pickfit tested it”.',
+        '能安裝並啟動、主要功能可用、服務有回應、能產生模型輸出。視窗代表桌面應用程式已開啟；插頭代表 MCP 用戶端用過它。標記在測試結果旁邊：展開「為什麼適合、我們怎麼知道」，或在「pickfit 怎麼測的」裡。',
+      ),
+    ) +
+    // The two checks on a tool page's At a glance (tool.ts checkMark): an eye and a shield, in the state's colour, and
+    // the same icon basted (dashed) in grey when not checked. Here so a touch screen, which shows a mark's words only
+    // after a tap, can read them all at once.
+    row(
+      `<span class="mark-sample checks" aria-hidden="true">${chk('pass', 'eye-check')}${chk('caution', 'eye', 2)}${chk('open', 'eye')}</span>${L('Visual check', '視覺檢查')}`,
+      L(
+        'pickfit looked at screenshots of the app. Green: it looks right. Amber with a number: things that look wrong; open it to see them. Grey and dashed: not checked yet.',
+        'pickfit 看過應用程式的截圖。綠色：畫面正常。黃色加數字：有看起來不對的地方，點開就能看到。灰色虛線：還沒檢查。',
       ),
     ) +
     row(
-      `<span class="mark-sample rf">${icon('refresh-cw')}${icon('hand')}${icon('wifi-off')}${icon('calendar')}</span>${L('About the run', '關於這次測試')}`,
+      `<span class="mark-sample checks" aria-hidden="true">${chk('pass', 'shield-check')}${chk('fail', 'shield-alert', 7)}${chk('open', 'shield')}</span>${L('Known vulnerabilities', '已知漏洞')}`,
       L(
-        'Replayed from scratch in a new sandbox, or installed by hand; passed again with the network off; the day it ran.',
-        '在新沙盒裡從頭重跑，或手動安裝；斷網後仍通過；測試日期。',
+        'Known high or critical vulnerabilities (OSV.dev) in what it installs. Green: none known. Red with a number: how many; open it for the list, and read it before you install. Grey and dashed: not checked, which does not mean safe.',
+        '它安裝的套件有沒有已知的高風險或嚴重漏洞（OSV.dev）。綠色：沒有已知漏洞。紅色加數字：有幾個，點開看清單，安裝前先看過。灰色虛線：沒有檢查，不代表安全。',
       ),
     ) +
+    // Everything else about a run (replayed, offline, the kind of tool) is said in words, so only these two marks remain.
     row(
-      `<span class="mark-sample rf">${icon('terminal')}${icon('cpu')}${icon('plug')}</span>${L('Kind of tool', '工具類型')}`,
-      L(
-        'Developer CLI, local AI tool, MCP server. The words after the mark say its form: command-line tool, desktop app, local server.',
-        '開發者 CLI、本機 AI 工具、MCP 伺服器。標記後的文字說明它的形式：命令列工具、桌面應用程式、本機伺服器。',
-      ),
+      `<span class="mark-sample rf">${icon('calendar')}${icon('package')}</span>${L('About the run', '關於這次測試')}`,
+      L('The day it ran, and the version that ran.', '測試日期，以及測到的版本。'),
     ) +
     row(
       `<span class="mark-sample rf">${icon('file-text')}</span>${L('Source of a reason', '理由的來源')}`,
@@ -233,9 +245,28 @@ export function helpButton(id: string, label: string): string {
   return `<button type="button" class="help" popovertarget="${id}" aria-label="${esc(label)}">${icon('circle-help')}</button>`;
 }
 
-/** A command with a copy button (the button shows once the script runs); a one-line command centres it, a longer one keeps it at the top. */
+/**
+ * A word of a command the browser could break inside (after a hyphen or a slash, at a bracket): `--` and `appdir` on two
+ * lines would read as two words. Such a word is kept whole (.w), so the line wraps at a space before it; only a word
+ * longer than the line breaks inside. The span adds no text: Copy and a selection still copy exactly the command.
+ */
+const BREAKABLE = /[^\s]*[-/|?!%)\]}][^\s]*/g;
+const words = (line: string) => esc(line).replace(BREAKABLE, (w) => `<span class="w">${w}</span>`);
+
+/**
+ * A command: a left-ruled block of monospace on the ground it sits on (no box), with a quiet Copy (shown once the
+ * script runs) on the first line's baseline. Several lines: each is its own block, so a long one wraps under itself
+ * (a hanging indent) and the next starts flush. The newlines stay in the text, so Copy copies exactly what was run.
+ */
 export function command(text: string): string {
-  return `<div class="cmd${text.includes('\n') ? ' cmd-multi' : ''}"><pre translate="no"><code>${esc(text)}</code></pre><button type="button" class="copy" aria-label="${L('Copy command', '複製指令')}">${icon('copy')}<span>${L('Copy', '複製')}</span></button></div>`;
+  const multi = text.includes('\n');
+  const body = multi
+    ? text
+        .split('\n')
+        .map((line, i, all) => `<span class="ln">${words(line)}${i < all.length - 1 ? '\n' : ''}</span>`)
+        .join('')
+    : words(text);
+  return `<div class="cmd${multi ? ' cmd-multi' : ''}"><pre translate="no"><code>${body}</code></pre><button type="button" class="copy" aria-label="${L('Copy command', '複製指令')}">${icon('copy')}<span>${L('Copy', '複製')}</span></button></div>`;
 }
 
 /** The stitch: drawn only on verified evidence. */
@@ -307,17 +338,81 @@ export function coverage(features: FeaturesOut, opts: { pop?: string } = {}): st
   );
 }
 
-/** One at-a-glance cell: an icon and its value, which say enough; the label is for screen readers and the hover title. */
-export function glance(ico: IconName | { svg: string }, label: string, value: string, tone: 'pass' | 'caution' | 'fail' | 'quiet' | 'plain' = 'plain'): string {
-  return `<div class="gl gl-${tone}" title="${esc(label)}">${typeof ico === 'string' ? icon(ico) : ico.svg}<span class="gl-label sr">${esc(label)}${L(': ', '：')}</span><span class="gl-value">${value}</span></div>`;
-}
-
-/** The checkbox that puts a tool in the compare tray (the tray is script; without it, the link to /compare works). */
+/**
+ * The checkbox that pins a tool to the compare tray (the tray is script; without it, the link to /compare works).
+ * Its mark is the dressmaker's pin; once the tool is pinned the chip's check takes the pin's place, as on every chip.
+ */
 export function compareToggle(slug: string, name: string): string {
   return (
     `<label class="chip chip-compare js-only"><input type="checkbox" data-compare="${esc(slug)}" data-name="${esc(name)}">` +
-    `${icon('scale')}<span>${L('Compare', '比較')}</span></label>`
+    `${icon('pin')}<span>${L('Compare', '比較')}</span></label>`
   );
+}
+
+// ---------------------------------------------------------------- the measurement sheet
+
+export type MeasureTone = 'pass' | 'caution' | 'fail' | 'quiet';
+
+export interface MeasureRow {
+  /** The label, plain text (escaped here); in words through L() so the zh-TW page reads 「價格」, not "Price". */
+  label: string;
+  /** The value as HTML: escape text first. One fact per row; an OS mark or a <small> note may sit inside it. */
+  value: string;
+  /** Colours the value only: pass for what a run proved, caution for a partial or other-system fact, quiet for "not stated". */
+  tone?: MeasureTone;
+}
+
+/**
+ * The widths (rem) at which a row of the sheet stops fitting on one line. measure() estimates the width a row needs
+ * (needRem) and tags it with the smallest of these that covers it, as m-fit<rem×10> (m-fit215: 21.5rem); styles.ts
+ * turns each into a container query that puts the value under the label in a sheet narrower than that. A row that
+ * needs less than the first never stacks; one that needs more than the last stacks in any single-column sheet.
+ */
+export const MEASURE_FITS = [16, 17, 18, 19, 20, 21.5, 23, 25, 27, 30, 36];
+
+const CJK = /[\u1100-\u115f\u2e80-\ua4cf\uac00-\ud7a3\uf900-\ufaff\ufe30-\ufe4f\uff00-\uff60\uffe0-\uffe6]/;
+
+/** Text width in rem, roughly, at `em` rem per Latin character (a CJK character is a full em, more or less). */
+function textRem(text: string, em: number): number {
+  let n = 0;
+  for (const ch of text) n += CJK.test(ch) ? 2.15 : 1;
+  return n * em;
+}
+
+/**
+ * The width (rem) a row needs on one line: the label (.92rem), the value (.95rem, its <small> .85rem, its <code>
+ * monospace), an OS mark, the shortest leader and the gaps (2.6rem) and a little slack. Calibrated on SF and Segoe-sized
+ * system faces to within about half a rem; when it falls short, the row's value wraps to the next line instead.
+ */
+function needRem(label: string, value: string): number {
+  const plain = (h: string) => h.replace(/<[^>]*>/g, '').replace(/&[#a-z0-9]+;/gi, '.');
+  let rem = textRem(label, 0.465);
+  // Words for screen readers only (osList's and kindTag's names) take no room on the line.
+  let rest = value.replace(/<span class="sr">[^<]*<\/span>/g, '');
+  rest = rest.replace(/<small\b[^>]*>([\s\S]*?)<\/small>/g, (_, t: string) => ((rem += textRem(plain(t), 0.38)), ''));
+  rest = rest.replace(/<code\b[^>]*>([\s\S]*?)<\/code>/g, (_, t: string) => ((rem += textRem(plain(t), 0.5)), ''));
+  rem += (rest.match(/<svg class="os\b/g)?.length ?? 0) * 1.6;
+  return rem + textRem(plain(rest), 0.47) + 2.9;
+}
+
+/**
+ * A measurement sheet (DESIGN.md §5): facts written as a tailor's measurement record, one row per fact, the label
+ * (--ink-3, system face) joined to its value (--ink, tabular figures) by a dotted leader. No box: it sits on whatever
+ * ground it is on, the first pick's --voice included. At most about 30rem wide. A row too long for a narrow sheet
+ * puts its value under the label. A row is never dropped: one with an empty value reads "not stated", in the quiet
+ * tone, so a fact the caller could not fill stays visibly unknown (a caller leaves out a row it does not want).
+ */
+export function measure(rows: MeasureRow[], opts: { cls?: string } = {}): string {
+  const items = rows
+    .map((r) => (r.value === '' ? { ...r, value: `<span class="unknown">${L('not stated', '未說明')}</span>`, tone: 'quiet' as const } : r))
+    .map((r) => {
+      const need = needRem(r.label, r.value);
+      const fit = need < MEASURE_FITS[0] ? 0 : (MEASURE_FITS.find((w) => w >= need) ?? MEASURE_FITS[MEASURE_FITS.length - 1]);
+      const cls = `m${r.tone ? ` m-${r.tone}` : ''}${fit ? ` m-fit${Math.round(fit * 10)}` : ''}`;
+      return `<div class="${cls}"><dt>${esc(r.label)}</dt><dd>${r.value}</dd></div>`;
+    })
+    .join('');
+  return `<dl class="measure${opts.cls ? ` ${opts.cls}` : ''}">${items}</dl>`;
 }
 
 /** Relative age of a day, against the catalog's build time so a cached page does not drift. */
