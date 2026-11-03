@@ -285,7 +285,7 @@ const installInput = z.object({
   rec_id: recId.optional(),
 });
 
-const installOutput = z.object({
+export const installOutput = z.object({
   rec_id: z.string().describe(REC_ID_OUT),
   matched_by: z.literal('rules').describe('No model is used here: these are the steps of a recorded run'),
   slug: z.string(),
@@ -380,6 +380,23 @@ const installOutput = z.object({
     .describe('Later, not now: how to ask whether the user still uses it, with their consent; nothing is installed or left running'),
   web_app: webApp,
   security,
+  verified_in_pickfit: z
+    .object({
+      sandbox_home: z.string().describe("The sandbox user's home the run's commands name (not the user's)"),
+      not_portable: z
+        .array(z.string())
+        .describe('Commands above that still name the sandbox home (inside single quotes): replace it with the user\'s home first'),
+      needs_workdir: z.boolean().describe("The run's commands used a work folder under the sandbox home that existed beforehand"),
+      steps: z.array(z.object({ order: z.number().int(), command: z.string() })),
+      first_task_setup: z.array(z.object({ command: z.string(), run_in_background: z.boolean() })),
+      first_task: z.string().nullable(),
+      verify: z.object({ command: z.string(), expected_contains: z.string() }).nullable(),
+    })
+    .nullable()
+    .describe(
+      "The commands exactly as pickfit's run executed them, for the record; run steps, first_task and verify above, " +
+        'which write its sandbox home as $HOME. null when those are the run\'s own commands',
+    ),
   warnings: z.array(z.string()),
   sources: z.array(z.string()),
 });

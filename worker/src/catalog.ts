@@ -136,6 +136,26 @@ export interface InstallGuide {
   run: RunSummary;
   /** MCP servers: the handshake of this run; null or absent for other software. */
   mcp?: McpHandshake | null;
+  /**
+   * The same commands as a user runs them (pickfit/userpaths.py): pickfit's sandbox home written as $HOME. The
+   * fields above stay exactly as the run executed them. Absent from older indexes.
+   */
+  user?: UserGuide;
+}
+
+export interface UserGuide {
+  steps: { command: string; purpose: string | null }[];
+  first_task_setup: { command: string; background: boolean }[];
+  first_task: string | null;
+  check: { command: string; expected_signal: string } | null;
+  /** Some command named the sandbox home and was rewritten. */
+  changed: boolean;
+  /** Commands still naming the sandbox home (inside single quotes): "step 4", "first task", "check". */
+  not_portable: string[];
+  /** A command names the sandbox's work folder, which existed before any step ran. */
+  needs_workdir: boolean;
+  /** The sandbox home the verified commands name (/Users/sbx, /home/sbx); null when none does. */
+  sandbox_home: string | null;
 }
 
 /** One goal pickfit operated a hosted web app toward in its browser, and what its own check found. */
