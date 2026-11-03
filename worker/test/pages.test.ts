@@ -9,7 +9,9 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import type { Env } from '../src/env.ts';
+import { loadCatalog, type Entry } from '../src/catalog.ts';
 import { compareTable, slugsFrom } from '../src/pages/compare.ts';
+import { visualLine } from '../src/pages/tool.ts';
 import { makeWorker } from '../src/worker.ts';
 import { fixtureCatalog, fixtureIndex, makeD1 } from './helpers.ts';
 
@@ -167,6 +169,9 @@ test('the how page states the scoring as score.py computes it', async () => {
   const html = await (await site().get('/how')).text();
   assert.match(html, /40%/);
   assert.match(html, /25%/);
+  assert.match(html, /quality score drops by 5%; finding none adds nothing/);
+  assert.match(html, /not visually checked and keeps its score/);
+  assert.doesNotMatch(html, /15%/);
   assert.match(html, /quality 80 or more and popularity 45 or less/);
 });
 
@@ -189,4 +194,26 @@ test('a web app opens from an address bar that ends in the button, its facts two
   const html = await (await site().get('/tool/fixture-web-sketch')).text();
   assert.match(html, /<div class="web-bar"><span class="web-addr"><svg[^>]*>.*?<\/svg><span translate="no">fixture-sketch\.example\.invalid<\/span><\/span><a [^>]*class="btn btn-primary btn-sm"/);
   assert.match(html, /<ul class="web-facts web-facts-grid">/);
+});
+
+
+test('a desktop or web app says what the visual check found: a defect and its -5%, none, or not checked', async () => {
+  const base = fixtureIndex() as { entries: Entry[] };
+  const render = (visual: Entry['visual']) => {
+    const index = structuredClone(base);
+    index.entries.find((e) => e.slug === 'fixture-web-sketch')!.visual = visual;
+    return visualLine(loadCatalog(index).bySlug.get('fixture-web-sketch')!);
+  };
+  const defect = render({ status: 'defect', factor: 0.95, defects: [{ kind: 'overlap', problem: 'A <b>button</b> covers the title.', quote: 'Sketch' }] });
+  assert.match(defect, /Visual check found a defect: −5%/);
+  assert.match(defect, /<li>A &lt;b&gt;button&lt;\/b&gt; covers the title\.<\/li>/);
+  assert.match(render({ status: 'clean', factor: 1, defects: [] }), /Visual check: no defect found\./);
+  const none = render({ status: 'not_checked' });
+  assert.match(none, /Not visually checked/);
+  assert.doesNotMatch(none, /−5%|defect found/);
+  assert.equal(render(null), '');
+  // The tool page shows the line from the index: the fixture web app has no check.
+  const html = await (await site().get('/tool/fixture-web-sketch')).text();
+  assert.match(html, /class="small quiet visual-check">Not visually checked yet, so nothing is taken off\./);
+  assert.doesNotMatch(html, /no screenshots/);
 });

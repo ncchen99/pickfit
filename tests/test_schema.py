@@ -345,7 +345,8 @@ def test_record_schema_forbids_unknown_keys():
     ]
     assert "browser_facts" not in schema["$defs"]["QualityComponents"]["required"]
     assert "usability" not in schema["$defs"]["QualityComponents"]["required"]
-    assert "usability" not in schema["required"]
+    assert "usability" not in schema["required"] and "visual_check" not in schema["required"]
+    assert "visual" not in schema["$defs"]["Quality"]["required"]
 
 
 # --- ExtractionResult ----------------------------------------------------------

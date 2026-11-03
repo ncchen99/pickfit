@@ -1697,6 +1697,18 @@
               "type": "null"
             }
           ]
+        },
+        "visual": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VisualDeduction"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Formulas ending +visual.v1: the visual check's factor, the total before it, its app defects."
         }
       },
       "required": [
@@ -2921,6 +2933,128 @@
       "title": "VideoRaw",
       "type": "object"
     },
+    "VisualCheck": {
+      "additionalProperties": false,
+      "description": "Measurable visual defects on the first screens of one passed GUI or web run (comfort.v1, pickfit/usability.py).\n\nMuse Wonder looked at pickfit's own screenshots (the app right after start and at the end of its last passed\noperation) and listed what a second person would find in the same spot: text cut off, overlaps, clipped controls,\nbad wraps, low contrast, tiny text, raw markup, broken images, misalignment, cramping. Never taste, welcome\ndialogs or what the sandbox causes. score: no app defect 2, minor ones only 1, any major 0.",
+      "properties": {
+        "checked_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "cost_usd": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "defects": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/EaseFinding"
+          },
+          "maxItems": 20,
+          "type": "array"
+        },
+        "effort": {
+          "maxLength": 20,
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs_sha": {
+          "description": "sha256 over the prompt and every image's sha256.",
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "model": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "run_id": {
+          "$ref": "#/$defs/RunId",
+          "description": "The run whose screenshots were read; stale once that run is gone."
+        },
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 2,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Null when the sandbox broke the screen or no answer came."
+        },
+        "screens": {
+          "description": "Screenshots read.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "scored",
+            "sandbox_broken",
+            "not_seen"
+          ],
+          "type": "string"
+        },
+        "version": {
+          "const": "comfort.v1",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "run_id",
+        "score",
+        "status",
+        "screens",
+        "model",
+        "effort",
+        "inputs_sha",
+        "checked_at",
+        "cost_usd"
+      ],
+      "title": "VisualCheck",
+      "type": "object"
+    },
+    "VisualDeduction": {
+      "additionalProperties": false,
+      "description": "What the visual check did to the total (formulas ending +visual.v1, pickfit/score.py apply_visual).",
+      "properties": {
+        "before": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The formula's total before the factor."
+        },
+        "defects": {
+          "description": "App-caused defects the check listed.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "factor": {
+          "description": "1.0 for a clean check; 0.95 when it found an app-caused defect.",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "type": "number"
+        }
+      },
+      "required": [
+        "factor",
+        "before",
+        "defects"
+      ],
+      "title": "VisualDeduction",
+      "type": "object"
+    },
     "WebApp": {
       "additionalProperties": false,
       "description": "A hosted web app (kind web_app): where to open it. What a browser saw lives in verification.runs[].web.",
@@ -3437,6 +3571,18 @@
     },
     "verification": {
       "$ref": "#/$defs/Verification"
+    },
+    "visual_check": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/VisualCheck"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Only for kind desktop_app and web_app: measurable visual defects on pickfit's own screenshots."
     },
     "web": {
       "anyOf": [

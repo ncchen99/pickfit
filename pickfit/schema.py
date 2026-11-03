@@ -1258,6 +1258,20 @@ class QualityComponents(_Model):
         return [(name, c) for name in type(self).model_fields if (c := getattr(self, name)) is not None]
 
 
+class VisualDeduction(_Model):
+    """What the visual check did to the total (formulas ending +visual.v1, pickfit/score.py apply_visual)."""
+
+    factor: float = Field(gt=0, le=1, description="1.0 for a clean check; 0.95 when it found an app-caused defect.")
+    before: float | None = Field(ge=0, le=100, description="The formula's total before the factor.")
+    defects: int = Field(ge=0, description="App-caused defects the check listed.")
+
+    @model_validator(mode="after")
+    def _factor_follows_defects(self) -> VisualDeduction:
+        if (self.factor < 1) != (self.defects > 0):
+            raise ValueError("the visual factor is below 1 exactly when the check found an app-caused defect")
+        return self
+
+
 class Quality(_Model):
     total: float | None = Field(ge=0, le=100)
     confidence: float = Field(ge=0, le=1, description="Share of weight that had data.")
@@ -1266,6 +1280,18 @@ class Quality(_Model):
     )
     cap_reason: CapReason | None = Field(description="binding_cap() of the record.")
     components: QualityComponents
+    visual: VisualDeduction | None = Field(
+        default=None, exclude_if=lambda value: value is None,
+        description="Formulas ending +visual.v1: the visual check's factor, the total before it, its app defects.")
+
+    @model_validator(mode="after")
+    def _check_visual(self) -> Quality:
+        v = self.visual
+        if v is not None and (v.before is None) != (self.total is None):
+            raise ValueError("a visual deduction has a total before it exactly when quality has a total")
+        if v is not None and v.before is not None and abs(self.total - round(v.before * v.factor, 1)) > 0.051:
+            raise ValueError("quality.total must be the total before the visual check times its factor")
+        return self
 
     @model_validator(mode="after")
     def _check_weights_and_cap(self) -> Quality:
@@ -1392,6 +1418,12 @@ class Scores(_Model):
             docs is None or abs(docs - self.docs_rubric.items.score()) > 0.001
         ):
             raise ValueError("install_docs.score must be docs_rubric points / 16")
+        return self
+
+    @model_validator(mode="after")
+    def _check_visual_formula(self) -> Scores:
+        if self.formula_version.endswith("+visual.v1") != (self.quality.visual is not None):
+            raise ValueError("a +visual.v1 formula carries quality.visual, and only it does")
         return self
 
     @model_validator(mode="after")
@@ -1568,6 +1600,59 @@ class Usability(_Model):
         return self
 
 
+# A visual check that found an app-caused defect multiplies the quality total by this (pickfit/score.py apply_visual).
+VISUAL_FACTOR = 0.95
+
+
+def visual_check_factor(visual: Any, verification: Any) -> float | None:
+    """1.0 for a clean visual check, VISUAL_FACTOR for one that found an app-caused defect; None without a current
+    check (none, one that read a run the record no longer has, or one the sandbox broke). Takes models or dicts."""
+    if visual is None:
+        return None
+    if isinstance(visual, dict):
+        run_id, score = visual.get("run_id"), visual.get("score")
+    else:
+        run_id, score = visual.run_id, visual.score
+    runs = {run.id for run in verification.runs if (run.gui or run.web) and is_passed(run.level)}
+    if score is None or run_id not in runs:
+        return None
+    return 1.0 if score == 2 else VISUAL_FACTOR
+
+
+class VisualCheck(_Model):
+    """Measurable visual defects on the first screens of one passed GUI or web run (comfort.v1, pickfit/usability.py).
+
+    Muse Wonder looked at pickfit's own screenshots (the app right after start and at the end of its last passed
+    operation) and listed what a second person would find in the same spot: text cut off, overlaps, clipped controls,
+    bad wraps, low contrast, tiny text, raw markup, broken images, misalignment, cramping. Never taste, welcome
+    dialogs or what the sandbox causes. score: no app defect 2, minor ones only 1, any major 0.
+    """
+
+    version: Literal["comfort.v1"]
+    run_id: RunId = Field(description="The run whose screenshots were read; stale once that run is gone.")
+    score: int | None = Field(ge=0, le=2, description="Null when the sandbox broke the screen or no answer came.")
+    status: Literal["scored", "sandbox_broken", "not_seen"]
+    defects: list[EaseFinding] = Field(default=[], max_length=20)
+    screens: int = Field(ge=1, description="Screenshots read.")
+    model: str = Field(min_length=1, max_length=80)
+    effort: str = Field(min_length=1, max_length=20)
+    inputs_sha: str = Field(pattern=r"^[0-9a-f]{64}$", description="sha256 over the prompt and every image's sha256.")
+    checked_at: AwareDatetime
+    cost_usd: float = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _score_follows_defects(self) -> VisualCheck:
+        if (self.score is None) != (self.status != "scored"):
+            raise ValueError("a visual check has a score exactly when its status is scored")
+        app = [d for d in self.defects if d.cause == "app"]
+        if any(d.item != "comfortable" or d.kind is None or d.severity is None for d in self.defects):
+            raise ValueError("a visual defect is a comfortable finding with its kind and severity")
+        expected = 2 if not app else 0 if any(d.severity == "major" for d in app) else 1
+        if self.score is not None and self.score != expected:
+            raise ValueError(f"score must be {expected} for these defects")
+        return self
+
+
 class WebApp(_Model):
     """A hosted web app (kind web_app): where to open it. What a browser saw lives in verification.runs[].web."""
 
@@ -1691,6 +1776,11 @@ class SoftwareRecord(_Model):
         exclude_if=lambda value: value is None,
         description="Only for kind desktop_app and web_app: how easy pickfit's AI operator found it (ease.v1).",
     )
+    visual_check: VisualCheck | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="Only for kind desktop_app and web_app: measurable visual defects on pickfit's own screenshots.",
+    )
     scores: Scores | None = None
     outcomes: Outcomes = Field(default_factory=Outcomes)
     sources: list[Source] = Field(min_length=1)
@@ -1714,6 +1804,8 @@ class SoftwareRecord(_Model):
     def _check_usability(self) -> SoftwareRecord:
         if self.usability is not None and self.kind not in ("desktop_app", "web_app"):
             raise ValueError("usability belongs to kind desktop_app and web_app only")
+        if self.visual_check is not None and self.kind not in ("desktop_app", "web_app"):
+            raise ValueError("visual_check belongs to kind desktop_app and web_app only")
         return self
 
     @model_validator(mode="after")
@@ -1805,6 +1897,20 @@ class SoftwareRecord(_Model):
             raise ValueError(
                 f"usage_outcomes needs >= {USAGE_MIN_REPORTS} external reports to have a score"
             )
+        return self
+
+    @model_validator(mode="after")
+    def _check_visual_deduction(self) -> SoftwareRecord:
+        """A visual deduction in the scores follows the record's own current visual check, so the total and the page
+        cannot disagree with it."""
+        visual = self.scores.quality.visual if self.scores else None
+        if visual is None:
+            return self
+        if self.kind not in ("desktop_app", "web_app"):
+            raise ValueError("a visual deduction belongs to kind desktop_app and web_app only")
+        factor = visual_check_factor(self.visual_check, self.verification)
+        if factor is None or abs(factor - visual.factor) > 1e-9:
+            raise ValueError("quality.visual must follow the record's current visual_check (pickfit score --refresh)")
         return self
 
 

@@ -307,6 +307,23 @@ def _add_score_command(sub: argparse._SubParsersAction) -> None:
     s.set_defaults(func=main_score)
 
 
+def _add_visual_command(sub: argparse._SubParsersAction) -> None:
+    from pickfit.usability import VISUAL_CAP_USD, main_visual
+
+    v = sub.add_parser("visual", help="measurable visual defects of desktop and web apps from pickfit's own "
+                                      "screenshots (Muse Wonder, one call each, paid); --write adds visual_check")
+    v.add_argument("--slug", action="append", help="check this record (repeatable)")
+    v.add_argument("--pilot", action="store_true", help="the 12 apps in data/calibration/ease-pilot.json")
+    v.add_argument("--all", action="store_true", help="every desktop_app and web_app with copied evidence")
+    v.add_argument("--data-dir", default=None, help="records (default data/software)")
+    v.add_argument("--cap", type=float, default=VISUAL_CAP_USD, help="the stage's ledger cap in USD, across runs")
+    v.add_argument("--force", action="store_true", help="check again even when the screens and prompt are the same")
+    v.add_argument("--write", action="store_true", help="add each result to its record as visual_check")
+    v.add_argument("--dry-run", action="store_true", help="count what would be checked and estimate the cost")
+    v.add_argument("--verbose", action="store_true", help="print each record's score")
+    v.set_defaults(func=main_visual)
+
+
 def _add_usability_command(sub: argparse._SubParsersAction) -> None:
     from pickfit.usability import COMFORT_MODEL, MODEL, SAMPLES, STAGE_CAP_USD, main_usability
 
@@ -542,6 +559,7 @@ def main(argv: list[str] | None = None) -> int:
     _add_pipeline_commands(sub)
     _add_score_command(sub)
     _add_usability_command(sub)
+    _add_visual_command(sub)
     _add_queue_commands(sub)
     _add_outcomes_command(sub)
     _add_publish_command(sub)

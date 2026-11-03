@@ -439,6 +439,10 @@ def _keep_verified_work(data: dict[str, Any], existing: dict[str, Any]) -> None:
     for key in ("verification", "scores", "outcomes", "why_worth_it", "usage_guide", "status", "status_reason"):
         if existing.get(key) is not None:
             data[key] = existing[key]
+    if data["kind"] in ("desktop_app", "web_app"):  # paid judgements of pickfit's own screenshots
+        for key in ("visual_check", "usability"):
+            if existing.get(key) is not None:
+                data[key] = existing[key]
     for os_name, guide in (existing.get("install") or {}).items():
         if guide and guide.get("basis") != "readme_claim":
             data["install"][os_name] = guide

@@ -803,3 +803,109 @@ def test_refresh_moves_records_to_the_usability_formulas_and_back(monkeypatch: p
     assert "usability" not in data["scores"]["quality"]["components"]
     assert refresh_scores(web, LATER) == "scores moved from formula web.v2 to web.v1, refreshed from the record"
     SoftwareRecord.model_validate(data)
+
+
+# --- measurable visual defects: an app-caused defect takes 5% off (b3.v5+visual.v1, web.v1+visual.v1) ------------
+
+
+def visual(run_id: str, score: int = 1) -> dict[str, Any]:
+    defects = {2: [], 1: [("minor", "raw_markup")], 0: [("major", "overlap")]}[score]
+    return {"version": "comfort.v1", "run_id": run_id, "score": score, "status": "scored",
+            "defects": [{"item": "comfortable", "operation": None, "cause": "app", "problem": "x", "screenshot": "a.png",
+                         "box": [0, 0, 10, 10], "quote": "x", "found_by": "ocr", "kind": kind, "severity": severity}
+                        for severity, kind in defects],
+            "screens": 2, "model": "muse-wonder-1.0", "effort": "medium", "inputs_sha": "0" * 64,
+            "checked_at": "2026-11-03T20:00:00+08:00", "cost_usd": 0.03}
+
+
+def test_a_visual_defect_takes_five_percent_off_and_a_clean_or_missing_check_changes_nothing() -> None:
+    desk = desktop_record()
+    desk.pop("usability")
+    plain = build_scores(SoftwareRecord.model_validate(desk), None, None, None, now=NOW)
+    assert plain["formula_version"] == FORMULA_VERSION and "visual" not in plain["quality"]
+    run_id = desk["verification"]["runs"][0]["id"]
+    for score, factor in ((0, 0.95), (1, 0.95), (2, 1.0)):  # severity is not used
+        desk["visual_check"] = visual(run_id, score)
+        scores = build_scores(SoftwareRecord.model_validate(desk), None, None, None, now=NOW)
+        assert scores["formula_version"] == "b3.v5+visual.v1"
+        assert scores["quality"]["components"] == plain["quality"]["components"]  # the formula itself is b3.v5
+        assert scores["quality"]["total"] == round(plain["quality"]["total"] * factor, 1)
+        assert scores["quality"]["visual"] == {"factor": factor, "before": plain["quality"]["total"],
+                                               "defects": 0 if score == 2 else 1}
+        Scores.model_validate(scores)
+    web = web_record()
+    plain = web_scores(web)
+    web["visual_check"] = visual(web["verification"]["runs"][0]["id"], 0)
+    scores = web_scores(web)
+    assert scores["formula_version"] == "web.v1+visual.v1"
+    assert scores["quality"]["total"] == round(plain["quality"]["total"] * 0.95, 1)
+    # A command-line tool cannot carry a check; a check of a run the record no longer has changes nothing.
+    desk["visual_check"] = visual("verify-gone", 0)
+    assert build_scores(SoftwareRecord.model_validate(desk), None, None, None, now=NOW)["formula_version"] == FORMULA_VERSION
+
+
+def test_the_treasure_rule_is_unchanged_and_works_on_the_total_after_the_deduction() -> None:
+    desk = desktop_record()
+    desk.pop("usability")
+    desk["visual_check"] = visual(desk["verification"]["runs"][0]["id"], 1)
+    scores = build_scores(SoftwareRecord.model_validate(desk), None, None, None, now=NOW)
+    shown = scores | {"popularity": scores["popularity"] | {"score": 30.0},
+                      "quality": scores["quality"] | {"total": 79.8, "visual": {"factor": 0.95, "before": 84.0,
+                                                                                "defects": 1}},
+                      "treasure": {"is_treasure": False, "value": 55.86}}
+    Scores.model_validate(shown)  # 84.0 before, 79.8 after: not a treasure
+    with pytest.raises(ValueError, match="before the visual check times its factor"):
+        Scores.model_validate(shown | {"quality": shown["quality"] | {"total": 84.0},
+                                       "treasure": {"is_treasure": True, "value": 58.8}})
+    with pytest.raises(ValueError, match=r"\+visual\.v1 formula carries quality\.visual"):
+        Scores.model_validate(shown | {"formula_version": FORMULA_VERSION})
+
+
+def test_refresh_applies_and_removes_the_deduction_and_moves_the_branch_formulas() -> None:
+    desk = desktop_record()
+    desk.pop("usability")
+    desk["scores"] = build_scores(SoftwareRecord.model_validate(desk), None, None, None, now=NOW)
+    before = desk["scores"]["quality"]["total"]
+    web = web_record()
+    web["scores"] = web_scores(web)
+    desk["visual_check"] = visual(desk["verification"]["runs"][0]["id"], 0)
+    web["visual_check"] = visual(web["verification"]["runs"][0]["id"], 2)
+    assert refresh_scores(desk, LATER) == "scores moved from formula b3.v5 to b3.v5+visual.v1, refreshed from the record"
+    assert desk["scores"]["quality"]["total"] == round(before * 0.95, 1)
+    assert refresh_scores(web, LATER) == "scores moved from formula web.v1 to web.v1+visual.v1, refreshed from the record"
+    assert web["scores"]["quality"]["visual"]["factor"] == 1.0
+    for record in (desk, web):
+        SoftwareRecord.model_validate(record)
+        assert refresh_scores(record, LATER) is None
+    # A re-verified record whose check read a run it no longer has goes back until it is checked again.
+    desk["visual_check"]["run_id"] = "verify-gone"
+    assert refresh_scores(desk, LATER) == "scores moved from formula b3.v5+visual.v1 to b3.v5, refreshed from the record"
+    assert desk["scores"]["quality"]["total"] == before and "visual" not in desk["scores"]["quality"]
+    # gui.v2 (the additive version tried on this branch) moves to the deduction.
+    desk["visual_check"]["run_id"] = desk["verification"]["runs"][0]["id"]
+    desk["scores"]["formula_version"] = "gui.v2"
+    assert "to b3.v5+visual.v1" in refresh_scores(desk, LATER)
+    assert "visual_quality" not in desk["scores"]["quality"]["components"]
+
+
+def test_a_visual_check_score_must_follow_its_defects() -> None:
+    from pickfit.schema import VisualCheck
+
+    VisualCheck.model_validate(visual("run-1", 0))
+    for wrong in ({"score": 2}, {"score": None}, {"status": "sandbox_broken"}):
+        with pytest.raises(ValueError):
+            VisualCheck.model_validate(visual("run-1", 0) | wrong)
+    with pytest.raises(ValueError, match="desktop_app and web_app only"):
+        tool = json.loads(CHAT_FIXTURE.read_text(encoding="utf-8"))
+        tool["visual_check"] = visual(tool["verification"]["runs"][0]["id"], 2)
+        SoftwareRecord.model_validate(tool)
+
+
+def test_rebuilding_a_profile_keeps_the_paid_visual_check_of_a_desktop_or_web_app() -> None:
+    from pickfit.profiles import _keep_verified_work
+
+    check = visual("run-1", 2)
+    for kind, kept in (("desktop_app", True), ("web_app", True), ("cli_tool", False)):
+        data = {"kind": kind, "first_seen_at": "x", "install": {}, "sources": [], "evidence": []}
+        _keep_verified_work(data, {"visual_check": check, "usability": {"version": "ease.v1"}})
+        assert ("visual_check" in data) is kept and ("usability" in data) is kept

@@ -76,6 +76,9 @@ COMFORT_VERSION = "comfort.v1"
 COMFORT_MODEL = "muse-wonder-1.0"
 COMFORT_EFFORT = "medium"
 COMFORT_MAX_TOKENS = 16_000
+VISUAL_CAP_USD = 8.0  # the whole visual-check stage, across runs (one ledger scope)
+VISUAL_RUN_ID = "usability-visual-comfort.v1"
+VISUAL_COST_PER_APP = 0.035  # measured on the 12 pilot apps: $0.39 for 12 (section 9.1)
 
 EVIDENCE_DIR = Path.home() / ".pickfit" / "evidence"
 RESULTS_DIR = Path.home() / ".pickfit" / "usability"
@@ -977,10 +980,14 @@ def check_comfort(answer: ComfortAnswer, shots: list[Shot], finder: TextFinder) 
         if not 1 <= d.evidence.image <= len(shots):
             problems.append(f"{d.kind} dropped: image {d.evidence.image} does not exist")
             continue
+        if not d.evidence.quote.strip():
+            problems.append(f"{d.kind} dropped: no text on the screen to point at")
+            continue
         shot = shots[d.evidence.image - 1]
         how, _ = finder.find(d.evidence.quote, shot)
+        problem = " ".join(d.problem.split())[:300] or d.kind.replace("_", " ")
         defects.append({"item": "comfortable", "operation": None, "cause": d.cause, "kind": d.kind,
-                        "severity": d.severity, "problem": " ".join(d.problem.split())[:300],
+                        "severity": d.severity, "problem": problem,
                         "screenshot": shot.path.name, "box": _box(d.evidence.box), "quote": d.evidence.quote[:QUOTE_MAX],
                         "found_by": how or "unverified"})
     return {"score": comfort_score(defects), "status": "scored"}, defects, problems
@@ -1003,6 +1010,29 @@ def judge_comfort(bundle: Bundle, ask: Ask, finder: TextFinder, log: Callable[[s
             "model": asked.model, "raw": raw, "error": None}
 
 
+def comfort_inputs_sha(bundle: Bundle) -> str:
+    """sha256 over what the comfort inspector reads: its prompt, the run, the screens' text and every image's sha256
+    (the run too, so a re-verified record is checked again even when its first screens look the same)."""
+    parts = {"version": COMFORT_VERSION, "instructions": hashlib.sha256(COMFORT_INSTRUCTIONS.encode()).hexdigest(),
+             "run_id": bundle.run_id, "text": first_look_text(bundle),
+             "shots": [s.sha256 for s in bundle.first_look_shots()],
+             "model": COMFORT_MODEL, "effort": COMFORT_EFFORT}
+    return hashlib.sha256(json.dumps(parts, sort_keys=True).encode()).hexdigest()
+
+
+def visual_check(bundle: Bundle, inspected: dict[str, Any], checked_at: str | None = None) -> dict[str, Any]:
+    """The record's visual_check (schema.VisualCheck) from one judge_comfort result."""
+    order = {"app": 0, "operator": 1, "sandbox": 2}
+    fields = ("item", "operation", "cause", "problem", "screenshot", "box", "quote", "found_by", "kind", "severity")
+    defects = sorted(inspected["defects"], key=lambda d: (order[d["cause"]], d["severity"] != "major"))
+    return {"version": COMFORT_VERSION, "run_id": bundle.run_id, "score": inspected["dimension"]["score"],
+            "status": inspected["dimension"]["status"], "defects": [{k: d[k] for k in fields} for d in defects][:20],
+            "screens": len(bundle.first_look_shots()), "model": inspected["model"], "effort": COMFORT_EFFORT,
+            "inputs_sha": comfort_inputs_sha(bundle),
+            "checked_at": checked_at or taipei_now().isoformat(timespec="seconds"),
+            "cost_usd": round(inspected["cost_usd"], 6)}
+
+
 def record_usability(result: dict[str, Any]) -> dict[str, Any]:
     """The part of a result that goes into the record (schema.Usability)."""
     keep = ("version", "run_id", "basis", "score", "verdict", "dimensions", "operations", "screens", "sandbox",
@@ -1014,6 +1044,108 @@ def record_usability(result: dict[str, Any]) -> dict[str, Any]:
 
 
 # --- command line ------------------------------------------------------------------------------------------
+
+
+def write_visual_check(path: Path, check: dict[str, Any]) -> None:
+    """Add visual_check to the record file as it is now (read again just before writing), just before scores where
+    the schema puts it and leaving every other key where it was, refresh the scores so the deduction follows it (as
+    verification write-back does), bump updated_at, validate, and replace the file atomically."""
+    from pickfit.schema import SoftwareRecord
+    from pickfit.score import refresh_scores
+
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    raw.pop("visual_check", None)
+    anchor = next((k for k in ("scores", "outcomes", "sources", "evidence", "first_seen_at", "updated_at") if k in raw),
+                  None)
+    keys = list(raw)
+    at = keys.index(anchor) if anchor else len(keys)
+    raw = {k: raw[k] for k in keys[:at]} | {"visual_check": check} | {k: raw[k] for k in keys[at:]}
+    now = taipei_now()
+    refresh_scores(raw, now)
+    raw["updated_at"] = now.isoformat(timespec="seconds")
+    SoftwareRecord.model_validate(raw)
+    tmp = path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(raw, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(path)
+
+
+def main_visual(args: Any) -> int:
+    """`pickfit visual` (wired in pickfit/cli.py): measurable visual defects for desktop and web apps (comfort.v1),
+    one Muse Wonder call each; --write adds them to the record as visual_check and refreshes its scores, so the visual
+    deduction (an app-caused defect: total x 0.95) follows at once. A record whose visual_check, or a saved result, read the same screens with the
+    same prompt is not checked again."""
+    from pickfit.env import REPO_ROOT
+    from pickfit.profiles import DEFAULT_OUT
+    from pickfit.schema import VisualCheck
+
+    data_dir = Path(args.data_dir) if args.data_dir else DEFAULT_OUT
+    if args.all:
+        slugs = [p.stem for p in sorted(data_dir.glob("*.json"))
+                 if json.loads(p.read_text(encoding="utf-8")).get("kind") in ("desktop_app", "web_app")]
+    else:
+        slugs = list(args.slug or []) + (pilot_slugs(REPO_ROOT) if args.pilot else [])
+    if not slugs:
+        print("pickfit visual: name --slug, --pilot or --all", file=sys.stderr)
+        return 2
+    saved_dir = RESULTS_DIR / "visual"
+    saved_dir.mkdir(parents=True, exist_ok=True)
+    ask = None if args.dry_run else meta_ask(COMFORT_MODEL, args.cap, VISUAL_RUN_ID, effort=COMFORT_EFFORT,
+                                             max_output_tokens=COMFORT_MAX_TOKENS)
+    finder = TextFinder()
+    summary: dict[str, Any] = {"apps": len(slugs), "checked": [], "reused": [], "fresh": [], "no_evidence": [],
+                               "written": 0, "cost_usd": 0.0, "scores": {}, "errors": {}}
+    for slug in slugs:
+        path = data_dir / f"{slug}.json"
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        bundle = bundle_for(raw)
+        if bundle is None:
+            summary["no_evidence"].append(slug)
+            continue
+        sha = comfort_inputs_sha(bundle)
+        current = raw.get("visual_check") or {}
+        if current.get("inputs_sha") == sha and not args.force:
+            summary["fresh"].append(slug)
+            continue
+        saved = saved_dir / f"{slug}.json"
+        check = json.loads(saved.read_text(encoding="utf-8")) if saved.is_file() else None
+        if check is not None and check.get("inputs_sha") == sha and not args.force:
+            summary["reused"].append(slug)
+        elif args.dry_run:
+            summary["checked"].append(slug)
+            continue
+        else:
+            try:
+                inspected = judge_comfort(bundle, ask, finder, lambda s: print(s, file=sys.stderr))
+            except BudgetExceeded as err:
+                summary["errors"][slug] = str(err)
+                break
+            except (RuntimeError, OSError, ValueError) as err:  # OCR or file trouble: this app only
+                summary["errors"][slug] = f"{type(err).__name__}: {str(err)[:200]}"
+                continue
+            summary["cost_usd"] = round(summary["cost_usd"] + inspected["cost_usd"], 6)
+            (saved_dir / f"{slug}.answer.json").write_text(  # the paid answer, kept even if it does not validate
+                json.dumps(inspected["raw"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            if inspected["error"]:
+                summary["errors"][slug] = inspected["error"]
+                continue
+            try:
+                check = VisualCheck.model_validate(visual_check(bundle, inspected)).model_dump(mode="json")
+            except ValueError as err:
+                summary["errors"][slug] = f"invalid check: {str(err)[:200]}"
+                continue
+            saved.write_text(json.dumps(check, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            summary["checked"].append(slug)
+        summary["scores"][slug] = check["score"]
+        if args.write and not args.dry_run:
+            write_visual_check(path, check)
+            summary["written"] += 1
+    if args.dry_run:
+        summary["estimated_usd"] = round(len(summary["checked"]) * VISUAL_COST_PER_APP, 2)
+    counts = {k: len(v) for k, v in summary.items() if isinstance(v, list)}
+    dist = {str(v): list(summary["scores"].values()).count(v) for v in (0, 1, 2, None)}
+    print(json.dumps(summary | counts | {"score_counts": dist} | ({} if args.verbose else {"scores": None}),
+                     ensure_ascii=False, indent=2))
+    return 0 if not summary["errors"] else 1
 
 
 def pilot_slugs(repo: Path) -> list[str]:
