@@ -1,0 +1,842 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<title>Along the thread</title>
+<style>
+  @font-face { font-family: "Bricolage Grotesque"; src: url("/repo/worker/public/assets/fonts/bricolage-grotesque.woff2") format("woff2"); font-weight: 200 800; font-display: block; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "/node_modules/three/build/three.module.js",
+  "three/addons/": "/node_modules/three/examples/jsm/",
+  "gsap": "/node_modules/gsap/index.js"
+} }
+</script>
+</head><body>
+<script type="module">
+// 1:52 "Along the thread" (36.5 s, one shot). The camera dives into the seam of MangoDisk's ticket
+// and follows the rufous running stitch through the stations of pickfit's record of MangoDisk
+// (3 Nov 2026): submission, prescreen, extraction, the macOS sandbox, the aimed-click fix, and
+// out onto the floor of all 963 tickets, where the thread ends at MangoDisk's.
+import * as THREE from 'three';
+import { gsap } from 'gsap';
+import { Stage, canvasTexture } from '../kit/stage.js';
+import { paperCard, text, drawSeam, drawMeasure, stitchThread, cardPath } from '../kit/props.js';
+import { site, fonts, ease } from '../kit/tokens.js';
+
+const DURATION = 36.5;
+const stage = new Stage({ dof: { aperture: 0.001, maxblur: 0.006 } });
+await stage.ready;
+const { scene, camera } = stage;
+
+// The world is about 35 units deep: one shadow frustum covers all of it, so shadows never crawl.
+{
+  const c = new THREE.Vector3(1.5, 0, -12.5);
+  stage.key.target.position.copy(c);
+  stage.key.position.copy(c).add(new THREE.Vector3(-4, 7, 5).normalize().multiplyScalar(36));
+  const sc = stage.key.shadow.camera;
+  sc.left = -18; sc.right = 18; sc.top = 18; sc.bottom = -18; sc.near = 1; sc.far = 80;
+  sc.updateProjectionMatrix();
+  stage.key.shadow.normalBias = 0.03;
+}
+
+// ---------------------------------------------------------------- helpers (pure functions of t)
+const EO = gsap.parseEase(ease.out), EIO = gsap.parseEase(ease.io);
+const clamp01 = (v) => Math.min(1, Math.max(0, v));
+const ramp = (t, a, d, ez = EO) => ez(clamp01((t - a) / d));
+const lerp = (a, b, u) => a + (b - a) * u;
+
+function fade(obj, a) {
+  obj.visible = a > 0.003;
+  obj.traverse((o) => {
+    if (!o.material || o.userData.keepAlpha) return;
+    for (const m of [].concat(o.material)) { m.transparent = a < 0.999 || !!m.userData.alpha; m.opacity = a * (m.userData.alpha ?? 1); }
+  });
+}
+// Entrance: short rise, scale from 0.94, opacity.
+function enter(obj, base, p, { rise = 0.1, from = 0.94, axis = 'y' } = {}) {
+  fade(obj, Math.min(1, p * 1.6));
+  obj.scale.setScalar(from + (1 - from) * p);
+  obj.position.copy(base);
+  obj.position[axis] -= rise * (1 - p);
+}
+// Lay a card flat on the floor (face up), with an in-plane turn.
+function layFlat(card, x, z, turn = 0, y = 0.03) { card.rotation.set(-Math.PI / 2, 0, turn); card.position.set(x, y, z); return card; }
+
+// Monotone cubic interpolation (no overshoot) of keyed values over time.
+function pchip(xs, ys) {
+  const n = xs.length, d = [], m = new Array(n);
+  for (let i = 0; i < n - 1; i++) d.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]));
+  for (let i = 1; i < n - 1; i++) {
+    if (d[i - 1] * d[i] <= 0) m[i] = 0;
+    else {
+      const h0 = xs[i] - xs[i - 1], h1 = xs[i + 1] - xs[i];
+      const w1 = 2 * h1 + h0, w2 = h1 + 2 * h0;
+      m[i] = (w1 + w2) / (w1 / d[i - 1] + w2 / d[i]);
+    }
+  }
+  m[0] = 0; m[n - 1] = 0;
+  return (x) => {
+    if (x <= xs[0]) return ys[0];
+    if (x >= xs[n - 1]) return ys[n - 1];
+    let i = 0;
+    while (x > xs[i + 1]) i++;
+    const h = xs[i + 1] - xs[i], s = (x - xs[i]) / h, s2 = s * s, s3 = s2 * s;
+    return (2 * s3 - 3 * s2 + 1) * ys[i] + (s3 - 2 * s2 + s) * h * m[i] + (-2 * s3 + 3 * s2) * ys[i + 1] + (s3 - s2) * h * m[i + 1];
+  };
+}
+
+// A paper tag: punched hole, a small caption, the model (or actor) in display type, an extra.
+function tagCard({ caption, name, extra = '', w = 1.5, h = 0.4, ppu = 400 }) {
+  return paperCard({ w, h, depth: 0.016, edge: site.rule, edgeWidth: 3, ppu, draw: (ctx, pw, ph) => {
+    ctx.fillStyle = site.paper; ctx.beginPath(); ctx.arc(30, ph / 2, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = site.rule; ctx.lineWidth = 2; ctx.stroke();
+    text(ctx, caption, 58, ph * 0.38, { size: 28, color: site.ink3 });
+    text(ctx, name, 58, ph * 0.80, { size: 48, weight: 700, family: fonts.display, color: site.ink });
+    if (extra) text(ctx, extra, pw - 30, ph * 0.80, { size: 44, weight: 500, color: site.ink2, align: 'right' });
+  } });
+}
+// A tent card standing on the floor, leaning back a little, turned to face a point.
+function tent(card, h, x, z, face, lean = 0.22) {
+  const g = new THREE.Group();
+  card.rotation.x = -lean;
+  card.position.set(0, (h / 2) * Math.cos(lean), -(h / 2) * Math.sin(lean));
+  g.add(card);
+  g.position.set(x, 0, z);
+  g.rotation.y = Math.atan2(face.x - x, face.z - z);
+  scene.add(g);
+  return g;
+}
+
+// ---------------------------------------------------------------- the wall layout (needed first: the thread ends there)
+const TKW = 0.26, TKD = 0.17, PX = 0.30, PZ = 0.21, ROWS = 12;
+const ROWZ = [-18.75, -22.7];
+const groups = [
+  { name: 'Desktop apps', n: 195, v: 115, row: 0, x0: -5.1 },
+  { name: 'Web apps', n: 90, v: 85, row: 0, x0: 0.9 },
+  { name: 'Other', sub: 'servers · terminal · self-hosted · extension', n: 149, v: 73, row: 0, x0: 4.2 },
+  { name: 'CLI tools', n: 335, v: 250, row: 1, x0: -5.7 },
+  { name: 'MCP servers', n: 194, v: 129, row: 1, x0: 3.6 },
+];
+let seed = 7;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const tickets = []; // { x, z, verified, mango }
+for (const g of groups) {
+  g.cols = Math.ceil(g.n / ROWS);
+  g.w = g.cols * PX;
+  g.cx = g.x0 + g.w / 2;
+  const order = Array.from({ length: g.n }, (_, i) => i);
+  for (let i = g.n - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+  const verified = new Set(order.slice(0, g.v));
+  for (let i = 0; i < g.n; i++) {
+    const col = i % g.cols, r = Math.floor(i / g.cols);
+    const mango = g.name === 'Desktop apps' && r === 0 && col === g.cols - 1;
+    tickets.push({ x: g.x0 + col * PX + PX / 2, z: ROWZ[g.row] - r * PZ - PZ / 2, verified: mango || verified.has(i), mango, g });
+  }
+  // keep the verified count exact even if MangoDisk's slot was not in the sample
+  const mt = tickets.find((k) => k.mango && k.g === g);
+  if (mt && !verified.has(g.cols - 1)) { const other = tickets.find((k) => k.g === g && k.verified && !k.mango); other.verified = false; }
+}
+const MANGO = tickets.find((k) => k.mango);
+
+// ---------------------------------------------------------------- the thread
+const P = (x, z, y = 0.013) => new THREE.Vector3(x, y, z);
+const SEAM_Z = -0.214, SEAM_Y = 0.047;
+const threadPts = [
+  P(-1.0, SEAM_Z, SEAM_Y), P(0.0, SEAM_Z, SEAM_Y), P(1.1, SEAM_Z, SEAM_Y), // across MangoDisk's ticket
+  P(1.42, -0.3), P(1.86, -0.85), P(2.07, -1.9), P(2.06, -3.0), P(2.03, -4.15), // under the submission
+  P(1.55, -5.05), P(0.6, -5.75), P(0.34, -6.6), P(0.33, -7.6), P(0.36, -8.65), // through the gate
+  P(1.3, -9.45), P(2.75, -10.1), P(3.45, -11.1), P(3.5, -12.3), // under the record
+  P(2.9, -13.3), P(1.95, -14.35), P(1.55, -15.3), P(1.42, -16.2), P(0.9, -17.2), P(0.25, -18.1), P(MANGO.x - 0.06, MANGO.z + 0.02, 0.03), // macOS VM, then MangoDisk on the wall
+];
+const curve = new THREE.CatmullRomCurve3(threadPts, false, 'centripetal');
+const thread = stitchThread(curve);
+scene.add(thread);
+
+// ---------------------------------------------------------------- T: MangoDisk's ticket (Fitz's answer card)
+const ticket = paperCard({ w: 2.4, h: 1.5, cut: 0.14, color: site.voice, edge: site.voiceEdge, edgeWidth: 3, ppu: 560, draw: (ctx, w) => {
+  text(ctx, 'MangoDisk', 64, 150, { size: 104, weight: 700, family: fonts.display });
+  text(ctx, 'Disk cleaner and space analyzer', 64, 222, { size: 46, color: site.ink2 });
+  drawMeasure(ctx, [['Runs', 'macOS · Apple silicon', site.pass], ['How far', '4 listed features checked', site.pass], ['Price', 'Free']], 64, 420, w - 128, { size: 42, gap: 78 });
+} });
+layFlat(ticket, 0, 0, 0);
+scene.add(ticket);
+
+// ---------------------------------------------------------------- Station 1: the submission
+const sub = paperCard({ w: 2.5, h: 0.62, edge: site.rule, edgeWidth: 3, ppu: 520, draw: (ctx) => {
+  text(ctx, 'Nov 3 · 18:04:23', 44, 80, { size: 36, color: site.ink3 });
+  text(ctx, 'submit_software  github.com/harry0703/MangoDisk', 44, 176, { size: 40, family: fonts.mono, color: site.ink });
+} });
+layFlat(sub, 2.05, -3.6, 0);
+scene.add(sub);
+
+// ---------------------------------------------------------------- Station 2: the prescreen gate
+const GATE = new THREE.Vector3(0.33, 0, -7.6);
+function gateCard() {
+  const W = 1.5, H = 0.92, sw = 0.9, sh = 0.2, depth = 0.045, ppu = 400;
+  const s = new THREE.Shape();
+  s.moveTo(-W / 2, 0); s.lineTo(-sw / 2, 0); s.lineTo(-sw / 2, sh); s.lineTo(sw / 2, sh); s.lineTo(sw / 2, 0);
+  s.lineTo(W / 2, 0); s.lineTo(W / 2, H); s.lineTo(-W / 2, H); s.closePath();
+  const geo = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 2 });
+  const pos = geo.attributes.position, uv = geo.attributes.uv;
+  for (let i = 0; i < pos.count; i++) uv.setXY(i, (pos.getX(i) + W / 2) / W, pos.getY(i) / H);
+  geo.translate(0, 0, -depth / 2);
+  const pw = W * ppu, ph = H * ppu;
+  const tex = canvasTexture(pw, ph, (ctx) => {
+    ctx.fillStyle = site.raised; ctx.fillRect(0, 0, pw, ph);
+    ctx.strokeStyle = site.rule; ctx.lineWidth = 4; ctx.strokeRect(2, 2, pw - 4, ph - 4);
+    text(ctx, 'prescreen', pw / 2, 120, { size: 64, weight: 700, family: fonts.display, align: 'center' });
+    text(ctx, 'is it software people can use?', pw / 2, 180, { size: 30, color: site.ink3, align: 'center' });
+    // the slot's printed edge
+    ctx.fillStyle = site.rule; ctx.fillRect((W - sw) / 2 * ppu - 3, ph - sh * ppu - 3, sw * ppu + 6, 3);
+  });
+  const mesh = new THREE.Mesh(geo, [new THREE.MeshStandardMaterial({ map: tex, roughness: 0.92 }), new THREE.MeshStandardMaterial({ color: site.raised, roughness: 0.92 })]);
+  mesh.castShadow = mesh.receiveShadow = true;
+  return mesh;
+}
+const gate = gateCard();
+gate.position.copy(GATE);
+scene.add(gate);
+function tile(label, main) {
+  return paperCard({ w: 0.76, h: 0.4, depth: 0.02, edge: site.rule, edgeWidth: 3, ppu: 440, draw: (ctx, w, h) => {
+    text(ctx, label, 26, h / 2 + 15, main ? { size: 50, weight: 700, family: fonts.display } : { size: 44, color: site.ink2 });
+  } });
+}
+const tiles = { lib: tile('a library'), mango: tile('MangoDisk', true), demo: tile('a demo') };
+for (const k in tiles) { tiles[k].rotation.set(-Math.PI / 2, 0, 0); scene.add(tiles[k]); }
+const CAM2 = new THREE.Vector3(2.45, 3.9, -4.1);
+const tag2 = tent(tagCard({ caption: 'prescreen by', name: 'Muse Spark Open', extra: '2 s', w: 1.62 }), 0.4, 1.8, -8.05, CAM2);
+
+// ---------------------------------------------------------------- Station 3: README -> the record, quotes kept
+const CAM3 = new THREE.Vector3(2.85, 4.1, -7.3);
+const RM = { x: 1.35, z: -11.42, w: 1.55, h: 2.05, ppu: 440 };
+const quotes = [
+  { label: 'Platforms', value: 'macOS, Windows, Linux', q: '… privacy protection for macOS, Windows, and Linux', lines: ['Disk cleanup, storage analysis, and privacy', 'protection for macOS, Windows, and Linux'], y: 196 },
+  { label: 'Kind', value: 'Desktop app', q: 'Download MangoDisk from the official download page', lines: ['Download MangoDisk from the official', 'download page'], y: 470 },
+  { label: 'Price', value: 'Free', q: 'MangoDisk is open source under the GNU General Public License v3.0', lines: ['MangoDisk is open source under the GNU', 'General Public License v3.0'], y: 760 },
+];
+function bars(ctx, y0, n, w) {
+  ctx.fillStyle = site.rule;
+  for (let i = 0; i < n; i++) ctx.fillRect(36, y0 + i * 30, (w - 72) * (0.62 + 0.38 * ((i * 37) % 10) / 10), 9);
+}
+let readmeKey = '';
+function drawReadme(ctx, w, h, hl) {
+  text(ctx, 'README.md', 36, 52, { size: 26, family: fonts.mono, color: site.ink3 });
+  text(ctx, 'MangoDisk', 36, 126, { size: 56, weight: 700, family: fonts.display });
+  text(ctx, '## Download', 36, 420, { size: 30, weight: 700, family: fonts.mono, color: site.ink2 });
+  text(ctx, '## License', 36, 712, { size: 30, weight: 700, family: fonts.mono, color: site.ink2 });
+  bars(ctx, 286, 4, w);
+  bars(ctx, 560, 4, w);
+  bars(ctx, 838, 2, w);
+  quotes.forEach((qq, i) => {
+    const p = hl[i];
+    qq.lines.forEach((ln, j) => {
+      ctx.font = `400 25px ${fonts.sans}`;
+      const lw = ctx.measureText(ln).width;
+      const yy = qq.y + j * 34;
+      const k = clamp01(p * 2 - j); // the marker runs line by line
+      if (k > 0) { ctx.fillStyle = 'rgba(245,194,67,0.55)'; ctx.fillRect(32, yy - 24, (lw + 8) * k, 32); }
+      text(ctx, ln, 36, yy, { size: 25, color: site.ink });
+    });
+  });
+}
+const readme = paperCard({ w: RM.w, h: RM.h, edge: site.rule, edgeWidth: 3, ppu: RM.ppu, draw: (ctx, w, h) => drawReadme(ctx, w, h, [0, 0, 0]) });
+layFlat(readme, RM.x, RM.z, 0.04);
+scene.add(readme);
+
+const REC = { x: 3.75, z: -11.38, w: 2.6, h: 1.78, ppu: 440 };
+let recKey = '';
+function drawRecord(ctx, w, h, rows) {
+  text(ctx, 'MangoDisk', 44, 78, { size: 50, weight: 700, family: fonts.display });
+  text(ctx, 'record', w - 44, 76, { size: 30, color: site.ink3, align: 'right' });
+  ctx.fillStyle = site.rule; ctx.fillRect(44, 104, w - 88, 2);
+  quotes.forEach((qq, i) => {
+    if (i >= rows) return;
+    const y = 178 + i * 182;
+    drawMeasure(ctx, [[qq.label, qq.value]], 44, y, w - 88, { size: 38 });
+    text(ctx, `“${qq.q}”`, 60, y + 52, { size: 26, color: site.ink3 });
+    ctx.fillStyle = site.voiceEdge; ctx.fillRect(44, y + 30, 4, 30);
+  });
+}
+const record = paperCard({ w: REC.w, h: REC.h, edge: site.rule, edgeWidth: 3, ppu: REC.ppu, draw: (ctx, w, h) => drawRecord(ctx, w, h, 0) });
+layFlat(record, REC.x, REC.z, -0.03);
+scene.add(record);
+// The highlighted sentences lift off as quotes and travel to their row.
+const strips = quotes.map((qq) => {
+  const str = `“${qq.q}”`;
+  const ctxW = 1300, ctxH = 52;
+  const tex = canvasTexture(ctxW, ctxH, (ctx) => {
+    ctx.font = `400 26px ${fonts.sans}`;
+    const lw = ctx.measureText(str).width;
+    ctx.fillStyle = 'rgba(245,194,67,0.6)'; ctx.fillRect(0, 6, lw + 24, 40);
+    text(ctx, str, 12, 35, { size: 26, color: site.ink });
+  });
+  const wUnits = ctxW / REC.ppu, hUnits = ctxH / REC.ppu;
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(wUnits, hUnits), new THREE.MeshBasicMaterial({ map: tex, transparent: true, toneMapped: false, depthWrite: false }));
+  mesh.geometry.translate(wUnits / 2, 0, 0); // anchored at its left edge
+  scene.add(mesh);
+  return mesh;
+});
+// card-face pixel -> world point on a flat card (ignoring its small in-plane turn)
+function onFlat(card, w, h, ppu, px, py, y = 0.05) {
+  const lx = px / ppu - w / 2, ly = h / 2 - py / ppu;
+  const c = Math.cos(card.rotation.z), s = Math.sin(card.rotation.z);
+  return new THREE.Vector3(card.position.x + lx * c - ly * s, y, card.position.z - (lx * s + ly * c));
+}
+const tag3 = tent(tagCard({ caption: 'read by', name: 'Muse Spark 1.3', extra: '13 s', w: 1.55 }), 0.4, 2.3, -10.2, CAM3);
+
+// ---------------------------------------------------------------- Station 4: three sandboxes
+const FW = 1.9, FH = 1.37, SW = 1.76, SH = 1.1, SCY = FH - 0.2 - SH / 2;
+function frameCard(title, right, inner) {
+  return paperCard({ w: FW, h: FH, depth: 0.04, edge: site.rule, edgeWidth: 3, ppu: 420, draw: (ctx, pw, ph) => {
+    text(ctx, title, 30, 58, { size: 42, weight: 700, family: fonts.display });
+    if (right) text(ctx, right, pw - 30, 56, { size: 30, family: fonts.mono, color: site.ink3, align: 'right' });
+    const x = (FW - SW) / 2 * 420, y = 0.2 * 420, w = SW * 420, h = SH * 420;
+    ctx.fillStyle = site.rule; ctx.beginPath(); ctx.roundRect(x, y, w, h, 8); ctx.fill();
+    if (inner) inner(ctx, x, y, w, h);
+  } });
+}
+function frameGroup(card, x, z) {
+  const g = new THREE.Group();
+  card.position.y = FH / 2;
+  g.add(card);
+  g.position.set(x, 0, z);
+  scene.add(g);
+  return g;
+}
+const linux = frameGroup(frameCard('Linux · Modal', '', (ctx, x, y) => {
+  const L = ['$ curl … /linux | bash', '$ curl … MangoDisk-linux-x64.deb', 'apt-get install: needs root'];
+  L.forEach((s, i) => text(ctx, s, x + 26, y + 60 + i * 50, { size: 28, family: fonts.mono, color: i === 2 ? site.ink2 : site.ink3 }));
+}), -0.78, -16.0);
+const browser = frameGroup(frameCard('sandboxed browser', '', (ctx, x, y, w) => {
+  ctx.fillStyle = site.raised; ctx.beginPath(); ctx.roundRect(x + 24, y + 22, w - 48, 40, 20); ctx.fill();
+  ctx.fillStyle = site.rule; for (let i = 0; i < 3; i++) ctx.fillRect(x + 40, y + 110 + i * 44, (w - 120) * (0.8 - i * 0.18), 14);
+}), 3.78, -16.0);
+const macCard = frameCard('fresh macOS VM', '18:30 → 18:48');
+const mac = frameGroup(macCard, 1.5, -16.0);
+const MAC_FWD = { z: -15.3, s: 1.12 };
+
+// the VM's screen: 1280 x 800 pixels, drawn on a lit-up plane inside the frame
+const VW = 1280, VH = 800;
+const vm = (px, py, z = 0.012) => new THREE.Vector3((px / VW - 0.5) * SW, SCY + (0.5 - py / VH) * SH, z);
+const ROW0 = 214, ROWSTEP = 54, CB = { x: 232, y: 214 };
+const FEATURES = ['Find largest files', 'Remove duplicate files', 'Analyze disk space', 'Deep clean caches'];
+const FILES = [['big-video-mangodisk.mov', '150 MB'], ['archive-2024.zip', '88 MB'], ['screen-recording.mov', '61 MB'], ['installer-old.dmg', '45 MB'], ['photos-backup.tar', '38 MB']];
+function chrome(ctx, x, y, w, h, title) {
+  ctx.fillStyle = site.raised; ctx.strokeStyle = site.rule; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, 12); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = site.sunk; ctx.beginPath(); ctx.roundRect(x + 1, y + 1, w - 2, 46, [12, 12, 0, 0]); ctx.fill();
+  ctx.fillStyle = site.rule; ctx.fillRect(x, y + 46, w, 2);
+  for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(x + 26 + i * 24, y + 23, 7, 0, Math.PI * 2); ctx.fill(); }
+  text(ctx, title, x + w / 2, y + 31, { size: 21, weight: 600, align: 'center', color: site.ink2 });
+}
+function checkbox(ctx, cx, cy, s, on) {
+  ctx.lineWidth = Math.max(2, s / 9);
+  ctx.beginPath(); ctx.roundRect(cx - s / 2, cy - s / 2, s, s, s / 5);
+  if (on) {
+    ctx.fillStyle = site.pass; ctx.fill();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = s / 7; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(cx - s * 0.26, cy + s * 0.02); ctx.lineTo(cx - s * 0.06, cy + s * 0.22); ctx.lineTo(cx + s * 0.28, cy - s * 0.2); ctx.stroke();
+  } else { ctx.fillStyle = site.raised; ctx.fill(); ctx.strokeStyle = site.lineCtl; ctx.stroke(); }
+}
+function drawScreen(ctx, st) {
+  ctx.fillStyle = site.raised; ctx.fillRect(0, 0, VW, VH);
+  ctx.fillStyle = site.sunk; ctx.fillRect(0, 0, VW, 26);
+  ctx.fillStyle = site.rule; ctx.fillRect(0, 26, VW, 2);
+  if (st.mode === 'install') {
+    chrome(ctx, 150, 140, 980, 520, 'Terminal');
+    const L = ['$ brew install --cask --appdir=~/Applications mangodisk', '==> Downloading MangoDisk 1.2.2', '==> Installing Cask mangodisk', '✓ MangoDisk.app installed'];
+    L.slice(0, st.lines).forEach((s, i) => text(ctx, s, 190, 250 + i * 64, { size: 27, family: fonts.mono, color: i === 3 ? site.pass : site.ink }));
+  } else if (st.mode === 'features') {
+    chrome(ctx, 150, 110, 980, 600, 'MangoDisk');
+    text(ctx, 'Four features', 210, 206, { size: 30, weight: 700, color: site.ink3 });
+    FEATURES.forEach((f, i) => {
+      const y = 300 + i * 96;
+      if (i > 0) { ctx.fillStyle = site.sunk; ctx.fillRect(210, y - 50, 860, 2); }
+      checkbox(ctx, 236, y - 11, 40, i < st.ticks);
+      text(ctx, f, 284, y, { size: 36, color: site.ink });
+    });
+  } else if (st.mode === 'list') {
+    chrome(ctx, 120, 90, 1040, 640, 'MangoDisk');
+    text(ctx, 'Large files', 170, 156, { size: 30, weight: 700, color: site.ink });
+    FILES.forEach(([f, s], i) => {
+      const cy = ROW0 + i * ROWSTEP;
+      if (i > 0) { ctx.fillStyle = site.sunk; ctx.fillRect(170, cy - 27, 940, 2); }
+      checkbox(ctx, CB.x, cy, 16, i === 0 && st.checked);
+      text(ctx, f, 262, cy + 8, { size: 22, color: site.ink });
+      text(ctx, s, 1110, cy + 8, { size: 22, color: site.ink3, align: 'right' });
+    });
+  }
+}
+let screenKey = '';
+const screenTex = canvasTexture(VW, VH, (ctx) => drawScreen(ctx, { mode: 'desktop' }));
+const screen = new THREE.Mesh(new THREE.PlaneGeometry(SW, SH), new THREE.MeshBasicMaterial({ map: screenTex, transparent: true, toneMapped: false }));
+screen.position.set(0, SCY, 0.008);
+mac.add(screen);
+
+// the operator's pointer (Muse Spark Open's hand)
+function pointerMesh() {
+  const s = new THREE.Shape();
+  [[0, 0], [0, -0.062], [0.016, -0.047], [0.028, -0.072], [0.038, -0.067], [0.026, -0.043], [0.046, -0.043]].forEach(([x, y], i) => (i ? s.lineTo(x, y) : s.moveTo(x, y)));
+  s.closePath();
+  const g = new THREE.Group();
+  const ink = new THREE.Mesh(new THREE.ShapeGeometry(s), new THREE.MeshBasicMaterial({ color: site.ink, toneMapped: false, transparent: true }));
+  const rim = new THREE.Mesh(new THREE.ShapeGeometry(s), new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false, transparent: true }));
+  rim.scale.setScalar(1.18); rim.position.set(-0.003, 0.004, -0.001);
+  g.add(rim, ink);
+  return g;
+}
+const pointer = pointerMesh();
+mac.add(pointer);
+
+// tags clipped to the frame's right edge: who did what
+const macTags = [
+  tagCard({ caption: 'installed by', name: 'Muse Spark 1.3', w: 1.34, h: 0.36 }),
+  tagCard({ caption: 'operated by', name: 'Muse Spark Open', w: 1.34, h: 0.36 }),
+  tagCard({ caption: 'checked by', name: 'pickfit', w: 1.34, h: 0.36 }),
+];
+const macTagBase = macTags.map((m, i) => new THREE.Vector3(FW / 2 + 0.06 + 0.67 * 0.8, FH - 0.3 - i * 0.36, 0.03));
+macTags.forEach((m, i) => {
+  const pin = new THREE.Mesh(new THREE.SphereGeometry(0.018, 12, 8), new THREE.MeshStandardMaterial({ color: site.ink2, roughness: 0.4 }));
+  pin.position.set(30 / 400 - 0.67, 0, 0.006);
+  m.add(pin);
+  mac.add(m);
+});
+// pickfit's stitch along the bottom of the macOS frame (pickfit ran it)
+const macStitch = stitchThread(new THREE.LineCurve3(new THREE.Vector3(-FW / 2 + 0.1, 0.035, 0.012), new THREE.Vector3(FW / 2 - 0.1, 0.035, 0.012)), { stitch: 0.07, gap: 0.045, radius: 0.009 });
+macStitch.frustumCulled = false;
+mac.add(macStitch);
+// Linux: honest, quiet
+const linuxNoteCard = tagCard({ caption: 'Linux run', name: 'needs root · not verified', w: 1.7, h: 0.38 });
+const linuxNote = new THREE.Group();
+linuxNote.add(linuxNoteCard);
+linuxNoteCard.position.set(0, 0.36, 0.035);
+linux.add(linuxNote);
+
+// ---------------------------------------------------------------- Station 5: the fix (inside the macOS window)
+function crosshair(color, r) {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshBasicMaterial({ color, toneMapped: false, transparent: true });
+  const ring = new THREE.Mesh(new THREE.RingGeometry(r * 0.84, r, 48), mat);
+  g.add(ring);
+  for (const [x, y, w, h] of [[r * 1.3, 0, r * 0.7, r * 0.16], [-r * 1.3, 0, r * 0.7, r * 0.16], [0, r * 1.3, r * 0.16, r * 0.7], [0, -r * 1.3, r * 0.16, r * 0.7]]) {
+    const bar = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+    bar.position.set(x, y, 0);
+    g.add(bar);
+  }
+  const dot = new THREE.Mesh(new THREE.CircleGeometry(r * 0.12, 16), mat);
+  g.add(dot);
+  g.userData.mat = mat;
+  return g;
+}
+const PXU = SW / VW; // frame units per VM pixel
+const miss = crosshair(site.fail, 13 * PXU);
+mac.add(miss);
+const MISS_PT = vm(CB.x + 3, CB.y + 30, 0.02), HIT_PT = vm(CB.x, CB.y, 0.02);
+// the measured miss: a small dimension line with "30 px"
+const dimTex = canvasTexture(120, 60, (ctx) => {
+  ctx.fillStyle = site.fail;
+  ctx.fillRect(98, 14, 2.5, 32); ctx.fillRect(92, 14, 14, 2.5); ctx.fillRect(92, 44, 14, 2.5);
+  text(ctx, '30 px', 86, 37, { size: 17, weight: 600, family: fonts.mono, color: site.fail, align: 'right' });
+});
+const dim = new THREE.Mesh(new THREE.PlaneGeometry(120 * PXU, 60 * PXU), new THREE.MeshBasicMaterial({ map: dimTex, transparent: true, toneMapped: false }));
+dim.position.copy(vm(CB.x - 47, CB.y + 15, 0.018));
+mac.add(dim);
+// the lens: a round paper loupe, 4x on the clicked area
+const LENS_R = 0.24, ZOOM_D = (2 * LENS_R / SW) * VW / 4; // VM pixels across the lens
+const LENS_C = vm(640, 370, 0.12);
+let lensKey = '';
+const LP = 600; // lens canvas pixels
+function drawLens(ctx, checked) {
+  ctx.save();
+  ctx.fillStyle = site.sunk; ctx.fillRect(0, 0, LP, LP);
+  ctx.translate(LP / 2, LP / 2);
+  ctx.scale(LP / ZOOM_D, LP / ZOOM_D);
+  ctx.translate(-CB.x, -CB.y);
+  drawScreen(ctx, { mode: 'list', checked });
+  ctx.restore();
+}
+const lensTex = canvasTexture(LP, LP, (ctx) => drawLens(ctx, false));
+const lens = new THREE.Group();
+const lensFace = new THREE.Mesh(new THREE.CircleGeometry(LENS_R, 72), new THREE.MeshBasicMaterial({ map: lensTex, toneMapped: false, transparent: true }));
+const lensRim = new THREE.Mesh(new THREE.TorusGeometry(LENS_R, 0.011, 10, 96), new THREE.MeshStandardMaterial({ color: site.fitzLine, roughness: 0.5 }));
+lensRim.castShadow = true;
+lens.add(lensFace, lensRim);
+const lensTab = paperCard({ w: 0.2, h: 0.11, depth: 0.012, edge: site.fitzLine, edgeWidth: 3, ppu: 500, draw: (ctx, w, h) => text(ctx, '4×', w / 2, h / 2 + 15, { size: 42, weight: 700, family: fonts.display, align: 'center' }) });
+lensTab.position.set(LENS_R * 0.74, -LENS_R * 0.74, 0.01);
+lens.add(lensTab);
+const aim = crosshair(site.fail, 13 * (2 * LENS_R / ZOOM_D));
+lens.add(aim);
+mac.add(lens);
+const LPX = 2 * LENS_R / ZOOM_D; // lens units per VM pixel
+// the zoomed area marked on the screen, and two lines out to the lens
+const srcRing = new THREE.Mesh(new THREE.RingGeometry(ZOOM_D / 2 * PXU - 0.0025, ZOOM_D / 2 * PXU, 48), new THREE.MeshBasicMaterial({ color: site.fitzLine, toneMapped: false, transparent: true }));
+srcRing.position.copy(vm(CB.x, CB.y, 0.016));
+mac.add(srcRing);
+function strip(a, b, w = 0.0025) {
+  const d = new THREE.Vector3().subVectors(b, a);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(d.length(), w), new THREE.MeshBasicMaterial({ color: site.fitzLine, toneMapped: false, transparent: true }));
+  m.position.copy(a).add(b).multiplyScalar(0.5);
+  m.rotation.z = Math.atan2(d.y, d.x);
+  return m;
+}
+const connectors = (() => {
+  const g = new THREE.Group();
+  const c0 = vm(CB.x, CB.y, 0.016), r0 = ZOOM_D / 2 * PXU;
+  const dir = new THREE.Vector2(LENS_C.x - c0.x, LENS_C.y - c0.y).normalize();
+  const nrm = new THREE.Vector2(-dir.y, dir.x);
+  for (const s of [1, -1]) {
+    const a = new THREE.Vector3(c0.x + nrm.x * r0 * s, c0.y + nrm.y * r0 * s, 0.016);
+    const b = new THREE.Vector3(LENS_C.x + nrm.x * LENS_R * s, LENS_C.y + nrm.y * LENS_R * s, 0.016);
+    g.add(strip(a, b));
+  }
+  return g;
+})();
+mac.add(connectors);
+// the result: small controls hit, 5 -> 13 of 14
+let hitKey = '';
+function drawHits(ctx, w, h, n) {
+  text(ctx, 'small controls hit', 30, 54, { size: 30, color: site.ink3 });
+  const x = text(ctx, '5', 30, 124, { size: 64, weight: 700, family: fonts.display, color: site.ink3 });
+  if (n > 5) {
+    const x2 = text(ctx, '  →  ', 30 + x, 124, { size: 52, family: fonts.sans, color: site.ink3 });
+    const x3 = text(ctx, String(n), 30 + x + x2, 124, { size: 64, weight: 700, family: fonts.display, color: n === 13 ? site.pass : site.ink });
+    text(ctx, ' of 14', 30 + x + x2 + x3, 124, { size: 44, color: site.ink2 });
+  } else text(ctx, ' of 14', 30 + x, 124, { size: 44, color: site.ink2 });
+}
+const hits = paperCard({ w: 0.66, h: 0.25, depth: 0.014, edge: site.rule, edgeWidth: 3, ppu: 600, draw: (ctx, w, h) => drawHits(ctx, w, h, 5) });
+const HITS_POS = vm(300, 560, 0.06);
+mac.add(hits);
+
+// Flat overlays printed just above the screen take no ambient occlusion (GTAO would draw a halo
+// round them); hide them only while the AO pass renders its normals.
+{
+  const noAO = [dim, miss, aim, srcRing, connectors, pointer, ...strips];
+  const g = stage.gtao, orig = g.render.bind(g);
+  g.render = (...args) => {
+    const vis = noAO.map((o) => o.visible);
+    noAO.forEach((o) => (o.visible = false));
+    orig(...args);
+    noAO.forEach((o, i) => (o.visible = vis[i]));
+  };
+}
+
+// ---------------------------------------------------------------- Station 6: the wall of tickets
+const WALL_N = tickets.length;
+function alphaMaterial(params) {
+  const m = new THREE.MeshStandardMaterial({ ...params, transparent: true });
+  m.onBeforeCompile = (s) => {
+    s.vertexShader = 'attribute float aAlpha;\nvarying float vAlpha;\n' + s.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvAlpha = aAlpha;');
+    s.fragmentShader = 'varying float vAlpha;\n' + s.fragmentShader.replace('#include <alphamap_fragment>', '#include <alphamap_fragment>\ndiffuseColor.a *= vAlpha;');
+  };
+  return m;
+}
+const tkTex = canvasTexture(104, 68, (ctx, w, h) => {
+  ctx.fillStyle = site.raised; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = site.rule; ctx.fillRect(10, 12, 50, 9); ctx.fillRect(10, 30, 76, 5); ctx.fillRect(10, 41, 62, 5);
+  ctx.strokeStyle = site.rule; ctx.lineWidth = 2; ctx.strokeRect(1, 1, w - 2, h - 2);
+});
+const others = tickets.filter((k) => !k.mango);
+const tkGeo = new THREE.BoxGeometry(TKW, 0.012, TKD);
+tkGeo.setAttribute('aAlpha', new THREE.InstancedBufferAttribute(new Float32Array(others.length).fill(0), 1));
+const wall = new THREE.InstancedMesh(tkGeo, alphaMaterial({ map: tkTex, roughness: 0.9 }), others.length);
+wall.castShadow = true; wall.receiveShadow = true;
+const white = new THREE.Color('#ffffff'), quiet = new THREE.Color(site.rule).lerp(new THREE.Color(site.paper), 0.3);
+others.forEach((k, i) => {
+  k.d = Math.hypot(k.x - MANGO.x, (k.z - MANGO.z) * 1.15);
+  wall.setColorAt(i, white);
+});
+const maxD = Math.max(...others.map((k) => k.d));
+others.forEach((k) => { k.appear = 29.05 + 1.65 * (k.d / maxD) + 0.12 * rnd(); });
+scene.add(wall);
+// MangoDisk's own ticket on the wall: olive, with its seam; the thread ends here
+const mangoTk = paperCard({ w: TKW, h: TKD, depth: 0.014, color: site.voice, edge: site.voiceEdge, edgeWidth: 3, ppu: 600, draw: (ctx, w, h) => {
+  text(ctx, 'MangoDisk', 12, 40, { size: 30, weight: 700, family: fonts.display });
+  ctx.fillStyle = site.voiceLine; ctx.fillRect(12, 56, 120, 6);
+} });
+layFlat(mangoTk, MANGO.x, MANGO.z, 0, 0.016);
+scene.add(mangoTk);
+// verified tickets: a short running stitch, sewn in as a wave
+const verifiedOthers = others.filter((k) => k.verified).sort((a, b) => a.d - b.d);
+const stGeo = new THREE.CapsuleGeometry(0.0075, 0.036, 3, 6);
+stGeo.rotateZ(Math.PI / 2);
+const wallStitch = new THREE.InstancedMesh(stGeo, new THREE.MeshPhysicalMaterial({ color: site.stitch, roughness: 0.55, sheen: 0.6, sheenColor: new THREE.Color('#ffd9c8') }), verifiedOthers.length * 3);
+wallStitch.castShadow = true;
+{
+  const m = new THREE.Matrix4();
+  verifiedOthers.forEach((k, i) => {
+    for (let j = 0; j < 3; j++) { m.makeTranslation(k.x - 0.075 + j * 0.075, 0.021, k.z + 0.035); wallStitch.setMatrixAt(i * 3 + j, m); }
+  });
+}
+wallStitch.count = 0;
+wallStitch.frustumCulled = false;
+wall.frustumCulled = false;
+scene.add(wallStitch);
+// group labels: name and total; then verified; then not verified
+const LABEL_LEAN = 1.12;
+const labels = groups.map((g) => {
+  const w = g.sub ? 3.95 : 2.7, h = 0.9;
+  g.lw = w; g.lh = h; g.key = '';
+  const card = paperCard({ w, h, depth: 0.018, edge: site.rule, edgeWidth: 3, ppu: 300, draw: (ctx, pw, ph) => drawLabel(ctx, pw, ph, g, 0) });
+  const grp = new THREE.Group();
+  card.rotation.x = -LABEL_LEAN;
+  card.position.set(0, (h / 2) * Math.cos(LABEL_LEAN), -(h / 2) * Math.sin(LABEL_LEAN));
+  grp.add(card);
+  grp.userData.base = new THREE.Vector3(g.cx, 0, ROWZ[g.row] + 0.5);
+  grp.userData.card = card;
+  scene.add(grp);
+  return grp;
+});
+function drawLabel(ctx, w, h, g, stage) {
+  const nw = text(ctx, g.name, 30, 84, { size: 72, weight: 700, family: fonts.display });
+  if (g.sub) text(ctx, g.sub, 30 + nw + 16, 80, { size: 36, color: site.ink3 });
+  text(ctx, String(g.n), w - 30, 84, { size: 72, weight: 700, family: fonts.display, align: 'right' });
+  if (stage >= 1) {
+    drawSeam(ctx, 32, 146, 64, { len: 18, gap: 10, width: 8 });
+    text(ctx, `${g.v} verified`, 112, 160, { size: 50, color: site.ink });
+  }
+  if (stage >= 2) text(ctx, `${g.n - g.v} not verified`, 30, 240, { size: 50, color: site.ink3 });
+}
+// the big count, standing behind the wall
+let countKey = '';
+const COUNT = { w: 7.4, h: 2.3, ppu: 260 };
+function drawCount(ctx, w, h, n, stage) {
+  const x = text(ctx, String(n), 60, 250, { size: 240, weight: 700, family: fonts.display });
+  text(ctx, ' listed', 60 + x, 250, { size: 110, weight: 700, family: fonts.display, color: site.ink2 });
+  if (stage >= 1) {
+    drawSeam(ctx, 64, 352, 92, { len: 26, gap: 14, width: 11 });
+    text(ctx, '652 verified · at least through install', 180, 372, { size: 74, color: site.ink });
+  }
+  if (stage >= 2) text(ctx, '311 say “not verified”', 64, 480, { size: 74, color: site.ink3 });
+}
+const counter = paperCard({ w: COUNT.w, h: COUNT.h, depth: 0.03, edge: site.rule, edgeWidth: 4, ppu: COUNT.ppu, draw: (ctx, w, h) => drawCount(ctx, w, h, 0, 0) });
+const counterG = new THREE.Group();
+counter.rotation.x = -0.72;
+counter.position.set(0, (COUNT.h / 2) * Math.cos(0.72), -(COUNT.h / 2) * Math.sin(0.72));
+counterG.add(counter);
+const COUNTER_BASE = new THREE.Vector3(1.4, 0, -25.75);
+scene.add(counterG);
+// a quiet name tag beside MangoDisk's ticket on the wall
+const mangoCall = paperCard({ w: 1.42, h: 0.42, depth: 0.016, color: site.voice, edge: site.voiceEdge, edgeWidth: 3, ppu: 300, draw: (ctx, w, h) => {
+  text(ctx, 'MangoDisk', 26, 88, { size: 64, weight: 700, family: fonts.display });
+} });
+const mangoCallG = new THREE.Group();
+mangoCall.rotation.x = -1.0;
+mangoCall.position.set(0, 0.21 * Math.cos(1.0), -0.21 * Math.sin(1.0));
+mangoCallG.add(mangoCall);
+const MCALL_BASE = new THREE.Vector3(MANGO.x + 0.12, 0, MANGO.z + 0.72);
+scene.add(mangoCallG);
+
+// ---------------------------------------------------------------- the camera: one continuous move
+const keys = [
+  // t     camera                 target                 aperture
+  [0.0,  [0.08, 2.6, 2.8],      [0.02, 0.03, -0.05],    0.0011],
+  [1.3,  [0.2, 2.3, 2.35],      [0.12, 0.03, -0.14],    0.0011],
+  [2.0,  [0.88, 0.5, 0.36],     [1.55, 0.03, -0.85],    0.0016],
+  [2.65, [1.92, 0.92, -0.72],   [2.07, 0.03, -3.4],     0.0014],
+  [3.25, [2.15, 2.25, -1.25],   [2.05, 0.03, -3.6],     0.0012],
+  [4.95, [2.0, 2.12, -1.5],     [2.03, 0.03, -3.62],    0.0012],
+  [5.75, [2.45, 3.95, -3.95],   [0.2, 0.1, -7.75],      0.0016],
+  [8.45, [2.2, 3.8, -4.25],     [0.18, 0.1, -7.85],     0.0016],
+  [9.25, [2.8, 4.15, -7.2],     [2.8, 0.03, -11.35],    0.0012],
+  [11.0, [2.92, 3.95, -7.5],    [2.92, 0.03, -11.35],   0.0012],
+  [12.3, [3.45, 3.1, -8.65],    [3.6, 0.03, -11.4],     0.0012],
+  [13.3, [1.5, 2.9, -8.95],     [1.5, 0.62, -16.0],     0.0008],
+  [14.5, [1.5, 2.8, -9.2],      [1.5, 0.64, -16.0],     0.0008],
+  [15.6, [2.12, 2.15, -10.85],  [2.12, 0.8, -15.3],     0.0011],
+  [22.35, [2.18, 2.05, -11.15], [2.14, 0.8, -15.3],     0.0011],
+  [23.35, [1.2, 0.95, -13.2],   [1.37, 0.76, -15.29],   0.0018],
+  [28.5, [1.22, 0.95, -13.3],   [1.37, 0.76, -15.29],   0.0018],
+  [30.7, [1.55, 15.4, -11.6],   [1.55, 0.0, -22.35],    0.00022],
+  [36.5, [1.55, 14.6, -12.2],   [1.55, 0.0, -22.4],     0.00022],
+];
+const KT = keys.map((k) => k[0]);
+const camF = [0, 1, 2].map((i) => pchip(KT, keys.map((k) => k[1][i])));
+const tgtF = [0, 1, 2].map((i) => pchip(KT, keys.map((k) => k[2][i])));
+const apF = pchip(KT, keys.map((k) => k[3]));
+
+// ---------------------------------------------------------------- update(t)
+const tmpColor = new THREE.Color();
+const tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion(), tmpS = new THREE.Vector3(), tmpP = new THREE.Vector3();
+function redrawIf(card, keyName, key, fn) {
+  if (card.userData[keyName] === key) return;
+  card.userData[keyName] = key;
+  card.userData.redraw(fn);
+}
+
+stage.run({ duration: DURATION, update: (t) => {
+  // camera
+  stage.camera.position.set(camF[0](t), camF[1](t), camF[2](t));
+  stage.target.set(tgtF[0](t), tgtF[1](t), tgtF[2](t));
+  stage.bokeh.uniforms.aperture.value = apF(t);
+
+  // --- station 2: the tiles meet the gate
+  {
+    const step1 = ramp(t, 5.7, 0.55, EIO), step2 = ramp(t, 6.55, 0.95, EIO), step3 = ramp(t, 7.35, 0.45, EIO);
+    const asideL = ramp(t, 6.3, 0.6, EIO), asideD = ramp(t, 7.85, 0.6, EIO);
+    const L = tiles.lib, M = tiles.mango, D = tiles.demo;
+    L.position.set(lerp(GATE.x, -0.72, asideL), 0.022, lerp(-6.55, -7.12, step1) + 0.25 * asideL);
+    L.rotation.z = 0.32 * asideL;
+    fade(L, 1 - 0.5 * ramp(t, 6.65, 0.4));
+    M.position.set(GATE.x, 0.022, lerp(-6.05, -6.55, step1) + (-9.2 + 6.55) * step2);
+    D.position.set(lerp(GATE.x, -0.62, asideD), 0.022 + 0.015 * asideD, lerp(-5.55, -6.05, step1) + (-7.12 + 6.05) * step3 + 0.72 * asideD);
+    D.rotation.z = -0.22 * asideD;
+    fade(D, 1 - 0.5 * ramp(t, 8.2, 0.4));
+    enter(tag2.children[0], tag2.userData.cb ??= tag2.children[0].position.clone(), ramp(t, 5.45, 0.6), { rise: 0.06 });
+  }
+
+  // --- station 3: highlight, lift, land
+  {
+    const hl = [ramp(t, 9.1, 0.45, (x) => x), ramp(t, 9.3, 0.45, (x) => x), ramp(t, 9.5, 0.45, (x) => x)];
+    const key = hl.map((v) => Math.round(v * 40)).join(',');
+    redrawIf(readme, 'rk', key, (ctx, w, h) => drawReadme(ctx, w, h, hl));
+    let landed = 0;
+    quotes.forEach((qq, i) => {
+      const s = strips[i];
+      const t0 = 9.75 + i * 0.4, p = ramp(t, t0, 0.7, EIO);
+      const from = onFlat(readme, RM.w, RM.h, RM.ppu, 36, qq.y - 4, 0.06);
+      const to = onFlat(record, REC.w, REC.h, REC.ppu, 60, 178 + i * 182 + 52 - 9, 0.05);
+      s.position.lerpVectors(from, to, p);
+      s.position.y += 0.26 * Math.sin(Math.PI * p);
+      s.rotation.set(-Math.PI / 2 + 0.35 * Math.sin(Math.PI * p), 0, lerp(readme.rotation.z, record.rotation.z, p));
+      const a = clamp01((t - t0) / 0.15) * (1 - ramp(t, t0 + 0.7, 0.2));
+      s.material.opacity = a;
+      s.visible = a > 0.003;
+      s.scale.setScalar(lerp(0.94, 1, p));
+      if (t >= t0 + 0.66) landed = i + 1;
+    });
+    redrawIf(record, 'rk', String(landed), (ctx, w, h) => drawRecord(ctx, w, h, landed));
+    enter(tag3.children[0], tag3.userData.cb ??= tag3.children[0].position.clone(), ramp(t, 9.05, 0.6), { rise: 0.06 });
+  }
+
+  // --- station 4: three sandboxes; the macOS one lights up and comes forward
+  {
+    const fwd = ramp(t, 14.55, 0.9, EIO);
+    mac.position.set(1.5, 0, lerp(-16.0, MAC_FWD.z, fwd));
+    mac.scale.setScalar(lerp(1, MAC_FWD.s, fwd));
+    const dimL = ramp(t, 14.6, 0.8, EIO);
+    fade(linux, 1 - 0.45 * dimL);
+    linux.position.z = -16.0 - 0.3 * dimL;
+    fade(browser, 0.55 - 0.25 * dimL);
+    browser.position.set(3.78 + 0.35 * dimL, 0, -16.0 - 0.6 * dimL);
+    const lnp = ramp(t, 13.0, 0.6);
+    enter(linuxNoteCard, linuxNote.userData.cb ??= linuxNoteCard.position.clone(), lnp, { rise: 0.05 });
+    fade(linuxNote, Math.min(1, lnp * 1.6) * (1 - 0.45 * dimL));
+    // the screen
+    const on = ramp(t, 14.35, 0.5);
+    screen.material.opacity = on;
+    screen.visible = on > 0.003;
+    let st;
+    if (t < 15.5) st = { mode: 'desktop' };
+    else if (t < 17.8) st = { mode: 'install', lines: t < 15.6 ? 0 : t < 16.05 ? 1 : t < 16.5 ? 2 : t < 17.0 ? 3 : 4 };
+    else if (t < 22.65) st = { mode: 'features', ticks: [18.45, 19.05, 19.65, 20.25].filter((x) => t >= x).length };
+    else st = { mode: 'list', checked: t >= 26.3 };
+    redrawIf(screenTex, 'sk', JSON.stringify(st), (ctx) => drawScreen(ctx, st));
+    // the tags: installed (15.5), operated (17.8), checked (20.7)
+    [15.5, 17.8, 20.7].forEach((ta, i) => {
+      const p = ramp(t, ta, 0.6);
+      const m = macTags[i];
+      fade(m, Math.min(1, p * 1.6) * (1 - ramp(t, 22.45, 0.5)));
+      m.scale.setScalar(0.8 * (0.94 + 0.06 * p));
+      m.position.copy(macTagBase[i]); m.position.x -= 0.08 * (1 - p);
+    });
+    macStitch.userData.progress(ramp(t, 20.75, 0.8, EIO));
+    // the operator's pointer visits each feature row and clicks
+    const ticksAt = [18.45, 19.05, 19.65, 20.25];
+    let px = 1000, py = 700, pa = 0;
+    if (t >= 17.85 && t < 22.6) {
+      pa = clamp01((t - 17.85) / 0.25) * (1 - clamp01((t - 20.7) / 0.3));
+      const rowY = (i) => 300 + i * 96 - 11;
+      let from = [1000, 700];
+      for (let i = 0; i < 4; i++) {
+        const a = ticksAt[i] - 0.45, b = ticksAt[i] - 0.05;
+        const to = [236 + 6, rowY(i) + 4];
+        if (t < a) break;
+        const u = ramp(t, a, b - a, EIO);
+        px = lerp(from[0], to[0], u); py = lerp(from[1], to[1], u);
+        from = to;
+      }
+      if (t < ticksAt[0] - 0.45) { px = 1000; py = 700; }
+    }
+    pointer.visible = pa > 0.003;
+    pointer.children.forEach((c) => (c.material.opacity = pa));
+    pointer.position.copy(vm(px, py, 0.02));
+    const click = ticksAt.reduce((acc, x) => acc + Math.max(0, 1 - Math.abs(t - x) / 0.08), 0);
+    pointer.scale.setScalar(1 - 0.12 * Math.min(1, click));
+  }
+
+  // --- station 5: the miss, measured; zoom 4x; aim again
+  {
+    const land = ramp(t, 23.75, 0.45);
+    const gone = ramp(t, 26.25, 0.3);
+    miss.visible = land > 0.003 && gone < 0.997;
+    miss.userData.mat.opacity = Math.min(1, land * 1.6) * (1 - gone);
+    miss.position.copy(MISS_PT);
+    miss.scale.setScalar(lerp(1.4, 1, land));
+    const dimA = ramp(t, 24.15, 0.4) * (1 - ramp(t, 26.25, 0.3));
+    dim.material.opacity = dimA; dim.visible = dimA > 0.003;
+    const lp = ramp(t, 24.75, 0.6);
+    const lensOut = ramp(t, 28.6, 0.4);
+    fade(lens, Math.min(1, lp * 1.6) * (1 - lensOut));
+    lensFace.material.transparent = true;
+    lens.position.copy(LENS_C); lens.position.z = lerp(0.03, LENS_C.z, lp);
+    lens.scale.setScalar(lerp(0.94, 1, lp));
+    const ca = Math.min(1, lp * 1.6) * (1 - lensOut);
+    srcRing.material.opacity = ca; srcRing.visible = ca > 0.003;
+    connectors.children.forEach((c) => (c.material.opacity = ca)); connectors.visible = ca > 0.003;
+    const lensChecked = t >= 26.3;
+    redrawIf(lensTex, 'lk', String(lensChecked), (ctx) => drawLens(ctx, lensChecked));
+    // the aim inside the lens: starts where the click landed, moves to dead centre, turns green
+    const move = ramp(t, 25.55, 0.65, EIO);
+    aim.position.set(3 * LPX * (1 - move), -30 * LPX * (1 - move), 0.006);
+    const good = t >= 26.22;
+    aim.userData.mat.color.set(good ? site.pass : site.fail);
+    aim.scale.setScalar(good ? 1 - 0.1 * Math.max(0, 1 - Math.abs(t - 26.3) / 0.1) : 1);
+    // the result
+    const hp = ramp(t, 26.65, 0.55);
+    fade(hits, Math.min(1, hp * 1.6) * (1 - lensOut));
+    hits.position.copy(HITS_POS); hits.position.y -= 0.03 * (1 - hp);
+    hits.scale.setScalar(lerp(0.94, 1, hp));
+    const n = Math.round(lerp(5, 13, ramp(t, 27.05, 0.6, (x) => x)));
+    redrawIf(hits, 'hk', String(n), (ctx, w, h) => drawHits(ctx, w, h, n));
+  }
+
+  // --- station 6: the wall
+  {
+    const aA = tkGeo.attributes.aAlpha;
+    let dirtyM = false;
+    others.forEach((k, i) => {
+      const p = ramp(t, k.appear, 0.45);
+      const a = Math.min(1, p * 1.7);
+      if (aA.array[i] !== a) { aA.array[i] = a; dirtyM = true; }
+      tmpP.set(k.x, 0.006 + 0.22 * (1 - p), k.z);
+      tmpS.setScalar(p > 0 ? 0.94 + 0.06 * p : 0.0001);
+      tmpM.compose(tmpP, tmpQ, tmpS);
+      wall.setMatrixAt(i, tmpM);
+      const tint = k.verified ? 0 : ramp(t, 35.2 + 0.25 * (k.d / maxD), 0.4);
+      wall.setColorAt(i, tmpColor.copy(white).lerp(quiet, tint));
+    });
+    aA.needsUpdate = true;
+    wall.instanceMatrix.needsUpdate = true;
+    wall.instanceColor.needsUpdate = true;
+    wall.visible = t > 29.0;
+    wallStitch.count = Math.round(verifiedOthers.length * ramp(t, 31.6, 1.3, (x) => x)) * 3;
+    // labels
+    labels.forEach((grp, i) => {
+      const g = groups[i];
+      const p = ramp(t, 29.7 + i * 0.12, 0.6);
+      enter(grp, grp.userData.base, p, { rise: 0.15, axis: 'z' });
+      const stg = t >= 35.2 + 0.08 * i ? 2 : t >= 31.75 + 0.1 * i ? 1 : 0;
+      redrawIf(grp.userData.card, 'lk', String(stg), (ctx, w, h) => drawLabel(ctx, w, h, g, stg));
+    });
+    const cp = ramp(t, 29.15, 0.6);
+    enter(counterG, COUNTER_BASE, cp, { rise: 0.2, axis: 'z' });
+    const cn = Math.round(963 * ramp(t, 29.5, 1.2, gsap.parseEase('power2.out')));
+    const cs = t >= 35.25 ? 2 : t >= 31.6 ? 1 : 0;
+    redrawIf(counter, 'ck', cn + ':' + cs, (ctx, w, h) => drawCount(ctx, w, h, cn, cs));
+    enter(mangoCallG, MCALL_BASE, ramp(t, 30.3, 0.6), { rise: 0.1, axis: 'z' });
+  }
+} });
+
+</script>
+</body></html>

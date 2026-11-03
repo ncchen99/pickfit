@@ -1,0 +1,169 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<title>Agents title</title>
+<style>
+  @font-face { font-family: "Bricolage Grotesque"; src: url("/repo/worker/public/assets/fonts/bricolage-grotesque.woff2") format("woff2"); font-weight: 200 800; font-display: block; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "/node_modules/three/build/three.module.js",
+  "three/addons/": "/node_modules/three/examples/jsm/",
+  "gsap": "/node_modules/gsap/index.js"
+} }
+</script>
+</head><body>
+<script type="module">
+// 1:24 "You're not the only one looking for software. So is your agent." (4.2 s)
+// A person's question to their agent on a white request card; beside it the agent's tool tray,
+// two tools it has and two dashed slots it lacks. On "So is your agent." Fitz peeks round the
+// tray and a pickfit tag clips onto it. Ends calm, ready to cut to the screen recording.
+import * as THREE from 'three';
+import { gsap } from 'gsap';
+import { Stage, canvasTexture } from '../kit/stage.js';
+import { createFitz } from '../kit/fitz3d.js';
+import { paperCard, text, drawTape, cardPath } from '../kit/props.js';
+import { site, fonts, ease } from '../kit/tokens.js';
+
+const DURATION = 4.2;
+const stage = new Stage({ dof: { aperture: 0.0007, maxblur: 0.004 } });
+await stage.ready;
+
+// Fade every material of an object (cards enter with a short rise, scale 0.94 and opacity).
+function fade(obj, a) {
+  obj.visible = a > 0.003;
+  obj.traverse((o) => {
+    if (!o.material) return;
+    for (const m of [].concat(o.material)) { m.transparent = a < 0.999; m.opacity = a; }
+  });
+}
+// Entrance state: p goes 0 -> 1.
+function enter(obj, base, p, { rise = 0.12, from = 0.94 } = {}) {
+  fade(obj, Math.min(1, p * 1.6));
+  obj.scale.setScalar(from + (1 - from) * p);
+  obj.position.set(base.x, base.y - rise * (1 - p), base.z);
+}
+
+// Your question to your agent: the request card (white, ink outline, cut corner, tape baseline).
+const ask = paperCard({ w: 2.75, h: 1.04, cut: 0.15, edge: site.fitzLine, edgeWidth: 7, ppu: 420, draw: (ctx, w, h) => {
+  text(ctx, 'You, to your agent', 40, 74, { size: 36, weight: 700, family: fonts.display, color: site.ink2 });
+  text(ctx, 'Scan my Mac for npm and PyPI', 40, 150, { size: 54, color: site.ink });
+  text(ctx, 'supply-chain malware.', 40, 214, { size: 54, color: site.ink });
+  text(ctx, 'Use pickfit to find a scanner and run it.', 40, 280, { size: 40, color: site.ink2 });
+  drawTape(ctx, 40, h - 66, w - 80, 22);
+} });
+const askBase = new THREE.Vector3(-1.3, 0.54, 0.05);
+ask.rotation.set(-0.07, 0.2, 0);
+stage.add(ask);
+
+// The agent's tool tray: a sunk paper board with slots. Two tools it has, two it lacks.
+const TW = 2.55, TH = 1.62;
+const tray = new THREE.Group();
+const board = paperCard({ w: TW, h: TH, depth: 0.05, color: site.sunk, edge: site.rule, edgeWidth: 4, ppu: 420, draw: (ctx, w) => {
+  text(ctx, 'Your agent’s tools', 44, 82, { size: 40, weight: 700, family: fonts.display, color: site.ink });
+} });
+tray.add(board);
+const slotW = 1.04, slotH = 0.44;
+const slotPos = [[-0.6, 0.12], [0.6, 0.12], [-0.6, -0.46], [0.6, -0.46]];
+// Tools it has: raised white tiles sitting in their slots.
+const tiles = ['shell', 'files'].map((name, i) => {
+  const t = paperCard({ w: slotW, h: slotH, depth: 0.035, edge: site.rule, edgeWidth: 3, ppu: 420, draw: (ctx, w, h) => {
+    ctx.fillStyle = site.ink3; ctx.fillRect(34, h / 2 - 15, 30, 30);
+    text(ctx, name, 86, h / 2 + 15, { size: 44, weight: 500, family: fonts.mono, color: site.ink });
+  } });
+  t.position.set(slotPos[i][0], slotPos[i][1], 0.04);
+  tray.add(t);
+  return t;
+});
+// Tools it lacks: dashed empty slots, labelled with a question.
+const holes = ['scanner?', 'books?'].map((name, i) => {
+  const pw = Math.round(slotW * 420), ph = Math.round(slotH * 420);
+  const tex = canvasTexture(pw, ph, (ctx) => {
+    ctx.strokeStyle = site.lineCtl; ctx.lineWidth = 4; ctx.setLineDash([16, 12]);
+    cardPath(ctx, pw, ph, 0, 10, 4); ctx.stroke(); ctx.setLineDash([]);
+    text(ctx, name, pw / 2, ph / 2 + 15, { size: 44, weight: 500, family: fonts.mono, color: site.ink3, align: 'center' });
+  });
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(slotW, slotH), new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: 0.95 }));
+  m.position.set(slotPos[i + 2][0], slotPos[i + 2][1], 0.01);
+  tray.add(m);
+  return m;
+});
+const trayBase = new THREE.Vector3(1.42, 0.86, -0.32);
+tray.rotation.set(-0.06, -0.22, 0);
+board.castShadow = true;
+stage.add(tray);
+
+// The pickfit tag that clips onto the tray's top edge.
+const tag = new THREE.Group();
+const tagCard = paperCard({ w: 0.86, h: 0.32, depth: 0.02, cut: 0.07, color: site.voice, edge: site.voiceEdge, edgeWidth: 3, ppu: 460, draw: (ctx, w, h) => {
+  text(ctx, 'pickfit', w / 2, h / 2 + 17, { size: 52, weight: 700, family: fonts.display, color: site.ink, align: 'center' });
+} });
+tagCard.position.y = -0.2;
+const clip = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.15, 0.08), new THREE.MeshStandardMaterial({ color: site.ink2, roughness: 0.4, metalness: 0.3 }));
+clip.position.set(0, -0.005, -0.012);
+clip.castShadow = true;
+tag.add(tagCard, clip);
+const tagBase = new THREE.Vector3(0.62, TH / 2 + 0.005, 0.06); // in tray space, on the top edge
+tray.add(tag);
+
+// Fitz, hidden behind the tray's right edge until he peeks round it.
+const fz = createFitz();
+fz.root.scale.setScalar(0.62);
+fz.root.rotation.y = -0.55;
+stage.add(fz.root);
+
+// One paused timeline holds every entrance; update(t) only seeks it.
+const st = { ask: 0, tray: 0, tile0: 0, tile1: 0, hole0: 0, hole1: 0, peek: 0, tag: 0, lean: 0 };
+const tl = gsap.timeline({ paused: true });
+tl.to(st, { ask: 1, duration: 0.7, ease: ease.out }, 0.02);
+tl.to(st, { tray: 1, duration: 0.7, ease: ease.out }, 0.42);
+tl.to(st, { tile0: 1, duration: 0.5, ease: ease.out }, 0.78);
+tl.to(st, { tile1: 1, duration: 0.5, ease: ease.out }, 0.9);
+tl.to(st, { hole0: 1, duration: 0.45, ease: ease.out }, 1.2);
+tl.to(st, { hole1: 1, duration: 0.45, ease: ease.out }, 1.45);
+// "So is your agent." (2.8): Fitz peeks, the tag clips on.
+tl.to(st, { peek: 1, duration: 0.75, ease: ease.out }, 2.78);
+tl.to(st, { lean: 1, duration: 0.35, ease: ease.out }, 2.78);
+tl.to(st, { lean: 0.45, duration: 0.6, ease: ease.io }, 3.13);
+tl.to(st, { tag: 1, duration: 0.55, ease: ease.out }, 3.08);
+tl.to({}, { duration: 0.01 }, DURATION);
+
+const camFrom = new THREE.Vector3(0.12, 3.05, 7.55), camTo = new THREE.Vector3(0.34, 2.8, 6.85);
+const tgtFrom = new THREE.Vector3(0.16, 0.55, -0.1), tgtTo = new THREE.Vector3(0.34, 0.6, -0.12);
+
+stage.run({ duration: DURATION, update: (t) => {
+  tl.seek(t, false);
+  enter(ask, askBase, st.ask);
+  enter(tray, trayBase, st.tray, { rise: 0.1 });
+  tiles.forEach((m, i) => {
+    const p = st['tile' + i];
+    fade(m, Math.min(1, p * 1.6));
+    m.position.z = 0.04 + 0.12 * (1 - p);
+    m.scale.setScalar(0.94 + 0.06 * p);
+  });
+  holes.forEach((m, i) => {
+    const p = st['hole' + i];
+    m.material.transparent = true;
+    m.material.opacity = Math.min(1, p * 1.4) * Math.min(1, st.tray * 1.6);
+    m.visible = m.material.opacity > 0.003;
+    m.scale.setScalar(0.96 + 0.04 * p);
+  });
+  // tag: drops onto the edge from just above
+  fade(tag, Math.min(1, st.tag * 1.8));
+  tag.position.set(tagBase.x, tagBase.y + 0.22 * (1 - st.tag), tagBase.z);
+  tag.rotation.z = 0.12 * (1 - st.tag) - 0.03;
+  tag.scale.setScalar(0.94 + 0.06 * st.tag);
+  // Fitz: slides out from behind the tray's right edge and leans in to look at the slots
+  const p = st.peek;
+  fz.root.visible = p > 0.001;
+  fz.root.position.set(2.2 + 1.0 * p, 0, -0.98 + 0.46 * p);
+  fz.bird.rotation.z = 0.2 * st.lean;
+  fz.turn(-0.25 * p);
+  fz.blink(t > 3.86 && t < 3.98 ? 1 : 0);
+  // camera: one slow push
+  const u = gsap.parseEase(ease.io)(Math.min(1, t / DURATION));
+  stage.camera.position.lerpVectors(camFrom, camTo, u);
+  stage.target.lerpVectors(tgtFrom, tgtTo, u);
+} });
+</script>
+</body></html>
