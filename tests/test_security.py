@@ -142,32 +142,65 @@ def test_uv_lock_keeps_the_run_time_closure() -> None:
     assert security._uv_lock_nodes(lock) == [("pypi", "certifi", "2026.1.1"), ("pypi", "httpx", "0.28.0")]
 
 
+CARGO = '[[package]]\nname = "zip"\nversion = "8.6.0"\nsource = "registry+x"\n\n[[package]]\nname = "mytool"\nversion = "0.1.0"\n'
+
+
 def test_repo_nodes_skip_parts_a_user_does_not_install(tmp_path: Path) -> None:
-    (tmp_path / "Cargo.lock").write_text('[[package]]\nname = "zip"\nversion = "8.6.0"\nsource = "registry+x"\n\n'
-                                         '[[package]]\nname = "mytool"\nversion = "0.1.0"\n')
+    (tmp_path / "Cargo.lock").write_text(CARGO)
     (tmp_path / "website").mkdir()
     (tmp_path / "website" / "package-lock.json").write_text(json.dumps(
         {"packages": {"node_modules/next": {"version": "16.0.0"}}}))
     (tmp_path / "go.mod").write_text("module example.com/t\n\ngo 1.22\n\nrequire (\n\tgithub.com/a/b v1.2.3 // indirect\n)\n")
-    for part in (".claude/skills/x", "tools", "third_party/lib", "spikes"):  # agent and tooling folders
+    for part in (".claude/skills/x", "tools", "third_party/lib", "spikes", "fuzz", "testdata", "skills/y", "probes"):
         (tmp_path / part).mkdir(parents=True)
         (tmp_path / part / "Cargo.lock").write_text('[[package]]\nname = "old"\nversion = "0.1.0"\nsource = "registry+x"\n')
-    nodes, read, unsupported, main_unread = security.repo_nodes(tmp_path)
-    assert nodes == [("crates", "zip", "8.6.0"), ("go", "github.com/a/b", "v1.2.3")]
-    assert read == ["Cargo.lock", "go.mod"] and not unsupported and not main_unread
+    repo = security.repo_nodes(tmp_path)
+    assert repo.nodes == [("crates", "zip", "8.6.0"), ("go", "github.com/a/b", "v1.2.3")]
+    assert repo.read == ["Cargo.lock", "go.mod"] and repo.complete and repo.reason is None
 
 
 def test_repo_with_only_an_unsupported_lockfile_says_so(tmp_path: Path) -> None:
     (tmp_path / "yarn.lock").write_text("# yarn lockfile v1\n")
-    assert security.repo_nodes(tmp_path) == ([], [], True, True)
+    repo = security.repo_nodes(tmp_path)
+    assert (repo.nodes, repo.complete, repo.reason) == ([], False, "lockfile_not_supported")
 
 
-def test_an_unreadable_root_lockfile_marks_the_check_incomplete(tmp_path: Path) -> None:
+def test_an_unreadable_root_lockfile_leaves_the_read_incomplete(tmp_path: Path) -> None:
     (tmp_path / "Cargo.lock").write_text("not toml [[[")
     (tmp_path / "web").mkdir()
     (tmp_path / "web" / "package-lock.json").write_text(json.dumps({"packages": {"node_modules/a": {"version": "1.0.0"}}}))
-    nodes, read, unsupported, main_unread = security.repo_nodes(tmp_path)
-    assert nodes == [("npm", "a", "1.0.0")] and main_unread
+    repo = security.repo_nodes(tmp_path)
+    assert repo.nodes == [("npm", "a", "1.0.0")] and (repo.complete, repo.reason) == (False, "lockfile_not_supported")
+
+
+def test_a_lockfile_counts_only_when_it_yields_packages(tmp_path: Path) -> None:
+    (tmp_path / "requirements.txt").write_text("requests\nrich>=13\n")  # nothing pinned
+    repo = security.repo_nodes(tmp_path)
+    assert (repo.read, repo.complete, repo.reason) == ([], False, "no_lockfile")
+
+
+def test_each_pyproject_resolves_on_its_own_and_a_failing_root_one_is_unresolved(monkeypatch: pytest.MonkeyPatch,
+                                                                               tmp_path: Path) -> None:
+    (tmp_path / "pyproject.toml").write_text("[project]\nname='root'\n")
+    (tmp_path / "sub").mkdir()
+    (tmp_path / "sub" / "pyproject.toml").write_text("[project]\nname='sub'\n")
+
+    def fake(path: Path) -> list[Any]:
+        if path.parent == tmp_path:
+            raise RuntimeError("no")
+        return [("pypi", "rich", "13.0.0")]
+
+    monkeypatch.setattr(security, "resolve_pyproject", fake)
+    repo = security.repo_nodes(tmp_path)
+    assert repo.read == ["sub/pyproject.toml (resolved today)"] and (repo.complete, repo.reason) == (False, "resolve_failed")
+
+
+def test_npm_platform_builds_do_not_count_as_dependencies() -> None:
+    lock = {"packages": {"": {"name": "probe"}, "node_modules/tool": {"version": "1.0.0"},
+                         "node_modules/@x/tool-darwin-arm64": {"version": "1.0.0", "optional": True, "os": ["darwin"],
+                                                               "cpu": ["arm64"]}}}
+    assert security.npm_lock_nodes(lock, platform=False) == [("npm", "tool", "1.0.0")]
+    assert len(security.npm_lock_nodes(lock)) == 2
 
 
 def test_packages_of_takes_only_the_softwares_own_packages() -> None:
@@ -189,11 +222,11 @@ def test_packages_of_takes_only_the_softwares_own_packages() -> None:
 
 
 def _resolving(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, graphs: dict[str, Any],
-               repo: tuple[list[Any], list[str], bool, bool] | None) -> list[str]:
-    """Stub the resolvers, the clone and OSV (no findings); returns the clones made."""
+               repo: security.RepoRead | None) -> list[str]:
+    """Stub the resolvers (name -> (nodes, real dependencies) or an exception), the clone and OSV (no findings)."""
     cloned: list[str] = []
 
-    def resolver(name: str) -> list[Any]:
+    def resolver(name: str) -> Any:
         if isinstance(graphs[name], Exception):
             raise graphs[name]
         return graphs[name]
@@ -211,35 +244,66 @@ def _resolving(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, graphs: dict[str
 
 RECORD = {"slug": "rtool", "name": "rtool", "repo": {"url": "https://github.com/o/rtool", "full_name": "o/rtool"},
           "verification": {"runs": []}, "scores": {"popularity": {"packages": ["crates:rtool"]}}}
+FULL = security.RepoRead([("crates", "zip", "8.6.0")], ["Cargo.lock"], True, None)
+NO_LOCK = security.RepoRead([], [], False, "no_lockfile")
+
+
+def check_with(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, raw: dict[str, Any], graphs: dict[str, Any],
+               repo: security.RepoRead | None) -> tuple[dict[str, Any], list[str]]:
+    cloned = _resolving(monkeypatch, tmp_path, graphs, repo)
+    return security.check(raw, security.Advisories(), now=NOW), cloned
+
+
+def test_every_own_package_resolved_with_dependencies_is_clean_without_the_repository(monkeypatch: pytest.MonkeyPatch,
+                                                                                     tmp_path: Path) -> None:
+    result, cloned = check_with(monkeypatch, tmp_path, RECORD,
+                                {"rtool": ([("crates", "rtool", "1.0.0"), ("crates", "zip", "9.0.5")], 1)}, NO_LOCK)
+    assert not cloned and result["status"] == "clean" and result["packages_checked"] == 2
 
 
 def test_a_crate_without_a_dependency_graph_falls_back_to_the_repository(monkeypatch: pytest.MonkeyPatch,
                                                                         tmp_path: Path) -> None:
-    cloned = _resolving(monkeypatch, tmp_path, {"rtool": RuntimeError("no graph")},
-                        ([("crates", "zip", "8.6.0")], ["Cargo.lock"], False, False))
-    result = security.check(RECORD, security.Advisories(), now=NOW)
+    result, cloned = check_with(monkeypatch, tmp_path, RECORD, {"rtool": RuntimeError("no graph")}, FULL)
     assert cloned == ["https://github.com/o/rtool"] and result["status"] == "clean"
     assert result["sources"] == ["github.com/o/rtool@0123456789ab", "Cargo.lock"]
 
 
-def test_a_package_that_resolves_to_itself_alone_also_reads_the_repository(monkeypatch: pytest.MonkeyPatch,
-                                                                          tmp_path: Path) -> None:
-    cloned = _resolving(monkeypatch, tmp_path, {"rtool": [("crates", "rtool", "1.0.0")]},
-                        ([("crates", "zip", "8.6.0")], ["Cargo.lock"], False, False))
-    result = security.check(RECORD, security.Advisories(), now=NOW)
-    assert cloned and result["packages_checked"] == 2
+def test_a_wrapper_is_clean_only_if_the_repository_is(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    wrapper = {"rtool": ([("npm", "rtool", "1.0.0"), ("npm", "@r/rtool-linux-x64", "1.0.0")], 0)}
+    result, cloned = check_with(monkeypatch, tmp_path, RECORD, wrapper, FULL)
+    assert cloned and result["status"] == "clean" and result["packages_checked"] == 3
+    result, _ = check_with(monkeypatch, tmp_path, RECORD, wrapper, NO_LOCK)
+    assert (result["status"], result["unchecked_reason"]) == ("unchecked", "resolve_failed")
+
+
+def test_one_own_package_failing_sends_the_check_to_the_repository(monkeypatch: pytest.MonkeyPatch,
+                                                                  tmp_path: Path) -> None:
+    raw = {**RECORD, "scores": {"popularity": {"packages": ["pypi:rtool", "crates:rtool-rt"]}}}
+    graphs = {"rtool": ([("pypi", "rtool", "1.0"), ("pypi", "rich", "13.0")], 1), "rtool-rt": RuntimeError("no graph")}
+    result, cloned = check_with(monkeypatch, tmp_path, raw, graphs, NO_LOCK)
+    assert cloned and (result["status"], result["unchecked_reason"]) == ("unchecked", "resolve_failed")
+    result, _ = check_with(monkeypatch, tmp_path, raw, graphs, FULL)
+    assert result["status"] == "clean"
 
 
 def test_without_findings_an_incomplete_read_is_unchecked_not_clean(monkeypatch: pytest.MonkeyPatch,
                                                                    tmp_path: Path) -> None:
-    _resolving(monkeypatch, tmp_path, {"rtool": RuntimeError("no graph")},
-               ([("npm", "a", "1.0.0")], ["web/package-lock.json"], False, True))
-    result = security.check(RECORD, security.Advisories(), now=NOW)
+    partial = security.RepoRead([("npm", "a", "1.0.0")], ["web/package-lock.json"], False, "lockfile_not_supported")
+    result, _ = check_with(monkeypatch, tmp_path, RECORD, {"rtool": RuntimeError("no graph")}, partial)
     assert (result["status"], result["unchecked_reason"]) == ("unchecked", "lockfile_not_supported")
     no_repo = {**RECORD, "repo": None}
-    _resolving(monkeypatch, tmp_path, {"rtool": [("crates", "rtool", "1.0.0")]}, None)
-    result = security.check(no_repo, security.Advisories(), now=NOW)
+    result, _ = check_with(monkeypatch, tmp_path, no_repo, {"rtool": ([("crates", "rtool", "1.0.0")], 0)}, None)
     assert (result["status"], result["unchecked_reason"]) == ("unchecked", "resolve_failed")
+    nothing = {**no_repo, "scores": None}
+    result, _ = check_with(monkeypatch, tmp_path, nothing, {}, None)
+    assert (result["status"], result["unchecked_reason"]) == ("unchecked", "no_source")
+
+
+def test_clean_needs_what_was_read() -> None:
+    with pytest.raises(ValidationError):
+        SecurityCheck.model_validate(check("clean", packages_checked=0))
+    with pytest.raises(ValidationError):
+        SecurityCheck.model_validate(check("clean", sources=[]))
 
 
 # --- OSV findings (no network) ----------------------------------------------------------------------------------------

@@ -36,6 +36,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -51,7 +52,8 @@ COUNTED = ("CRITICAL", "HIGH")
 # Parts of a repository a person installing the software does not get.
 PERIPHERAL = re.compile(r"(^|/)(website|site|docs?|landing|www|demo|examples?|bench(mark)?s?|playground|e2e|tests?|"
                         r"__tests__|fixtures?|scripts|editors?|action|vscode|node_modules|vendor|tools|external|"
-                        r"third_party|reference|mockups|spikes?|eval|\.[^/]+)/", re.I)
+                        r"third_party|reference|mockups|spikes?|eval|fuzz|testdata|experiments?|skill_assets|skills|qa|"
+                        r"labs?|probes?|\.[^/]+)/", re.I)
 UNSUPPORTED_LOCKS = ("pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb")
 MAX_FINDINGS = 60
 TIMEOUT = 300
@@ -149,33 +151,41 @@ def _run(cmd: list[str], cwd: Path | None = None, stdin: str | None = None) -> s
     return subprocess.run(cmd, cwd=cwd, input=stdin, capture_output=True, text=True, timeout=TIMEOUT)
 
 
-def npm_lock_nodes(lock: dict[str, Any]) -> list[Node]:
+def npm_lock_nodes(lock: dict[str, Any], *, platform: bool = True) -> list[Node]:
     """Non-dev packages of a package-lock.json (v2/v3) from the registry: the root project and workspace members (local
-    code, entries outside node_modules/) are left out, so a local name is never looked up as someone else's package."""
+    code, entries outside node_modules/) are left out, so a local name is never looked up as someone else's package.
+    platform=False also leaves out per-platform binaries (entries with os or cpu, as `@x/tool-darwin-arm64`)."""
     out = []
     for path, p in (lock.get("packages") or {}).items():
         if "node_modules/" not in path or "version" not in p or p.get("dev") or p.get("link"):
+            continue
+        if not platform and (p.get("os") or p.get("cpu")):
             continue
         out.append(("npm", p.get("name") or path.rsplit("node_modules/", 1)[-1], p["version"]))
     return out
 
 
-def resolve_npm(name: str) -> list[Node]:
+# A resolver returns every package a fresh install brings and how many of them are real dependencies: neither the
+# package itself nor a per-platform build of it. None means a wrapper whose dependencies are compiled in.
+type Resolved = tuple[list[Node], int]
+
+
+def resolve_npm(name: str) -> Resolved:
     with tempfile.TemporaryDirectory(prefix="pickfit-sec-npm-") as tmp:
         Path(tmp, "package.json").write_text('{"name":"pickfit-security-probe","version":"0.0.0","private":true}')
         r = _run(["npm", "install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund", name], cwd=Path(tmp))
         if r.returncode:
             raise RuntimeError(f"npm resolve failed: {r.stderr.strip()[-200:]}")
-        return npm_lock_nodes(json.loads(Path(tmp, "package-lock.json").read_text()))
+        lock = json.loads(Path(tmp, "package-lock.json").read_text())
+    deps = [n for n in npm_lock_nodes(lock, platform=False) if n[1] != name]
+    return npm_lock_nodes(lock), len(deps)
 
 
 def _pins(text: str) -> list[Node]:
     return [("pypi", m.group(1), m.group(2)) for m in re.finditer(r"(?m)^([A-Za-z0-9_.\-]+)==([^\s;#\\]+)", text)]
 
 
-def resolve_pypi(requirement: str | Path) -> list[Node]:
-    """A requirement (a package name) or a pyproject.toml, resolved for Linux without building anything."""
-    target, stdin = ([str(requirement)], None) if isinstance(requirement, Path) else (["-"], requirement + "\n")
+def _compile(target: list[str], stdin: str | None) -> list[Node]:
     err = ""
     for py in ("3.12", "3.13"):
         r = _run(["uv", "pip", "compile", "--no-build", "--no-header", "--no-annotate", "--quiet", "--python-version",
@@ -186,7 +196,17 @@ def resolve_pypi(requirement: str | Path) -> list[Node]:
     raise RuntimeError(f"uv resolve failed: {err}")
 
 
-def resolve_crate(name: str) -> list[Node]:
+def resolve_pypi(name: str) -> Resolved:
+    """A package name resolved for Linux without building anything."""
+    nodes = _compile(["-"], name + "\n")
+    return nodes, len([n for n in nodes if _norm(n[1]) != _norm(name)])
+
+
+def resolve_pyproject(path: Path) -> list[Node]:
+    return _compile([str(path)], None)
+
+
+def resolve_crate(name: str) -> Resolved:
     q = urllib.parse.quote(name, safe="")
     info = _http(f"{DEPS_DEV}/systems/cargo/packages/{q}")
     default = [v for v in info.get("versions", []) if v.get("isDefault")]
@@ -197,7 +217,8 @@ def resolve_crate(name: str) -> list[Node]:
     nodes = graph.get("nodes", [])
     if not any(n.get("relation") == "SELF" for n in nodes):  # deps.dev has not resolved this version
         raise RuntimeError("deps.dev has no dependency graph for this crate")
-    return [("crates", n["versionKey"]["name"], n["versionKey"]["version"]) for n in nodes]
+    return ([("crates", n["versionKey"]["name"], n["versionKey"]["version"]) for n in nodes],
+            len([n for n in nodes if n.get("relation") != "SELF"]))
 
 
 RESOLVERS = {"npm": resolve_npm, "pypi": resolve_pypi, "crates": resolve_crate}
@@ -221,15 +242,37 @@ def _uv_lock_nodes(lock: dict[str, Any]) -> list[Node]:
     return [("pypi", n, by_name[n]["version"]) for n in sorted(keep) if "version" in by_name[n]]
 
 
-def repo_nodes(root: Path) -> tuple[list[Node], list[str], bool, bool]:
-    """(nodes, lockfiles read, saw only lockfiles pickfit cannot read, a lockfile at the root could not be read) for a
-    cloned repository. The last means what was read may not be what installs, so a check without findings is not clean."""
+@dataclass
+class RepoRead:
+    """What a repository's lockfiles gave. complete: a main lockfile (at the root or one folder down) yielded packages,
+    and nothing at the root was left unread; otherwise `reason` says why the read is not the whole software."""
+
+    nodes: list[Node]
+    read: list[str]
+    complete: bool
+    reason: str | None
+
+
+def _main(rel: str) -> bool:
+    return rel.count("/") <= 1
+
+
+def repo_nodes(root: Path) -> RepoRead:
+    """Read a cloned repository's lockfiles. A lockfile counts as read only when it yields packages. Python projects are
+    resolved from pyproject.toml as pip and uv do (each on its own), a lockfile beside it standing in when that fails."""
     nodes: list[Node] = []
     read: list[str] = []
-    unsupported = False
-    main_unread = False
+    main_read = unsupported = root_unreadable = root_unresolved = False
     pyprojects: list[Path] = []
-    py_locks: list[Path] = []
+    py_locks: dict[Path, list[Path]] = {}
+
+    def took(rel: str, got: list[Node]) -> None:
+        nonlocal main_read
+        if got:
+            nodes.extend(got)
+            read.append(rel)
+            main_read |= _main(rel.split(" (", 1)[0])
+
     for f in sorted(root.rglob("*")):
         rel = f.relative_to(root).as_posix()
         if not f.is_file() or ".git/" in rel or PERIPHERAL.search(rel) or rel.count("/") > 3:
@@ -237,51 +280,57 @@ def repo_nodes(root: Path) -> tuple[list[Node], list[str], bool, bool]:
         name = f.name
         try:
             if name == "package-lock.json":
-                nodes += npm_lock_nodes(json.loads(f.read_text(encoding="utf-8")))
-                read.append(rel)
+                took(rel, npm_lock_nodes(json.loads(f.read_text(encoding="utf-8"))))
             elif name == "Cargo.lock":
-                nodes += [("crates", p["name"], p["version"]) for p in tomllib.loads(f.read_text(encoding="utf-8"))
-                          .get("package", []) if "source" in p]
-                read.append(rel)
+                took(rel, [("crates", p["name"], p["version"]) for p in tomllib.loads(f.read_text(encoding="utf-8"))
+                           .get("package", []) if "source" in p])
             elif name == "go.mod":
                 body = f.read_text(encoding="utf-8")
-                nodes += [("go", m.group(1), m.group(2)) for m in
-                          re.finditer(r"(?m)^\s*(?:require\s+)?([\w.\-]+\.[\w./\-]+)\s+(v[\w.\-+]+)", body)]
-                read.append(rel)
-            elif name == "pyproject.toml" and rel.count("/") <= 1:
+                took(rel, [("go", m.group(1), m.group(2)) for m in
+                           re.finditer(r"(?m)^\s*(?:require\s+)?([\w.\-]+\.[\w./\-]+)\s+(v[\w.\-+]+)", body)])
+            elif name == "pyproject.toml" and _main(rel):
                 pyprojects.append(f)
             elif name in ("uv.lock", "poetry.lock") or re.fullmatch(r"requirements(-lock)?\.txt", name):
-                py_locks.append(f)
+                py_locks.setdefault(f.parent, []).append(f)
             elif name in UNSUPPORTED_LOCKS:
                 unsupported = True
-                main_unread |= "/" not in rel
+                root_unreadable |= "/" not in rel
         except (ValueError, UnicodeDecodeError, tomllib.TOMLDecodeError):
-            main_unread |= "/" not in rel
-            continue
-    # pip and uv install from pyproject.toml and resolve afresh; a lockfile only stands in when that fails.
-    fresh_ok = False
+            root_unreadable |= "/" not in rel
+    py_dirs = {p.parent for p in pyprojects}
     for p in pyprojects:
+        rel = p.relative_to(root).as_posix()
         try:
-            nodes += resolve_pypi(p)
-            read.append(f"{p.relative_to(root).as_posix()} (resolved today)")
-            fresh_ok = True
+            got = resolve_pyproject(p)
         except (RuntimeError, subprocess.TimeoutExpired):
+            got = []
+        if got:
+            took(f"{rel} (resolved today)", got)
             continue
-    lock_ok = False
-    if not fresh_ok:
-        for f in py_locks:
+        fallback: list[Node] = []
+        for f in py_locks.get(p.parent, []):
+            try:
+                text = f.read_text(encoding="utf-8")
+                fallback += _uv_lock_nodes(tomllib.loads(text)) if f.suffix == ".lock" else _pins(text)
+            except (ValueError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+                continue
+        if fallback:
+            took(" + ".join(f.relative_to(root).as_posix() for f in py_locks[p.parent]), fallback)
+        elif "/" not in rel:
+            root_unresolved = True  # the Python project at the root: its dependencies could not be read
+    for folder, files in py_locks.items():  # Python lockfiles with no pyproject.toml beside them
+        if folder in py_dirs:
+            continue
+        for f in files:
             rel = f.relative_to(root).as_posix()
             try:
                 text = f.read_text(encoding="utf-8")
-                nodes += _uv_lock_nodes(tomllib.loads(text)) if f.suffix == ".lock" else _pins(text)
-                read.append(rel)
-                lock_ok = True
+                took(rel, _uv_lock_nodes(tomllib.loads(text)) if f.suffix == ".lock" else _pins(text))
             except (ValueError, UnicodeDecodeError, tomllib.TOMLDecodeError):
-                main_unread |= "/" not in rel
-                continue
-    if any("/" not in p.relative_to(root).as_posix() for p in pyprojects) and not fresh_ok and not lock_ok:
-        main_unread = True  # a Python project at the root whose dependencies could not be resolved
-    return list(dict.fromkeys(nodes)), read, unsupported and not read, main_unread
+                root_unreadable |= "/" not in rel
+    reason = ("lockfile_not_supported" if root_unreadable else "resolve_failed" if root_unresolved
+              else None if main_read else "lockfile_not_supported" if unsupported and not read else "no_lockfile")
+    return RepoRead(list(dict.fromkeys(nodes)), read, reason is None, reason)
 
 
 def _git(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
@@ -419,11 +468,10 @@ def check(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones:
           unrated: list[str] | None = None) -> dict[str, Any]:
     """The security check (SecurityCheck as JSON) for one record.
 
-    The software's own registry packages are resolved first. The repository is read too when none resolved, or when
-    each resolved to itself alone (a binary or wheel whose dependencies are compiled in, listed in the repository's
-    lockfiles). When part of what installs could not be read (a lockfile at the root pickfit cannot parse, a root
-    Python project that does not resolve, or a lone package with no repository behind it) a check without findings
-    is unchecked, never clean; findings still make it vulnerable."""
+    Clean only when the software's own dependency set was read in full: every one of its registry packages resolved
+    with real dependencies (not a wrapper around a compiled binary), or else its repository's main lockfiles yielded
+    packages with nothing at the root left unread. Anything less is unchecked with the reason, and keeps its score.
+    Findings make it vulnerable whatever else could not be read."""
     base = {"version": VERSION, "database": "OSV.dev", "checked_at": now.isoformat(timespec="seconds")}
 
     def unchecked(reason: str) -> dict[str, Any]:
@@ -432,49 +480,44 @@ def check(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones:
 
     nodes: list[Node] = []
     sources: list[str] = []
-    failed = False
-    resolved = 0
-    for pkg in packages_of(raw):
+    own = packages_of(raw)
+    all_resolved, wrapper = True, False
+    for pkg in own:
         eco, name = pkg.split(":", 1)
         try:
-            got = RESOLVERS[eco](name)
+            got, deps = RESOLVERS[eco](name)
         except (RuntimeError, subprocess.TimeoutExpired, urllib.error.URLError):
-            failed = True
+            all_resolved = False
             continue
         if not got:
-            failed = True
+            all_resolved = False
             continue
-        resolved += 1
+        wrapper |= deps == 0
         nodes += got
         sources.append(f"{pkg} (fresh install, {len(got)} packages)")
-    self_only = resolved > 0 and len(set(nodes)) <= resolved
-    unsupported = False
-    incomplete: str | None = None  # why part of what installs was not read
-    if not resolved or self_only:
+    complete = bool(own) and all_resolved and not wrapper
+    reason: str | None = None
+    if not complete:
+        # A package that did not resolve, or a wrapper: what installs is in the repository's lockfiles.
         url = _repo_url(raw)
         if url is None:
-            if not resolved:
-                return unchecked("resolve_failed" if failed else "no_source")
-            incomplete = "resolve_failed"
+            reason = "resolve_failed" if own else "no_source"
         else:
             try:
                 root, commit = clone(url, raw["slug"], clones)
-                got, read, unsupported, main_unread = repo_nodes(root)
-                incomplete = "lockfile_not_supported" if main_unread else None
             except (RuntimeError, subprocess.TimeoutExpired):
-                if not resolved:
-                    return unchecked("resolve_failed")
-                got, read, incomplete = [], [], "resolve_failed"
+                reason = "resolve_failed"
             else:
-                read = [f"{url.removeprefix('https://')}@{commit[:12]}"] + read if read else read
-            nodes += got
-            sources += read
+                repo = repo_nodes(root)
+                nodes += repo.nodes
+                sources += ([f"{url.removeprefix('https://')}@{commit[:12]}"] + repo.read) if repo.read else []
+                complete, reason = repo.complete, repo.reason
+                if not complete and own and reason == "no_lockfile":
+                    reason = "resolve_failed"  # its own package did not resolve to its dependencies either
     nodes = list(dict.fromkeys(nodes))
-    if not nodes:
-        return unchecked("lockfile_not_supported" if unsupported else "resolve_failed" if failed else "no_lockfile")
-    findings = findings_for(nodes, advisories, unrated)
-    if incomplete and not findings:
-        return unchecked(incomplete)
+    findings = findings_for(nodes, advisories, unrated) if nodes else []
+    if not findings and not complete:
+        return unchecked(reason or "resolve_failed")
     return base | {"status": "vulnerable" if findings else "clean", "unchecked_reason": None, "sources": sources[:20],
                    "packages_checked": len(nodes), "findings_total": len(findings),
                    "findings": findings[:MAX_FINDINGS]}

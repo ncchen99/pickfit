@@ -20,7 +20,7 @@ const ANSWER =
   "Keep drawbacks short; say why the obvious choice isn't recommended. " +
   'Tag well_known_option "(not verified by pickfit)" beside its name. ' +
   "Don't narrate the search or say pickfit found nothing; just answer. No disclaimers about what you didn't run. " +
-  "If security.status is vulnerable, warn the user before they install; if unchecked, don't call it safe.";
+  "If security.status is vulnerable, warn the user first; if unchecked, don't call it safe.";
 
 export const INSTRUCTIONS =
   ABOUT +
@@ -92,7 +92,7 @@ const security = z
   .object({
     status: z
       .enum(['vulnerable', 'clean', 'unchecked'])
-      .describe('vulnerable = tell the user before they install (quality capped at 79); clean = none known; unchecked = not checked, so do not call it safe'),
+      .describe('vulnerable = tell the user before they install or use it (quality capped at 79); clean = none known; unchecked = not checked, so do not call it safe'),
     reason: z
       .enum(['no_source', 'no_lockfile', 'lockfile_not_supported', 'resolve_failed', 'not_run'])
       .nullable()

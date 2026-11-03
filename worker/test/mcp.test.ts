@@ -104,7 +104,7 @@ test('instructions say how to write the answer: pick first, alternative before t
     assert.match(text, /Tag well_known_option "\(not verified by pickfit\)" beside its name/);
     assert.match(text, /Don't narrate the search or say pickfit found nothing; just answer/);
     assert.match(text, /No disclaimers about what you didn't run/);
-    assert.match(text, /If security\.status is vulnerable, warn the user before they install; if unchecked, don't call it safe\./);
+    assert.match(text, /If security\.status is vulnerable, warn the user first; if unchecked, don't call it safe\./);
   }
 });
 

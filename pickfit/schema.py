@@ -1672,8 +1672,10 @@ class SecurityCheck(_Model):
             raise ValueError("an unchecked security check has no packages or findings")
         if (self.status == "vulnerable") != bool(self.findings):
             raise ValueError("status is vulnerable exactly when there are findings")
-        if self.findings_total < len(self.findings):
-            raise ValueError("findings_total counts at least the findings kept")
+        if self.findings_total < len(self.findings) or (self.status != "vulnerable") != (self.findings_total == 0):
+            raise ValueError("findings_total counts every finding kept, and is 0 exactly when not vulnerable")
+        if self.status == "clean" and not (self.packages_checked and self.sources):
+            raise ValueError("clean needs what was read: packages_checked and sources")
         return self
 
 

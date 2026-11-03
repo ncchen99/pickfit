@@ -189,8 +189,8 @@ export function securityLine(entry: Entry): string {
   const more = count - Math.min(findings.length, SECURITY_SHOWN);
   return `<div class="small security-check" id="security"><p>${badge('fail', L('Known vulnerabilities', '已知漏洞'), { icon: 'triangle-alert' })} ` +
     L(
-      `${count} known high or critical ${count === 1 ? 'vulnerability' : 'vulnerabilities'} in packages it installs. That keeps it out of hidden gems: quality is capped at 79.`,
-      `它安裝的套件有 ${count} 個已知的高風險或嚴重漏洞，所以不列為寶藏：品質最高 79 分。`,
+      `${count} known high or critical ${count === 1 ? 'vulnerability' : 'vulnerabilities'} in ${isWebApp(entry) ? 'the packages the site is built from' : 'packages it installs'}. That keeps it out of hidden gems: quality is capped at 79.`,
+      `${isWebApp(entry) ? '這個網站用到的' : '它安裝的'}套件有 ${count} 個已知的高風險或嚴重漏洞，所以不列為寶藏：品質最高 79 分。`,
     ) +
     `</p>${items ? `<ul>${items}</ul>` : ''}` +
     (more > 0 ? `<p class="quiet">${L(`${more} more not listed here.`, `另有 ${more} 個未列出。`)}</p>` : '') +
