@@ -60,18 +60,18 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-mangodisk-20261103-183054-4c97",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask harry0703/tap/mangodisk",
-          "purpose": null
+          "command": "brew tap harry0703/tap && brew trust --tap harry0703/tap && brew install --cask --appdir=$HOME/Applications harry0703/tap/mangodisk",
+          "purpose": "Install MangoDisk via Homebrew cask"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "mangodisk --version"
+      "first_task": "open ~/Applications/MangoDisk.app"
     },
     "linux": {
       "basis": "readme_claim",
@@ -115,9 +115,9 @@
     "url": "https://github.com/harry0703/MangoDisk/releases/tag/v1.2.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_root",
-    "checked_at": "2026-11-03T18:07:00.623172+08:00",
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-03T18:48:30.151363+08:00",
     "runs": [
       {
         "id": "verify-mangodisk-20261103-180500-bf92",
@@ -160,20 +160,314 @@
         },
         "actor_model": "muse-spark-1.3",
         "cost_usd": 0.381916
+      },
+      {
+        "id": "verify-mangodisk-20261103-183054-4c97",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-03T18:48:30.151363+08:00",
+        "tool_version": "1.2.2",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew tap harry0703/tap && brew trust --tap harry0703/tap && brew install --cask --appdir=$HOME/Applications harry0703/tap/mangodisk",
+            "purpose": "Install MangoDisk via Homebrew cask"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/MangoDisk.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/MangoDisk.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"big-video-mangodisk.mov\": yes",
+            "setup": [
+              {
+                "command": "mkdir -p ~/pickfit-plant ~/pickfit-out && dd if=/dev/urandom of=$HOME/pickfit-plant/big-video-mangodisk.mov bs=1048576 count=150 && ls -lh ~/pickfit-plant/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/MangoDisk.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"duplicate-mangodisk-A.bin\": yes",
+            "setup": [
+              {
+                "command": "mkdir -p ~/pickfit-plant/dupes && dd if=/dev/urandom of=$HOME/pickfit-plant/dupes/duplicate-mangodisk-A.bin bs=1024 count=500 && cp ~/pickfit-plant/dupes/duplicate-mangodisk-A.bin ~/pickfit-plant/dupes/duplicate-mangodisk-B.bin && ls -lh ~/pickfit-plant/dupes/ && mkdir -p ~/pickfit-plant/fakeproj/node_modules && echo '{\"name\":\"fake\"}' > ~/pickfit-plant/fakeproj/package.json && dd if=/dev/urandom of=$HOME/pickfit-plant/fakeproj/node_modules/cache-chunk.bin bs=1024 count=1024 && ls -R ~/pickfit-plant/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/MangoDisk.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"big-video-mangodisk.mov\": yes",
+            "setup": [
+              {
+                "command": "mkdir -p ~/pickfit-plant ~/pickfit-out && dd if=/dev/urandom of=$HOME/pickfit-plant/big-video-mangodisk.mov bs=1048576 count=150 && ls -lh ~/pickfit-plant/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/MangoDisk.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"fakeproj\": yes",
+            "setup": [
+              {
+                "command": "mkdir -p ~/pickfit-plant/dupes && dd if=/dev/urandom of=$HOME/pickfit-plant/dupes/duplicate-mangodisk-A.bin bs=1024 count=500 && cp ~/pickfit-plant/dupes/duplicate-mangodisk-A.bin ~/pickfit-plant/dupes/duplicate-mangodisk-B.bin && ls -lh ~/pickfit-plant/dupes/ && mkdir -p ~/pickfit-plant/fakeproj/node_modules && echo '{\"name\":\"fake\"}' > ~/pickfit-plant/fakeproj/package.json && dd if=/dev/urandom of=$HOME/pickfit-plant/fakeproj/node_modules/cache-chunk.bin bs=1024 count=1024 && ls -R ~/pickfit-plant/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask harry0703/tap/mangodisk",
+            "actually_needed": "brew tap harry0703/tap && brew trust --tap harry0703/tap && brew install --cask --appdir=$HOME/Applications harry0703/tap/mangodisk",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The MangoDisk app shows its Deep Cleanup workspace with sidebar tools and a Start Scan prompt.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mangodisk-20261103-183054-4c97/report.json",
+          "log_path": "runs/verify/verify-mangodisk-20261103-183054-4c97/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-2-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.56962,
+        "gui": {
+          "tier": "action_checked",
+          "screen": "main_ui",
+          "command": "open ~/Applications/MangoDisk.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+          "operations": [
+            {
+              "feature": "find and clean largest files",
+              "goal": "In MangoDisk, go to Large File Cleanup (large files section) in the sidebar. Set the scan location to the folder /Users/sbx/pickfit-plant if it lets you choose a folder, otherwise scan the home folder. Start the scan and wait for results. Look for the file big-video-mangodisk.mov (150 MB) in the results list. Do not delete anything.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "big-video-mangodisk.mov"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"big-video-mangodisk.mov\": yes",
+              "smoke_test": 1,
+              "actions": 11,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": [
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-5-2-op-1.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-5-2-op-2.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-5-2-op-3.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-5-2-op-4.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-5-2-op-5.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-5-2-op-6.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-5-2-op-7.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-5-2-op-8.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-5-2-op-9.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-5-2-op-10.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-5-2-op-11.png"
+              ]
+            },
+            {
+              "feature": "remove duplicate files safely",
+              "goal": "In MangoDisk, go to Duplicate File Cleanup / Duplicate Cleanup in the sidebar. Set the scan location to /Users/sbx/pickfit-plant/dupes if it lets you choose a folder, otherwise use /Users/sbx/pickfit-plant. Start the scan (use Complete Scan if it asks) and wait for results. Look for duplicate-mangodisk-A.bin in the duplicate groups. Do not delete anything.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "duplicate-mangodisk-A.bin"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"duplicate-mangodisk-A.bin\": yes",
+              "smoke_test": 2,
+              "actions": 18,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": [
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-1.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-2.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-3.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-4.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-5.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-6.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-7.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-8.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-9.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-10.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-11.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-12.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-13.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-14.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-15.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-16.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-17.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-6-3-op-18.png"
+              ]
+            },
+            {
+              "feature": "analyze disk space visually",
+              "goal": "In MangoDisk, go to Disk Space Analysis in the sidebar. Set the analyzed folder to /Users/sbx/pickfit-plant if it lets you choose, otherwise analyze the home folder. Start the analysis/scan (use Complete Scan if offered) and wait for the treemap/sunburst chart and file list. Find big-video-mangodisk.mov in the results. Do not delete anything.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "big-video-mangodisk.mov"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"big-video-mangodisk.mov\": yes",
+              "smoke_test": 3,
+              "actions": 26,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": [
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-1.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-2.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-3.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-4.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-5.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-6.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-7.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-8.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-9.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-10.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-11.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-12.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-13.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-14.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-15.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-16.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-17.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-18.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-19.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-20.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-21.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-22.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-23.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-24.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-7-4-op-25.png"
+              ]
+            },
+            {
+              "feature": "deep clean system and app caches",
+              "goal": "In MangoDisk, go to Deep Cleanup in the sidebar. Start the Scan (use Complete Scan if offered) with default locations and wait for results to finish. Look through the results for the project folder fakeproj under /Users/sbx/pickfit-plant/fakeproj (project build artifacts / node_modules). Do not clean or delete anything.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "fakeproj"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"fakeproj\": yes",
+              "smoke_test": 4,
+              "actions": 3,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": [
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-8-5-op-1.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-8-5-op-2.png",
+                "runs/verify/verify-mangodisk-20261103-183054-4c97/replay-8-5-op-3.png"
+              ]
+            }
+          ]
+        },
+        "features": [
+          {
+            "feature": "deep clean system and app caches",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "find and clean largest files",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "remove duplicate files safely",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "analyze disk space visually",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-03T18:07:00+08:00",
+    "computed_at": "2026-11-03T18:48:30+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 80.5,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.85,
           "weight": 40.0
         },
         "install_docs": {
@@ -214,7 +508,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 13.8
+      "value": 16.1
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -513,5 +807,5 @@
     }
   ],
   "first_seen_at": "2026-11-03T18:04:40+08:00",
-  "updated_at": "2026-11-03T18:07:00+08:00"
+  "updated_at": "2026-11-03T18:48:30.160621+08:00"
 }
