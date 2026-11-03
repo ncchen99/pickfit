@@ -206,7 +206,10 @@ OPERATE_GUI_TOOL = _fn(
      "goal": {"type": "string", "description": (
          "What to do in the app's own UI, step by step as a user would, with the exact text to type and where "
          "to save. Write {nonce} where a unique word should go: pickfit puts a fresh one there each time.")},
-     "inputs": {"type": "array", "description": "Files pickfit writes under ~/pickfit-in/ before the app starts.",
+     "inputs": {"type": "array", "description": (
+         "Small files pickfit writes under ~/pickfit-in/ before the app starts (at most 4,000 characters of text "
+         "each). A big file (a large-file or duplicate finder's threshold), or one the app must find elsewhere, is "
+         "not an input: make it first with run_command and cite that command as this operation's setup."),
                 "items": {"type": "object", "properties": {
                     "path": {"type": "string", "description": "e.g. ~/pickfit-in/notes.md"},
                     "text": {**_NULL_STR, "description": "The file's text ({nonce} allowed), or null."},
@@ -476,9 +479,11 @@ Examples: a notes or editor app: type {nonce}, save to ~/pickfit-out/note.md, ch
 an image tool: open ~/pickfit-in/photo.png (sample png), export ~/pickfit-out/photo.webp, check format webp; \
 a model browser: download the smallest GGUF it lists, check folder ~/ for format gguf; a document search: an \
 input file holding {nonce}, search for {nonce}, check screen_text for the input file's name; a converter: \
-check the converted text, not the text typed; a disk cleaner: a setup makes a big file (mkdir -p ~/pickfit-plant && dd \
-if=/dev/urandom of=$HOME/pickfit-plant/big-video.mov bs=1048576 count=150) or two copies of one file, one operation finds it \
-(screen_text: its name in the app's list) and another, with a file of its own, deletes it in the app (gone). \
+check the converted text, not the text typed; a disk cleaner: inputs are below its size thresholds, so a \
+run_command setup makes the files first (mkdir -p ~/pickfit-plant && dd if=/dev/urandom \
+of=$HOME/pickfit-plant/big-video.mov bs=1048576 count=150; for duplicates, two copies of one 300 KB file; for a \
+cache cleaner, a file in a cache folder its rules name), then an operation finds it in the app (screen_text: the \
+file's name in the app's list) or deletes it in the app (gone), each citing that setup. \
 A check must hold the feature's own result: a file it saved or exported, text it converted, computed or \
 generated, a value it copied, or something it created and then lists or stores. Never a heading, a label, a \
 menu or the name of a screen: opening a screen shows nothing about a feature, a screen_text result must not \
@@ -561,7 +566,9 @@ pickfit's judge reads the screenshot itself. Launch it even if it will ask for a
 the sign-in screen.
 """ + OPERATE_RULES + """ On this Mac, goals name the Mac's shortcuts (cmd+s to save, cmd+c to copy; not ctrl), \
 ~/ is /Users/sbx, a menu bar app's controls are in the menu of its item at the top right, and this VM has no \
-microphone or camera (needs_hardware)."""
+microphone or camera (needs_hardware). pickfit turns Spotlight indexing off in this VM: an app's search or quick \
+scan built on Spotlight finds nothing here (this VM's limit, not the app's): use the app's full or complete scan \
+when it offers one, and record the limit as a pitfall of kind sandbox."""
 
 FLATPAK_RULE = """ A Flatpak app installs per user as two cited steps, \
 `flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo` and then \
