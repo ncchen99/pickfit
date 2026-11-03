@@ -45,7 +45,7 @@ const SITE = 'https://pickfit.app';
 function shareMeta(input: ShellInput): string {
   const zh = lang() === 'zh-TW';
   const image = `${SITE}/assets/og/pickfit-${zh ? 'zh' : 'en'}.png`;
-  const alt = L('pickfit: every tool, tested first. Fitz the tailorbird on a cutting mat.', 'pickfit：先幫你試過推薦的軟體。縫葉鶯 Fitz 站在裁縫切割墊上。');
+  const alt = L('pickfit: every tool, tested first. Fitz the tailorbird stands on a result tag: installed in a sandbox, features checked, replayed offline.', 'pickfit：推薦的軟體先試過了。縫葉鶯 Fitz 站在結果標籤上：在沙盒裡裝過、功能逐項測過、斷網重跑通過。');
   return `<meta property="og:type" content="website">
 <meta property="og:site_name" content="pickfit">
 <meta property="og:locale" content="${zh ? 'zh_TW' : 'en_US'}">
