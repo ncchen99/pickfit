@@ -605,14 +605,51 @@ def launch(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout_s
     return result, shown, png
 
 
+# A scroll: wheel buttons sent over Virtualization.framework's VNC never reach the guest (11/3: a Finder window did
+# not move), so pickfit posts the wheel event in sbx's session. Posted from anything tart-guest-agent starts, TCC
+# asks whether tart-guest-agent may "control this computer" (PostEvent) and drops it; osascript started by launchd
+# is its own responsible process and holds PostEvent on the GUI base, so the event lands, with no prompt.
+SCROLL_PX = 300  # pixels per scroll: about a third of an ordinary window
+SCROLL_RAN_S = 10  # launchd starts a submitted job at once; a KeepAlive restart waits 10 s, and the job is gone by then
+_SCROLL_JXA = ('ObjC.import("CoreGraphics"); var e = $.CGEventCreateScrollWheelEvent2(null, 0, 1, @DY@, 0, 0); '
+               '$.CGEventSetLocation(e, {x: @X@, y: @Y@}); $.CGEventPost(0, e);')
+
+
+def post_scroll(box: TartBox, x: int, y: int, direction: str, *, sleep: Any = time.sleep) -> None:
+    """One wheel scroll at (x, y) of the screen, up or down, as a one-off launchd job in sbx's session."""
+    dy = {"up": SCROLL_PX, "down": -SCROLL_PX}.get(direction)  # positive moves the content down: a scroll up
+    if dy is None:
+        raise ValueError(f"unknown scroll direction {direction!r}")
+    script = _SCROLL_JXA.replace("@DY@", str(dy)).replace("@X@", str(int(x))).replace("@Y@", str(int(y)))
+    label = f"pickfit.scroll.{secrets.token_hex(4)}"
+    session = ["/bin/launchctl", "asuser", str(MAC_UID), "/bin/launchctl"]
+    done = box.harness_exec([*session, "submit", "-l", label, "--", "/usr/bin/osascript", "-l", "JavaScript", "-e",
+                             script], 30)
+    if done.exit_code != 0:
+        raise BoxError(f"launchctl submit exited {done.exit_code}: {done.stderr.strip()[-200:]}")
+    try:
+        deadline = time.monotonic() + SCROLL_RAN_S
+        while True:
+            listed = box.harness_exec([*session, "list", label], 15).stdout
+            if '"LastExitStatus"' in listed and '"PID"' not in listed:
+                break
+            if time.monotonic() > deadline:
+                raise BoxError("the scroll did not run")
+            sleep(0.2)
+        if not re.search(r'"LastExitStatus" = 0;', listed):
+            raise BoxError("the scroll did not post: " + " ".join(listed.split())[-200:])
+    finally:
+        box.harness_exec([*session, "remove", label], 15)
+
+
 class VncDisplay:
     """The VM's display as pickfit drives it from the host: the operating loop's Display (gui_operate.Display).
 
     screenshot -> PNG bytes once the screen has settled, click(x, y, count), type_text, key, scroll, and with a
     box, clipboard. Coordinates are pixels of the screenshot (1280x800 on the GUI base). Key names are X
     keysyms and `+` combinations (Return, BackSpace, ctrl+slash) with the Mac's own modifiers (cmd+s,
-    option+left); see vnc.parse_key. Nothing runs in the guest for it but the clipboard read. A VNC failure is
-    the loop's DisplayError.
+    option+left); see vnc.parse_key. Nothing runs in the guest for it but the clipboard read and, with a box, a
+    scroll (post_scroll). A VNC failure is the loop's DisplayError.
     """
 
     os = "macos"  # the operating loop speaks of a Mac's desktop and keeps cmd apart from ctrl
@@ -631,7 +668,7 @@ class VncDisplay:
 
         try:
             return fn(*args)
-        except (VncError, OSError, ValueError) as err:
+        except (VncError, OSError, ValueError, BoxError) as err:
             raise DisplayError(f"{what} over VNC failed: {err}") from err
 
     @property
@@ -674,6 +711,9 @@ class VncDisplay:
     def double_click(self, x: int, y: int) -> None:
         self.click(x, y, 2)
 
+    def right_click(self, x: int, y: int) -> None:
+        self._do("right-click", lambda: self._connected().click(x, y, button="right"))
+
     def type_text(self, text: str) -> None:
         self._do("typing", lambda: self._connected().type_text(text))
 
@@ -681,7 +721,10 @@ class VncDisplay:
         self._do(f"key {name}", lambda: self._connected().key(name))
 
     def scroll(self, x: int, y: int, direction: str) -> None:
-        self._do("scroll", lambda: self._connected().scroll(x, y, direction))
+        if self._box is None:
+            self._do("scroll", lambda: self._connected().scroll(x, y, direction))
+        else:
+            self._do("scroll", lambda: post_scroll(self._box, x, y, direction))
 
     def clipboard(self) -> bytes | None:
         """The box user's pasteboard as text, read in its desktop session (None when it holds no text)."""

@@ -205,3 +205,15 @@ def test_the_display_waits_for_two_frames_that_agree(server: FakeServer):
     assert server.connections == 2  # the first frame, then one that agrees
     assert display.clipboard() is None  # no box, no pasteboard to read
     display.close()
+
+
+def test_the_displays_right_click_presses_the_right_button(server: FakeServer):
+    from pickfit.verify.gui_mac import VncDisplay
+    from pickfit.verify.vnc import BUTTON_RIGHT
+
+    display = VncDisplay(f"vnc://:{PASSWORD}@127.0.0.1:{server.port}")
+    display.right_click(2, 1)
+    _wait(server, 3)
+    assert [e for e in server.events if e[0] == "pointer"] == [
+        ("pointer", 0, 2, 1), ("pointer", BUTTON_RIGHT, 2, 1), ("pointer", 0, 2, 1)]
+    display.close()

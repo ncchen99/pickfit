@@ -46,7 +46,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Protocol
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, create_model, field_validator
 
 from pickfit.env import get_env
 from pickfit.ledger import BudgetExceeded
@@ -182,7 +182,8 @@ try:
     kind = ACT["kind"]
     out["t0"] = time.time()  # the box's clock, which its screen recording uses (record.py)
     if kind == "click":
-        xdo("mousemove", "--sync", ACT["x"], ACT["y"], "click", "--repeat", ACT.get("count", 1), "--delay", 90, 1)
+        xdo("mousemove", "--sync", ACT["x"], ACT["y"], "click", "--repeat", ACT.get("count", 1), "--delay", 90,
+            3 if ACT.get("button") == "right" else 1)
     elif kind == "type":
         xdo("type", "--delay", 35, "--", ACT["text"], timeout=150)
     elif kind == "key":
@@ -279,6 +280,9 @@ class XvfbDisplay:
 
     def click(self, x: int, y: int, count: int = 1) -> None:
         self._do({"kind": "click", "x": int(x), "y": int(y), "count": max(1, min(int(count), 3))})
+
+    def right_click(self, x: int, y: int) -> None:
+        self._do({"kind": "click", "x": int(x), "y": int(y), "count": 1, "button": "right"})
 
     def type_text(self, text: str) -> None:
         self._do({"kind": "type", "text": text}, 180)
@@ -679,7 +683,8 @@ screenshot of the part of the virtual screen the app draws on, the goal, and the
 no window manager: windows have no title bars, and there is no desktop, taskbar or terminal, only the app. \
 Return the one next action:
 - click: x and y of the point to click, normalized 0-1000 over the image (0,0 is the top left, 1000,1000 the \
-bottom right); aim at the middle of the control; clicks 2 for a double click.
+bottom right); aim at the middle of the control; clicks 2 for a double click; button right for a right-click, \
+which opens the context menu of what is under the pointer (some apps keep their commands there).
 - type: the text to type into the field that has focus (click the field first). Type exactly the text the \
 goal gives.
 - key: one key or combination, e.g. Return, Tab, Escape, BackSpace, ctrl+a, ctrl+s, ctrl+c.
@@ -705,6 +710,8 @@ class OperatorAction(BaseModel):
     x: int | None = Field(description="click, scroll: 0-1000 from the left; else null.")
     y: int | None = Field(description="click, scroll: 0-1000 from the top; else null.")
     clicks: int | None = Field(description="click: 1, or 2 for a double click; else null.")
+    button: Literal["left", "right"] | None = Field(
+        description="click: right for a right-click (a context menu), else left; null for other actions.")
     text: str | None = Field(description="type: the text; else null.")
     key: str | None = Field(description="key: e.g. Return or ctrl+s; else null.")
     direction: Literal["up", "down"] | None = Field(description="scroll: up or down; else null.")
@@ -712,11 +719,21 @@ class OperatorAction(BaseModel):
     why: str = Field(description="One short sentence: why this action, or why done or give_up.")
 
 
-class MacOperatorAction(OperatorAction):
-    """On a Mac the operator may name a numbered text pickfit read on the screen (marks.py) instead of aiming."""
+def _with_element() -> type[BaseModel]:
+    """OperatorAction with `element` right after x and y: on a Mac the operator may name a numbered text pickfit read
+    on the screen (marks.py) instead of aiming. Strict mode makes it required-but-nullable; written last, after why,
+    the model filled it with -1 or 0 on coordinate clicks (62 times in 10 operations, 11/2)."""
+    fields: dict[str, Any] = {}
+    for name, info in OperatorAction.model_fields.items():
+        fields[name] = (info.annotation, info)
+        if name == "y":
+            fields["element"] = (int | None, Field(description=(
+                "click: the number of a marked text to click the middle of (more precise than x and y, which are "
+                "then ignored); null when you give x and y or for any other action, never 0 or -1.")))
+    return create_model("MacOperatorAction", **fields)
 
-    element: int | None = Field(description="click: the number of a marked text to click the middle of (more "
-                                            "precise than x and y, which are then ignored); else null.")
+
+MacOperatorAction = _with_element()
 
 
 def normalize_key(name: str, mac: bool = False) -> str | None:
@@ -807,12 +824,14 @@ def to_action(answer: OperatorAction, view: View, mac: bool = False, marks: list
     if kind in ("done", "give_up"):
         return {"kind": kind}, None
     element = getattr(answer, "element", None)
-    if kind == "click" and element is not None:
+    # Marks are numbered from 1: an element below 1 is the model's "none" (it wrote -1 or 0 for null), so x and y
+    # decide; a number with no mark is refused.
+    if kind == "click" and element is not None and element >= 1:
         mark = next((m for m in marks if m.number == element), None)
         if mark is None:
             return None, f"no marked text numbered {element}"
         x, y = mark.center
-        return {"kind": "click", "x": x, "y": y, "count": 2 if answer.clicks == 2 else 1}, None
+        return _click(x, y, answer)
     if kind in ("click", "scroll"):
         if answer.x is None or answer.y is None or not (0 <= answer.x <= 1000 and 0 <= answer.y <= 1000):
             return None, f"{kind} needs x and y between 0 and 1000"
@@ -820,7 +839,7 @@ def to_action(answer: OperatorAction, view: View, mac: bool = False, marks: list
         if kind == "scroll":
             return ({"kind": "scroll", "x": x, "y": y, "direction": answer.direction}, None) if answer.direction \
                 else (None, "scroll needs a direction")
-        return {"kind": "click", "x": x, "y": y, "count": 2 if answer.clicks == 2 else 1}, None
+        return _click(x, y, answer)
     if kind == "type":
         text = answer.text or ""
         if not text or len(text) > TYPE_MAX or any(not (c.isprintable() or c in "\n\t") for c in text):
@@ -833,8 +852,17 @@ def to_action(answer: OperatorAction, view: View, mac: bool = False, marks: list
     return {"kind": "wait", "seconds": max(1, min(int(seconds), WAIT_MAX_S))}, None
 
 
+def _click(x: int, y: int, answer: OperatorAction) -> tuple[dict[str, Any] | None, str | None]:
+    """A click action; a right-click carries button right (a single click) and a left one no button, as before."""
+    if answer.button == "right":
+        return {"kind": "click", "x": x, "y": y, "count": 1, "button": "right"}, None
+    return {"kind": "click", "x": x, "y": y, "count": 2 if answer.clicks == 2 else 1}, None
+
+
 def describe(act: dict[str, Any]) -> str:
     kind = act["kind"]
+    if kind == "click" and act.get("button") == "right":
+        return f"right-click at {act['x']},{act['y']}"
     if kind == "click":
         return f"{'double-' if act.get('count') == 2 else ''}click at {act['x']},{act['y']}"
     if kind == "type":
@@ -850,7 +878,12 @@ def describe(act: dict[str, Any]) -> str:
 
 def perform(display: Display, act: dict[str, Any], sleep: Callable[[float], None] = time.sleep) -> None:
     kind = act["kind"]
-    if kind == "click":
+    if kind == "click" and act.get("button") == "right":
+        right_click = getattr(display, "right_click", None)
+        if right_click is None:
+            raise DisplayError("this display cannot right-click")
+        right_click(act["x"], act["y"])
+    elif kind == "click":
         display.click(act["x"], act["y"], act.get("count", 1))
     elif kind == "type":
         display.type_text(act["text"])
@@ -908,6 +941,7 @@ class Step:
     observation: str = ""  # the operator's words: data, never a result
     why: str = ""
     refused: str | None = None  # why pickfit did not perform the answer
+    answer: dict[str, Any] | None = None  # a refused answer's own x, y, element, key and text, for later analysis
     at: list[float] | None = None  # when the action ran, [start, end], in its recording's clock (record.py)
 
 
@@ -1101,6 +1135,7 @@ def operate(display: Display, goal: str, *, model: str | None = None, max_steps:
         act, why = to_action(answer, view, mac, found)
         if act is None:
             step.refused = why
+            step.answer = {k: getattr(answer, k, None) for k in ("x", "y", "element", "key", "text")}
             steps.append(step)
             note = f"Your last answer could not be performed: {why}."
             previous = png  # nothing was done: the same screen is shown again

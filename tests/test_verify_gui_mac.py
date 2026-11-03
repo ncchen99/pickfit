@@ -362,7 +362,7 @@ def test_the_operator_clicks_a_marked_text_by_number_on_a_mac():
     found = marks.parse(json.dumps([{"text": "Add Folder", "x": 672, "y": 442, "w": 72, "h": 12}]))
     view = gui_operate.View(0, 0, 1280, 800)
     answer = gui_operate.MacOperatorAction(observation="a button", action="click", x=556, y=631, clicks=None,
-                                           text=None, key=None, direction=None, seconds=None, why="add a folder",
+                                           button=None, text=None, key=None, direction=None, seconds=None, why="add a folder",
                                            element=1)
     assert gui_operate.to_action(answer, view, True, found) == ({"kind": "click", "x": 708, "y": 448, "count": 1}, None)
     missing = answer.model_copy(update={"element": 9})
@@ -381,3 +381,105 @@ def PNG_IMAGE() -> bytes:
     out = io.BytesIO()
     Image.new("RGB", (1280, 800), (240, 240, 240)).save(out, "PNG")
     return out.getvalue()
+
+
+class ScrollBox:
+    """launchctl as the GUI base answers it: submit, then list (running, then exited with `status`), then remove."""
+
+    def __init__(self, status: int | None = 0, submit_code: int = 0) -> None:
+        self.calls: list[list[str]] = []
+        self.status, self.submit_code, self.lists = status, submit_code, 0
+
+    def harness_exec(self, argv: list[str], timeout_s: int, **_: Any) -> ExecResult:
+        self.calls.append(argv)
+        out, code = "", 0
+        if "submit" in argv:
+            code = self.submit_code
+        elif "list" in argv:
+            self.lists += 1
+            done = self.lists > 1 and self.status is not None
+            out = ('{ "Label" = "x"; "LastExitStatus" = ' + str(self.status if done else 0) + ";"
+                   + ("" if done else ' "PID" = 833;') + " }")
+        return ExecResult(command=" ".join(argv), exit_code=code, stdout=out, stderr="", seconds=0.1)
+
+
+def test_a_mac_scroll_is_a_wheel_event_osascript_posts_from_a_one_off_launchd_job():
+    box = ScrollBox()
+    gui_mac.post_scroll(box, 640, 420, "down", sleep=lambda s: None)
+    submit, *lists, remove = box.calls
+    assert submit[:5] == ["/bin/launchctl", "asuser", str(gui_mac.MAC_UID), "/bin/launchctl", "submit"]
+    label = submit[submit.index("-l") + 1]
+    assert label.startswith("pickfit.scroll.") and submit[submit.index("--") + 1] == "/usr/bin/osascript"
+    assert "CGEventCreateScrollWheelEvent2(null, 0, 1, -300, 0, 0)" in submit[-1] and "{x: 640, y: 420}" in submit[-1]
+    assert len(lists) == 2 and remove[-2:] == ["remove", label]  # waited for it to exit, then took it away
+    up = ScrollBox()
+    gui_mac.post_scroll(up, 1, 2, "up", sleep=lambda s: None)
+    assert "(null, 0, 1, 300, 0, 0)" in up.calls[0][-1]
+
+
+def test_a_mac_scroll_that_does_not_post_is_the_operating_loops_display_error():
+    from pickfit.verify.box import BoxError
+    from pickfit.verify.gui_operate import DisplayError
+
+    failed = ScrollBox(status=1)
+    with pytest.raises(BoxError, match="did not post"):
+        gui_mac.post_scroll(failed, 1, 2, "down", sleep=lambda s: None)
+    assert failed.calls[-1][-2] == "remove"  # never left behind
+    with pytest.raises(BoxError, match="submit exited 3"):
+        gui_mac.post_scroll(ScrollBox(submit_code=3), 1, 2, "down", sleep=lambda s: None)
+    with pytest.raises(ValueError):
+        gui_mac.post_scroll(ScrollBox(), 1, 2, "sideways", sleep=lambda s: None)
+    display = gui_mac.VncDisplay("vnc://:pw@127.0.0.1:5900", ScrollBox(status=2))
+    with pytest.raises(DisplayError, match="scroll over VNC failed"):
+        display.scroll(1, 2, "down")
+
+
+def _mac_answer(**kw: Any) -> Any:
+    from pickfit.verify import gui_operate
+
+    base = dict(observation="the window", action="click", x=500, y=250, element=None, clicks=None, button=None,
+                text=None, key=None, direction=None, seconds=None, why="click it")
+    return gui_operate.MacOperatorAction(**{**base, **kw})
+
+
+def test_an_element_below_one_is_no_element_and_x_y_decide():
+    from pickfit.verify import gui_operate, marks
+
+    found = marks.parse(json.dumps([{"text": "Add Folder", "x": 672, "y": 442, "w": 72, "h": 12}]))
+    view = gui_operate.View(0, 0, 1280, 800)
+    at = view.to_screen(500, 250)
+    for sentinel in (-1, 0, -2):  # what the model wrote for "none" on coordinate clicks (62 times, 11/2)
+        assert gui_operate.to_action(_mac_answer(element=sentinel), view, True, found) == (
+            {"kind": "click", "x": at[0], "y": at[1], "count": 1}, None)
+    assert gui_operate.to_action(_mac_answer(element=5), view, True, found) == (None, "no marked text numbered 5")
+    refused = gui_operate.to_action(_mac_answer(element=-1, x=None, y=None), view, True, found)
+    assert refused == (None, "click needs x and y between 0 and 1000")
+    assert gui_operate.to_action(_mac_answer(element=1), view, True, found)[0]["x"] == 708
+
+
+def test_the_mac_schema_puts_element_next_to_x_and_y_and_says_null():
+    from pickfit.schema import meta_strict_schema
+    from pickfit.verify import gui_operate
+
+    schema = meta_strict_schema(gui_operate.MacOperatorAction)
+    names = list(schema["properties"])
+    assert names.index("element") == names.index("y") + 1 and names[-1] == "why"
+    assert "never 0 or -1" in schema["properties"]["element"]["description"]
+
+
+def test_a_refused_step_keeps_the_answers_own_fields(monkeypatch):
+    from types import SimpleNamespace
+
+    from pickfit.verify import gui_operate, marks
+
+    answers = [_mac_answer(element=5), _mac_answer(action="done", x=None, y=None)]
+    monkeypatch.setattr(marks, "ocr_tool", lambda: None)
+    monkeypatch.setattr(gui_operate, "call_meta", lambda *a, **k: SimpleNamespace(
+        parsed=answers.pop(0), cost_usd=0.0, parse_error=None))
+    display = FakeVncDisplay()
+    display.screenshot = PNG_IMAGE  # a real picture: the operator's view is cut from it
+    steps, stop, cost, error = gui_operate.operate(display, "save it", model="open", log=lambda s: None,
+                                                   sleep=lambda s: None)
+    assert stop == "done" and steps[0].refused == "no marked text numbered 5"
+    assert steps[0].answer == {"x": 500, "y": 250, "element": 5, "key": None, "text": None}
+    assert steps[1].answer is None
