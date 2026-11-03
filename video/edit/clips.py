@@ -23,7 +23,8 @@ def build(clip, sources):
         args += ["-ss", f"{p['in']:.3f}", "-t", f"{span + 0.5:.3f}", "-i", str(HERE / src["file"])]
         crop = src.get("crop")
         speed = span / p["dur"]
-        chain = f"[{i}:v]setpts=PTS-STARTPTS,setpts=PTS/{speed:.5f},fps={FPS},trim=duration={p['dur']:.4f},setpts=PTS-STARTPTS"
+        # The screen recorder writes no frames while nothing changes, so hold the last frame (tpad) to fill the piece.
+        chain = f"[{i}:v]setpts=PTS-STARTPTS,setpts=PTS/{speed:.5f},fps={FPS},tpad=stop_mode=clone:stop_duration={p['dur'] + 1:.2f},trim=duration={p['dur']:.4f},setpts=PTS-STARTPTS"
         if crop:
             w, h, x, y = crop[2], crop[3], crop[0], crop[1]
             chain += f",crop={w}:{h}:{x}:{y}"
