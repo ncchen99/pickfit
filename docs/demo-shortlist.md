@@ -13,7 +13,23 @@
 
 依這些條件，下面「第一版」的 4 個 CLI（`mcp-audit`、`tcount`、`pando`、`shine`）都會排後面：都不是 GUI，而且 agent 自己就能在終端機跑。
 
-**另外，任何 GUI app 只要驗到 function 等級，現在就會碰到下方「線上 bug」（修正在 `claude/hotfix-gui-tier` 的 5eb1f2c，等念誠同意才部署），`find_software` 整個報錯。** List A 的前兩名、List B 裡的任何一個，驗到 function 之後都一樣。所以不管念誠選哪一個，這個 bug 都要先修好並部署。
+**GUI tier 的 bug 已經修好並部署**（11/2 約 18:00，Worker 版本 c5dc40e2，來自 main 8d83ae9；修正是 `claude/hotfix-gui-tier` 的 5eb1f2c）。之前被 bug 擋住的兩個 app 已經重測，結果見下一節。
+
+### 修好後重測（11/2 約 17:57–18:00，台北）
+
+同樣 4 句需求、同樣參數（`os: macos`、`arch: arm64`；第 2 句另加 `free_only`），每句 3 次，共 12 次。每次都是 `matched_by: muse-spark-1.3`、`degraded: false`、沒有追問、沒有報錯。
+
+| 工具 | 需求 | 3 次的排名 | 回傳的 picks |
+|---|---|---|---|
+| `breaktimer-app` | I sit at my laptop for hours. I want something that nags me to stand up and take a break every so often | **1, 1, 1** | 只有 `breaktimer-app` |
+| `breaktimer-app` | an app that reminds me to rest my eyes every 20 minutes, but only during my work hours | **1, 1, 1** | 只有 `breaktimer-app` |
+| `neon-vision-editor` | I want a free app for writing Markdown notes with a live preview | **2, 2, —** | 前 2 次：`writer-computer`（install）、`neon-vision-editor`（function）、`jottr`（install）；第 3 次只回 `writer-computer` |
+| `neon-vision-editor` | a lightweight native text editor for my Mac to open and tweak scripts and config files（`free_only`） | **—, —, —** | 3 次都只回 `writer-computer`；後 2 次另給 well-known option「Visual Studio Code」 |
+
+結論：
+
+- **`breaktimer-app` 6 次都排第 1，而且是唯一的 pick**，現在可以當 demo。兩句都能用：「只在上班時間提醒」這項功能在 macOS 驗過（4 項功能都 checked），只是那段的影片被標記，passed-only 的影片沒有收進去。用第 2 句的話，影片裡看不到這項。
+- **`neon-vision-editor` 不建議**：筆記那句排第 2，排在只驗到 install 的 `writer-computer` 後面，3 次裡有 1 次沒出現；編輯器那句 3 次都沒出現。
 
 ### List A：目錄裡的 GUI app 重新排名
 
@@ -21,15 +37,15 @@
 
 | # | 工具 | 做什麼 | macOS 驗證 | 符合新標準的地方 | 問題 |
 |---|---|---|---|---|---|
-| 1 | `neon-vision-editor` | 原生 Mac 的 Markdown／筆記／程式碼編輯器 | function；有影片（40 秒） | 筆記；SwiftUI 原生介面，精緻；Apache-2.0；v2.1.5（10/26） | 線上 bug 會讓它報錯；兩句筆記需求裡，成功的 2 次都只回 install 等級的 `writer-computer`（另 1 次被 bug 擋住，不算沒排上）；驗過的只有「寫 Markdown 並存檔」 |
-| 2 | `breaktimer-app` | 定時提醒休息 | function（4 項功能都驗過）；有影片（passed-only，49 秒，3 項功能） | 需求很大眾，非開發者也懂；agent 不能幫你起來休息 | 線上 bug；介面是普通的 Electron 設定頁，不算精緻；最新 release 是 2025-11-13，快一年 |
+| 1 | `breaktimer-app` | 定時提醒休息 | function（4 項功能都驗過）；有影片（passed-only，49 秒，3 項功能） | 需求很大眾，非開發者也懂；agent 不能幫你起來休息；**修好後重測 6 次都排第 1** | 介面是普通的 Electron 設定頁，不算精緻；最新 release 是 2025-11-13，快一年 |
+| 2 | `neon-vision-editor` | 原生 Mac 的 Markdown／筆記／程式碼編輯器 | function；有影片（40 秒） | 筆記；SwiftUI 原生介面，精緻；Apache-2.0；v2.1.5（10/26） | 修好後重測：筆記那句排 2、2、—（`writer-computer` 排第 1），編輯器那句 3 次都沒出現；驗過的只有「寫 Markdown 並存檔」 |
 | 3 | `writer-computer` | 本機優先的 Markdown 筆記（資料夾裡的純文字） | 只到 install（VM 裡開不了資料夾選擇器） | 筆記；搜尋時排第 1 | 只到 install，功能沒驗到 |
 | 4 | `opendisk` | 掃 Mac 硬碟看空間、刪大檔案 | 只到 install | 大家都遇過硬碟滿 | agent 用 `du` 也能做；只到 install |
 | 5 | `sigil` | EPUB 電子書編輯器 | function（2 項） | 免費、GPL-3.0 | 需求太專門 |
 
 語音輸入（`dictate`、`inlaut`、`opstrellis`、`quassel`、`quill`、`thundertalk`、`whisper-local`、`meeting-transcriber`、`charoite-audio`）：都需要麥克風，都只到 install。Agent 桌面介面（`hivemind`、`oxi`）需要 agent 的訂閱或 key；本機聊天（`camelid`、`hilbertraum`、`m1k3`、`llama-macos`）需要模型：也都只到 install。`itsypad-macos` 驗到 function，但是 freemium，而且全新 box 開不出視窗，錄不了影片。
 
-**結論：目錄裡沒有完全符合的。** 最接近的是 `neon-vision-editor`（筆記、精緻、有影片），但它要等 bug 修好，而且成功回應的筆記需求裡它沒有出現；修好後要重測。
+**結論：目錄裡沒有完全符合的。** 能用的是 `breaktimer-app`：重測都排第 1、有影片、需求大眾，但介面不算精緻、release 偏舊。`neon-vision-editor` 介面最好，但搜尋時排不到第 1。
 
 ### List B：目錄外的免費開源 Mac GUI app
 
@@ -117,7 +133,7 @@ VM 的限制：tart 的 macOS VM 沒有電池、沒有外接螢幕（所以沒�
 
 - **建議主案：`mcp-audit`**（「我裝了一堆 MCP server，有沒有哪個有風險？」）。6 次呼叫都排第 1，回 3 個選項可以比較；服務等級；看的人多半自己就在用 MCP。
 - **備案：`tcount`**（token 計數，4 項功能都驗過）、**`pando`**（給平行 coding agent 用的 git worktree）。
-- **有影片的兩個 GUI app（`neon-vision-editor`、`breaktimer-app`）現在不能用來 demo**：線上 Worker 的 `find_software` 只要結果裡有功能等級的 GUI app 就會整個報錯（見下方「線上 bug」）。這個 bug 修好並部署之後，它們才能重新列入考慮。
+- **有影片的兩個 GUI app（`neon-vision-editor`、`breaktimer-app`）當時不能用來 demo**：線上 Worker 的 `find_software` 只要結果裡有功能等級的 GUI app 就會整個報錯（見下方「線上 bug」）。（11/2 約 18:00 已修好並重測，見最上面「修好後重測」。）
 
 ### 篩選
 
@@ -174,7 +190,7 @@ Worker 回的是 `isError: true`，內容是：
 | 2 | check how many tokens a prompt file is and whether it fits in the model's context window | 1, 1, 1（另一句也是 1, 1, 1） | 有在用 LLM 的人都遇過「這段塞不塞得進 context」。 | 沒有（CLI）；終端機輸出畫面很清楚，好錄。 | 只回 1 個選項，沒有比較的畫面。Claude、Gemini 的數字是估算（工具自己標 Approx），旁白不要說「精確」。最新 release v0.7.0 是 9/12，約 7 週前。brew 要從作者的 tap 裝（`lancekrogers/tap/tcount`）。 |
 | 3 | I run several coding agents on different branches at once. Something to manage git worktrees with a dev server for each | 1, 1, 1（另一句也是 1, 1, 1） | 平行跑 coding agent 是現在很多開發者在做的事，和 demo 的觀眾很貼近。回 3 個選項（`orbit`、`vincent`）。 | 沒有（TUI）。 | **需求說的「每個 worktree 一個 dev server」在 macOS 沒驗過**（agent 的 box 通過，全新 box 重播沒過）；驗過的只有建立、刪除 worktree。要用這個就換成另一句（keep a separate checkout per branch …），旁白只講 worktree。AGPL-3.0。public URL、服務副本要 cloudflared、Docker。 |
 | 4 | preview my README nicely right in the terminal and catch markdown mistakes before I publish | 1, 1, 1（另一句也是 1, 1, 1） | 寫 README、發布前檢查 markdown，大部分開發者都做過。treasure 分數 65.9，這幾個裡最高。 | 沒有（TUI）。 | 最新 release v0.1.2 是 7/10，4 個月前，「最近有 release」偏弱；版本號 0.1.x。只回 1 個選項。npm 要裝指定版本 `@nk02/shine@0.1.2`。行內圖片沒驗到。 |
-| （修好 bug 才能用） | I sit at my laptop for hours. I want something that nags me to stand up and take a break every so often | 被 bug 擋住 ×4（沒有排名） | 最大眾的需求，非開發者也懂；而且有 Muse Spark Open 剪的驗證影片（passed-only 版，49 秒，3 項功能）。 | 有（passed-only） | 現在線上會報錯，要先修 Worker 的 schema 並部署。最新 release v2.0.3 是 2025-11-13，快一年。「只在上班時間提醒」那項沒驗過，影片也拿掉了，所以不要用第 2 句。修好之後排名要重測。 |
+| （bug 修好後可用） | I sit at my laptop for hours. I want something that nags me to stand up and take a break every so often | 當時被 bug 擋住 ×4；修好後重測 1, 1, 1（另一句也是 1, 1, 1） | 最大眾的需求，非開發者也懂；而且有 Muse Spark Open 剪的驗證影片（passed-only 版，49 秒，3 項功能）。 | 有（passed-only） | 最新 release v2.0.3 是 2025-11-13，快一年。「只在上班時間提醒」那項在 macOS 驗過，但那段影片被標記，passed-only 的影片沒有收進去；用第 2 句的話，影片裡看不到這項。（更正：先前寫成「沒驗過」是錯的。） |
 
 `neon-vision-editor`（有影片）在兩句 markdown／文字編輯器需求裡成功回應的 2 次都沒排上，只回 install 等級的 `writer-computer`；另 1 次被 bug 擋住。bug 修好前不建議當 demo，修好後要重測。
 
