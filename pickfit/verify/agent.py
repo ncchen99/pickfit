@@ -483,7 +483,9 @@ check the converted text, not the text typed; a disk cleaner: inputs are below i
 run_command setup makes the files first (mkdir -p ~/pickfit-plant && dd if=/dev/urandom \
 of=$HOME/pickfit-plant/big-video.mov bs=1048576 count=150; for duplicates, two copies of one 300 KB file; for a \
 cache cleaner, a file in a cache folder its rules name), then an operation finds it in the app (screen_text: the \
-file's name in the app's list) or deletes it in the app (gone), each citing that setup. \
+file's name in the app's list) or deletes it in the app (gone), each citing that setup; a disk space analyzer's \
+check holds what the analysis computed for the planted file as the app shows it, its size or share (150 MiB \
+shows as 157 MB in decimal units), not only its name. \
 A check must hold the feature's own result: a file it saved or exported, text it converted, computed or \
 generated, a value it copied, or something it created and then lists or stores. Never a heading, a label, a \
 menu or the name of a screen: opening a screen shows nothing about a feature, a screen_text result must not \
