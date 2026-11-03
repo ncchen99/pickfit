@@ -10,7 +10,7 @@ A software advisor for people and their AI agents. pickfit installs and tests so
 <p align="center">
   <a href="https://pickfit.app"><b>pickfit.app</b></a> ·
   <a href="https://pickfit.app/agents">Connect your agent (MCP)</a> ·
-  <a href="REPORT_URL"><b>Full report</b></a> ·
+  <a href="https://ncchen99.github.io/pickfit/"><b>Full report</b></a> ·
   <a href="docs/REPORT.md">Report (Markdown)</a>
 </p>
 
@@ -77,7 +77,7 @@ flowchart LR
   F --> G[Publish<br>MCP + pickfit.app]
 ```
 
-Meta's models do every product decision: **Muse Spark 1.3** reads READMEs, judges what passed and matches requests live; **Muse Spark Open** (open weights, on Baseten and Modal) does the first cut and operates desktop apps from screenshots; **Muse Wonder** checks screenshots for visual defects. Since 3 Nov the same Meta models are reached through OpenRouter, pinned to Meta as the only provider with data collection denied. Claude was the development tool and the agent under test in the evaluation; it also wrote the tool pages' how-to text for records that existed on 2 Nov, and each such record names the model that wrote it. The [full report](REPORT_URL) covers the hypotheses, every experiment (including the ones that failed), the iterations, and the designs that keep the catalogue honest.
+Meta's models do every product decision: **Muse Spark 1.3** reads READMEs, judges what passed and matches requests live; **Muse Spark Open** (open weights, on Baseten and Modal) does the first cut and operates desktop apps from screenshots; **Muse Wonder** checks screenshots for visual defects. Since 3 Nov the same Meta models are reached through OpenRouter, pinned to Meta as the only provider with data collection denied. Claude was the development tool and the agent under test in the evaluation; it also wrote the tool pages' how-to text for records that existed on 2 Nov, and each such record names the model that wrote it. The [full report](https://ncchen99.github.io/pickfit/) covers the hypotheses, every experiment (including the ones that failed), the iterations, and the designs that keep the catalogue honest.
 
 ## Repository
 
