@@ -42,6 +42,15 @@ def render(source: Path) -> tuple[str, str, str, str]:
     lede = re.sub(r"<[^>]+>", "", first_p.group(1)).strip() if first_p else ""
     if first_p and first_p.start() < 40:  # the lede is shown in the hero, not twice
         body = body[:first_p.start()] + body[first_p.end():]
+    # Figures (docs/report/figures/*.svg, drawn by figures.py) are inlined, so their colours follow the
+    # page's theme; the Markdown links them as images, which GitHub shows in light colours.
+    def figure(m: re.Match) -> str:
+        caption, name = m.group(1), m.group(2)
+        art = (HERE / "figures" / f"{name}.svg").read_text(encoding="utf-8")
+        art = re.sub(r'\s(width|height)="\d+"', "", art, count=2)
+        return f'<figure class="fig" id="fig-{name}">{art}<figcaption>{caption}</figcaption></figure>'
+
+    body = re.sub(r'<p><img alt="([^"]*)" src="report/figures/([\w-]+)\.svg"\s*/?></p>', figure, body)
     # Wide tables scroll inside their own frame instead of the page.
     body = body.replace("<table>", '<div class="table"><table>').replace("</table>", "</table></div>")
     return title, lede, body, md.toc

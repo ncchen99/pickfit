@@ -9,6 +9,7 @@ A software advisor for people and their AI agents. pickfit installs and tests so
 
 <p align="center">
   <a href="https://pickfit.app"><b>pickfit.app</b></a> ·
+  <a href="https://www.youtube.com/watch?v=jr1R0Ld0kOc"><b>Demo video (2:57)</b></a> ·
   <a href="https://pickfit.app/agents">Connect your agent (MCP)</a> ·
   <a href="https://ncchen99.github.io/pickfit/"><b>Full report</b></a> ·
   <a href="docs/REPORT.md">Report (Markdown)</a>
@@ -38,6 +39,8 @@ Fitz, the mascot, is a tailorbird. Real tailorbirds pick leaves and stitch them 
 | <img src="brand/screenshots/home.png" alt="pickfit home page: an 'I need…' search box over a ruler, with filters for OS, CPU, free, offline and data stays local" width="420"> | <img src="brand/screenshots/tool-page.png" alt="A pickfit tool page for OpenPets: tested on macOS, a video recorded by pickfit with chapters for each checked feature" width="420"> |
 
 As of 3 Nov 2026: **963** projects read, **652** verified at least through install, **567** replayed in a fresh sandbox, **85** web apps tried in a browser, **132** hidden gems. CLI tools, local AI tools, MCP servers, desktop apps (Linux and macOS) and web apps.
+
+<p align="center"><a href="https://www.youtube.com/watch?v=jr1R0Ld0kOc"><img src="brand/screenshots/demo-video.jpg" alt="Watch the pickfit demo video on YouTube (2:57)" width="640"></a><br><sub>Watch the 3-minute demo: Claude Code finds and installs MangoDisk through pickfit, then the app's first use.</sub></p>
 
 ## Try it
 
