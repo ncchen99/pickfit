@@ -11,7 +11,7 @@ import { test } from 'node:test';
 import type { Env } from '../src/env.ts';
 import { loadCatalog, type Entry } from '../src/catalog.ts';
 import { compareTable, slugsFrom } from '../src/pages/compare.ts';
-import { visualLine } from '../src/pages/tool.ts';
+import { visualMark } from '../src/pages/tool.ts';
 import { makeWorker } from '../src/worker.ts';
 import { commandText, fixtureCatalog, fixtureIndex, makeD1 } from './helpers.ts';
 
@@ -209,8 +209,18 @@ test('compare takes two to four known tools, marks "best" only on recorded numbe
     const row = best.slice(best.lastIndexOf('<th scope="row">'));
     assert.match(row, /^<th scope="row">(Install|Quality|Features|Last release)<\/th>/, 'best is marked only on plain recorded comparisons');
   }
+  // Each "best here" says in what, on hover, on focus and to screen readers (the page no longer explains it in a footnote).
+  const marks = [...table.matchAll(/<span class="best" tabindex="0" data-tip="([^"]+)">.*?best here<span class="sr">: ([^<]+)<\/span><\/span>/g)];
+  assert.ok(marks.length > 0);
+  for (const [, tip, sr] of marks) {
+    assert.match(tip, /^(Fewest install commands|Highest quality score|Most features checked|Newest release)$/);
+    assert.equal(sr, tip.toLowerCase());
+  }
 
   const s = site();
+  const two = await (await s.get('/compare?tools=fixture-llm-runner,fixture-chat-tui')).text();
+  assert.ok(two.includes('<table class="dt cmp-table">'));
+  assert.doesNotMatch(two, /marks only a plain comparison|nothing was asked of a model/);
   const one = await (await s.get('/compare?tools=fixture-llm-runner')).text();
   assert.match(one, /Add one more to compare with Fixture LLM Runner/);
   assert.ok(!one.includes('<table class="dt cmp-table">'));
@@ -248,23 +258,63 @@ test('a web app opens from an address bar that ends in the button, its facts two
 });
 
 
-test('a desktop or web app says what the visual check found: a defect and its -5%, none, or not checked', async () => {
+test('a desktop or web app shows what the visual check found as an eye: defects to open, none, or not checked', async () => {
   const base = fixtureIndex() as { entries: Entry[] };
   const render = (visual: Entry['visual']) => {
     const index = structuredClone(base);
     index.entries.find((e) => e.slug === 'fixture-web-sketch')!.visual = visual;
-    return visualLine(loadCatalog(index).bySlug.get('fixture-web-sketch')!);
+    return visualMark(loadCatalog(index).bySlug.get('fixture-web-sketch')!);
   };
-  const defect = render({ status: 'defect', factor: 0.95, defects: [{ kind: 'overlap', problem: 'A <b>button</b> covers the title.', quote: 'Sketch' }] });
-  assert.match(defect, /Visual check found a defect: −5%/);
-  assert.match(defect, /<li>A &lt;b&gt;button&lt;\/b&gt; covers the title\.<\/li>/);
-  assert.match(render({ status: 'clean', factor: 1, defects: [] }), /Visual check: no defect found\./);
+  // A defect: the caution eye with the count, named on hover and for screen readers, opening the list of what looks wrong.
+  const defect = render({ status: 'defect', factor: 0.95, checked_at: '2026-11-03', defects: [{ kind: 'overlap', problem: 'A <b>button</b> covers the title.', quote: 'Sketch' }] });
+  assert.match(defect, /<button type="button" class="check-mark mark-caution" popovertarget="pop-visual" data-tip="Visual check: 1 defect on pickfit’s screenshots\. Open to see what looks wrong"><svg class="i i-eye"/);
+  assert.match(defect, /<span class="check-count" aria-hidden="true">1<\/span><span class="sr">Visual check: 1 defect on pickfit’s screenshots\./);
+  assert.match(defect, /<div popover id="pop-visual" class="pop"[^>]*>.*<li>A &lt;b&gt;button&lt;\/b&gt; covers the title\.<\/li>.*Seen on pickfit’s screenshots, 3 Nov 2026\./);
+  // None found: the eye with a check for a pupil, in the pass tone.
+  const clean = render({ status: 'clean', factor: 1, defects: [] });
+  assert.match(clean, /class="check-mark mark-pass" tabindex="0" data-tip="Visual check: it looks right on screen, no defects on pickfit’s screenshots"><svg class="i i-eye-check"/);
+  assert.match(clean, /<span class="sr">Visual check: it looks right on screen/);
+  // Not checked reads as not checked (the grey, basted eye), never as passed.
   const none = render({ status: 'not_checked' });
-  assert.match(none, /Not visually checked/);
-  assert.doesNotMatch(none, /−5%|defect found/);
+  assert.match(none, /class="check-mark mark-open" tabindex="0" data-tip="Not visually checked yet"><svg class="i i-eye"/);
+  assert.match(none, /<span class="sr">Not visually checked yet<\/span>/);
+  // The quality score's rules stay on /how: no deduction, no "nothing is taken off".
+  for (const html of [defect, clean, none]) assert.doesNotMatch(html, /−5%|5%|taken off|扣分/);
   assert.equal(render(null), '');
-  // The tool page shows the line from the index: the fixture web app has no check.
+  // The tool page shows the mark from the index: the fixture web app has no check.
   const html = await (await site().get('/tool/fixture-web-sketch')).text();
-  assert.match(html, /class="small quiet visual-check">Not visually checked yet, so nothing is taken off\./);
-  assert.doesNotMatch(html, /no screenshots/);
+  assert.match(html, /<ul class="check-marks" aria-label="Checks"><li><span class="check-mark mark-open" tabindex="0" data-tip="Not visually checked yet">/);
+  assert.doesNotMatch(html, /no screenshots|nothing is taken off/);
+  const zh = await (await site().get('/tool/fixture-web-sketch?lang=zh-TW')).text();
+  assert.match(zh, /data-tip="尚未做視覺檢查"/);
+  assert.doesNotMatch(zh, /不扣分/);
+});
+
+test('the tool page words what pickfit saw for a reader: why a feature was not tested, and a web app run without the browser build or the model', async () => {
+  const index = structuredClone(fixtureIndex()) as any;
+  const runner = index.entries.find((e: Entry) => e.slug === 'fixture-llm-runner');
+  runner.install.linux.features.push(
+    // The checker's own lead-in goes; what the run saw stays.
+    { feature: 'chat in a terminal', status: 'not_checked', reason: 'not_shown', failure: null, note: 'its check passed, but the output does not show it: Output shows only a help screen.', checks: [] },
+    // A note about the checker itself gives way to the reason in plain words.
+    { feature: 'tag models', status: 'not_checked', reason: 'not_attempted', failure: null, note: 'budget exhausted before check', checks: [] },
+  );
+  runner.features = [...runner.features, 'chat in a terminal', 'tag models'];
+  const worker = makeWorker(index, { now: () => new Date('2026-11-03T12:00:00Z') });
+  const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
+  const get = async (path: string) =>
+    (await worker.fetch(new Request(`http://127.0.0.1:8787${path}`, { headers: { accept: 'text/html' } }), { DB: makeD1().db, MODEL_API_KEY: 'k' } as Env, ctx)).text();
+  const html = await get('/tool/fixture-llm-runner');
+  // Used but not shown working is labelled so (not "Not tested"), and its tooltip says what the run saw.
+  assert.match(html, /<span class="feat-state" tabindex="0" data-tip="Output shows only a help screen\.">.*?Not shown working<\/span>/);
+  assert.match(html, /data-tip="pickfit didn’t get to it">/);
+  assert.match(html, /data-tip="The registry was unreachable offline">/);
+  assert.doesNotMatch(html, /its check passed, but|budget exhausted/);
+
+  const web = await get('/tool/fixture-web-sketch');
+  const start = web.indexOf('<details class="block tested">');
+  const fold = web.slice(start, web.indexOf('</details>', start));
+  assert.match(fold, /When pickfit opened it in a browser on 2 Nov 2026, the page loaded to its main screen\. pickfit then used it, and this worked: /);
+  assert.doesNotMatch(fold, /Chromium|Muse Spark|visited once|sandboxed browser/);
+  assert.match(await get('/tool/fixture-web-sketch?lang=zh-TW'), /pickfit 於 2026年11月2日 在瀏覽器中打開它時，頁面已載入主畫面。/);
 });

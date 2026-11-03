@@ -6,18 +6,18 @@
  * here calls a model. The plain feature titles, steps and open hint come from the record's usage_guide,
  * which names the model that wrote them.
  */
-import { bestGuide, isVerified, isWebApp, OSES, securityOf, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo } from '../catalog.ts';
-import { featuresOut, type FeaturesOut } from '../features.ts';
+import { bestGuide, isVerified, isWebApp, OSES, securityOf, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo, type SecurityFinding } from '../catalog.ts';
+import { featuresOut, type FeaturesOut, type NotCheckedReason } from '../features.ts';
 import { L } from '../i18n.ts';
 import { installGuide, type InstallOutput } from '../install.ts';
 import { EMPTY_FORM, installSection, levelLine, stepText, webFactList } from '../page.ts';
-import { day, guiSentence, KIND, KIND_PLURAL, levelLabel, OS_NAME, PRICE, PROCESSING, passed, webLevelLabel } from '../ui/facts.ts';
+import { day, guideTitle, guiSentence, KIND, KIND_PLURAL, levelLabel, OS_NAME, PRICE, PROCESSING, passed, webLevelLabel, webRunWords } from '../ui/facts.ts';
 import { esc, link, listOf, safeUrl } from '../ui/html.ts';
 import { icon, osMark, type IconName } from '../ui/icons.ts';
-import { age, badge, compareToggle, coverage, fitz, kindTag, levelIcon, measure, osList, runFacts, tape, type FitzName, type MeasureRow } from '../ui/kit.ts';
+import { age, badge, compareToggle, coverage, fitz, kindTag, levelIcon, measure, osList, popover, runFacts, tape, type FitzName, type MeasureRow } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 import { posterOf, videoPath } from '../video.ts';
-import { NO_INSTALL_LABEL, noInstallLabel, webRanSentence } from '../webapp.ts';
+import { NO_INSTALL_LABEL, noInstallLabel } from '../webapp.ts';
 
 const MATURITY: Record<string, string> = {
   get stable() { return L('Stable', '穩定版'); },
@@ -112,9 +112,6 @@ function firstVideo(entry: Entry): RunVideo | null {
   return runs.find((r) => r.video)?.video ?? null;
 }
 
-/** usage_guide's plain title for a feature, if it has one. */
-const guideTitle = (entry: Entry, feature: string) => entry.usage_guide?.features.find((f) => f.feature === feature)?.title ?? null;
-
 /** The clip opened at a time (a media fragment), so a chapter link works without the page script too. */
 const atTime = (slug: string, video: RunVideo, s: number) => `${videoPath(slug, video.clip)}#t=${s}`;
 
@@ -127,25 +124,49 @@ export interface Chapter {
   title: string;
 }
 
-/** The clip's chapters for the page: a feature's plain title when there is one, fixed words for the two cards. */
-/** Desktop and web apps: the visual deduction that is in the quality score. An app not checked yet says so plainly:
- * nothing is taken off for that. */
-export function visualLine(entry: Entry): string {
-  const v = entry.visual;
-  if (!v) return '';
-  if (v.status === 'not_checked') {
-    return `<p class="small quiet visual-check">${L('Not visually checked yet, so nothing is taken off.', '尚未做視覺檢查，所以不扣分。')}</p>`;
-  }
-  if (v.status === 'clean') {
-    return `<p class="small visual-check">${L('Visual check: no defect found.', '視覺檢查：沒有發現缺陷。')}</p>`;
-  }
-  const items = (v.defects ?? []).map((d) => `<li>${esc(d.problem)}</li>`).join('');
-  return `<div class="small visual-check"><p>${L('Visual check found a defect: −5%', '視覺檢查發現缺陷：−5%')}</p>` +
-    (items ? `<ul>${items}</ul>` : '') + `</div>`;
+// ---------------------------------------------------------------- the checks, as marks
+
+type MarkTone = 'pass' | 'caution' | 'fail' | 'open';
+
+/**
+ * One check as a mark (DESIGN.md §8): its icon in the state's colour, the fact in words on hover, on focus and for screen
+ * readers. Not checked is the same icon basted (dashed) in grey, so it never reads as passed. `count` puts the number
+ * found beside the icon; `href` or `pop` makes the mark open what it counts.
+ */
+function checkMark(tone: MarkTone, name: IconName, say: string, opts: { count?: number; href?: string; pop?: string } = {}): string {
+  const cls = `check-mark mark-${tone}`;
+  const tip = ` data-tip="${esc(say)}"`;
+  const inner = `${icon(name)}${opts.count ? `<span class="check-count" aria-hidden="true">${opts.count}</span>` : ''}<span class="sr">${esc(say)}</span>`;
+  if (opts.href) return `<a class="${cls}" href="${esc(opts.href)}"${tip}>${inner}</a>`;
+  if (opts.pop) return `<button type="button" class="${cls}" popovertarget="${opts.pop}"${tip}>${inner}</button>`;
+  return `<span class="${cls}" tabindex="0"${tip}>${inner}</span>`;
 }
 
-/** How many known vulnerabilities the page lists; the line still gives the full count. */
-const SECURITY_SHOWN = 5;
+/** Desktop and web apps: what pickfit's visual check of its own screenshots found, as an eye. A defect's mark opens the
+ * list of what looks wrong; nothing for a tool with no window. */
+export function visualMark(entry: Entry): string {
+  const v = entry.visual;
+  if (!v) return '';
+  if (v.status === 'not_checked') return checkMark('open', 'eye', L('Not visually checked yet', '尚未做視覺檢查'));
+  if (v.status === 'clean') {
+    return checkMark('pass', 'eye-check', L('Visual check: it looks right on screen, no defects on pickfit’s screenshots', '視覺檢查：畫面正常，pickfit 的截圖上沒有發現缺陷'));
+  }
+  const defects = v.defects ?? [];
+  const n = defects.length;
+  if (!n) return checkMark('caution', 'eye', L('Visual check: a defect on pickfit’s screenshots', '視覺檢查：pickfit 的截圖上有缺陷'));
+  const date = v.checked_at ? day(v.checked_at) : '';
+  const body =
+    `<ul class="visual-defects">${defects.map((d) => `<li>${esc(d.problem)}</li>`).join('')}</ul>` +
+    `<p class="quiet">${L(`Seen on pickfit’s screenshots${date ? `, ${esc(date)}` : ''}.`, `來自 pickfit 的截圖${date ? `，${esc(date)}` : ''}。`)}</p>`;
+  return (
+    checkMark(
+      'caution',
+      'eye',
+      L(`Visual check: ${n} ${n === 1 ? 'defect' : 'defects'} on pickfit’s screenshots. Open to see what looks wrong`, `視覺檢查：pickfit 的截圖上有 ${n} 個缺陷，點開看哪裡不對`),
+      { count: n, pop: 'pop-visual' },
+    ) + popover('pop-visual', L('What looks wrong on screen', '畫面上哪裡不對'), body)
+  );
+}
 
 /** Why a tool was not checked for known vulnerabilities, as the end of a sentence. */
 const securityReason = (reason: string | undefined): string => {
@@ -163,58 +184,57 @@ const securityReason = (reason: string | undefined): string => {
   }
 };
 
-/** Every tool: known high or critical vulnerabilities (OSV.dev) in what a fresh install brings. One keeps it out of
- * hidden gems (quality capped at 79); a tool pickfit could not check keeps its score and says so plainly. */
-export function securityLine(entry: Entry): string {
+/** Every tool: known high or critical vulnerabilities (OSV.dev) in what a fresh install brings, as a shield. A vulnerable
+ * one carries the count and jumps to the warning before the install steps, where the list is; one pickfit could not
+ * check says so (a grey, dashed shield), never clean. */
+export function securityMark(entry: Entry): string {
   const s = securityOf(entry);
+  const date = s.checked_at ? day(s.checked_at) : '';
   if (s.status === 'clean') {
-    const date = s.checked_at ? day(s.checked_at) : '';
     const n = s.packages_checked ?? 0;
-    return `<p class="small security-check">${L(
-      `No known high or critical vulnerabilities (OSV.dev${date ? `, checked ${esc(date)}` : ''}, ${n} ${n === 1 ? 'package' : 'packages'}).`,
-      `沒有已知的高風險或嚴重漏洞（OSV.dev${date ? `，${esc(date)} 檢查` : ''}，共 ${n} 個套件）。`,
-    )}</p>`;
+    return checkMark(
+      'pass',
+      'shield-check',
+      L(
+        `No known high or critical vulnerabilities (OSV.dev${date ? `, checked ${date}` : ''}, ${n} ${n === 1 ? 'package' : 'packages'})`,
+        `沒有已知的高風險或嚴重漏洞（OSV.dev${date ? `，${date} 檢查` : ''}，共 ${n} 個套件）`,
+      ),
+    );
   }
   if (s.status === 'unchecked') {
     const why = securityReason(s.reason);
-    return `<p class="small quiet security-check">${
-      why
-        ? L(`Not checked for known vulnerabilities: ${why}. Its score is unchanged.`, `沒有檢查已知漏洞：${why}，分數不變。`)
-        : L('Not checked for known vulnerabilities yet. Its score is unchanged.', '尚未檢查已知漏洞，分數不變。')
-    }</p>`;
+    return checkMark(
+      'open',
+      'shield',
+      why ? L(`Not checked for known vulnerabilities: ${why}`, `沒有檢查已知漏洞：${why}`) : L('Not checked for known vulnerabilities yet', '尚未檢查已知漏洞'),
+    );
   }
-  const findings = s.findings ?? [];
-  const count = Math.max(s.count ?? 0, findings.length, 1);
-  const items = findings
-    .slice(0, SECURITY_SHOWN)
-    .map((f) => {
-      const advisory = link(`https://osv.dev/vulnerability/${encodeURIComponent(f.advisory)}`, esc(f.advisory));
-      const severity = f.malicious
-        ? L('malicious package', '惡意套件')
-        : f.severity === 'CRITICAL'
-          ? L('critical', '嚴重')
-          : L('high', '高風險');
-      const fix = f.malicious
-        ? ''
-        : f.fixed_in
-          ? L(`, fixed in ${esc(f.fixed_in)}`, `，${esc(f.fixed_in)} 已修正`)
-          : L(', no fix yet', '，尚無修正版本');
-      return `<li><code>${esc(f.package)} ${esc(f.version)}</code> — ${advisory}${L(` (${severity})`, `（${severity}）`)}${fix}</li>`;
-    })
-    .join('');
-  const more = count - Math.min(findings.length, SECURITY_SHOWN);
-  return `<div class="small security-check" id="security"><p>${badge('fail', L('Known vulnerabilities', '已知漏洞'), { icon: 'triangle-alert' })} ` +
+  const count = Math.max(s.count ?? 0, s.findings?.length ?? 0, 1);
+  return checkMark(
+    'fail',
+    'shield-alert',
     L(
-      `${count} known high or critical ${count === 1 ? 'vulnerability' : 'vulnerabilities'} in ${isWebApp(entry) ? 'the packages the site is built from' : 'packages it installs'}. That keeps it out of hidden gems: quality is capped at 79.`,
-      `${isWebApp(entry) ? '這個網站用到的' : '它安裝的'}套件有 ${count} 個已知的高風險或嚴重漏洞，所以不列為寶藏：品質最高 79 分。`,
-    ) +
-    `</p>${items ? `<ul>${items}</ul>` : ''}` +
-    (more > 0 ? `<p class="quiet">${L(`${more} more not listed here.`, `另有 ${more} 個未列出。`)}</p>` : '') +
-    `</div>`;
+      `${count} known high or critical ${count === 1 ? 'vulnerability' : 'vulnerabilities'} in ${isWebApp(entry) ? 'the packages the site is built from' : 'packages it installs'} (OSV.dev${date ? `, ${date}` : ''}). See the list`,
+      `${isWebApp(entry) ? '這個網站用到的' : '它安裝的'}套件有 ${count} 個已知的高風險或嚴重漏洞（OSV.dev${date ? `，${date}` : ''}）。看清單`,
+    ),
+    { count, href: '#security' },
+  );
 }
 
+/** At a glance's checks: the visual check (desktop and web apps) and known vulnerabilities, one mark each. */
+const checkMarks = (entry: Entry) =>
+  `<ul class="check-marks" aria-label="${L('Checks', '檢查')}">${[visualMark(entry), securityMark(entry)]
+    .filter(Boolean)
+    .map((m) => `<li>${m}</li>`)
+    .join('')}</ul>`;
+
+const severityOf = (f: SecurityFinding) => (f.malicious ? L('malicious package', '惡意套件') : f.severity === 'CRITICAL' ? L('critical', '嚴重') : L('high', '高風險'));
+const fixOf = (f: SecurityFinding) => (f.malicious ? '' : f.fixed_in ? L(`, fixed in ${esc(f.fixed_in)}`, `，${esc(f.fixed_in)} 已修正`) : L(', no fix yet', '，尚無修正版本'));
+const advisoryLink = (f: SecurityFinding) => link(`https://osv.dev/vulnerability/${encodeURIComponent(f.advisory)}`, esc(f.advisory));
+
 /** Before the first install step, or beside the site's address: a known vulnerability, so a person reading the page
- * weighs it before installing, as an agent is told to through the install guide's warning. Nothing for clean or unchecked. */
+ * weighs it before installing, as an agent is told to through the install guide's warning. The worst two packages, then
+ * the rest the check kept in a fold. Nothing for clean or unchecked. */
 export function securityNotice(entry: Entry): string {
   const s = securityOf(entry);
   if (s.status !== 'vulnerable') return '';
@@ -222,30 +242,35 @@ export function securityNotice(entry: Entry): string {
   const count = Math.max(s.count ?? 0, all.length, 1);
   const web = isWebApp(entry);
   // The worst of the first two packages (findings come worst first), so two advisories on one package do not hide a second.
-  const items = all
-    .filter((f, i) => all.findIndex((g) => g.package === f.package) === i)
-    .slice(0, 2)
-    .map((f) => {
-      const severity = f.malicious ? L('malicious package', '惡意套件') : f.severity === 'CRITICAL' ? L('critical', '嚴重') : L('high', '高風險');
-      const fix = f.malicious ? '' : f.fixed_in ? L(`, fixed in ${esc(f.fixed_in)}`, `，${esc(f.fixed_in)} 已修正`) : L(', no fix yet', '，尚無修正版本');
-      const advisory = link(`https://osv.dev/vulnerability/${encodeURIComponent(f.advisory)}`, esc(f.advisory));
-      return `<li><code>${esc(f.package)} ${esc(f.version)}</code>${f.summary ? ` ${esc(f.summary)}` : ''} ${L(`(${advisory}, ${severity}${fix})`, `（${advisory}，${severity}${fix}）`)}</li>`;
-    })
+  const worst = all.filter((f, i) => all.findIndex((g) => g.package === f.package) === i).slice(0, 2);
+  const items = worst
+    .map((f) => `<li><code>${esc(f.package)} ${esc(f.version)}</code>${f.summary ? ` ${esc(f.summary)}` : ''} ${L(`(${advisoryLink(f)}, ${severityOf(f)}${fixOf(f)})`, `（${advisoryLink(f)}，${severityOf(f)}${fixOf(f)}）`)}</li>`)
     .join('');
+  // The rest the check kept (at most 10 in all), and how many more it counted: the count above stays the full one.
+  const rest = count - all.length;
+  const more = (cls: string) => (rest > 0 ? `<p class="${cls}">${L(`${rest} more not listed here.`, `另有 ${rest} 個未列出。`)}</p>` : '');
+  // The fold holds the ones not named above, so no advisory is listed twice.
+  const others = all.filter((f) => !worst.includes(f));
+  const list = others.length
+    ? `<details class="vuln-list small"><summary>${L(`See ${others.length} more`, `再看 ${others.length} 個`)}</summary><ul>` +
+      others.map((f) => `<li><code>${esc(f.package)} ${esc(f.version)}</code> — ${advisoryLink(f)}${L(` (${severityOf(f)})`, `（${severityOf(f)}）`)}${fixOf(f)}</li>`).join('') +
+      `</ul>${more('quiet')}</details>`
+    : more('small quiet');
   const date = s.checked_at ? day(s.checked_at) : '';
   return (
-    `<div class="notice error security-notice" role="note">${fitz('sorry', 64)}<div>` +
+    `<div class="notice error security-notice" role="note" id="security">${fitz('sorry', 64)}<div>` +
     `<h3>${web ? L('Before you use it: known vulnerabilities', '使用前先知道：有已知漏洞') : L('Before you install: known vulnerabilities', '安裝前先知道：有已知漏洞')}</h3>` +
     `<p>${L(
       `pickfit found ${count} known high or critical ${count === 1 ? 'vulnerability' : 'vulnerabilities'} in ${web ? 'the packages this site is built with' : 'the packages a fresh install brings'}${date ? ` (OSV.dev, ${esc(date)})` : ''}. Weigh this before you ${web ? 'use it' : 'install it'}.`,
       `pickfit 在${web ? '這個網站用到的套件' : '安裝時會一併裝上的套件'}裡找到 ${count} 個已知的高風險或嚴重漏洞${date ? `（OSV.dev，${esc(date)}）` : ''}，${web ? '使用' : '安裝'}前請先考慮。`,
     )}</p>` +
     (items ? `<ul class="small">${items}</ul>` : '') +
-    (count > 2 ? `<p class="small"><a href="#security">${L(`See all ${count}`, `看全部 ${count} 個`)}</a></p>` : '') +
+    list +
     `</div></div>`
   );
 }
 
+/** The clip's chapters for the page: a feature's plain title when there is one, fixed words for the two cards. */
 export function chaptersOf(entry: Entry, video: RunVideo): Chapter[] {
   const list = [...(video.chapters ?? [])].filter((c) => c.start_s >= 0 && c.start_s < video.seconds).sort((a, b) => a.start_s - b.start_s);
   return list.map((c, i) => ({
@@ -399,8 +424,8 @@ function progress(entry: Entry): string {
       `<section class="block" aria-labelledby="progress-title">${progressTitle()}` +
       `<div class="empty"><div><p>` +
       L(
-        `<b>pickfit hasn’t verified ${esc(entry.name)} yet</b>, so it gives no install steps and never suggests it.`,
-        `<b>pickfit 還沒驗證過 ${esc(entry.name)}</b>，所以不提供安裝步驟，也不會推薦它。`,
+        `<b>pickfit hasn’t verified ${esc(entry.name)} yet</b>, so there are no tested install steps.`,
+        `<b>pickfit 還沒驗證過 ${esc(entry.name)}</b>，所以沒有測過的安裝步驟。`,
       ) +
       `</p><p class="quiet">${entry.verification.level === 'failed' ? L('A verification run did not pass. ', '有一次驗證測試沒通過。') : ''}${L('What follows comes from its README only.', '以下只依據它的 README。')}</p></div></div></section>`
     );
@@ -422,19 +447,58 @@ function progress(entry: Entry): string {
 
 // ---------------------------------------------------------------- what it does
 
-/** features.ts writes "<reason>: <the run's note>"; a person needs only the note when there is one. */
-const featureWhy = (detail: string) => {
-  const at = detail.indexOf(': ');
-  return (at > 0 ? detail.slice(at + 2) : detail).replace(/^not checked:?\s*/i, '');
+/** Why a feature was not tested, in a reader's words (features.ts words it for agents, with the sandbox's own terms). */
+const WHY_NOT: Record<NotCheckedReason, () => string> = {
+  needs_account: () => L('It needs an account or an API key', '需要帳號或 API 金鑰'),
+  needs_gpu: () => L('It needs a GPU', '需要 GPU'),
+  needs_display: () => L('It needs a display or a browser', '需要螢幕或瀏覽器'),
+  needs_hardware: () => L('It needs hardware such as a microphone, a camera or a device', '需要麥克風、相機或其他裝置'),
+  needs_service: () => L('It needs an outside service or server', '需要外部服務或伺服器'),
+  needs_more_resources: () => L('It needs more memory, disk or time than the test machine has', '需要的記憶體、磁碟或時間超過測試機器'),
+  needs_container: () => L('It needs Docker or another container engine', '需要 Docker 或其他容器引擎'),
+  needs_root: () => L('It needs root or a system service', '需要 root 權限或系統服務'),
+  needs_toolchain: () => L('It needs a build from source with a compiler', '需要用編譯器從原始碼建置'),
+  other_os: () => L('It runs only on another system', '只能在其他系統上執行'),
+  not_attempted: () => L('pickfit didn’t get to it', 'pickfit 沒有測到這一項'),
+  not_shown: () => L('What pickfit saw didn’t show it working', 'pickfit 看到的結果沒有顯示它可用'),
+  operator_limit: () => L('pickfit couldn’t get through the app to it', 'pickfit 沒能在應用程式裡操作到這一步'),
+  check_not_met: () => L('pickfit used it but didn’t see the result', 'pickfit 操作過，但沒有看到結果'),
+  app_error: () => L('The app crashed or showed an error', '應用程式當掉或顯示錯誤'),
+  needs_desktop: () => L('It needs a desktop part the test machine lacks', '需要測試機器沒有的桌面元件'),
+  test_failed_in_sandbox: () => L('Its test failed because of the test machine’s limits, not the tool', '測試沒通過，原因是測試機器的限制，不是工具本身'),
+  test_failed: () => L('Its test failed with the tool’s own error; you may hit it too (not confirmed on a real machine)', '測試沒通過，是工具本身的錯誤，你也可能遇到（尚未在實體機器上確認）'),
+  not_recorded: () => L('Not checked one by one', '沒有逐項檢查'),
+  other: () => L('Not checked', '未檢查'),
 };
 
-/** Why the features come from the profile alone: a run from before feature checks, or no run at all. */
+/** A run note that only describes pickfit's own checker (its budget, its boxes, its record), in English or as translated. */
+const CHECKER_NOTE = /install-only run|budget|agent's box|too long for the record|僅安裝|僅執行安裝|預算|額度已用盡|agent 的(?:沙盒|環境)|過長/i;
+
+/** features.ts writes "<reason>: <the run's note>". The note says what the run saw, so it is kept when there is one,
+ * without the checker's own lead-in; otherwise, or when the note is only about the checker, the reason in plain words. */
+const featureWhy = (n: { reason: NotCheckedReason; detail: string }) => {
+  const at = n.detail.indexOf(': ');
+  const note = (at > 0 ? n.detail.slice(at + 2) : '')
+    .replace(/^its check passed, but the output does not show it:\s*/i, '')
+    .replace(/^檢查通過，但輸出未顯示[：:]\s*/, '')
+    .trim();
+  if (!note || CHECKER_NOTE.test(note)) return WHY_NOT[n.reason]();
+  // "Output shows only an error, not …" says what was seen; the mark's label (Not shown working) says why it does not count.
+  return note.charAt(0).toUpperCase() + note.slice(1);
+};
+
+/** The mark beside a feature pickfit did not see work: failed, used but not shown working, or not tested. */
+const featureState = (reason: NotCheckedReason) =>
+  reason === 'test_failed'
+    ? L('Test failed', '測試未通過')
+    : reason === 'not_shown' || reason === 'check_not_met'
+      ? L('Not shown working', '沒有看到它可用')
+      : L('Not tested', '未測試');
+
+/** Why the features come from the profile alone: a run that did not check them one by one, or no run at all. */
 const notRecorded = (entry: Entry, ran: boolean) =>
   ran
-    ? L(
-        'This run came before pickfit checked features one by one, so these come from the README only.',
-        '這次測試早於 pickfit 開始逐項檢查功能，所以以下只依據 README。',
-      )
+    ? L('These come from the README; pickfit didn’t check them one by one.', '以下依據 README；pickfit 沒有逐項檢查。')
     : L(
         `pickfit hasn’t run it yet, so these come from ${isWebApp(entry) ? 'its own site' : 'the README'} only.`,
         `pickfit 還沒測過它，所以以下只依據${isWebApp(entry) ? '它自己的網站' : ' README'}。`,
@@ -473,10 +537,10 @@ function featureList(entry: Entry, f: FeaturesOut): string {
     // The feature is the row; whether pickfit tested it is the mark on the right, and why not is only its tooltip.
     ...f.not_checked.map((n) => {
       const failed = n.reason === 'test_failed';
-      const why = esc(featureWhy(n.detail));
+      const why = esc(featureWhy(n));
       return (
         `<li class="${failed ? 'feat-fail' : 'feat-open'}"><div><span class="feat-title">${title(n.feature)}</span></div>` +
-        `<span class="feat-state" tabindex="0" data-tip="${why}">${icon(failed ? 'x' : 'circle-dashed')}${failed ? L('Test failed', '測試未通過') : L('Not tested', '未測試')}</span></li>`
+        `<span class="feat-state" tabindex="0" data-tip="${why}">${icon(failed ? 'x' : 'circle-dashed')}${featureState(n.reason)}</span></li>`
       );
     }),
   ];
@@ -523,8 +587,10 @@ function install(catalog: Catalog, entry: Entry): string {
   if (isWebApp(entry) && entry.web) return webRun(entry);
   const oses = OSES.filter((os) => entry.install[os]);
   if (!oses.length) {
+    // A vulnerable tool keeps its warning (the target of the head badge and the shield) even with nothing else to say here.
     const needs = prerequisites(entry);
-    return needs ? `<section class="block" aria-labelledby="install-title">${installTitle('Use it', '使用')}${securityNotice(entry)}${needs}</section>` : '';
+    const notice = securityNotice(entry);
+    return needs || notice ? `<section class="block" aria-labelledby="install-title">${installTitle('Use it', '使用')}${notice}${needs}</section>` : '';
   }
   const hint = entry.usage_guide?.open_hint ?? null;
   // What you need first sits in each system's install step, where it can differ by system.
@@ -565,8 +631,8 @@ function webRun(entry: Entry): string {
       `<section class="block" aria-labelledby="install-title">${installTitle('Open it', '開啟')}${securityNotice(entry)}` +
       `<div class="empty"><div><p>` +
       L(
-        `<b>pickfit hasn’t checked ${esc(entry.name)} in its browser yet</b>, so it never suggests it.`,
-        `<b>pickfit 還沒在瀏覽器中檢查過 ${esc(entry.name)}</b>，所以不會推薦它。`,
+        `<b>pickfit hasn’t checked ${esc(entry.name)} in its browser yet</b>.`,
+        `<b>pickfit 還沒在瀏覽器中檢查過 ${esc(entry.name)}</b>。`,
       ) +
       `</p><p class="quiet">${L('The profile above comes from its own site only.', '上方簡介只依據它自己的網站。')}</p></div></div></section>`
     );
@@ -585,20 +651,16 @@ function webRun(entry: Entry): string {
 
 // ---------------------------------------------------------------- how pickfit tested it
 
-function rawList(slug: string, video: RunVideo): string {
+/** The unedited recordings the clip was cut from, each named by the feature it shows, to download. */
+function rawList(entry: Entry, video: RunVideo): string {
   const raw = video.raw
-    .map((r) => {
+    .map((r, i) => {
       const shows = r.feature_index != null ? video.features[r.feature_index] : null;
-      return (
-        `<li><a href="${esc(videoPath(slug, r.file))}" download>${esc(r.file)}</a> <span class="quiet">${L(`(${Math.round(r.seconds)} s)`, `（${Math.round(r.seconds)} 秒）`)}${shows ? ` ${esc(shows)}` : ''}</span>` +
-        `<br><span class="quiet small">sha256</span> <code class="hash" translate="no">${esc(r.sha256)}</code></li>`
-      );
+      const name = shows ? (guideTitle(entry, shows) ?? shows.charAt(0).toUpperCase() + shows.slice(1)) : L(`Recording ${i + 1}`, `錄影 ${i + 1}`);
+      return `<li><a href="${esc(videoPath(entry.slug, r.file))}" download>${esc(name)}</a> <span class="quiet">${L(`(${Math.round(r.seconds)} s)`, `（${Math.round(r.seconds)} 秒）`)}</span></li>`;
     })
     .join('');
-  return (
-    `<p class="small">${L('Clip', '影片')} <code class="hash" translate="no">${esc(video.clip)}</code>, sha256 <code class="hash" translate="no">${esc(video.clip_sha256)}</code>. ` +
-    `${L('It was cut from these unedited recordings:', '剪輯自以下原始錄影：')}</p><ul class="small raw-list">${raw}</ul>`
-  );
+  return raw ? `<p class="small">${L('The clip was cut from these unedited recordings:', '影片剪輯自以下原始錄影：')}</p><ul class="small raw-list">${raw}</ul>` : '';
 }
 
 /** Everything a skeptic wants and a user doesn't: where each run ran, who looked, the raw recordings, the sandbox-only differences. */
@@ -608,7 +670,7 @@ function tested(catalog: Catalog, entry: Entry): string {
   if (isWebApp(entry)) {
     const check = webCheck(entry);
     if (!check) return '';
-    parts.push(levelLine(webLevelLabel(check), true) + `<p>${esc(webRanSentence(check))}</p>` + recordLink(safeUrl(check.evidence_url)));
+    parts.push(levelLine(webLevelLabel(check), true) + `<p>${esc(webRunWords(entry, check))}</p>` + recordLink(safeUrl(check.evidence_url)));
   }
   for (const os of OSES.filter((o) => entry.install[o])) {
     const g = entry.install[os]!;
@@ -627,9 +689,9 @@ function tested(catalog: Catalog, entry: Entry): string {
       `<div class="tested-run"><h3>${osMark(os)}${esc(OS_NAME[os])}${r.arch ? ` <span class="arch">${esc(r.arch)}</span>` : ''}</h3>` +
         levelLine(levelLabel(r.level, evidence), passed(r.gui), levelIcon(r.level, evidence)) +
         runFacts(r, { offline: r.gui ? null : g.works_offline, named: true }) +
-        (r.gui ? `<p>${esc(guiSentence(r.gui))}</p>` : '') +
+        (r.gui ? `<p>${esc(guiSentence(r.gui, { entry, features: featuresOut(entry, g) }))}</p>` : '') +
         mcpLine +
-        (r.video ? rawList(entry.slug, r.video) : '') +
+        (r.video ? rawList(entry, r.video) : '') +
         (box.length
           ? `<h4>${L('Differences the test machine hit', '測試機器遇到的差異')}</h4><ul class="issues">${box
               .map((i) => `<li><span class="quiet">README:</span> ${esc(i.readme_said)}<br><span class="quiet">${L('In the test:', '測試中：')}</span> ${esc(i.actually_needed)}</li>`)
@@ -642,10 +704,7 @@ function tested(catalog: Catalog, entry: Entry): string {
   if (!parts.length) return '';
   return (
     `<details class="block tested"><summary><h2>${L('How pickfit tested it', 'pickfit 怎麼測的')}</h2>${icon('chevron-down')}</summary>` +
-    `<p class="quiet">${L(
-      'Each run starts from a clean machine, follows the steps above, and checks the result itself.',
-      '每次測試都從乾淨的機器開始，照上面的步驟執行，並自行檢查結果。',
-    )} <a href="/how">${L('How pickfit verifies', 'pickfit 怎麼驗證')}</a></p>` +
+    `<p class="quiet">${L('Each run starts from a clean machine and follows the steps above.', '每次測試都從乾淨的機器開始，照上面的步驟執行。')} <a href="/how">${L('How pickfit verifies', 'pickfit 怎麼驗證')}</a></p>` +
     `${parts.join('')}</details>`
   );
 }
@@ -719,7 +778,8 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
     tape(L('Quality', '品質'), entry.scores?.quality ?? null, { pop: 'pop-quality' }) +
     tape(L('Popularity', '知名度'), entry.scores?.popularity ?? null, { pop: 'pop-popularity', tone: 'quiet' }) +
     coverage(features, { pop: 'pop-features' }) +
-    `</div>${visualLine(entry)}${securityLine(entry)}<p class="small quiet">${L('Scored apart; ranked by neither.', '兩項分開計分，排序不看分數。')} <a href="/how#scores">${L('How scores work', '評分方式')}</a></p></div>` +
+    checkMarks(entry) +
+    `</div><p class="small quiet"><a href="/how#scores">${L('How scores work', '評分方式')}</a></p></div>` +
     (sources ? `<details class="panel sources"><summary>${L('Sources', '來源')}</summary><ul class="small">${sources}</ul><p class="small quiet">${L('Every field in the profile cites one of these.', '簡介裡的每個欄位都引用下列其中一個來源。')}</p></details>` : '') +
     `</aside></div>`;
   return renderShell({

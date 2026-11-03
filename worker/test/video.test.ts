@@ -139,7 +139,7 @@ test('without the VIDEOS binding, or with the file not uploaded yet, /video/ is 
   assert.equal((await site(undefined)('/tool/fixture-json-query', { headers: { accept: 'text/html' } })).status, 200);
 });
 
-test('the tool page plays the clip first with its poster, and links the raw recordings with their sha256', async () => {
+test('the tool page plays the clip first with its poster, and links the raw recordings to download', async () => {
   const res = await site(undefined)(`/tool/${SLUG}`, { headers: { accept: 'text/html' } });
   const html = await res.text();
   assert.match(res.headers.get('content-security-policy') ?? '', /media-src 'self'/);
@@ -147,8 +147,10 @@ test('the tool page plays the clip first with its poster, and links the raw reco
   assert.match(html, new RegExp(`<source src="/video/${SLUG}/${CLIP}" type="video/mp4">`));
   assert.match(html, /Fixture Chat TUI running, recorded by pickfit on 2 Nov 2026 · 20 s/);
   assert.ok(html.indexOf('<figure class="showcase">') < html.indexOf('id="progress-title"'), 'the clip comes before everything else');
-  assert.match(html, new RegExp(`href="/video/${SLUG}/${RAW}" download>${RAW}</a>`));
-  assert.ok(html.includes('b'.repeat(64)));
+  // Each unedited recording is a download named for what it shows (here no feature: its number), with its length.
+  assert.match(html, new RegExp(`<li><a href="/video/${SLUG}/${RAW}" download>Recording 1</a> <span class="quiet">\\(33 s\\)</span></li>`));
+  // The hashes are the run record's, not the page's.
+  assert.ok(!html.includes('b'.repeat(64)) && !html.includes('a'.repeat(64)));
   // Other tools have no video element.
   const other = await (await site(undefined)('/tool/fixture-json-query', { headers: { accept: 'text/html' } })).text();
   assert.ok(!other.includes('<video'));

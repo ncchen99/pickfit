@@ -183,6 +183,8 @@ export function runFacts(run: RunFacts, opts: { offline?: boolean | null; mine?:
 export function marksLegend(): string {
   const row = (dt: string, dd: string) => `<div><dt>${dt}</dt><dd>${dd}</dd></div>`;
   const lvl = (level: string, evidence = {}) => `<span class="level-i">${icon(levelIcon(level, evidence))}</span>`;
+  const chk = (tone: 'pass' | 'caution' | 'fail' | 'open', name: IconName, count = 0) =>
+    `<span class="mark-${tone}">${icon(name)}${count ? `<span class="check-count">${count}</span>` : ''}</span>`;
   return (
     row(
       `<span class="mark-sample">${osList(['macos', 'linux', 'windows'], { tone: 'pass' })}</span>${L('Where it ran', '在哪裡測過')}`,
@@ -196,6 +198,23 @@ export function marksLegend(): string {
       L(
         'Installs and starts, its main function works, its service answers, it produces model output. A window means a desktop app opened; a plug, an MCP client used it. The mark sits beside the run’s result, under “Why it fits and how we know” and in “How pickfit tested it”.',
         '能安裝並啟動、主要功能可用、服務有回應、能產生模型輸出。視窗代表桌面應用程式已開啟；插頭代表 MCP 用戶端用過它。標記在測試結果旁邊：展開「為什麼適合、我們怎麼知道」，或在「pickfit 怎麼測的」裡。',
+      ),
+    ) +
+    // The two checks on a tool page's At a glance (tool.ts checkMark): an eye and a shield, in the state's colour, and
+    // the same icon basted (dashed) in grey when not checked. Here so a touch screen, which shows a mark's words only
+    // after a tap, can read them all at once.
+    row(
+      `<span class="mark-sample checks" aria-hidden="true">${chk('pass', 'eye-check')}${chk('caution', 'eye', 2)}${chk('open', 'eye')}</span>${L('Visual check', '視覺檢查')}`,
+      L(
+        'pickfit looked at screenshots of the app. Green: it looks right. Amber with a number: things that look wrong; open it to see them. Grey and dashed: not checked yet.',
+        'pickfit 看過應用程式的截圖。綠色：畫面正常。黃色加數字：有看起來不對的地方，點開就能看到。灰色虛線：還沒檢查。',
+      ),
+    ) +
+    row(
+      `<span class="mark-sample checks" aria-hidden="true">${chk('pass', 'shield-check')}${chk('fail', 'shield-alert', 7)}${chk('open', 'shield')}</span>${L('Known vulnerabilities', '已知漏洞')}`,
+      L(
+        'Known high or critical vulnerabilities (OSV.dev) in what it installs. Green: none known. Red with a number: how many; open it for the list, and read it before you install. Grey and dashed: not checked, which does not mean safe.',
+        '它安裝的套件有沒有已知的高風險或嚴重漏洞（OSV.dev）。綠色：沒有已知漏洞。紅色加數字：有幾個，點開看清單，安裝前先看過。灰色虛線：沒有檢查，不代表安全。',
       ),
     ) +
     // Everything else about a run (replayed, offline, the kind of tool) is said in words, so only these two marks remain.

@@ -14,12 +14,12 @@ import { fitNote } from './fit.ts';
 import { isZh, L, withLang } from './i18n.ts';
 import { PIPE_TO_SHELL, type InstallOutput, type VerifiedInPickfit } from './install.ts';
 import { compareTable } from './pages/compare.ts';
-import { day, guiSentence, howRan, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system, webLevelLabel } from './ui/facts.ts';
+import { day, guiSentence, howRan, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system, webLevelLabel, webRunWords } from './ui/facts.ts';
 import { esc, link, listOf } from './ui/html.ts';
 import { icon, osMark, type IconName } from './ui/icons.ts';
 import { badge, command, compareToggle, coverage, fitz, kindTag, levelIcon, measure, notice, osList, runFacts, says, SEAM, sysTag, tape, type FitzName, type MeasureRow } from './ui/kit.ts';
 import { renderShell } from './ui/shell.ts';
-import { NO_INSTALL_LABEL, noInstallLabel, webFacts, webRanSentence } from './webapp.ts';
+import { NO_INSTALL_LABEL, noInstallLabel, webFacts } from './webapp.ts';
 
 export { esc, safeUrl } from './ui/html.ts';
 export { guiSentence, LEVEL_LABEL, levelLabel, osName } from './ui/facts.ts';
@@ -326,7 +326,7 @@ function installStages(all: { name: string; html: string; cls?: string }[]): str
 }
 
 /** The run record: the evidence half of a pick, under the seam. Each fact once, as a mark; only a mismatch with the reader's OS is said in words. */
-function record(pick: PickOut, guide: InstallOutput | undefined, form: FormValues): string {
+function record(pick: PickOut, guide: InstallOutput | undefined, form: FormValues, entry: Entry | undefined): string {
   const v = pick.verification;
   const mine = yourSystem(v, form);
   const mcp = guide?.mcp_client_config ?? null;
@@ -348,9 +348,8 @@ function record(pick: PickOut, guide: InstallOutput | undefined, form: FormValue
     levelLine(levelLabel(v.level, { gui: v.gui, mcp }), passed(v.gui), levelIcon(v.level, { gui: v.gui, mcp })) +
     (v.os ? runFacts(v, { offline, mine: v.verified_on_user_os, askedOffline: form.offline && !v.gui }) : `<p>${esc(ranSentence(v))}</p>`) +
     (mcpLine ? `<p>${esc(mcpLine)}</p>` : '') +
-    (v.gui ? `<p>${esc(guiSentence(v.gui))}</p>` : '') +
+    (v.gui ? `<p>${esc(guiSentence(v.gui, { entry, features: pick.features }))}</p>` : '') +
     (mine.state === 'no' ? `<p class="mine mine-no">${esc(mine.text)}</p>` : mine.state === 'unknown' ? `<p class="small quiet">${esc(mine.text)}</p>` : '') +
-    `<details class="how"><summary>${L('How we know', '我們怎麼知道的')}</summary><p>${esc(pick.how_we_know)}</p></details>` +
     `</section>`
   );
 }
@@ -489,17 +488,16 @@ export function webFactList(entry: Entry, cls = ''): string {
 }
 
 /** The run record of a web app: what pickfit's browser saw, under the seam. */
-function webRecord(pick: PickOut, entry: Entry | undefined): string {
+function webRecord(entry: Entry | undefined): string {
   const check = entry ? webCheck(entry) : null;
   if (!check || !entry) return '';
   return (
     `<section class="record" aria-label="${L('Test record', '測試紀錄')}">` +
     `<p class="record-title">${icon('badge-check')}${L('Test record', '測試紀錄')}</p>` +
     levelLine(webLevelLabel(check), true) +
-    `<p>${esc(webRanSentence(check))}</p>` +
+    `<p>${esc(webRunWords(entry, check))}</p>` +
     webFactList(entry) +
     `<p class="mine mine-yes">${esc(L('Nothing to install: it opens in a browser on any OS.', '免安裝：任何系統的瀏覽器都能打開。'))}</p>` +
-    `<details class="how"><summary>${L('How we know', '我們怎麼知道的')}</summary><p>${esc(pick.how_we_know)}</p></details>` +
     `</section>`
   );
 }
@@ -516,6 +514,28 @@ function webSheet(pick: PickOut, entry: Entry | undefined, first: boolean): stri
   if (first) rows.push({ label: L('Setup steps', '安裝步驟'), value: L('Nothing to install', '免安裝') });
   rows.push(priceRow(pick));
   return measure(rows, { cls: 't-sheet' });
+}
+
+/**
+ * A vulnerable pick says so before its commands (or its address), as the tool page's warning does before its steps: the
+ * red shield with the count, the source and day, and a link to the list on the tool page. Clean and unchecked add
+ * nothing here, so a ticket never reads as checked clean when it was not; the tool page's shield says which it is.
+ */
+function vulnLine(pick: PickOut): string {
+  const s = pick.security;
+  if (s?.status !== 'vulnerable') return '';
+  const n = Math.max(s.count, s.findings.length, 1);
+  const date = s.checked_at ? day(s.checked_at) : '';
+  const web = !!pick.web_app;
+  const what = L(
+    `${n} known ${n === 1 ? 'vulnerability' : 'vulnerabilities'} in ${web ? 'the packages the site is built from' : 'packages it installs'}`,
+    `${web ? '這個網站用到的' : '它安裝的'}套件有 ${n} 個已知漏洞`,
+  );
+  const source = L(`high or critical; OSV.dev${date ? `, ${esc(date)}` : ''}`, `高風險或嚴重；OSV.dev${date ? `，${esc(date)}` : ''}`);
+  return (
+    `<p class="t-vuln" role="note">${icon('shield-alert')}<span><b>${esc(what)}</b>${L(` (${source}). `, `（${source}）。`)}` +
+    `<a href="/tool/${esc(pick.slug)}#security">${L('See the list', '看清單')}</a></span></p>`
+  );
 }
 
 /** The one action on a web app's ticket: open it. */
@@ -579,6 +599,7 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
     (web ? webSheet(pick, entry, index === 0) : verdictSheet(pick, guide, form, index === 0)) +
     instead +
     SEAM +
+    vulnLine(pick) +
     (web ? webOpen(pick) : quickInstall(guide, form, index)) +
     `<details class="t-more"><summary>${icon('chevron-down')}${L('Why it fits and how we know', '為什麼適合、我們怎麼知道')}</summary><div class="t-more-body">` +
     `<div class="t-body"><div class="t-claim">` +
@@ -596,7 +617,7 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
     tape(L('Popularity', '知名度'), pick.scores.popularity, { pop: 'pop-popularity', tone: 'quiet', note: gemNote }) +
     coverage(pick.features, { pop: 'pop-features' }) +
     `</div></div>` +
-    (web ? webRecord(pick, entry) : record(pick, guide, form)) +
+    (web ? webRecord(entry) : record(pick, guide, form, entry)) +
     // Open for the first pick only when the steps above it are not all of them; otherwise it would repeat them.
     (guide && !web ? installSection(guide, form, index === 0 && guide.steps.length > STEPS_SHOWN) : '') +
     (links.length ? `<p class="t-links">${links.join('')}</p>` : '') +
@@ -606,69 +627,37 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
   );
 }
 
-const BY_RULES = () =>
+/** What a search without the model matched on, said once in the status line; how the rules rank is on /how. */
+const WORDS_ONLY = () =>
   L(
-    'these results are ranked by rules (the words in your request, then no-install web apps among close fits, then verification on your OS, then the hidden-gem score) without Muse Spark',
-    '這次改用規則排序、沒有用 Muse Spark（依序看需求裡的字詞、相近結果中免安裝的網頁應用、是否在你的作業系統上驗證過、寶藏分數）',
+    'These are matched on the words in your request only, so the fit may be rougher.',
+    '這次只比對需求裡的字詞，結果可能比較粗略。',
   );
 const BUDGET: Record<BudgetStop | 'other', { title: string; text: string }> = {
   get web_daily() {
-    return {
-      title: L('Model matching paused until 00:00 UTC', '模型比對暫停至 UTC 00:00'),
-      text: L(
-        `Today’s Meta spend, by this page and by agents together, has reached the share this page may use, so ${BY_RULES()}.`,
-        `今天本頁和 agent 合計的 Meta 花費已用完本頁的額度，因此${BY_RULES()}。`,
-      ),
-    };
+    return { title: L('Model matching paused until 00:00 UTC', '模型比對暫停至 UTC 00:00'), text: WORDS_ONLY() };
   },
   get total() {
-    return {
-      title: L('Model matching is paused', '模型比對已暫停'),
-      text: L(
-        `pickfit’s overall budget for Meta model calls is used up, so ${BY_RULES()}.`,
-        `pickfit 呼叫 Meta 模型的總預算已用完，因此${BY_RULES()}。`,
-      ),
-    };
+    return { title: L('Model matching is paused', '模型比對已暫停'), text: WORDS_ONLY() };
   },
   get unavailable() {
     return {
       title: L('Ranked without the model this time', '這次沒用模型排序'),
-      text: L(
-        `pickfit couldn’t check its model budget, so it didn’t call Muse Spark: ${BY_RULES()}. Search again in a minute.`,
-        `pickfit 無法確認模型預算，所以${BY_RULES()}。請過一分鐘再搜尋一次。`,
-      ),
+      text: `${WORDS_ONLY()}${L(' Search again in a minute.', '請過一分鐘再搜尋一次。')}`,
     };
   },
   get other() {
-    return {
-      title: L('Model matching is paused for now', '模型比對暫時停止'),
-      text: L(
-        `pickfit’s budget for Meta model calls is used up for now, so ${BY_RULES()}.`,
-        `pickfit 呼叫 Meta 模型的預算目前已用完，因此${BY_RULES()}。`,
-      ),
-    };
+    return { title: L('Model matching is paused for now', '模型比對暫時停止'), text: WORDS_ONLY() };
   },
 };
 
 // Every entry is a getter so its text follows the render's language (no_api_key and model_timeout included).
 const DEGRADED: Record<string, { title: string; text: string }> = {
   get budget_unavailable() {
-    return {
-      title: L('Ranked without the model this time', '這次沒用模型排序'),
-      text: L(
-        'pickfit couldn’t check its model budget, so it didn’t call Muse Spark and ranked these by rules. Search again in a minute.',
-        'pickfit 無法確認模型預算，這次沒呼叫 Muse Spark，改用規則排序。請過一分鐘再搜尋一次。',
-      ),
-    };
+    return BUDGET.unavailable;
   },
   get model_off() {
-    return {
-      title: L('Model matching is off on this server', '這台伺服器未啟用模型比對'),
-      text: L(
-        'These results are ranked by rules: the words in your request, then no-install web apps among close fits, then verification on your OS, then the hidden-gem score.',
-        '這些結果依規則排序，依序看需求裡的字詞、相近結果中免安裝的網頁應用、是否在你的作業系統上驗證過、寶藏分數。',
-      ),
-    };
+    return { title: L('Model matching is off on this server', '這台伺服器未啟用模型比對'), text: WORDS_ONLY() };
   },
   get no_api_key() {
     return DEGRADED.model_off;
@@ -677,8 +666,8 @@ const DEGRADED: Record<string, { title: string; text: string }> = {
     return {
       title: L('Ranked without the model this time', '這次沒用模型排序'),
       text: L(
-        'Muse Spark didn’t answer in time, so these results are ranked by rules. Search again to retry.',
-        'Muse Spark 沒有及時回應，這次改用規則排序。再搜尋一次就會重試。',
+        'Muse Spark didn’t answer in time, so these are matched on the words in your request only. Search again to retry.',
+        'Muse Spark 沒有及時回應，這次只比對需求裡的字詞。再搜尋一次就會重試。',
       ),
     };
   },
@@ -686,38 +675,42 @@ const DEGRADED: Record<string, { title: string; text: string }> = {
 const MODEL_FAILED = () => ({
   title: L('Ranked without the model this time', '這次沒用模型排序'),
   text: L(
-    'Muse Spark didn’t return a usable answer, so these results are ranked by rules. Search again to retry.',
-    'Muse Spark 的回答無法使用，這次改用規則排序。再搜尋一次就會重試。',
+    'Muse Spark didn’t return a usable answer, so these are matched on the words in your request only. Search again to retry.',
+    'Muse Spark 的回答無法使用，這次只比對需求裡的字詞。再搜尋一次就會重試。',
   ),
 });
 
-/** The results heading says what came back, in words. */
+/** The results heading says what came back, in words; without the model, how close the fits are. */
 function resultsTitle(out: FindOutput): string {
   const n = out.picks.length;
   if (n === 0) return L('Nothing fits yet', '目前沒有合適的工具');
   const tools = `${n} ${n === 1 ? 'tool' : 'tools'}`;
   if (out.matched_by === 'rules') {
-    if (out.match_quality === 'none') return L('No clear fit, ranked by rules', '沒有明顯合適的，依規則排序');
-    if (out.match_quality === 'partial') return L('Partial fits, ranked by rules', '部分符合，依規則排序');
-    return L(`${tools} ranked by rules`, `${n} 款工具，依規則排序`);
+    if (out.match_quality === 'none') return L('No clear fit', '沒有明顯合適的');
+    if (out.match_quality === 'partial') return L('Partial fits', '部分符合');
+    return L(`${tools} that may fit`, `${n} 款可能合適的工具`);
   }
   return L(`${tools} ${n === 1 ? 'fits' : 'fit'} your need`, `${n} 款工具符合你的需求`);
 }
 
-function matchLine(out: FindOutput): string {
-  const n = out.picks.length;
-  const meet = L(
-    `${out.considered} verified ${out.considered === 1 ? 'tool meets' : 'tools meet'} your conditions`,
-    `${out.considered} 款已驗證工具符合你的條件`,
-  );
-  if (out.matched_by === 'rules') return L(`${meet}; these are ranked by rules, without a model.`, `${meet}；以下依規則排序，沒有用模型。`);
-  // When more than the card limit meet them, coverage_note says how many the model compared.
-  return (
-    L(
-      `${meet}; Meta’s ${esc(out.matched_by)} ${n === 0 ? 'found none that fits' : `picked ${n === 1 ? 'one' : n}`}.`,
-      `${meet}；Meta 的 ${esc(out.matched_by)} ${n === 0 ? '沒有找到合適的' : `挑出了 ${n} 款`}。`,
-    ) + (n ? L(' Code checked every reason against the tool’s profile.', '每個理由都已由程式對照簡介查核。') : '')
-  );
+/**
+ * find_software's coverage_note for agents also says how the shortlist was drawn (how many met the conditions, which
+ * were compared): pickfit's own process, so the page leaves those sentences out and keeps the ones about the fit.
+ */
+const SHORTLIST_NOTE = [
+  /\s*\d+ tools met the conditions; the \d+ compared were the \d+ whose profiles best match the request's words and the \d+ other tools with the highest treasure scores\./g,
+  /\s*\d+ tools met the conditions; no profile matched the request's words, so the \d+ with the highest treasure scores were compared\./g,
+];
+/** A sentence about the shortlist in any wording, so a change to find.ts's words cannot bring it back on the page. */
+const SHORTLIST_WORDS = /\bmet the conditions\b|\btreasure scores?\b/i;
+function readerNote(note: string | null): string | null {
+  if (!note) return null;
+  const said = SHORTLIST_NOTE.reduce((rest, re) => rest.replace(re, ''), note)
+    .split(/(?<=\.)\s+/)
+    .filter((sentence) => !SHORTLIST_WORDS.test(sentence))
+    .join(' ')
+    .trim();
+  return said || null;
 }
 
 /**
@@ -747,10 +740,6 @@ const NOTE_ZH: [RegExp, (m: RegExpMatchArray) => string][] = (() => {
       (m) => `pickfit 沒有明顯能完成這件事的已驗證${what(m[1])}。從簡介看，列出的是最接近的，但${miss(m[2]) ?? '\u0000'}；${each}${known}`],
     [/^No listed (tool|alternative) covers the whole request(?:: the closest, (.+?), does not mention (.+?))?\. Each pick's match says what it covers\./,
       (m) => `沒有一款${what(m[1])}涵蓋你的全部需求${m[2] ? `：最接近的 ${m[2]} 沒有提到 ${words(m[3])}` : ''}。${each}`],
-    [/^(\d+) tools met the conditions; the (\d+) compared were the (\d+) whose profiles best match the request's words and the (\d+) other tools with the highest treasure scores\./,
-      (m) => `有 ${m[1]} 款工具符合條件；比較的 ${m[2]} 款是簡介最符合需求字詞的 ${m[3]} 款，加上寶藏分數最高的另外 ${m[4]} 款。`],
-    [/^(\d+) tools met the conditions; no profile matched the request's words, so the (\d+) with the highest treasure scores were compared\./,
-      (m) => `有 ${m[1]} 款工具符合條件；沒有簡介符合需求字詞，所以比較的是寶藏分數最高的 ${m[2]} 款。`],
   ];
 })();
 
@@ -814,6 +803,26 @@ function insteadLines(picks: PickOut[], catalog: Catalog, form: FormValues): str
   return lines.join('');
 }
 
+/**
+ * What pickfit has not checked about a tool it only names, in the page's language. find_software's how_we_know for it
+ * (written for agents) opens with which model named it; the page keeps only the unchecked facts at its end, and says
+ * nothing more when they do not read as expected (the line above already says it is not installed or tested).
+ */
+function outsideUnchecked(howWeKnow: string): string {
+  const m = /has not checked (.+)\.$/.exec(howWeKnow);
+  if (!m) return '';
+  const said: string[] = [];
+  for (const item of m[1].split(/, | or /)) {
+    const on = /^that it runs on (macos|linux|windows)$/.exec(item);
+    if (item === 'its price') said.push(L('its price', '它的價格'));
+    else if (on) said.push(L(`that it runs on ${osName(on[1] as OS)}`, `能否在 ${osName(on[1] as OS)} 上執行`));
+    else if (item === 'that it works offline') said.push(L('that it works offline', '能否離線使用'));
+    else return '';
+  }
+  const list = isZh() ? said.join('、') : said.length > 1 ? `${said.slice(0, -1).join(', ')} or ${said[said.length - 1]}` : said[0];
+  return `<p class="quiet small">${esc(L(`pickfit also hasn’t checked ${list}.`, `pickfit 也沒有確認${list}。`))}</p>`;
+}
+
 /** The results area for one search. `catalog` names a best free option that is not among the picks. */
 export function renderResults(
   result: SearchResult,
@@ -824,11 +833,12 @@ export function renderResults(
   const { out } = result;
   const parts: string[] = [];
   const said: string[] = [`<h2 class="results-title">${esc(resultsTitle(out))}</h2>`];
-  if (out.considered > 0) said.push(`<p class="match-line">${matchLine(out)}</p>`);
+  // The heading says what came back; the note under it only when nothing did.
+  const readerSaid = readerNote(out.coverage_note);
   if (out.picks.length === 0) {
     said.push(
       `<p class="match-line">${esc(
-        (out.coverage_note ? coverageNote(out.coverage_note) : null) ??
+        (readerSaid ? coverageNote(readerSaid) : null) ??
           L(
             'pickfit covers developer CLI tools, local AI tools, MCP servers and some web apps today.',
             'pickfit 目前涵蓋開發者 CLI 工具、本機 AI 工具、MCP 伺服器和部分網頁應用。',
@@ -837,7 +847,7 @@ export function renderResults(
     );
   }
   // A partial or missing fit is said before the picks, not after them.
-  const fitFirst = out.picks.length > 0 && (out.match_quality === 'partial' || out.match_quality === 'none') && out.coverage_note;
+  const fitFirst = out.picks.length > 0 && (out.match_quality === 'partial' || out.match_quality === 'none') && readerSaid;
   const slugs = out.picks.map((p) => p.slug);
   const cmpHref = `/compare?tools=${slugs.map(encodeURIComponent).join(',')}${form.os ? `&amp;os=${form.os}` : ''}${form.arch ? `&amp;arch=${form.arch}` : ''}`;
   const tools = out.picks.length
@@ -852,9 +862,9 @@ export function renderResults(
     status.push(`<li class="st st-busy" role="status">${icon('clock')}<span><strong>${esc(d.title)}${L('.', '。')}</strong> ${esc(d.text)}</span></li>`);
   }
   if (fitFirst) {
-    const note = coverageNote(out.coverage_note!);
+    const note = coverageNote(readerSaid!);
     // The first sentence is the summary; Chinese ends it with 。 and needs no space after it.
-    const zh = note !== out.coverage_note;
+    const zh = note !== readerSaid;
     const cut = zh ? note.indexOf('。') : note.indexOf('. ');
     const gap = zh ? 1 : 2;
     status.push(
@@ -876,7 +886,7 @@ export function renderResults(
     parts.push(
       // No Fitz of its own: the one over the results says it (one Fitz per screen).
       `<div class="aside ask-note"><h3>${L('You may not need to install anything', '也許不用另外安裝')}</h3><p>${esc(out.no_install_option)}</p>` +
-        `<p class="quiet small">${L('From Muse Spark’s general knowledge; pickfit hasn’t checked it.', '這是 Muse Spark 的一般知識，pickfit 沒有驗證過。')}</p></div>`,
+        `<p class="quiet small">${L('pickfit hasn’t checked it.', 'pickfit 沒有驗證過。')}</p></div>`,
     );
   }
   if (out.picks.length) {
@@ -887,7 +897,7 @@ export function renderResults(
     parts.push(
       `<div class="picks">${out.picks.map((pick, i) => (i === 1 ? also : '') + pickHtml(pick, i, result, form, catalog, i === 0 ? instead : '')).join('')}</div>`,
     );
-    if (out.coverage_note && !fitFirst) parts.push(`<p class="quiet small">${esc(coverageNote(out.coverage_note))}</p>`);
+    if (readerSaid && !fitFirst) parts.push(`<p class="quiet small">${esc(coverageNote(readerSaid))}</p>`);
     const entries = slugs.map((s) => catalog.bySlug.get(s)).filter((e): e is Entry => !!e);
     if (entries.length > 1) {
       parts.push(
@@ -903,7 +913,7 @@ export function renderResults(
     parts.push(
       `<div class="aside best-free"><p><span class="lead-in">${L('Best free option:', '最佳免費選擇：')}</span> ` +
         `<a href="/tool/${esc(free.slug)}">${esc(free.name)}</a>. ${esc(out.best_free.reason)}</p>` +
-        (freeWeb ? `<p class="quiet">${esc(webRanSentence(freeWeb))}</p>` : '') +
+        (freeWeb ? `<p class="quiet">${esc(webRunWords(free, freeWeb))}</p>` : '') +
         `<p class="mine mine-yes">${esc(L(`${NO_INSTALL_LABEL}: it opens in a browser.`, '免安裝，用瀏覽器打開就能用。'))}</p></div>`,
     );
   } else if (free && out.best_free) {
@@ -936,7 +946,7 @@ export function renderResults(
         'pickfit has not installed or tested it. There is no run record and no install guide.',
         'pickfit 沒有安裝或測試過它，所以沒有測試紀錄和安裝指南。',
       )}</p>` +
-      `<p>${esc(wk.why)}</p><p class="quiet small">${esc(wk.how_we_know)}</p></aside>`
+      `<p>${esc(wk.why)}</p>${outsideUnchecked(wk.how_we_know)}</aside>`
     : '';
   if (outside && out.picks.length === 0) {
     // Nothing fits: Fitz's note on the left, the unverified option beside it.
@@ -1018,7 +1028,7 @@ function stagesSection(): string {
     {
       name: L('Match', '比對'),
       who: 'searching',
-      text: L('Your sentence meets every verified profile. Each reason is checked.', '你的需求逐一比對已驗證的簡介，理由都會查核。'),
+      text: L('Your sentence is matched against every tool pickfit has tested.', '你的需求會和 pickfit 測過的每款工具逐一比對。'),
     },
     { name: L('Get the steps', '交給你'), who: 'recommending', text: L('You get the commands that worked.', '交給你真的能用的指令。') },
   ];
@@ -1063,10 +1073,7 @@ function freshSection(showcase: Showcase): string {
   return (
     `<section id="recent" class="sec wrap home-only" aria-labelledby="recent-title">` +
     `<div class="sec-head"><div><h2 id="recent-title">${L('Recently tested', '最近試過的工具')}</h2>` +
-    `<p>${L(
-      `Of ${stats.listed} tools, ${stats.replayed} have been installed and rerun${stats.web ? `, and ${stats.web} web ${stats.web === 1 ? 'app has' : 'apps have'} been used in a browser` : ''}. pickfit only suggests these.`,
-      `收錄的 ${stats.listed} 款工具裡，${stats.replayed} 款已經實際裝過、重跑過${stats.web ? `，另外 ${stats.web} 款網頁應用也在瀏覽器裡用過` : ''}。只有這些會被推薦。`,
-    )}</p></div>` +
+    `<p>${L('pickfit only suggests tools it has installed and tested itself. These are the newest runs.', 'pickfit 只推薦親自裝過、測過的工具。這些是最新的測試。')}</p></div>` +
     `<a class="more" href="/browse">${L(`Browse all ${stats.verified}`, `瀏覽全部 ${stats.verified} 款`)}${icon('arrow-right')}</a></div>` +
     `<div class="fresh"><ul class="runs-list">${rows}</ul>${fixNote}</div></section>`
   );
@@ -1150,13 +1157,6 @@ export function renderPage(input: PageInput): string {
     says(
       'searching',
       `<h2>${L(`Checking ${stats.verified} verified tools for you…`, `正在從 ${stats.verified} 款驗證過的工具裡幫你挑…`)}</h2>` +
-        `<ol><li>${L(
-          'Keep the tools that meet your OS, price, offline and privacy conditions',
-          '篩出符合你的系統、價格、離線與隱私條件的工具',
-        )}</li><li>${L(
-          'Muse Spark reads every remaining profile and picks the best fits',
-          'Muse Spark 閱讀剩下的每份簡介，挑出最合適的',
-        )}</li><li>${L('Code checks each reason against the profile', '程式對照簡介檢查每個理由')}</li></ol>` +
         `<p class="quiet small">${L('Usually 5 to 15 seconds.', '通常需要 5 到 15 秒。')}</p><div class="unroll" aria-hidden="true"></div>`,
       { size: 104 },
     ) +

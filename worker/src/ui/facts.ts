@@ -4,6 +4,7 @@
  */
 import type { Arch, Entry, GuiEvidence, InstallGuide, OS, WebCheck } from '../catalog.ts';
 import { operatedText } from '../evidence.ts';
+import { featuresOut, type FeaturesOut } from '../features.ts';
 import { L, isZh } from '../i18n.ts';
 
 export const OS_NAME: Record<OS, string> = { macos: 'macOS', linux: 'Linux', windows: 'Windows' };
@@ -63,18 +64,60 @@ export const webLevelLabel = (check: WebCheck) => (check.level === 'function' ? 
 /** The check mark is for runs that passed; a GUI app that showed an error or a blank window gets none. */
 export const passed = (gui?: GuiEvidence | null) => !gui || gui.screen === 'main_ui' || gui.screen === 'first_run';
 
-/** The GUI launch in words: where it ran, who looked, and whether a feature was operated and checked. */
-export function guiSentence(gui: GuiEvidence): string {
-  const operated = operatedText(gui);
+/** usage_guide's plain title for a feature, if it has one. */
+export const guideTitle = (entry: Entry | null | undefined, feature: string) => entry?.usage_guide?.features.find((f) => f.feature === feature)?.title ?? null;
+
+/**
+ * The features a run's operations showed working, each once, by the plain title its feature row uses. With the run's
+ * feature list, only the ones it counts as checked: an operation can pass while what it showed was judged not to show
+ * the feature, and the page then lists that feature as not shown working, so the run sentence must not say it worked.
+ */
+export function workedFeatures(
+  ops: { feature: string | null; passed: boolean }[],
+  entry?: Entry | null,
+  features?: FeaturesOut | null,
+): { used: boolean; names: string[] } {
+  const passed = ops.filter((o) => o.passed);
+  const counted = features?.recorded ? new Set(features.checked.map((c) => c.feature)) : null;
+  const names = passed
+    .filter((o) => !counted || (o.feature !== null && counted.has(o.feature)))
+    .map((o) => (o.feature ? (guideTitle(entry, o.feature) ?? o.feature) : L('a task', '一項任務')));
+  return { used: passed.length > 0, names: [...new Set(names)] };
+}
+
+/** "pickfit then used it, and this worked: …", or what it did when nothing it used counts as working. */
+const usedWords = (w: { used: boolean; names: string[] }, none: string) =>
+  w.names.length
+    ? L(`pickfit then used it, and this worked: ${w.names.join('; ')}.`, `pickfit 接著實際操作，這些功能可用：${w.names.join('；')}。`)
+    : w.used
+      ? L('pickfit then used it, but what it saw didn’t show a feature working.', 'pickfit 接著實際操作，但看到的結果沒有顯示功能可用。')
+      : none;
+
+/**
+ * The GUI launch in words, for a reader: what it showed when pickfit opened it, and which features worked when pickfit
+ * used it. How it was seen (the virtual display, the screen judge, the operator) is in how_we_know and on /how. With
+ * the entry and the run's features, the features are named as their rows name them, and only the checked ones.
+ */
+export function guiSentence(gui: GuiEvidence, ctx: { entry?: Entry | null; features?: FeaturesOut | null } = {}): string {
+  // operatedText() decides whether any operation counts (an action_checked run with one that passed).
+  const worked = operatedText(gui) ? workedFeatures(gui.operations ?? [], ctx.entry, ctx.features) : { used: false, names: [] };
   return (
-    L(
-      `pickfit launched it on a virtual display (${gui.display}), and a separate model reading a screenshot of its window judged that ${SCREEN_SEEN[gui.screen]}. `,
-      `pickfit 在虛擬顯示器（${gui.display}）上啟動它，再由另一個模型看視窗截圖判斷：${SCREEN_SEEN[gui.screen]}。`,
-    ) +
-    (operated
-      ? L(`${operated[0].toUpperCase()}${operated.slice(1)}.`, `${operated[0].toUpperCase()}${operated.slice(1)}。`)
-      : L('That shows it installs and starts; pickfit did not use any of its features.', '這證明它能安裝並啟動；pickfit 沒有操作它的任何功能。')) +
+    L(`When pickfit opened it, ${SCREEN_SEEN[gui.screen]}. `, `pickfit 打開它時，${SCREEN_SEEN[gui.screen]}。`) +
+    usedWords(worked, L('That shows it installs and starts; pickfit did not use any of its features.', '這證明它能安裝並啟動；pickfit 沒有操作它的任何功能。')) +
     `${gui.launch_offline ? L(' The launch passed again with the network off.', '斷網後再次啟動也通過。') : ''}`
+  );
+}
+
+/**
+ * A web app's browser run in a reader's words: when it opened, and which features worked when pickfit used them (only
+ * the ones its feature list counts as checked), each once. webRanSentence (webapp.ts) words the same run for agents, with
+ * the browser build, the model and the replay rule.
+ */
+export function webRunWords(entry: Entry, check: WebCheck): string {
+  const worked = check.level === 'function' ? workedFeatures(check.operations, entry, featuresOut(entry, null)) : { used: false, names: [] };
+  return (
+    L(`When pickfit opened it in a browser on ${day(check.checked_at)}, the page loaded to its main screen. `, `pickfit 於 ${day(check.checked_at)} 在瀏覽器中打開它時，頁面已載入主畫面。`) +
+    usedWords(worked, L('pickfit did not use any of its features.', 'pickfit 沒有使用它的任何功能。'))
   );
 }
 

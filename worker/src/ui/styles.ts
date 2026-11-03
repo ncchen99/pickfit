@@ -329,6 +329,12 @@ font:600 .85rem/1.6 var(--sans);text-decoration:underline;text-decoration-color:
 .security-notice ul{margin:8px 0 0;padding-left:1.2em}
 .security-notice li+li{margin-top:4px}
 .security-notice p.small{margin-top:8px}
+/* Every finding the check kept, folded under the worst two; the count above stays the full one. */
+.vuln-list{margin-top:10px}
+.vuln-list>summary{font-weight:600;color:var(--ink-2)}
+.vuln-list>summary:hover{color:var(--ink)}
+.vuln-list ul{margin:8px 0 6px}
+.vuln-list p{margin:0}
 .badge-link{text-decoration:none}
 .notice .fitz{flex:none}
 
@@ -358,6 +364,9 @@ font:600 .85rem/1.6 var(--sans);text-decoration:underline;text-decoration-color:
 .mark-sample{display:inline-flex;align-items:center;gap:6px;color:var(--ink-2)}
 .mark-sample.rf .i{width:18px;height:18px}
 .mark-sample .oses .os{width:18px;height:18px}
+.mark-sample.checks{gap:12px}
+.mark-sample.checks>span{display:inline-flex;align-items:center;gap:3px;font:700 .9rem/1 var(--sans);font-variant-numeric:tabular-nums}
+.mark-sample.checks .i{width:20px;height:20px}
 
 /* compare tray and toasts */
 .tray{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:10px 0;background:var(--raised);color:var(--ink);border-top:1px solid var(--rule);box-shadow:0 -12px 30px -18px rgb(0 0 0/.35);animation:tray-in .35s var(--ease-out)}
@@ -574,6 +583,10 @@ clip-path:inset(0 100% 0 0);transition:clip-path .45s var(--ease-out)}
 /* The README fix: a plain paragraph under the command, its words verbatim. */
 .t-fix{margin:12px 0 0;font-size:var(--t-small);color:var(--ink-2);max-width:68ch}
 .t-fix b{color:var(--ink)}
+/* A vulnerable pick, before its commands: the red shield and the count, then where it comes from and the list's link. */
+.t-vuln{display:flex;align-items:flex-start;gap:8px;margin:0 0 12px;font-size:var(--t-small);line-height:1.45;color:var(--ink-2)}
+.t-vuln .i{flex:none;width:22px;height:22px;margin-top:-1px;color:var(--fail)}
+.t-vuln b{color:var(--fail)}
 .t-install .cmd pre{font-size:.95rem;padding:3px 0 3px calc(16px + 2ch)}
 /* In Fitz's answer the command takes the row, so its Copy stands at the answer's right edge, under the sheet's values. */
 .picks .pick:first-child .t-install .cmd pre{flex:1 1 auto}
@@ -876,7 +889,26 @@ body.is-results .home-only{display:none}
 .panel-measure .meter-read{font:600 1.05rem/1 var(--sans)}
 .panel-measure .meter .meter-wide,.panel-measure .meter-none .meter-read{font:500 var(--t-small)/1.3 var(--sans);color:var(--ink-2)}
 .panel-measure .tape-mark,.cmp-table .tape-mark{stroke-width:2}
-.panel .visual-check{margin:12px 0 8px}
+/* The checks under the readings, one mark each (tool.ts checkMark): the visual check an eye, known vulnerabilities a
+   shield, in the state's colour; not checked is the same icon basted (dashed) in grey. The fact is the tooltip, shown
+   on hover and on focus, and the screen reader's name. A mark that found something carries the count and opens it. */
+.check-marks{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;list-style:none;margin:2px 0 0;padding:0}
+.check-mark{display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:0 2px;margin:0;border:0;border-radius:var(--r-ctl);background:none;color:inherit;
+font:700 1.05rem/1 var(--sans);font-variant-numeric:tabular-nums;text-decoration:none;cursor:help}
+.check-mark .i{width:26px;height:26px}
+a.check-mark,button.check-mark{cursor:pointer}
+a.check-mark:hover .check-count,button.check-mark:hover .check-count{text-decoration:underline;text-decoration-thickness:2px;text-decoration-color:var(--stitch);text-underline-offset:4px}
+.mark-pass{color:var(--pass)}.mark-caution{color:var(--caution)}.mark-fail{color:var(--fail)}
+.mark-open{color:var(--ink-3)}
+.mark-open .i>*{stroke-dasharray:2.25 2.75}
+.check-mark:focus-visible{outline:3px solid var(--stitch);outline-offset:2px}
+.check-mark[data-tip]{position:relative}
+/* On focus too (a tap focuses it on a touch screen, which has no hover), as a feature's mark does. */
+.check-mark[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 6px);z-index:3;padding:6px 9px;border-radius:var(--r-ctl);background:var(--ink);color:var(--paper);font:600 .78rem/1.3 var(--sans);width:max-content;max-width:240px;white-space:normal;pointer-events:none}
+.check-mark[data-tip]:hover::after{max-width:240px}
+.check-marks li:has(:popover-open)>.check-mark::after{display:none}
+.visual-defects{margin:0 0 8px;padding-left:1.1em}
+.visual-defects li+li{margin-top:6px}
 .sources{padding:4px 2px;background:none;box-shadow:none}
 .sources>summary{font:600 .95rem/1.4 var(--sans);color:var(--ink-2);cursor:pointer}
 .sources>summary:hover{color:var(--ink)}
@@ -1027,7 +1059,6 @@ body.has-tray .showcase video{max-height:max(280px,calc(100svh - 356px - var(--t
 .tested-run{padding:16px 0;border-top:1px solid var(--rule)}
 .tested-run h3{display:flex;align-items:center;gap:8px;margin:0 0 8px}
 .raw-list{list-style:none;padding:0;display:grid;gap:6px}
-.raw-list .hash,.tested .hash{overflow-wrap:anywhere;word-break:break-all;font-size:.8rem}
 .run-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:center}
 .run-head h3{display:flex;align-items:center;gap:10px;font-size:1.25rem}
 .run-head .arch{font:500 .9rem/1 var(--sans);color:var(--ink-2)}
@@ -1053,6 +1084,11 @@ body.has-tray .showcase video{max-height:max(280px,calc(100svh - 356px - var(--t
 .cmp-table tbody th{font:500 .88rem/1.3 var(--sans);color:var(--ink-2)}
 .cmp-table .grp th{background:none;padding:22px 16px 8px;font:600 .8rem/1.2 var(--sans);letter-spacing:0;color:var(--ink-2)}
 .best{font:600 .78rem/1 var(--sans)}
+/* What it is best at is its tooltip: a dotted underline says there is one, and focus (a tap) shows it as hover does. */
+.best[data-tip]{text-decoration:underline dotted;text-decoration-color:var(--line-ctl);text-underline-offset:4px;cursor:help}
+.best:focus-visible{outline:3px solid var(--stitch);outline-offset:2px;border-radius:2px}
+.best[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 6px);z-index:3;padding:6px 9px;border-radius:var(--r-ctl);background:var(--ink);color:var(--paper);font:600 .78rem/1.3 var(--sans);width:max-content;max-width:220px;white-space:normal;pointer-events:none;text-decoration:none}
+@media (hover:none){.best[data-tip]{cursor:default}}
 .cmp-table .meter{min-width:170px}
 .cmp-table .meter .tape{height:8px}
 .cmp-table .meter-read{font:600 1.05rem/1 var(--sans)}

@@ -6,13 +6,14 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { loadCatalog, type Catalog, type Entry, type WebCheck } from '../src/catalog.ts';
+import { loadCatalog, webCheck, type Catalog, type Entry, type WebCheck } from '../src/catalog.ts';
 import { CARD_FIELDS, toCard, WEB_FIELDS } from '../src/cards.ts';
 import { hardFilter, type Conditions } from '../src/filter.ts';
 import { findSoftware } from '../src/find.ts';
 import { contradiction } from '../src/guard.ts';
 import { installGuide } from '../src/install.ts';
-import { renderResults, EMPTY_FORM } from '../src/page.ts';
+import { esc, renderResults, EMPTY_FORM } from '../src/page.ts';
+import { webRunWords } from '../src/ui/facts.ts';
 import { MATCH_INSTRUCTIONS } from '../src/prompt.ts';
 import { leansInstall, rankByRules, WEB_BAND } from '../src/rules.ts';
 import { normalizeWebUrl, submitSoftware } from '../src/submit.ts';
@@ -181,6 +182,12 @@ test('page: a web app ticket opens the URL, says no install, and shows what the 
   assert.match(ticket, /Works offline once loaded \(checked\)/);
   assert.ok(!ticket.includes('Source code'), 'no repository, no source link');
   assert.ok(!ticket.includes('Install steps that worked'));
+  // The run in the reader's words, as the tool page says it (same day, same features): not the agents' sentence with
+  // the browser build, the model and the replay rule.
+  const entry = catalog.bySlug.get(SLUG)!;
+  assert.ok(ticket.includes(esc(webRunWords(entry, webCheck(entry)!))));
+  assert.match(ticket, /When pickfit opened it in a browser on \d{1,2} \w{3} \d{4}, the page loaded to its main screen\./);
+  assert.doesNotMatch(ticket, /Chromium|headless|Muse Spark|visited once|no replay/);
 });
 
 test('page: the tool page of a web app, browse and compare', async () => {
@@ -232,7 +239,8 @@ test('page: a web app no browser run passed on says so, and its features come fr
   const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
   const res = await worker.fetch(new Request(`http://127.0.0.1:8787/tool/${SLUG}`, { headers: { accept: 'text/html' } }), { DB: makeD1().db, MODEL_API_KEY: 'k' } as Env, ctx);
   const html = await res.text();
-  assert.match(html, /pickfit hasn’t checked Fixture Web Sketch in its browser yet<\/b>, so it never suggests it/);
+  assert.match(html, /pickfit hasn’t checked Fixture Web Sketch in its browser yet<\/b>\./);
+  assert.doesNotMatch(html, /never suggests it/); // pickfit's own policy is the How page's, not this page's
   assert.match(html, /Not verified yet/);
   assert.match(html, /pickfit hasn’t run it yet, so these come from its own site only\./);
   assert.ok(!html.includes('Checked in a browser'));

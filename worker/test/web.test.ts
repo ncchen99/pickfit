@@ -9,6 +9,7 @@ import type { Env } from '../src/env.ts';
 import type { FindOutput, PickOut } from '../src/find.ts';
 import { runDay } from '../src/evidence.ts';
 import { catalogStats, EMPTY_FORM, esc, guiSentence, levelLabel, ranSentence, renderResults, safeUrl, yourSystem, type FormValues } from '../src/page.ts';
+import { withLang } from '../src/i18n.ts';
 import { BODY_MAX_BYTES, MAX_IN_FLIGHT, SEARCHES_PER_MINUTE, visitorKey } from '../src/web.ts';
 import { command } from '../src/ui/kit.ts';
 import { makeWorker } from '../src/worker.ts';
@@ -118,7 +119,10 @@ test('a search is find_software plus get_install_guide: reasons, verification, s
   assert.equal(s.metaCalls.length, 1);
   assert.equal(s.metaCalls[0].model, 'muse-spark-1.3');
   assert.match(JSON.stringify(s.metaCalls[0].input), /run a language model offline on my laptop/);
-  assert.match(html, /\d+ verified tools meet your conditions; Meta’s muse-spark-1\.3 picked 2\. Code checked every reason/);
+  // The heading says what came back; how many met the conditions, which model picked and how reasons were checked
+  // are pickfit's own process (on /how and in the MCP answer's how_we_know), not lines on the page.
+  assert.doesNotMatch(html, /verified tools meet your conditions|Code checked every reason|class="match-line"|muse-spark-1\.3 picked/);
+  assert.doesNotMatch(html, /<details class="how">|scored separately \(formula|passed pickfit's hard filters/);
 
   // Ranked picks with the fit, cited reasons, tradeoffs, best_free and the comparison.
   // Commands read as their text (commandText: the word spans add none).
@@ -176,7 +180,10 @@ test('well_known_option is set apart, labelled not verified, and never looks lik
   assert.ok(outside, 'the well-known option is rendered');
   assert.match(outside, /^ aria-label="Not verified by pickfit"><h3>Also consider Ollama, not verified by pickfit<\/h3>/);
   assert.ok(outside.includes(esc(why)));
-  assert.match(outside, /pickfit has not installed it, has no install guide for it/);
+  // Still read as unchecked, in the page's own words; which model named it stays in the MCP answer.
+  assert.match(outside, /<p class="unchecked">pickfit has not installed or tested it\. There is no run record and no install guide\.<\/p>/);
+  assert.match(outside, /pickfit also hasn’t checked its price, that it runs on macOS or that it works offline\./);
+  assert.doesNotMatch(outside, /Named by|general knowledge/);
   // No rank, badges, test record, install steps or links: nothing a verified pick has.
   for (const mark of ['class="pick"', 'data-ui', 'badge', 'class="record"', 'class="install"', '<a ']) {
     assert.ok(!outside.includes(mark), `well-known option has ${mark}`);
@@ -198,7 +205,8 @@ test('a model failure says the results are ranked by rules', async () => {
   // Said once, in the status list under Fitz, before any pick.
   assert.match(html, /<li class="st st-busy" role="status"><svg[^>]*>.*?<\/svg><span><strong>Ranked without the model this time\.<\/strong>/);
   assert.ok(html.indexOf('st-busy') < html.indexOf('<article class="pick"'));
-  assert.match(html, /\d+ verified tools meet your conditions; these are ranked by rules, without a model\./);
+  assert.match(html, /these are matched on the words in your request only\./);
+  assert.doesNotMatch(html, /verified tools meet your conditions|ranked by rules/);
   assert.ok(html.includes('<article class="pick"'));
 });
 
@@ -304,7 +312,7 @@ test('without the script, the form posts and gets the whole page back', async ()
   assert.ok(html.includes('offline &lt;for &quot;me&quot;&gt;</textarea>'));
   assert.ok(html.includes('<input type="radio" name="os" value="macos" checked aria-label="macOS">'));
   assert.match(html, /<body class="is-results" data-served="1">/);
-  assert.match(html, /<section id="results"[^>]*><div class="res-head"><div class="says"><img [^>]*><div class="bubble"><h2 class="results-title">2 tools fit your need<\/h2><p class="match-line">/);
+  assert.match(html, /<section id="results"[^>]*><div class="res-head"><div class="says"><img [^>]*><div class="bubble"><h2 class="results-title">2 tools fit your need<\/h2><\/div><\/div>/);
   const nonce = /script-src 'nonce-([0-9a-f]+)'/.exec(res.headers.get('content-security-policy')!)![1];
   assert.ok(html.includes(`<script nonce="${nonce}">`));
 });
@@ -328,7 +336,7 @@ test('before any search the page shows real catalog runs, never invented ones', 
   // Each row says when it ran (a ledger's day column) and where (the system's mark).
   assert.equal(runs.split('<time class="when" datetime="').length - 1, 3);
   assert.equal(runs.split('<span class="sys"').length - 1, 3);
-  assert.match(html, /Of 7 tools, 6 have been installed and rerun, and 1 web app has been used in a browser\. pickfit only suggests these\./);
+  assert.match(html, /pickfit only suggests tools it has installed and tested itself\./);
   // The counts in the hero are the catalog's.
   assert.match(html, /<strong>7<\/strong> READMEs read/);
   assert.equal(s.metaCalls.length, 0);
@@ -437,7 +445,7 @@ test('the total cap stops the page too, and the notice does not promise a reset'
   s.sqlite.prepare('INSERT INTO meta_budget (day, calls, cost_usd) VALUES (?, 1, 39.99)').run('2026-10-20');
   const html = await (await s.search(MAC_LLM)).text();
   assert.equal(s.metaCalls.length, 0);
-  assert.match(html, /<strong>Model matching is paused\.<\/strong> pickfit’s overall budget for Meta model calls is used up/);
+  assert.match(html, /<strong>Model matching is paused\.<\/strong> These are matched on the words in your request only/);
   assert.ok(!html.includes('00:00 UTC'));
 });
 
@@ -598,7 +606,7 @@ test('render: a best free option outside the picks, a no-install option and a ca
   const html = renderResults({ out, guides: {} }, EMPTY_FORM, fixtureCatalog(), { cached: true });
   assert.match(html, /Best free option:<\/span> <a href="\/tool\/fixture-json-query">Fixture JSON Query<\/a>\. Free and local\./);
   assert.match(html, /<div class="aside best-free">[\s\S]*?<ul class="run-facts">/);
-  assert.match(html, /You may not need to install anything<\/h3><p>python3 -m json\.tool is enough\.<\/p><p class="quiet small">From Muse Spark’s general knowledge; pickfit hasn’t checked it\./);
+  assert.match(html, /You may not need to install anything<\/h3><p>python3 -m json\.tool is enough\.<\/p><p class="quiet small">pickfit hasn’t checked it\./);
   assert.match(html, /Shown from the same search/);
 });
 
@@ -645,7 +653,7 @@ test('the rules path shows each pick\'s fit label and its words once, and the he
   const s = site({ MATCH_MODE: 'off' });
   const html = await (await s.search({ ...MAC_LLM, need: 'run a language model offline with a terminal chat client' })).text();
   const title = /<h2 class="results-title">([^<]*)<\/h2>/.exec(html)![1];
-  assert.match(title, /^(\d tools? ranked by rules|Partial fits, ranked by rules|No clear fit, ranked by rules)$/);
+  assert.match(title, /^(\d tools? that may fit|Partial fits|No clear fit)$/);
   const picks = html.split('<article class="pick"').slice(1);
   assert.ok(picks.length > 0);
   for (const pick of picks) {
@@ -676,7 +684,7 @@ test('render: a GUI app\'s launch is described as such, and only a real screen g
 
 test('render: a model timeout says so', () => {
   const out = { ...output([pick()]), matched_by: 'rules', degraded: true, degraded_reason: 'model_timeout' };
-  assert.match(renderResults({ out, guides: {} }, EMPTY_FORM, fixtureCatalog()), /Muse Spark didn’t answer in time, so these results are ranked by rules\./);
+  assert.match(renderResults({ out, guides: {} }, EMPTY_FORM, fixtureCatalog()), /Muse Spark didn’t answer in time, so these are matched on the words in your request only\. Search again to retry\./);
 });
 
 test('a run is dated by its UTC day everywhere, the day the page shows', () => {
@@ -684,4 +692,38 @@ test('a run is dated by its UTC day everywhere, the day the page shows', () => {
   assert.equal(runDay('2026-10-31T01:45:18.636290+08:00'), '2026-10-30');
   assert.equal(runDay('2026-10-31T12:00:00Z'), '2026-10-31');
   assert.equal(runDay('not a date'), 'not a date');
+});
+
+test('render: the page leaves out how the shortlist was drawn, and keeps what the note says about the fit', () => {
+  const shortlist =
+    "72 tools met the conditions; the 60 compared were the 50 whose profiles best match the request's words and the 10 other tools with the highest treasure scores.";
+  const plain = renderResults({ out: { ...output([pick()]), coverage_note: shortlist }, guides: {} }, EMPTY_FORM, fixtureCatalog());
+  assert.doesNotMatch(plain, /tools met the conditions|treasure scores/);
+  const partial = "No listed tool covers the whole request. Each pick's match says what it covers.";
+  const both = { ...output([pick()]), match_quality: 'partial' as const, coverage_note: `${partial} ${shortlist}` };
+  const html = renderResults({ out: both, guides: {} }, EMPTY_FORM, fixtureCatalog());
+  assert.match(html, /<li class="st st-caution">[\s\S]*?No listed tool covers the whole request\./);
+  assert.doesNotMatch(html, /tools met the conditions|treasure scores/);
+  const zh = withLang('zh-TW', () => renderResults({ out: both, guides: {} }, EMPTY_FORM, fixtureCatalog()));
+  assert.match(zh, /沒有一款工具涵蓋你的全部需求。/);
+  assert.doesNotMatch(zh, /寶藏分數|tools met the conditions/);
+});
+
+test('pages say what a score or a mark means to the reader, not the rules behind it (those are on /how)', async () => {
+  const s = site();
+  const browse = await (await s.send(new Request('http://127.0.0.1:8787/browse', { headers: { accept: 'text/html' } }))).text();
+  const home = await (await s.send(new Request('http://127.0.0.1:8787/', { headers: { accept: 'text/html' } }))).text();
+  for (const html of [browse, home]) {
+    assert.doesNotMatch(html, /80 or more|45 or less|caps quality at 79|\(40%\)|takes 5% off|Scored apart|ranks by fit, not by either|verification agent/);
+    // The quality and hidden-gem popovers each link to the method.
+    for (const id of ['pop-quality', 'pop-gem']) {
+      const pop = html.slice(html.indexOf(`<div popover id="${id}"`));
+      assert.match(pop.slice(0, pop.indexOf('</div>')), /<a href="\/how#scores">How scores work<\/a>/);
+    }
+  }
+  // The loading panel: the wait, not the pipeline.
+  const loading = home.slice(home.indexOf('<template id="loading">'), home.indexOf('</template>', home.indexOf('<template id="loading">')));
+  assert.match(loading, /Usually 5 to 15 seconds\./);
+  assert.doesNotMatch(loading, /Muse Spark reads|Code checks each reason|<ol>/);
+  assert.doesNotMatch(home, /Each reason is checked/);
 });
