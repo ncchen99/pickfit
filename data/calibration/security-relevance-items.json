@@ -1,0 +1,3725 @@
+{
+ "scanned_at": "2026-11-03",
+ "source": "OSV.dev (api.osv.dev), deps.dev; read-only dry run",
+ "pairs": [
+  {
+   "id": "p001",
+   "slug": "all-code",
+   "package": "crates:zip",
+   "version": "8.6.0",
+   "where": "Cargo.lock",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-hjqx-j4rw-g7xv",
+     "cve": [
+      "CVE-2026-115908"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "9.0.0",
+     "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically. ",
+     "details": "### Summary\n\n- **Verified version:** zip `9.0.0-pre3`\n- **Affected versions:** `7.2.0` and later\n- **Precondition:** The attacker knows (or can guess) the absolute path of the extraction destination\n\nThe validation applied to symlinks is purely lexical.\nAs a result, an attacker can write arbitrary files outside the extraction directory through a symlink.\nExploitation requires the attacker to know (or guess) the absolute path of the destination, but this is realistic in practice: CI workspaces, `/opt/app`, a fixed Downloads path, and so on.\n\n> **Impact extends further on Windows (verified on real hardware for both the separate-drive and UNC-share cases)**:  \n> Because `simplified_components` ",
+     "cwe": [
+      "CWE-22",
+      "CWE-59",
+      "CWE-61"
+     ]
+    },
+    {
+     "id": "GHSA-m665-v7pm-7grj",
+     "cve": [
+      "CVE-2026-115905"
+     ],
+     "severity": "CRITICAL",
+     "fixed_in": "9.0.5",
+     "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwri",
+     "details": "## Summary\nA critical architectural parser differential exists in the `zip` crate (`<= 9.0.4`) between random-access archive readers (`ZipArchive`) and streaming readers (`ZipStreamReader`). `ZipArchive` considers the Central Directory File Header (CDFH) authoritative and ignores the filename declared in the Local File Header (LFH). In contrast, `ZipStreamReader` relies exclusively on the Local File Header (LFH) when extracting files to the filesystem.\n\nThis discrepancy enables ZIP archives to appear to have different file paths and contents according to which tool is reading them.\n\n---\n\n## Details\n\n### Architectural Root Cause\nIn the PKWARE ZIP archive format, every file entry is defined in",
+     "cwe": [
+      "CWE-20",
+      "CWE-436"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p002",
+   "slug": "batch-file-renamer",
+   "package": "npm:react-router",
+   "version": "7.12.0",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-49rj-9fvp-4h2h",
+     "cve": [
+      "CVE-2026-42211"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "7.14.2",
+     "summary": "React Router's vendored turbo-stream v2 allows arbitrary constructor invocation via TYPE_ERROR deserialization leading to Unauth RCE",
+     "details": "When using React Router v7 in [Framework Mode](https://reactrouter.com/start/modes#framework), there exists a combination of steps that could potentially allow unauthorized RCE through external requests.  This first requires the application code to have an existing prototype pollution vulnerability.  This can be leveraged into a 2-step attack in which the second step can trigger unauthorized RCE on the remote server.\n\n> [!NOTE]\n> This does not impact your React Router application if you are using [Declarative Mode](https://reactrouter.com/start/modes#declarative) (`<BrowserRouter>`) or [Data Mode](https://reactrouter.com/start/modes#data) (`createBrowserRouter`/`<RouterProvider>`).",
+     "cwe": [
+      "CWE-502"
+     ]
+    },
+    {
+     "id": "GHSA-8646-j5j9-6r62",
+     "cve": [
+      "CVE-2026-33245"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "7.13.2",
+     "summary": "React Router vulnerable to XSS in unstable RSC redirect handling via javascript: redirect targets",
+     "details": "When using React Router v7's unstable RSC APIs, there exists a potential client-side XSS issue in the RSC redirect handling if redirects are coming from untrusted sources\n\n> [!NOTE]\n> This only impacts your application if you are using the unstable RSC APIs in React Router.",
+     "cwe": [
+      "CWE-79"
+     ]
+    },
+    {
+     "id": "GHSA-qwww-vcr4-c8h2",
+     "cve": [],
+     "severity": "HIGH",
+     "fixed_in": "7.18.2",
+     "summary": "React Router: RSC Mode CSRF Bypass Allows Action Execution Before 400 Response",
+     "details": "This is a follow up to CVE-2026-22030 to address related CSRF flows in unstable RSC code paths.\n\n> [!NOTE]\n> This only affects your application if you are using the unstable RSC APIs",
+     "cwe": [
+      "CWE-352"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p003",
+   "slug": "free-online-tools-for-video-audio-pdfs-images-and-ai",
+   "package": "npm:next",
+   "version": "16.2.12",
+   "where": "djai-pdf-tools/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-2464-fhr4-w9xw",
+     "cve": [],
+     "severity": "CRITICAL",
+     "fixed_in": "16.4.1",
+     "summary": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when SVG files are used",
+     "details": "## Impact\n\nA memory-related vulnerability has been discovered in an upstream library used for Image Optimization can lead to possible remote code execution (RCE) when Next.js runs on glibc-based Linux.\n\n## Workaround\n\nEnsure the version of `sharp` used by Next.js is greater than or equal to `0.35.5`. Fresh installs automatically get a fixed version of `sharp`.\nUpgrading Next.js to the patched versions will ensure package managers automatically provide a fixed version of `sharp` to Next.js.",
+     "cwe": [
+      "CWE-1395"
+     ]
+    },
+    {
+     "id": "GHSA-cjq9-62q9-8jv4",
+     "cve": [
+      "CVE-2026-94483"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "16.3.8",
+     "summary": "Next.js has Server-Side Request Forgery in Image Optimization",
+     "details": "## Impact\n\nAn attacker-controlled, allow-listed remote URL can lead to server-side request forgery (e.g. to private IPs) during Image Optimization. \n\n## Workaround\n\nAudit allow-listed remote URLs in `images.remotePatterns` (see https://nextjs.org/docs/app/getting-started/images#remote-images) for hosts that may not be trusted with their DNS entries. If no `images.remotePatterns` are configured, your app is not affected.",
+     "cwe": [
+      "CWE-918"
+     ]
+    },
+    {
+     "id": "GHSA-vcvr-r3jv-pc5j",
+     "cve": [],
+     "severity": "CRITICAL",
+     "fixed_in": "16.3.6",
+     "summary": "Next.js: Remote Code Execution in next/og ImageResponse",
+     "details": "## Impact\n\nThe Node.js `ImageResponse` implementation from `next/og` is affected by an upstream vulnerability. This can lead to remote code execution.\n\nAffected applications pass attacker-controlled values into SVG content, attributes, or styles during image generation:\n\n```tsx\nimport { ImageResponse } from 'next/og'\n\nexport async function GET(request: Request) {\n  const value = new URL(request.url).searchParams.get('value') ?? ''\n\n  return new ImageResponse(\n    <svg width=\"1200\" height=\"630\">\n      <title>{value}</title>\n    </svg>\n  )\n}\n```\n\nApplications using the Edge `ImageResponse` implementation, or applications that do not pass attacker-controlled values into SVG content, attributes,",
+     "cwe": [
+      "CWE-1395"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p004",
+   "slug": "free-online-tools-for-video-audio-pdfs-images-and-ai",
+   "package": "npm:sharp",
+   "version": "0.35.3",
+   "where": "djai-pdf-tools/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-rgj7-g3m4-5g8c",
+     "cve": [
+      "CVE-2026-114112"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.35.4",
+     "summary": "sharp: Vulnerabilities in libheif: GHSA-g89c-p67h-r497 and GHSA-2jg2-4ch7-h545",
+     "details": "### Impact\nA number of vulnerabilities, two rated as \"Critical\" severity using CVSSv3, have been discovered and fixed in the upstream libheif dependency. These can lead to possible remote code execution (RCE) on glibc-based Linux when run under certain conditions.\n\nThe attack vector for these claims to be \"network\" however sharp does not provide any networking features so this vulnerability is down-rated to a \"High\" severity using CVSSv4 but please note its Subsequent System Impact.\n\nThose processing untrusted input with versions of sharp prior to 0.35.4 are affected.\n\n### Patches\n\n#### Using prebuilt binaries provided by sharp?\n\nMost people rely on the prebuilt binaries provided by sharp.\n\n",
+     "cwe": [
+      "CWE-122"
+     ]
+    },
+    {
+     "id": "GHSA-wq5f-xc86-pv6w",
+     "cve": [
+      "CVE-2026-114111"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.35.5",
+     "summary": "sharp : Vulnerability in librsvg dependency CVE-2026-96889",
+     "details": "### Impact\n\nA memory-related vulnerability has been discovered and fixed in the upstream librsvg dependency. When certain runtime-specific conditions apply, this vulnerability can lead to possible remote code execution (RCE) on glibc-based Linux.\n\n### Patches\n\n#### Using prebuilt binaries provided by sharp?\n\nMost people rely on the prebuilt binaries provided by sharp.\n\nPlease upgrade sharp to the latest version, currently 0.35.5, which provides librsvg 2.63.2.\n\n#### Using a globally-installed librsvg?\n\nPlease ensure you are using the latest librsvg 2.63.2.\n\n### Workarounds\n\nAdd the following to your code to prevent sharp from decoding SVG images.\n```js\nsharp.block({ operation: [\"VipsForeignL",
+     "cwe": [
+      "CWE-1395",
+      "CWE-416"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p005",
+   "slug": "free-online-tools-for-video-audio-pdfs-images-and-ai",
+   "package": "npm:source-map-js",
+   "version": "1.2.1",
+   "where": "djai-pdf-tools/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-68fv-2mgg-jv7q",
+     "cve": [
+      "CVE-2026-93749"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.2.2",
+     "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+     "details": "source-map-js through 1.2.1 fails to validate the per-section offset line value in indexed source maps, allowing attackers to specify arbitrary numeric values. Attackers can supply extremely large offset line values that cause synchronous event loop blocking for extended periods, preventing the service from handling other requests.",
+     "cwe": [
+      "CWE-1284"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p006",
+   "slug": "free-online-tools-for-video-audio-pdfs-images-and-ai",
+   "package": "npm:@xmldom/xmldom",
+   "version": "0.8.13",
+   "where": "djai-document-tools/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-27p8-2357-5qqv",
+     "cve": [
+      "CVE-2026-83608"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.8.15",
+     "summary": "xmldom: DocType `name` Injection Bypasses requireWellFormed",
+     "details": "## Summary\n\nThe `@xmldom/xmldom` serializer emits `DocumentType.name` verbatim into the\n`<!DOCTYPE …>` declaration with no well-formedness guard. GHSA-f6ww-3ggp-fr8h\n(CVE-2026-41674) hardened the serializer's `requireWellFormed` path for a\nDocumentType's sibling fields — `publicId`, `systemId`, and `internalSubset` —\nbut it did **not** add any check for `name`. A `>` (or whitespace) in the name\nterminates the doctype declaration early, letting the remaining characters\nbecome sibling markup in the serialized output.\n\nBecause `requireWellFormed: true` — the recommended mitigation for the prior\nxmldom injection CVEs — performs no validation on the DocType `name`, this is a\nbypass of that contro",
+     "cwe": [
+      "CWE-91"
+     ]
+    },
+    {
+     "id": "GHSA-4w3w-2rp5-g8jm",
+     "cve": [
+      "CVE-2026-83605"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.8.14",
+     "summary": "xmldom: Attribute name injection via setAttribute() bypasses requireWellFormed",
+     "details": "## Summary\n\n`Element.setAttribute()` in `@xmldom/xmldom` bypasses attribute name validation by calling the private `_createAttribute(name)` method, which performs no validation. The public `createAttribute()` method correctly validates names against an anchored `QName` pattern, but `setAttribute()` never uses it. The serializer escapes attribute *values* but trusts attribute *names*, allowing an attacker to inject additional attributes (including event handlers) into serialized output. The `requireWellFormed: true` option did not catch this.\n\n## Details\n\n`Element.setAttribute(name, value)` creates attribute nodes by calling the private `_createAttribute(name)` method, which performs no valid",
+     "cwe": [
+      "CWE-91"
+     ]
+    },
+    {
+     "id": "GHSA-c7q8-3ch8-vqpv",
+     "cve": [
+      "CVE-2026-83616"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.8.15",
+     "summary": "xmldom: Processing Instruction Target Injection Bypasses requireWellFormed",
+     "details": "## Summary\n\n`Document.createProcessingInstruction()` in `@xmldom/xmldom` performs no validation on the `target` parameter. The `requireWellFormed: true` serializer option validates only for `:` in the target and a case-insensitive `xml` prefix, but does not check for `>` characters. A `>` in the target breaks the processing instruction boundary (`<?...?>`), allowing injection of arbitrary content into the serialized XML output.\n\n## Details\n\n`Document.createProcessingInstruction(target, data)` at `lib/dom.js` around line 2413 accepts any string as the `target` parameter and stores it on the PI node without validation.\n\nDuring serialization, the `requireWellFormed` code path (around line 3286)",
+     "cwe": [
+      "CWE-91"
+     ]
+    },
+    {
+     "id": "GHSA-w2rr-34g9-rvrj",
+     "cve": [
+      "CVE-2026-83607"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.8.14",
+     "summary": "xmldom: Element name injection via createElement() bypasses requireWellFormed",
+     "details": "## Summary\n\n`Document.createElement()` in `@xmldom/xmldom` accepts arbitrary strings as the `tagName` parameter with zero validation. The serializer emits the tag name verbatim into XML/HTML output. Critically, the `requireWellFormed: true` serializer option — the recommended mitigation from CVE-2026-41672, CVE-2026-41674, and CVE-2026-34601 — did NOT catch this, making it a bypass of the existing security controls.\n\nAn attacker who controls the element name string can inject arbitrary attributes (including event handlers) into the serialized output, leading to XSS when the output is consumed by a browser or downstream parser.\n\n## Details\n\n`Document.createElement()` accepts any string as `ta",
+     "cwe": [
+      "CWE-91"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p007",
+   "slug": "free-online-tools-for-video-audio-pdfs-images-and-ai",
+   "package": "npm:dompurify",
+   "version": "3.4.12",
+   "where": "djai-document-tools/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-cg2g-xh64-v4q7",
+     "cve": [
+      "CVE-2026-116804"
+     ],
+     "severity": "CRITICAL",
+     "fixed_in": "3.4.17",
+     "summary": "DOMPurify SAFE_FOR_TEMPLATES bypass: split template expressions survive in attached shadow root content on DOM output modes",
+     "details": "## Summary\n\nWhen DOMPurify is configured with `SAFE_FOR_TEMPLATES: true` together with a DOM-returning mode (`RETURN_DOM: true`, `RETURN_DOM_FRAGMENT: true`, or `IN_PLACE: true`), template expressions such as `{{...}}`, `${...}`, and `<%...%>` survive sanitization inside the text content of an attached shadow root. The post-walk safety net `_scrubTemplateExpressions` (`src/purify.ts:1717`) was extended to recurse into `<template>.content`, but it never recurses into attached shadow roots. An attacker who can supply a DOM node carrying a shadow root (the `IN_PLACE` and shadow-aware `RETURN_DOM` surfaces) can split an expression across text nodes separated by disallowed elements; after those e",
+     "cwe": [
+      "CWE-79"
+     ]
+    },
+    {
+     "id": "GHSA-mrv2-3pqr-j5jr",
+     "cve": [
+      "CVE-2026-116803"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.4.17",
+     "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-9",
+     "details": "### Summary\n\nThe 3.4.16 fix for GHSA-p98j-92pf-mc4p only covers a hook that removes the node it was called for. If an `IN_PLACE` hook removes a different node, like the current node's parent or a sibling that has not been visited yet, that subtree is never walked or neutralized. Event handlers in it stay on the elements, and an `<img onerror>` that was already loading fires after `sanitize()` returns.\n\nThe README says: \"Nodes that a hook detaches from the tree ... are treated as removed. In IN_PLACE mode their subtree is neutralized inline, so an `<img onload>` that was already loading when you built the live tree cannot fire after `sanitize()` returns.\" That does not hold when the detached ",
+     "cwe": [
+      "CWE-693",
+      "CWE-79"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p008",
+   "slug": "free-online-tools-for-video-audio-pdfs-images-and-ai",
+   "package": "npm:pdfjs-dist",
+   "version": "6.1.200",
+   "where": "djai-pdf-tools/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-hq66-cqwq-w95j",
+     "cve": [
+      "CVE-2026-16633"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "6.2.108",
+     "summary": "PDF.js: Arbitrary JavaScript execution upon opening a malicious PDF ",
+     "details": "### Impact\n\nIf PDF.js is used to load a malicious PDF, and PDF.js is configured with `enableScripting` set to true (which is the default value) and no CSP for disallowing script-src, unrestricted attacker-controlled JavaScript will be executed in the context of the hosting domain.\n\n### Patches\n\n### Workarounds\nSet `enableScripting` to `false` or set a CSP.",
+     "cwe": [
+      "CWE-79"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p009",
+   "slug": "homebotbuild",
+   "package": "npm:lodash",
+   "version": "4.17.23",
+   "where": "dashboard/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-r5fr-rjxr-66jc",
+     "cve": [
+      "CVE-2026-4800"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.18.0",
+     "summary": "lodash vulnerable to Code Injection via `_.template` imports key names",
+     "details": "### Impact\n\nThe fix for [CVE-2021-23337](https://github.com/advisories/GHSA-35jh-r3h4-6jhm) added validation for the `variable` option in `_.template` but did not apply the same validation to `options.imports` key names. Both paths flow into the same `Function()` constructor sink.\n\nWhen an application passes untrusted input as `options.imports` key names, an attacker can inject default-parameter expressions that execute arbitrary code at template compilation time.\n\nAdditionally, `_.template` uses `assignInWith` to merge imports, which enumerates inherited properties via `for..in`. If `Object.prototype` has been polluted by any other vector, the polluted keys are copied into the imports objec",
+     "cwe": [
+      "CWE-94"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p010",
+   "slug": "homebotbuild",
+   "package": "npm:nanoid",
+   "version": "3.3.11",
+   "where": "dashboard/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-xwg4-73v4-xw9w",
+     "cve": [
+      "CVE-2026-73086"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.3.12",
+     "summary": "nanoid: Integer Overflow or Wraparound",
+     "details": "### Summary\n\nAn integer overflow in `nanoid(size)` permanently corrupts the process-wide CSPRNG pool, causing all subsequent ID generation to return the deterministic string `\"uuuuuuuuuuuuuuuuuuuuu\"`. Any application that passes user-influenced values to the `size` parameter loses all randomness guarantees for session tokens, CSRF tokens, and unique identifiers until process restart.\n\n### Details\n\n`nanoid()` at [`index.js:101`](https://github.com/ai/nanoid/blob/main/index.js#L101) coerces the `size` parameter with `size |= 0`, which converts it to a signed 32-bit integer. When `size >= 2^31` (e.g., `2147483648`), this wraps to `-2147483648`.\n\nThe negative value is passed to `fillPool()` ([`i",
+     "cwe": [
+      "CWE-190"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p011",
+   "slug": "homebotbuild",
+   "package": "npm:next",
+   "version": "16.2.12",
+   "where": "dashboard/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-2464-fhr4-w9xw",
+     "cve": [],
+     "severity": "CRITICAL",
+     "fixed_in": "16.4.1",
+     "summary": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when SVG files are used",
+     "details": "## Impact\n\nA memory-related vulnerability has been discovered in an upstream library used for Image Optimization can lead to possible remote code execution (RCE) when Next.js runs on glibc-based Linux.\n\n## Workaround\n\nEnsure the version of `sharp` used by Next.js is greater than or equal to `0.35.5`. Fresh installs automatically get a fixed version of `sharp`.\nUpgrading Next.js to the patched versions will ensure package managers automatically provide a fixed version of `sharp` to Next.js.",
+     "cwe": [
+      "CWE-1395"
+     ]
+    },
+    {
+     "id": "GHSA-cjq9-62q9-8jv4",
+     "cve": [
+      "CVE-2026-94483"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "16.3.8",
+     "summary": "Next.js has Server-Side Request Forgery in Image Optimization",
+     "details": "## Impact\n\nAn attacker-controlled, allow-listed remote URL can lead to server-side request forgery (e.g. to private IPs) during Image Optimization. \n\n## Workaround\n\nAudit allow-listed remote URLs in `images.remotePatterns` (see https://nextjs.org/docs/app/getting-started/images#remote-images) for hosts that may not be trusted with their DNS entries. If no `images.remotePatterns` are configured, your app is not affected.",
+     "cwe": [
+      "CWE-918"
+     ]
+    },
+    {
+     "id": "GHSA-vcvr-r3jv-pc5j",
+     "cve": [],
+     "severity": "CRITICAL",
+     "fixed_in": "16.3.6",
+     "summary": "Next.js: Remote Code Execution in next/og ImageResponse",
+     "details": "## Impact\n\nThe Node.js `ImageResponse` implementation from `next/og` is affected by an upstream vulnerability. This can lead to remote code execution.\n\nAffected applications pass attacker-controlled values into SVG content, attributes, or styles during image generation:\n\n```tsx\nimport { ImageResponse } from 'next/og'\n\nexport async function GET(request: Request) {\n  const value = new URL(request.url).searchParams.get('value') ?? ''\n\n  return new ImageResponse(\n    <svg width=\"1200\" height=\"630\">\n      <title>{value}</title>\n    </svg>\n  )\n}\n```\n\nApplications using the Edge `ImageResponse` implementation, or applications that do not pass attacker-controlled values into SVG content, attributes,",
+     "cwe": [
+      "CWE-1395"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p012",
+   "slug": "homebotbuild",
+   "package": "npm:postcss",
+   "version": "8.4.31",
+   "where": "dashboard/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-6g55-p6wh-862q",
+     "cve": [
+      "CVE-2026-45623"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "8.5.12",
+     "summary": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
+     "details": "## Summary\n\nPostCSS's `PreviousMap` parses the `/*# sourceMappingURL=PATH */` comment from any CSS string passed to `process()` and dereferences `PATH` against the local filesystem with no scheme, allowlist, or traversal check. An attacker who controls the CSS input can cause the host process to read any file readable by Node and leak the first ~10 bytes of its content through the resulting `JSON.parse` `SyntaxError` message. The bug also yields a precise file-existence oracle and a controllable-read primitive that may be combined with large-file targets for DoS. The behaviour is triggered with PostCSS's default options — no `from`, no `map`, no plugins required — and is therefore reachable ",
+     "cwe": [
+      "CWE-200",
+      "CWE-22"
+     ]
+    },
+    {
+     "id": "GHSA-r28c-9q8g-f849",
+     "cve": [
+      "CVE-2026-73646"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "8.5.18",
+     "summary": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+     "details": "## Vulnerability Details\n\n**File**: `lib/previous-map.js`\n**Line**: 87-98 (`loadFile`), 129-144 (`loadMap`)\n\n\n### Root Cause\nPostCSS auto-detects a `/*# sourceMappingURL=... */` comment inside the CSS text it is asked to parse and, unless the caller explicitly passes `map: false`, attempts to load that path from disk as a \"previous source map.\" This happens on every `postcss.parse()` / `postcss().process()` call by default (opt-out, not opt-in).\n\n`loadMap()` builds the candidate path via `join(dirname(opts.from), annotation)`, where `annotation` is the raw, attacker-controlled string from the CSS comment. `path.join()` normalizes but does not sandbox `..` segments, so a `../../../` prefix wa",
+     "cwe": [
+      "CWE-22"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p013",
+   "slug": "homebotbuild",
+   "package": "npm:sharp",
+   "version": "0.34.5",
+   "where": "dashboard/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-f88m-g3jw-g9cj",
+     "cve": [
+      "CVE-2026-114113"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.35.0",
+     "summary": "sharp inherited vulnerabilities in libvips: CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591",
+     "details": "### Impact\n\nA number of vulnerabilities, two rated as \"High\" severity using CVSSv4, have been discovered and fixed in the upstream libvips dependency.\n\nThose processing untrusted input with versions of sharp prior to 0.35.0 are affected.\n\n### Patches\n\n#### Using prebuilt binaries provided by sharp?\n\nMost people rely on the prebuilt binaries provided by sharp.\n\nPlease upgrade sharp to the latest version, currently 0.35.3, which provides libvips 8.18.3.\n\n#### Using a globally-installed libvips?\n\nPlease ensure you are using the latest libvips 8.18.3.\n\n### Workarounds\nAdd the following to your code to prevent sharp from decoding GIF, TIFF and VIPS images.\n```js\nsharp.block({ operation: [\"VipsFor",
+     "cwe": [
+      "CWE-1395"
+     ]
+    },
+    {
+     "id": "GHSA-rgj7-g3m4-5g8c",
+     "cve": [
+      "CVE-2026-114112"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.35.4",
+     "summary": "sharp: Vulnerabilities in libheif: GHSA-g89c-p67h-r497 and GHSA-2jg2-4ch7-h545",
+     "details": "### Impact\nA number of vulnerabilities, two rated as \"Critical\" severity using CVSSv3, have been discovered and fixed in the upstream libheif dependency. These can lead to possible remote code execution (RCE) on glibc-based Linux when run under certain conditions.\n\nThe attack vector for these claims to be \"network\" however sharp does not provide any networking features so this vulnerability is down-rated to a \"High\" severity using CVSSv4 but please note its Subsequent System Impact.\n\nThose processing untrusted input with versions of sharp prior to 0.35.4 are affected.\n\n### Patches\n\n#### Using prebuilt binaries provided by sharp?\n\nMost people rely on the prebuilt binaries provided by sharp.\n\n",
+     "cwe": [
+      "CWE-122"
+     ]
+    },
+    {
+     "id": "GHSA-wq5f-xc86-pv6w",
+     "cve": [
+      "CVE-2026-114111"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.35.5",
+     "summary": "sharp : Vulnerability in librsvg dependency CVE-2026-96889",
+     "details": "### Impact\n\nA memory-related vulnerability has been discovered and fixed in the upstream librsvg dependency. When certain runtime-specific conditions apply, this vulnerability can lead to possible remote code execution (RCE) on glibc-based Linux.\n\n### Patches\n\n#### Using prebuilt binaries provided by sharp?\n\nMost people rely on the prebuilt binaries provided by sharp.\n\nPlease upgrade sharp to the latest version, currently 0.35.5, which provides librsvg 2.63.2.\n\n#### Using a globally-installed librsvg?\n\nPlease ensure you are using the latest librsvg 2.63.2.\n\n### Workarounds\n\nAdd the following to your code to prevent sharp from decoding SVG images.\n```js\nsharp.block({ operation: [\"VipsForeignL",
+     "cwe": [
+      "CWE-1395",
+      "CWE-416"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p014",
+   "slug": "homebotbuild",
+   "package": "npm:source-map-js",
+   "version": "1.2.1",
+   "where": "dashboard/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-68fv-2mgg-jv7q",
+     "cve": [
+      "CVE-2026-93749"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.2.2",
+     "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+     "details": "source-map-js through 1.2.1 fails to validate the per-section offset line value in indexed source maps, allowing attackers to specify arbitrary numeric values. Attackers can supply extremely large offset line values that cause synchronous event loop blocking for extended periods, preventing the service from handling other requests.",
+     "cwe": [
+      "CWE-1284"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p015",
+   "slug": "image-comparison-tool",
+   "package": "npm:@babel/plugin-transform-modules-systemjs",
+   "version": "7.28.5",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-fv7c-fp4j-7gwp",
+     "cve": [
+      "CVE-2026-44728"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "7.29.4",
+     "summary": "@babel/plugin-transform-modules-systemjs generates arbitrary code when compiling malicious input",
+     "details": "### Impact\n\nUsing Babel to compile code that was specifically crafted by an attacker can cause Babel to generate output code that executes arbitrary code.\n\nKnown affected plugins are:\n- `@babel/plugin-transform-modules-systemjs`\n- `@babel/preset-env` when using the [`modules: \"systemjs\"` option](https://babel.dev/docs/babel-preset-env#modules), as it delegates to `@babel/plugin-transform-modules-systemjs`\n\nNo other plugins under the `@babel` namespace are impacted.\n\n**Users that only compile trusted code are not impacted.**\n\n### Patches\n\nThe vulnerability has been fixed in `@babel/plugin-transform-modules-systemjs@7.29.4`.\n\nBabel also released `@babel/preset-env@7.29.5`, updating its `@babel",
+     "cwe": [
+      "CWE-843",
+      "CWE-94"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p016",
+   "slug": "image-comparison-tool",
+   "package": "npm:browserslist",
+   "version": "4.28.1",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-73wf-gq98-2v4g",
+     "cve": [
+      "CVE-2026-73088"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.28.7",
+     "summary": "Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats)",
+     "details": "## Vulnerability Details\n\n**File**: `node.js`\n**Function**: `normalizeStats()` (line ~214), reached from `getStat()` (called\n**unconditionally** on every `browserslist()` call) and `loadStat()`\n\n### Root Cause\n```js\nfunction normalizeStats(data, stats) {\n  if (!data) { data = {} }\n  if (stats && 'dataByBrowser' in stats) { stats = stats.dataByBrowser }\n  if (typeof stats !== 'object') return undefined\n\n  var normalized = {}\n  for (var i in stats) {\n    var versions = Object.keys(stats[i])\n    if (versions.length === 1 && data[i] && data[i].versions.length === 1) {\n      var normal = data[i].versions[0]\n      normalized[i] = {}\n      normalized[i][normal] = stats[i][versions[0]]\n    } else {\n",
+     "cwe": [
+      "CWE-1321",
+      "CWE-248"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p017",
+   "slug": "image-comparison-tool",
+   "package": "npm:fast-uri",
+   "version": "3.1.0",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-4c8g-83qw-93j6",
+     "cve": [
+      "CVE-2026-13676"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.1.3",
+     "summary": "fast-uri vulnerable to host confusion via failed IDN canonicalization",
+     "details": "### Impact\n\n`fast-uri` versions `>= 2.3.1, <= 4.0.0` fail to canonicalize Unicode/IDN hostnames for HTTP-family URLs. The IDN conversion path calls `URL.domainToASCII(...)` on the global WHATWG `URL` constructor, where that helper does not exist. The resulting `TypeError` is silently routed into `parsed.error`, but `parse()`, `normalize()`, and `equal()` all return with the host left in its original Unicode form.\n\nFor example, `http://127。0。0。1/` is treated by `fast-uri` as host `127。0。0。1`, while Node's WHATWG URL parser and `fetch()` canonicalize the same input to `127.0.0.1`.\n\nApplications that use `fast-uri` to enforce host-based policy (denylists, loopback filtering, redirect validation",
+     "cwe": [
+      "CWE-436",
+      "CWE-551"
+     ]
+    },
+    {
+     "id": "GHSA-f65p-4m7j-42xc",
+     "cve": [
+      "CVE-2026-75975"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.1.6",
+     "summary": "fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization",
+     "details": "### Impact\n\n`fast-uri` does not validate the complete RFC 3986 grammar for bracketed IPv6 literals, so a malformed literal with invalid trailing text is silently truncated to a different valid IPv6 address with no error reported. For example, `normalize('http://[::not-valid]/private')` returns `http://[::]/private`, and `[fc00::not-hex]` and `[fe80::not-hex]` collapse to `[fc00::]` and `[fe80::]`. An application that normalizes an untrusted URL before an outbound request, redirect, or host-policy check can be routed to a local or private address such as loopback (`::1`), unique-local, or link-local. Because `parse().error` is unset for these inputs, checking it does not protect the consumer.",
+     "cwe": [
+      "CWE-20",
+      "CWE-918"
+     ]
+    },
+    {
+     "id": "GHSA-q3j6-qgpj-74h6",
+     "cve": [
+      "CVE-2026-6321"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.1.1",
+     "summary": "fast-uri vulnerable to path traversal via percent-encoded dot segments",
+     "details": "### Impact\n\n`fast-uri` v3.1.0 and earlier decodes percent-encoded path separators (`%2F`) and dot segments (`%2E`) before applying dot-segment removal in `normalize()` and `equal()`. This makes encoded path data behave like real `/` and `..`, so distinct URIs collapse onto the same normalized path.\n\nFor example, `http://example.com/public/%2e%2e/admin` normalizes to `http://example.com/admin`, and `equal()` considers them the same URI.\n\nApplications that normalize or compare attacker-controlled URLs to enforce path-based policy can be bypassed. A path that looks confined under an allowed prefix can normalize to a different location.\n\n### Patches\n\nUpgrade to `fast-uri` >= 3.1.1, or if you are",
+     "cwe": [
+      "CWE-22"
+     ]
+    },
+    {
+     "id": "GHSA-qw65-cvwx-89v3",
+     "cve": [
+      "CVE-2026-84292"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.1.7",
+     "summary": "fast-uri vulnerable to authority injection via an unvalidated port in serialize",
+     "details": "### Impact\n\n`fast-uri` serializes the `port` component of a URI without validating it. When recomposing the authority, `fast-uri` escapes the userinfo and host components but concatenates the port verbatim, so a `port` value that is not a sequence of digits can inject authority delimiters. For example, serializing a component whose `port` is `@127.0.0.1:8124` produces `http://trusted.example:@127.0.0.1:8124/app`, demoting the intended host to userinfo and pointing the authority at an attacker-controlled host. Both `fast-uri` and Node's `URL` read the result back as the attacker's host with no error, so re-validating the built URI does not catch it.\n\nThis affects applications that build URIs ",
+     "cwe": [
+      "CWE-116"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p018",
+   "slug": "image-comparison-tool",
+   "package": "npm:lodash",
+   "version": "4.17.21",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-r5fr-rjxr-66jc",
+     "cve": [
+      "CVE-2026-4800"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.18.0",
+     "summary": "lodash vulnerable to Code Injection via `_.template` imports key names",
+     "details": "### Impact\n\nThe fix for [CVE-2021-23337](https://github.com/advisories/GHSA-35jh-r3h4-6jhm) added validation for the `variable` option in `_.template` but did not apply the same validation to `options.imports` key names. Both paths flow into the same `Function()` constructor sink.\n\nWhen an application passes untrusted input as `options.imports` key names, an attacker can inject default-parameter expressions that execute arbitrary code at template compilation time.\n\nAdditionally, `_.template` uses `assignInWith` to merge imports, which enumerates inherited properties via `for..in`. If `Object.prototype` has been polluted by any other vector, the polluted keys are copied into the imports objec",
+     "cwe": [
+      "CWE-94"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p019",
+   "slug": "image-comparison-tool",
+   "package": "npm:next",
+   "version": "16.0.10",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-2464-fhr4-w9xw",
+     "cve": [],
+     "severity": "CRITICAL",
+     "fixed_in": "16.4.1",
+     "summary": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when SVG files are used",
+     "details": "## Impact\n\nA memory-related vulnerability has been discovered in an upstream library used for Image Optimization can lead to possible remote code execution (RCE) when Next.js runs on glibc-based Linux.\n\n## Workaround\n\nEnsure the version of `sharp` used by Next.js is greater than or equal to `0.35.5`. Fresh installs automatically get a fixed version of `sharp`.\nUpgrading Next.js to the patched versions will ensure package managers automatically provide a fixed version of `sharp` to Next.js.",
+     "cwe": [
+      "CWE-1395"
+     ]
+    },
+    {
+     "id": "GHSA-267c-6grr-h53f",
+     "cve": [
+      "CVE-2026-44575"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "16.2.5",
+     "summary": "Next.js has a Middleware / Proxy bypass in App Router applications via segment-prefetch routes",
+     "details": "### Impact\n\nApp Router applications that rely on middleware or proxy-based checks for authorization can allow unauthorized access through transport-specific route variants used for segment prefetching. In affected configurations, specially crafted `.rsc` and segment-prefetch URLs can resolve to the same page without being matched by the intended middleware rule, which can allow protected content to be reached without the expected authorization check.\n\n### Fix\n\nWe now include App Router transport variants when generating middleware matchers, so middleware protections are applied consistently to those requests as well as to the normal page URL.\n\n### Workarounds\n\nIf you cannot upgrade immediate",
+     "cwe": [
+      "CWE-288"
+     ]
+    },
+    {
+     "id": "GHSA-6gpp-xcg3-4w24",
+     "cve": [
+      "CVE-2026-64642"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "16.2.11",
+     "summary": "Next.js: Middleware / Proxy bypass in App Router applications using Turbopack and single locale",
+     "details": "## Impact\n\nCrafted requests targeting Next.js applications using App Router built with Turbopack and a **single** entry in `config.i18n.locales` can bypass middleware/proxy based authentication.\n\n## Workarounds\n\nIf you cannot upgrade immediately, enforce authorization in the page's server-side data path instead of relying solely on middleware.",
+     "cwe": [
+      "CWE-285"
+     ]
+    },
+    {
+     "id": "GHSA-89xv-2m56-2m9x",
+     "cve": [
+      "CVE-2026-64649"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "16.2.11",
+     "summary": "Next.js: Server-Side Request Forgery in Server Actions on custom servers",
+     "details": "## Impact\n\nWhen a Server Action forwards or redirects a request, an attacker can cause the server to send that outbound request to a malicious host (Server-Side Request Forgery). This requires the attacker's request to control Host-associated headers. In some configurations, it's also possible to obtain internal values that weaken middleware/proxy authorization.\n\nApplications that use Server Actions are affected when the incoming host header is not fixed to a trusted value. This typically occurs on custom servers, or on deployments not behind a proxy that pins the host. Managed hosting pins the host upstream and is not affected; `next start` and standalone output do the same from version 14.",
+     "cwe": [
+      "CWE-918"
+     ]
+    },
+    {
+     "id": "GHSA-c4j6-fc7j-m34r",
+     "cve": [
+      "CVE-2026-44578"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "16.2.5",
+     "summary": "Next.js vulnerable to server-side request forgery in applications using WebSocket upgrades",
+     "details": "### Impact\n\nSelf-hosted applications using the built-in Node.js server can be vulnerable to server-side request forgery through crafted WebSocket upgrade requests. An attacker can cause the server to proxy requests to arbitrary internal or external destinations, which may expose internal services or cloud metadata endpoints. Vercel-hosted deployments are not affected.\n\n### Fix\n\nWe now apply the same safety checks to WebSocket upgrade handling that already existed for normal HTTP requests, so upgrade requests are only proxied when routing has explicitly marked them as safe external rewrites.\n\n### Workarounds\n\nIf you cannot upgrade immediately, do not expose the origin server directly to untru",
+     "cwe": [
+      "CWE-918"
+     ]
+    },
+    {
+     "id": "GHSA-cjq9-62q9-8jv4",
+     "cve": [
+      "CVE-2026-94483"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "16.3.8",
+     "summary": "Next.js has Server-Side Request Forgery in Image Optimization",
+     "details": "## Impact\n\nAn attacker-controlled, allow-listed remote URL can lead to server-side request forgery (e.g. to private IPs) during Image Optimization. \n\n## Workaround\n\nAudit allow-listed remote URLs in `images.remotePatterns` (see https://nextjs.org/docs/app/getting-started/images#remote-images) for hosts that may not be trusted with their DNS entries. If no `images.remotePatterns` are configured, your app is not affected.",
+     "cwe": [
+      "CWE-918"
+     ]
+    },
+    {
+     "id": "GHSA-h25m-26qc-wcjf",
+     "cve": [],
+     "severity": "HIGH",
+     "fixed_in": "16.0.11",
+     "summary": "Next.js HTTP request deserialization can lead to DoS when using insecure React Server Components",
+     "details": "A vulnerability affects certain React Server Components packages for versions 19.0.x, 19.1.x, and 19.2.x and frameworks that use the affected packages, including Next.js 13.x, 14.x, 15.x, and 16.x using the App Router. The issue is tracked upstream as [CVE-2026-23864](https://github.com/facebook/react/security/advisories/GHSA-83fc-fqcc-2hmg).\n\nA specially crafted HTTP request can be sent to any App Router Server Function endpoint that, when deserialized, may trigger excessive CPU usage, out-of-memory exceptions, or server crashes. This can result in denial of service in unpatched environments.",
+     "cwe": [
+      "CWE-400",
+      "CWE-502"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p020",
+   "slug": "image-comparison-tool",
+   "package": "npm:postcss",
+   "version": "8.4.31",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-6g55-p6wh-862q",
+     "cve": [
+      "CVE-2026-45623"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "8.5.12",
+     "summary": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
+     "details": "## Summary\n\nPostCSS's `PreviousMap` parses the `/*# sourceMappingURL=PATH */` comment from any CSS string passed to `process()` and dereferences `PATH` against the local filesystem with no scheme, allowlist, or traversal check. An attacker who controls the CSS input can cause the host process to read any file readable by Node and leak the first ~10 bytes of its content through the resulting `JSON.parse` `SyntaxError` message. The bug also yields a precise file-existence oracle and a controllable-read primitive that may be combined with large-file targets for DoS. The behaviour is triggered with PostCSS's default options — no `from`, no `map`, no plugins required — and is therefore reachable ",
+     "cwe": [
+      "CWE-200",
+      "CWE-22"
+     ]
+    },
+    {
+     "id": "GHSA-r28c-9q8g-f849",
+     "cve": [
+      "CVE-2026-73646"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "8.5.18",
+     "summary": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+     "details": "## Vulnerability Details\n\n**File**: `lib/previous-map.js`\n**Line**: 87-98 (`loadFile`), 129-144 (`loadMap`)\n\n\n### Root Cause\nPostCSS auto-detects a `/*# sourceMappingURL=... */` comment inside the CSS text it is asked to parse and, unless the caller explicitly passes `map: false`, attempts to load that path from disk as a \"previous source map.\" This happens on every `postcss.parse()` / `postcss().process()` call by default (opt-out, not opt-in).\n\n`loadMap()` builds the candidate path via `join(dirname(opts.from), annotation)`, where `annotation` is the raw, attacker-controlled string from the CSS comment. `path.join()` normalizes but does not sandbox `..` segments, so a `../../../` prefix wa",
+     "cwe": [
+      "CWE-22"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p021",
+   "slug": "image-comparison-tool",
+   "package": "npm:rollup",
+   "version": "2.79.2",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-mw96-cpmx-2vgc",
+     "cve": [
+      "CVE-2026-27606"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "2.80.0",
+     "summary": "Rollup 4 has Arbitrary File Write via Path Traversal",
+     "details": "### Summary\nThe Rollup module bundler (specifically v4.x and present in current source) is vulnerable to an Arbitrary File Write via Path Traversal. Insecure file name sanitization in the core engine allows an attacker to control output filenames (e.g., via CLI named inputs, manual chunk aliases, or malicious plugins) and use traversal sequences (`../`) to overwrite files anywhere on the host filesystem that the build process has permissions for. This can lead to persistent Remote Code Execution (RCE) by overwriting critical system or user configuration files.\n\n### Details\nThe vulnerability is caused by the combination of two flawed components in the Rollup core:\n\n1.  **Improper Sanitization",
+     "cwe": [
+      "CWE-22"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p022",
+   "slug": "image-comparison-tool",
+   "package": "npm:serialize-javascript",
+   "version": "6.0.2",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-5c6j-r48x-rmvq",
+     "cve": [],
+     "severity": "HIGH",
+     "fixed_in": "7.0.3",
+     "summary": "Serialize JavaScript is Vulnerable to RCE via RegExp.flags and Date.prototype.toISOString()",
+     "details": "### Impact\n\nThe serialize-javascript npm package (versions <= 7.0.2) contains a code injection vulnerability. It is an incomplete fix for CVE-2020-7660.\n\nWhile `RegExp.source` is sanitized, `RegExp.flags` is interpolated directly into the generated output without escaping. A similar issue exists in `Date.prototype.toISOString()`.\n\nIf an attacker can control the input object passed to `serialize()`, they can inject malicious JavaScript via the flags property of a RegExp object. When the serialized string is later evaluated (via `eval`, `new Function`, or `<script>` tags), the injected code executes.\n\n```javascript\nconst serialize = require('serialize-javascript');\n// Create an object that pas",
+     "cwe": [
+      "CWE-96"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p023",
+   "slug": "image-comparison-tool",
+   "package": "npm:sharp",
+   "version": "0.34.5",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-f88m-g3jw-g9cj",
+     "cve": [
+      "CVE-2026-114113"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.35.0",
+     "summary": "sharp inherited vulnerabilities in libvips: CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591",
+     "details": "### Impact\n\nA number of vulnerabilities, two rated as \"High\" severity using CVSSv4, have been discovered and fixed in the upstream libvips dependency.\n\nThose processing untrusted input with versions of sharp prior to 0.35.0 are affected.\n\n### Patches\n\n#### Using prebuilt binaries provided by sharp?\n\nMost people rely on the prebuilt binaries provided by sharp.\n\nPlease upgrade sharp to the latest version, currently 0.35.3, which provides libvips 8.18.3.\n\n#### Using a globally-installed libvips?\n\nPlease ensure you are using the latest libvips 8.18.3.\n\n### Workarounds\nAdd the following to your code to prevent sharp from decoding GIF, TIFF and VIPS images.\n```js\nsharp.block({ operation: [\"VipsFor",
+     "cwe": [
+      "CWE-1395"
+     ]
+    },
+    {
+     "id": "GHSA-rgj7-g3m4-5g8c",
+     "cve": [
+      "CVE-2026-114112"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.35.4",
+     "summary": "sharp: Vulnerabilities in libheif: GHSA-g89c-p67h-r497 and GHSA-2jg2-4ch7-h545",
+     "details": "### Impact\nA number of vulnerabilities, two rated as \"Critical\" severity using CVSSv3, have been discovered and fixed in the upstream libheif dependency. These can lead to possible remote code execution (RCE) on glibc-based Linux when run under certain conditions.\n\nThe attack vector for these claims to be \"network\" however sharp does not provide any networking features so this vulnerability is down-rated to a \"High\" severity using CVSSv4 but please note its Subsequent System Impact.\n\nThose processing untrusted input with versions of sharp prior to 0.35.4 are affected.\n\n### Patches\n\n#### Using prebuilt binaries provided by sharp?\n\nMost people rely on the prebuilt binaries provided by sharp.\n\n",
+     "cwe": [
+      "CWE-122"
+     ]
+    },
+    {
+     "id": "GHSA-wq5f-xc86-pv6w",
+     "cve": [
+      "CVE-2026-114111"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.35.5",
+     "summary": "sharp : Vulnerability in librsvg dependency CVE-2026-96889",
+     "details": "### Impact\n\nA memory-related vulnerability has been discovered and fixed in the upstream librsvg dependency. When certain runtime-specific conditions apply, this vulnerability can lead to possible remote code execution (RCE) on glibc-based Linux.\n\n### Patches\n\n#### Using prebuilt binaries provided by sharp?\n\nMost people rely on the prebuilt binaries provided by sharp.\n\nPlease upgrade sharp to the latest version, currently 0.35.5, which provides librsvg 2.63.2.\n\n#### Using a globally-installed librsvg?\n\nPlease ensure you are using the latest librsvg 2.63.2.\n\n### Workarounds\n\nAdd the following to your code to prevent sharp from decoding SVG images.\n```js\nsharp.block({ operation: [\"VipsForeignL",
+     "cwe": [
+      "CWE-1395",
+      "CWE-416"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p024",
+   "slug": "image-comparison-tool",
+   "package": "npm:source-map-js",
+   "version": "1.2.1",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-68fv-2mgg-jv7q",
+     "cve": [
+      "CVE-2026-93749"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.2.2",
+     "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+     "details": "source-map-js through 1.2.1 fails to validate the per-section offset line value in indexed source maps, allowing attackers to specify arbitrary numeric values. Attackers can supply extremely large offset line values that cause synchronous event loop blocking for extended periods, preventing the service from handling other requests.",
+     "cwe": [
+      "CWE-1284"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p025",
+   "slug": "lumen",
+   "package": "crates:rustls-webpki",
+   "version": "0.103.10",
+   "where": "Cargo.lock",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-82j2-j2ch-gfr8",
+     "cve": [
+      "CVE-2026-93599"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.103.13",
+     "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
+     "details": "### Summary\n\n`bit_string_flags()` in `src/der.rs` panics with an index-out-of-bounds when given a BIT STRING whose content is exactly `[0x00]` (one byte: zero padding bits, zero data bytes). This is reachable through the public API `BorrowedCertRevocationList::from_der()` via the `issuingDistributionPoint` CRL extension.\n\n**Precondition**: CRL checking is opt-in in rustls-webpki. This vulnerability affects only applications that explicitly pass `RevocationOptions` to `verify_for_usage()` and load CRL bytes from a source the attacker can influence. The default rustls configuration (no `RevocationOptions`) is not affected.\n\n> **AI disclosure**: This report was prepared with AI assistance (Clau",
+     "cwe": [
+      "CWE-125"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p026",
+   "slug": "mergegate",
+   "package": "crates:gix",
+   "version": "0.89.0",
+   "where": "Cargo.lock",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-q54r-jf2p-rfr2",
+     "cve": [],
+     "severity": "HIGH",
+     "fixed_in": "0.90.0",
+     "summary": "gitoxide gix: untrusted .git/config disables filesystem .git-protection path checks via unfiltered protect_options()",
+     "details": "## Summary\n\nIn the `gix` crate, `Cache::protect_options()` in `gix/src/config/cache/access.rs` reads the three filesystem path-protection settings (`core.protectHFS`, `core.protectNTFS`, and `gitoxide.core.protectWindows`) with the unfiltered `gix_config::File::boolean()` accessor instead of the trust-aware `boolean_filter()` accessor used by every other security-critical config read in the same file. When a repository is opened with reduced trust (an ownership mismatch, which maps `.git/config` sections to `Trust::Reduced`), these protection settings should not be honored from the untrusted repository-local config. Because the trust filter is skipped, an attacker who controls a repository's",
+     "cwe": [
+      "CWE-349"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p027",
+   "slug": "mergegate",
+   "package": "crates:wasmtime",
+   "version": "48.0.6",
+   "where": "Cargo.lock",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-mghf-wjfp-p5xm",
+     "cve": [
+      "CVE-2026-115893"
+     ],
+     "severity": "CRITICAL",
+     "fixed_in": "48.0.7",
+     "summary": "Wasmtime: Cranelift backend on aarch64 can jump to incorrect target on large Wasm `br_table` instruction",
+     "details": "## Summary\n\nWhen running with the Cranelift compiler backend on an aarch64 target, Wasmtime can compile a Wasm module with more than ~256k targets on one `br_table` instruction in a way that results in an incorrect conditional branch target. This conditional branch could then jump to arbitrary other code (at an user-controlled offset), leading to arbitrary sandbox escapes.\n\n## Impact\n\nAny Wasmtime engine running on aarch64 with default settings can be forced to jump to arbitrary code by a user-controlled Wasm module. All versions of Wasmtime/Cranelift that support aarch64, since the initial release of that support in 2020 (before Wasmtime v1.0), are affected.\n\n## Patches\n\nWasmtime v36.0.19, ",
+     "cwe": [
+      "CWE-691"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p028",
+   "slug": "nlm-memory",
+   "package": "npm:adm-zip",
+   "version": "0.5.18",
+   "where": "published package, fresh install",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-j5f4-cc29-5x44",
+     "cve": [
+      "CVE-2026-102282"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.6.1",
+     "summary": "adm-zip extraction preserves SUID/SGID bits from untrusted ZIPs -> local privilege escalation",
+     "details": "## Summary\n\nadm-zip applies the Unix permission bits stored in a zip entry directly to the extracted file via `fs.chmodSync()` when `keepOriginalPermission=true` is passed to `extractAllTo()`/`extractEntryTo()` — and it never filters the setuid/setgid/sticky bits out of those bits. A zip crafted by an attacker can therefore produce an extracted binary with mode `04755`. When extraction runs as root (the default posture in Docker builds, CI runners, and privileged install steps — the exact environments where this flag is used), the resulting root-owned setuid file is executed later by a lesser-privileged user, turning the attacker's code into a root execution.\n\n## Details\n\nThe mode a zip entr",
+     "cwe": [
+      "CWE-732"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p029",
+   "slug": "nlm-memory",
+   "package": "npm:sharp",
+   "version": "0.34.5",
+   "where": "published package, fresh install",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-f88m-g3jw-g9cj",
+     "cve": [
+      "CVE-2026-114113"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.35.0",
+     "summary": "sharp inherited vulnerabilities in libvips: CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591",
+     "details": "### Impact\n\nA number of vulnerabilities, two rated as \"High\" severity using CVSSv4, have been discovered and fixed in the upstream libvips dependency.\n\nThose processing untrusted input with versions of sharp prior to 0.35.0 are affected.\n\n### Patches\n\n#### Using prebuilt binaries provided by sharp?\n\nMost people rely on the prebuilt binaries provided by sharp.\n\nPlease upgrade sharp to the latest version, currently 0.35.3, which provides libvips 8.18.3.\n\n#### Using a globally-installed libvips?\n\nPlease ensure you are using the latest libvips 8.18.3.\n\n### Workarounds\nAdd the following to your code to prevent sharp from decoding GIF, TIFF and VIPS images.\n```js\nsharp.block({ operation: [\"VipsFor",
+     "cwe": [
+      "CWE-1395"
+     ]
+    },
+    {
+     "id": "GHSA-rgj7-g3m4-5g8c",
+     "cve": [
+      "CVE-2026-114112"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.35.4",
+     "summary": "sharp: Vulnerabilities in libheif: GHSA-g89c-p67h-r497 and GHSA-2jg2-4ch7-h545",
+     "details": "### Impact\nA number of vulnerabilities, two rated as \"Critical\" severity using CVSSv3, have been discovered and fixed in the upstream libheif dependency. These can lead to possible remote code execution (RCE) on glibc-based Linux when run under certain conditions.\n\nThe attack vector for these claims to be \"network\" however sharp does not provide any networking features so this vulnerability is down-rated to a \"High\" severity using CVSSv4 but please note its Subsequent System Impact.\n\nThose processing untrusted input with versions of sharp prior to 0.35.4 are affected.\n\n### Patches\n\n#### Using prebuilt binaries provided by sharp?\n\nMost people rely on the prebuilt binaries provided by sharp.\n\n",
+     "cwe": [
+      "CWE-122"
+     ]
+    },
+    {
+     "id": "GHSA-wq5f-xc86-pv6w",
+     "cve": [
+      "CVE-2026-114111"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.35.5",
+     "summary": "sharp : Vulnerability in librsvg dependency CVE-2026-96889",
+     "details": "### Impact\n\nA memory-related vulnerability has been discovered and fixed in the upstream librsvg dependency. When certain runtime-specific conditions apply, this vulnerability can lead to possible remote code execution (RCE) on glibc-based Linux.\n\n### Patches\n\n#### Using prebuilt binaries provided by sharp?\n\nMost people rely on the prebuilt binaries provided by sharp.\n\nPlease upgrade sharp to the latest version, currently 0.35.5, which provides librsvg 2.63.2.\n\n#### Using a globally-installed librsvg?\n\nPlease ensure you are using the latest librsvg 2.63.2.\n\n### Workarounds\n\nAdd the following to your code to prevent sharp from decoding SVG images.\n```js\nsharp.block({ operation: [\"VipsForeignL",
+     "cwe": [
+      "CWE-1395",
+      "CWE-416"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p030",
+   "slug": "paintracker-ca",
+   "package": "npm:dompurify",
+   "version": "3.4.2",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-mrv2-3pqr-j5jr",
+     "cve": [
+      "CVE-2026-116803"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.4.17",
+     "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-9",
+     "details": "### Summary\n\nThe 3.4.16 fix for GHSA-p98j-92pf-mc4p only covers a hook that removes the node it was called for. If an `IN_PLACE` hook removes a different node, like the current node's parent or a sibling that has not been visited yet, that subtree is never walked or neutralized. Event handlers in it stay on the elements, and an `<img onerror>` that was already loading fires after `sanitize()` returns.\n\nThe README says: \"Nodes that a hook detaches from the tree ... are treated as removed. In IN_PLACE mode their subtree is neutralized inline, so an `<img onload>` that was already loading when you built the live tree cannot fire after `sanitize()` returns.\" That does not hold when the detached ",
+     "cwe": [
+      "CWE-693",
+      "CWE-79"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p031",
+   "slug": "paintracker-ca",
+   "package": "npm:follow-redirects",
+   "version": "1.16.0",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-8r9p-f939-6h3c",
+     "cve": [
+      "CVE-2026-111755"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.16.1",
+     "summary": "follow-redirects sensitiveHeaders regex escaping can expose credential headers",
+     "details": "### Summary\nfollow-redirects 1.16.0 introduced the `sensitiveHeaders` option (the fix for CVE-2026-40895 / GHSA-r4q5-vmmm-2653), which lets an application declare extra header names that must be removed when a redirect crosses to a different host or downgrades protocol. The filter is a single case-insensitive regular expression built by concatenating the declared header names into an alternation after passing each through `escapeRegex`. `escapeRegex` escapes only a partial set of metacharacters and leaves `^`, `|`, `[`, `{`, and `}` unescaped. Header names may legitimately contain `^` and `|` (both are valid RFC 9110 token characters that Node accepts and sends), and for a declared name cont",
+     "cwe": [
+      "CWE-185",
+      "CWE-200"
+     ]
+    },
+    {
+     "id": "GHSA-mrwp-f3q8-3g9p",
+     "cve": [
+      "CVE-2026-116689"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.16.2",
+     "summary": "follow-redirects: Cross-realm sensitiveHeaders arrays are discarded and custom credentials can follow redirects",
+     "details": "### Summary\n\nfollow-redirects 1.16.0 and 1.16.1 validate the documented sensitiveHeaders option with instanceof Array. An array created in another JavaScript realm is silently replaced with an empty list, so a caller-declared custom credential header can be forwarded to an attacker-controlled cross-origin redirect destination.\n\n### Details\n\nAffected versions\n\nThe sensitiveHeaders option was introduced in 1.16.0. Published 1.16.0 and 1.16.1 both reproduced, giving a tested affected range of 1.16.0 through 1.16.1. The source checkout was pinned at revision 46301256333c90b7faac7aa126effe72ec16d16e; the exact npm 1.16.1 artifact reproduced independently.\n\nRoot cause\n\nindex.js resets options.sens",
+     "cwe": [
+      "CWE-201"
+     ]
+    },
+    {
+     "id": "GHSA-q3jh-wrc6-jgq8",
+     "cve": [
+      "CVE-2026-111756"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.16.1",
+     "summary": "follow-redirects array-form headers bypass cross-origin credential stripping",
+     "details": "### Summary\nfollow-redirects removes sensitive credential headers (Authorization, Proxy-Authorization, Cookie, and any caller-declared `sensitiveHeaders`) before following a redirect that crosses to a different host or downgrades to a less secure protocol. The removal routine iterates the caller's headers container with `for...in` and matches header names against a filter. This assumes the headers container is a plain object keyed by header names. Node's underlying `http.request`, which follow-redirects is a drop-in replacement for, also accepts headers as an alternating array of names and values. For an array, `for...in` yields the numeric indices `\"0\"`, `\"1\"`, `\"2\"` and so on, which never ",
+     "cwe": [
+      "CWE-200",
+      "CWE-212"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p032",
+   "slug": "paintracker-ca",
+   "package": "npm:http-proxy-middleware",
+   "version": "3.0.5",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-gcq2-9pq2-cxqm",
+     "cve": [
+      "CVE-2026-55603"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.0.7",
+     "summary": "http-proxy-middleware: multipart/form-data field injection via unescaped CRLF in `fixRequestBody`",
+     "details": "## Summary\n`fixRequestBody()` is the library's documented helper for re-emitting a request body that was already consumed by a body parser. When the **outgoing** `Content-Type` is `multipart/form-data`, it rebuilds the body with `handlerFormDataBodyData()`, which interpolates each `req.body` key and value directly into the multipart wire format **without neutralizing CR/LF**:\n\n```js\n// dist/handlers/fix-request-body.js\nfunction handlerFormDataBodyData(contentType, data) {\n  const boundary = contentType.replace(/^.*boundary=(.*)$/, '$1');\n  let str = '';\n  for (const [key, value] of Object.entries(data)) {\n    str += `--${boundary}\\r\\nContent-Disposition: form-data; name=\"${key}\"\\r\\n\\r\\n${val",
+     "cwe": [
+      "CWE-93"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p033",
+   "slug": "paintracker-ca",
+   "package": "npm:ip-address",
+   "version": "10.2.0",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-mwp4-54f8-5fhr",
+     "cve": [
+      "CVE-2026-69192"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "10.3.1",
+     "summary": "ip-address: Address4 decodes leading-zero octets as decimal while resolvers decode them as octal, allowing SSRF and trust-boundary bypass",
+     "details": "### Summary\n\n`Address4` accepts an octet written with a leading zero and decodes it as decimal, while the WHATWG URL host parser, `inet_aton`, and `getaddrinfo` all decode a leading zero as octal. The library and the network stack therefore disagree about which host a string names. `new Address4('012.0.0.1')` reports `correctForm()` of `12.0.0.1` and `isPrivate()` of `false`, but `fetch('http://012.0.0.1/')` connects to `10.0.0.1`.\n\nAn application that builds a network trust-boundary decision on these checks (for example a filter intended to block Server-Side Request Forgery, or SSRF) will classify an internal target as external and allow the request. SSRF is an attack in which a user-suppli",
+     "cwe": [
+      "CWE-20",
+      "CWE-918"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p034",
+   "slug": "paintracker-ca",
+   "package": "npm:nanoid",
+   "version": "3.3.11",
+   "where": "packages/blog/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-xwg4-73v4-xw9w",
+     "cve": [
+      "CVE-2026-73086"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.3.12",
+     "summary": "nanoid: Integer Overflow or Wraparound",
+     "details": "### Summary\n\nAn integer overflow in `nanoid(size)` permanently corrupts the process-wide CSPRNG pool, causing all subsequent ID generation to return the deterministic string `\"uuuuuuuuuuuuuuuuuuuuu\"`. Any application that passes user-influenced values to the `size` parameter loses all randomness guarantees for session tokens, CSRF tokens, and unique identifiers until process restart.\n\n### Details\n\n`nanoid()` at [`index.js:101`](https://github.com/ai/nanoid/blob/main/index.js#L101) coerces the `size` parameter with `size |= 0`, which converts it to a signed 32-bit integer. When `size >= 2^31` (e.g., `2147483648`), this wraps to `-2147483648`.\n\nThe negative value is passed to `fillPool()` ([`i",
+     "cwe": [
+      "CWE-190"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p035",
+   "slug": "paintracker-ca",
+   "package": "npm:proxy-addr",
+   "version": "2.0.7",
+   "where": "desktop/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-jqcg-44mw-7w3h",
+     "cve": [
+      "CVE-2026-90711"
+     ],
+     "severity": "CRITICAL",
+     "fixed_in": "2.0.8",
+     "summary": "proxy-addr vulnerable to IP spoofing via IPv4-mapped IPv6 trust subnet",
+     "details": "### Impact\n\n`proxy-addr` determines which network hops are trusted proxies so that `X-Forwarded-For` can be believed. When an application configures a trust subnet as an IPv4-mapped IPv6 address with a short prefix, such as `::ffff:10.0.0.0/8` (the correct spelling is `::ffff:10.0.0.0/104`), the subnet compiles with all-zero leading bits and matches every IPv4 address instead of the block it names. The same happens for any IPv6 trust subnet with zero leading bits, such as `::/1`.\n\nEvery unauthenticated client is then trusted as a proxy at hop 0, so `proxyaddr(req, trust)`, and therefore `req.ip` and `req.ips` in Express, returns whatever the client sends in `X-Forwarded-For`. This defeats IP",
+     "cwe": [
+      "CWE-290",
+      "CWE-348",
+      "CWE-697"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p036",
+   "slug": "paintracker-ca",
+   "package": "npm:react-router",
+   "version": "7.17.0",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-qwww-vcr4-c8h2",
+     "cve": [],
+     "severity": "HIGH",
+     "fixed_in": "7.18.2",
+     "summary": "React Router: RSC Mode CSRF Bypass Allows Action Execution Before 400 Response",
+     "details": "This is a follow up to CVE-2026-22030 to address related CSRF flows in unstable RSC code paths.\n\n> [!NOTE]\n> This only affects your application if you are using the unstable RSC APIs",
+     "cwe": [
+      "CWE-352"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p037",
+   "slug": "paintracker-ca",
+   "package": "npm:sharp",
+   "version": "0.34.5",
+   "where": "packages/blog/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-f88m-g3jw-g9cj",
+     "cve": [
+      "CVE-2026-114113"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.35.0",
+     "summary": "sharp inherited vulnerabilities in libvips: CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591",
+     "details": "### Impact\n\nA number of vulnerabilities, two rated as \"High\" severity using CVSSv4, have been discovered and fixed in the upstream libvips dependency.\n\nThose processing untrusted input with versions of sharp prior to 0.35.0 are affected.\n\n### Patches\n\n#### Using prebuilt binaries provided by sharp?\n\nMost people rely on the prebuilt binaries provided by sharp.\n\nPlease upgrade sharp to the latest version, currently 0.35.3, which provides libvips 8.18.3.\n\n#### Using a globally-installed libvips?\n\nPlease ensure you are using the latest libvips 8.18.3.\n\n### Workarounds\nAdd the following to your code to prevent sharp from decoding GIF, TIFF and VIPS images.\n```js\nsharp.block({ operation: [\"VipsFor",
+     "cwe": [
+      "CWE-1395"
+     ]
+    },
+    {
+     "id": "GHSA-rgj7-g3m4-5g8c",
+     "cve": [
+      "CVE-2026-114112"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.35.4",
+     "summary": "sharp: Vulnerabilities in libheif: GHSA-g89c-p67h-r497 and GHSA-2jg2-4ch7-h545",
+     "details": "### Impact\nA number of vulnerabilities, two rated as \"Critical\" severity using CVSSv3, have been discovered and fixed in the upstream libheif dependency. These can lead to possible remote code execution (RCE) on glibc-based Linux when run under certain conditions.\n\nThe attack vector for these claims to be \"network\" however sharp does not provide any networking features so this vulnerability is down-rated to a \"High\" severity using CVSSv4 but please note its Subsequent System Impact.\n\nThose processing untrusted input with versions of sharp prior to 0.35.4 are affected.\n\n### Patches\n\n#### Using prebuilt binaries provided by sharp?\n\nMost people rely on the prebuilt binaries provided by sharp.\n\n",
+     "cwe": [
+      "CWE-122"
+     ]
+    },
+    {
+     "id": "GHSA-wq5f-xc86-pv6w",
+     "cve": [
+      "CVE-2026-114111"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.35.5",
+     "summary": "sharp : Vulnerability in librsvg dependency CVE-2026-96889",
+     "details": "### Impact\n\nA memory-related vulnerability has been discovered and fixed in the upstream librsvg dependency. When certain runtime-specific conditions apply, this vulnerability can lead to possible remote code execution (RCE) on glibc-based Linux.\n\n### Patches\n\n#### Using prebuilt binaries provided by sharp?\n\nMost people rely on the prebuilt binaries provided by sharp.\n\nPlease upgrade sharp to the latest version, currently 0.35.5, which provides librsvg 2.63.2.\n\n#### Using a globally-installed librsvg?\n\nPlease ensure you are using the latest librsvg 2.63.2.\n\n### Workarounds\n\nAdd the following to your code to prevent sharp from decoding SVG images.\n```js\nsharp.block({ operation: [\"VipsForeignL",
+     "cwe": [
+      "CWE-1395",
+      "CWE-416"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p038",
+   "slug": "paintracker-ca",
+   "package": "npm:source-map-js",
+   "version": "1.2.1",
+   "where": "packages/blog/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-68fv-2mgg-jv7q",
+     "cve": [
+      "CVE-2026-93749"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.2.2",
+     "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+     "details": "source-map-js through 1.2.1 fails to validate the per-section offset line value in indexed source maps, allowing attackers to specify arbitrary numeric values. Attackers can supply extremely large offset line values that cause synchronous event loop blocking for extended periods, preventing the service from handling other requests.",
+     "cwe": [
+      "CWE-1284"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p039",
+   "slug": "paintracker-ca",
+   "package": "npm:next",
+   "version": "16.2.4",
+   "where": "packages/blog/package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-2464-fhr4-w9xw",
+     "cve": [],
+     "severity": "CRITICAL",
+     "fixed_in": "16.4.1",
+     "summary": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when SVG files are used",
+     "details": "## Impact\n\nA memory-related vulnerability has been discovered in an upstream library used for Image Optimization can lead to possible remote code execution (RCE) when Next.js runs on glibc-based Linux.\n\n## Workaround\n\nEnsure the version of `sharp` used by Next.js is greater than or equal to `0.35.5`. Fresh installs automatically get a fixed version of `sharp`.\nUpgrading Next.js to the patched versions will ensure package managers automatically provide a fixed version of `sharp` to Next.js.",
+     "cwe": [
+      "CWE-1395"
+     ]
+    },
+    {
+     "id": "GHSA-267c-6grr-h53f",
+     "cve": [
+      "CVE-2026-44575"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "16.2.5",
+     "summary": "Next.js has a Middleware / Proxy bypass in App Router applications via segment-prefetch routes",
+     "details": "### Impact\n\nApp Router applications that rely on middleware or proxy-based checks for authorization can allow unauthorized access through transport-specific route variants used for segment prefetching. In affected configurations, specially crafted `.rsc` and segment-prefetch URLs can resolve to the same page without being matched by the intended middleware rule, which can allow protected content to be reached without the expected authorization check.\n\n### Fix\n\nWe now include App Router transport variants when generating middleware matchers, so middleware protections are applied consistently to those requests as well as to the normal page URL.\n\n### Workarounds\n\nIf you cannot upgrade immediate",
+     "cwe": [
+      "CWE-288"
+     ]
+    },
+    {
+     "id": "GHSA-6gpp-xcg3-4w24",
+     "cve": [
+      "CVE-2026-64642"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "16.2.11",
+     "summary": "Next.js: Middleware / Proxy bypass in App Router applications using Turbopack and single locale",
+     "details": "## Impact\n\nCrafted requests targeting Next.js applications using App Router built with Turbopack and a **single** entry in `config.i18n.locales` can bypass middleware/proxy based authentication.\n\n## Workarounds\n\nIf you cannot upgrade immediately, enforce authorization in the page's server-side data path instead of relying solely on middleware.",
+     "cwe": [
+      "CWE-285"
+     ]
+    },
+    {
+     "id": "GHSA-89xv-2m56-2m9x",
+     "cve": [
+      "CVE-2026-64649"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "16.2.11",
+     "summary": "Next.js: Server-Side Request Forgery in Server Actions on custom servers",
+     "details": "## Impact\n\nWhen a Server Action forwards or redirects a request, an attacker can cause the server to send that outbound request to a malicious host (Server-Side Request Forgery). This requires the attacker's request to control Host-associated headers. In some configurations, it's also possible to obtain internal values that weaken middleware/proxy authorization.\n\nApplications that use Server Actions are affected when the incoming host header is not fixed to a trusted value. This typically occurs on custom servers, or on deployments not behind a proxy that pins the host. Managed hosting pins the host upstream and is not affected; `next start` and standalone output do the same from version 14.",
+     "cwe": [
+      "CWE-918"
+     ]
+    },
+    {
+     "id": "GHSA-c4j6-fc7j-m34r",
+     "cve": [
+      "CVE-2026-44578"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "16.2.5",
+     "summary": "Next.js vulnerable to server-side request forgery in applications using WebSocket upgrades",
+     "details": "### Impact\n\nSelf-hosted applications using the built-in Node.js server can be vulnerable to server-side request forgery through crafted WebSocket upgrade requests. An attacker can cause the server to proxy requests to arbitrary internal or external destinations, which may expose internal services or cloud metadata endpoints. Vercel-hosted deployments are not affected.\n\n### Fix\n\nWe now apply the same safety checks to WebSocket upgrade handling that already existed for normal HTTP requests, so upgrade requests are only proxied when routing has explicitly marked them as safe external rewrites.\n\n### Workarounds\n\nIf you cannot upgrade immediately, do not expose the origin server directly to untru",
+     "cwe": [
+      "CWE-918"
+     ]
+    },
+    {
+     "id": "GHSA-cjq9-62q9-8jv4",
+     "cve": [
+      "CVE-2026-94483"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "16.3.8",
+     "summary": "Next.js has Server-Side Request Forgery in Image Optimization",
+     "details": "## Impact\n\nAn attacker-controlled, allow-listed remote URL can lead to server-side request forgery (e.g. to private IPs) during Image Optimization. \n\n## Workaround\n\nAudit allow-listed remote URLs in `images.remotePatterns` (see https://nextjs.org/docs/app/getting-started/images#remote-images) for hosts that may not be trusted with their DNS entries. If no `images.remotePatterns` are configured, your app is not affected.",
+     "cwe": [
+      "CWE-918"
+     ]
+    },
+    {
+     "id": "GHSA-vcvr-r3jv-pc5j",
+     "cve": [],
+     "severity": "CRITICAL",
+     "fixed_in": "16.3.6",
+     "summary": "Next.js: Remote Code Execution in next/og ImageResponse",
+     "details": "## Impact\n\nThe Node.js `ImageResponse` implementation from `next/og` is affected by an upstream vulnerability. This can lead to remote code execution.\n\nAffected applications pass attacker-controlled values into SVG content, attributes, or styles during image generation:\n\n```tsx\nimport { ImageResponse } from 'next/og'\n\nexport async function GET(request: Request) {\n  const value = new URL(request.url).searchParams.get('value') ?? ''\n\n  return new ImageResponse(\n    <svg width=\"1200\" height=\"630\">\n      <title>{value}</title>\n    </svg>\n  )\n}\n```\n\nApplications using the Edge `ImageResponse` implementation, or applications that do not pass attacker-controlled values into SVG content, attributes,",
+     "cwe": [
+      "CWE-1395"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p040",
+   "slug": "phantom",
+   "package": "npm:@modelcontextprotocol/sdk",
+   "version": "1.31.0",
+   "where": "published package, fresh install",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-22jm-h49p-29qw",
+     "cve": [
+      "CVE-2026-111767"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.32.0",
+     "summary": "MCP TypeScript SDK: Experimental tasks were not tied to the session that created them",
+     "details": "### Summary\nIn affected versions, the experimental tasks feature (`taskStore`) did not check which session created a task. Clients sharing one `InMemoryTaskStore` could list, read and cancel each other's tasks.\n\nExperimental tasks are deprecated. The 2026-07-28 specification replaced them with a redesigned extension. The best course of action is to stop using them.\n\n### Am I affected?\nOnly if your HTTP server passes `taskStore` to `McpServer` or `Server`. If `grep -ri taskstore --exclude-dir=node_modules .` finds nothing, you are not affected.\n\nAffected versions: `@modelcontextprotocol/sdk` 1.24.0 through 1.31.0. The 2.x packages are not affected.\n\n### Fix\nUpgrade to `@modelcontextprotocol/s",
+     "cwe": [
+      "CWE-639",
+      "CWE-862"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p041",
+   "slug": "pooprusteek",
+   "package": "crates:wasmtime",
+   "version": "27.0.0",
+   "where": "Cargo.lock",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-897f-g5gm-fmxm",
+     "cve": [
+      "CVE-2026-115889"
+     ],
+     "severity": "CRITICAL",
+     "fixed_in": "36.0.19",
+     "summary": "Wasmtime: Bit-packing in Cranelift compiler causes silent overflow and miscompilation",
+     "details": "## Summary\n\nIn Wasmtime prior to v43, the Cranelift compiler backend bit-packs its SSA value indices in a way that can result in silent overflow in release builds, and result in incorrect value references in the IR resulting in arbitrary miscompilation. A very large Wasm function body, or one that is specially crafted to use many SSA values, can use this to force type-confusion or other arbitrary side-effects and escape the sandbox.\n\nCranelift was changed in Wasmtime v43 to use a full `u32` index, with checks if that limit is exceeded, and so is no longer susceptible to this bug.\n\n## Impact\n\nA Wasmtime engine with default settings (using the Cranelift backend) on any architecture/platform co",
+     "cwe": [
+      "CWE-197",
+      "CWE-843"
+     ]
+    },
+    {
+     "id": "GHSA-mghf-wjfp-p5xm",
+     "cve": [
+      "CVE-2026-115893"
+     ],
+     "severity": "CRITICAL",
+     "fixed_in": "36.0.19",
+     "summary": "Wasmtime: Cranelift backend on aarch64 can jump to incorrect target on large Wasm `br_table` instruction",
+     "details": "## Summary\n\nWhen running with the Cranelift compiler backend on an aarch64 target, Wasmtime can compile a Wasm module with more than ~256k targets on one `br_table` instruction in a way that results in an incorrect conditional branch target. This conditional branch could then jump to arbitrary other code (at an user-controlled offset), leading to arbitrary sandbox escapes.\n\n## Impact\n\nAny Wasmtime engine running on aarch64 with default settings can be forced to jump to arbitrary code by a user-controlled Wasm module. All versions of Wasmtime/Cranelift that support aarch64, since the initial release of that support in 2020 (before Wasmtime v1.0), are affected.\n\n## Patches\n\nWasmtime v36.0.19, ",
+     "cwe": [
+      "CWE-691"
+     ]
+    },
+    {
+     "id": "GHSA-xx5w-cvp6-jv83",
+     "cve": [
+      "CVE-2026-34987"
+     ],
+     "severity": "CRITICAL",
+     "fixed_in": "36.0.7",
+     "summary": "Wasmtime with Winch compiler backend on aarch64 may allow a sandbox-escaping memory access",
+     "details": "### Impact\n\nWasmtime with its Winch (baseline) non-default compiler backend may allow properly constructed guest Wasm to access host memory outside of its linear-memory sandbox.\n\nThis vulnerability requires use of the Winch compiler (`-Ccompiler=winch`). By default, Wasmtime uses its Cranelift backend, not Winch. With Winch, the same incorrect assumption is present in theory on both aarch64 and x86-64. The aarch64 case has an observed-working proof of concept, while the x86-64 case is theoretical and may not be reachable in practice.\n\nThis Winch compiler bug can allow the Wasm guest to access memory before or after the linear-memory region, independently of whether pre- or post-guard regions",
+     "cwe": [
+      "CWE-125",
+      "CWE-787"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p042",
+   "slug": "praana",
+   "package": "npm:seroval",
+   "version": "1.5.6",
+   "where": "published package, fresh install",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-7rv5-mrxv-xcr9",
+     "cve": [
+      "CVE-2026-116580"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.6.8",
+     "summary": "Seroval: Deserialization invokes attacker-chosen callables: AsyncIteratorFactoryInstance calls source.on(listener) without type check",
+     "details": "### Summary\n\nWhen `fromJSON` rebuilt an async iterator, it called `on()` on the iterator's source without checking that the source was a seroval stream. A crafted payload could pick another value as the source, such as a function returned by an application plugin. The deserializer then called that value's `on` method.\n\nThis is a variant of GHSA-mv8w-475r-vwqw. That fix covered the promise and stream control nodes but not the async iterator node.\n\n### Impact\n\nAn application that passes untrusted input to `fromJSON` with plugins that return callable values can have those callables invoked during deserialization. What this allows depends on what the plugin's values do.\n\n### Affected versions\n\n-",
+     "cwe": [
+      "CWE-502"
+     ]
+    },
+    {
+     "id": "GHSA-97r2-qh9m-474h",
+     "cve": [
+      "CVE-2026-116581"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.6.8",
+     "summary": "Seroval: fromJSON deserializer trusts node-supplied array length and sequence doneAt (unauthenticated event-loop DoS)",
+     "details": "### Summary\n\n`fromJSON` and `fromCrossJSON` used two node fields without checking them.\n\n- An array node's element list was not checked to be an array. A small payload could set the length the decoder looped over. This part is also tracked in GHSA-wp97-x4hv-qvhp.\n- A sequence node's done index was not checked. A crafted value produced an iterator that never finished.\n\n### Impact\n\nA service that passes untrusted input to `fromJSON` or `fromCrossJSON` can be made unavailable by an unauthenticated request.\n\n- The array case blocks the thread while the decoder runs.\n- The sequence case makes any code that reads the resulting iterator to the end run forever.\n\n### Patches\n\nFixed in `seroval@1.6.8`",
+     "cwe": [
+      "CWE-1284",
+      "CWE-835"
+     ]
+    },
+    {
+     "id": "GHSA-p6vx-979v-rg4c",
+     "cve": [
+      "CVE-2026-104846"
+     ],
+     "severity": "CRITICAL",
+     "fixed_in": "1.6.2",
+     "summary": "Seroval: `fromJSON()` Promise thenable assimilation invokes plugin-produced callables (bypass of GHSA-mv8w-475r-vwqw)",
+     "details": "A fulfilled Promise node deserialized by `fromJSON()` can trigger unintended invocation of a plugin-produced callable through native ECMAScript thenable assimilation. This bypasses the type-confusion fix in `seroval@1.5.3` (GHSA-mv8w-475r-vwqw / CVE-2026-59940) and affects every plugin-capable release from `0.12.0` through the current `1.6.0`.",
+     "cwe": [
+      "CWE-843"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p043",
+   "slug": "privateer-agent",
+   "package": "npm:undici",
+   "version": "8.9.0",
+   "where": "published package, fresh install",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-2m5v-pch6-74hx",
+     "cve": [
+      "CVE-2026-109383"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "8.12.2",
+     "summary": "undici vulnerable to TLS certificate validation bypass via dropped tls options in Agent",
+     "details": "### Impact\n\nundici's `Agent` passes its constructor options through a JSON-based deep clone (`JSON.parse(JSON.stringify(...))`) before forwarding them to each per-origin `Pool`. JSON cannot represent functions, so a caller-supplied `tls` option containing a `checkServerIdentity` callback is silently dropped before it reaches the TLS layer. As a result, a TLS peer whose certificate a custom `checkServerIdentity` was written to reject, but which passes Node's default hostname and chain checks, is silently accepted when the request is made through `Agent`. Because `Agent` is the default dispatcher behind `request`, `fetch`, and `setGlobalDispatcher`, this is the path most applications use. `Env",
+     "cwe": [
+      "CWE-295"
+     ]
+    },
+    {
+     "id": "GHSA-4w7w-5xrc-9h26",
+     "cve": [
+      "CVE-2026-109829"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "8.12.2",
+     "summary": "undici vulnerable to cache poisoning and cross-user disclosure via cross-origin redirects",
+     "details": "### Impact\n\nWhen an originless `Agent` composes the redirect and cache interceptors as `compose(redirect(), cache())` with a shared cache (`type: 'shared'`), the cache builds its key from the original request URL before the redirect handler changes the origin. The response produced after a redirect is then stored under the original key, even when the redirect crossed to a different origin.\n\nAn attacker who controls the target of a redirect from a trusted URL can have their response cached under that trusted URL. A later caller requesting the trusted URL receives the attacker's body from the shared cache without either origin being contacted, allowing persistent cache poisoning. The same key ",
+     "cwe": [
+      "CWE-346",
+      "CWE-524"
+     ]
+    },
+    {
+     "id": "GHSA-qrxm-fqhp-jwvm",
+     "cve": [
+      "CVE-2026-87018"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "8.12.2",
+     "summary": "undici vulnerable to Denial of Service via TLS 1.2 certificate-changing renegotiation",
+     "details": "## Impact\n\nundici crashes the client process when a TLS 1.2 server renegotiates after the connection is established and presents a different, CA-trusted certificate whose hostname does not match the requested host. Node.js re-runs hostname verification on the renegotiated handshake and destroys the socket with `ERR_TLS_CERT_ALTNAME_INVALID`. undici's established socket error handler asserted that this error code could never occur, so the peer-controlled error became an uncaught `AssertionError` that terminates the Node.js process. Both the HTTP/1.1 and HTTP/2 paths are affected.\n\nA malicious or compromised HTTPS endpoint reached through undici or the global `fetch()` can crash the client wit",
+     "cwe": [
+      "CWE-248",
+      "CWE-617"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p044",
+   "slug": "pulsechain-mcp",
+   "package": "npm:@modelcontextprotocol/server",
+   "version": "2.0.0",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-jm63-cq47-j5jp",
+     "cve": [
+      "CVE-2026-111770"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "2.3.0",
+     "summary": "MCP  TypeScript server SDK: Shared transport or server instances delivered one HTTP client's messages to another",
+     "details": "### Summary\nIn affected versions, an MCP server reached over HTTP could deliver one client's responses and notifications to another client. This happened when clients shared one stateless transport, or one `McpServer` or `Server` instance.\n\nMessages were matched to a connection by JSON-RPC `id` alone. SDK clients number requests from 0, so ids collide in normal use.\n\n### Am I affected?\nYes, if more than one client can reach your HTTP endpoint and your code creates the transport or the server once at startup, instead of once per request or per session. Until this release, the README examples of `@modelcontextprotocol/hono`, `express`, `fastify` and `node` showed that pattern.\n\nAffected versio",
+     "cwe": [
+      "CWE-362"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p045",
+   "slug": "rustcode",
+   "package": "crates:zip",
+   "version": "2.4.2",
+   "where": "Cargo.lock",
+   "scope": "runtime",
+   "group": "flagged",
+   "advisories": [
+    {
+     "id": "GHSA-m665-v7pm-7grj",
+     "cve": [
+      "CVE-2026-115905"
+     ],
+     "severity": "CRITICAL",
+     "fixed_in": "9.0.5",
+     "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwri",
+     "details": "## Summary\nA critical architectural parser differential exists in the `zip` crate (`<= 9.0.4`) between random-access archive readers (`ZipArchive`) and streaming readers (`ZipStreamReader`). `ZipArchive` considers the Central Directory File Header (CDFH) authoritative and ignores the filename declared in the Local File Header (LFH). In contrast, `ZipStreamReader` relies exclusively on the Local File Header (LFH) when extracting files to the filesystem.\n\nThis discrepancy enables ZIP archives to appear to have different file paths and contents according to which tool is reading them.\n\n---\n\n## Details\n\n### Architectural Root Cause\nIn the PKWARE ZIP archive format, every file entry is defined in",
+     "cwe": [
+      "CWE-20",
+      "CWE-436"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p046",
+   "slug": "bailout",
+   "package": "npm:sharp",
+   "version": "0.35.4",
+   "where": "worker/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-wq5f-xc86-pv6w",
+     "cve": [
+      "CVE-2026-114111"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.35.5",
+     "summary": "sharp : Vulnerability in librsvg dependency CVE-2026-96889",
+     "details": "### Impact\n\nA memory-related vulnerability has been discovered and fixed in the upstream librsvg dependency. When certain runtime-specific conditions apply, this vulnerability can lead to possible remote code execution (RCE) on glibc-based Linux.\n\n### Patches\n\n#### Using prebuilt binaries provided by sharp?\n\nMost people rely on the prebuilt binaries provided by sharp.\n\nPlease upgrade sharp to the latest version, currently 0.35.5, which provides librsvg 2.63.2.\n\n#### Using a globally-installed librsvg?\n\nPlease ensure you are using the latest librsvg 2.63.2.\n\n### Workarounds\n\nAdd the following to your code to prevent sharp from decoding SVG images.\n```js\nsharp.block({ operation: [\"VipsForeignL",
+     "cwe": [
+      "CWE-1395",
+      "CWE-416"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p047",
+   "slug": "bailout",
+   "package": "npm:undici",
+   "version": "7.29.0",
+   "where": "worker/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-2m5v-pch6-74hx",
+     "cve": [
+      "CVE-2026-109383"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "7.30.1",
+     "summary": "undici vulnerable to TLS certificate validation bypass via dropped tls options in Agent",
+     "details": "### Impact\n\nundici's `Agent` passes its constructor options through a JSON-based deep clone (`JSON.parse(JSON.stringify(...))`) before forwarding them to each per-origin `Pool`. JSON cannot represent functions, so a caller-supplied `tls` option containing a `checkServerIdentity` callback is silently dropped before it reaches the TLS layer. As a result, a TLS peer whose certificate a custom `checkServerIdentity` was written to reject, but which passes Node's default hostname and chain checks, is silently accepted when the request is made through `Agent`. Because `Agent` is the default dispatcher behind `request`, `fetch`, and `setGlobalDispatcher`, this is the path most applications use. `Env",
+     "cwe": [
+      "CWE-295"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p048",
+   "slug": "batch-file-renamer",
+   "package": "npm:brace-expansion",
+   "version": "2.1.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-3jxr-9vmj-r5cp",
+     "cve": [
+      "CVE-2026-13149"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "2.1.2",
+     "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+     "details": "### Summary\nbrace-expansion's expand() exhibits exponential-time - O(2ⁿ) - behavior in the number of consecutive non-expanding {} groups. A short, all-ASCII input (~90 bytes/30 groups) blocks the calling thread for minutes; a slightly longer input hangs it effectively indefinitely. Because the dominant consumers run on Node's single-threaded event loop, one small input can fully stall a worker/process.\n\nIn `expand_`, `post` is computed unconditionally at the top of the function, before the early-return branches that don't use it:\n```js\nconst post = m.post.length ? expand_(m.post, max, false) : [''];   // always recurses\n  ...\nif (!isSequence && !isOptions) {\n  if (m.post.match(/,(?!,).*\\}/))",
+     "cwe": [
+      "CWE-400",
+      "CWE-407"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p049",
+   "slug": "batch-file-renamer",
+   "package": "npm:browserslist",
+   "version": "4.28.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-73wf-gq98-2v4g",
+     "cve": [
+      "CVE-2026-73088"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.28.7",
+     "summary": "Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats)",
+     "details": "## Vulnerability Details\n\n**File**: `node.js`\n**Function**: `normalizeStats()` (line ~214), reached from `getStat()` (called\n**unconditionally** on every `browserslist()` call) and `loadStat()`\n\n### Root Cause\n```js\nfunction normalizeStats(data, stats) {\n  if (!data) { data = {} }\n  if (stats && 'dataByBrowser' in stats) { stats = stats.dataByBrowser }\n  if (typeof stats !== 'object') return undefined\n\n  var normalized = {}\n  for (var i in stats) {\n    var versions = Object.keys(stats[i])\n    if (versions.length === 1 && data[i] && data[i].versions.length === 1) {\n      var normal = data[i].versions[0]\n      normalized[i] = {}\n      normalized[i][normal] = stats[i][versions[0]]\n    } else {\n",
+     "cwe": [
+      "CWE-1321",
+      "CWE-248"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p050",
+   "slug": "batch-file-renamer",
+   "package": "npm:js-yaml",
+   "version": "4.1.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-2883-xcg3-v3hh",
+     "cve": [
+      "CVE-2026-84375"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.3.2",
+     "summary": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+     "details": "## Summary\n\n`maxTotalMergeKeys` does not count empty mappings. An attacker can repeatedly merge a large sequence of them and consume significant CPU without reaching the configured limit.\n\n## Example\n\n```yaml\narr: &arr [{}, {}, {}, ...] # N empty mappings\ntargets:\n  - <<: *arr                # repeated K times\n```\n\nFor every target, the loader iterates all `N` elements of `arr`. This results in `O(N * K)` work while `totalMergeKeys` remains unchanged.\n\n## PoC\n\n```js\nimport { performance } from 'node:perf_hooks'\nimport { load, YAML11_SCHEMA } from 'js-yaml'\n\nconst n = 20000\n\nconst src =\n  'arr: &arr [' + '{},'.repeat(n).slice(0, -1) + ']\\n' +\n  'targets:\\n' +\n  '  - <<: *arr\\n'.repeat(n)\n\ncon",
+     "cwe": [
+      "CWE-400",
+      "CWE-407"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p051",
+   "slug": "batch-file-renamer",
+   "package": "npm:nanoid",
+   "version": "3.3.12",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-28wg-ghj8-5hjv",
+     "cve": [
+      "CVE-2026-67214"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.3.16",
+     "summary": "nanoid: non-secure generators can loop indefinitely with negative size",
+     "details": "nanoid (Nano ID) before 5.1.16 contains an infinite loop in the customAlphabet and nanoid functions of its non-secure module (nanoid/non-secure). When these functions are given a negative size, the loop counter is decremented from a negative value and never reaches its termination condition, spinning indefinitely and hanging the calling thread. An application that passes an unvalidated, attacker-controlled negative size to these functions is exposed to a denial-of-service condition.",
+     "cwe": [
+      "CWE-835"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p052",
+   "slug": "batch-file-renamer",
+   "package": "npm:postcss",
+   "version": "8.5.15",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-r28c-9q8g-f849",
+     "cve": [
+      "CVE-2026-73646"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "8.5.18",
+     "summary": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+     "details": "## Vulnerability Details\n\n**File**: `lib/previous-map.js`\n**Line**: 87-98 (`loadFile`), 129-144 (`loadMap`)\n\n\n### Root Cause\nPostCSS auto-detects a `/*# sourceMappingURL=... */` comment inside the CSS text it is asked to parse and, unless the caller explicitly passes `map: false`, attempts to load that path from disk as a \"previous source map.\" This happens on every `postcss.parse()` / `postcss().process()` call by default (opt-out, not opt-in).\n\n`loadMap()` builds the candidate path via `join(dirname(opts.from), annotation)`, where `annotation` is the raw, attacker-controlled string from the CSS comment. `path.join()` normalizes but does not sandbox `..` segments, so a `../../../` prefix wa",
+     "cwe": [
+      "CWE-22"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p053",
+   "slug": "batch-file-renamer",
+   "package": "npm:source-map-js",
+   "version": "1.2.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-68fv-2mgg-jv7q",
+     "cve": [
+      "CVE-2026-93749"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.2.2",
+     "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+     "details": "source-map-js through 1.2.1 fails to validate the per-section offset line value in indexed source maps, allowing attackers to specify arbitrary numeric values. Attackers can supply extremely large offset line values that cause synchronous event loop blocking for extended periods, preventing the service from handling other requests.",
+     "cwe": [
+      "CWE-1284"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p054",
+   "slug": "batch-file-renamer",
+   "package": "npm:vite",
+   "version": "6.4.2",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-587h-7wmj-h5pm",
+     "cve": [
+      "CVE-2026-112942"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "6.4.4",
+     "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+     "details": "### Summary\n\n`launch-editor` checked `fs.existsSync(fileName)` before passing a supplied path to an editor command. On Windows, an attacker can bypass this check with a crafted path ending in `\\\\..:line:column`. This removes the requirement that the attacker be able to place a file with a malicious filename.\n\nCombined with the `%` escaping issue described in [GHSA-698v-4r3x-3vcv](https://github.com/vitejs/launch-editor/security/advisories/GHSA-698v-4r3x-3vcv), this bypass can lead to OS command injection when an attacker controls the file argument.\n\n### Impact\n\nOnly apps that runs on Windows is affected.\n\n### Details\n\nThe earlier advisory assumed that `fs.existsSync()` required an attacker-c",
+     "cwe": [
+      "CWE-77"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p055",
+   "slug": "claudette",
+   "package": "npm:@azure/msal-node",
+   "version": "6.0.1",
+   "where": "editor/vscode/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-xcx6-jx8p-x3h5",
+     "cve": [
+      "CVE-2026-109461"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "7.1.0",
+     "summary": "MSAL Node authorization code flow may disclose parameters to an attacker-controlled endpoint",
+     "details": "### Impact\n\nOrigin validation error in Microsoft Authentication Library (MSAL) for Node.js allows an unauthorized attacker to disclose information over a network. This affects the auth_code flow.\n\n### Patches\n\nVersion 7.1.0 and higher are patched.\n\n### Workarounds\n\nEnsure you pass in only the auth_code to to acquireTokenByCode",
+     "cwe": [
+      "CWE-346"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p056",
+   "slug": "contemplative-agent",
+   "package": "npm:re2js",
+   "version": "2.8.6",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-gg6h-894w-4m9c",
+     "cve": [
+      "CVE-2026-116795"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "2.8.7",
+     "summary": "RE2JS: Quadratic-time denial of service in re2js lookbehind matching",
+     "details": "### Summary\n\nUsing the opt-in `LOOKBEHINDS` flag together with any repeated-matching API\n(`matcher().find()` in a loop, `matchAll()`, `split()`, `matcher().replaceAll()`)\ncauses quadratic-time (Θ(n²)) matching, contradicting the library's own\n\"linear time matching\" guarantee. A single call with a 16,000-character input\ntakes **36.7–38.7 seconds of CPU**.\n\n### Description\n\n#### Root cause\n\nIn `build/index.cjs`, `Machine.match`:\n\n```js\nlet currentPos = this.prog.numLb > 0 ? 0 : pos;   // ~line 1907\n...\nif (this.ncap === 0 && this.matched) break;        // ~line 1953\n```\n\nAny pattern containing a lookbehind sets `prog.numLb > 0`, which forces the\nscan to **always restart at offset 0**, regardle",
+     "cwe": [
+      "CWE-1333",
+      "CWE-407"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p057",
+   "slug": "free-online-tools-for-video-audio-pdfs-images-and-ai",
+   "package": "npm:nanoid",
+   "version": "3.3.16",
+   "where": "djai-pdf-tools/package-lock.json",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-2v37-7h3g-55p8",
+     "cve": [
+      "CVE-2026-67213"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.3.18",
+     "summary": "nanoid: custom generators can loop indefinitely when size is zero",
+     "details": "nanoid (Nano ID) before 5.1.6 contains an infinite loop in the customAlphabet and customRandom functions. When these functions are configured with a size of 0, the internal generation loop never satisfies its exit condition and spins indefinitely, hanging the calling thread. An application that passes an unvalidated, attacker-controlled size of 0 to these functions is exposed to a denial-of-service condition.",
+     "cwe": [
+      "CWE-835"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p058",
+   "slug": "free-online-tools-for-video-audio-pdfs-images-and-ai",
+   "package": "npm:brace-expansion",
+   "version": "5.0.8",
+   "where": "DJayTools-Free-QR-Generator-Source/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-6j4f-fj2g-mc7p",
+     "cve": [
+      "CVE-2026-102276"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "5.0.10",
+     "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+     "details": "### Summary\n\n`parseCommaParts()` can exhaust the native stack and crash the process. There are two distinct ways to trigger it, both reachable from a single untrusted pattern string.\n\nThis is the parsing-side counterpart to CVE-2026-14257 / GHSA-mh99-v99m-4gvg. That fix made `expand_()` iterative and documented a constant-stack-depth guarantee, but `parseCommaParts()` was left recursive, so the guarantee only held for one of the two parsing paths.\n\n### Vector 1 - unbounded recursion on `post`\n\n`parseCommaParts()` recursed on the remainder of the string once per brace group:\n\n```js\nconst postParts = parseCommaParts(post)   // unbounded\n```\n\nA brace group containing many comma-separated groups",
+     "cwe": [
+      "CWE-400",
+      "CWE-674"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p059",
+   "slug": "free-online-tools-for-video-audio-pdfs-images-and-ai",
+   "package": "npm:browserslist",
+   "version": "4.28.2",
+   "where": "DJayTools-Free-QR-Generator-Source/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-73wf-gq98-2v4g",
+     "cve": [
+      "CVE-2026-73088"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.28.7",
+     "summary": "Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats)",
+     "details": "## Vulnerability Details\n\n**File**: `node.js`\n**Function**: `normalizeStats()` (line ~214), reached from `getStat()` (called\n**unconditionally** on every `browserslist()` call) and `loadStat()`\n\n### Root Cause\n```js\nfunction normalizeStats(data, stats) {\n  if (!data) { data = {} }\n  if (stats && 'dataByBrowser' in stats) { stats = stats.dataByBrowser }\n  if (typeof stats !== 'object') return undefined\n\n  var normalized = {}\n  for (var i in stats) {\n    var versions = Object.keys(stats[i])\n    if (versions.length === 1 && data[i] && data[i].versions.length === 1) {\n      var normal = data[i].versions[0]\n      normalized[i] = {}\n      normalized[i][normal] = stats[i][versions[0]]\n    } else {\n",
+     "cwe": [
+      "CWE-1321",
+      "CWE-248"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p060",
+   "slug": "free-online-tools-for-video-audio-pdfs-images-and-ai",
+   "package": "npm:js-yaml",
+   "version": "4.3.0",
+   "where": "DJayTools-Free-QR-Generator-Source/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-2883-xcg3-v3hh",
+     "cve": [
+      "CVE-2026-84375"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.3.2",
+     "summary": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+     "details": "## Summary\n\n`maxTotalMergeKeys` does not count empty mappings. An attacker can repeatedly merge a large sequence of them and consume significant CPU without reaching the configured limit.\n\n## Example\n\n```yaml\narr: &arr [{}, {}, {}, ...] # N empty mappings\ntargets:\n  - <<: *arr                # repeated K times\n```\n\nFor every target, the loader iterates all `N` elements of `arr`. This results in `O(N * K)` work while `totalMergeKeys` remains unchanged.\n\n## PoC\n\n```js\nimport { performance } from 'node:perf_hooks'\nimport { load, YAML11_SCHEMA } from 'js-yaml'\n\nconst n = 20000\n\nconst src =\n  'arr: &arr [' + '{},'.repeat(n).slice(0, -1) + ']\\n' +\n  'targets:\\n' +\n  '  - <<: *arr\\n'.repeat(n)\n\ncon",
+     "cwe": [
+      "CWE-400",
+      "CWE-407"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p061",
+   "slug": "free-online-tools-for-video-audio-pdfs-images-and-ai",
+   "package": "npm:zod",
+   "version": "4.4.3",
+   "where": "DJayTools-Free-QR-Generator-Source/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-mrhx-c7xc-m3w5",
+     "cve": [
+      "CVE-2023-54404"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.6.6",
+     "summary": "Zod can exhaust memory while validating oversized constrained collections",
+     "details": "Zod schema-validation library through 4.6.5 contains an uncontrolled resource consumption vulnerability that allows attackers to exhaust memory by submitting a large array to an application using an array schema without a length constraint. Attackers can exploit the handleArrayResult parse logic in $ZodArray, which accumulates every validation issue for each failing element with no cap or early termination, causing the process to allocate excessive issue objects and crash due to out-of-memory conditions.",
+     "cwe": [
+      "CWE-770"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p062",
+   "slug": "goatedcontext",
+   "package": "npm:zod",
+   "version": "3.25.76",
+   "where": "published package, fresh install",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-mrhx-c7xc-m3w5",
+     "cve": [
+      "CVE-2023-54404"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.6.6",
+     "summary": "Zod can exhaust memory while validating oversized constrained collections",
+     "details": "Zod schema-validation library through 4.6.5 contains an uncontrolled resource consumption vulnerability that allows attackers to exhaust memory by submitting a large array to an application using an array schema without a length constraint. Attackers can exploit the handleArrayResult parse logic in $ZodArray, which accumulates every validation issue for each failing element with no cap or early termination, causing the process to allocate excessive issue objects and crash due to out-of-memory conditions.",
+     "cwe": [
+      "CWE-770"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p063",
+   "slug": "gsl-lang",
+   "package": "npm:brace-expansion",
+   "version": "2.1.1",
+   "where": "editors/vscode/package-lock.json",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-3jxr-9vmj-r5cp",
+     "cve": [
+      "CVE-2026-13149"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "2.1.2",
+     "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+     "details": "### Summary\nbrace-expansion's expand() exhibits exponential-time - O(2ⁿ) - behavior in the number of consecutive non-expanding {} groups. A short, all-ASCII input (~90 bytes/30 groups) blocks the calling thread for minutes; a slightly longer input hangs it effectively indefinitely. Because the dominant consumers run on Node's single-threaded event loop, one small input can fully stall a worker/process.\n\nIn `expand_`, `post` is computed unconditionally at the top of the function, before the early-return branches that don't use it:\n```js\nconst post = m.post.length ? expand_(m.post, max, false) : [''];   // always recurses\n  ...\nif (!isSequence && !isOptions) {\n  if (m.post.match(/,(?!,).*\\}/))",
+     "cwe": [
+      "CWE-400",
+      "CWE-407"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p064",
+   "slug": "homebotbuild",
+   "package": "npm:brace-expansion",
+   "version": "5.0.4",
+   "where": "dashboard/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-3jxr-9vmj-r5cp",
+     "cve": [
+      "CVE-2026-13149"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "5.0.7",
+     "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+     "details": "### Summary\nbrace-expansion's expand() exhibits exponential-time - O(2ⁿ) - behavior in the number of consecutive non-expanding {} groups. A short, all-ASCII input (~90 bytes/30 groups) blocks the calling thread for minutes; a slightly longer input hangs it effectively indefinitely. Because the dominant consumers run on Node's single-threaded event loop, one small input can fully stall a worker/process.\n\nIn `expand_`, `post` is computed unconditionally at the top of the function, before the early-return branches that don't use it:\n```js\nconst post = m.post.length ? expand_(m.post, max, false) : [''];   // always recurses\n  ...\nif (!isSequence && !isOptions) {\n  if (m.post.match(/,(?!,).*\\}/))",
+     "cwe": [
+      "CWE-400",
+      "CWE-407"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p065",
+   "slug": "homebotbuild",
+   "package": "npm:browserslist",
+   "version": "4.28.1",
+   "where": "dashboard/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-73wf-gq98-2v4g",
+     "cve": [
+      "CVE-2026-73088"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.28.7",
+     "summary": "Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats)",
+     "details": "## Vulnerability Details\n\n**File**: `node.js`\n**Function**: `normalizeStats()` (line ~214), reached from `getStat()` (called\n**unconditionally** on every `browserslist()` call) and `loadStat()`\n\n### Root Cause\n```js\nfunction normalizeStats(data, stats) {\n  if (!data) { data = {} }\n  if (stats && 'dataByBrowser' in stats) { stats = stats.dataByBrowser }\n  if (typeof stats !== 'object') return undefined\n\n  var normalized = {}\n  for (var i in stats) {\n    var versions = Object.keys(stats[i])\n    if (versions.length === 1 && data[i] && data[i].versions.length === 1) {\n      var normal = data[i].versions[0]\n      normalized[i] = {}\n      normalized[i][normal] = stats[i][versions[0]]\n    } else {\n",
+     "cwe": [
+      "CWE-1321",
+      "CWE-248"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p066",
+   "slug": "homebotbuild",
+   "package": "npm:flatted",
+   "version": "3.4.1",
+   "where": "dashboard/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-rf6f-7fwh-wjgh",
+     "cve": [
+      "CVE-2026-33228"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.4.2",
+     "summary": "Prototype Pollution via parse() in NodeJS flatted",
+     "details": "---\n  **Summary**\n\n  The parse() function in flatted can use attacker-controlled string values from the parsed JSON as direct array index\n  keys, without validating that they are numeric. Since the internal input buffer is a JavaScript Array, accessing it\n  with the key \"\\_\\_proto\\_\\_\" returns Array.prototype via the inherited getter. This object is then treated as a legitimate\n   parsed value and assigned as a property of the output object, effectively leaking a live reference to Array.prototype\n   to the consumer. Any code that subsequently writes to that property will pollute the global prototype.\n\n  ---\n  **Root Cause**\n\n  File: esm/index.js:29 (identical in cjs/index.js)\n```\n  const res",
+     "cwe": [
+      "CWE-1321",
+      "CWE-915"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p067",
+   "slug": "homebotbuild",
+   "package": "npm:js-yaml",
+   "version": "4.1.1",
+   "where": "dashboard/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-2883-xcg3-v3hh",
+     "cve": [
+      "CVE-2026-84375"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.3.2",
+     "summary": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+     "details": "## Summary\n\n`maxTotalMergeKeys` does not count empty mappings. An attacker can repeatedly merge a large sequence of them and consume significant CPU without reaching the configured limit.\n\n## Example\n\n```yaml\narr: &arr [{}, {}, {}, ...] # N empty mappings\ntargets:\n  - <<: *arr                # repeated K times\n```\n\nFor every target, the loader iterates all `N` elements of `arr`. This results in `O(N * K)` work while `totalMergeKeys` remains unchanged.\n\n## PoC\n\n```js\nimport { performance } from 'node:perf_hooks'\nimport { load, YAML11_SCHEMA } from 'js-yaml'\n\nconst n = 20000\n\nconst src =\n  'arr: &arr [' + '{},'.repeat(n).slice(0, -1) + ']\\n' +\n  'targets:\\n' +\n  '  - <<: *arr\\n'.repeat(n)\n\ncon",
+     "cwe": [
+      "CWE-400",
+      "CWE-407"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p068",
+   "slug": "homebotbuild",
+   "package": "npm:picomatch",
+   "version": "4.0.3",
+   "where": "dashboard/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-c2c7-rcm5-vvqj",
+     "cve": [
+      "CVE-2026-33671"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.0.4",
+     "summary": "Picomatch has a ReDoS vulnerability via extglob quantifiers",
+     "details": "### Impact\n`picomatch` is vulnerable to Regular Expression Denial of Service (ReDoS) when processing crafted extglob patterns. Certain patterns using extglob quantifiers such as `+()` and `*()`, especially when combined with overlapping alternatives or nested extglobs, are compiled into regular expressions that can exhibit catastrophic backtracking on non-matching input.\n\nExamples of problematic patterns include `+(a|aa)`, `+(*|?)`, `+(+(a))`, `*(+(a))`, and `+(+(+(a)))`. In local reproduction, these patterns caused multi-second event-loop blocking with relatively short inputs. For example, `+(a|aa)` compiled to `^(?:(?=.)(?:a|aa)+)$` and took about 2 seconds to reject a 41-character non-mat",
+     "cwe": [
+      "CWE-1333"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p069",
+   "slug": "homebotbuild",
+   "package": "npm:zod",
+   "version": "4.3.6",
+   "where": "dashboard/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-mrhx-c7xc-m3w5",
+     "cve": [
+      "CVE-2023-54404"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.6.6",
+     "summary": "Zod can exhaust memory while validating oversized constrained collections",
+     "details": "Zod schema-validation library through 4.6.5 contains an uncontrolled resource consumption vulnerability that allows attackers to exhaust memory by submitting a large array to an application using an array schema without a length constraint. Attackers can exploit the handleArrayResult parse logic in $ZodArray, which accumulates every validation issue for each failing element with no cap or early termination, causing the process to allocate excessive issue objects and crash due to out-of-memory conditions.",
+     "cwe": [
+      "CWE-770"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p070",
+   "slug": "image-comparison-tool",
+   "package": "npm:brace-expansion",
+   "version": "1.1.12",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-3jxr-9vmj-r5cp",
+     "cve": [
+      "CVE-2026-13149"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.1.16",
+     "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+     "details": "### Summary\nbrace-expansion's expand() exhibits exponential-time - O(2ⁿ) - behavior in the number of consecutive non-expanding {} groups. A short, all-ASCII input (~90 bytes/30 groups) blocks the calling thread for minutes; a slightly longer input hangs it effectively indefinitely. Because the dominant consumers run on Node's single-threaded event loop, one small input can fully stall a worker/process.\n\nIn `expand_`, `post` is computed unconditionally at the top of the function, before the early-return branches that don't use it:\n```js\nconst post = m.post.length ? expand_(m.post, max, false) : [''];   // always recurses\n  ...\nif (!isSequence && !isOptions) {\n  if (m.post.match(/,(?!,).*\\}/))",
+     "cwe": [
+      "CWE-400",
+      "CWE-407"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p071",
+   "slug": "image-comparison-tool",
+   "package": "npm:minimatch",
+   "version": "3.1.2",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-23c5-xmqv-rm74",
+     "cve": [
+      "CVE-2026-27904"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.1.4",
+     "summary": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
+     "details": "### Summary\n\nNested `*()` extglobs produce regexps with nested unbounded quantifiers (e.g. `(?:(?:a|b)*)*`), which exhibit catastrophic backtracking in V8. With a 12-byte pattern `*(*(*(a|b)))` and an 18-byte non-matching input, `minimatch()` stalls for over 7 seconds. Adding a single nesting level or a few input characters pushes this to minutes. This is the most severe finding: it is triggered by the default `minimatch()` API with no special options, and the minimum viable pattern is only 12 bytes. The same issue affects `+()` extglobs equally.\n\n---\n\n### Details\n\nThe root cause is in `AST.toRegExpSource()` at [`src/ast.ts#L598`](https://github.com/isaacs/minimatch/blob/v10.2.2/src/ast.ts#L",
+     "cwe": [
+      "CWE-1333"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p072",
+   "slug": "image-comparison-tool",
+   "package": "npm:picomatch",
+   "version": "2.3.1",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-c2c7-rcm5-vvqj",
+     "cve": [
+      "CVE-2026-33671"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "2.3.2",
+     "summary": "Picomatch has a ReDoS vulnerability via extglob quantifiers",
+     "details": "### Impact\n`picomatch` is vulnerable to Regular Expression Denial of Service (ReDoS) when processing crafted extglob patterns. Certain patterns using extglob quantifiers such as `+()` and `*()`, especially when combined with overlapping alternatives or nested extglobs, are compiled into regular expressions that can exhibit catastrophic backtracking on non-matching input.\n\nExamples of problematic patterns include `+(a|aa)`, `+(*|?)`, `+(+(a))`, `*(+(a))`, and `+(+(+(a)))`. In local reproduction, these patterns caused multi-second event-loop blocking with relatively short inputs. For example, `+(a|aa)` compiled to `^(?:(?=.)(?:a|aa)+)$` and took about 2 seconds to reject a 41-character non-mat",
+     "cwe": [
+      "CWE-1333"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p073",
+   "slug": "image-comparison-tool",
+   "package": "npm:compression",
+   "version": "1.8.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-vc2v-76pw-4v95",
+     "cve": [
+      "CVE-2026-87776"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.8.2",
+     "summary": "compression vulnerable to Denial of Service via memory leak on premature response close",
+     "details": "### Impact\n\nA vulnerability in compression `< 1.8.2` allows an attacker to trigger a Denial of Service (DoS) by disconnecting while a compressed response is being sent. When the client aborts the connection before the response finishes, the zlib stream created to compress that response is never destroyed, so each aborted compressed response leaks its native zlib memory. Repeated aborted requests can exhaust available memory. All applications using compression are affected.\n\n### Patches\n\nUsers should upgrade to `1.8.2`.\n\n### Workarounds\n\nNone.",
+     "cwe": [
+      "CWE-401",
+      "CWE-459"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p074",
+   "slug": "image-comparison-tool",
+   "package": "npm:flatted",
+   "version": "3.3.3",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-25h7-pfq9-p65f",
+     "cve": [
+      "CVE-2026-32141"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.4.0",
+     "summary": "flatted vulnerable to unbounded recursion DoS in parse() revive phase",
+     "details": "## Summary\n\nflatted's `parse()` function uses a recursive `revive()` phase to resolve circular references in deserialized JSON. When given a crafted payload with deeply nested or self-referential `$` indices, the recursion depth is unbounded, causing a stack overflow that crashes the Node.js process.\n\n## Impact\n\nDenial of Service (DoS). Any application that passes untrusted input to `flatted.parse()` can be crashed by an unauthenticated attacker with a single request.\n\nflatted has ~87M weekly npm downloads and is used as the circular-JSON serialization layer in many caching and logging libraries.\n\n## Proof of Concept\n\n```javascript\nconst flatted = require('flatted');\n\n// Build deeply nested ",
+     "cwe": [
+      "CWE-674"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p075",
+   "slug": "image-comparison-tool",
+   "package": "npm:js-yaml",
+   "version": "4.1.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-2883-xcg3-v3hh",
+     "cve": [
+      "CVE-2026-84375"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.3.2",
+     "summary": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+     "details": "## Summary\n\n`maxTotalMergeKeys` does not count empty mappings. An attacker can repeatedly merge a large sequence of them and consume significant CPU without reaching the configured limit.\n\n## Example\n\n```yaml\narr: &arr [{}, {}, {}, ...] # N empty mappings\ntargets:\n  - <<: *arr                # repeated K times\n```\n\nFor every target, the loader iterates all `N` elements of `arr`. This results in `O(N * K)` work while `totalMergeKeys` remains unchanged.\n\n## PoC\n\n```js\nimport { performance } from 'node:perf_hooks'\nimport { load, YAML11_SCHEMA } from 'js-yaml'\n\nconst n = 20000\n\nconst src =\n  'arr: &arr [' + '{},'.repeat(n).slice(0, -1) + ']\\n' +\n  'targets:\\n' +\n  '  - <<: *arr\\n'.repeat(n)\n\ncon",
+     "cwe": [
+      "CWE-400",
+      "CWE-407"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p076",
+   "slug": "image-comparison-tool",
+   "package": "npm:undici",
+   "version": "7.29.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-2m5v-pch6-74hx",
+     "cve": [
+      "CVE-2026-109383"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "7.30.1",
+     "summary": "undici vulnerable to TLS certificate validation bypass via dropped tls options in Agent",
+     "details": "### Impact\n\nundici's `Agent` passes its constructor options through a JSON-based deep clone (`JSON.parse(JSON.stringify(...))`) before forwarding them to each per-origin `Pool`. JSON cannot represent functions, so a caller-supplied `tls` option containing a `checkServerIdentity` callback is silently dropped before it reaches the TLS layer. As a result, a TLS peer whose certificate a custom `checkServerIdentity` was written to reject, but which passes Node's default hostname and chain checks, is silently accepted when the request is made through `Agent`. Because `Agent` is the default dispatcher behind `request`, `fetch`, and `setGlobalDispatcher`, this is the path most applications use. `Env",
+     "cwe": [
+      "CWE-295"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p077",
+   "slug": "image-comparison-tool",
+   "package": "npm:vite",
+   "version": "8.3.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-587h-7wmj-h5pm",
+     "cve": [
+      "CVE-2026-112942"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "8.3.3",
+     "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+     "details": "### Summary\n\n`launch-editor` checked `fs.existsSync(fileName)` before passing a supplied path to an editor command. On Windows, an attacker can bypass this check with a crafted path ending in `\\\\..:line:column`. This removes the requirement that the attacker be able to place a file with a malicious filename.\n\nCombined with the `%` escaping issue described in [GHSA-698v-4r3x-3vcv](https://github.com/vitejs/launch-editor/security/advisories/GHSA-698v-4r3x-3vcv), this bypass can lead to OS command injection when an attacker controls the file argument.\n\n### Impact\n\nOnly apps that runs on Windows is affected.\n\n### Details\n\nThe earlier advisory assumed that `fs.existsSync()` required an attacker-c",
+     "cwe": [
+      "CWE-77"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p078",
+   "slug": "jp-lit-mcp",
+   "package": "npm:zod",
+   "version": "3.25.76",
+   "where": "published package, fresh install",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-mrhx-c7xc-m3w5",
+     "cve": [
+      "CVE-2023-54404"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.6.6",
+     "summary": "Zod can exhaust memory while validating oversized constrained collections",
+     "details": "Zod schema-validation library through 4.6.5 contains an uncontrolled resource consumption vulnerability that allows attackers to exhaust memory by submitting a large array to an application using an array schema without a length constraint. Attackers can exploit the handleArrayResult parse logic in $ZodArray, which accumulates every validation issue for each failing element with no cap or early termination, causing the process to allocate excessive issue objects and crash due to out-of-memory conditions.",
+     "cwe": [
+      "CWE-770"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p079",
+   "slug": "medha-agent",
+   "package": "npm:source-map-js",
+   "version": "1.2.1",
+   "where": "apps/desktop/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-68fv-2mgg-jv7q",
+     "cve": [
+      "CVE-2026-93749"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.2.2",
+     "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+     "details": "source-map-js through 1.2.1 fails to validate the per-section offset line value in indexed source maps, allowing attackers to specify arbitrary numeric values. Attackers can supply extremely large offset line values that cause synchronous event loop blocking for extended periods, preventing the service from handling other requests.",
+     "cwe": [
+      "CWE-1284"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p080",
+   "slug": "medha-agent",
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "where": "apps/desktop/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-587h-7wmj-h5pm",
+     "cve": [
+      "CVE-2026-112942"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "6.4.4",
+     "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+     "details": "### Summary\n\n`launch-editor` checked `fs.existsSync(fileName)` before passing a supplied path to an editor command. On Windows, an attacker can bypass this check with a crafted path ending in `\\\\..:line:column`. This removes the requirement that the attacker be able to place a file with a malicious filename.\n\nCombined with the `%` escaping issue described in [GHSA-698v-4r3x-3vcv](https://github.com/vitejs/launch-editor/security/advisories/GHSA-698v-4r3x-3vcv), this bypass can lead to OS command injection when an attacker controls the file argument.\n\n### Impact\n\nOnly apps that runs on Windows is affected.\n\n### Details\n\nThe earlier advisory assumed that `fs.existsSync()` required an attacker-c",
+     "cwe": [
+      "CWE-77"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p081",
+   "slug": "oh-my-score-studio",
+   "package": "npm:brace-expansion",
+   "version": "2.1.0",
+   "where": "packages/midi-player/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-3jxr-9vmj-r5cp",
+     "cve": [
+      "CVE-2026-13149"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "2.1.2",
+     "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+     "details": "### Summary\nbrace-expansion's expand() exhibits exponential-time - O(2ⁿ) - behavior in the number of consecutive non-expanding {} groups. A short, all-ASCII input (~90 bytes/30 groups) blocks the calling thread for minutes; a slightly longer input hangs it effectively indefinitely. Because the dominant consumers run on Node's single-threaded event loop, one small input can fully stall a worker/process.\n\nIn `expand_`, `post` is computed unconditionally at the top of the function, before the early-return branches that don't use it:\n```js\nconst post = m.post.length ? expand_(m.post, max, false) : [''];   // always recurses\n  ...\nif (!isSequence && !isOptions) {\n  if (m.post.match(/,(?!,).*\\}/))",
+     "cwe": [
+      "CWE-400",
+      "CWE-407"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p082",
+   "slug": "oh-my-score-studio",
+   "package": "npm:browserslist",
+   "version": "4.28.2",
+   "where": "packages/midi-player/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-73wf-gq98-2v4g",
+     "cve": [
+      "CVE-2026-73088"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.28.7",
+     "summary": "Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats)",
+     "details": "## Vulnerability Details\n\n**File**: `node.js`\n**Function**: `normalizeStats()` (line ~214), reached from `getStat()` (called\n**unconditionally** on every `browserslist()` call) and `loadStat()`\n\n### Root Cause\n```js\nfunction normalizeStats(data, stats) {\n  if (!data) { data = {} }\n  if (stats && 'dataByBrowser' in stats) { stats = stats.dataByBrowser }\n  if (typeof stats !== 'object') return undefined\n\n  var normalized = {}\n  for (var i in stats) {\n    var versions = Object.keys(stats[i])\n    if (versions.length === 1 && data[i] && data[i].versions.length === 1) {\n      var normal = data[i].versions[0]\n      normalized[i] = {}\n      normalized[i][normal] = stats[i][versions[0]]\n    } else {\n",
+     "cwe": [
+      "CWE-1321",
+      "CWE-248"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p083",
+   "slug": "oh-my-score-studio",
+   "package": "npm:js-yaml",
+   "version": "4.3.0",
+   "where": "packages/midi-player/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-2883-xcg3-v3hh",
+     "cve": [
+      "CVE-2026-84375"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.3.2",
+     "summary": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+     "details": "## Summary\n\n`maxTotalMergeKeys` does not count empty mappings. An attacker can repeatedly merge a large sequence of them and consume significant CPU without reaching the configured limit.\n\n## Example\n\n```yaml\narr: &arr [{}, {}, {}, ...] # N empty mappings\ntargets:\n  - <<: *arr                # repeated K times\n```\n\nFor every target, the loader iterates all `N` elements of `arr`. This results in `O(N * K)` work while `totalMergeKeys` remains unchanged.\n\n## PoC\n\n```js\nimport { performance } from 'node:perf_hooks'\nimport { load, YAML11_SCHEMA } from 'js-yaml'\n\nconst n = 20000\n\nconst src =\n  'arr: &arr [' + '{},'.repeat(n).slice(0, -1) + ']\\n' +\n  'targets:\\n' +\n  '  - <<: *arr\\n'.repeat(n)\n\ncon",
+     "cwe": [
+      "CWE-400",
+      "CWE-407"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p084",
+   "slug": "oh-my-score-studio",
+   "package": "npm:linkify-it",
+   "version": "5.0.1",
+   "where": "packages/midi-player/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-v245-v573-v5vm",
+     "cve": [
+      "CVE-2026-59887"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "5.0.2",
+     "summary": "linkify-it: Quadratic-complexity DoS via the `mailto:` validator scan-loop on attacker text",
+     "details": "### Summary\n`linkify-it`'s schema-scan loop (`.test()` / `.match()`, the documented public API) invokes the `mailto:`\nschema validator at **every** `mailto:` occurrence in the input text. For each occurrence the validator does\n`text.slice(pos)` (an O(n) copy) and runs an email regex whose local-part class `src_email_name` greedily\nscans the **entire remaining tail** (O(n)) before failing. With N `mailto:` occurrences that is\n**N × O(n) = O(n²)**. Because linkify-it runs on arbitrary user text (markdown-it feeds it whole documents\nwhen `linkify:true`), an unauthenticated attacker can block the single-threaded event loop for many seconds\nwith a small input. No length bound (unlike an HTTP head",
+     "cwe": [
+      "CWE-407"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p085",
+   "slug": "oh-my-score-studio",
+   "package": "npm:markdown-it",
+   "version": "14.2.0",
+   "where": "packages/midi-player/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-gfr2-rv44-r23c",
+     "cve": [
+      "CVE-2026-111758"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "14.3.3",
+     "summary": "markdown-it: Quadratic-time rendering of a single multi-line link reference definition with default options (regression since 14.0)",
+     "details": "### Summary\n\nA link reference definition whose label or title is never closed is O(n²) in markdown-it 15.0.2 with default options. Continuation lines are pulled lazily with str += lineContent in src/rules_block/reference.ts, and the subsequent charCodeAt and slice calls flatten the V8 cons-string, copying everything collected so far; this runs before the rule decides the definition is invalid. It is a regression introduced by PR #1004 in 14.0.0: 13.0.2 processed a 313 KB input in 125 ms, while every version since takes about 11 seconds on the same input. At the sizes below, 200 KB takes 3.6 seconds, 400 KB takes 18.1 seconds, and 800 KB takes 74.0 seconds, which is roughly 4–5× per doubling.",
+     "cwe": [
+      "CWE-400",
+      "CWE-407"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p086",
+   "slug": "paintracker-ca",
+   "package": "npm:body-parser",
+   "version": "2.2.2",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-27r3-jxmh-p828",
+     "cve": [
+      "CVE-2026-111181"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "2.4.0",
+     "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
+     "details": "### Impact\n\nA single request can crash any application using `body-parser` with default options. When a request carries a `Content-Encoding` (for example `gzip`), `body-parser` pipes it into a decompression stream and, after reading the body, leaves that stream piped with no error listener. A payload of one valid compressed frame followed by trailing bytes decodes and the application responds normally, but the trailing bytes then reach the already-finished decoder, which emits an error that is re-thrown as an uncaught exception and terminates the process. No authentication or matching route is required, since parsing runs before routing.\n\n### Patches\n\nFixed in body-parser 2.4.0 and 1.20.9. U",
+     "cwe": [
+      "CWE-248"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p087",
+   "slug": "paintracker-ca",
+   "package": "npm:brace-expansion",
+   "version": "5.0.6",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-3jxr-9vmj-r5cp",
+     "cve": [
+      "CVE-2026-13149"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "5.0.7",
+     "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+     "details": "### Summary\nbrace-expansion's expand() exhibits exponential-time - O(2ⁿ) - behavior in the number of consecutive non-expanding {} groups. A short, all-ASCII input (~90 bytes/30 groups) blocks the calling thread for minutes; a slightly longer input hangs it effectively indefinitely. Because the dominant consumers run on Node's single-threaded event loop, one small input can fully stall a worker/process.\n\nIn `expand_`, `post` is computed unconditionally at the top of the function, before the early-return branches that don't use it:\n```js\nconst post = m.post.length ? expand_(m.post, max, false) : [''];   // always recurses\n  ...\nif (!isSequence && !isOptions) {\n  if (m.post.match(/,(?!,).*\\}/))",
+     "cwe": [
+      "CWE-400",
+      "CWE-407"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p088",
+   "slug": "paintracker-ca",
+   "package": "npm:zod",
+   "version": "4.3.5",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-mrhx-c7xc-m3w5",
+     "cve": [
+      "CVE-2023-54404"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.6.6",
+     "summary": "Zod can exhaust memory while validating oversized constrained collections",
+     "details": "Zod schema-validation library through 4.6.5 contains an uncontrolled resource consumption vulnerability that allows attackers to exhaust memory by submitting a large array to an application using an array schema without a length constraint. Attackers can exploit the handleArrayResult parse logic in $ZodArray, which accumulates every validation issue for each failing element with no cap or early termination, causing the process to allocate excessive issue objects and crash due to out-of-memory conditions.",
+     "cwe": [
+      "CWE-770"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p089",
+   "slug": "paintracker-ca",
+   "package": "npm:browserslist",
+   "version": "4.28.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-73wf-gq98-2v4g",
+     "cve": [
+      "CVE-2026-73088"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.28.7",
+     "summary": "Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats)",
+     "details": "## Vulnerability Details\n\n**File**: `node.js`\n**Function**: `normalizeStats()` (line ~214), reached from `getStat()` (called\n**unconditionally** on every `browserslist()` call) and `loadStat()`\n\n### Root Cause\n```js\nfunction normalizeStats(data, stats) {\n  if (!data) { data = {} }\n  if (stats && 'dataByBrowser' in stats) { stats = stats.dataByBrowser }\n  if (typeof stats !== 'object') return undefined\n\n  var normalized = {}\n  for (var i in stats) {\n    var versions = Object.keys(stats[i])\n    if (versions.length === 1 && data[i] && data[i].versions.length === 1) {\n      var normal = data[i].versions[0]\n      normalized[i] = {}\n      normalized[i][normal] = stats[i][versions[0]]\n    } else {\n",
+     "cwe": [
+      "CWE-1321",
+      "CWE-248"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p090",
+   "slug": "paintracker-ca",
+   "package": "npm:fast-uri",
+   "version": "3.1.2",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-4c8g-83qw-93j6",
+     "cve": [
+      "CVE-2026-13676"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.1.3",
+     "summary": "fast-uri vulnerable to host confusion via failed IDN canonicalization",
+     "details": "### Impact\n\n`fast-uri` versions `>= 2.3.1, <= 4.0.0` fail to canonicalize Unicode/IDN hostnames for HTTP-family URLs. The IDN conversion path calls `URL.domainToASCII(...)` on the global WHATWG `URL` constructor, where that helper does not exist. The resulting `TypeError` is silently routed into `parsed.error`, but `parse()`, `normalize()`, and `equal()` all return with the host left in its original Unicode form.\n\nFor example, `http://127。0。0。1/` is treated by `fast-uri` as host `127。0。0。1`, while Node's WHATWG URL parser and `fetch()` canonicalize the same input to `127.0.0.1`.\n\nApplications that use `fast-uri` to enforce host-based policy (denylists, loopback filtering, redirect validation",
+     "cwe": [
+      "CWE-436",
+      "CWE-551"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p091",
+   "slug": "paintracker-ca",
+   "package": "npm:happy-dom",
+   "version": "20.9.0",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-834v-8h66-3h79",
+     "cve": [
+      "CVE-2026-115895"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "21.0.4",
+     "summary": "Happy DOM: Incomplete fix for CVE-2026-33943: unsanitized import alias leads to host code execution",
+     "details": "## Summary\n\nThe ESM compiler in `happy-dom@20.14.5` does not validate imported local binding aliases before interpolating them into generated JavaScript.\n\nAs a result, an invalid ESM import alias can be transformed into a valid JavaScript destructuring default initializer and executed.\n\nThis appears to be an alternate injection path and incomplete remediation of GHSA-6q6h-j7hj-3r64 / CVE-2026-33943. The previous fix validates `importName` in the local `export { ... }` handler, but the named import handler still places an unvalidated `alias` directly into code context.\n\nThese issues were confirmed through the public `Window` and `<script type=\"module\">` APIs using the published `happy-dom` np",
+     "cwe": [
+      "CWE-94"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p092",
+   "slug": "paintracker-ca",
+   "package": "npm:js-yaml",
+   "version": "4.1.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-2883-xcg3-v3hh",
+     "cve": [
+      "CVE-2026-84375"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.3.2",
+     "summary": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+     "details": "## Summary\n\n`maxTotalMergeKeys` does not count empty mappings. An attacker can repeatedly merge a large sequence of them and consume significant CPU without reaching the configured limit.\n\n## Example\n\n```yaml\narr: &arr [{}, {}, {}, ...] # N empty mappings\ntargets:\n  - <<: *arr                # repeated K times\n```\n\nFor every target, the loader iterates all `N` elements of `arr`. This results in `O(N * K)` work while `totalMergeKeys` remains unchanged.\n\n## PoC\n\n```js\nimport { performance } from 'node:perf_hooks'\nimport { load, YAML11_SCHEMA } from 'js-yaml'\n\nconst n = 20000\n\nconst src =\n  'arr: &arr [' + '{},'.repeat(n).slice(0, -1) + ']\\n' +\n  'targets:\\n' +\n  '  - <<: *arr\\n'.repeat(n)\n\ncon",
+     "cwe": [
+      "CWE-400",
+      "CWE-407"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p093",
+   "slug": "paintracker-ca",
+   "package": "npm:postcss",
+   "version": "8.5.13",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-r28c-9q8g-f849",
+     "cve": [
+      "CVE-2026-73646"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "8.5.18",
+     "summary": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+     "details": "## Vulnerability Details\n\n**File**: `lib/previous-map.js`\n**Line**: 87-98 (`loadFile`), 129-144 (`loadMap`)\n\n\n### Root Cause\nPostCSS auto-detects a `/*# sourceMappingURL=... */` comment inside the CSS text it is asked to parse and, unless the caller explicitly passes `map: false`, attempts to load that path from disk as a \"previous source map.\" This happens on every `postcss.parse()` / `postcss().process()` call by default (opt-out, not opt-in).\n\n`loadMap()` builds the candidate path via `join(dirname(opts.from), annotation)`, where `annotation` is the raw, attacker-controlled string from the CSS comment. `path.join()` normalizes but does not sandbox `..` segments, so a `../../../` prefix wa",
+     "cwe": [
+      "CWE-22"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p094",
+   "slug": "paintracker-ca",
+   "package": "npm:shell-quote",
+   "version": "1.8.3",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-395f-4hp3-45gv",
+     "cve": [
+      "CVE-2026-13311"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.9.0",
+     "summary": "shell-quote: Quadratic-complexity Denial of Service in `parse()` (CWE-407)",
+     "details": "### Summary\n`shell-quote`'s `parse()` finalizes its token list with a `reduce` that uses\n`Array.prototype.concat` as the accumulator. Each `prev.concat(arg)` copies the entire growing\narray, so `parse()` runs in **O(n²)** in the number of tokens. An unauthenticated attacker who\ncan submit a string to any code path that calls `parse()` on it can block the single-threaded\nNode.js event loop for tens of seconds with a small input — a denial of service. The trigger\nneeds **no shell metacharacters** (plain space-separated words suffice), so input filters that\nonly screen for `;`, `|`, `$`, or backticks do not help.\n\n### Root cause\n`parse.js` (lines 200–203), in `parseInternal` — this path runs on",
+     "cwe": [
+      "CWE-407"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p095",
+   "slug": "paintracker-ca",
+   "package": "npm:vite",
+   "version": "8.0.10",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-587h-7wmj-h5pm",
+     "cve": [
+      "CVE-2026-112942"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "8.1.6",
+     "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+     "details": "### Summary\n\n`launch-editor` checked `fs.existsSync(fileName)` before passing a supplied path to an editor command. On Windows, an attacker can bypass this check with a crafted path ending in `\\\\..:line:column`. This removes the requirement that the attacker be able to place a file with a malicious filename.\n\nCombined with the `%` escaping issue described in [GHSA-698v-4r3x-3vcv](https://github.com/vitejs/launch-editor/security/advisories/GHSA-698v-4r3x-3vcv), this bypass can lead to OS command injection when an attacker controls the file argument.\n\n### Impact\n\nOnly apps that runs on Windows is affected.\n\n### Details\n\nThe earlier advisory assumed that `fs.existsSync()` required an attacker-c",
+     "cwe": [
+      "CWE-77"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p096",
+   "slug": "paintracker-ca",
+   "package": "npm:ws",
+   "version": "8.20.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-96hv-2xvq-fx4p",
+     "cve": [
+      "CVE-2026-48779"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "8.21.0",
+     "summary": "ws: Memory exhaustion DoS from tiny fragments and data chunks",
+     "details": "### Impact\n\nA high volume of exceptionally small fragments and data chunks can be sent by a peer, with modest network traffic, to force the remote peer into allocating and holding structural wrappers that consume far more memory than the default documented message-size limit, leading to process termination due to OOM.\n\n### Proof of concept\n\n```js\nimport { WebSocket, WebSocketServer } from 'ws';\n\nconst wss = new WebSocketServer({ port: 0 }, function () {\n  const data = Buffer.alloc(1);\n  const options = { fin: false };\n  const { port } = wss.address();\n  const ws = new WebSocket(`ws://localhost:${port}`);\n\n  ws.on('open', function () {\n    (function send() {\n      ws.send(data, options, funct",
+     "cwe": [
+      "CWE-1050",
+      "CWE-400",
+      "CWE-770"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p097",
+   "slug": "paintracker-ca",
+   "package": "npm:@xmldom/xmldom",
+   "version": "0.8.13",
+   "where": "desktop/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-27p8-2357-5qqv",
+     "cve": [
+      "CVE-2026-83608"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.8.15",
+     "summary": "xmldom: DocType `name` Injection Bypasses requireWellFormed",
+     "details": "## Summary\n\nThe `@xmldom/xmldom` serializer emits `DocumentType.name` verbatim into the\n`<!DOCTYPE …>` declaration with no well-formedness guard. GHSA-f6ww-3ggp-fr8h\n(CVE-2026-41674) hardened the serializer's `requireWellFormed` path for a\nDocumentType's sibling fields — `publicId`, `systemId`, and `internalSubset` —\nbut it did **not** add any check for `name`. A `>` (or whitespace) in the name\nterminates the doctype declaration early, letting the remaining characters\nbecome sibling markup in the serialized output.\n\nBecause `requireWellFormed: true` — the recommended mitigation for the prior\nxmldom injection CVEs — performs no validation on the DocType `name`, this is a\nbypass of that contro",
+     "cwe": [
+      "CWE-91"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p098",
+   "slug": "paintracker-ca",
+   "package": "npm:app-builder-lib",
+   "version": "26.9.0",
+   "where": "desktop/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-7g7r-gx96-252g",
+     "cve": [
+      "CVE-2026-54672"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "26.15.0",
+     "summary": "electron-updater: Uncontrolled search path elements within `AppImage` built by `app-builder-lib`",
+     "details": "### Summary\n\n`AppImage` targets built by `app-builder-lib` could use an empty path component when setting the `LD_LIBRARY_PATH` environment variable at runtime. This causes the current working directory to be added to the dynamic linker search path, which may allow an attacker to execute arbitrary code by placing a malicious shared library in the directory from which the `AppImage` is launched.\n\nThis vulnerability is the same class as [`CVE-2024-41817`](https://github.com/ImageMagick/ImageMagick/security/advisories/GHSA-8rxc-922v-phg8).\n\n### Details\n\nThe vulnerability existed in two independent code paths within `app-builder-lib` (toolset `1.0.0`) and through upstream dependency `app-builder",
+     "cwe": [
+      "CWE-427"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p099",
+   "slug": "paintracker-ca",
+   "package": "npm:builder-util-runtime",
+   "version": "9.6.0",
+   "where": "desktop/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-p2f4-r6v6-j797",
+     "cve": [
+      "CVE-2026-54673"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "9.7.0",
+     "summary": "electron-updater: Cross-origin redirect leaks `PRIVATE-TOKEN` and mixed-case `Authorization` credentials in `builder-util-runtime`",
+     "details": "## Summary\n\nIn `electron-builder`'s `builder-util-runtime` package, the HTTP redirect handler (`HttpExecutor.prepareRedirectUrlOptions`) only stripped a credential header whose key string matched exactly lowercase `\"authorization\"`. Other credential-bearing headers — most notably `PRIVATE-TOKEN` (used by GitLab's personal access token flow) and mixed-case `Authorization` (used by GitLab's Bearer/OAuth flow) — were not stripped and could be forwarded to an attacker-controlled cross-origin redirect destination.\n\n---\n\n## Details\n\n### Root cause\n\n`HttpExecutor.prepareRedirectUrlOptions` (introduced in `builder-util-runtime` via [PR #9211](https://github.com/electron-userland/electron-builder/pul",
+     "cwe": [
+      "CWE-200"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p100",
+   "slug": "paintracker-ca",
+   "package": "npm:electron",
+   "version": "40.9.3",
+   "where": "desktop/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-9f4c-93c8-jc8g",
+     "cve": [
+      "CVE-2026-70608"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "41.10.3",
+     "summary": "Electron: Sandboxed iframe can bypass the allow-popups restriction via the OpenURL navigation path",
+     "details": "### Impact\nA sandboxed iframe without the `allow-popups` keyword could still open a new window (or trigger `setWindowOpenHandler`) with no user interaction, because new-window navigations taking the OpenURL path did not apply the iframe sandbox popup restriction.\n\nApps that embed untrusted content in sandboxed iframes and rely on the absence of `allow-popups` to prevent window creation are affected. Apps that deny window creation in `setWindowOpenHandler`, or that do not embed untrusted content in sandboxed iframes, are not affected.\n\n### Workarounds\nReturn `{ action: 'deny' }` from `setWindowOpenHandler` for any content you do not trust, rather than relying on the iframe sandbox alone.\n\n###",
+     "cwe": [
+      "CWE-1021",
+      "CWE-693"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p101",
+   "slug": "paintracker-ca",
+   "package": "npm:form-data",
+   "version": "4.0.5",
+   "where": "desktop/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-hmw2-7cc7-3qxx",
+     "cve": [
+      "CVE-2026-12143"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.0.6",
+     "summary": "form-data: CRLF injection in form-data via unescaped multipart field names and filenames",
+     "details": "## Summary\n\n`form-data` builds `multipart/form-data` request bodies. Through v4.0.5, the `field` name passed to `FormData#append` and the `filename` option are concatenated directly into the `Content-Disposition` header with no escaping of CR (`\\r`), LF (`\\n`), or `\"`. An application that uses **untrusted input as a field name or filename** therefore lets an attacker terminate the header line and either inject additional headers or smuggle whole additional multipart parts into the request the application forwards to a backend.\n\nThis is CWE-93 (CRLF injection). It is a divergence from how browsers and the WHATWG HTML spec serialize form-data (they escape these characters), so the fix is to ma",
+     "cwe": [
+      "CWE-93"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p102",
+   "slug": "paintracker-ca",
+   "package": "npm:tar",
+   "version": "7.5.13",
+   "where": "desktop/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-23hp-3jrh-7fpw",
+     "cve": [
+      "CVE-2026-59873"
+     ],
+     "severity": "CRITICAL",
+     "fixed_in": "7.5.19",
+     "summary": "node-tar: Decompression/parse DoS via unlimited input",
+     "details": "### Summary\nA **Decompression/parse DoS via unlimited input** vulnerability in `node-tar` allows an attacker to exhaust server resources (disk space and CPU). Because the library does not enforce hard upper bounds on total decompressed data or entry counts, a small, maliciously crafted \"Gzip Bomb\" can be used to fill a server's storage and crash services.\n\n### Details\nThe `node-tar` library does not enforce a hard upper bound on archive size or the volume of decompressed data processed during extraction. While the `maxReadSize` option exists, it only controls internal read chunk sizes (default 16MB) and does not limit the total cumulative bytes written to disk.\n\nSpecifically, in `src/extract",
+     "cwe": [
+      "CWE-770"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p103",
+   "slug": "paintracker-ca",
+   "package": "npm:tmp",
+   "version": "0.2.5",
+   "where": "desktop/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-ph9p-34f9-6g65",
+     "cve": [
+      "CVE-2026-44705"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "0.2.6",
+     "summary": "tmp has Path Traversal via unsanitized prefix/postfix that enables directory escape",
+     "details": "### Summary\n\nThe tmp npm package contains a path traversal vulnerability that allows escaping the intended temporary directory when untrusted data flows into the `prefix`, `postfix`, or `dir` options. By embedding traversal sequences (e.g., `../`) or path separators in these parameters, attackers can cause files to be created outside the configured temporary base directory at attacker-controlled locations with the privileges of the running process. This vulnerability affects applications that pass user-controlled data to tmp's file/directory creation functions without proper input sanitization.\n\n### Details\n\n**Root Cause:**\nThe vulnerability exists in tmp's path construction logic where user",
+     "cwe": [
+      "CWE-22"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p104",
+   "slug": "paintracker-ca",
+   "package": "npm:undici",
+   "version": "6.25.0",
+   "where": "desktop/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-2m5v-pch6-74hx",
+     "cve": [
+      "CVE-2026-109383"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "6.29.1",
+     "summary": "undici vulnerable to TLS certificate validation bypass via dropped tls options in Agent",
+     "details": "### Impact\n\nundici's `Agent` passes its constructor options through a JSON-based deep clone (`JSON.parse(JSON.stringify(...))`) before forwarding them to each per-origin `Pool`. JSON cannot represent functions, so a caller-supplied `tls` option containing a `checkServerIdentity` callback is silently dropped before it reaches the TLS layer. As a result, a TLS peer whose certificate a custom `checkServerIdentity` was written to reject, but which passes Node's default hostname and chain checks, is silently accepted when the request is made through `Agent`. Because `Agent` is the default dispatcher behind `request`, `fetch`, and `setGlobalDispatcher`, this is the path most applications use. `Env",
+     "cwe": [
+      "CWE-295"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p105",
+   "slug": "papertrade-analytics",
+   "package": "npm:undici",
+   "version": "7.29.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-2m5v-pch6-74hx",
+     "cve": [
+      "CVE-2026-109383"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "7.30.1",
+     "summary": "undici vulnerable to TLS certificate validation bypass via dropped tls options in Agent",
+     "details": "### Impact\n\nundici's `Agent` passes its constructor options through a JSON-based deep clone (`JSON.parse(JSON.stringify(...))`) before forwarding them to each per-origin `Pool`. JSON cannot represent functions, so a caller-supplied `tls` option containing a `checkServerIdentity` callback is silently dropped before it reaches the TLS layer. As a result, a TLS peer whose certificate a custom `checkServerIdentity` was written to reject, but which passes Node's default hostname and chain checks, is silently accepted when the request is made through `Agent`. Because `Agent` is the default dispatcher behind `request`, `fetch`, and `setGlobalDispatcher`, this is the path most applications use. `Env",
+     "cwe": [
+      "CWE-295"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p106",
+   "slug": "pbp",
+   "package": "npm:postcss",
+   "version": "8.5.8",
+   "where": "frontend/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-6g55-p6wh-862q",
+     "cve": [
+      "CVE-2026-45623"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "8.5.12",
+     "summary": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
+     "details": "## Summary\n\nPostCSS's `PreviousMap` parses the `/*# sourceMappingURL=PATH */` comment from any CSS string passed to `process()` and dereferences `PATH` against the local filesystem with no scheme, allowlist, or traversal check. An attacker who controls the CSS input can cause the host process to read any file readable by Node and leak the first ~10 bytes of its content through the resulting `JSON.parse` `SyntaxError` message. The bug also yields a precise file-existence oracle and a controllable-read primitive that may be combined with large-file targets for DoS. The behaviour is triggered with PostCSS's default options — no `from`, no `map`, no plugins required — and is therefore reachable ",
+     "cwe": [
+      "CWE-200",
+      "CWE-22"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p107",
+   "slug": "pbp",
+   "package": "npm:vite",
+   "version": "8.0.0",
+   "where": "frontend/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-587h-7wmj-h5pm",
+     "cve": [
+      "CVE-2026-112942"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "8.1.6",
+     "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+     "details": "### Summary\n\n`launch-editor` checked `fs.existsSync(fileName)` before passing a supplied path to an editor command. On Windows, an attacker can bypass this check with a crafted path ending in `\\\\..:line:column`. This removes the requirement that the attacker be able to place a file with a malicious filename.\n\nCombined with the `%` escaping issue described in [GHSA-698v-4r3x-3vcv](https://github.com/vitejs/launch-editor/security/advisories/GHSA-698v-4r3x-3vcv), this bypass can lead to OS command injection when an attacker controls the file argument.\n\n### Impact\n\nOnly apps that runs on Windows is affected.\n\n### Details\n\nThe earlier advisory assumed that `fs.existsSync()` required an attacker-c",
+     "cwe": [
+      "CWE-77"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p108",
+   "slug": "phantom",
+   "package": "npm:body-parser",
+   "version": "2.3.0",
+   "where": "published package, fresh install",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-27r3-jxmh-p828",
+     "cve": [
+      "CVE-2026-111181"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "2.4.0",
+     "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
+     "details": "### Impact\n\nA single request can crash any application using `body-parser` with default options. When a request carries a `Content-Encoding` (for example `gzip`), `body-parser` pipes it into a decompression stream and, after reading the body, leaves that stream piped with no error listener. A payload of one valid compressed frame followed by trailing bytes decodes and the application responds normally, but the trailing bytes then reach the already-finished decoder, which emits an error that is re-thrown as an uncaught exception and terminates the process. No authentication or matching route is required, since parsing runs before routing.\n\n### Patches\n\nFixed in body-parser 2.4.0 and 1.20.9. U",
+     "cwe": [
+      "CWE-248"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p109",
+   "slug": "phantom",
+   "package": "npm:zod",
+   "version": "4.4.3",
+   "where": "published package, fresh install",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-mrhx-c7xc-m3w5",
+     "cve": [
+      "CVE-2023-54404"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.6.6",
+     "summary": "Zod can exhaust memory while validating oversized constrained collections",
+     "details": "Zod schema-validation library through 4.6.5 contains an uncontrolled resource consumption vulnerability that allows attackers to exhaust memory by submitting a large array to an application using an array schema without a length constraint. Attackers can exploit the handleArrayResult parse logic in $ZodArray, which accumulates every validation issue for each failing element with no cap or early termination, causing the process to allocate excessive issue objects and crash due to out-of-memory conditions.",
+     "cwe": [
+      "CWE-770"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p110",
+   "slug": "privateer-agent",
+   "package": "npm:brace-expansion",
+   "version": "5.0.9",
+   "where": "published package, fresh install",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-6j4f-fj2g-mc7p",
+     "cve": [
+      "CVE-2026-102276"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "5.0.10",
+     "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+     "details": "### Summary\n\n`parseCommaParts()` can exhaust the native stack and crash the process. There are two distinct ways to trigger it, both reachable from a single untrusted pattern string.\n\nThis is the parsing-side counterpart to CVE-2026-14257 / GHSA-mh99-v99m-4gvg. That fix made `expand_()` iterative and documented a constant-stack-depth guarantee, but `parseCommaParts()` was left recursive, so the guarantee only held for one of the two parsing paths.\n\n### Vector 1 - unbounded recursion on `post`\n\n`parseCommaParts()` recursed on the remainder of the string once per brace group:\n\n```js\nconst postParts = parseCommaParts(post)   // unbounded\n```\n\nA brace group containing many comma-separated groups",
+     "cwe": [
+      "CWE-400",
+      "CWE-674"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p111",
+   "slug": "privateer-agent",
+   "package": "npm:zod",
+   "version": "3.25.76",
+   "where": "published package, fresh install",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-mrhx-c7xc-m3w5",
+     "cve": [
+      "CVE-2023-54404"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.6.6",
+     "summary": "Zod can exhaust memory while validating oversized constrained collections",
+     "details": "Zod schema-validation library through 4.6.5 contains an uncontrolled resource consumption vulnerability that allows attackers to exhaust memory by submitting a large array to an application using an array schema without a length constraint. Attackers can exploit the handleArrayResult parse logic in $ZodArray, which accumulates every validation issue for each failing element with no cap or early termination, causing the process to allocate excessive issue objects and crash due to out-of-memory conditions.",
+     "cwe": [
+      "CWE-770"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p112",
+   "slug": "pulsechain-mcp",
+   "package": "npm:@modelcontextprotocol/node",
+   "version": "2.0.0",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-f897-62hf-6gxq",
+     "cve": [],
+     "severity": "HIGH",
+     "fixed_in": "2.1.0",
+     "summary": "MCP TypeScript SDK: HTTP server transports and handlers did not limit request body size or JSON-RPC batch length",
+     "details": "### Summary\nIn affected versions, MCP servers reachable over HTTP put no limit on the size of a POST body or on the number of messages in a JSON-RPC batch. Large requests could exhaust the server's memory, and one long batch could block it from serving anyone else. No credentials were needed, unless your application authenticates requests before they reach the SDK.\n\n### Am I affected?\nYes, if clients you do not fully trust can reach your server over Streamable HTTP. A body parser such as `express.json()` does not protect you, because it does not limit batch length. Servers that only use stdio are not affected.\n\nAffected versions:\n\n- `@modelcontextprotocol/sdk` 1.10.0 through 1.30.0\n- `@model",
+     "cwe": [
+      "CWE-770"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p113",
+   "slug": "pulsechain-mcp",
+   "package": "npm:zod",
+   "version": "4.4.3",
+   "where": "package-lock.json",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-mrhx-c7xc-m3w5",
+     "cve": [
+      "CVE-2023-54404"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.6.6",
+     "summary": "Zod can exhaust memory while validating oversized constrained collections",
+     "details": "Zod schema-validation library through 4.6.5 contains an uncontrolled resource consumption vulnerability that allows attackers to exhaust memory by submitting a large array to an application using an array schema without a length constraint. Attackers can exploit the handleArrayResult parse logic in $ZodArray, which accumulates every validation issue for each failing element with no cap or early termination, causing the process to allocate excessive issue objects and crash due to out-of-memory conditions.",
+     "cwe": [
+      "CWE-770"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p114",
+   "slug": "pulsechain-mcp",
+   "package": "npm:brace-expansion",
+   "version": "5.0.8",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-6j4f-fj2g-mc7p",
+     "cve": [
+      "CVE-2026-102276"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "5.0.10",
+     "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+     "details": "### Summary\n\n`parseCommaParts()` can exhaust the native stack and crash the process. There are two distinct ways to trigger it, both reachable from a single untrusted pattern string.\n\nThis is the parsing-side counterpart to CVE-2026-14257 / GHSA-mh99-v99m-4gvg. That fix made `expand_()` iterative and documented a constant-stack-depth guarantee, but `parseCommaParts()` was left recursive, so the guarantee only held for one of the two parsing paths.\n\n### Vector 1 - unbounded recursion on `post`\n\n`parseCommaParts()` recursed on the remainder of the string once per brace group:\n\n```js\nconst postParts = parseCommaParts(post)   // unbounded\n```\n\nA brace group containing many comma-separated groups",
+     "cwe": [
+      "CWE-400",
+      "CWE-674"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p115",
+   "slug": "pulsechain-mcp",
+   "package": "npm:nanoid",
+   "version": "3.3.16",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-2v37-7h3g-55p8",
+     "cve": [
+      "CVE-2026-67213"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.3.18",
+     "summary": "nanoid: custom generators can loop indefinitely when size is zero",
+     "details": "nanoid (Nano ID) before 5.1.6 contains an infinite loop in the customAlphabet and customRandom functions. When these functions are configured with a size of 0, the internal generation loop never satisfies its exit condition and spins indefinitely, hanging the calling thread. An application that passes an unvalidated, attacker-controlled size of 0 to these functions is exposed to a denial-of-service condition.",
+     "cwe": [
+      "CWE-835"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p116",
+   "slug": "pulsechain-mcp",
+   "package": "npm:source-map-js",
+   "version": "1.2.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-68fv-2mgg-jv7q",
+     "cve": [
+      "CVE-2026-93749"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.2.2",
+     "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+     "details": "source-map-js through 1.2.1 fails to validate the per-section offset line value in indexed source maps, allowing attackers to specify arbitrary numeric values. Attackers can supply extremely large offset line values that cause synchronous event loop blocking for extended periods, preventing the service from handling other requests.",
+     "cwe": [
+      "CWE-1284"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p117",
+   "slug": "pulsechain-mcp",
+   "package": "npm:tinypool",
+   "version": "1.1.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-5gmw-xhrv-c9v3",
+     "cve": [
+      "CVE-2026-104848"
+     ],
+     "severity": "CRITICAL",
+     "fixed_in": "2.1.1",
+     "summary": "Tinypool: Prototype Pollution gadget in worker options leads to Remote Code Execution",
+     "details": "`tinypool` passes worker options to `new Worker()` by reading them off a plain object whose prototype is `Object.prototype`. Options the application did not set are resolved through the prototype chain and then passed explicitly to `worker_threads.Worker`.\n\nNode core ignores `Worker` options inherited from `Object.prototype`. By reading them and passing them explicitly, tinypool re-materialises them as own properties and defeats that protection.\n\n\nTwo keys reach code execution:\n\n1. **`execArgv`** — polluting `Object.prototype.execArgv = ['--require', '/path/to/attacker.js']` causes every pool worker to load the attacker's script.\n2. **`env`** — polluting `Object.prototype.env = { NODE_OPTION",
+     "cwe": [
+      "CWE-1321"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p118",
+   "slug": "pulsechain-mcp",
+   "package": "npm:vite",
+   "version": "7.3.6",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-587h-7wmj-h5pm",
+     "cve": [
+      "CVE-2026-112942"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "7.3.7",
+     "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+     "details": "### Summary\n\n`launch-editor` checked `fs.existsSync(fileName)` before passing a supplied path to an editor command. On Windows, an attacker can bypass this check with a crafted path ending in `\\\\..:line:column`. This removes the requirement that the attacker be able to place a file with a malicious filename.\n\nCombined with the `%` escaping issue described in [GHSA-698v-4r3x-3vcv](https://github.com/vitejs/launch-editor/security/advisories/GHSA-698v-4r3x-3vcv), this bypass can lead to OS command injection when an attacker controls the file argument.\n\n### Impact\n\nOnly apps that runs on Windows is affected.\n\n### Details\n\nThe earlier advisory assumed that `fs.existsSync()` required an attacker-c",
+     "cwe": [
+      "CWE-77"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p119",
+   "slug": "pulsechain-mcp",
+   "package": "npm:vitest",
+   "version": "3.2.4",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-5xrq-8626-4rwp",
+     "cve": [
+      "CVE-2026-47429"
+     ],
+     "severity": "CRITICAL",
+     "fixed_in": "3.2.6",
+     "summary": "When Vitest UI server is listening, arbitrary file can be read and executed",
+     "details": "### Summary\nArbitrary file can be read on Windows when Vitest UI server is listening, especially when exposed to the network.\n\n### Impact\nOnly users that match either of the following conditions are affected:\n\n- explicitly exposes the Vitest UI server to the network (using `--api.host` or [`api.host` config option](https://vitest.dev/config/api.html))\n- running the Vitest UI or Browser Mode on Windows\n\n### Details\nThe API handler for `/__vitest_attachment__` uses the deprecated `isFileServingAllowed` incorrectly.\nhttps://github.com/vitest-dev/vitest/blob/eb1abf08573032a532015b999ad3501c5e89e3bb/packages/ui/node/index.ts#L77\nThe function expects the passed value to use `cleanUrl` after the ch",
+     "cwe": [
+      "CWE-22",
+      "CWE-862"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p120",
+   "slug": "stem-digital-lab",
+   "package": "npm:brace-expansion",
+   "version": "5.0.9",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-6j4f-fj2g-mc7p",
+     "cve": [
+      "CVE-2026-102276"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "5.0.10",
+     "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+     "details": "### Summary\n\n`parseCommaParts()` can exhaust the native stack and crash the process. There are two distinct ways to trigger it, both reachable from a single untrusted pattern string.\n\nThis is the parsing-side counterpart to CVE-2026-14257 / GHSA-mh99-v99m-4gvg. That fix made `expand_()` iterative and documented a constant-stack-depth guarantee, but `parseCommaParts()` was left recursive, so the guarantee only held for one of the two parsing paths.\n\n### Vector 1 - unbounded recursion on `post`\n\n`parseCommaParts()` recursed on the remainder of the string once per brace group:\n\n```js\nconst postParts = parseCommaParts(post)   // unbounded\n```\n\nA brace group containing many comma-separated groups",
+     "cwe": [
+      "CWE-400",
+      "CWE-674"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p121",
+   "slug": "stem-digital-lab",
+   "package": "npm:fast-uri",
+   "version": "3.1.6",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-58mr-gqgx-xq4g",
+     "cve": [
+      "CVE-2026-84394"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "3.1.7",
+     "summary": "fast-uri vulnerable to host confusion via an unclosed bracket in the URI authority",
+     "details": "### Impact\n\n`fast-uri` accepts a host that contains an unbalanced or misplaced authority bracket (`[` or `]`) without reporting an error. A host that starts with `[` but does not end with `]`, such as `[@127.0.0.1`, is neither validated as an IP literal nor canonicalized as a domain name, so `parse()` returns it as the host with `error` undefined, while Node's `URL` (and `http.get`, `axios`, `got`, and other clients built on it) resolve the same string to `127.0.0.1`. An application that reads `parse().host` to make a host decision (an SSRF denylist, a redirect allowlist, or proxy routing) and then passes the original URL to an HTTP client evaluates its policy against a string that is not th",
+     "cwe": [
+      "CWE-436"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p122",
+   "slug": "stem-digital-lab",
+   "package": "npm:source-map-js",
+   "version": "1.2.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-68fv-2mgg-jv7q",
+     "cve": [
+      "CVE-2026-93749"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.2.2",
+     "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+     "details": "source-map-js through 1.2.1 fails to validate the per-section offset line value in indexed source maps, allowing attackers to specify arbitrary numeric values. Attackers can supply extremely large offset line values that cause synchronous event loop blocking for extended periods, preventing the service from handling other requests.",
+     "cwe": [
+      "CWE-1284"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p123",
+   "slug": "stem-digital-lab",
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-587h-7wmj-h5pm",
+     "cve": [
+      "CVE-2026-112942"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "6.4.4",
+     "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+     "details": "### Summary\n\n`launch-editor` checked `fs.existsSync(fileName)` before passing a supplied path to an editor command. On Windows, an attacker can bypass this check with a crafted path ending in `\\\\..:line:column`. This removes the requirement that the attacker be able to place a file with a malicious filename.\n\nCombined with the `%` escaping issue described in [GHSA-698v-4r3x-3vcv](https://github.com/vitejs/launch-editor/security/advisories/GHSA-698v-4r3x-3vcv), this bypass can lead to OS command injection when an attacker controls the file argument.\n\n### Impact\n\nOnly apps that runs on Windows is affected.\n\n### Details\n\nThe earlier advisory assumed that `fs.existsSync()` required an attacker-c",
+     "cwe": [
+      "CWE-77"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p124",
+   "slug": "tessera",
+   "package": "npm:brace-expansion",
+   "version": "5.0.9",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-6j4f-fj2g-mc7p",
+     "cve": [
+      "CVE-2026-102276"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "5.0.10",
+     "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+     "details": "### Summary\n\n`parseCommaParts()` can exhaust the native stack and crash the process. There are two distinct ways to trigger it, both reachable from a single untrusted pattern string.\n\nThis is the parsing-side counterpart to CVE-2026-14257 / GHSA-mh99-v99m-4gvg. That fix made `expand_()` iterative and documented a constant-stack-depth guarantee, but `parseCommaParts()` was left recursive, so the guarantee only held for one of the two parsing paths.\n\n### Vector 1 - unbounded recursion on `post`\n\n`parseCommaParts()` recursed on the remainder of the string once per brace group:\n\n```js\nconst postParts = parseCommaParts(post)   // unbounded\n```\n\nA brace group containing many comma-separated groups",
+     "cwe": [
+      "CWE-400",
+      "CWE-674"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p125",
+   "slug": "tessera",
+   "package": "npm:source-map-js",
+   "version": "1.2.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-68fv-2mgg-jv7q",
+     "cve": [
+      "CVE-2026-93749"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "1.2.2",
+     "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+     "details": "source-map-js through 1.2.1 fails to validate the per-section offset line value in indexed source maps, allowing attackers to specify arbitrary numeric values. Attackers can supply extremely large offset line values that cause synchronous event loop blocking for extended periods, preventing the service from handling other requests.",
+     "cwe": [
+      "CWE-1284"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p126",
+   "slug": "tessera",
+   "package": "npm:undici",
+   "version": "7.29.1",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-2m5v-pch6-74hx",
+     "cve": [
+      "CVE-2026-109383"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "7.30.1",
+     "summary": "undici vulnerable to TLS certificate validation bypass via dropped tls options in Agent",
+     "details": "### Impact\n\nundici's `Agent` passes its constructor options through a JSON-based deep clone (`JSON.parse(JSON.stringify(...))`) before forwarding them to each per-origin `Pool`. JSON cannot represent functions, so a caller-supplied `tls` option containing a `checkServerIdentity` callback is silently dropped before it reaches the TLS layer. As a result, a TLS peer whose certificate a custom `checkServerIdentity` was written to reject, but which passes Node's default hostname and chain checks, is silently accepted when the request is made through `Agent`. Because `Agent` is the default dispatcher behind `request`, `fetch`, and `setGlobalDispatcher`, this is the path most applications use. `Env",
+     "cwe": [
+      "CWE-295"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p127",
+   "slug": "tessera",
+   "package": "npm:vite",
+   "version": "8.2.2",
+   "where": "package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-587h-7wmj-h5pm",
+     "cve": [
+      "CVE-2026-112942"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "8.2.4",
+     "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+     "details": "### Summary\n\n`launch-editor` checked `fs.existsSync(fileName)` before passing a supplied path to an editor command. On Windows, an attacker can bypass this check with a crafted path ending in `\\\\..:line:column`. This removes the requirement that the attacker be able to place a file with a malicious filename.\n\nCombined with the `%` escaping issue described in [GHSA-698v-4r3x-3vcv](https://github.com/vitejs/launch-editor/security/advisories/GHSA-698v-4r3x-3vcv), this bypass can lead to OS command injection when an attacker controls the file argument.\n\n### Impact\n\nOnly apps that runs on Windows is affected.\n\n### Details\n\nThe earlier advisory assumed that `fs.existsSync()` required an attacker-c",
+     "cwe": [
+      "CWE-77"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p128",
+   "slug": "xipher",
+   "package": "go:github.com/go-jose/go-jose/v4",
+   "version": "v4.1.5",
+   "where": "go.mod",
+   "scope": "runtime",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-mgcc-cww5-fp2q",
+     "cve": [
+      "CVE-2026-116587"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "4.1.6",
+     "summary": "Go JOSE: DoS when parsing JWKs that contain RSA keys",
+     "details": "### Summary\n\nA crafted RSA key inside a JWK can cause operations that parse JWKs to consume excess CPU.\n\n### Details\n\ngo-jose does not check for bounds on RSA modulus and primes before validating them. Values are passed directly to `crypto/rsa.PrivateKey.Validate()`. On Go 1.24+, this takes cubic time complexity with respect to the RSA modulus and primes. This allows an attacker to supply a crafted JWK to consume excessive CPU.\n\nhttps://github.com/go-jose/go-jose/blob/5b371aecfcf7aabe06068d67da4344591ecddc76/jwk.go#L655-L700\n\n### Proof of concept\n\nNo special configuration of go-jose is required to reproduce this vulnerability.\n\n```go\npackage main\n\nimport (\n\t\"encoding/base64\"\n\t\"encoding/json\"",
+     "cwe": [
+      "CWE-407",
+      "CWE-770"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p129",
+   "slug": "xipher",
+   "package": "npm:brace-expansion",
+   "version": "5.0.9",
+   "where": "action/package-lock.json",
+   "scope": "dev",
+   "group": "control",
+   "advisories": [
+    {
+     "id": "GHSA-6j4f-fj2g-mc7p",
+     "cve": [
+      "CVE-2026-102276"
+     ],
+     "severity": "HIGH",
+     "fixed_in": "5.0.10",
+     "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+     "details": "### Summary\n\n`parseCommaParts()` can exhaust the native stack and crash the process. There are two distinct ways to trigger it, both reachable from a single untrusted pattern string.\n\nThis is the parsing-side counterpart to CVE-2026-14257 / GHSA-mh99-v99m-4gvg. That fix made `expand_()` iterative and documented a constant-stack-depth guarantee, but `parseCommaParts()` was left recursive, so the guarantee only held for one of the two parsing paths.\n\n### Vector 1 - unbounded recursion on `post`\n\n`parseCommaParts()` recursed on the remainder of the string once per brace group:\n\n```js\nconst postParts = parseCommaParts(post)   // unbounded\n```\n\nA brace group containing many comma-separated groups",
+     "cwe": [
+      "CWE-400",
+      "CWE-674"
+     ]
+    }
+   ]
+  }
+ ]
+}

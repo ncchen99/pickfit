@@ -274,6 +274,13 @@ button.badge{cursor:help}
 .notice.busy h2{color:var(--caution)}
 .notice.error{background:var(--fail-soft)}
 .notice.error h2{color:var(--fail)}
+.notice h3{font-size:var(--t-head);margin-bottom:4px}
+.notice.error h3{color:var(--fail)}
+.security-notice{margin:0 0 20px}
+.security-notice ul{margin:8px 0 0;padding-left:1.2em}
+.security-notice li+li{margin-top:4px}
+.security-notice p.small{margin-top:8px}
+.badge-link{text-decoration:none}
 .notice .fitz{flex:none}
 
 /* popovers and the legend dialog */

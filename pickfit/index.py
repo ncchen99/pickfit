@@ -124,6 +124,27 @@ def _visual(record: SoftwareRecord) -> dict[str, Any] | None:
             "checked_at": _iso(check.checked_at)[:10], "model": check.model}
 
 
+def _security(record: SoftwareRecord) -> dict[str, Any]:
+    """Known high or critical vulnerabilities in what a fresh install brings (record field security, sec.v1):
+    "vulnerable" (quality capped at 79, the advisories listed, malicious ones first), "clean", or "unchecked" with
+    why (no repository or package, a lockfile pickfit cannot read, nothing resolved). A record not run yet is
+    "unchecked" too, reason "not_run"."""
+    check = record.security
+    if check is None:
+        return {"status": "unchecked", "reason": "not_run"}
+    out: dict[str, Any] = {"status": check.status, "checked_at": _iso(check.checked_at)[:10]}
+    if check.status == "unchecked":
+        out["reason"] = check.unchecked_reason
+        return out
+    out["packages_checked"] = check.packages_checked
+    if check.findings:
+        out["count"] = max(check.findings_total, len(check.findings))
+        out["findings"] = [{"package": f.package, "version": f.version, "advisory": f.advisory, "severity": f.severity,
+                            "fixed_in": f.fixed_in, "summary": f.summary, "malicious": f.malicious}
+                           for f in check.findings[:10]]
+    return out
+
+
 def _web(record: SoftwareRecord) -> dict[str, Any] | None:
     """A web app's URL and what its strongest passed browser run saw (latest first on a tie); check is None
     until a run passed. Operations' observed lines are pickfit's own."""
@@ -310,6 +331,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
         "mcp": record.mcp.model_dump() if record.mcp else None,
         "web": _web(record),
         "visual": _visual(record),
+        "security": _security(record),
         "scores": {
             "quality": scores.quality.total,
             "popularity": scores.popularity.score,

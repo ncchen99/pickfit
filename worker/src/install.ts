@@ -20,6 +20,7 @@ import { ranSentence, videoOut, videoSentence } from './evidence.ts';
 import { featureSentence, featuresOut, type FeaturesOut } from './features.ts';
 import { newId, REC_ID } from './events.ts';
 import { clientConfig, type McpClientConfig } from './mcpconfig.ts';
+import { securityOut, securityWarnings, type SecurityOut } from './security.ts';
 import { webAppOut, webRanSentence, webWarnings, type WebAppOut } from './webapp.ts';
 
 export interface InstallInput {
@@ -82,6 +83,8 @@ export interface InstallOutput {
   check_in: CheckIn | null;
   /** A hosted web app: the URL to open instead of steps, and what pickfit's browser saw; null for anything else. */
   web_app: WebAppOut | null;
+  /** Known high or critical vulnerabilities (OSV.dev) in what a fresh install brings; unchecked says why not. */
+  security: SecurityOut;
   /**
    * The commands exactly as pickfit's run executed them, when the ones above differ (the sandbox home written as
    * $HOME) or still name the sandbox home; null when the commands above are the run's own.
@@ -146,6 +149,7 @@ function webGuide(entry: Entry, input: InstallInput, now: Date): InstallOutput {
   const check = webCheck(entry);
   const web = webAppOut(entry)!;
   const covered = featureSentence(featuresOut(entry, null));
+  const security = securityOut(entry);
   return {
     rec_id: input.rec_id && REC_ID.test(input.rec_id) ? input.rec_id : newId('rec'),
     matched_by: 'rules',
@@ -183,7 +187,8 @@ function webGuide(entry: Entry, input: InstallInput, now: Date): InstallOutput {
     check_in: check ? webCheckIn(entry, web.url, now) : null,
     web_app: web,
     verified_in_pickfit: null,
-    warnings: webWarnings(check),
+    security,
+    warnings: [...securityWarnings(security, true), ...webWarnings(check)],
     sources: entry.sources,
   };
 }
@@ -231,7 +236,9 @@ export function installGuide(catalog: Catalog, input: InstallInput, now = new Da
   const howWeKnow = guide
     ? `${ranSentence(guide)} ${recorded}${covered ? ` ${covered}` : ''}${clip ? ` ${clip}` : ''}`
     : `pickfit has not run ${entry.name}'s install steps on any system yet.`;
-  const warnings: string[] = sandboxWarnings(user);
+  const security = securityOut(entry);
+  // First, so the agent reads it before the steps.
+  const warnings: string[] = [...securityWarnings(security), ...sandboxWarnings(user)];
   if (steps.some((s) => PIPE_TO_SHELL.test(s.command))) {
     warnings.push('A step pipes a downloaded script into a shell. Show it to the user and get consent before running it.');
   }
@@ -280,6 +287,7 @@ export function installGuide(catalog: Catalog, input: InstallInput, now = new Da
     mcp_client_config: clientConfig(entry, guide),
     check_in: guide ? checkIn(entry, guide, input.os, now) : null,
     web_app: null,
+    security,
     verified_in_pickfit: verifiedInPickfit(guide),
     warnings,
     sources: entry.sources,

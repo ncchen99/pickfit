@@ -117,7 +117,7 @@ type FeatureGap = Literal[
 ]
 # Who a failed feature test points at, as pitfall kinds do: only this box, or the tool itself.
 type FeatureFailure = Literal["sandbox", "tool"]
-type CapReason = Literal["archived", "verification_failed", "not_a_tool", "unverified"]
+type CapReason = Literal["archived", "verification_failed", "not_a_tool", "unverified", "known_vulnerability"]
 type SourceKind = Literal[
     "github_api", "readme", "release", "manifest", "package_registry",
     "hn", "submission", "sandbox", "human", "website",
@@ -161,6 +161,9 @@ QUALITY_CAPS: dict[str, int] = {
     "verification_failed": 40,
     "not_a_tool": 50,
     "unverified": 69,
+    # A high or critical advisory in what a fresh install brings (record field security); 念誠 11/3: rather drop a
+    # treasure by mistake than recommend software with a known hole, so any such advisory keeps it below treasure.
+    "known_vulnerability": 79,
 }
 assert set(QUALITY_CAPS) == set(get_args(CapReason.__value__))
 assert max(QUALITY_CAPS.values()) < TREASURE_MIN_QUALITY
@@ -229,13 +232,22 @@ def treasure_value(quality: float, popularity: float) -> float:
     return quality * (1 - popularity / 100)
 
 
-def binding_cap(kind: str, archived: bool, level: str) -> CapReason | None:
+def security_vulnerable(security: Any) -> bool:
+    """Whether a record's security check (model or its JSON) found a high or critical advisory."""
+    if security is None:
+        return False
+    status = security.get("status") if isinstance(security, dict) else security.status
+    return status == "vulnerable"
+
+
+def binding_cap(kind: str, archived: bool, level: str, security: Any = None) -> CapReason | None:
     """The lowest B.3 quality cap that applies to an entry, or None."""
     applies = {
         "archived": archived,
         "verification_failed": level == "failed",
         "not_a_tool": kind not in TOOL_KINDS,
         "unverified": level == "unverified",
+        "known_vulnerability": security_vulnerable(security),
     }
     reasons = [reason for reason, hit in applies.items() if hit]
     return min(reasons, key=QUALITY_CAPS.__getitem__, default=None)
@@ -1619,6 +1631,54 @@ def visual_check_factor(visual: Any, verification: Any) -> float | None:
     return 1.0 if score == 2 else VISUAL_FACTOR
 
 
+class SecurityFinding(_Model):
+    """One high or critical OSV advisory (or a malicious-package report) on a package a fresh install brings."""
+
+    package: str = Field(pattern=r"^(npm|pypi|crates|go):\S+$", description="Ecosystem and name, e.g. 'npm:undici'.")
+    version: str = Field(min_length=1, max_length=100)
+    advisory: str = Field(pattern=r"^[A-Z][A-Z0-9]*-[\w-]+$", description="OSV id, e.g. GHSA-xxxx-xxxx-xxxx or MAL-2025-1.")
+    cves: list[str] = Field(default=[], max_length=10)
+    severity: Literal["CRITICAL", "HIGH"]
+    fixed_in: str | None = Field(description="The lowest fixed version above the installed one; null when none is out.")
+    summary: str = Field(max_length=200)
+    malicious: bool = False
+
+
+class SecurityCheck(_Model):
+    """Known vulnerabilities in what a fresh install brings (sec.v1, pickfit/security.py; 念誠 11/3).
+
+    No model call: the dependencies are resolved the way a person installing it today gets them (a published package
+    through npm --package-lock-only --ignore-scripts or uv pip compile --no-build, neither runs package code; else the
+    repository's lockfiles, Python re-resolved from pyproject.toml since pip and uv do not read uv.lock), without
+    development dependencies and without lockfiles of parts the person does not install (docs sites, editor extensions,
+    CI actions). Every resolved version is looked up on OSV.dev; any high or critical advisory, fixed or not, counts.
+    """
+
+    version: Literal["sec.v1"]
+    status: Literal["vulnerable", "clean", "unchecked"]
+    unchecked_reason: Literal["no_source", "no_lockfile", "lockfile_not_supported", "resolve_failed"] | None = None
+    sources: list[str] = Field(default=[], max_length=20, description="What was resolved, e.g. 'npm:x@1.2.0' or a lockfile path.")
+    packages_checked: int = Field(ge=0)
+    findings_total: int = Field(default=0, ge=0, description="Every finding, though findings keeps at most 60.")
+    findings: list[SecurityFinding] = Field(default=[], max_length=60)
+    database: Literal["OSV.dev"] = "OSV.dev"
+    checked_at: AwareDatetime
+
+    @model_validator(mode="after")
+    def _status_follows_findings(self) -> SecurityCheck:
+        if (self.status == "unchecked") != (self.unchecked_reason is not None):
+            raise ValueError("unchecked_reason is set exactly when status is unchecked")
+        if self.status == "unchecked" and (self.findings or self.packages_checked):
+            raise ValueError("an unchecked security check has no packages or findings")
+        if (self.status == "vulnerable") != bool(self.findings):
+            raise ValueError("status is vulnerable exactly when there are findings")
+        if self.findings_total < len(self.findings) or (self.status != "vulnerable") != (self.findings_total == 0):
+            raise ValueError("findings_total counts every finding kept, and is 0 exactly when not vulnerable")
+        if self.status == "clean" and not (self.packages_checked and self.sources):
+            raise ValueError("clean needs what was read: packages_checked and sources")
+        return self
+
+
 class VisualCheck(_Model):
     """Measurable visual defects on the first screens of one passed GUI or web run (comfort.v1, pickfit/usability.py).
 
@@ -1781,6 +1841,11 @@ class SoftwareRecord(_Model):
         exclude_if=lambda value: value is None,
         description="Only for kind desktop_app and web_app: measurable visual defects on pickfit's own screenshots.",
     )
+    security: SecurityCheck | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description="Known high or critical vulnerabilities in what a fresh install brings (OSV.dev); null: not run yet.",
+    )
     scores: Scores | None = None
     outcomes: Outcomes = Field(default_factory=Outcomes)
     sources: list[Source] = Field(min_length=1)
@@ -1889,7 +1954,8 @@ class SoftwareRecord(_Model):
         if self.scores is None:
             return self
         quality = self.scores.quality
-        expected = binding_cap(self.kind, self.repo is not None and self.repo.archived, self.verification.level)
+        expected = binding_cap(self.kind, self.repo is not None and self.repo.archived, self.verification.level,
+                               self.security)
         if quality.cap_reason != expected:
             raise ValueError(f"scores.quality.cap_reason must be {expected!r}")
         usage = quality.components.usage_outcomes
