@@ -274,6 +274,8 @@ test('a desktop or web app shows what the visual check found as an eye: defects 
   const clean = render({ status: 'clean', factor: 1, defects: [] });
   assert.match(clean, /class="check-mark mark-pass" tabindex="0" data-tip="Visual check: it looks right on screen, no defects on pickfit’s screenshots"><svg class="i i-eye-check"/);
   assert.match(clean, /<span class="sr">Visual check: it looks right on screen/);
+  // The check is named beside its mark, so the eye never has to explain itself.
+  assert.match(clean, /<svg class="i i-eye-check"[^>]*>.*?<\/svg><span class="check-label" aria-hidden="true">Visual check<\/span>/);
   // Not checked reads as not checked (the grey, basted eye), never as passed.
   const none = render({ status: 'not_checked' });
   assert.match(none, /class="check-mark mark-open" tabindex="0" data-tip="Not visually checked yet"><svg class="i i-eye"/);

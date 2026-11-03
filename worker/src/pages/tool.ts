@@ -130,30 +130,37 @@ type MarkTone = 'pass' | 'caution' | 'fail' | 'open';
 
 /**
  * One check as a mark (DESIGN.md §8): its icon in the state's colour, the fact in words on hover, on focus and for screen
- * readers. Not checked is the same icon basted (dashed) in grey, so it never reads as passed. `count` puts the number
- * found beside the icon; `href` or `pop` makes the mark open what it counts.
+ * readers. Not checked is the same icon basted (dashed) in grey, so it never reads as passed. `label` names the check
+ * beside the icon (screen readers get the fact instead); `count` puts the number found after it; `href` or `pop` makes
+ * the mark open what it counts.
  */
-function checkMark(tone: MarkTone, name: IconName, say: string, opts: { count?: number; href?: string; pop?: string } = {}): string {
+function checkMark(tone: MarkTone, name: IconName, label: string, say: string, opts: { count?: number; href?: string; pop?: string } = {}): string {
   const cls = `check-mark mark-${tone}`;
   const tip = ` data-tip="${esc(say)}"`;
-  const inner = `${icon(name)}${opts.count ? `<span class="check-count" aria-hidden="true">${opts.count}</span>` : ''}<span class="sr">${esc(say)}</span>`;
+  const inner =
+    `${icon(name)}<span class="check-label" aria-hidden="true">${esc(label)}</span>` +
+    `${opts.count ? `<span class="check-count" aria-hidden="true">${opts.count}</span>` : ''}<span class="sr">${esc(say)}</span>`;
   if (opts.href) return `<a class="${cls}" href="${esc(opts.href)}"${tip}>${inner}</a>`;
   if (opts.pop) return `<button type="button" class="${cls}" popovertarget="${opts.pop}"${tip}>${inner}</button>`;
   return `<span class="${cls}" tabindex="0"${tip}>${inner}</span>`;
 }
+
+/** The checks' names, written beside their marks so the icon is never left to explain itself. */
+const VISUAL = () => L('Visual check', '視覺檢查');
+const SECURITY = () => L('Security check', '安全性檢查');
 
 /** Desktop and web apps: what pickfit's visual check of its own screenshots found, as an eye. A defect's mark opens the
  * list of what looks wrong; nothing for a tool with no window. */
 export function visualMark(entry: Entry): string {
   const v = entry.visual;
   if (!v) return '';
-  if (v.status === 'not_checked') return checkMark('open', 'eye', L('Not visually checked yet', '尚未做視覺檢查'));
+  if (v.status === 'not_checked') return checkMark('open', 'eye', VISUAL(), L('Not visually checked yet', '尚未做視覺檢查'));
   if (v.status === 'clean') {
-    return checkMark('pass', 'eye-check', L('Visual check: it looks right on screen, no defects on pickfit’s screenshots', '視覺檢查：畫面正常，pickfit 的截圖上沒有發現缺陷'));
+    return checkMark('pass', 'eye-check', VISUAL(), L('Visual check: it looks right on screen, no defects on pickfit’s screenshots', '視覺檢查：畫面正常，pickfit 的截圖上沒有發現缺陷'));
   }
   const defects = v.defects ?? [];
   const n = defects.length;
-  if (!n) return checkMark('caution', 'eye', L('Visual check: a defect on pickfit’s screenshots', '視覺檢查：pickfit 的截圖上有缺陷'));
+  if (!n) return checkMark('caution', 'eye', VISUAL(), L('Visual check: a defect on pickfit’s screenshots', '視覺檢查：pickfit 的截圖上有缺陷'));
   const date = v.checked_at ? day(v.checked_at) : '';
   const body =
     `<ul class="visual-defects">${defects.map((d) => `<li>${esc(d.problem)}</li>`).join('')}</ul>` +
@@ -162,6 +169,7 @@ export function visualMark(entry: Entry): string {
     checkMark(
       'caution',
       'eye',
+      VISUAL(),
       L(`Visual check: ${n} ${n === 1 ? 'defect' : 'defects'} on pickfit’s screenshots. Open to see what looks wrong`, `視覺檢查：pickfit 的截圖上有 ${n} 個缺陷，點開看哪裡不對`),
       { count: n, pop: 'pop-visual' },
     ) + popover('pop-visual', L('What looks wrong on screen', '畫面上哪裡不對'), body)
@@ -195,6 +203,7 @@ export function securityMark(entry: Entry): string {
     return checkMark(
       'pass',
       'shield-check',
+      SECURITY(),
       L(
         `No known high or critical vulnerabilities (OSV.dev${date ? `, checked ${date}` : ''}, ${n} ${n === 1 ? 'package' : 'packages'})`,
         `沒有已知的高風險或嚴重漏洞（OSV.dev${date ? `，${date} 檢查` : ''}，共 ${n} 個套件）`,
@@ -206,6 +215,7 @@ export function securityMark(entry: Entry): string {
     return checkMark(
       'open',
       'shield',
+      SECURITY(),
       why ? L(`Not checked for known vulnerabilities: ${why}`, `沒有檢查已知漏洞：${why}`) : L('Not checked for known vulnerabilities yet', '尚未檢查已知漏洞'),
     );
   }
@@ -213,6 +223,7 @@ export function securityMark(entry: Entry): string {
   return checkMark(
     'fail',
     'shield-alert',
+    SECURITY(),
     L(
       `${count} known high or critical ${count === 1 ? 'vulnerability' : 'vulnerabilities'} in ${isWebApp(entry) ? 'the packages the site is built from' : 'packages it installs'} (OSV.dev${date ? `, ${date}` : ''}). See the list`,
       `${isWebApp(entry) ? '這個網站用到的' : '它安裝的'}套件有 ${count} 個已知的高風險或嚴重漏洞（OSV.dev${date ? `，${date}` : ''}）。看清單`,

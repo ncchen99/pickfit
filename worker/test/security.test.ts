@@ -71,7 +71,7 @@ test('tool page, vulnerable: a red shield with the count and its source, jumping
   const mark = markFor(VULNERABLE);
   const say = '7 known high or critical vulnerabilities in packages it installs \\(OSV\\.dev, 3 Nov 2026\\)\\. See the list';
   assert.match(mark, new RegExp(`^<a class="check-mark mark-fail" href="#security" data-tip="${say}"><svg class="i i-shield-alert"`));
-  assert.match(mark, new RegExp(`<span class="check-count" aria-hidden="true">7</span><span class="sr">${say}</span></a>$`));
+  assert.match(mark, new RegExp(`<span class="check-label" aria-hidden="true">Security check</span><span class="check-count" aria-hidden="true">7</span><span class="sr">${say}</span></a>$`));
   // The score's rules are the How page's: the mark says what is vulnerable, not what it does to the score.
   assert.doesNotMatch(mark, /capped|79|hidden gem/);
   const zhMark = markFor(VULNERABLE, 'zh-TW');

@@ -896,6 +896,7 @@ body.is-results .home-only{display:none}
 .check-mark{display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:0 2px;margin:0;border:0;border-radius:var(--r-ctl);background:none;color:inherit;
 font:700 1.05rem/1 var(--sans);font-variant-numeric:tabular-nums;text-decoration:none;cursor:help}
 .check-mark .i{width:26px;height:26px}
+.check-label{font:600 .9rem/1.2 var(--sans);color:var(--ink-2);margin-left:2px}
 a.check-mark,button.check-mark{cursor:pointer}
 a.check-mark:hover .check-count,button.check-mark:hover .check-count{text-decoration:underline;text-decoration-thickness:2px;text-decoration-color:var(--stitch);text-underline-offset:4px}
 .mark-pass{color:var(--pass)}.mark-caution{color:var(--caution)}.mark-fail{color:var(--fail)}
