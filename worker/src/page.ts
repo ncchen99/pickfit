@@ -12,7 +12,7 @@ import { bestGuide, isVerified, isWebApp, verifiedOn, verifiedOnUserSystem, webC
 import type { FindOutput, PickOut } from './find.ts';
 import { fitNote } from './fit.ts';
 import { isZh, L, withLang } from './i18n.ts';
-import { PIPE_TO_SHELL, type InstallOutput } from './install.ts';
+import { PIPE_TO_SHELL, type InstallOutput, type VerifiedInPickfit } from './install.ts';
 import { compareTable } from './pages/compare.ts';
 import { day, guiSentence, howRan, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system, webLevelLabel } from './ui/facts.ts';
 import { esc, link, listOf } from './ui/html.ts';
@@ -238,19 +238,64 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
         )
         .join('')}</ul>`
     : '';
+  const ran = guide.verified_in_pickfit;
+  if (ran) cautions.push(...sandboxNotes(ran));
+  const asRun = ran ? verifiedFold(ran) : '';
   const sysSpan = `<span class="sys">${v.os ? osMark(v.os) : ''}${esc(system(v.os, v.arch))}</span>`;
   const body = stepper
     ? installStages([
-        { name: L('Install', '安裝'), html: (stepper?.needs ?? '') + cautions.join('') + stepList + manual + issues },
+        { name: L('Install', '安裝'), html: (stepper?.needs ?? '') + cautions.join('') + stepList + manual + issues + asRun },
         { name: L('Check it works', '確認能用'), html: verify, cls: 'inst-check' },
         { name: L('Start using it', '開始使用'), html: first + agent + (stepper.hint ? `<p class="open-hint">${icon('arrow-right')}<span>${stepText(stepper.hint)}</span></p>` : '') },
       ])
-    : `<div class="install-body">${[...cautions, stepList, manual, verify, first, agent, issues].join('')}</div>`;
+    : `<div class="install-body">${[...cautions, stepList, manual, verify, first, agent, issues, asRun].join('')}</div>`;
   // Inside a run card the steps sit straight in the card: a fold inside it would be a box inside a box.
   if (inRun) return body;
   return (
     `<details class="install"${open ? ' open' : ''}><summary><span>${L(`Install steps that worked on ${sysSpan}`, `在 ${sysSpan} 上可行的安裝步驟`)}</span>${icon('chevron-down')}</summary>` +
     `${body}</details>`
+  );
+}
+
+/** What a reader needs to know when the run's commands named pickfit's sandbox: how they were adapted, and what was not. */
+function sandboxNotes(ran: VerifiedInPickfit): string[] {
+  const home = `<code translate="no">${esc(ran.sandbox_home)}</code>`;
+  const notes = [
+    `<p class="quiet small">${L(
+      `pickfit ran these steps in its sandbox, whose home folder is ${home}. Here that folder is written as <code translate="no">$HOME</code>, so the commands use yours.`,
+      `pickfit 是在沙盒裡跑這些步驟的，沙盒的家目錄是 ${home}；這裡改寫成 <code translate="no">$HOME</code>，指令會用你自己的家目錄。`,
+    )}</p>`,
+  ];
+  if (ran.not_portable.length) {
+    notes.push(
+      `<p class="caution small">${L(
+        `${esc(ran.not_portable.join(', '))} still names ${home} inside single quotes, where <code translate="no">$HOME</code> would not work: put your own home folder there before running it.`,
+        `${esc(ran.not_portable.join('、'))} 的單引號裡還寫著 ${home}（那裡 <code translate="no">$HOME</code> 不會展開）：執行前請換成你自己的家目錄。`,
+      )}</p>`,
+    );
+  }
+  if (ran.needs_workdir) {
+    notes.push(
+      `<p class="caution small">${L(
+        'These steps ran from a folder named <code translate="no">work</code> in that home folder, which already existed. Make it and run them from there:',
+        '這些步驟是在家目錄裡一個已經存在的 <code translate="no">work</code> 資料夾裡跑的。請先建立它，再從那裡執行：',
+      )}</p>${command('mkdir -p "$HOME/work" && cd "$HOME/work"')}`,
+    );
+  }
+  return notes;
+}
+
+/** The commands exactly as pickfit's run executed them, folded away under the ones a reader runs. */
+function verifiedFold(ran: VerifiedInPickfit): string {
+  const list = (cmds: string[]) => cmds.map((c) => `<pre class="quiet small"><code translate="no">${esc(c)}</code></pre>`).join('');
+  const first = [...ran.first_task_setup.map((s) => s.command), ...(ran.first_task ? [ran.first_task] : [])];
+  return (
+    `<details class="as-run"><summary class="small">${L('Verified in pickfit: the commands exactly as its sandbox ran them', '在 pickfit 驗證過的原始指令（沙盒裡實際執行的）')}</summary>` +
+    `<p class="quiet small">${L(`For the record only: they name the sandbox's home, ${esc(ran.sandbox_home)}.`, `僅供查核：裡面是沙盒的家目錄 ${esc(ran.sandbox_home)}。`)}</p>` +
+    list(ran.steps.map((s) => s.command)) +
+    (ran.verify ? list([ran.verify.command]) : '') +
+    (first.length ? list(first) : '') +
+    `</details>`
   );
 }
 
