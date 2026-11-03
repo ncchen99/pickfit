@@ -1,0 +1,77 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<title>Look test</title>
+<style>
+  @font-face { font-family: "Bricolage Grotesque"; src: url("/repo/worker/public/assets/fonts/bricolage-grotesque.woff2") format("woff2"); font-weight: 200 800; font-display: block; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "/node_modules/three/build/three.module.js",
+  "three/addons/": "/node_modules/three/examples/jsm/",
+  "gsap": "/node_modules/gsap/index.js"
+} }
+</script>
+</head><body>
+<script type="module">
+// A still to judge the look: Fitz, your request and Fitz's answer on the paper floor.
+import * as THREE from 'three';
+import { gsap } from 'gsap';
+import { Stage } from '../kit/stage.js';
+import { createFitz, leaf } from '../kit/fitz3d.js';
+import { paperCard, text, drawTape, drawSeam, drawMeasure, stitchThread } from '../kit/props.js';
+import { site, fonts, ease } from '../kit/tokens.js';
+
+const stage = new Stage({ dof: { aperture: 0.0009, maxblur: 0.005 } });
+await stage.ready;
+
+const fz = createFitz();
+fz.root.position.set(-1.25, 0, 0.5);
+fz.root.rotation.y = 0.35;
+fz.root.scale.setScalar(0.85);
+stage.add(fz.root);
+const lf = leaf();
+lf.rotation.set(0.1, 0, 0.35);
+fz.hold.add(lf);
+
+// Your request: white, Fitz's line colour outline, the cut corner, tape as its baseline.
+const ask = paperCard({ w: 2.6, h: 0.9, cut: 0.14, edge: site.fitzLine, edgeWidth: 7, draw: (ctx, w, h) => {
+  text(ctx, 'I need', 34, 70, { size: 34, weight: 700, family: fonts.display, color: site.ink });
+  text(ctx, 'My Mac’s disk is full. A free cleaner', 34, 140, { size: 44, color: site.ink });
+  text(ctx, 'I can trust.', 34, 196, { size: 44, color: site.ink });
+  drawTape(ctx, 34, h - 70, w - 68, 20);
+} });
+ask.position.set(0.55, 0.45, -0.6);
+ask.rotation.set(-0.08, -0.28, 0);
+stage.add(ask);
+
+// Fitz's answer: olive voice surface, the cut corner, the full seam under the claim.
+const ans = paperCard({ w: 2.4, h: 1.5, cut: 0.14, color: site.voice, edge: site.voiceEdge, edgeWidth: 3, draw: (ctx, w, h) => {
+  text(ctx, 'MangoDisk', 34, 82, { size: 58, weight: 700, family: fonts.display });
+  text(ctx, 'Free disk cleaner and space analyzer. Tested on macOS.', 34, 132, { size: 26, color: site.ink2 });
+  drawSeam(ctx, 34, 168, w - 68);
+  drawMeasure(ctx, [['Runs', 'macOS · Apple silicon', site.pass], ['How far', 'Every feature checked', site.pass], ['Price', 'Free']], 34, 232, w - 68);
+} });
+ans.position.set(0.95, 0.012, 0.85);
+ans.rotation.set(-Math.PI / 2, 0, 0.12);
+stage.add(ans);
+
+// A thread running off into the distance.
+const curve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(2.2, 0.03, 1.45), new THREE.Vector3(3.2, 0.03, 0.9), new THREE.Vector3(3.7, 0.03, -0.6), new THREE.Vector3(5.5, 0.03, -2.5),
+]);
+const thread = stitchThread(curve);
+stage.add(thread);
+
+stage.camera.position.set(0.1, 2.6, 6.6);
+stage.lookAt(0.2, 0.45, 0.2);
+
+const tl = gsap.timeline({ paused: true });
+tl.to({}, { duration: 4 });
+stage.run({ duration: 4, update: (t) => {
+  tl.seek(t, false);
+  fz.blink(t % 3 > 2.85 ? 1 : 0);
+  fz.turn(0.7);
+} });
+</script>
+</body></html>
