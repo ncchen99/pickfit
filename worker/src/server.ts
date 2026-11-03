@@ -19,7 +19,8 @@ const ANSWER =
   'Next line, before any steps: "If your setup is X instead, use Y." ' +
   "Keep drawbacks short; say why the obvious choice isn't recommended. " +
   'Tag well_known_option "(not verified by pickfit)" beside its name. ' +
-  "Don't narrate the search or say pickfit found nothing; just answer. No disclaimers about what you didn't run.";
+  "Don't narrate the search or say pickfit found nothing; just answer. No disclaimers about what you didn't run. " +
+  "If security.status is vulnerable, warn the user first; if unchecked, don't call it safe.";
 
 export const INSTRUCTIONS =
   ABOUT +
@@ -85,6 +86,31 @@ const webApp = z
   })
   .nullable()
   .describe('A hosted web app: open the URL, nothing to install. null for software to install');
+
+/** Known high or critical vulnerabilities in what a fresh install brings (OSV.dev), in a pick or a guide. */
+const security = z
+  .object({
+    status: z
+      .enum(['vulnerable', 'clean', 'unchecked'])
+      .describe('vulnerable = tell the user before they install or use it (quality capped at 79); clean = none known; unchecked = not checked, so do not call it safe'),
+    reason: z
+      .enum(['no_source', 'no_lockfile', 'lockfile_not_supported', 'resolve_failed', 'not_run'])
+      .nullable()
+      .describe('unchecked only: why pickfit could not check it'),
+    checked_at: z.string().nullable(),
+    count: z.number().int().describe('vulnerable: how many in all; findings lists at most 5'),
+    findings: z.array(
+      z.object({
+        package: z.string().describe('Ecosystem and name, e.g. npm:undici'),
+        version: z.string(),
+        advisory: z.string().describe('Advisory ID; details at https://osv.dev/vulnerability/<advisory>'),
+        severity: z.enum(['CRITICAL', 'HIGH']),
+        fixed_in: z.string().nullable().describe('null = no fixed version yet'),
+        malicious: z.boolean(),
+      }),
+    ),
+  })
+  .describe('Known high or critical vulnerabilities (OSV.dev) in the packages a fresh install brings');
 
 /** A GUI app's run as pickfit saw it: a launch supports install; action_checked (a listed feature checked) supports function. */
 export const gui = z
@@ -155,6 +181,7 @@ const pick = z.object({
     popularity: z.number().nullable().describe('0-100; scored separately from quality'),
     treasure: z.boolean().describe('High quality, low popularity'),
   }),
+  security,
   repo: z.string().nullable(),
   homepage: z.string().nullable(),
   web_app: webApp,
@@ -258,7 +285,7 @@ const installInput = z.object({
   rec_id: recId.optional(),
 });
 
-const installOutput = z.object({
+export const installOutput = z.object({
   rec_id: z.string().describe(REC_ID_OUT),
   matched_by: z.literal('rules').describe('No model is used here: these are the steps of a recorded run'),
   slug: z.string(),
@@ -352,6 +379,24 @@ const installOutput = z.object({
     .nullable()
     .describe('Later, not now: how to ask whether the user still uses it, with their consent; nothing is installed or left running'),
   web_app: webApp,
+  security,
+  verified_in_pickfit: z
+    .object({
+      sandbox_home: z.string().describe("The sandbox user's home the run's commands name (not the user's)"),
+      not_portable: z
+        .array(z.string())
+        .describe('Commands above that still name the sandbox home (inside single quotes): replace it with the user\'s home first'),
+      needs_workdir: z.boolean().describe("The run's commands used a work folder under the sandbox home that existed beforehand"),
+      steps: z.array(z.object({ order: z.number().int(), command: z.string() })),
+      first_task_setup: z.array(z.object({ command: z.string(), run_in_background: z.boolean() })),
+      first_task: z.string().nullable(),
+      verify: z.object({ command: z.string(), expected_contains: z.string() }).nullable(),
+    })
+    .nullable()
+    .describe(
+      "The commands exactly as pickfit's run executed them, for the record; run steps, first_task and verify above, " +
+        'which write its sandbox home as $HOME. null when those are the run\'s own commands',
+    ),
   warnings: z.array(z.string()),
   sources: z.array(z.string()),
 });

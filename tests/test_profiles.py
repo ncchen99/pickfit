@@ -240,6 +240,22 @@ def test_slug_clash_uses_the_owner_and_rewrites_keep_slug_and_verification(db: P
     assert len(build_index(out, now=NOW).index["entries"]) == 2
 
 
+def test_rewriting_keeps_the_security_check(db: PipelineDB, tmp_path: Path) -> None:
+    """A profile rebuild must not drop security: that would lift the known-vulnerability cap (pickfit/security.py)."""
+    add(db, 7, "someone/tinyq", extraction())
+    out = tmp_path / "software"
+    write_profiles(db, model=MODEL, out_dir=out, now=NOW)
+    record = read(out, "tinyq")
+    record["security"] = {"version": "sec.v1", "status": "vulnerable", "unchecked_reason": None, "sources": ["Cargo.lock"],
+                          "packages_checked": 2, "findings_total": 1, "findings": [
+                              {"package": "crates:zip", "version": "8.6.0", "advisory": "GHSA-m665-v7pm-7grj", "cves": [],
+                               "severity": "CRITICAL", "fixed_in": "9.0.5", "summary": "zip cloaking", "malicious": False}],
+                          "database": "OSV.dev", "checked_at": "2026-11-03T12:00:00+08:00"}
+    (out / "tinyq.json").write_text(json.dumps(record), encoding="utf-8")
+    write_profiles(db, model=MODEL, out_dir=out, now=NOW)
+    assert read(out, "tinyq")["security"] == record["security"]
+
+
 def test_a_show_hn_post_is_listed_as_a_source_but_backs_no_field(db: PipelineDB, tmp_path: Path) -> None:
     from pickfit.discover.showhn import Post
 

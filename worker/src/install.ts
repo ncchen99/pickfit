@@ -3,12 +3,24 @@
  * sandbox, or done by hand on a real machine). No model call. README claims
  * that were never run are not in the index, so they cannot leak out here.
  */
-import { bestGuide, isWebApp, webCheck, type Arch, type Catalog, type Entry, type GuiEvidence, type OS } from './catalog.ts';
+import {
+  bestGuide,
+  isWebApp,
+  webCheck,
+  type Arch,
+  type Catalog,
+  type Entry,
+  type GuiEvidence,
+  type InstallGuide,
+  type OS,
+  type UserGuide,
+} from './catalog.ts';
 import { checkIn, webCheckIn, type CheckIn } from './checkin.ts';
 import { ranSentence, videoOut, videoSentence } from './evidence.ts';
 import { featureSentence, featuresOut, type FeaturesOut } from './features.ts';
 import { newId, REC_ID } from './events.ts';
 import { clientConfig, type McpClientConfig } from './mcpconfig.ts';
+import { securityOut, securityWarnings, type SecurityOut } from './security.ts';
 import { webAppOut, webRanSentence, webWarnings, type WebAppOut } from './webapp.ts';
 
 export interface InstallInput {
@@ -71,8 +83,61 @@ export interface InstallOutput {
   check_in: CheckIn | null;
   /** A hosted web app: the URL to open instead of steps, and what pickfit's browser saw; null for anything else. */
   web_app: WebAppOut | null;
+  /** Known high or critical vulnerabilities (OSV.dev) in what a fresh install brings; unchecked says why not. */
+  security: SecurityOut;
+  /**
+   * The commands exactly as pickfit's run executed them, when the ones above differ (the sandbox home written as
+   * $HOME) or still name the sandbox home; null when the commands above are the run's own.
+   */
+  verified_in_pickfit: VerifiedInPickfit | null;
   warnings: string[];
   sources: string[];
+}
+
+export interface VerifiedInPickfit {
+  sandbox_home: string;
+  /** Commands that still name the sandbox home (inside single quotes): "step 4", "first task", "check". */
+  not_portable: string[];
+  /** The run's commands name the sandbox's work folder, which existed before the first step. */
+  needs_workdir: boolean;
+  steps: { order: number; command: string }[];
+  first_task_setup: { command: string; run_in_background: boolean }[];
+  first_task: string | null;
+  verify: { command: string; expected_contains: string } | null;
+}
+
+/** Where a user's commands differ from the run's, the run's own; null when they are the same. */
+function verifiedInPickfit(guide: InstallGuide | null): VerifiedInPickfit | null {
+  const user = guide?.user;
+  if (!guide || !user?.sandbox_home) return null;
+  return {
+    sandbox_home: user.sandbox_home,
+    not_portable: user.not_portable,
+    needs_workdir: user.needs_workdir,
+    steps: guide.steps.map((s, i) => ({ order: i + 1, command: s.command })),
+    first_task_setup: guide.first_task_setup.map((s) => ({ command: s.command, run_in_background: s.background })),
+    first_task: guide.first_task,
+    verify: guide.check ? { command: guide.check.command, expected_contains: guide.check.expected_signal } : null,
+  };
+}
+
+/** What a user should know before running a guide whose commands named pickfit's sandbox. */
+export function sandboxWarnings(user: UserGuide | undefined): string[] {
+  if (!user) return [];
+  const out: string[] = [];
+  if (user.not_portable.length) {
+    out.push(
+      `${user.not_portable.join(', ')} still names pickfit's sandbox home (${user.sandbox_home}) inside single quotes, where $HOME would not expand: ` +
+        `put the user's own home folder there before running it.`,
+    );
+  }
+  if (user.needs_workdir) {
+    out.push(
+      'These steps ran from a folder named work in the home folder of pickfit\'s sandbox, which existed before the first step: ' +
+        'create it and run them from there (mkdir -p "$HOME/work" && cd "$HOME/work").',
+    );
+  }
+  return out;
 }
 
 export class UnknownSlugError extends Error {}
@@ -84,6 +149,7 @@ function webGuide(entry: Entry, input: InstallInput, now: Date): InstallOutput {
   const check = webCheck(entry);
   const web = webAppOut(entry)!;
   const covered = featureSentence(featuresOut(entry, null));
+  const security = securityOut(entry);
   return {
     rec_id: input.rec_id && REC_ID.test(input.rec_id) ? input.rec_id : newId('rec'),
     matched_by: 'rules',
@@ -120,7 +186,9 @@ function webGuide(entry: Entry, input: InstallInput, now: Date): InstallOutput {
     mcp_client_config: null,
     check_in: check ? webCheckIn(entry, web.url, now) : null,
     web_app: web,
-    warnings: webWarnings(check),
+    verified_in_pickfit: null,
+    security,
+    warnings: [...securityWarnings(security, true), ...webWarnings(check)],
     sources: entry.sources,
   };
 }
@@ -148,20 +216,29 @@ export function installGuide(catalog: Catalog, input: InstallInput, now = new Da
     // No arch given: exact for the OS only, so say which CPU the run was on.
     if (!input.arch) note = `Checked on ${run.os}/${run.arch}; the request did not say this machine's CPU architecture.`;
   }
-  const steps = (guide?.steps ?? []).map((step, i) => ({
+  // A user's copy of the run's commands (the sandbox home as $HOME); an older index has none, so the run's own.
+  const user = guide?.user;
+  const steps = (user?.steps ?? guide?.steps ?? []).map((step, i) => ({
     order: i + 1,
     command: step.command,
     purpose: step.purpose,
     run_by: 'agent' as const,
     needs_sudo: /(^|[\s;&|])sudo\s/.test(step.command),
   }));
+  const check = user ? user.check : (guide?.check ?? null);
   const features = featuresOut(entry, guide);
   const covered = featureSentence(features);
   const clip = guide ? videoSentence(entry.slug, guide.run.video, videoBase) : null;
+  const recorded = user?.changed
+    ? `These are the recorded steps of that run with pickfit's sandbox home (${user.sandbox_home}) written as $HOME, so they run in the user's own home; ` +
+      'no model wrote or changed them, and verified_in_pickfit has the commands exactly as the run executed them.'
+    : 'These are the recorded steps of that run; no model wrote or changed them.';
   const howWeKnow = guide
-    ? `${ranSentence(guide)} These are the recorded steps of that run; no model wrote or changed them.${covered ? ` ${covered}` : ''}${clip ? ` ${clip}` : ''}`
+    ? `${ranSentence(guide)} ${recorded}${covered ? ` ${covered}` : ''}${clip ? ` ${clip}` : ''}`
     : `pickfit has not run ${entry.name}'s install steps on any system yet.`;
-  const warnings: string[] = [];
+  const security = securityOut(entry);
+  // First, so the agent reads it before the steps.
+  const warnings: string[] = [...securityWarnings(security), ...sandboxWarnings(user)];
   if (steps.some((s) => PIPE_TO_SHELL.test(s.command))) {
     warnings.push('A step pipes a downloaded script into a shell. Show it to the user and get consent before running it.');
   }
@@ -194,9 +271,12 @@ export function installGuide(catalog: Catalog, input: InstallInput, now = new Da
     applies_to_user_system: { match, note },
     steps,
     manual_steps: (guide?.manual_steps ?? []).map((title) => ({ title, run_by: 'user' as const })),
-    verify: guide?.check ? { command: guide.check.command, expected_contains: guide.check.expected_signal } : null,
-    first_task: guide?.first_task ?? null,
-    first_task_setup: (guide?.first_task_setup ?? []).map((s) => ({ command: s.command, run_in_background: s.background })),
+    verify: check ? { command: check.command, expected_contains: check.expected_signal } : null,
+    first_task: user ? user.first_task : (guide?.first_task ?? null),
+    first_task_setup: (user?.first_task_setup ?? guide?.first_task_setup ?? []).map((s) => ({
+      command: s.command,
+      run_in_background: s.background,
+    })),
     features,
     // Field by field, so whatever else the index carries never reaches the response.
     known_issues: (guide?.pitfalls ?? []).map((p) => ({
@@ -207,6 +287,8 @@ export function installGuide(catalog: Catalog, input: InstallInput, now = new Da
     mcp_client_config: clientConfig(entry, guide),
     check_in: guide ? checkIn(entry, guide, input.os, now) : null,
     web_app: null,
+    security,
+    verified_in_pickfit: verifiedInPickfit(guide),
     warnings,
     sources: entry.sources,
   };

@@ -36,6 +36,7 @@ from pydantic import ValidationError
 
 from pickfit.schema import SCHEMA_VERSION, SoftwareRecord, VerificationRun, is_passed
 from pickfit.usage_guide import shown_guide
+from pickfit.userpaths import SANDBOX_HOMES, UserCommand, expected_for_user, for_user, names_workdir
 
 INDEX_VERSION = "pickfit-index.v1"
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -121,6 +122,27 @@ def _visual(record: SoftwareRecord) -> dict[str, Any] | None:
     defects = [{"kind": d.kind, "problem": d.problem, "quote": d.quote} for d in check.defects if d.cause == "app"]
     return {"status": "defect" if visual.factor < 1 else "clean", "factor": visual.factor, "defects": defects[:6],
             "checked_at": _iso(check.checked_at)[:10], "model": check.model}
+
+
+def _security(record: SoftwareRecord) -> dict[str, Any]:
+    """Known high or critical vulnerabilities in what a fresh install brings (record field security, sec.v1):
+    "vulnerable" (quality capped at 79, the advisories listed, malicious ones first), "clean", or "unchecked" with
+    why (no repository or package, a lockfile pickfit cannot read, nothing resolved). A record not run yet is
+    "unchecked" too, reason "not_run"."""
+    check = record.security
+    if check is None:
+        return {"status": "unchecked", "reason": "not_run"}
+    out: dict[str, Any] = {"status": check.status, "checked_at": _iso(check.checked_at)[:10]}
+    if check.status == "unchecked":
+        out["reason"] = check.unchecked_reason
+        return out
+    out["packages_checked"] = check.packages_checked
+    if check.findings:
+        out["count"] = max(check.findings_total, len(check.findings))
+        out["findings"] = [{"package": f.package, "version": f.version, "advisory": f.advisory, "severity": f.severity,
+                            "fixed_in": f.fixed_in, "summary": f.summary, "malicious": f.malicious}
+                           for f in check.findings[:10]]
+    return out
 
 
 def _web(record: SoftwareRecord) -> dict[str, Any] | None:
@@ -226,6 +248,34 @@ def _feature_coverage(run: VerificationRun) -> list[dict[str, Any]]:
             for f in run.features]
 
 
+def _user_guide(guide: dict[str, Any], os_name: str) -> dict[str, Any]:
+    """The guide's commands as a user runs them (userpaths.for_user: the sandbox home as $HOME); the guide's own
+    steps, first task, setup and check stay exactly as the run executed them."""
+    where: dict[str, UserCommand] = {}
+
+    def user(label: str, command: str) -> str:
+        where[label] = for_user(command, os_name)
+        return where[label].command
+
+    check = guide["check"]
+    out = {
+        "steps": [{"command": user(f"step {i}", s["command"]), "purpose": s["purpose"]}
+                  for i, s in enumerate(guide["steps"], start=1)],
+        "first_task_setup": [{"command": user(f"setup {i}", s["command"]), "background": s["background"]}
+                             for i, s in enumerate(guide["first_task_setup"], start=1)],
+        "first_task": user("first task", guide["first_task"]) if guide["first_task"] else None,
+        "check": {"command": user("check", check["command"]),
+                  "expected_signal": expected_for_user(check["expected_signal"], os_name)} if check else None,
+    }
+    commands = [s["command"] for s in guide["steps"] + guide["first_task_setup"]] + \
+        [c for c in (guide["first_task"], check and check["command"]) if c]
+    out["changed"] = any(u.changed for u in where.values())
+    out["not_portable"] = [label for label, u in where.items() if not u.portable]
+    out["needs_workdir"] = any(names_workdir(c, os_name) for c in commands)
+    out["sandbox_home"] = SANDBOX_HOMES.get(os_name) if out["changed"] or out["not_portable"] else None
+    return out
+
+
 def _entry(record: SoftwareRecord) -> dict[str, Any]:
     runs = {run.id: run for run in record.verification.runs}
     install: dict[str, Any] = {}
@@ -247,6 +297,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
             "run": _run_summary(run),
             "mcp": run.mcp.model_dump() if run.mcp else None,
         }
+        install[os_name]["user"] = _user_guide(install[os_name], run.os)
     scores = record.scores
     return {
         "slug": record.slug,
@@ -280,6 +331,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
         "mcp": record.mcp.model_dump() if record.mcp else None,
         "web": _web(record),
         "visual": _visual(record),
+        "security": _security(record),
         "scores": {
             "quality": scores.quality.total,
             "popularity": scores.popularity.score,

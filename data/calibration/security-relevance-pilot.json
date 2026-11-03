@@ -1,0 +1,1034 @@
+{
+ "run_id": "security-relevance-pilot-20261103-131245",
+ "model": "muse-spark-1.3",
+ "reasoning_effort": "low",
+ "cost_usd": 0.2212,
+ "results": [
+  {
+   "slug": "all-code",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.00648225,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p001": {
+     "id": "p001",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Description shows only provider setup and agent launching with no zip download or extraction use, so attacker-crafted archive file-write flaws have no path in normal use."
+    }
+   }
+  },
+  {
+   "slug": "batch-file-renamer",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.00828425,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p002": {
+     "id": "p002",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "All three advisories need Framework Mode or unstable RSC APIs with server actions. This static local browser renamer shows no server or RSC use."
+    },
+    "p048": {
+     "id": "p048",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev build dependency, not shipped runtime code. It also only allows denial of service, which is out of scope."
+    },
+    "p049": {
+     "id": "p049",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev build tool for CSS targeting, not run by visitors. Needs an untrusted stats file during build, not normal renaming use."
+    },
+    "p050": {
+     "id": "p050",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev build dependency, not used when renaming files in browser. It also only allows CPU denial of service."
+    },
+    "p051": {
+     "id": "p051",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev dependency, not runtime user input handling. It also only causes a hang from negative size, which is denial of service."
+    },
+    "p052": {
+     "id": "p052",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev CSS build tool, not run by visitors renaming files. The flaw triggers during builds, not normal browser use."
+    },
+    "p053": {
+     "id": "p053",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev build sourcemap helper, not runtime code. It also only allows event-loop denial of service."
+    },
+    "p054": {
+     "id": "p054",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev server and build tool only; visitors use the hosted static app, they do not run Vite or launch-editor."
+    }
+   }
+  },
+  {
+   "slug": "free-online-tools-for-video-audio-pdfs-images-and-ai",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.01690275,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p003": {
+     "id": "p003",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Next.js image flaws are server-side RCE/SSRF. This is an author-hosted web app, so server code runs on the author's server, not in the visitor's browser."
+    },
+    "p004": {
+     "id": "p004",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "sharp is server-side image processing. In an author-hosted web app the visitor is not exposed to server-side processing flaws, only to browser code."
+    },
+    "p005": {
+     "id": "p005",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "source-map-js flaw only blocks the event loop to deny service. Denial of service alone does not count as exposure."
+    },
+    "p006": {
+     "id": "p006",
+     "verdict": "conditional",
+     "condition": "opening an XML-based document from an untrusted source",
+     "reason": "xmldom parses XML that document tools plausibly handle in the browser. A malicious file from someone else could use the injection to get XSS in the visitor."
+    },
+    "p007": {
+     "id": "p007",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Both flaws need non-default modes: SAFE_FOR_TEMPLATES with DOM modes, or IN_PLACE with removing hooks. Description gives no sign these modes are used."
+    },
+    "p008": {
+     "id": "p008",
+     "verdict": "conditional",
+     "condition": "opening a PDF file received from someone else",
+     "reason": "pdfjs-dist runs in the browser to handle PDFs, a listed feature. A malicious PDF from another person could execute script in the visitor's context."
+    },
+    "p057": {
+     "id": "p057",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "nanoid flaw only hangs the calling thread when size is zero. Denial of service alone does not count as exposure."
+    },
+    "p058": {
+     "id": "p058",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found only in dev scope of QR generator source, so it builds the software but does not run for the visitor. It is also only a denial of service."
+    },
+    "p059": {
+     "id": "p059",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found only in dev scope, so it is a build tool and does not run for the visitor using the web app."
+    },
+    "p060": {
+     "id": "p060",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found only in dev scope, so it does not run for the visitor. It is also only CPU exhaustion, which is denial of service."
+    },
+    "p061": {
+     "id": "p061",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found only in dev scope, so it does not run for the visitor. It is also only memory exhaustion, which is denial of service."
+    }
+   }
+  },
+  {
+   "slug": "homebotbuild",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.01550175,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p009": {
+     "id": "p009",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Flaw needs app to pass attacker input as lodash template imports keys. No such templating with user input is described."
+    },
+    "p010": {
+     "id": "p010",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Flaw needs app to let attacker control nanoid size over 2^31. No user-controlled ID length is described."
+    },
+    "p011": {
+     "id": "p011",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Flaws need remote image URLs or attacker-controlled OG SVG generation. Dashboard is local chat/library/smart-home with no such image feature described."
+    },
+    "p012": {
+     "id": "p012",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Flaw needs attacker to supply CSS processed by PostCSS. Dashboard processes its own styles; no user CSS input is described."
+    },
+    "p013": {
+     "id": "p013",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Flaw needs processing of untrusted GIF/TIFF/SVG/HEIF images. No image upload or remote image handling is described."
+    },
+    "p014": {
+     "id": "p014",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Advisory is denial of service only, which is out of scope. No attacker source-map flow is described."
+    },
+    "p064": {
+     "id": "p064",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-scoped build dependency; not run in normal use. Flaw is denial of service only."
+    },
+    "p065": {
+     "id": "p065",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-scoped build tool for CSS browser targets; not run in normal use."
+    },
+    "p066": {
+     "id": "p066",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-scoped build dependency; not run in normal use."
+    },
+    "p067": {
+     "id": "p067",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-scoped build dependency; not run in normal use. Flaw is denial of service only."
+    },
+    "p068": {
+     "id": "p068",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-scoped build dependency; not run in normal use. Flaw is denial of service only."
+    },
+    "p069": {
+     "id": "p069",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-scoped dependency; not run in normal use. Flaw is denial of service only."
+    }
+   }
+  },
+  {
+   "slug": "image-comparison-tool",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.0243655,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p015": {
+     "id": "p015",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Build-time Babel plugin for compiling code. Normal use of the comparison tool does not compile attacker code, so the malicious-input codegen flaw is not reached."
+    },
+    "p016": {
+     "id": "p016",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Build helper for browser targets. The flaw needs an untrusted browserslist stats file in the build, not image comparison in a browser."
+    },
+    "p017": {
+     "id": "p017",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "URL policy bypass flaws. The tool does local image/video comparison with no host or path allow-listing described, so the flawed checks are not used."
+    },
+    "p018": {
+     "id": "p018",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Flaw needs the app to pass untrusted input as lodash template import names. No templating feature with attacker-controlled keys is described."
+    },
+    "p019": {
+     "id": "p019",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "All flaws are server-side image-optimization, middleware auth bypass, SSRF, or DoS. In this author-hosted web app only browser code reaches the visitor."
+    },
+    "p020": {
+     "id": "p020",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "CSS build tool. Normal use compares uploaded images/videos, it does not process attacker-controlled CSS through PostCSS."
+    },
+    "p021": {
+     "id": "p021",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Module bundler used to build the software. Visitors do not run the bundler on attacker-controlled chunk names."
+    },
+    "p022": {
+     "id": "p022",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Flaw needs attacker-controlled objects serialized for another user's browser to evaluate. This local single-user tool has no such shared-data flow."
+    },
+    "p023": {
+     "id": "p023",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Server-side Node image library. This hosted tool does local browser processing, so visitor does not run sharp; server RCE does not expose the visitor."
+    },
+    "p024": {
+     "id": "p024",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Source-map parsing flaw only blocks the event loop. Denial of service alone is out of scope and does not expose the user."
+    },
+    "p070": {
+     "id": "p070",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Glob expansion helper. The flaw only causes denial of service via slow expansion, which alone is out of scope."
+    },
+    "p071": {
+     "id": "p071",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Glob matching helper. The flaw only causes denial of service via backtracking, which alone is out of scope."
+    },
+    "p072": {
+     "id": "p072",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Glob matching helper. The flaw only causes denial of service via backtracking, which alone is out of scope."
+    },
+    "p073": {
+     "id": "p073",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Development dependency and server compression middleware. Visitors do not run it, and the flaw only causes denial of service."
+    },
+    "p074": {
+     "id": "p074",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Development dependency. Visitors do not run it, and the flaw only crashes the process via denial of service."
+    },
+    "p075": {
+     "id": "p075",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Development dependency for YAML parsing. Visitors do not run it, and the flaw only causes excess CPU use."
+    },
+    "p076": {
+     "id": "p076",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Development dependency for fetching. Visitors do not run it, and the tool does local processing with no custom TLS checks described."
+    },
+    "p077": {
+     "id": "p077",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-server build helper. Visitors using the hosted tool do not run Vite or launch-editor, so the Windows editor flaw is not reached."
+    }
+   }
+  },
+  {
+   "slug": "lumen",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.00279875,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p025": {
+     "id": "p025",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Causes only a panic crash, which counts as denial of service, and needs opt-in CRL checking that Lumen's local LLM serving does not show."
+    }
+   }
+  },
+  {
+   "slug": "mergegate",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.00809225,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p026": {
+     "id": "p026",
+     "verdict": "conditional",
+     "condition": "reviewing untrusted or externally-sourced agent branches/repos with attacker-controlled .git/config",
+     "reason": "App reviews agent git branches using gix. A crafted .git/config could disable HFS/NTFS path protection, but attacker control of reviewed repos is plausible not certain."
+    },
+    "p027": {
+     "id": "p027",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Wasmtime flaw needs attacker-supplied Wasm module executed on aarch64. Description shows inbox review and squash-merge with no Wasm plugins or execution feature."
+    }
+   }
+  },
+  {
+   "slug": "nlm-memory",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.00526875,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p028": {
+     "id": "p028",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "No ZIP import or extraction feature is described for this session store, and the flaw needs extraction with keepOriginalPermission as root."
+    },
+    "p029": {
+     "id": "p029",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "No image processing feature is described; the tool stores and recalls text sessions and facts, so untrusted image decoding is not part of normal use."
+    }
+   }
+  },
+  {
+   "slug": "paintracker-ca",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.025148,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p030": {
+     "id": "p030",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Browser sanitizer, but offline local-only app has no attacker-supplied HTML described, and flaw needs IN_PLACE mode with detaching hooks not shown."
+    },
+    "p031": {
+     "id": "p031",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Node redirect credential stripping on server side; offline web visitor does not run it and app shows no remote fetching."
+    },
+    "p032": {
+     "id": "p032",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Server proxy helper for forwarding multipart bodies; visitor to hosted offline app does not run proxy code."
+    },
+    "p033": {
+     "id": "p033",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Server-side IP check for SSRF filters; offline app shows no server requests or trust-boundary checks."
+    },
+    "p034": {
+     "id": "p034",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found in packages/blog lockfile, not the main app the person visits; blog build code does not reach visitor."
+    },
+    "p035": {
+     "id": "p035",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found in desktop lockfile, a different distribution than the hosted web app described."
+    },
+    "p036": {
+     "id": "p036",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Flaw only affects unstable RSC APIs; description gives no sign of RSC use."
+    },
+    "p037": {
+     "id": "p037",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found in packages/blog lockfile, not the main app; image processing for blog does not reach visitor."
+    },
+    "p038": {
+     "id": "p038",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found in blog lockfile and is denial-of-service only, which is out of scope."
+    },
+    "p039": {
+     "id": "p039",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found in packages/blog lockfile, not the main offline app; blog server flaws run on author's server, not visitor."
+    },
+    "p086": {
+     "id": "p086",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Denial-of-service via crashed process only, which is out of scope, and server-side parsing not run by visitor."
+    },
+    "p087": {
+     "id": "p087",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Denial-of-service via event-loop block only, which is out of scope."
+    },
+    "p088": {
+     "id": "p088",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Denial-of-service via memory exhaustion only, which is out of scope."
+    },
+    "p089": {
+     "id": "p089",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev build tool for browser queries; only builds the software, not run in normal use."
+    },
+    "p090": {
+     "id": "p090",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev dependency for URI parsing; only builds the software, not run by visitor."
+    },
+    "p091": {
+     "id": "p091",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Test DOM implementation; only tests the software, not run in normal use."
+    },
+    "p092": {
+     "id": "p092",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev build tool and CPU denial-of-service only; not run by visitor."
+    },
+    "p093": {
+     "id": "p093",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev CSS build tool; only builds the software, not run in normal use."
+    },
+    "p094": {
+     "id": "p094",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev tooling and denial-of-service only; not run by visitor."
+    },
+    "p095": {
+     "id": "p095",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev server helper; only builds or serves during development, not run by visitor."
+    },
+    "p096": {
+     "id": "p096",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev dependency and denial-of-service only; not run in normal use."
+    },
+    "p097": {
+     "id": "p097",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found in desktop lockfile dev scope, a different distribution the web visitor does not install or run."
+    },
+    "p098": {
+     "id": "p098",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Build tool for AppImage in desktop part; only builds a different distribution."
+    },
+    "p099": {
+     "id": "p099",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found in desktop dev lockfile, a different distribution than the web app described."
+    },
+    "p100": {
+     "id": "p100",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found in desktop dev lockfile, a different distribution the web visitor does not run."
+    },
+    "p101": {
+     "id": "p101",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found in desktop dev lockfile, a different distribution the web visitor does not run."
+    },
+    "p102": {
+     "id": "p102",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found in desktop dev lockfile and denial-of-service only; different distribution and out of scope."
+    },
+    "p103": {
+     "id": "p103",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found in desktop dev lockfile, a different distribution the web visitor does not run."
+    },
+    "p104": {
+     "id": "p104",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found in desktop dev lockfile, a different distribution the web visitor does not run."
+    }
+   }
+  },
+  {
+   "slug": "phantom",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.00510125,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p040": {
+     "id": "p040",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Flaw only matters for an HTTP MCP server using experimental taskStore. Description shows a CLI workbench with no sign it runs such a shared server or uses that deprecated feature."
+    },
+    "p108": {
+     "id": "p108",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Advisory is a crash-only denial of service from a crafted compressed request. Denial of service alone is rated not_exposed."
+    },
+    "p109": {
+     "id": "p109",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Advisory is uncontrolled memory growth leading to out-of-memory crash from large arrays. That is denial of service only, so not_exposed."
+    }
+   }
+  },
+  {
+   "slug": "pooprusteek",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.01017375,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p041": {
+     "id": "p041",
+     "verdict": "conditional",
+     "condition": "opening or running untrusted Wasm files or projects from others",
+     "reason": "All flaws need an attacker-crafted Wasm module to escape the Wasmtime sandbox. That only happens if the agent loads untrusted Wasm while working on others' code, not in normal chat use."
+    }
+   }
+  },
+  {
+   "slug": "praana",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.00902675,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p042": {
+     "id": "p042",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "PRAANA likely uses seroval to save and replay local checkpoints, not to parse untrusted input. The critical flaws need untrusted input plus plugins returning callables, which the description shows no sign of."
+    }
+   }
+  },
+  {
+   "slug": "privateer-agent",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.01022325,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p043": {
+     "id": "p043",
+     "verdict": "exposed",
+     "condition": null,
+     "reason": "Privateer talks to remote AI providers and MCP servers over HTTPS via undici fetch. A certificate check bypass lets a network attacker intercept that traffic in normal use."
+    },
+    "p110": {
+     "id": "p110",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "The advisory is only a stack-exhaustion crash from a crafted pattern. Crash-only denial of service does not count as exposed."
+    },
+    "p111": {
+     "id": "p111",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "The advisory is only memory exhaustion and out-of-memory crash from a large array. Crash-only denial of service does not count as exposed."
+    }
+   }
+  },
+  {
+   "slug": "pulsechain-mcp",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.01020625,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p044": {
+     "id": "p044",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Needs MCP server reachable over HTTP with shared transport. Description shows an MCP server with no HTTP endpoint mentioned, so this mode is not shown."
+    },
+    "p112": {
+     "id": "p112",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Affects only MCP servers reachable over Streamable HTTP with untrusted clients. No HTTP use is described, stdio-only use is the default, so not reached."
+    },
+    "p113": {
+     "id": "p113",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Advisory is uncontrolled memory use causing out-of-memory crash. Denial of service alone does not count as exposed."
+    },
+    "p114": {
+     "id": "p114",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only build helper and flaw only causes stack exhaustion crash. Build tools and denial of service do not expose the user."
+    },
+    "p115": {
+     "id": "p115",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only dependency and flaw only hangs the calling thread. Build tool use and denial of service do not expose the user."
+    },
+    "p116": {
+     "id": "p116",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only source-map tool and flaw only blocks the event loop. Build tools and denial of service do not expose the user."
+    },
+    "p117": {
+     "id": "p117",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only worker pool used by test tools, not run by normal install and use. User does not run this code."
+    },
+    "p118": {
+     "id": "p118",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only build tool vite. The launch-editor issue needs Windows developer use, not normal use of the installed server."
+    },
+    "p119": {
+     "id": "p119",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only test runner. Flaw needs Vitest UI server explicitly exposed to network, which normal install and use does not do."
+    }
+   }
+  },
+  {
+   "slug": "rustcode",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.00496175,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p045": {
+     "id": "p045",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Description shows editing code files and running commands but no zip handling. The flaw needs extracting a crafted zip archive, which is not shown."
+    }
+   }
+  },
+  {
+   "slug": "bailout",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.00511125,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p046": {
+     "id": "p046",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only entry in worker/package-lock.json, not shipped in the install.sh CLI; bootstrap/repair tool does not process images or SVGs in normal use."
+    },
+    "p047": {
+     "id": "p047",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only entry in worker/package-lock.json, not shipped in the install.sh CLI; no evidence this dev copy handles users' network traffic during bootstrap/repair."
+    }
+   }
+  },
+  {
+   "slug": "claudette",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.00304375,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p055": {
+     "id": "p055",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found only in editor/vscode package-lock.json, not in the CLI installed via brew or install scripts, so normal offline use never runs this code."
+    }
+   }
+  },
+  {
+   "slug": "contemplative-agent",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.00362525,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p056": {
+     "id": "p056",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Installed via pip, so npm dev package re2js is not installed or run by the user. Flaw is also quadratic-time DoS only, which is out of scope."
+    }
+   }
+  },
+  {
+   "slug": "goatedcontext",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.003147,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p062": {
+     "id": "p062",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "This flaw only allows memory exhaustion and crash from a large array, which is denial of service and does not expose the user under the rules."
+    }
+   }
+  },
+  {
+   "slug": "gsl-lang",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.0029225,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p063": {
+     "id": "p063",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found only in editors/vscode lockfile, which is not installed by the described go/binary install. The CLI user does not run that extension code."
+    }
+   }
+  },
+  {
+   "slug": "jp-lit-mcp",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.0034475,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p078": {
+     "id": "p078",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "The advisory describes only memory exhaustion and crashing from large arrays. Denial of service alone counts as not_exposed."
+    }
+   }
+  },
+  {
+   "slug": "medha-agent",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.004986,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p079": {
+     "id": "p079",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Denial-of-service only flaws are not_exposed, and source-map-js is a build-time map helper not run by the installed binary."
+    },
+    "p080": {
+     "id": "p080",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Vite is a build and dev-server tool, not runtime code in the shipped binary, so its editor-launch flaw is not reached in normal use."
+    }
+   }
+  },
+  {
+   "slug": "oh-my-score-studio",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.007098,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p081": {
+     "id": "p081",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only build dependency for midi-player, not shipped to the browser studio. Flaw is event-loop DoS only, which is out of scope."
+    },
+    "p082": {
+     "id": "p082",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only build tool for resolving browser targets, not runtime code in the studio. Needs an attacker-supplied stats file and causes crash, not exposure."
+    },
+    "p083": {
+     "id": "p083",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only YAML loader in midi-player build, not used to parse user MP3/WAV/MIDI in normal use. Flaw is CPU DoS only."
+    },
+    "p084": {
+     "id": "p084",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only markdown link helper in midi-player build, not part of transcription or playback. Flaw is quadratic DoS only."
+    },
+    "p085": {
+     "id": "p085",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only markdown renderer in midi-player build, not used for audio/MIDI work. Flaw is slow rendering DoS only."
+    }
+   }
+  },
+  {
+   "slug": "papertrade-analytics",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.003897,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p105": {
+     "id": "p105",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Undici is a Node server-side HTTP client. This is a hosted web app, so that code runs on the author's server, not in the visitor's browser."
+    }
+   }
+  },
+  {
+   "slug": "pbp",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.0045815,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p106": {
+     "id": "p106",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "PostCSS is a CSS build tool in the frontend dev lockfile. It runs at build time, not when searching jobs or analyzing CVs, so normal use does not pass attacker CSS to it."
+    },
+    "p107": {
+     "id": "p107",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Vite is a dev build server in the frontend dev lockfile, not run in normal Linux install. Flaw also needs Windows and attacker-controlled editor file path."
+    }
+   }
+  },
+  {
+   "slug": "stem-digital-lab",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.00571825,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p120": {
+     "id": "p120",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only build helper; flaw only crashes via crafted pattern (denial of service), which is out of scope and never reached by normal lab use."
+    },
+    "p121": {
+     "id": "p121",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only transitive build dependency; visitor browsing labs and periodic table does not use it for host allowlists or proxy routing."
+    },
+    "p122": {
+     "id": "p122",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only source-map tooling; flaw only blocks event loop (denial of service), which is out of scope for a visitor using labs locally."
+    },
+    "p123": {
+     "id": "p123",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Vite dev-server/build tool not run by site visitor; launch-editor issue needs Windows dev opening attacker-controlled file, not browsing labs."
+    }
+   }
+  },
+  {
+   "slug": "tessera",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.00618525,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p124": {
+     "id": "p124",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only dependency and denial-of-service flaws do not expose the user; crash-only stack exhaustion cannot leak data or run code."
+    },
+    "p125": {
+     "id": "p125",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only source-map tooling and event-loop denial of service only; it cannot leak data and is not shipped in the browser QR studio."
+    },
+    "p126": {
+     "id": "p126",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Dev-only HTTP client; local-only QR app has no described remote fetching or custom TLS check, and server build code does not run in visitor browser."
+    },
+    "p127": {
+     "id": "p127",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Vite launch-editor is build/dev-server tooling not run by site visitors; Windows editor command injection is not reachable in normal local QR use."
+    }
+   }
+  },
+  {
+   "slug": "xipher",
+   "model": "muse-spark-1.3",
+   "cost_usd": 0.0049085,
+   "error": null,
+   "missing": [],
+   "verdicts": {
+    "p128": {
+     "id": "p128",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "This advisory is denial-of-service only via excess CPU when parsing crafted JWKs, which the rules count as not_exposed."
+    },
+    "p129": {
+     "id": "p129",
+     "verdict": "not_exposed",
+     "condition": null,
+     "reason": "Found in action/package-lock.json, a CI action part the browser user does not install or run, and the flaw is DoS-only stack exhaustion."
+    }
+   }
+  }
+ ]
+}

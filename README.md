@@ -65,6 +65,12 @@
   - **影響**（對照沒有這項的版本）：有檢查的 186 款品質分中位數 0、平均 −1.4（桌面 −0.9、網頁 −2.0）；69 款有缺陷的各扣 5%；寶藏從 162 款變 161 款（boltzyml-v2-0）；沒有任何一款變動超過 5 分。
   - **花費**：檢查一次 Muse Wonder，每款約 $0.03，186 款共約 $6.4。
   - **依嚴重度扣分：試過、不上線**：嚴重扣 10%、輕微扣 5%，而且「嚴重」要第二位評審（Muse Spark 1.3）也同意才算。第二位評審沒過事先寫下的門檻：複查者確認的 4 個嚴重缺陷只保住 1 個（有爭議的 8 個倒是降級了 7 個）。念誠逐一看過這 12 個判斷的截圖，認同 Claude 複查者的判斷，決定維持一律扣 5%。細節見 [docs/usability-pilot.md](docs/usability-pilot.md) 第 13 節；程式留在分支 `claude/usability-wonder`，沒有合併。
+- **已知安全弱點：有就不當寶藏（11/3 起）**：
+  - **原則**（念誠）：軟體是 pickfit 推薦的，寧可錯殺一款寶藏，也不推薦有已知漏洞的軟體。
+  - **做法**（`pickfit security`，不用模型、不花錢）：先照「今天全新安裝」的方式解析使用者會裝到的套件（`npm --package-lock-only --ignore-scripts`、`uv pip compile --no-build`，都不會執行套件的程式碼；沒有套件就讀 repo 的 lockfile，Python 照 `pyproject.toml` 重新解析），再逐一到 [OSV.dev](https://osv.dev) 查。開發用的相依，以及文件網站、編輯器擴充、CI 這些使用者不會裝到的部分，都不算。
+  - **怎麼算分**：只要有任何 high 或 critical 弱點，不論有沒有修正版、是不是只造成 DoS，品質分最高 79（`known_vulnerability`），也就不能當寶藏。malicious 套件會直接下架。工具頁列出弱點和修正版本，MCP 的回答也帶 `security`，請 agent 在安裝前告訴使用者。
+  - **沒檢查到的**：263 款分數不變，工具頁寫明沒檢查和原因。原因有兩種：沒有可讀的來源（大多是沒有 lockfile 的桌面 App，以及沒有 repo 的網頁），或是軟體本身的相依沒有完整讀到。只有軟體自己的套件全部解析成功、或 repo 的主要 lockfile 有讀到套件時，才寫「沒有已知弱點」。
+  - **影響**：962 款上線的軟體裡，259 款有已知弱點、440 款沒有、263 款沒檢查到；81 款的分數有變；寶藏從 161 款變成 132 款。lockfile 支援 npm（package-lock、pnpm-lock）、Cargo、Go 與 Python（uv、poetry、requirements）；yarn 和 bun 還不支援。細節與先前用 AI 判斷「會不會影響使用者」的試跑（沒有採用）見 [docs/security-pilot.md](docs/security-pilot.md)。
 
 ## 驗證環境的限制與之後的方向
 

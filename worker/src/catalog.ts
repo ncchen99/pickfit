@@ -136,6 +136,26 @@ export interface InstallGuide {
   run: RunSummary;
   /** MCP servers: the handshake of this run; null or absent for other software. */
   mcp?: McpHandshake | null;
+  /**
+   * The same commands as a user runs them (pickfit/userpaths.py): pickfit's sandbox home written as $HOME. The
+   * fields above stay exactly as the run executed them. Absent from older indexes.
+   */
+  user?: UserGuide;
+}
+
+export interface UserGuide {
+  steps: { command: string; purpose: string | null }[];
+  first_task_setup: { command: string; background: boolean }[];
+  first_task: string | null;
+  check: { command: string; expected_signal: string } | null;
+  /** Some command named the sandbox home and was rewritten. */
+  changed: boolean;
+  /** Commands still naming the sandbox home (inside single quotes): "step 4", "first task", "check". */
+  not_portable: string[];
+  /** A command names the sandbox's work folder, which existed before any step ran. */
+  needs_workdir: boolean;
+  /** The sandbox home the verified commands name (/Users/sbx, /home/sbx); null when none does. */
+  sandbox_home: string | null;
 }
 
 /** One goal pickfit operated a hosted web app toward in its browser, and what its own check found. */
@@ -241,6 +261,9 @@ export interface Entry {
   web?: WebApp | null;
   /** Desktop and web apps only: what pickfit's visual check of its own screenshots found (pickfit/index.py _visual). */
   visual?: VisualCheck | null;
+  /** Known high or critical vulnerabilities (OSV.dev) in what a fresh install brings (pickfit/index.py _security).
+   * Older indexes lack it: read a missing one as unchecked, reason not_run (securityOf). */
+  security?: SecurityCheck | null;
   scores: {
     quality: number | null;
     popularity: number | null;
@@ -259,6 +282,41 @@ export interface VisualCheck {
   defects?: { kind: string; problem: string; quote: string }[];
   checked_at?: string;
   model?: string;
+}
+
+/** Why pickfit could not check a tool for known vulnerabilities; not_run = no check yet. */
+export type SecurityReason = 'no_source' | 'no_lockfile' | 'lockfile_not_supported' | 'resolve_failed' | 'not_run';
+
+/** One known vulnerability in a package a fresh install brings. */
+export interface SecurityFinding {
+  /** Ecosystem and name, e.g. npm:undici. */
+  package: string;
+  version: string;
+  /** GHSA-…, RUSTSEC-…, MAL-…: its page is https://osv.dev/vulnerability/<advisory>. */
+  advisory: string;
+  severity: 'CRITICAL' | 'HIGH';
+  fixed_in: string | null;
+  summary: string;
+  malicious: boolean;
+}
+
+/** The vulnerability check, as the quality score applied it: "vulnerable" capped quality at 79 (so never a hidden gem),
+ * "clean" changed nothing, "unchecked" changed nothing and says why. */
+export interface SecurityCheck {
+  status: 'vulnerable' | 'clean' | 'unchecked';
+  /** Only when unchecked. */
+  reason?: SecurityReason;
+  /** YYYY-MM-DD; absent when reason is not_run. */
+  checked_at?: string;
+  packages_checked?: number;
+  /** vulnerable: how many findings in all (findings lists at most 10). */
+  count?: number;
+  findings?: SecurityFinding[];
+}
+
+/** An entry's security check; an index from before the check has none, which reads as not checked yet. */
+export function securityOf(entry: Entry): SecurityCheck {
+  return entry.security ?? { status: 'unchecked', reason: 'not_run' };
 }
 
 export interface Catalog {
