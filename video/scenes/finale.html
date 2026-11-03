@@ -1,0 +1,605 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<title>Finale</title>
+<style>
+  @font-face { font-family: "Bricolage Grotesque"; src: url("/repo/worker/public/assets/fonts/bricolage-grotesque.woff2") format("woff2"); font-weight: 200 800; font-display: block; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "/node_modules/three/build/three.module.js",
+  "three/addons/": "/node_modules/three/examples/jsm/",
+  "gsap": "/node_modules/gsap/index.js"
+} }
+</script>
+</head><body>
+<script type="module">
+// 2:26.5–2:57 of the cut (segments J_maker and K_end): the other end of the thread, the Next
+// plan, and the end card. t = 0 is the segment start; cue times are from edit/timeline.json.
+
+// ---- swap these when the real frames and time are ready ------------------------------------
+const SCREEN_LEFT = './finale/left.png';   // a frame of the agent conversation (Claude app), 16:10
+const SCREEN_RIGHT = './finale/right.png'; // a frame of pickfit.app's results page, 16:10
+const CLOCK_TIME = '7:14 PM';             // the real time the recording ended
+// ---------------------------------------------------------------------------------------------
+
+import * as THREE from 'three';
+import { Stage } from '../kit/stage.js';
+import { createFitz, leaf } from '../kit/fitz3d.js';
+import { paperCard, text, drawSeam, stitchThread, screenPanel } from '../kit/props.js';
+import { site, fonts } from '../kit/tokens.js';
+import {
+  E, prog, lerp, clamp01, rng, setOpacity, noShadows, measure, decal, sourceTag, workbench, makerCard,
+  nextTag, submitCard, appTicket, station, slip, clockTag, screenTexture, happyEyes,
+} from './finale/parts.js';
+
+const DURATION = 30.5;
+
+const stage = new Stage({ dof: { aperture: 0.0008, maxblur: 0.005 } });
+await stage.ready;
+const { scene, camera } = stage;
+scene.add(camera); // the Next tag rides with the camera
+camera.far = 40; // no distant floor at the horizon (it picks up a grey band of AO there)
+camera.updateProjectionMatrix();
+
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+const tmp = new THREE.Vector3();
+
+// =============================================================================================
+// 1. The edge of the ticket wall, the thread, the maker's card
+// =============================================================================================
+const zoneA = new THREE.Group();
+scene.add(zoneA);
+
+// The wall as the last shot left it: small white tickets (a short seam on the verified ones),
+// MangoDisk's ticket olive at its edge with its name tag. Two templates, cloned.
+const r = rng(7);
+const TW = 0.5, TD = 0.33, GX = 0.58, GZ = 0.41;
+const MANGO = { x: -5.3, z: 0.0 };
+const wallFace = (verified) => (ctx, pw) => {
+  const k = pw / 104;
+  ctx.fillStyle = site.rule;
+  ctx.fillRect(10 * k, 12 * k, 50 * k, 9 * k); ctx.fillRect(10 * k, 30 * k, 76 * k, 5 * k); ctx.fillRect(10 * k, 41 * k, 62 * k, 5 * k);
+  if (verified) drawSeam(ctx, 10 * k, 57 * k, 52 * k, { len: 9 * k, gap: 5 * k, width: 3.4 * k });
+};
+const tplV = paperCard({ w: TW, h: TD, depth: 0.014, edge: site.rule, edgeWidth: 3, ppu: 420, draw: wallFace(true) });
+const tplN = paperCard({ w: TW, h: TD, depth: 0.014, edge: site.rule, edgeWidth: 3, ppu: 420, draw: wallFace(false) });
+for (let c = 0; c < 12; c++) for (let row = -6; row <= 6; row++) {
+  if (c === 0 && row === 0) continue; // MangoDisk's slot
+  if (c === 0 && Math.abs(row) > 4) continue; // a ragged edge
+  const m = (r() < 0.68 ? tplV : tplN).clone();
+  m.rotation.x = -Math.PI / 2;
+  m.position.set(MANGO.x - c * GX, 0.015, MANGO.z + row * GZ);
+  zoneA.add(m);
+}
+const mango = paperCard({ w: TW, h: TD, depth: 0.014, color: site.voice, edge: site.voiceEdge, edgeWidth: 3, ppu: 600, draw: (ctx) => {
+  text(ctx, 'MangoDisk', 12, 40, { size: 30, weight: 700, family: fonts.display });
+  ctx.fillStyle = site.voiceLine; ctx.fillRect(12, 56, 120, 6);
+} });
+mango.rotation.x = -Math.PI / 2;
+mango.position.set(MANGO.x, 0.016, MANGO.z);
+zoneA.add(mango);
+const mangoTag = paperCard({ w: 1.42, h: 0.42, depth: 0.016, color: site.voice, edge: site.voiceEdge, edgeWidth: 3, ppu: 300, draw: (ctx) => {
+  text(ctx, 'MangoDisk', 26, 88, { size: 64, weight: 700, family: fonts.display });
+} });
+mangoTag.rotation.x = -1.0;
+mangoTag.position.set(MANGO.x + 0.12, 0.21 * Math.cos(1.0), MANGO.z + 0.72 - 0.21 * Math.sin(1.0));
+zoneA.add(mangoTag);
+
+// The thread runs off the MangoDisk ticket to the maker's card.
+const threadA = new THREE.CatmullRomCurve3([
+  V(-5.25, 0.034, -0.02), V(-4.98, 0.03, -0.04), V(-4.6, 0.016, 0.02), V(-3.9, 0.016, 0.42), V(-2.6, 0.016, 0.74),
+  V(-0.6, 0.016, 0.66), V(1.4, 0.016, 0.78), V(3.0, 0.016, 0.68), V(4.1, 0.016, 0.5), V(4.45, 0.06, 0.32), V(4.5, 0.16, 0.24),
+], false, 'catmullrom', 0.4);
+const stitchA = stitchThread(threadA, { stitch: 0.12, gap: 0.075, radius: 0.015 });
+stitchA.frustumCulled = false; // the kit's InstancedMesh keeps the bounds of its first (empty) frame
+zoneA.add(stitchA);
+
+// The maker's card on the other end, and the bench it came from.
+const maker = makerCard({ url: 'github.com/harry0703/MangoDisk', releases: ['v1.2.2', 'v1.2.1', 'v1.2.0'] });
+maker.card.position.set(5.85, maker.h / 2, 0.22);
+maker.card.rotation.y = -0.1;
+zoneA.add(maker.card);
+const bench = workbench();
+bench.group.position.set(8.05, 0, -0.75);
+bench.group.rotation.y = -0.42;
+bench.chair.position.set(0.1, 0, 0.78);
+bench.chair.rotation.y = Math.PI + 0.55;
+zoneA.add(bench.group);
+
+// Source tags along the thread: where pickfit went looking.
+const SOURCES = ['GitHub', 'Show HN', 'Flathub', 'Homebrew Cask', 'submissions'];
+const tags = [];
+{
+  const gap = 0.32;
+  const built = SOURCES.map((s) => sourceTag(s));
+  const total = built.reduce((a, b) => a + b.w, 0) + gap * (built.length - 1);
+  let x = 0.3 - total / 2;
+  built.forEach((tg, i) => {
+    tg.pivot.position.set(x + tg.w / 2, 0, -0.12 + (i % 2) * 0.1);
+    tg.pivot.rotation.y = -0.04 * (x + tg.w / 2) / 3;
+    x += tg.w + gap;
+    zoneA.add(tg.pivot);
+    tags.push(tg);
+  });
+}
+
+// =============================================================================================
+// 2. Fitz
+// =============================================================================================
+const fz = createFitz();
+scene.add(fz.root);
+const happy = happyEyes(fz);
+const lf = leaf();
+fz.hold.add(lf);
+
+// The flight along the thread (This week, pickfit went looking).
+const flight = new THREE.CatmullRomCurve3([
+  V(-5.0, 1.55, 1.4), V(-3.0, 1.0, 1.0), V(-0.5, 0.95, 0.95), V(2.0, 1.0, 1.0), V(3.9, 1.1, 1.1), V(5.6, 1.9, 1.3),
+  V(8.0, 3.2, 1.2), V(10.5, 4.3, 0.9),
+]);
+const FLY0 = 3.75, FLY1 = 6.9;
+const flyU = (t) => {
+  const v = clamp01((t - FLY0) / (FLY1 - FLY0));
+  return E.p2io(v) * 0.2 + v * 0.8;
+};
+// Each tag pops up as Fitz comes to it.
+const popAt = tags.map((tg) => {
+  const tx = tg.pivot.position.x - 1.1;
+  for (let t = FLY0; t < FLY1; t += 0.01) if (flight.getPointAt(flyU(t)).x >= tx) return t;
+  return FLY1;
+});
+
+// =============================================================================================
+// 3. Next: makers submit; the same tests run; outcomes come back
+// =============================================================================================
+const zoneN = new THREE.Group();
+scene.add(zoneN);
+
+const next = nextTag();
+camera.add(next.card);
+
+const sub = submitCard();
+const tk = appTicket();
+const flip = new THREE.Group(); // the submit card, with the ticket on its back
+flip.add(sub.card);
+tk.card.rotation.x = Math.PI;
+tk.card.position.z = -0.06;
+flip.add(tk.card);
+const carrier = new THREE.Group();
+carrier.add(flip);
+zoneN.add(carrier);
+
+const STATION_X = [10.75, 12.15, 13.55, 14.95];
+const stations = ['sieve', 'readme', 'sandbox', 'check'].map((k, i) => {
+  const s = station(k);
+  s.card.position.set(STATION_X[i], s.w / 2, -0.25);
+  s.card.rotation.y = -0.03 * (i - 1.5);
+  zoneN.add(s.card);
+  return s;
+});
+const same = sourceTag('same tests', { size: 54, h: 0.36 });
+same.pivot.position.set((STATION_X[0] + STATION_X[3]) / 2, 0, 0.75);
+zoneN.add(same.pivot);
+
+// The seam the ticket gets once every station has passed (pickfit ran it).
+const seamCurve = new THREE.LineCurve3(V(-1.6, tk.seamY, 0.016), V(-0.3, tk.seamY, 0.016));
+const seam = stitchThread(seamCurve, { stitch: 0.07, gap: 0.045, radius: 0.011 });
+seam.castShadow = false;
+seam.frustumCulled = false;
+tk.card.add(seam);
+
+// The ticket's match meter: an ink caret under the tape, and paper over the part not reached.
+const caret = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.06, 3), new THREE.MeshStandardMaterial({ color: site.ink, roughness: 0.5 }));
+caret.rotation.z = 0;
+tk.card.add(caret);
+const veil = new THREE.Mesh(new THREE.PlaneGeometry(1, 0.1), new THREE.MeshStandardMaterial({ color: site.raised, roughness: 0.92, transparent: true, opacity: 0.72 }));
+veil.material.userData.alwaysTransparent = true;
+tk.card.add(veil);
+const NOTCH = 0.152;
+function setMeter(v) { // v = reading in units along the tape
+  const m = tk.meter;
+  caret.position.set(m.x0 + v, m.y - 0.085, 0.03);
+  const rest = m.w - v;
+  veil.scale.x = Math.max(0.001, rest);
+  veil.position.set(m.x0 + v + rest / 2, m.y, 0.01); // the card's face is at z = +0.004 (bevel)
+}
+
+// The thread out to the agents, and the reports that come back along it.
+const TK = { x: 16.6, y: 0.98, z: 0.25, s: 0.9 };
+const threadR = new THREE.CatmullRomCurve3([
+  V(17.55, TK.y - 0.4, 0.31), V(17.75, 0.3, 0.42), V(18.15, 0.016, 0.72), V(19.6, 0.016, 0.92), V(22.2, 0.016, 1.04), V(25.5, 0.016, 1.12),
+]);
+const stitchR = stitchThread(threadR, { stitch: 0.12, gap: 0.075, radius: 0.015 });
+stitchR.frustumCulled = false;
+zoneN.add(stitchR);
+const REPORTS = ['installed', 'first run', 'still using'];
+const slips = REPORTS.map((label, i) => {
+  const s = slip(label);
+  zoneN.add(s.card);
+  return { ...s, t0: 12.4 + i * 0.45 };
+});
+
+// =============================================================================================
+// 4. Ask through your agent, or on the web: two screens Fitz sews together; the end card
+// =============================================================================================
+const PANEL_W = 3.2, PANEL_H = 2.0, GAP = 0.2;
+const PANEL_IN = [16.3, 16.75]; // "Ask through your agent," / "or on the web."
+const zoneP = new THREE.Group();
+zoneP.position.set(19.2, 1.55, 2.9);
+scene.add(zoneP);
+const [texL, texR] = await Promise.all([screenTexture(SCREEN_LEFT, 'agent'), screenTexture(SCREEN_RIGHT, 'web')]);
+const panels = [texL, texR].map((tex, i) => {
+  const p = screenPanel({ w: PANEL_W, h: PANEL_H });
+  p.userData.face.material.map = tex;
+  p.userData.face.material.needsUpdate = true;
+  const side = i === 0 ? -1 : 1;
+  p.position.x = side * (PANEL_W / 2 + GAP / 2);
+  p.rotation.y = -side * 0.05;
+  const g = new THREE.Group();
+  g.add(p);
+  zoneP.add(g);
+  return g;
+});
+// The seam Fitz sews down between the two screens: short stitches across the gap, one per peck.
+const SEAM_N = 11, SEAM_TOP = 0.86, SEAM_STEP = 0.172;
+const stitchP = (() => {
+  const geo = new THREE.CapsuleGeometry(0.018, 0.27, 4, 10);
+  geo.rotateZ(Math.PI / 2);
+  const mat = new THREE.MeshPhysicalMaterial({ color: site.stitch, roughness: 0.55, sheen: 0.6, sheenColor: new THREE.Color('#ffd9c8') });
+  const mesh = new THREE.InstancedMesh(geo, mat, SEAM_N);
+  mesh.castShadow = true;
+  mesh.frustumCulled = false;
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
+  for (let i = 0; i < SEAM_N; i++) {
+    e.set(0, 0, 0.32);
+    q.setFromEuler(e);
+    m.compose(V(0, SEAM_TOP - i * SEAM_STEP, 0.07), q, V(1, 1, 1));
+    mesh.setMatrixAt(i, m);
+  }
+  mesh.count = 0;
+  return mesh;
+})();
+zoneP.add(stitchP);
+
+const clock = clockTag(CLOCK_TIME);
+clock.card.position.set(PANEL_W + GAP / 2 - clock.w / 2, -PANEL_H / 2 - 0.36, 0.35);
+zoneP.add(clock.card);
+
+// The end card that settles on the paper: a white card standing on its edge, leaning back a
+// little, with the name, the line and the address printed on it.
+const END = { x: 19.55, z: 3.2 };
+const CARD_W = 5.4, CARD_H = 2.1, LEAN = -0.12;
+const endGroup = new THREE.Group();
+endGroup.position.set(END.x, 0, END.z);
+scene.add(endGroup);
+const endPivot = new THREE.Group();
+endGroup.add(endPivot);
+const endCard = paperCard({ w: CARD_W, h: CARD_H, color: site.raised, edge: site.rule, edgeWidth: 4, ppu: 220 });
+endCard.position.y = CARD_H / 2;
+endPivot.add(endCard);
+
+// Printed words: x from the card's left edge, y the baseline from its top (units).
+function print(str, { size, weight = 400, family = fonts.sans, color = site.ink, tracking = 0, x, y, ppu = 480, drawFn = null }) {
+  const m = measure(str, { size: size * ppu, weight, family, tracking: tracking * ppu });
+  const asc = m.fontBoundingBoxAscent / ppu, desc = m.fontBoundingBoxDescent / ppu, pad = 0.04;
+  const w = m.width / ppu + 2 * pad, h = asc + desc + 2 * pad;
+  const d = decal(w, h, (ctx) => {
+    if (drawFn) drawFn(ctx, pad * ppu, (pad + asc) * ppu, ppu);
+    else text(ctx, str, pad * ppu, (pad + asc) * ppu, { size: size * ppu, weight, family, color, tracking: tracking * ppu });
+  }, { ppu });
+  d.position.set(-CARD_W / 2 + x - pad + w / 2, CARD_H / 2 - (y - asc - pad) - h / 2, 0.009);
+  endCard.add(d);
+  return { decal: d, w, h, asc, y0: d.position.y };
+}
+const TX = 1.3;
+// The dot of a glyph (centre x from the glyph's origin, height above the baseline, radius), in px.
+function glyphDot(ch, o) {
+  const S = Math.ceil(o.size * 1.6), c = document.createElement('canvas');
+  c.width = S; c.height = S;
+  const g = c.getContext('2d', { willReadFrequently: true });
+  const base = Math.round(S * 0.8);
+  text(g, ch, 0, base, { ...o, tracking: 0 });
+  const px = g.getImageData(0, 0, S, S).data;
+  const ink = (x, y) => px[(y * S + x) * 4 + 3] > 128;
+  const rowInk = (y) => { for (let x = 0; x < S; x++) if (ink(x, y)) return true; return false; };
+  let y0 = 0;
+  while (y0 < S && !rowInk(y0)) y0++;
+  let y1 = y0;
+  while (y1 < S && rowInk(y1)) y1++;
+  let xa = S, xb = 0;
+  for (let y = y0; y < y1; y++) for (let x = 0; x < S; x++) if (ink(x, y)) { xa = Math.min(xa, x); xb = Math.max(xb, x); }
+  return { cx: (xa + xb + 1) / 2, up: base - (y0 + y1) / 2, r: Math.max(xb + 1 - xa, y1 - y0) / 2 };
+}
+// The wordmark: Bricolage 800, tracking -0.03em, the i's dot replaced by the stitch colour (the
+// site paints a paper ring over the glyph's dot and a rufous dot on top; here the dot is a bead).
+const WM = { size: 0.74, y: 0.8 };
+const wmDot = {};
+const wordmark = print('pickfit', { size: WM.size, weight: 800, family: fonts.display, tracking: -0.03 * WM.size, x: TX, y: WM.y,
+  drawFn: (ctx, x0, base, ppu) => {
+    const F = WM.size * ppu, tr = -0.03 * F, o = { size: F, weight: 800, family: fonts.display, tracking: tr };
+    const w1 = text(ctx, 'pickf', x0, base, o); // drawn in pieces so "fi" never becomes a ligature
+    const wi = text(ctx, 'i', x0 + w1, base, o);
+    text(ctx, 't', x0 + w1 + wi, base, o);
+    // find the glyph's own dot: the first ink above the stem of a lone "i"
+    const dot = glyphDot('i', o);
+    const cx = x0 + w1 + dot.cx, cy = base - dot.up, r = dot.r * 1.05;
+    ctx.fillStyle = site.raised; // the paper ring, as on the site (.07em; a little less here)
+    ctx.beginPath(); ctx.arc(cx, cy, r + 0.045 * F, 0, Math.PI * 2); ctx.fill();
+    Object.assign(wmDot, { cx: cx / ppu, cy: cy / ppu, r: r / ppu });
+  } });
+const tagline = print('The right software, for the person who needs it.', { size: 0.158, weight: 500, x: TX + 0.03, y: 1.14 });
+const url = print('pickfit.app', { size: 0.15, weight: 600, family: fonts.mono, x: TX + 0.03, y: 1.5 });
+const small1 = print('Add pickfit to your agent over MCP', { size: 0.098, weight: 400, color: site.ink2, x: TX + 0.03, y: 1.74 });
+const small2 = print('pickfit runs on Meta’s Muse Spark 1.3 and Muse Spark Open', { size: 0.098, weight: 400, color: site.ink2, x: TX + 0.03, y: 1.9 });
+
+// The dot itself: a small rufous bead sewn onto the card.
+const knot = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 20), new THREE.MeshPhysicalMaterial({ color: site.stitch, roughness: 0.55, sheen: 0.6, sheenColor: new THREE.Color('#ffd9c8') }));
+{
+  const d = wordmark.decal;
+  knot.position.set(d.position.x - wordmark.w / 2 + wmDot.cx, d.position.y + wordmark.h / 2 - wmDot.cy, 0.008);
+  knot.castShadow = true;
+  endCard.add(knot);
+}
+
+// Where Fitz stands, in front of the card's left end, holding the leaf toward the name.
+const FITZ_END = V(END.x - 2.45, 0, END.z + 0.95);
+
+// =============================================================================================
+// Camera
+// =============================================================================================
+// [time, position, target, ease into this key]
+const CAM = [
+  [0.0, [-5.4, 8.4, 5.2], [-5.3, 0.0, -0.45]],
+  [2.9, [4.6, 3.6, 7.9], [5.6, 0.6, 0.0], E.io],
+  [3.8, [4.75, 3.5, 7.7], [5.7, 0.6, 0.0], E.sine],
+  [5.0, [2.0, 5.2, 11.4], [2.0, 0.3, 0.1], E.io],
+  [6.2, [2.3, 5.1, 11.2], [2.3, 0.3, 0.1], E.sine],
+  [7.4, [12.8, 4.2, 8.7], [12.8, 0.95, 0.3], E.io],
+  [11.35, [13.2, 4.1, 8.5], [13.2, 0.95, 0.3], E.sine],
+  [12.7, [17.75, 3.75, 8.6], [17.75, 0.8, 0.45], E.io],
+  [15.7, [17.65, 3.65, 8.35], [17.65, 0.8, 0.45], E.sine],
+  [16.9, [19.2, 2.05, 11.9], [19.2, 1.5, 2.9], E.io],
+  [19.8, [19.2, 2.1, 11.6], [19.2, 1.5, 2.9], E.sine],
+  [21.4, [19.15, 2.3, 12.1], [19.15, 1.0, 3.5], E.io],
+  [30.5, [19.15, 2.25, 11.8], [19.15, 1.0, 3.5], E.sine],
+];
+function poseCamera(t) {
+  let i = 1;
+  while (i < CAM.length - 1 && t > CAM[i][0]) i++;
+  const [t0, p0, g0] = CAM[i - 1], [t1, p1, g1, ez] = CAM[i];
+  const v = (ez || E.io)(clamp01((t - t0) / (t1 - t0)));
+  camera.position.set(lerp(p0[0], p1[0], v), lerp(p0[1], p1[1], v), lerp(p0[2], p1[2], v));
+  stage.lookAt(lerp(g0[0], g1[0], v), lerp(g0[1], g1[1], v), lerp(g0[2], g1[2], v));
+  camera.lookAt(stage.target);
+}
+
+// Entrance: a short rise, from 0.94 scale, with opacity (never from nothing).
+function entr(t, t0, { dur = 0.7, rise = 0.12, from = 0.94 } = {}) {
+  const v = prog(t, t0, t0 + dur, E.out);
+  return { op: clamp01((t - t0) / (dur * 0.45)), s: from + (1 - from) * v, lift: (1 - v) * rise };
+}
+
+// =============================================================================================
+// update(t): every pose from t alone
+// =============================================================================================
+const SEW0 = 17.4, SEW1 = 19.0, SEW_DT = (SEW1 - SEW0) / SEAM_N;
+const holdW = new THREE.Vector3();
+function placeFitzBy(target) { // move Fitz so the beak (hold) sits on target
+  fz.root.updateMatrixWorld(true);
+  fz.hold.getWorldPosition(holdW);
+  fz.root.position.add(tmp.copy(target).sub(holdW));
+}
+
+function update(t) {
+  poseCamera(t);
+
+  // ---- 1. thread to the maker ---------------------------------------------------------------
+  zoneA.visible = t < 7.4;
+  if (zoneA.visible) {
+    // this layer dims as the camera leaves it for the Next plan
+    const fadeA = 1 - prog(t, 6.3, 7.2, E.io);
+    stitchA.userData.progress(prog(t, 0.15, 2.7, E.p2io));
+    setOpacity(stitchA, fadeA);
+    setOpacity(maker.card, fadeA);
+    setOpacity(bench.group, fadeA);
+    tags.forEach((tg, i) => {
+      const t0 = popAt[i];
+      const v = prog(t, t0, t0 + 0.55, E.back);
+      tg.pivot.rotation.x = -Math.PI / 2 * (1 - v);
+      setOpacity(tg.card, clamp01((t - t0) / 0.18) * fadeA);
+    });
+  }
+
+  // ---- 2. Fitz ------------------------------------------------------------------------------
+  fz.root.visible = (t > FLY0 && t < 6.9) || t > 16.55;
+  fz.flap(0); fz.squash(1); fz.turn(0); fz.blink(0); happy(false);
+  fz.bird.rotation.set(0, 0, 0); fz.bird.position.set(0, 0, 0);
+  lf.visible = false;
+  if (t <= 6.9) {
+    const p = flight.getPointAt(flyU(t));
+    fz.root.position.copy(p);
+    fz.root.scale.setScalar(0.7);
+    fz.root.rotation.set(0, 0.95, 0);
+    fz.bird.rotation.x = 0.18;
+    fz.bird.position.y = Math.sin(t * Math.PI * 2 * 3) * 0.03;
+    fz.flap(0.5 + 0.5 * Math.sin(t * Math.PI * 2 * 7));
+  } else if (t > 16.55) {
+    poseFitzEnd(t);
+  }
+
+  // ---- 3. Next ------------------------------------------------------------------------------
+  // the tag in the top-right corner of the frame
+  {
+    const d = camera.position.distanceTo(stage.target);
+    const halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * d, halfW = halfH * camera.aspect;
+    const s = (d / 8.6) * 0.86;
+    const e = entr(t, 6.2, { dur: 0.7, rise: 0.1 * s });
+    const out = prog(t, 15.85, 16.35, E.io);
+    setOpacity(next.card, e.op * (1 - out));
+    next.card.scale.setScalar(s * e.s);
+    next.card.position.set(halfW - (next.w / 2 + 0.32) * s, halfH - (next.h / 2 + 0.3) * s - e.lift, -d);
+    next.setSub(t < 12.3 ? 'Makers submit their own work' : 'Real outcomes sharpen every match');
+  }
+
+  zoneN.visible = t > 6.4 && t < 17.35;
+  if (zoneN.visible) {
+    // the old layer dims when the screens come in
+    const dim = 1 - 0.75 * prog(t, 15.75, 16.45, E.io) - 0.25 * prog(t, 16.45, 17.2, E.io);
+    // the submit card floats in, then rides the test line
+    const e = entr(t, 6.85, { dur: 0.9, rise: 0.25 });
+    setOpacity(carrier, e.op * dim);
+    let x = 12.6, y = 1.72, z = 1.25, sc = 1;
+    const shrink = prog(t, 9.0, 9.6, E.io);
+    const STEP0 = 9.6, STEP = 0.55;
+    x = lerp(x, STATION_X[0], shrink); y = lerp(y, 1.12, shrink); z = lerp(z, 0.05, shrink); sc = lerp(1, 0.56, shrink);
+    for (let i = 1; i < 4; i++) x = lerp(x, STATION_X[i], prog(t, STEP0 + (i - 1) * STEP + 0.22, STEP0 + i * STEP, E.io));
+    // after the check: to the ticket spot, turning over
+    const go = prog(t, 11.35, 12.2, E.io);
+    x = lerp(x, TK.x, go); y = lerp(y, TK.y, go); z = lerp(z, TK.z, go); sc = lerp(sc, TK.s, go);
+    carrier.position.set(x, y + e.lift, z);
+    carrier.scale.setScalar(sc * e.s);
+    const fv = prog(t, 11.5, 12.2, E.io);
+    flip.rotation.x = Math.PI * fv; // top edge comes forward, the ticket side turns up into the light
+    sub.card.visible = fv < 1; // once over, only the ticket side shows (no ghost when it dims)
+    flip.rotation.y = 0.08 * Math.sin(Math.PI * fv);
+    seam.userData.progress(prog(t, 12.1, 12.6, E.p2out));
+    // stations light as the card arrives over each
+    stations.forEach((s, i) => {
+      const at = STEP0 + i * STEP - 0.05;
+      s.setLit(t >= at);
+      const pop = Math.sin(Math.PI * clamp01((t - at) / 0.35));
+      s.card.position.y = s.w / 2 + 0.05 * pop;
+      setOpacity(s.card, dim);
+    });
+    const sameRise = prog(t, 9.3, 9.85, E.back);
+    same.pivot.rotation.x = -Math.PI / 2 * (1 - sameRise);
+    setOpacity(same.card, clamp01((t - 9.3) / 0.18) * dim);
+
+    // reports flow back into the ticket; then the reading rises a notch
+    stitchR.userData.progress(prog(t, 12.2, 12.9, E.p2io));
+    setOpacity(stitchR, dim);
+    const tabX = TK.x + (tk.w * TK.s) / 2 + 0.625 - 0.3;
+    slips.forEach((s, i) => {
+      const t0 = s.t0, tA = t0 + 1.0, tB = tA + 0.45;
+      const u = lerp(0.66, 0.22, clamp01((t - t0) / (tA - t0)));
+      threadR.getPointAt(u, tmp);
+      let px = tmp.x, py = tmp.y + 0.2, pz = tmp.z + 0.04;
+      const k = prog(t, tA, tB, E.io);
+      px = lerp(px, tabX, k); py = lerp(py, TK.y + 0.27 * (1 - i), k); pz = lerp(pz, TK.z - 0.06, k);
+      s.card.position.set(px, py, pz);
+      s.card.rotation.set(0, 0, 0.03 * (1 - i) * k);
+      setOpacity(s.card, clamp01((t - t0) / 0.3) * dim);
+    });
+    setMeter(NOTCH * 6 + NOTCH * prog(t, 14.75, 15.2, E.back));
+  }
+
+  // ---- 4. Screens, then the end card -------------------------------------------------------
+  zoneP.visible = t > 15.9 && t < 21.2;
+  if (zoneP.visible) {
+    const fade = 1 - prog(t, 19.95, 21.0, E.io);
+    panels.forEach((g, i) => {
+      const e = entr(t, PANEL_IN[i], { dur: 0.8, rise: 0.3 });
+      g.position.y = -e.lift;
+      g.scale.setScalar(e.s);
+      setOpacity(g, e.op * fade);
+    });
+    stitchP.count = Math.max(0, Math.min(SEAM_N, Math.floor((t - SEW0) / SEW_DT + 0.5)));
+    setOpacity(stitchP, fade);
+    const ce = entr(t, 17.8, { dur: 0.6, rise: 0.1 });
+    clock.card.position.y = -PANEL_H / 2 - 0.36 - ce.lift;
+    clock.card.scale.setScalar(ce.s);
+    setOpacity(clock.card, ce.op * fade);
+    // the clock runs (the hand ticks, the colon blinks), then stops on the line
+    const TICK0 = 17.2, STOP = 19.2;
+    const run = Math.min(t, STOP) - TICK0;
+    const n = Math.floor(run), f = run - n;
+    const step = run < 0 ? 0 : n + E.back(clamp01(f / 0.18));
+    const settle = t > STOP ? Math.sin((t - STOP) * 28) * Math.exp(-(t - STOP) * 8) * 0.05 : 0;
+    clock.hand.rotation.z = -1.1 - (step * Math.PI * 2) / 60 - settle;
+    clock.setColon(t >= STOP || run < 0 || f < 0.5);
+    // ease back
+    const back = prog(t, 19.75, 21.1, E.io);
+    zoneP.position.set(19.2, 1.55 + back * 1.6, 2.9 - back * 2.2);
+    zoneP.scale.setScalar(1 - back * 0.06);
+  }
+
+  endGroup.visible = t > 20.1;
+  if (endGroup.visible) {
+    // the card drops onto the paper and settles on its edge
+    const v = prog(t, 20.2, 21.2, E.out);
+    endPivot.position.y = (1 - v) * 0.7;
+    endPivot.rotation.x = LEAN - (1 - v) * 0.3;
+    endPivot.scale.setScalar(0.94 + 0.06 * v);
+    const cardOp = clamp01((t - 20.2) / 0.35);
+    setOpacity(endCard, cardOp);
+    const items = [[wordmark, 21.8, 0.8], [tagline, 22.7, 0.7], [url, 23.45, 0.7], [small1, 23.95, 0.7], [small2, 24.25, 0.7]];
+    for (const [it, t0, dur] of items) {
+      const e = entr(t, t0, { dur, rise: 0.06 });
+      setOpacity(it.decal, e.op * cardOp);
+      it.decal.scale.setScalar(e.s);
+      it.decal.position.y = it.y0 + e.lift;
+    }
+    // the dot is sewn on just after the name lands
+    const dv = prog(t, 22.1, 22.55, E.back);
+    knot.visible = t > 22.1;
+    const kr = wmDot.r * (0.6 + 0.4 * dv);
+    knot.scale.set(kr, kr, kr * 0.5);
+  }
+}
+
+// Fitz from the screens to the end card.
+const ZP_BASE = new THREE.Matrix4().makeTranslation(19.2, 1.55, 2.9); // the screens before they ease back
+function sewPose(t) {
+  fz.root.scale.setScalar(0.58);
+  fz.root.rotation.set(0, 0.62, 0);
+  fz.turn(prog(t, 17.05, 17.35, E.io));
+  // the beak follows the seam down, pecking in for each stitch
+  const f = Math.min(SEAM_N - 0.5, Math.max(-0.5, (t - SEW0) / SEW_DT - 0.5));
+  const peck = t > SEW0 && t < SEW1 ? 0.09 * (0.5 - 0.5 * Math.cos(Math.PI * 2 * f)) : 0.09;
+  const after = prog(t, SEW1, 19.45, E.out);
+  tmp.set(0, SEAM_TOP - f * SEAM_STEP + after * 0.06, 0.1 + peck + after * 0.22).applyMatrix4(ZP_BASE);
+  fz.root.position.set(0, 0, 0);
+  placeFitzBy(tmp);
+  // fly in from the upper left
+  const arrive = prog(t, 16.55, 17.3, E.out);
+  fz.root.position.x -= (1 - arrive) * 2.8;
+  fz.root.position.y += (1 - arrive) * 1.6;
+  fz.root.position.z += (1 - arrive) * 0.8;
+}
+sewPose(19.75);
+const FLY_START = fz.root.position.clone();
+
+function poseFitzEnd(t) {
+  const flapFast = 0.5 + 0.5 * Math.sin(t * Math.PI * 2 * 7);
+  if (t < 19.75) {
+    sewPose(t);
+    fz.flap(flapFast);
+    fz.bird.position.y = Math.sin(t * Math.PI * 2 * 2.2) * 0.012;
+    return;
+  }
+  // fly down in front of the end card and land
+  const v = prog(t, 19.75, 21.15, E.io);
+  fz.root.scale.setScalar(lerp(0.58, 0.94, v));
+  fz.turn(1);
+  fz.root.position.set(lerp(FLY_START.x, FITZ_END.x, v), lerp(FLY_START.y, FITZ_END.y, v) + Math.sin(Math.PI * v) * 0.45, lerp(FLY_START.z, FITZ_END.z, v));
+  fz.root.rotation.y = lerp(0.62, 0.32, v);
+  const land = clamp01((t - 21.15) / 0.5);
+  fz.flap(t < 21.15 ? flapFast : 0);
+  fz.squash(t > 21.15 ? 1 - 0.1 * Math.sin(Math.PI * land) * (1 - land) : 1);
+  // the leaf: held out once he has landed
+  const lv = prog(t, 21.2, 21.75, E.out);
+  lf.visible = t > 21.2;
+  lf.scale.setScalar(0.94 + 0.06 * lv);
+  setOpacity(lf, clamp01((t - 21.2) / 0.3));
+  lf.rotation.set(0.1, 0.0, -0.3 + 0.05 * Math.sin((t - 21.2) * Math.PI * 2 / 2.8));
+  // calm idle: breathing, a happy blink now and then
+  if (t > 21.7) fz.squash(1 + 0.008 * Math.sin((t - 21.7) * Math.PI * 2 / 2.6));
+  const cyc = (t - 22.0) % 3.4;
+  happy((t > 22.0 && t < 22.7) || (t > 23 && cyc > 2.9 && cyc < 3.3));
+  fz.blink(t > 23 && cyc > 1.5 && cyc < 1.62 ? 1 : 0);
+}
+
+stage.run({ duration: DURATION, update });
+</script>
+</body></html>

@@ -1,0 +1,896 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<title>Night</title>
+<style>
+  @font-face { font-family: "Bricolage Grotesque"; src: url("/repo/worker/public/assets/fonts/bricolage-grotesque.woff2") format("woff2"); font-weight: 200 800; font-display: block; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "/node_modules/three/build/three.module.js",
+  "three/addons/": "/node_modules/three/examples/jsm/",
+  "gsap": "/node_modules/gsap/index.js"
+} }
+</script>
+</head><body>
+<script type="module">
+// 0:00–0:38 of the film. The disclosure card (0–7), one evening at a small night desk (7–29.3),
+// and the turn (29.3–38): Fitz, the first colour, pulls the evening back on his tape, daylight
+// comes back, and the laptop screen becomes pickfit's request card.
+//
+// Everything is posed from t alone. The night props are driven by a story clock tau: during the
+// night tau = t; in the rewind tau runs back as Fitz pulls the tape, so the evening plays backwards.
+
+import * as THREE from 'three';
+import { gsap } from 'gsap';
+import { Stage, canvasTexture } from '../kit/stage.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { createFitz } from '../kit/fitz3d.js';
+import { paperCard, drawTape } from '../kit/props.js';
+import { site, fonts } from '../kit/tokens.js';
+import * as B from './night/build.js';
+import * as D from './night/draw.js';
+
+const DUR = 38.0;
+const stage = new Stage({ dof: { aperture: 0.0012, maxblur: 0.007 } });
+await stage.ready;
+const { scene, camera } = stage;
+
+// ------------------------------------------------------------------ time helpers
+const EO = gsap.parseEase('expo.out'), EIO = gsap.parseEase('power3.inOut'), SIO = gsap.parseEase('sine.inOut');
+const BACK = gsap.parseEase('back.out(1.7)'), P2O = gsap.parseEase('power2.out'), P2I = gsap.parseEase('power2.in');
+const LIN = (x) => x;
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const seg = (t, a, b) => cl((t - a) / (b - a));
+const k = (t, a, b, e = EO) => e(seg(t, a, b));
+const lerp = (a, b, u) => a + (b - a) * u;
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+const smooth = (a, b, x) => { const u = cl((x - a) / (b - a)); return u * u * (3 - 2 * u); };
+// a damped wobble that settles to 0 (for landings and slaps)
+const wob = (t, t0, amp = 1, f = 16, d = 7) => (t < t0 ? 0 : amp * Math.exp(-d * (t - t0)) * Math.cos(f * (t - t0)));
+
+// ------------------------------------------------------------------ the room: fog, a lit floor for the night, lights
+const PAPER = new THREE.Color(site.paper), NIGHT = new THREE.Color('#2A2F37'), DUSK_FLOOR = new THREE.Color('#5E636B');
+scene.fog = new THREE.Fog(site.paper, 60, 140);
+const litFloor = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshStandardMaterial({ color: '#C2C1BB', roughness: 1, transparent: true, opacity: 0, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -8 }));
+litFloor.rotation.x = -Math.PI / 2;
+litFloor.position.y = 0.0002;
+litFloor.receiveShadow = true;
+litFloor.renderOrder = -1;
+scene.add(litFloor);
+const hemi = new THREE.HemisphereLight('#b3c0d8', '#22262c', 0);
+scene.add(hemi);
+const spot = new THREE.SpotLight('#ffd49e', 0, 3.1, 0.55, 0.9, 0);
+spot.castShadow = true;
+spot.shadow.mapSize.set(2048, 2048);
+spot.shadow.bias = -0.0004;
+spot.shadow.normalBias = 0.01;
+spot.shadow.radius = 5;
+spot.shadow.camera.near = 0.2;
+spot.shadow.camera.far = 9;
+scene.add(spot, spot.target);
+const glow = new THREE.PointLight('#dfe7ff', 0, 3.4, 1.4);
+scene.add(glow);
+const spill = new THREE.DirectionalLight('#c3d0ea', 0);
+spill.position.set(1.5, 3.5, 8);
+scene.add(spill, spill.target);
+const KEY_DAY = new THREE.Color('#fffaf0'), KEY_NIGHT = new THREE.Color('#8fa5d0');
+// Fitz brings his own light: a soft warm-white light in front of him while it is still night
+const fzLight = new THREE.PointLight('#fff4e2', 0, 1.9, 1.4);
+scene.add(fzLight);
+
+// ------------------------------------------------------------------ the disclosure card (far from the desk)
+const DZ = -16;
+const discCard = paperCard({ w: 3.5, h: 1.32, depth: 0.03, ppu: 300 });
+discCard.position.set(0, 0.68, DZ);
+discCard.rotation.x = -0.26;
+scene.add(discCard);
+const DISC_LINES = [['Before this week:', 'idea and planning notes.'], ['Built this week:', 'everything you’ll see.']];
+const discOverlays = (() => {
+  const ppu = 620, W = 3.2, Hh = 0.26;
+  const pw = Math.round(W * ppu), ph = Math.round(Hh * ppu);
+  // measure both lines so the block is centred on the card
+  const mc = document.createElement('canvas').getContext('2d');
+  const widthOf = ([a, b]) => { mc.font = `700 84px ${fonts.display}`; const wa = mc.measureText(a).width; mc.font = `400 84px ${fonts.display}`; return wa + 26 + mc.measureText(b).width; };
+  const maxW = Math.max(...DISC_LINES.map(widthOf));
+  const shift = (pw - maxW) / 2 / ppu;
+  return DISC_LINES.map(([a, b], i) => {
+    const tex = canvasTexture(pw, ph, D.drawDisclosureLine(a, b));
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(W, Hh), new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: 0.9, depthWrite: false }));
+    m.position.set(shift, i === 0 ? 0.2 : -0.2, 0.006);
+    discCard.add(m);
+    return m;
+  });
+})();
+
+// ------------------------------------------------------------------ the night desk
+const room = new THREE.Group();
+scene.add(room);
+room.add(B.desk());
+const PX = -0.35;
+const chair = B.chair();
+chair.position.set(PX, 0, 1.32);
+room.add(chair);
+const P = B.person();
+P.root.position.set(PX, 0, 1.17);
+P.hips.position.y = 0.9;
+room.add(P.root);
+
+let screenKey = '';
+const screenTex = canvasTexture(1088, 640, (ctx, w, h) => D.drawScreen(ctx, w, h, { mode: 'desk' }));
+const L = B.laptop(screenTex);
+L.root.position.set(PX, B.DESK.top, 0.15);
+room.add(L.root);
+
+const mug = B.mug();
+mug.position.set(0.66, B.DESK.top, -0.32);
+mug.rotation.y = 2.6;
+room.add(mug);
+const clock = B.deskClock(0.34);
+clock.root.position.set(1.24, B.DESK.top + 0.34 * 0.82 + 0.03, -0.44);
+clock.root.rotation.y = 0.3;
+room.add(clock.root);
+const lamp = B.lamp();
+lamp.root.position.set(1.8, B.DESK.top, -0.64);
+room.add(lamp.root);
+const LAMP_AIM = V(0.45, B.DESK.top, 0.25);
+room.updateMatrixWorld(true);
+{
+  const hw = lamp.head.getWorldPosition(V());
+  const dir = LAMP_AIM.clone().sub(hw).normalize();
+  lamp.tilt.quaternion.setFromUnitVectors(V(0, -1, 0), dir);
+}
+const bin = B.bin();
+bin.position.set(1.02, B.DESK.top, 0.2);
+room.add(bin);
+room.updateMatrixWorld(true);
+
+// screen frame: centre, axes
+const SC = L.screen.getWorldPosition(V());
+const SQ = L.front.getWorldQuaternion(new THREE.Quaternion());
+const SX = V(1, 0, 0).applyQuaternion(SQ), SY = V(0, 1, 0).applyQuaternion(SQ), SN = V(0, 0, 1).applyQuaternion(SQ);
+const sp = (x, y, z) => SC.clone().addScaledVector(SX, x).addScaledVector(SY, y).addScaledVector(SN, z);
+glow.position.copy(sp(0, -0.1, 0.45));
+lamp.from.updateMatrixWorld(true);
+spot.position.copy(lamp.from.getWorldPosition(V()));
+spot.target.position.copy(LAMP_AIM);
+
+// ------------------------------------------------------------------ paper props (in screen space unless noted)
+// paper props glow a little at night, as if lit by the screen, so the words stay readable
+let paperGlow = 0;
+function fadeable(obj, { glow = false } = {}) {
+  const mats = [];
+  obj.traverse((o) => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { if (!mats.includes(m)) mats.push(m); }); });
+  const base = mats.map((m) => m.color ? m.color.clone() : null);
+  if (glow) mats.forEach((m) => { if (m.emissive) { m.emissive.set('#ffffff'); if (m.map) m.emissiveMap = m.map; else m.emissive.copy(m.color); m.emissiveIntensity = 0; } });
+  obj.userData.look = (opacity, dim = 0) => {
+    mats.forEach((m, i) => {
+      m.transparent = opacity < 0.999 || m.userData.alwaysTransparent;
+      m.opacity = opacity;
+      if (base[i]) m.color.copy(base[i]).multiplyScalar(1 - dim);
+      if (glow && m.emissive) m.emissiveIntensity = paperGlow * (1 - dim) * (m.map ? 1 : 0.85);
+    });
+    obj.visible = opacity > 0.003;
+  };
+  obj.userData.look(0);
+  return obj;
+}
+
+// the alert that pops out of the screen
+const ALERT_W = 0.98, ALERT_H = ALERT_W * 220 / 520;
+const alertCard = fadeable(paperCard({ w: ALERT_W, h: ALERT_H, depth: 0.012, ppu: 760, draw: (ctx, w, h) => D.alertDialog(ctx, 0, 0, w, h, w / 520) }), { glow: true });
+L.front.add(alertCard);
+
+// tabs: paper slips that pop out of the top edge of the lid and squeeze as more come
+const TAB_W = 0.6, TAB_H = 0.16;
+const tabs = D.TAB_TITLES.map((title) => {
+  const c = fadeable(paperCard({ w: TAB_W, h: TAB_H, depth: 0.008, ppu: 700, draw: D.drawTab(title) }), { glow: true });
+  L.front.add(c);
+  return c;
+});
+const TAB_T = D.TAB_TITLES.map((_, i) => 11.6 + i * 0.088);
+
+// review bubbles
+function bubble(line, stars, who, side) {
+  const g = new THREE.Group();
+  const card = paperCard({ w: 0.86, h: 0.34, depth: 0.012, ppu: 640, draw: D.drawBubble(line, stars, who) });
+  g.add(card);
+  const tail = new THREE.Shape();
+  tail.moveTo(-0.07, 0); tail.lineTo(0.07, 0); tail.lineTo(side * 0.16, -0.13); tail.closePath();
+  const tm = new THREE.Mesh(new THREE.ExtrudeGeometry(tail, { depth: 0.012, bevelEnabled: false }), new THREE.MeshStandardMaterial({ color: site.raised, roughness: 0.92 }));
+  tm.position.set(side * 0.18, -0.17 + 0.005, -0.012);
+  tm.castShadow = true;
+  g.add(tm);
+  return fadeable(g, { glow: true });
+}
+const bubA = bubble('A is the one.', 5, 'Reviewer 1', 1);
+const bubB = bubble('No. Get B.', 1, 'Reviewer 2', -1);
+L.front.add(bubA, bubB);
+
+const trial = fadeable(paperCard({ w: 0.98, h: 0.5, depth: 0.012, ppu: 640, draw: D.drawTrial }), { glow: true });
+const access = fadeable(paperCard({ w: 1.08, h: 0.52, depth: 0.012, ppu: 620, draw: D.drawAccess }), { glow: true });
+L.front.add(trial, access);
+
+// the doubt: a big ink question mark over the person
+const qTex = canvasTexture(256, 320, D.drawQuestion);
+const question = fadeable(new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.325), new THREE.MeshBasicMaterial({ map: qTex, transparent: true, depthWrite: false })));
+question.material.userData.alwaysTransparent = true;
+room.add(question);
+
+// the dock and four fictional app icons (world space; three of them go in the bin)
+const dockPos = sp(0, -0.43, 0.24);
+const dock = fadeable(B.dock(1.06));
+dock.position.copy(dockPos);
+room.add(dock);
+const ICONS = ['broom', 'lens', 'pie', 'bolt'].map((kind, i) => {
+  const ic = fadeable(B.appIcon(kind, 0.19));
+  room.add(ic);
+  return ic;
+});
+const ICON_SLOT = (i) => dockPos.clone().add(V(-0.36 + i * 0.24, 0.0175 + 0.095, 0.0));
+const ICON_DROP = [19.8, 19.93, 20.06, 20.19];
+const TRASH = [[0, 20.9], [2, 21.25], [3, 21.6]]; // [icon, time]
+const BIN_TOP = V(1.02, B.DESK.top + 0.4, 0.2);
+
+// building it yourself: a version tag and sticky notes
+let versionKey = '';
+const versionTag = fadeable(paperCard({ w: 0.3, h: 0.17, depth: 0.008, ppu: 700, draw: D.drawVersion('v1') }), { glow: true });
+L.front.add(versionTag);
+const NOTES = [
+  ['fix scan', 22.75, [-0.56, 0.22, 0.05], 0.1],
+  ['fix crash', 23.45, [0.56, -0.14, 0.055], -0.12],
+  ['update deps', 24.15, [-0.5, -0.2, 0.06], -0.06],
+  ['fix scan again', 24.8, [0.44, 0.2, 0.065], 0.14],
+].map(([line, at, pos, rz]) => {
+  const n = fadeable(paperCard({ w: 0.29, h: 0.29, depth: 0.004, ppu: 640, color: '#F4F3EE', draw: D.drawNote(line) }), { glow: true });
+  L.front.add(n);
+  return { n, at, pos, rz };
+});
+const VERSION_T = [22.3, 22.75, 23.2, 23.6, 24.0, 24.4, 24.8, 25.15, 25.5];
+
+// ------------------------------------------------------------------ the time ruler (becomes Fitz's tape)
+const RX0 = 0.2, RZ = 0.755, RY = B.DESK.top + 0.0035;
+const FULL = B.RULER.hours * B.RULER.perHour;
+const NSEG = 200;
+const rulerTex = B.rulerTexture();
+const ribGeo = new THREE.BufferGeometry();
+const rPos = new Float32Array((NSEG + 1) * 2 * 3), rUv = new Float32Array((NSEG + 1) * 2 * 2), rCol = new Float32Array((NSEG + 1) * 2 * 3);
+const rIdx = [];
+for (let i = 0; i < NSEG; i++) { const a = i * 2, b = a + 2; rIdx.push(a, b, a + 1, b, b + 1, a + 1); }
+ribGeo.setIndex(rIdx);
+ribGeo.setAttribute('position', new THREE.BufferAttribute(rPos, 3));
+ribGeo.setAttribute('uv', new THREE.BufferAttribute(rUv, 2));
+ribGeo.setAttribute('color', new THREE.BufferAttribute(rCol, 3));
+const ribbon = new THREE.Mesh(ribGeo, new THREE.MeshPhysicalMaterial({ map: rulerTex, vertexColors: true, roughness: 0.42, sheen: 0.35, sheenRoughness: 0.5, side: THREE.DoubleSide }));
+ribbon.castShadow = true;
+ribbon.receiveShadow = true;
+ribbon.frustumCulled = false;
+room.add(ribbon);
+const startClip = new THREE.Mesh(new RoundedBoxGeometry(0.07, 0.045, 0.13, 3, 0.015), B.clay('#E8E7E1'));
+startClip.position.set(RX0 - 0.03, RY + 0.02, RZ);
+startClip.castShadow = startClip.receiveShadow = true;
+room.add(startClip);
+const tabMat = new THREE.MeshPhysicalMaterial({ color: site.tapeTab, roughness: 0.35, metalness: 0.55 });
+const tabDesk = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.03, 0.1), tabMat);
+tabDesk.castShadow = true;
+room.add(tabDesk);
+const TAPE_LIN = new THREE.Color(site.tape), WHITE = new THREE.Color('#ffffff');
+
+function setRibbon(len, held, flood) {
+  // the path: flat along the desk edge, then (when held) rising to the beak
+  const flatEnd = held ? cl(held.x - 0.07, RX0 + 0.004, RX0 + len) : RX0 + Math.max(0.004, len);
+  const P0 = V(flatEnd, RY, RZ);
+  const curve = held ? new THREE.QuadraticBezierCurve3(P0, V(flatEnd + 0.05, RY, RZ), held) : null;
+  const Lf = flatEnd - RX0, Lc = curve ? curve.getLength() : 0, Lg = Lf + Lc;
+  const n1 = curve ? Math.max(2, Math.round(NSEG * Lf / Lg)) : NSEG;
+  const sF = Lg * (1 - flood);
+  const half = B.RULER.width / 2;
+  const p = V(), tan = V(), side = V(0, 0, 1);
+  for (let i = 0; i <= NSEG; i++) {
+    let s;
+    if (i <= n1) { s = (i / n1) * Lf; p.set(RX0 + s, RY, RZ); }
+    else { const u = (i - n1) / (NSEG - n1); curve.getPointAt(u, p); s = Lf + u * Lc; }
+    for (let j = 0; j < 2; j++) {
+      const o = (i * 2 + j);
+      rPos[o * 3] = p.x; rPos[o * 3 + 1] = p.y; rPos[o * 3 + 2] = p.z + (j ? half : -half);
+      rUv[o * 2] = s / FULL; rUv[o * 2 + 1] = j ? 0 : 1;
+      const f = flood > 0 ? smooth(sF - 0.05, sF + 0.05, s) : 0;
+      const c = [lerp(1, TAPE_LIN.r, f), lerp(1, TAPE_LIN.g, f), lerp(1, TAPE_LIN.b, f)];
+      rCol[o * 3] = c[0]; rCol[o * 3 + 1] = c[1]; rCol[o * 3 + 2] = c[2];
+    }
+  }
+  ribGeo.attributes.position.needsUpdate = true;
+  ribGeo.attributes.uv.needsUpdate = true;
+  ribGeo.attributes.color.needsUpdate = true;
+  ribGeo.computeVertexNormals();
+  ribGeo.computeBoundingSphere();
+  tabDesk.visible = !held;
+  tabDesk.position.set(RX0 + Math.max(0.004, len) + 0.008, RY + 0.012, RZ);
+}
+
+// ------------------------------------------------------------------ Fitz
+const fz = createFitz();
+const FS = 0.36;
+fz.root.scale.setScalar(FS);
+fz.root.visible = false;
+scene.add(fz.root);
+const tabHeld = new THREE.Mesh(new THREE.BoxGeometry(0.1 / FS * 0.36, 0.03 / FS, 0.024 / FS), tabMat);
+tabHeld.position.set(0, -0.02, 0.06);
+tabHeld.castShadow = true;
+tabHeld.visible = false;
+fz.hold.add(tabHeld);
+const FITZ_RY = Math.PI / 2 - 0.62; // the turned head faces +x, along the desk edge
+const FZ_Z = RZ - 0.1;
+
+// once the camera is inside the screen, the bezel turns to paper too, so no dark edge slips into frame
+const bleed = new THREE.Mesh(new THREE.PlaneGeometry(B.LAP.w - 0.03, B.LAP.h - 0.03), new THREE.MeshBasicMaterial({ color: site.paper, transparent: true, opacity: 0, toneMapped: false }));
+bleed.position.set(0, B.LAP.h / 2, 0.0045);
+L.hinge.add(bleed);
+
+// ------------------------------------------------------------------ the end: the request card and the wordmark (screen space)
+const ASK_W = 0.86, ASK_H = 0.235, ASK_PPU = 1180, ASK_Y = -0.078;
+const ask = fadeable(paperCard({ w: ASK_W, h: ASK_H, depth: 0.012, cut: 0.05, edge: site.fitzLine, edgeWidth: 4.5, ppu: ASK_PPU, draw: D.drawAsk }));
+ask.position.set(0, ASK_Y, 0.03);
+L.front.add(ask);
+// the tape along its baseline: a satin strip that unrolls from the left
+const TAPE_PX = 62, TAPE_LEN = ASK_W - 2 * 56 / ASK_PPU, TAPE_TH = 30 / ASK_PPU;
+const tapeTex = canvasTexture(Math.round(TAPE_LEN * ASK_PPU), Math.round(TAPE_TH * ASK_PPU), (ctx, w, h) => drawTape(ctx, 0, 0, w, h));
+const tapeStrip = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: tapeTex, toneMapped: false }));
+tapeStrip.position.set(0, -ASK_H / 2 + TAPE_PX / ASK_PPU, 0.0062);
+ask.add(tapeStrip);
+const roll = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, TAPE_TH, 24), new THREE.MeshStandardMaterial({ color: site.tapeDeep, roughness: 0.5 }));
+roll.rotation.x = Math.PI / 2;
+roll.rotation.z = Math.PI / 2;
+roll.castShadow = true;
+ask.add(roll);
+const caret = new THREE.Mesh(new THREE.PlaneGeometry(4 / ASK_PPU, 66 / ASK_PPU), new THREE.MeshBasicMaterial({ color: site.ink, toneMapped: false }));
+ask.add(caret);
+{
+  // the caret sits after "I need", where the field starts
+  const mc = document.createElement('canvas').getContext('2d');
+  mc.font = `700 64px ${fonts.display}`;
+  if ('letterSpacing' in mc) mc.letterSpacing = '-1.3px';
+  const lw = mc.measureText('I need').width;
+  caret.position.set(-ASK_W / 2 + (56 + lw + 22) / ASK_PPU, ASK_H / 2 - 96 / ASK_PPU, 0.0062);
+}
+
+const WM_W = 0.56, WM_H = 0.16, WM_PPU = 2200, WM_SIZE = 220, WM_Y = 0.15;
+let dotAt = null;
+const wmTex = canvasTexture(WM_W * WM_PPU, WM_H * WM_PPU, (ctx, w, h) => { dotAt = D.drawWordmark(ctx, w, h, WM_SIZE); });
+const wordmark = new THREE.Mesh(new THREE.PlaneGeometry(WM_W, WM_H), new THREE.MeshBasicMaterial({ map: wmTex, transparent: true, toneMapped: false, depthWrite: false }));
+wordmark.material.userData.alwaysTransparent = true;
+wordmark.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: wmTex, alphaTest: 0.5 });
+wordmark.castShadow = true;
+wordmark.position.set(0, WM_Y, 0.002);
+fadeable(wordmark);
+L.front.add(wordmark);
+const dotR = dotAt.r / WM_PPU;
+let wmSewn = false;
+const dotLocal = V(dotAt.cx / WM_PPU - WM_W / 2, WM_H / 2 - dotAt.cy / WM_PPU, 0);
+const dot = new THREE.Mesh(new THREE.CylinderGeometry(dotR, dotR, 0.004, 48), new THREE.MeshBasicMaterial({ color: site.stitch, toneMapped: false }));
+dot.rotation.x = Math.PI / 2;
+dot.castShadow = true;
+const dotHolder = new THREE.Group();
+dotHolder.add(dot);
+L.front.add(dotHolder);
+const threadMat = new THREE.MeshPhysicalMaterial({ color: site.stitch, roughness: 0.55, sheen: 0.6, sheenColor: new THREE.Color('#ffd9c8') });
+const thread = new THREE.Mesh(new THREE.BufferGeometry(), threadMat);
+L.front.add(thread);
+
+// ------------------------------------------------------------------ the story clock
+// minutes after 7:00 PM as the night goes (tau = scene seconds)
+const MIN_KEYS = [[7.0, 2], [7.7, 2], [11.6, 40], [14.7, 85], [19.8, 150], [22.1, 190], [26.0, 288]];
+function minutesAt(tau) {
+  if (tau <= MIN_KEYS[0][0]) return MIN_KEYS[0][1];
+  for (let i = 1; i < MIN_KEYS.length; i++) {
+    const [t1, m1] = MIN_KEYS[i], [t0, m0] = MIN_KEYS[i - 1];
+    if (tau <= t1) return lerp(m0, m1, (tau - t0) / (t1 - t0));
+  }
+  return 288;
+}
+function tauAt(min) {
+  if (min >= 288) return 26.0;
+  for (let i = MIN_KEYS.length - 1; i > 0; i--) {
+    const [t1, m1] = MIN_KEYS[i], [t0, m0] = MIN_KEYS[i - 1];
+    if (min >= m0 && m1 > m0) return lerp(t0, t1, (min - m0) / (m1 - m0));
+  }
+  return 7.0;
+}
+const fmt = (min) => {
+  const tot = Math.round(19 * 60 + min);
+  const h24 = Math.floor(tot / 60) % 24, mm = ((tot % 60) + 60) % 60;
+  const h = ((h24 + 11) % 12) + 1;
+  return `${h}:${String(mm).padStart(2, '0')} ${h24 >= 12 ? 'PM' : 'AM'}`;
+};
+
+// The pull: Fitz's progress 0 -> 1 between 31.0 and 33.0, with a tug back before and an overshoot after.
+// a tug back first, then the pull, a little past 7:02, and it settles
+const P2IO = gsap.parseEase('power2.inOut');
+const PULL_T0 = 30.85, PULL_T1 = 32.7, PULL_T2 = 33.1;
+function pullAt(t) {
+  if (t < PULL_T0) return 0;
+  if (t < 31.05) return -0.025 * Math.sin(Math.PI * seg(t, PULL_T0, 31.05));
+  if (t < PULL_T1) return 1.035 * P2IO(seg(t, 31.05, PULL_T1));
+  return 1.035 - 0.035 * EIO(seg(t, PULL_T1, PULL_T2));
+}
+const MIN_END = 2;
+
+// ------------------------------------------------------------------ the person
+const POSES = {
+  type: { spine: -0.06, neckX: -0.16, neckZ: 0, sx: 0.66, sz: 0.3, ex: 1.02, ez: 0 },
+  back: { spine: 0.36, neckX: 0.22, neckZ: 0.26, sx: 0.05, sz: 0.1, ex: 0.55, ez: 0 },
+  slump: { spine: -0.72, neckX: -0.5, neckZ: 0.25, sx: 1.55, sz: 0.62, ex: 1.15, ez: 0 },
+};
+function mixPose(a, b, u) { const o = {}; for (const key in a) o[key] = lerp(a[key], b[key], u); return o; }
+function poseTau(tau) {
+  let p = POSES.type;
+  const back = k(tau, 18.3, 18.75, EIO) * (1 - k(tau, 19.5, 19.9, EIO));
+  p = mixPose(p, POSES.back, back);
+  // typing: the search, and the build
+  const typing = Math.max(seg(tau, 9.85, 10.0) * (1 - seg(tau, 11.25, 11.4)), seg(tau, 22.1, 22.3) * (1 - seg(tau, 25.85, 26.0)), 0.35 * seg(tau, 7.2, 7.4) * (1 - seg(tau, 8.3, 8.4)));
+  return { p, typing };
+}
+function setPose(p, typing, tau) {
+  P.spine.rotation.x = p.spine;
+  P.neckJ.rotation.x = p.neckX;
+  P.neckJ.rotation.z = p.neckZ;
+  for (const [arm, s, ph] of [[P.armL, -1, 0], [P.armR, 1, Math.PI * 0.7]]) {
+    arm.shoulder.rotation.x = p.sx;
+    arm.shoulder.rotation.z = -s * p.sz;
+    arm.elbow.rotation.x = p.ex + typing * 0.07 * Math.sin(tau * 2 * Math.PI * 6.5 + ph);
+    arm.elbow.rotation.z = p.ez;
+  }
+}
+
+// ------------------------------------------------------------------ the camera
+// keys: [t, pos, target, aperture, cut?]; between two keys the second's ease is used
+const WIDE_F_POS = V(4.4, 3.95, 6.3), WIDE_F_TGT = V(0.35, 1.5, 0.1);
+const FINAL_TGT = sp(0, -0.01, 0), FINAL_D = 1.24;
+const FINAL_POS = FINAL_TGT.clone().addScaledVector(SN, FINAL_D);
+const CAM = [
+  { t: 0, pos: V(0, 2.55, DZ + 6.0), tgt: V(0, 0.62, DZ), ap: 0.0008 },
+  { t: 6.98, pos: V(0, 2.3, DZ + 5.2), tgt: V(0, 0.62, DZ), ap: 0.0008, e: SIO },
+  // 7.0 the desk, wide
+  { t: 7.0, cut: true, pos: V(4.35, 3.9, 6.25), tgt: V(0.3, 1.55, 0.05), ap: 0.0012 },
+  { t: 8.25, pos: V(4.0, 3.65, 5.75), tgt: V(0.3, 1.55, 0.05), ap: 0.0012, e: LIN },
+  // 8.25 over the shoulder: the alert, the search
+  { t: 8.25, cut: true, pos: V(1.2, 2.72, 2.6), tgt: V(PX + 0.12, 1.76, -0.35), ap: 0.0042 },
+  { t: 11.5, pos: V(1.05, 2.62, 2.3), tgt: V(PX + 0.12, 1.78, -0.35), ap: 0.0042, e: LIN },
+  // 11.5 the lid: tabs, then reviews
+  { t: 11.5, cut: true, pos: V(1.4, 3.3, 3.2), tgt: V(PX + 0.02, 2.02, -0.35), ap: 0.003 },
+  { t: 14.55, pos: V(1.28, 3.22, 3.0), tgt: V(PX + 0.02, 2.02, -0.35), ap: 0.003, e: LIN },
+  // 14.55 a quick move: the subscription and the permission
+  { t: 14.95, pos: V(1.5, 3.15, 3.45), tgt: V(PX + 0.12, 1.92, 0.0), ap: 0.0028, e: EIO },
+  { t: 18.1, pos: V(1.4, 3.1, 3.25), tgt: V(PX + 0.12, 1.92, 0.0), ap: 0.0028, e: LIN },
+  // 18.1 pull back: the doubt
+  { t: 18.55, pos: V(2.35, 3.05, 4.75), tgt: V(-0.1, 1.95, 0.35), ap: 0.0016, e: EIO },
+  { t: 19.7, pos: V(2.45, 3.1, 4.95), tgt: V(-0.1, 1.95, 0.35), ap: 0.0016, e: LIN },
+  // 19.7 the dock and the bin
+  { t: 19.7, cut: true, pos: V(1.8, 2.4, 2.65), tgt: V(0.2, 1.48, 0.0), ap: 0.0024 },
+  { t: 22.0, pos: V(1.62, 2.32, 2.4), tgt: V(0.2, 1.48, 0.0), ap: 0.0024, e: LIN },
+  // 22.0 the build, over the other shoulder
+  { t: 22.0, cut: true, pos: V(-1.95, 2.85, 2.45), tgt: V(PX + 0.05, 1.82, -0.4), ap: 0.0032 },
+  { t: 25.95, pos: V(-1.72, 2.72, 2.0), tgt: V(PX + 0.05, 1.82, -0.4), ap: 0.0032, e: LIN },
+  // 25.95 eleven forty-eight: wide, frozen
+  { t: 25.95, cut: true, pos: WIDE_F_POS, tgt: WIDE_F_TGT, ap: 0.0012 },
+  { t: 29.55, pos: WIDE_F_POS, tgt: WIDE_F_TGT, ap: 0.0012, e: LIN },
+  // Fitz lands; the camera leans in on him and the tape
+  { t: 30.5, pos: V(3.45, 2.95, 4.8), tgt: V(1.05, 1.5, 0.45), ap: 0.0016, e: EIO },
+  { t: 31.0, pos: V(3.35, 2.92, 4.72), tgt: V(1.0, 1.5, 0.45), ap: 0.0016, e: LIN },
+  // the pull: follow him back along the edge
+  { t: 32.95, pos: V(2.75, 2.85, 4.45), tgt: V(0.35, 1.6, 0.25), ap: 0.0016, e: EIO },
+];
+const PUSH_T0 = 32.95, PUSH_T1 = 35.7;
+// PUSH_T0 -> PUSH_T1 into the screen along a curve that passes right of the person's head; then a slow settle
+const PUSH = new THREE.CubicBezierCurve3(V(2.75, 2.85, 4.45), V(1.6, 2.75, 3.3), FINAL_POS.clone().add(V(0.75, 0.12, 0.55)), FINAL_POS.clone().addScaledVector(SN, 0.1));
+const camPos = V(), camTgt = V();
+function cameraAt(t) {
+  let ap;
+  if (t >= PUSH_T0) {
+    const u = EIO(seg(t, PUSH_T0, PUSH_T1));
+    PUSH.getPoint(u, camPos);
+    const settle = P2O(seg(t, PUSH_T1, 37.95));
+    if (t >= PUSH_T1) camPos.copy(FINAL_POS).addScaledVector(SN, 0.1 * (1 - settle));
+    camTgt.copy(V(0.35, 1.6, 0.25)).lerp(FINAL_TGT, EIO(seg(t, PUSH_T0, 35.2)));
+    ap = lerp(0.0016, 0.0006, seg(t, PUSH_T0, 34.8));
+  } else {
+    let i = 0;
+    while (i + 1 < CAM.length && CAM[i + 1].t <= t) i++;
+    const a = CAM[i], b = CAM[i + 1];
+    if (!b || b.cut) { camPos.copy(a.pos); camTgt.copy(a.tgt); ap = a.ap; }
+    else {
+      const u = (b.e || EIO)(seg(t, a.t, b.t));
+      camPos.copy(a.pos).lerp(b.pos, u);
+      camTgt.copy(a.tgt).lerp(b.tgt, u);
+      ap = lerp(a.ap, b.ap, u);
+    }
+  }
+  camera.position.copy(camPos);
+  stage.lookAt(camTgt.x, camTgt.y, camTgt.z);
+  camera.lookAt(camTgt); // now, so things that face the camera use this frame's camera
+  camera.updateMatrixWorld();
+  stage.bokeh.uniforms.aperture.value = ap;
+}
+
+// ------------------------------------------------------------------ light: day, dusk, night, and back
+const tmpC = new THREE.Color();
+function lightAt(t) {
+  // N: 0 day, 1 night
+  let N;
+  if (t < 7.0) N = 0.45 * k(t, 6.55, 6.98, EIO);
+  else N = 1 - k(t, 31.0, 33.1, EIO);
+  const lampOn = t >= 7.0 ? k(t, 7.18, 7.3, EO) : 0;
+  stage.key.intensity = lerp(1.55, 0.2, N);
+  stage.key.color.copy(KEY_DAY).lerp(KEY_NIGHT, N);
+  stage.fill.intensity = lerp(0.45, 0.04, N);
+  scene.environmentIntensity = lerp(0.42, 0.07, N);
+  hemi.intensity = 0.3 * N;
+  paperGlow = (t < 7.0 ? 0 : 0.42) * N;
+  tmpC.copy(PAPER).lerp(NIGHT, N);
+  scene.background.copy(tmpC);
+  stage.floor.material.color.copy(PAPER).lerp(DUSK_FLOOR, N);
+  scene.fog.color.copy(tmpC);
+  scene.fog.near = lerp(60, 9, N);
+  scene.fog.far = lerp(140, 26, N);
+  litFloor.material.opacity = t < 7.0 ? 0 : N;
+  litFloor.visible = litFloor.material.opacity > 0.002;
+  stage.floor.visible = litFloor.material.opacity < 0.999;
+  stage.catcher.material.opacity = lerp(0.16, 0.05, N);
+  glow.intensity = (t < 7.0 ? 0 : 1.3) * N;
+  spill.intensity = (t < 7.0 ? 0 : 0.32) * N;
+  spot.intensity = 9 * lampOn * N;
+  // a shadow catcher draws every caster's shadow whatever the light's intensity: no lamp, no shadows
+  spot.castShadow = spot.intensity > 0.01;
+  lamp.bulb.material.color.set('#8d8b84').lerp(new THREE.Color('#fff2d6'), lampOn * N);
+  return N;
+}
+
+function aimKey(target, half, normalBias = 0.02) {
+  const key = stage.key;
+  key.shadow.normalBias = normalBias;
+  key.target.position.copy(target);
+  key.position.copy(target).add(V(-4, 7, 5));
+  const c = key.shadow.camera;
+  if (c.right !== half) { c.left = -half; c.right = half; c.top = half; c.bottom = -half; c.updateProjectionMatrix(); }
+}
+
+// ------------------------------------------------------------------ the night props from tau
+const tmpV = V(), tmpQ = new THREE.Quaternion();
+
+function propsAt(tau, t) {
+  // the alert: pops out at 8.35, goes back in at 9.65
+  {
+    const inU = k(tau, 8.35, 8.85, EO), outU = k(tau, 9.6, 9.95, EIO);
+    alertCard.position.set(0, 0.04 + 0.03 * outU, lerp(0.02, 0.17, inU) - 0.15 * outU);
+    alertCard.scale.setScalar(lerp(0.94, 1, inU) * lerp(1, 0.94, outU));
+    alertCard.userData.look(cl(inU * 1.6) * (1 - outU));
+  }
+  // tabs
+  const popped = TAB_T.filter((x) => tau >= x).length;
+  {
+    // a continuous count for the squeeze
+    let nC = 0;
+    TAB_T.forEach((x) => { nC += k(tau, x, x + 0.22, EO); });
+    const depth = k(tau, 12.65, 13.1, EIO) + k(tau, 14.7, 15.15, EIO);
+    const gone = k(tau, 16.2, 16.6, EIO);
+    const rowW = 1.3;
+    const spacing = Math.min(TAB_W + 0.04, (rowW - TAB_W) / Math.max(1, nC - 1));
+    tabs.forEach((c, i) => {
+      const u = k(tau, TAB_T[i], TAB_T[i] + 0.4, BACK);
+      const x = -rowW / 2 + TAB_W / 2 + i * spacing;
+      const y = 0.43 + TAB_H / 2 + lerp(-0.2, 0.02 + 0.025 * Math.sin(i * 2.1), u) - 0.06 * depth - 0.25 * gone;
+      c.position.set(x, y, -0.024 + i * 0.0016 - 0.01 * depth);
+      c.rotation.z = (i % 2 ? -1 : 1) * 0.03 * u + 0.012 * (i - 4);
+      c.userData.look(u > 0.001 ? 1 - gone : 0, 0.25 * depth);
+    });
+  }
+  // review bubbles flip in from the sides
+  for (const [b, at, side, x, y] of [[bubA, 12.65, -1, -0.92, 0.36], [bubB, 13.0, 1, 1.0, 0.08]]) {
+    const u = k(tau, at, at + 0.5, BACK);
+    const depth = k(tau, 14.7, 15.15, EIO) + k(tau, 16.25, 16.7, EIO);
+    const gone = k(tau, 19.38, 19.68, EIO);
+    b.position.set(x - side * 0.05 * depth, y + 0.04 * depth, 0.3 - 0.22 * depth);
+    b.rotation.set(0, side * lerp(Math.PI / 2, -0.22, u), side * 0.02);
+    b.scale.setScalar(lerp(0.94, 1, u));
+    b.userData.look(seg(u, 0, 0.15) * (1 - gone), 0.28 * depth);
+  }
+  // the subscription, the permission
+  const doubt = k(tau, 18.3, 18.7, BACK) * (1 - k(tau, 19.5, 19.8, EIO));
+  {
+    const u = k(tau, 14.7, 15.2, EO);
+    const depth = k(tau, 16.25, 16.7, EIO) + k(tau, 19.38, 19.68, EIO);
+    const gone = k(tau, 19.38, 19.68, EIO);
+    const away = k(tau, 19.38, 19.68, EIO);
+    trial.position.set(lerp(-1.1, -0.72, u) - 0.06 * depth - 0.3 * away, 0.5 + 0.05 * depth + 0.25 * away, 0.5 - 0.25 * depth);
+    trial.rotation.set(0, 0.32, 0.04 + 0.13 * doubt + wob(tau, 18.3, 0.04, 14, 5));
+    trial.scale.setScalar(lerp(0.94, 1, u));
+    trial.userData.look(seg(u, 0, 0.2) * (1 - gone), 0.27 * depth);
+  }
+  {
+    const u = k(tau, 16.25, 16.75, EO);
+    const depth = k(tau, 19.38, 19.68, EIO);
+    const gone = k(tau, 19.38, 19.68, EIO);
+    const away = k(tau, 19.38, 19.68, EIO);
+    access.position.set(lerp(1.0, 0.5, u) + 0.06 * depth + 0.25 * away, -0.04 + 0.05 * depth + 0.42 * away, 0.8 - 0.3 * depth);
+    access.rotation.set(0, -0.3, -0.03 - 0.12 * doubt - wob(tau, 18.3, 0.04, 14, 5));
+    access.scale.setScalar(lerp(0.94, 1, u));
+    access.userData.look(seg(u, 0, 0.2) * (1 - gone), 0.27 * depth);
+  }
+  // the question mark
+  {
+    const u = k(tau, 18.35, 18.75, BACK), out = k(tau, 19.35, 19.65, EIO);
+    P.head.getWorldPosition(question.position).add(V(-0.4, 0.14 + 0.05 * u, 0.05));
+    question.quaternion.copy(camera.quaternion);
+    question.rotateZ(-0.12 + wob(tau, 18.35, 0.12, 12, 4));
+    question.scale.setScalar(lerp(0.94, 1, u));
+    question.userData.look(seg(u, 0, 0.2) * (1 - out));
+  }
+  // the dock and the icons
+  {
+    const dIn = k(tau, 19.62, 19.95, EO);
+    const depth = k(tau, 22.1, 22.5, EIO);
+    const gone = k(tau, 22.6, 23.0, EIO);
+    dock.position.copy(dockPos).add(V(0, 0, -0.1 * depth));
+    dock.scale.setScalar(lerp(0.94, 1, dIn));
+    dock.userData.look(dIn * (1 - gone), 0.3 * depth);
+    ICONS.forEach((ic, i) => {
+      const drop = ICON_DROP[i];
+      const fallU = seg(tau, drop, drop + 0.26);
+      const y = lerp(0.75, 0, P2I(fallU)) + (fallU >= 1 ? wob(tau, drop + 0.26, 0.035, 22, 9) * -1 : 0);
+      const slot = ICON_SLOT(i);
+      const tr = TRASH.find(([j]) => j === i);
+      let pos = slot.clone().add(V(0, Math.max(-0.02, y), 0.0));
+      let sc = 1, look = seg(tau, drop - 0.02, drop + 0.08), spin = 0;
+      ic.rotation.set(-0.12, 0, 0);
+      if (tr) {
+        const a = tr[1];
+        const u = seg(tau, a, a + 0.42);
+        if (u > 0) {
+          // an arc into the bin
+          const apex = slot.clone().lerp(BIN_TOP, 0.5).add(V(0, 0.42, 0.05));
+          const q = new THREE.QuadraticBezierCurve3(slot, apex, BIN_TOP.clone().add(V(0, 0.02, 0)));
+          const uu = EIO(cl(u / 0.8));
+          q.getPoint(uu, pos);
+          if (u > 0.8) pos.y -= 0.22 * P2I((u - 0.8) / 0.2);
+          spin = uu * Math.PI * 1.5;
+          sc = lerp(1, 0.75, uu);
+          look = 1 - seg(u, 0.88, 1);
+        }
+      }
+      ic.position.copy(pos);
+      ic.rotation.z = spin;
+      ic.scale.setScalar(sc);
+      ic.userData.look(look * (1 - gone), 0.3 * depth);
+    });
+  }
+  // the version tag and the notes
+  {
+    const u = k(tau, 22.25, 22.7, BACK);
+    const v = VERSION_T.filter((x) => tau >= x).length || 1;
+    const label = `v${v}`;
+    if (label !== versionKey) { versionKey = label; versionTag.userData.redraw?.(D.drawVersion(label)); }
+    const bump = VERSION_T.reduce((acc, x) => acc + wob(tau, x, 0.06, 26, 10), 0);
+    versionTag.position.set(0.6, 0.47, 0.07);
+    versionTag.rotation.set(0, 0, -0.09 + bump);
+    versionTag.scale.setScalar(lerp(0.94, 1, u) * (1 + bump * 0.6));
+    versionTag.userData.look(seg(u, 0, 0.15));
+  }
+  NOTES.forEach(({ n, at, pos, rz }, i) => {
+    const u = k(tau, at, at + 0.38, EO);
+    const slap = wob(tau, at + 0.2, 0.05, 30, 12);
+    n.position.set(pos[0] + (1 - u) * (pos[0] > 0 ? 0.35 : -0.35), pos[1] + (1 - u) * 0.25, pos[2] + (1 - u) * 0.6);
+    n.rotation.set((1 - u) * -0.6 + slap, (1 - u) * (pos[0] > 0 ? -0.5 : 0.5), rz + (1 - u) * 0.6 * (pos[0] > 0 ? 1 : -1));
+    n.scale.setScalar(lerp(1.06, 1, u));
+    n.userData.look(seg(u, 0, 0.12));
+  });
+  return popped;
+}
+
+
+// ------------------------------------------------------------------ the screen
+function screenAt(tau, min, t) {
+  let s;
+  if (tau < 9.75) s = { mode: 'desk' };
+  else if (tau < 11.6) {
+    const q = 'free disk cleaner for mac';
+    const n = Math.floor(q.length * seg(tau, 9.95, 11.2));
+    s = { mode: 'search', typed: q.slice(0, n), caret: n < q.length ? true : Math.floor(tau * 2.5) % 2 === 0 };
+  } else if (tau < 22.1) {
+    s = { mode: 'tabs', tabs: Math.max(1, TAB_T.filter((x) => tau >= x).length) };
+  } else {
+    const lines = CODE_LINES(tau);
+    s = { mode: 'code', lines: lines.n, partial: lines.partial, version: versionKey };
+  }
+  if (tau >= 25.85) s.alert = true;
+  s.clock = fmt(min);
+  if (t >= 33.15) s = { mode: 'desk', clock: fmt(MIN_END) };
+  const key = JSON.stringify(s);
+  if (key !== screenKey) { screenKey = key; screenTex.userData.redraw((ctx, w, h) => D.drawScreen(ctx, w, h, s)); }
+}
+function CODE_LINES(tau) {
+  const u = seg(tau, 22.15, 25.7);
+  const total = D.CODE.length;
+  const x = Math.pow(u, 0.85) * total;
+  const n = Math.min(total, Math.floor(x) + 1);
+  return { n, partial: n >= total && u >= 1 ? null : x - Math.floor(x) };
+}
+
+// ------------------------------------------------------------------ update
+const CASTERS = [P.root, fz.root, lamp.root, mug, clock.root, bin, chair, ribbon, startClip, tabDesk, question, dock, ...ICONS];
+CASTERS.forEach((o) => o.traverse((c) => { if (c.isMesh) c.userData.cast0 = c.castShadow; }));
+let castersOff = false;
+function update(t) {
+  cameraAt(t);
+  // story clock
+  let tau, min, pull = 0;
+  if (t < 26.0) { tau = Math.max(7.0, t); min = minutesAt(tau); }
+  else if (t < PULL_T0) { tau = 26.0; min = 288; }
+  else {
+    pull = pullAt(t);
+    min = lerp(288, MIN_END, pull);
+    tau = tauAt(min);
+  }
+  const N = lightAt(t);
+
+  // disclosure
+  const disc = t < 7.0;
+  discCard.visible = disc;
+  room.visible = !disc;
+  if (disc) {
+    aimKey(V(0, 0.6, DZ), 6);
+    const inU = k(t, 0.0, 0.75, EO);
+    discCard.position.y = 0.68 - 0.05 * (1 - inU);
+    discCard.scale.setScalar(lerp(0.96, 1, inU));
+    discOverlays[0].material.opacity = k(t, 0.12, 0.7, EO);
+    const l2 = k(t, 4.1, 4.6, EO);
+    discOverlays[1].material.opacity = l2;
+    discOverlays[1].position.y = -0.2 - 0.035 * (1 - l2);
+  } else if (t < PUSH_T0) {
+    aimKey(V(0.3, 1.0, 0.1), 4.2);
+  } else {
+    aimKey(SC, lerp(4.2, 1.6, seg(t, PUSH_T0, 34.3)), lerp(0.02, 0.002, seg(t, PUSH_T0, 34.3)));
+  }
+
+  // the clock
+  const secs = t < PULL_T0 ? Math.floor(t) % 60 : 60 - ((t - PULL_T0) * 140) % 60;
+  clock.setTime(min, secs);
+
+  // the person
+  {
+    const { p, typing } = poseTau(tau);
+    let slump = t < PULL_T0 ? k(t, 26.05, 27.0, EIO) : 1 - k(t, 31.05, 31.7, EIO);
+    const settle = t >= 26.05 && t < PULL_T0 ? wob(t, 27.0, 0.025, 9, 5) : 0;
+    const q = mixPose(p, POSES.slump, slump);
+    q.spine += settle;
+    setPose(q, typing * (1 - slump), tau);
+  }
+
+  const popped = propsAt(tau, t);
+  screenAt(tau, min, t);
+
+  // Fitz
+  let held = null, flood = 0;
+  const fzOn = t >= 29.55;
+  fz.root.visible = fzOn;
+  if (!fzOn) fzLight.intensity = 0;
+  if (fzOn) {
+    const LAND_T = 30.15;
+    const endX = RX0 + (288 / 60) * B.RULER.perHour;
+    const landX = endX - 0.23;
+    const land = V(landX, B.DESK.top, FZ_Z);
+    let pos = V(), flap = 0, pitch = 0, sq = 1, turn = 0, lean = 0, hop = 0;
+    if (t < LAND_T) {
+      const u = seg(t, 29.55, LAND_T);
+      const start = V(landX + 1.0, B.DESK.top + 3.7, FZ_Z - 0.5);
+      const ctrl = V(landX + 0.25, B.DESK.top + 1.2, FZ_Z - 0.1);
+      new THREE.QuadraticBezierCurve3(start, ctrl, land).getPoint(P2O(u), pos);
+      flap = 0.5 + 0.5 * Math.sin(t * 2 * Math.PI * 7.5);
+      pitch = 0.25 * (1 - u);
+      sq = 1.06;
+    } else {
+      pos.copy(land);
+      sq = 1 - wob(t, LAND_T, 0.17, 20, 7);
+      flap = 0.5 * (1 - seg(t, LAND_T, LAND_T + 0.25));
+      turn = k(t, 30.3, 30.55, EO);
+      // peck down to the tab and come up with it
+      const peck = Math.sin(Math.PI * seg(t, 30.5, 30.8));
+      pitch = 0.3 * peck;
+      if (t >= 30.62) held = true;
+      flood = k(t, 30.66, 31.05, EO);
+      if (t >= PULL_T0) {
+        const pp = pullAt(t);
+        const toX = RX0 + (MIN_END / 60) * B.RULER.perHour + (landX - endX) + 0.03;
+        pos.x = lerp(landX, toX, pp);
+        const u = seg(t, 31.05, PULL_T1);
+        const tug = Math.sin(Math.PI * seg(t, PULL_T0, 31.12));
+        hop = Math.abs(Math.sin(Math.PI * 5 * u)) * 0.12 * Math.sin(Math.PI * u);
+        flap = (0.3 + 0.3 * Math.sin(t * 2 * Math.PI * 7)) * Math.sin(Math.PI * cl(u * 1.1));
+        lean = 0.3 * tug + 0.24 * Math.sin(Math.PI * cl(u * 1.05));
+        sq = 1 - 0.08 * tug - wob(t, PULL_T1, 0.12, 18, 7);
+      }
+    }
+    fz.root.position.copy(pos);
+    fz.root.rotation.y = FITZ_RY;
+    fzLight.position.copy(pos).add(V(0.35, 0.55, 0.6));
+    fzLight.intensity = 2.4 * k(t, 29.6, 30.2, EO) * N;
+    fz.bird.position.y = hop / FS;
+    // lean back, away from +x
+    // tilt toward (+) or away from (-) where the head faces
+    const fa = 0.62 * turn;
+    fz.bird.quaternion.setFromAxisAngle(V(Math.cos(fa), 0, -Math.sin(fa)), pitch - lean);
+    fz.flap(flap);
+    fz.squash(sq);
+    fz.turn(turn);
+    const bl = [30.32, 31.9, 33.55].some((b) => t > b && t < b + 0.12) ? 1 : 0;
+    fz.blink(bl);
+    tabHeld.visible = !!held;
+    if (held) { fz.root.updateMatrixWorld(true); held = tabHeld.getWorldPosition(V()); }
+  }
+  const len = Math.max(0.004, (min / 60) * B.RULER.perHour);
+  setRibbon(len, held, flood);
+  ribbon.visible = !disc;
+
+  // the end: the screen becomes the page; the request card, its tape, the wordmark, the stitched dot
+  {
+    const pageU = k(t, 33.25, 34.1, EIO);
+    L.page.material.opacity = pageU;
+    L.page.visible = pageU > 0.002;
+    L.catcher.material.opacity = 0.16 * pageU;
+    bleed.material.opacity = k(t, 34.6, 35.2, EIO);
+    bleed.visible = bleed.material.opacity > 0.002;
+    const cardU = k(t, 33.7, 34.4, EO);
+    ask.position.z = lerp(0.006, 0.03, cardU);
+    ask.scale.setScalar(lerp(0.94, 1, cardU));
+    ask.userData.look(seg(t, 33.7, 34.0));
+    const tapeU = k(t, 34.35, 35.25, EO);
+    const tl = Math.max(0.0001, TAPE_LEN * tapeU);
+    tapeStrip.scale.set(tl, TAPE_TH, 1);
+    tapeStrip.position.x = -TAPE_LEN / 2 + tl / 2;
+    tapeTex.repeat.set(tapeU || 0.0001, 1);
+    tapeStrip.visible = tapeU > 0.001;
+    const rr = 0.016 * (1 - tapeU) + 0.0001;
+    roll.scale.set(rr, 1, rr);
+    roll.position.set(-TAPE_LEN / 2 + tl + rr * 0.6, tapeStrip.position.y, 0.0062 + rr);
+    roll.visible = tapeU > 0.001 && tapeU < 0.995;
+    roll.rotation.y = 0;
+    // the caret blinks once everything has landed
+    caret.visible = (t > 36.95 && t < 37.5) || t > 37.72;
+
+    const wmU = k(t, 35.25, 35.85, EO);
+    wordmark.position.z = lerp(0.09, 0.0025, wmU);
+    wordmark.scale.setScalar(lerp(1.05, 1, wmU));
+    wordmark.userData.look(seg(t, 35.25, 35.55));
+    // the dot of the i, sewn on with one stitch at about 36.5
+    const sew = seg(t, 36.25, 36.62);
+    const dotIn = t >= 36.5;
+    const pop = dotIn ? 1 + wob(t, 36.5, 0.22, 24, 9) : 0;
+    dotHolder.position.copy(wordmark.position).add(dotLocal.clone().multiplyScalar(wordmark.scale.x)).add(V(0, 0, 0.0035));
+    dotHolder.scale.setScalar(Math.max(0.0001, pop));
+    dotHolder.visible = dotIn;
+    if (dotIn !== wmSewn) { wmSewn = dotIn; wmTex.userData.redraw((ctx, w, h) => D.drawWordmark(ctx, w, h, WM_SIZE, dotIn)); }
+    // nothing but the page's own things casts on the page once the camera is in the screen
+    const inScreen = t >= 34.6;
+    if (inScreen !== castersOff) { castersOff = inScreen; CASTERS.forEach((o) => o.traverse((c) => { if (c.isMesh) c.castShadow = c.userData.cast0 && !inScreen; })); }
+    if (sew > 0 && sew < 1) {
+      // a thread comes down through the dot and pulls tight
+      const c = dotHolder.position;
+      const a = sew < 0.6 ? EO(sew / 0.6) : 1, pullT = sew < 0.6 ? 0 : EIO((sew - 0.6) / 0.4);
+      const far = V(c.x + 0.11, c.y + 0.1, c.z + 0.12);
+      const tip = far.clone().lerp(c, a);
+      const tail = far.clone().lerp(c, pullT);
+      const mid = tail.clone().lerp(tip, 0.5).add(V(0.02 * (1 - pullT), 0.03 * (1 - pullT), 0.02));
+      const curve = new THREE.QuadraticBezierCurve3(tail, mid, tip);
+      thread.geometry.dispose();
+      thread.geometry = new THREE.TubeGeometry(curve, 24, 0.0024, 8, false);
+      thread.visible = tail.distanceTo(tip) > 0.002;
+    } else thread.visible = false;
+  }
+
+  // ambient occlusion: tighter for the close-up on the page, so cards get contact, not a halo
+  stage.gtao.gtaoMaterial.uniforms.radius.value = lerp(0.35, 0.05, seg(t, 33.3, 34.8));
+  stage.gtao.blendIntensity = lerp(0.8, 0, seg(t, 34.2, 35.2));
+}
+
+stage.run({ duration: DUR, update });
+</script>
+</body></html>

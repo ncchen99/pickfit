@@ -52,7 +52,7 @@
 
 | 畫面 | 旁白 | 聲音 |
 |---|---|---|
-| 紙色地面，鏡頭很慢地推。一張白紙卡上兩行墨字：「Before this week: research and planning notes.」「Built this week: everything you'll see.」 | **Before this hackathon, we had research and planning notes. Everything you'll see was built this week.** | 只有房間的底噪 |
+| 紙色地面，鏡頭很慢地推。一張白紙卡上兩行墨字：「Before this week: idea and planning notes.」「Built this week: everything you'll see.」 | **Before this hackathon, we had idea and planning notes. Everything you'll see was built this week.** | 只有房間的底噪 |
 
 ### 0:05–0:22 同一個人的同一晚：硬碟滿了（快，跳剪）
 
@@ -86,7 +86,7 @@
 | 0:30 | pickfit.app（英文、淺色）。在請求欄打：「My Mac's disk is full. I want a free cleaner I can trust.」勾 macOS、Free。捲尺在字下展開。按 Find tools | **Seven p.m., again. This time, just say what you need.** | |
 | 0:36 | 結果到：Fitz 的回答（橄欖卡）＝MangoDisk，量身單：Tested on macOS、how far it got、free；下面是安全提醒（紅盾牌：9 known advisories，OSV.dev）；Also fits 幾列 | **pickfit matches it against software it has installed and tested itself. Ranked by fit, not stars. No ads.** | Meta：即時配對（畫面小標「matching: Muse Spark 1.3」）；Impact：中立 |
 | 0:44 | 點進 MangoDisk 的工具頁。影片「Recorded by pickfit」在第一屏；點章節「Find and clear largest files」，直接跳過去播放 | **Want to see it first? This is pickfit using MangoDisk on a fresh macOS VM. One chapter per feature it checked. The hands are Muse Spark Open, Meta's open-weight model.** | Meta：開放權重模型操作桌面 GUI；Impact：不用再去找 YouTube |
-| 0:58 | 切到 Claude app（鏡頭從網頁面板滑到旁邊另一塊面板）。使用者打：「Install MangoDisk for me, the one pickfit tested.」工具呼叫 pickfit · get_install_guide 展開；agent 先說 9 則已知公告與修正版，再提出安裝 | **Hand it to your agent. It gets the exact steps that worked in the sandbox. It warns you about the nine known advisories first.** | 技術：只回重播過的步驟；安全檢查 |
+| 0:58 | 切到 Claude app（鏡頭從網頁面板滑到旁邊另一塊面板）。使用者打：「Install MangoDisk for me, the one pickfit tested.」工具呼叫 pickfit · get_install_guide 展開；agent 先說 9 則已知公告與修正版，再提出安裝 | **Hand it to your agent. It gets the exact steps that worked in the sandbox. It warns you about known vulnerabilities first.** | 技術：只回重播過的步驟；安全檢查 |
 | 1:07 | Claude 真正的權限提示跳出來（`brew tap … && brew install --cask --appdir=$HOME/Applications …`），使用者按 Allow（1×）；下載與安裝加速（標「8×」）；完成後 `open ~/Applications/MangoDisk.app` | **And it asks before it runs anything.** | 母題：先問你，再執行 |
 | 1:13 | 切到 MangoDisk（真實錄影）：開始掃描（加速、標倍速）→ Large files 列出事先放好的大檔 → 勾選 → 清除，可用空間跳回 | **Scan. Find the big ones. Clear them. Your evening is back.** | Demo：從需求到能用，中間不剪 |
 
@@ -139,7 +139,7 @@ story.md 第 5 節的主張檢查照舊適用。這版另外要確認：
 
 | 主張 | 處理 |
 |---|---|
-| MangoDisk 有已知漏洞 | 不迴避：agent 依伺服器說明先警告，旁白說「warns you about the nine known advisories first」。不說「它們不影響 MangoDisk」，那是我們人工查證的推論，不是 pickfit 的檢查結果 |
+| MangoDisk 有已知漏洞 | 不迴避：agent 依伺服器說明先警告，旁白說「warns you about known vulnerabilities first」。不說「它們不影響 MangoDisk」，那是我們人工查證的推論，不是 pickfit 的檢查結果 |
 | 「tested on a fresh macOS VM」 | MangoDisk 的 macOS run `verify-mangodisk-20261103-183054-4c97`：function、離線重播通過、4／4 功能；操作者 Muse Spark Open、安裝與判定 muse-spark-1.3 |
 | 「Muse Spark Open made the first cut in two seconds」 | plan.md 11/3 20:16 那列：初篩 2 秒、抽取 13 秒。錄前再從 D1 或 trace 確認一次 |
 | 「zoom in and aim again」 | plan.md 11/3 22:05：離線評估 14 個 x、y 點擊從 5 中變 13 中。旁白不講數字，畫面寫「5 → 13 of 14」 |
