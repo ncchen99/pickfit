@@ -38,30 +38,38 @@
   ],
   "why_worth_it": null,
   "usage_guide": {
-    "model": "claude-opus-5-5",
-    "generated_at": "2026-11-02T13:13:14.412206Z",
-    "run_id": null,
-    "open_hint": "Add the `gutenberg-mcp-server` command to your MCP client's server settings, then ask the client to search or read Project Gutenberg books.",
+    "model": "muse-spark-1.3",
+    "generated_at": "2026-11-03T10:28:23.848674Z",
+    "run_id": "verify-gutenberg-mcp-server-20261103-182153-0266",
+    "open_hint": "Connect your MCP client to `gutenberg-mcp-server` to access the book tools.",
     "features": [
       {
         "feature": "Search book catalog by title and author",
-        "title": "Search the book catalog by title and author",
-        "steps": []
+        "title": "Search books by title and author",
+        "steps": [
+          "Call `gutenberg_search_books` with a `query` for title or author."
+        ]
       },
       {
         "feature": "Fetch complete metadata for a book",
-        "title": "Get full details for a book",
-        "steps": []
+        "title": "Get full metadata for a book",
+        "steps": [
+          "Call `gutenberg_get_book` with a book `id`."
+        ]
       },
       {
         "feature": "Retrieve book plain-text in chunks",
-        "title": "Read a book's plain text in chunks",
-        "steps": []
+        "title": "Read book text in chunks",
+        "steps": [
+          "Call `gutenberg_get_text` with a book `id` and `limit`."
+        ]
       },
       {
         "feature": "Browse most-downloaded popular books",
-        "title": "Browse the most-downloaded books",
-        "steps": []
+        "title": "Browse most-downloaded books",
+        "steps": [
+          "Call `gutenberg_browse_popular` with a `limit`."
+        ]
       }
     ]
   },
@@ -85,15 +93,32 @@
     "api_keys": []
   },
   "install": {
-    "macos": null,
+    "macos": {
+      "basis": "replayed",
+      "run_id": "verify-gutenberg-mcp-server-20261103-181350-c9b3",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @cyanheads/gutenberg-mcp-server 2>&1",
+          "purpose": "install via npm global"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-gutenberg-mcp-server-20261101-003053-7aee",
+      "run_id": "verify-gutenberg-mcp-server-20261103-182153-0266",
       "method": "npm",
       "steps": [
         {
           "command": "npm install -g @cyanheads/gutenberg-mcp-server",
-          "purpose": "install globally via npm install -g @cyanheads/gutenberg-mcp-server"
+          "purpose": "npm install -g package"
+        },
+        {
+          "command": "curl -fsSL https://nodejs.org/dist/v24.11.1/node-v24.11.1-linux-x64.tar.xz -o /tmp/node.tar.xz && tar -xf /tmp/node.tar.xz -C /tmp && /tmp/node-v24.11.1-linux-x64/bin/npm -v",
+          "purpose": "download Node 24.11.1 to meet >=24 requirement"
         }
       ],
       "manual_steps": [],
@@ -115,63 +140,95 @@
     "url": "https://github.com/cyanheads/gutenberg-mcp-server/releases/tag/v0.3.1"
   },
   "verification": {
-    "level": "function",
+    "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-01T00:32:26.426061+08:00",
+    "checked_at": "2026-11-03T18:25:10.789560+08:00",
     "runs": [
       {
-        "id": "verify-gutenberg-mcp-server-20261101-003053-7aee",
-        "level": "function",
+        "id": "verify-gutenberg-mcp-server-20261103-181350-c9b3",
+        "level": "service",
         "unverified_reason": null,
-        "os": "linux",
-        "arch": "x86_64",
+        "os": "macos",
+        "arch": "arm64",
         "method": "sandbox",
-        "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:32:26.426061+08:00",
-        "tool_version": "0.3.1",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-03T18:19:37.231193+08:00",
+        "tool_version": "0.3.2",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g @cyanheads/gutenberg-mcp-server",
-            "purpose": "install globally via npm install -g @cyanheads/gutenberg-mcp-server"
+            "command": "npm install -g @cyanheads/gutenberg-mcp-server 2>&1",
+            "purpose": "install via npm global"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- gutenberg-mcp-server",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- gutenberg-mcp-server 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
             "setup": [],
             "offline": true
-          }
-        ],
-        "pitfalls": [
+          },
           {
-            "readme_said": "Requires Bun v1.4.0 or Node.js v24+",
-            "actually_needed": "Installs and runs on Node 22.23.4 with EBADENGINE warning but handshake succeeds",
-            "kind": "sandbox"
+            "command": "python3 ~/.pickfit/mcp_probe.py --call gutenberg_search_books --args '{\"query\":\"Pride and Prejudice\"}' -- gutenberg-mcp-server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=gutenberg_search_books content=text,text text_chars=2078",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call gutenberg_get_book --args '{\"id\":1342}' -- gutenberg-mcp-server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=gutenberg_get_book content=text text_chars=1839",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call gutenberg_get_text --args '{\"id\":1342,\"limit\":5000}' -- gutenberg-mcp-server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=gutenberg_get_text content=text text_chars=5445",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call gutenberg_browse_popular --args '{\"limit\":5}' -- gutenberg-mcp-server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=gutenberg_browse_popular content=text,text text_chars=981",
+            "setup": [],
+            "offline": false
           }
         ],
+        "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows MCP probe initializing gutenberg-mcp-server v0.3.1, listing 4 tools, and completing handshake ok.",
+          "observed": "MCP server handshakes with 4 Gutenberg tools and both search and get_book calls return Pride and Prejudice (ID 1342).",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-gutenberg-mcp-server-20261101-003053-7aee/report.json",
+          "trace_path": "runs/verify/verify-gutenberg-mcp-server-20261103-181350-c9b3/report.json",
           "log_path": null,
           "screenshot_paths": [
-            "runs/verify/verify-gutenberg-mcp-server-20261101-003053-7aee/check-1-cmd5.judged.png"
+            "runs/verify/verify-gutenberg-mcp-server-20261103-181350-c9b3/check-1-cmd3.judged.png",
+            "runs/verify/verify-gutenberg-mcp-server-20261103-181350-c9b3/check-2-cmd4.judged.png",
+            "runs/verify/verify-gutenberg-mcp-server-20261103-181350-c9b3/check-3-cmd5.judged.png"
           ],
           "evidence_url": null
         },
         "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.032781,
+        "cost_usd": 0.04364,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -180,7 +237,7 @@
           "url": null,
           "protocol_version": "2025-11-25",
           "server_name": "gutenberg-mcp-server",
-          "server_version": "0.3.1",
+          "server_version": "0.3.2",
           "tools": [
             "gutenberg_search_books",
             "gutenberg_get_book",
@@ -188,9 +245,208 @@
             "gutenberg_browse_popular"
           ],
           "tool_count": 4,
-          "called_tool": null,
+          "called_tool": "gutenberg_search_books",
           "offline": true
-        }
+        },
+        "features": [
+          {
+            "feature": "Search book catalog by title and author",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Fetch complete metadata for a book",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Retrieve book plain-text in chunks",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Browse most-downloaded popular books",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      },
+      {
+        "id": "verify-gutenberg-mcp-server-20261103-182153-0266",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-03T18:25:10.789560+08:00",
+        "tool_version": "0.3.2",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @cyanheads/gutenberg-mcp-server",
+            "purpose": "npm install -g package"
+          },
+          {
+            "command": "curl -fsSL https://nodejs.org/dist/v24.11.1/node-v24.11.1-linux-x64.tar.xz -o /tmp/node.tar.xz && tar -xf /tmp/node.tar.xz -C /tmp && /tmp/node-v24.11.1-linux-x64/bin/npm -v",
+            "purpose": "download Node 24.11.1 to meet >=24 requirement"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "export PATH=/tmp/node-v24.11.1-linux-x64/bin:$PATH && node -v && python3 ~/.pickfit/mcp_probe.py -- gutenberg-mcp-server 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=/tmp/node-v24.11.1-linux-x64/bin:$PATH && python3 ~/.pickfit/mcp_probe.py --call gutenberg_search_books --args '{\"query\":\"Pride and Prejudice\"}' -- gutenberg-mcp-server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=gutenberg_search_books content=text,text text_chars=2078",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "export PATH=/tmp/node-v24.11.1-linux-x64/bin:$PATH && python3 ~/.pickfit/mcp_probe.py --call gutenberg_get_book --args '{\"id\":1342}' -- gutenberg-mcp-server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=gutenberg_get_book content=text text_chars=1839",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "export PATH=/tmp/node-v24.11.1-linux-x64/bin:$PATH && python3 ~/.pickfit/mcp_probe.py --call gutenberg_browse_popular --args '{\"limit\":5}' -- gutenberg-mcp-server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=gutenberg_browse_popular content=text,text text_chars=981",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "export PATH=/tmp/node-v24.11.1-linux-x64/bin:$PATH && python3 ~/.pickfit/mcp_probe.py --call gutenberg_get_text --args '{\"id\":1342,\"limit\":500}' -- gutenberg-mcp-server 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=gutenberg_get_text content=text text_chars=842",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Requires Bun v1.4.0 or Node.js v24+",
+            "actually_needed": "Box has Node 22.23.4; install succeeds with warning but tool calls fail with 'Promise.try is not a function'; downloading Node 24 tarball and prepending its bin to PATH fixes it",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake with 4 Gutenberg tools and successful search and book detail calls for Pride and Prejudice ID 1342.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-gutenberg-mcp-server-20261103-182153-0266/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-gutenberg-mcp-server-20261103-182153-0266/check-1-cmd11.judged.png",
+            "runs/verify/verify-gutenberg-mcp-server-20261103-182153-0266/check-2-cmd12.judged.png",
+            "runs/verify/verify-gutenberg-mcp-server-20261103-182153-0266/check-3-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/muse-spark-open-1026",
+        "cost_usd": 0.069226,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "gutenberg-mcp-server"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "gutenberg-mcp-server",
+          "server_version": "0.3.2",
+          "tools": [
+            "gutenberg_search_books",
+            "gutenberg_get_book",
+            "gutenberg_get_text",
+            "gutenberg_browse_popular"
+          ],
+          "tool_count": 4,
+          "called_tool": "gutenberg_search_books",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "Search book catalog by title and author",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Fetch complete metadata for a book",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Retrieve book plain-text in chunks",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Browse most-downloaded popular books",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
@@ -256,7 +512,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-03T16:36:16+08:00",
+    "checked_at": "2026-11-03T18:28:37+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -268,19 +524,19 @@
   },
   "scores": {
     "formula_version": "b3.v5",
-    "computed_at": "2026-11-01T00:45:12+08:00",
+    "computed_at": "2026-11-03T18:29:33+08:00",
     "quality": {
-      "total": 82.2,
+      "total": 88.3,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.8,
+          "score": 1.0,
           "weight": 40.0
         },
         "install_docs": {
-          "score": 0.75,
+          "score": 0.625,
           "weight": 25.0
         },
         "maintenance": {
@@ -302,33 +558,33 @@
       }
     },
     "popularity": {
-      "score": 38.2,
+      "score": 41.1,
       "signals": {
-        "stars": 5,
-        "monthly_downloads": 1531,
-        "forks": 1,
+        "stars": 6,
+        "monthly_downloads": 2013,
+        "forks": 2,
         "dependents": null,
-        "release_downloads": 40,
+        "release_downloads": 42,
         "hn_top_score": 0,
         "registries_count": 1
       },
-      "age_days": 151,
+      "age_days": 155,
       "packages": [
         "npm:@cyanheads/gutenberg-mcp-server"
       ]
     },
     "treasure": {
       "is_treasure": true,
-      "value": 50.8
+      "value": 52.01
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-01T00:45:12.068268+08:00",
-      "sources_sha": "45f2a404f7b3b1e3fffe94ca5a6d8b2b03bff051f8527162ccb34b5a0440f859",
+      "checked_at": "2026-11-03T18:29:33.492259+08:00",
+      "sources_sha": "ff5d1d606beba3ab233929e532cb79a89f7c42a0c762e34fabd47fcaa8396c6a",
       "items": {
         "what_it_does": {
           "score": 2,
-          "quote": "Search, browse, and read 78,000+ public-domain books from Project Gutenberg"
+          "quote": "Search, browse, and read 78,000+ public-domain books from Project Gutenberg with full plain-text retrieval and offset/limit chunking via MCP. STDIO or Streamable HTTP."
         },
         "who_it_is_for": {
           "score": 1,
@@ -343,20 +599,20 @@
           "quote": "claude mcp add gutenberg-mcp-server -- npx -y @cyanheads/gutenberg-mcp-server"
         },
         "first_run_example": {
-          "score": 1,
-          "quote": "claude mcp add --transport http gutenberg-mcp-server https://gutenberg.caseyjhand.com/mcp"
+          "score": 0,
+          "quote": null
         },
         "config_and_keys": {
           "score": 2,
-          "quote": "No API key required."
+          "quote": "No API key required"
         },
         "troubleshooting_uninstall": {
           "score": 0,
           "quote": null
         },
         "license_and_platforms": {
-          "score": 2,
-          "quote": "[![License](https://img.shields.io/badge/License-Apache%202.0-orange.svg?style=flat-square)](./LICENSE) [![Docker](https://img.shields.io/badge/Docker-ghcr.io-2496ED?style=flat"
+          "score": 1,
+          "quote": "Apache-2.0 — see [LICENSE](LICENSE) for details."
         }
       },
       "unquoted": []
@@ -698,5 +954,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:31+08:00",
-  "updated_at": "2026-11-03T16:36:16+08:00"
+  "updated_at": "2026-11-03T18:29:33+08:00"
 }
