@@ -119,4 +119,11 @@
   - `fuzz/`、`testdata/`、`skills/`、`probes/` 等資料夾不算進去。
 
   寶藏又少 1 款（actual-cli），變成 134 款。
+- **加上 pnpm-lock 支援**（念誠 11/3，為了檢查 demo App OpenPets）：
+  - 讀法：只算每個 workspace importer 的 dependencies 和 optionalDependencies，以及它們再帶進來的套件；devDependencies 不算，但 `electron` 例外，因為它的執行環境會打包進 App；文件網站這類周邊的 importer 也不算。
+  - 支援 lockfile v6 到 v9；更舊的版本當成讀不到。
+  - 結果：之前掃不到的 281 款重掃後，11 款有已知弱點、7 款沒有。
+  - **OpenPets 有已知弱點**：讀了 `pnpm-lock.yaml` 裡 755 個執行期套件，有 53 個 high 或 critical 弱點，最嚴重的是 proxy-addr 2.0.7 和 tar 6.2.1，兩個都有修正版。它的品質分原本就是 79.0（不是寶藏），所以分數沒變，只是上限的原因改成 `known_vulnerability`，工具頁會出現警告。
+  - 寶藏再少 2 款（stegmoji、xprite，都是網頁），變成 132 款。
+  - 最新總數（962 款，含 OpenPets）：有已知弱點 259、沒有 440、掃不到 263（沒有 lockfile 151、解析失敗 58、沒有來源 46、lockfile 格式不支援 8）。
 - **還沒算進去的**：225 款有「完全沒有嚴重度」的公告（多半是 RustSec 和 Go，既沒有 GHSA 評級，也沒有 CVSS v3），其中 95 款沒有其他弱點。這些目前不算；念誠決定先不算。

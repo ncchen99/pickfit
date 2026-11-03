@@ -195,6 +195,115 @@ def test_each_pyproject_resolves_on_its_own_and_a_failing_root_one_is_unresolved
     assert repo.read == ["sub/pyproject.toml (resolved today)"] and (repo.complete, repo.reason) == (False, "resolve_failed")
 
 
+PNPM_V9 = """lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+
+importers:
+
+  .:
+    devDependencies:
+      wrangler:
+        specifier: ^4.0.0
+        version: 4.120.0
+
+  apps/desktop:
+    dependencies:
+      '@me/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+      '@ai-sdk/provider-utils':
+        specifier: ^5.0.0
+        version: 5.0.23(zod@4.4.3)
+    devDependencies:
+      electron:
+        specifier: ^42.0.0
+        version: 42.0.0
+      vite:
+        specifier: ^8.0.0
+        version: 8.0.14
+
+  docs:
+    dependencies:
+      next:
+        specifier: ^16.0.0
+        version: 16.0.10
+
+packages:
+
+  '@ai-sdk/provider-utils@5.0.23':
+    resolution: {integrity: sha512-x}
+    peerDependencies:
+      zod: ^4.0.0
+
+snapshots:
+
+  '@ai-sdk/provider-utils@5.0.23(zod@4.4.3)':
+    dependencies:
+      undici: 7.29.0
+      zod: 4.4.3
+    optionalDependencies:
+      fsevents: 2.3.3
+
+  undici@7.29.0: {}
+
+  zod@4.4.3: {}
+
+  fsevents@2.3.3: {}
+"""
+
+PNPM_V6 = """lockfileVersion: '6.0'
+
+dependencies:
+  chalk:
+    specifier: ^5.0.0
+    version: 5.3.0
+
+devDependencies:
+  vitest:
+    specifier: ^1.0.0
+    version: 1.0.0
+
+packages:
+
+  /chalk@5.3.0:
+    resolution: {integrity: sha512-y}
+    dependencies:
+      ansi-styles: 6.2.1
+    dev: false
+
+  /ansi-styles@6.2.1:
+    resolution: {integrity: sha512-z}
+    dev: false
+"""
+
+
+def test_pnpm_v9_reads_what_installs_at_run_time() -> None:
+    nodes = security.pnpm_lock_nodes(PNPM_V9)
+    assert sorted(nodes) == sorted([("npm", "electron", "42.0.0"), ("npm", "@ai-sdk/provider-utils", "5.0.23"),
+                                    ("npm", "undici", "7.29.0"), ("npm", "zod", "4.4.3"), ("npm", "fsevents", "2.3.3")])
+    # Not wrangler (the root's dev tool), vite (a dev dependency), the docs site, or the workspace link.
+
+
+def test_pnpm_v6_without_workspaces() -> None:
+    assert security.pnpm_lock_nodes(PNPM_V6) == [("npm", "chalk", "5.3.0"), ("npm", "ansi-styles", "6.2.1")]
+
+
+def test_pnpm_older_lockfiles_are_not_read() -> None:
+    with pytest.raises(ValueError):
+        security.pnpm_lock_nodes("lockfileVersion: 5.4\n")
+
+
+def test_a_root_pnpm_lock_is_a_main_lockfile(tmp_path: Path) -> None:
+    (tmp_path / "pnpm-lock.yaml").write_text(PNPM_V9)
+    repo = security.repo_nodes(tmp_path)
+    assert repo.complete and repo.read == ["pnpm-lock.yaml"] and len(repo.nodes) == 5
+    (tmp_path / "pnpm-lock.yaml").write_text("lockfileVersion: 5.4\n")
+    repo = security.repo_nodes(tmp_path)
+    assert (repo.complete, repo.reason) == (False, "lockfile_not_supported")
+
+
 def test_npm_platform_builds_do_not_count_as_dependencies() -> None:
     lock = {"packages": {"": {"name": "probe"}, "node_modules/tool": {"version": "1.0.0"},
                          "node_modules/@x/tool-darwin-arm64": {"version": "1.0.0", "optional": True, "os": ["darwin"],
