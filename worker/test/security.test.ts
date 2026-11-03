@@ -257,6 +257,6 @@ test('web app, vulnerable: the notice sits beside the site, worded for using it'
 
 test('get_install_guide for a web app: the warning speaks of using the site, not installing it', () => {
   const catalog = loadCatalog(indexWith(VULNERABLE, 'fixture-web-sketch'));
-  const out = installGuide(catalog, { slug: 'fixture-web-sketch' }) as unknown as { warnings: string[] };
+  const out = installGuide(catalog, { slug: 'fixture-web-sketch', os: 'linux' }) as unknown as { warnings: string[] };
   assert.match(out.warnings[0], /^Known vulnerabilities \(7 high or critical\): .*Tell the user before they use it\.$/);
 });
