@@ -1600,6 +1600,25 @@ class Usability(_Model):
         return self
 
 
+# A visual check that found an app-caused defect multiplies the quality total by this (pickfit/score.py apply_visual).
+VISUAL_FACTOR = 0.95
+
+
+def visual_check_factor(visual: Any, verification: Any) -> float | None:
+    """1.0 for a clean visual check, VISUAL_FACTOR for one that found an app-caused defect; None without a current
+    check (none, one that read a run the record no longer has, or one the sandbox broke). Takes models or dicts."""
+    if visual is None:
+        return None
+    if isinstance(visual, dict):
+        run_id, score = visual.get("run_id"), visual.get("score")
+    else:
+        run_id, score = visual.run_id, visual.score
+    runs = {run.id for run in verification.runs if (run.gui or run.web) and is_passed(run.level)}
+    if score is None or run_id not in runs:
+        return None
+    return 1.0 if score == 2 else VISUAL_FACTOR
+
+
 class VisualCheck(_Model):
     """Measurable visual defects on the first screens of one passed GUI or web run (comfort.v1, pickfit/usability.py).
 
@@ -1878,6 +1897,20 @@ class SoftwareRecord(_Model):
             raise ValueError(
                 f"usage_outcomes needs >= {USAGE_MIN_REPORTS} external reports to have a score"
             )
+        return self
+
+    @model_validator(mode="after")
+    def _check_visual_deduction(self) -> SoftwareRecord:
+        """A visual deduction in the scores follows the record's own current visual check, so the total and the page
+        cannot disagree with it."""
+        visual = self.scores.quality.visual if self.scores else None
+        if visual is None:
+            return self
+        if self.kind not in ("desktop_app", "web_app"):
+            raise ValueError("a visual deduction belongs to kind desktop_app and web_app only")
+        factor = visual_check_factor(self.visual_check, self.verification)
+        if factor is None or abs(factor - visual.factor) > 1e-9:
+            raise ValueError("quality.visual must follow the record's current visual_check (pickfit score --refresh)")
         return self
 
 

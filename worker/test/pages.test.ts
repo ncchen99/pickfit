@@ -214,5 +214,6 @@ test('a desktop or web app says what the visual check found: a defect and its -5
   assert.equal(render(null), '');
   // The tool page shows the line from the index: the fixture web app has no check.
   const html = await (await site().get('/tool/fixture-web-sketch')).text();
-  assert.match(html, /class="small quiet visual-check">Not visually checked/);
+  assert.match(html, /class="small quiet visual-check">Not visually checked yet, so nothing is taken off\./);
+  assert.doesNotMatch(html, /no screenshots/);
 });

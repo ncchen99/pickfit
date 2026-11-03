@@ -1048,9 +1048,10 @@ def record_usability(result: dict[str, Any]) -> dict[str, Any]:
 
 def write_visual_check(path: Path, check: dict[str, Any]) -> None:
     """Add visual_check to the record file as it is now (read again just before writing), just before scores where
-    the schema puts it and leaving every other key where it was, bump updated_at, validate, and replace the file
-    atomically."""
+    the schema puts it and leaving every other key where it was, refresh the scores so the deduction follows it (as
+    verification write-back does), bump updated_at, validate, and replace the file atomically."""
     from pickfit.schema import SoftwareRecord
+    from pickfit.score import refresh_scores
 
     raw = json.loads(path.read_text(encoding="utf-8"))
     raw.pop("visual_check", None)
@@ -1059,7 +1060,9 @@ def write_visual_check(path: Path, check: dict[str, Any]) -> None:
     keys = list(raw)
     at = keys.index(anchor) if anchor else len(keys)
     raw = {k: raw[k] for k in keys[:at]} | {"visual_check": check} | {k: raw[k] for k in keys[at:]}
-    raw["updated_at"] = taipei_now().isoformat(timespec="seconds")
+    now = taipei_now()
+    refresh_scores(raw, now)
+    raw["updated_at"] = now.isoformat(timespec="seconds")
     SoftwareRecord.model_validate(raw)
     tmp = path.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(raw, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -1068,8 +1071,8 @@ def write_visual_check(path: Path, check: dict[str, Any]) -> None:
 
 def main_visual(args: Any) -> int:
     """`pickfit visual` (wired in pickfit/cli.py): measurable visual defects for desktop and web apps (comfort.v1),
-    one Muse Wonder call each; --write adds them to the record as visual_check, which `pickfit score --refresh` turns
-    into the visual deduction (an app-caused defect: total x 0.95). A record whose visual_check, or a saved result, read the same screens with the
+    one Muse Wonder call each; --write adds them to the record as visual_check and refreshes its scores, so the visual
+    deduction (an app-caused defect: total x 0.95) follows at once. A record whose visual_check, or a saved result, read the same screens with the
     same prompt is not checked again."""
     from pickfit.env import REPO_ROOT
     from pickfit.profiles import DEFAULT_OUT

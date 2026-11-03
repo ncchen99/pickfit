@@ -529,3 +529,27 @@ def test_a_defect_with_no_text_is_dropped_and_one_bad_app_does_not_stop_the_batc
     (data / "app-b.json").write_text(json.dumps(gui_record(tmp_path / "evidence") | {"slug": "app-b"}))
     assert usability.main_visual(argparse.Namespace(**vars(args) | {"slug": ["app-b"], "dry_run": True})) == 0
     assert "visual_check" not in json.loads((data / "app-b.json").read_text())
+
+
+def test_writing_a_visual_check_refreshes_the_score_so_the_deduction_follows_at_once(tmp_path: Path) -> None:
+    from datetime import datetime
+
+    from pickfit.ledger import TAIPEI
+    from pickfit.score import build_scores
+    from pickfit.usability import write_visual_check
+
+    record = gui_record(tmp_path / "evidence")
+    record["scores"] = build_scores(SoftwareRecord.model_validate(record | {"scores": None}), None, None, None,
+                                    now=datetime(2026, 11, 3, 21, tzinfo=TAIPEI))
+    before = record["scores"]["quality"]["total"]
+    path = tmp_path / "fixture-chat-tui.json"
+    path.write_text(json.dumps(record), encoding="utf-8")
+    check = {"version": "comfort.v1", "run_id": RUN, "score": 1, "status": "scored", "screens": 2,
+             "defects": [{"item": "comfortable", "operation": None, "cause": "app", "problem": "x", "screenshot": "a.png",
+                          "box": [0, 0, 10, 10], "quote": "x", "found_by": "ocr", "kind": "cramped", "severity": "minor"}],
+             "model": "muse-wonder-1.0", "effort": "medium", "inputs_sha": "0" * 64,
+             "checked_at": "2026-11-03T20:00:00+08:00", "cost_usd": 0.03}
+    write_visual_check(path, check)
+    written = SoftwareRecord.model_validate(json.loads(path.read_text(encoding="utf-8")))
+    assert written.scores.formula_version == "b3.v5+visual.v1"
+    assert written.scores.quality.total == round(before * 0.95, 1) and written.scores.quality.visual.before == before

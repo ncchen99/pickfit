@@ -362,8 +362,8 @@ Meta 帳務一直失敗，念誠決定 Meta 的模型改走 OpenRouter（`PICKFI
 - 工具頁品質量尺下方加一行：
   - 有缺陷：「Visual check found a defect: −5%／視覺檢查發現缺陷：−5%」，並列出缺陷。
   - 沒有缺陷：「視覺檢查：沒有發現缺陷」。
-  - 沒有截圖的 104 款：「沒有做視覺檢查：pickfit 沒有這個應用自己拍的截圖，所以不扣分」。
-- 資料來自 index 的 `visual` 欄位（`pickfit/index.py` 的 `_visual`），判斷方式和算分完全相同。
+  - 還沒檢查的 104 款：「尚未做視覺檢查，所以不扣分」。這也包括 pickfit 有截圖、但檢查已經過期或證據不在的幾款（例如 openharness、readany、speakoflow、termul、termy），所以不寫「沒有截圖」。
+- 資料來自 index 的 `visual` 欄位（`pickfit/index.py` 的 `_visual`），直接讀分數裡的 `quality.visual`，所以頁面只會說分數真的扣了的事。紀錄驗證時也要求 `quality.visual` 跟著紀錄自己目前的視覺檢查；`pickfit visual --write` 寫入後會立刻 refresh 分數。
 - 「How pickfit works」頁和品質分說明框改寫成扣分的說法（中英文），也寫明嚴重程度暫時不算。
 
 **實際影響**（分支上的紀錄已經 refresh，對照 main 逐筆比對；和第 11.5 節一致）

@@ -117,6 +117,7 @@ from pickfit.d1 import Database
 from pickfit.ledger import BudgetExceeded, taipei_now
 from pickfit.schema import (
     EASE_TREASURE_MIN,
+    VISUAL_FACTOR,
     PASSED_LEVELS,
     QUALITY_CAPS,
     TREASURE_MAX_POPULARITY,
@@ -132,6 +133,7 @@ from pickfit.schema import (
     is_passed,
     treasure_value,
     usage_outcomes_weight,
+    visual_check_factor,
 )
 
 FORMULA_VERSION = "b3.v5"
@@ -152,7 +154,6 @@ WEB2_FORMULA_VERSION = "web.v2"
 # its total by VISUAL_FACTOR. gui.v2 and web.v3 (an additive 15% share) were tried on a branch only; refresh moves them.
 VISUAL_SCORED = True
 VISUAL_SUFFIX = "+visual.v1"
-VISUAL_FACTOR = 0.95
 GUI_VISUAL_VERSION = FORMULA_VERSION + VISUAL_SUFFIX
 WEB_VISUAL_VERSION = WEB_FORMULA_VERSION + VISUAL_SUFFIX
 TOOL_FORMULAS = frozenset({FORMULA_VERSION, GUI_FORMULA_VERSION, GUI_VISUAL_VERSION, "gui.v2", *REFRESHABLE_FROM})
@@ -734,17 +735,8 @@ def gui_formula(kind: str, verification: Verification) -> bool:
 
 def visual_factor(visual: Any, verification: Verification) -> float | None:
     """1.0 for a clean visual check, VISUAL_FACTOR for one that found an app-caused defect; None without a current
-    check (none, one that read a run the record no longer has, or one the sandbox broke)."""
-    if visual is None:
-        return None
-    if isinstance(visual, dict):
-        run_id, score = visual.get("run_id"), visual.get("score")
-    else:
-        run_id, score = visual.run_id, visual.score
-    runs = {run.id for run in verification.runs if (run.gui or run.web) and is_passed(run.level)}
-    if score is None or run_id not in runs:
-        return None
-    return 1.0 if score == 2 else VISUAL_FACTOR
+    check (schema.visual_check_factor, which the record's validation uses too)."""
+    return visual_check_factor(visual, verification)
 
 
 def _app_defects(visual: Any) -> int:

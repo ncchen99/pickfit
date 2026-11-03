@@ -251,8 +251,8 @@ export interface Entry {
   sources: string[];
 }
 
-/** A desktop or web app's visual check: "defect" took 5% off quality, "clean" changed nothing, "not_checked" means
- * pickfit has no screenshots of its own of the app (nothing is taken off for that). */
+/** A desktop or web app's visual check, as the quality score applied it: "defect" took 5% off, "clean" changed nothing,
+ * "not_checked" means no current check (nothing is taken off for that). */
 export interface VisualCheck {
   status: 'defect' | 'clean' | 'not_checked';
   factor?: number;

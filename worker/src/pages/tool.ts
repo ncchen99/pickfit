@@ -112,13 +112,13 @@ export interface Chapter {
 }
 
 /** The clip's chapters for the page: a feature's plain title when there is one, fixed words for the two cards. */
-/** Desktop and web apps: what the visual check of pickfit's own screenshots found, as the quality score uses it. An
- * app with no screenshots says so plainly: nothing is taken off for that. */
+/** Desktop and web apps: the visual deduction that is in the quality score. An app not checked yet says so plainly:
+ * nothing is taken off for that. */
 export function visualLine(entry: Entry): string {
   const v = entry.visual;
   if (!v) return '';
   if (v.status === 'not_checked') {
-    return `<p class="small quiet visual-check">${L('Not visually checked: pickfit has no screenshots of its own of this app, so nothing is taken off.', '沒有做視覺檢查：pickfit 沒有這個應用自己拍的截圖，所以不扣分。')}</p>`;
+    return `<p class="small quiet visual-check">${L('Not visually checked yet, so nothing is taken off.', '尚未做視覺檢查，所以不扣分。')}</p>`;
   }
   if (v.status === 'clean') {
     return `<p class="small visual-check">${L('Visual check: no defect found.', '視覺檢查：沒有發現缺陷。')}</p>`;

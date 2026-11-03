@@ -109,19 +109,17 @@ def _gui(run: VerificationRun) -> dict[str, Any] | None:
 
 
 def _visual(record: SoftwareRecord) -> dict[str, Any] | None:
-    """Desktop and web apps: what pickfit's visual check of its own screenshots found (comfort.v1), as the score uses
-    it: "defect" (the quality total took 5% off), "clean", or "not_checked" (no screenshots of pickfit's own, or the
-    check read a run the record no longer has). Only app-caused defects are listed. None for other kinds."""
-    from pickfit.score import visual_factor
-
+    """Desktop and web apps: the visual deduction that is in the quality score (scores.quality.visual, which the
+    record's validation ties to its own current visual check): "defect" (the total took 5% off, with the app-caused
+    defects listed), "clean", or "not_checked" (no current check, so nothing is taken off). None for other kinds."""
     if record.kind not in ("desktop_app", "web_app"):
         return None
+    visual = record.scores.quality.visual if record.scores else None
     check = record.visual_check
-    factor = visual_factor(check, record.verification) if check is not None else None
-    if check is None or factor is None:
+    if visual is None or check is None:
         return {"status": "not_checked"}
     defects = [{"kind": d.kind, "problem": d.problem, "quote": d.quote} for d in check.defects if d.cause == "app"]
-    return {"status": "defect" if factor < 1 else "clean", "factor": factor, "defects": defects[:6],
+    return {"status": "defect" if visual.factor < 1 else "clean", "factor": visual.factor, "defects": defects[:6],
             "checked_at": _iso(check.checked_at)[:10], "model": check.model}
 
 
