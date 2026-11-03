@@ -26,6 +26,7 @@ import { toCard, type Card } from './cards.ts';
 import { checkBudget, recordSpend } from './budget.ts';
 import { ranSentence, videoSentence } from './evidence.ts';
 import { featureSentence, featuresOut, type FeaturesOut } from './features.ts';
+import { securityOut, type SecurityOut } from './security.ts';
 import type { Settings } from './env.ts';
 import { logEvent, logFailure, newId, type Reporter } from './events.ts';
 import { englishKeywords, EXPAND_TIMEOUT_MS, type Expansion } from './expand.ts';
@@ -97,6 +98,8 @@ export interface PickOut {
   how_we_know: string;
   evidence_url: string | null;
   scores: { quality: number | null; popularity: number | null; treasure: boolean };
+  /** Known high or critical vulnerabilities (OSV.dev) in what a fresh install brings; unchecked says why not. */
+  security: SecurityOut;
   /** null for a web app with no public repository. */
   repo: string | null;
   homepage: string | null;
@@ -225,6 +228,7 @@ function pickOut(
       popularity: entry.scores?.popularity ?? null,
       treasure: entry.scores?.treasure ?? false,
     },
+    security: securityOut(entry),
     repo: entry.repo_url,
     homepage: entry.homepage,
     web_app: webAppOut(entry),

@@ -307,6 +307,21 @@ def _add_score_command(sub: argparse._SubParsersAction) -> None:
     s.set_defaults(func=main_score)
 
 
+def _add_security_command(sub: argparse._SubParsersAction) -> None:
+    from pickfit.security import main_security
+
+    s = sub.add_parser("security", help="known high or critical vulnerabilities in what a fresh install brings "
+                                        "(OSV.dev, no model call, $0); --write adds security and caps quality at 79")
+    s.add_argument("--slug", action="append", help="check this record (repeatable)")
+    s.add_argument("--all", action="store_true", help="every listed record")
+    s.add_argument("--data-dir", default=None, help="records (default data/software)")
+    s.add_argument("--workers", type=int, default=6, help="records checked at once")
+    s.add_argument("--write", action="store_true", help="store each check in its record and refresh its scores")
+    s.add_argument("--report", default=None, help="write every record's result and score change to this JSON file")
+    s.add_argument("--verbose", action="store_true", help="print each record's status")
+    s.set_defaults(func=main_security)
+
+
 def _add_visual_command(sub: argparse._SubParsersAction) -> None:
     from pickfit.usability import VISUAL_CAP_USD, main_visual
 
@@ -560,6 +575,7 @@ def main(argv: list[str] | None = None) -> int:
     _add_score_command(sub)
     _add_usability_command(sub)
     _add_visual_command(sub)
+    _add_security_command(sub)
     _add_queue_commands(sub)
     _add_outcomes_command(sub)
     _add_publish_command(sub)
