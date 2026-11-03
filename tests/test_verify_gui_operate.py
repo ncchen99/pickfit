@@ -99,7 +99,7 @@ class OperateBox(GuiBox):
 
 def operator_reply(action: str, **fields: Any) -> dict[str, Any]:
     answer = {"observation": "the app's note window", "action": action, "x": None, "y": None, "clicks": None,
-              "text": None, "key": None, "direction": None, "seconds": None, "why": "towards the goal", **fields}
+              "button": None, "text": None, "key": None, "direction": None, "seconds": None, "why": "towards the goal", **fields}
     text = json.dumps(answer)
     return {"id": f"op-{action}", "object": "response", "created_at": 0, "model": "meta-models/muse-spark-open-1026",
             "status": "completed", "output": [{"type": "message", "id": "m", "role": "assistant", "status": "completed",
@@ -137,7 +137,7 @@ def operate_args(**overrides: Any) -> OperateArgs:
 
 def test_the_operators_answer_becomes_a_checked_action_in_screen_pixels():
     def answer(action: str, **f: Any) -> OperatorAction:
-        base = {"observation": "", "x": None, "y": None, "clicks": None, "text": None, "key": None,
+        base = {"observation": "", "x": None, "y": None, "clicks": None, "button": None, "text": None, "key": None,
                 "direction": None, "seconds": None, "why": ""}
         return OperatorAction.model_validate({**base, "action": action, **f})
 
@@ -154,6 +154,40 @@ def test_the_operators_answer_becomes_a_checked_action_in_screen_pixels():
     assert op.to_action(answer("key", key="rm -rf /"), screen)[0] is None
     assert op.to_action(answer("type", text="a\x07b"), screen)[0] is None
     assert op.to_action(answer("wait", seconds=60), screen)[0] == {"kind": "wait", "seconds": op.WAIT_MAX_S}
+    # A right-click (a context menu) is one click with button right; a left click keeps its old shape.
+    right = op.to_action(answer("click", x=500, y=250, button="right", clicks=2), screen)[0]
+    assert right == {"kind": "click", "x": 640, "y": 200, "count": 1, "button": "right"}
+    assert op.describe(right) == "right-click at 640,200"
+    assert op.to_action(answer("click", x=500, y=250, button="left"), screen)[0] == \
+        {"kind": "click", "x": 640, "y": 200, "count": 1}
+
+
+def test_a_right_click_reaches_the_displays_right_click_or_stops():
+    done: list[tuple] = []
+
+    class Hands:
+        width, height = 1280, 800
+
+        def click(self, x: int, y: int, count: int = 1) -> None:
+            done.append(("click", x, y, count))
+
+        def right_click(self, x: int, y: int) -> None:
+            done.append(("right", x, y))
+
+    op.perform(Hands(), {"kind": "click", "x": 3, "y": 4, "count": 1, "button": "right"})
+    op.perform(Hands(), {"kind": "click", "x": 5, "y": 6, "count": 2})
+    assert done == [("right", 3, 4), ("click", 5, 6, 2)]
+
+    class LeftOnly:
+        width, height = 1280, 800
+
+        def click(self, x: int, y: int, count: int = 1) -> None:
+            done.append(("click", x, y, count))
+
+    with pytest.raises(op.DisplayError, match="right-click"):
+        op.perform(LeftOnly(), {"kind": "click", "x": 3, "y": 4, "count": 1, "button": "right"})
+    # Linux: the display uid's hands press button 3 for it.
+    assert '3 if ACT.get("button") == "right" else 1' in op._HANDS
 
 
 def test_the_operator_sees_what_the_app_draws_zoomed_with_its_last_click_marked():

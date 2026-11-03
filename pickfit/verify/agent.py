@@ -194,7 +194,8 @@ LAUNCH_GUI_TOOL = _fn(
 _NULL_STR = {"type": ["string", "null"]}
 OPERATE_GUI_TOOL = _fn(
     "operate_gui", "Start a GUI app as launch_gui does, then have it operated: Muse Spark sees pickfit's screenshots "
-    "and picks clicks, typing and keys toward the goal, pickfit performs them on the virtual display, and then "
+    "and picks clicks (right-clicks too, for an app whose commands are in a context menu), typing and keys "
+    "toward the goal, pickfit performs them on the virtual display, and then "
     "pickfit checks the result itself (a file the app wrote, the clipboard, or text on the screen). Every process "
     "of the box user is stopped before and after. Returns its command_id and pickfit's own lines, ending with "
     "`gui check: passed` or `gui check: failed (why)`. Uses one unit of the command budget.",
