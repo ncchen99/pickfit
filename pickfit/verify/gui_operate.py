@@ -80,9 +80,21 @@ def operator_effort(value: str | None) -> str:
     return effort
 
 
+def operator_max_steps(value: str | None) -> int:
+    """PICKFIT_OPERATOR_MAX_STEPS, 8 to 60; unset keeps 28. An app whose task runs through a folder picker, a scan,
+    a selection and a confirmation (a disk cleaner, 11/3) can need more than 28 actions."""
+    if value is None or not value.strip():
+        return 28
+    steps = int(value)  # a typo fails loudly instead of being ignored
+    if not 8 <= steps <= 60:
+        raise ValueError("PICKFIT_OPERATOR_MAX_STEPS must be between 8 and 60")
+    return steps
+
+
 REASONING_EFFORT = operator_effort(get_env("PICKFIT_OPERATOR_EFFORT"))
 MAX_OUTPUT_TOKENS = 1_500
-MAX_STEPS = 28  # actions per operation, done and give_up included (a first-run wizard alone can take 8)
+# Actions per operation, done and give_up included (a first-run wizard alone can take 8).
+MAX_STEPS = operator_max_steps(get_env("PICKFIT_OPERATOR_MAX_STEPS"))
 HISTORY_STEPS = 12  # earlier actions the operator is reminded of
 # Going in circles: the same action LOOP_REPEATS times among the last LOOP_WINDOW (clicks within LOOP_RADIUS px).
 LOOP_WINDOW, LOOP_REPEATS, LOOP_RADIUS = 8, 3, 40

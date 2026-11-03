@@ -399,6 +399,14 @@ def test_a_file_the_app_deletes_passes_only_when_it_was_there_and_is_gone(tmp_pa
     assert not operation.passed
 
 
+def test_the_operators_step_limit_is_28_unless_set_within_bounds():
+    assert op.operator_max_steps(None) == op.operator_max_steps("") == 28
+    assert op.operator_max_steps("40") == 40
+    for bad in ("4", "100", "many"):
+        with pytest.raises(ValueError):
+            op.operator_max_steps(bad)
+
+
 def test_no_window_means_nothing_is_operated(tmp_path: Path):
     from test_verify_gui import report
 
