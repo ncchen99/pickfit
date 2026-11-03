@@ -901,10 +901,6 @@ def _mac_instructions(text: str) -> str:
          "- click: element, the number of a marked text (magenta tags; listed with the turn) to click its middle: "
          "use it for any button, menu, tab or field that has text, since it is more precise; otherwise x and y "
          "of the point to click,"),
-        ("- scroll: x, y and direction up or down.",
-         "- scroll: x, y and direction up or down. On this Mac a scroll may leave the view where it was: when it "
-         "does, reach what is below with the keyboard instead (Tab moves the focus to the next control and the "
-         "view follows it; Page_Down, space or the arrow keys in a list)."),
         ("e.g. Return, Tab, Escape, BackSpace, ctrl+a, ctrl+s, ctrl+c.",
          "e.g. Return, Tab, Escape, BackSpace, cmd+a, cmd+s, cmd+c (a Mac's shortcuts use cmd, the Command key; "
          "alt is Option)."),

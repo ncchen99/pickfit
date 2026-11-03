@@ -381,3 +381,54 @@ def PNG_IMAGE() -> bytes:
     out = io.BytesIO()
     Image.new("RGB", (1280, 800), (240, 240, 240)).save(out, "PNG")
     return out.getvalue()
+
+
+class ScrollBox:
+    """launchctl as the GUI base answers it: submit, then list (running, then exited with `status`), then remove."""
+
+    def __init__(self, status: int | None = 0, submit_code: int = 0) -> None:
+        self.calls: list[list[str]] = []
+        self.status, self.submit_code, self.lists = status, submit_code, 0
+
+    def harness_exec(self, argv: list[str], timeout_s: int, **_: Any) -> ExecResult:
+        self.calls.append(argv)
+        out, code = "", 0
+        if "submit" in argv:
+            code = self.submit_code
+        elif "list" in argv:
+            self.lists += 1
+            done = self.lists > 1 and self.status is not None
+            out = ('{ "Label" = "x"; "LastExitStatus" = ' + str(self.status if done else 0) + ";"
+                   + ("" if done else ' "PID" = 833;') + " }")
+        return ExecResult(command=" ".join(argv), exit_code=code, stdout=out, stderr="", seconds=0.1)
+
+
+def test_a_mac_scroll_is_a_wheel_event_osascript_posts_from_a_one_off_launchd_job():
+    box = ScrollBox()
+    gui_mac.post_scroll(box, 640, 420, "down", sleep=lambda s: None)
+    submit, *lists, remove = box.calls
+    assert submit[:5] == ["/bin/launchctl", "asuser", str(gui_mac.MAC_UID), "/bin/launchctl", "submit"]
+    label = submit[submit.index("-l") + 1]
+    assert label.startswith("pickfit.scroll.") and submit[submit.index("--") + 1] == "/usr/bin/osascript"
+    assert "CGEventCreateScrollWheelEvent2(null, 0, 1, -300, 0, 0)" in submit[-1] and "{x: 640, y: 420}" in submit[-1]
+    assert len(lists) == 2 and remove[-2:] == ["remove", label]  # waited for it to exit, then took it away
+    up = ScrollBox()
+    gui_mac.post_scroll(up, 1, 2, "up", sleep=lambda s: None)
+    assert "(null, 0, 1, 300, 0, 0)" in up.calls[0][-1]
+
+
+def test_a_mac_scroll_that_does_not_post_is_the_operating_loops_display_error():
+    from pickfit.verify.box import BoxError
+    from pickfit.verify.gui_operate import DisplayError
+
+    failed = ScrollBox(status=1)
+    with pytest.raises(BoxError, match="did not post"):
+        gui_mac.post_scroll(failed, 1, 2, "down", sleep=lambda s: None)
+    assert failed.calls[-1][-2] == "remove"  # never left behind
+    with pytest.raises(BoxError, match="submit exited 3"):
+        gui_mac.post_scroll(ScrollBox(submit_code=3), 1, 2, "down", sleep=lambda s: None)
+    with pytest.raises(ValueError):
+        gui_mac.post_scroll(ScrollBox(), 1, 2, "sideways", sleep=lambda s: None)
+    display = gui_mac.VncDisplay("vnc://:pw@127.0.0.1:5900", ScrollBox(status=2))
+    with pytest.raises(DisplayError, match="scroll over VNC failed"):
+        display.scroll(1, 2, "down")
