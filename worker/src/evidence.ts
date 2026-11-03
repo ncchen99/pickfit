@@ -31,6 +31,7 @@ const CHECK_TEXT: Record<GuiOperation['check'], string> = {
   file: 'a file the app saved, which pickfit read itself',
   clipboard: 'what the app put on the clipboard, which pickfit read itself',
   screen_text: "text the app showed, read off pickfit's own screenshot",
+  gone: 'a file pickfit saw before the app started and found gone after, which pickfit checked itself',
 };
 
 /**

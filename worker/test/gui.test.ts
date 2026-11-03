@@ -112,6 +112,23 @@ test("the tools' output schema accepts every GUI tier a record can carry (a func
   for (const tier of tiers) assert.ok(gui.safeParse({ ...GUI, tier }).success, tier);
 });
 
+test("the tools' output schema accepts every GUI check kind a record can carry, and each reads as words", () => {
+  const py = readFileSync(join(import.meta.dirname, '..', '..', 'pickfit', 'schema.py'), 'utf8');
+  const kinds = [...py.match(/type GuiCheckKind = Literal\[([^\]]*)\]/)![1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(kinds.includes('gone'));
+  for (const check of kinds) {
+    const operated = {
+      ...GUI,
+      tier: 'action_checked',
+      operations: [{ feature: 'clean large files', check, passed: true, replay: 'actions', goal: 'Delete it.', observed: 'gone' }],
+    } as GuiEvidence;
+    assert.ok(gui.safeParse(operated).success, check);
+    const out = installGuide(loadCatalog(withGui(operated)), { slug: 'fixture-chat-tui', os: 'linux' });
+    assert.match(out.how_we_know, /clean large files \(checked by [a-z]/, check);
+    assert.doesNotMatch(out.how_we_know, /undefined/, check);
+  }
+});
+
 test("the tools' published output schema allows every key an operated GUI app carries (openpets broke find_software)", () => {
   const operated: GuiEvidence = {
     ...GUI,

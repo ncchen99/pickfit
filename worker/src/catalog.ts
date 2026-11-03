@@ -70,8 +70,11 @@ export interface GuiEvidence {
 /** One goal pickfit operated a GUI app toward (gui_operate.py), and what its own check found. */
 export interface GuiOperation {
   feature: string | null;
-  /** file: a file the app wrote, read by root; clipboard: read by pickfit's display user; screen_text: read off pickfit's screenshot. */
-  check: 'file' | 'clipboard' | 'screen_text';
+  /**
+   * file: a file the app wrote, read by root; clipboard: read by pickfit's display user; screen_text: read off pickfit's
+   * screenshot; gone: a file root read before the app started and found gone after it stopped (the app deleted it).
+   */
+  check: 'file' | 'clipboard' | 'screen_text' | 'gone';
   passed: boolean;
   /** actions: the recorded clicks and keys passed again; operated: the operator reached the goal again. */
   replay: 'actions' | 'operated';

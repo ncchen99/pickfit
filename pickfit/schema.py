@@ -762,7 +762,7 @@ GUI_SCREENS_BY_TIER: dict[str, tuple[str, ...]] = {
     "ui_rendered": ("main_ui", "first_run"),
     "action_checked": ("main_ui", "first_run"),
 }
-type GuiCheckKind = Literal["file", "clipboard", "screen_text"]
+type GuiCheckKind = Literal["file", "clipboard", "screen_text", "gone"]
 
 
 class GuiOperation(_Model):
@@ -770,14 +770,16 @@ class GuiOperation(_Model):
 
     Muse Spark Open chose each click, text and key from pickfit's screenshots; pickfit performed them as
     the display user (the app never acts for itself), then checked the result itself: a file the app wrote,
-    read by root; the clipboard, read by the display user; or text the screen judge read on pickfit's last
-    screenshot. The goal and the expected text hold {nonce} where pickfit put a fresh word.
+    read by root; the clipboard, read by the display user; text the screen judge read on pickfit's last
+    screenshot; or a file root read before the app started and found gone after it stopped. The goal and the
+    expected text hold {nonce} where pickfit put a fresh word.
     """
 
     feature: str | None = Field(default=None, max_length=FEATURE_MAX, description="The listed feature it exercises.")
     goal: str = Field(min_length=1, max_length=600, description="What the operator was asked to do.")
     check: GuiCheckKind
-    target: str | None = Field(default=None, max_length=300, description="file: the file, or the folder searched.")
+    target: str | None = Field(default=None, max_length=300,
+                                description="file: the file, or the folder searched; gone: the file deleted.")
     expected: list[Annotated[str, StringConstraints(min_length=1, max_length=200)]] = Field(default=[], max_length=4)
     format: str | None = Field(default=None, max_length=20, description="file: the format it had to have.")
     passed: bool = Field(description="pickfit's check, never the operator's word.")

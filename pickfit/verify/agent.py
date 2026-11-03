@@ -196,7 +196,8 @@ OPERATE_GUI_TOOL = _fn(
     "operate_gui", "Start a GUI app as launch_gui does, then have it operated: Muse Spark sees pickfit's screenshots "
     "and picks clicks (right-clicks too, for an app whose commands are in a context menu), typing and keys "
     "toward the goal, pickfit performs them on the virtual display, and then "
-    "pickfit checks the result itself (a file the app wrote, the clipboard, or text on the screen). Every process "
+    "pickfit checks the result itself (a file the app wrote, the clipboard, text on the screen, or a file the app "
+    "deleted). Every process "
     "of the box user is stopped before and after. Returns its command_id and pickfit's own lines, ending with "
     "`gui check: passed` or `gui check: failed (why)`. Uses one unit of the command budget.",
     {"command": {"type": "string", "description": "The command that starts the app, as with launch_gui."},
@@ -205,7 +206,10 @@ OPERATE_GUI_TOOL = _fn(
      "goal": {"type": "string", "description": (
          "What to do in the app's own UI, step by step as a user would, with the exact text to type and where "
          "to save. Write {nonce} where a unique word should go: pickfit puts a fresh one there each time.")},
-     "inputs": {"type": "array", "description": "Files pickfit writes under ~/pickfit-in/ before the app starts.",
+     "inputs": {"type": "array", "description": (
+         "Small files pickfit writes under ~/pickfit-in/ before the app starts (at most 4,000 characters of text "
+         "each). A big file (a large-file or duplicate finder's threshold), or one the app must find elsewhere, is "
+         "not an input: make it first with run_command and cite that command as this operation's setup."),
                 "items": {"type": "object", "properties": {
                     "path": {"type": "string", "description": "e.g. ~/pickfit-in/notes.md"},
                     "text": {**_NULL_STR, "description": "The file's text ({nonce} allowed), or null."},
@@ -215,14 +219,16 @@ OPERATE_GUI_TOOL = _fn(
                                               "or null."}},
                     "required": ["path", "text", "sample"], "additionalProperties": False}},
      "check": {"type": "object", "description": "What pickfit checks after the operation.", "properties": {
-         "kind": {"type": "string", "enum": ["file", "clipboard", "screen_text"]},
+         "kind": {"type": "string", "enum": ["file", "clipboard", "screen_text", "gone"]},
          "path": {**_NULL_STR, "description": (
              "file: the file the app saves or exports (under ~/pickfit-out/ when the goal chooses where), or a "
-             "folder to search ending in / (e.g. ~/ for wherever the app keeps its data); else null.")},
+             "folder to search ending in / (e.g. ~/ for wherever the app keeps its data); gone: the file the app "
+             "deletes, made before the app starts by a run_command you cite as this operation's setup (not under "
+             "~/pickfit-out/); else null.")},
          "contains": {"type": "array", "items": {"type": "string"}, "description": (
              "Text the result must hold ({nonce} allowed). For screen_text, a result the app computes or "
              "converts, never the text typed. In a box with a simulated microphone, the item {spoken} stands for "
-             "each word pickfit speaks into it during the operation.")},
+             "each word pickfit speaks into it during the operation. [] for gone.")},
          "format": {"type": ["string", "null"], "enum": [*gui_operate.FORMATS, None],
                     "description": "file: the format the file must have, or null."}},
          "required": ["kind", "path", "contains", "format"], "additionalProperties": False}},
@@ -464,18 +470,26 @@ After a launch shows a window, exercise each listed feature that the app's own U
 pickfit can check, one operate_gui per feature: a goal a user would do in the app (the exact text to type, \
 {nonce} where a unique word should go, and where to save), and a check: file (the app saves or exports a file: \
 its path under ~/pickfit-out/, or a folder to search such as ~/ where the app keeps its data, with the text it \
-must hold and/or its format), clipboard (the app copies a result), or screen_text (text the app computes or \
-converts, never the text typed). Put input files the goal needs in inputs (text, or pickfit's sample png, jpeg, \
-gif, pdf, wav, mp4 or zip). \
+must hold and/or its format), clipboard (the app copies a result), screen_text (text the app computes or \
+converts, never the text typed), or gone (the app deletes a file: its path; pickfit checks the file was there \
+before the app started and is gone after). Put input files the goal needs in inputs (text, or pickfit's sample \
+png, jpeg, gif, pdf, wav, mp4 or zip); a file too big for inputs, or one the app should find elsewhere, make with \
+a run_command and cite it as the operation's setup (setup_ids), so the fresh box makes it again. \
 Examples: a notes or editor app: type {nonce}, save to ~/pickfit-out/note.md, check that file contains {nonce}; \
 an image tool: open ~/pickfit-in/photo.png (sample png), export ~/pickfit-out/photo.webp, check format webp; \
 a model browser: download the smallest GGUF it lists, check folder ~/ for format gguf; a document search: an \
 input file holding {nonce}, search for {nonce}, check screen_text for the input file's name; a converter: \
-check the converted text, not the text typed. \
+check the converted text, not the text typed; a disk cleaner: inputs are below its size thresholds, so a \
+run_command setup makes the files first (mkdir -p ~/pickfit-plant && dd if=/dev/urandom \
+of=$HOME/pickfit-plant/big-video.mov bs=1048576 count=150; for duplicates, two copies of one 300 KB file; for a \
+cache cleaner, a file in a cache folder its rules name), then an operation finds it in the app (screen_text: the \
+file's name in the app's list) or deletes it in the app (gone), each citing that setup. \
 A check must hold the feature's own result: a file it saved or exported, text it converted, computed or \
 generated, a value it copied, or something it created and then lists or stores. Never a heading, a label, a \
 menu or the name of a screen: opening a screen shows nothing about a feature, a screen_text result must not \
-be on the screen before the first action, and pickfit's feature judge refuses such checks. \
+be on the screen before the first action, and pickfit's feature judge refuses such checks. A feature that \
+deletes, cleans up or removes files is checked by gone (the app deletes a file a setup made, in one operation \
+that also finds it first): a list that shows the file proves only the scan. \
 A passing operate_gui is the only way a GUI app reaches level function: cite it as a smoke test with \
 expected_signal `gui check: passed` and in features as checked. A feature that needs what this box lacks is \
 not a check: report it not_checked with the code that names our box's limit, never other: needs_gpu (a GPU), \
@@ -528,7 +542,9 @@ would without admin rights: a Homebrew cask with `brew install --cask --appdir=$
 <user>/<tap> && brew trust --tap <user>/<tap> && brew install --cask --appdir=$HOME/Applications \
 <user>/<tap>/<cask>`) \
 (you cannot write /Applications; a cask that runs a .pkg installer or needs sudo cannot install here: finish \
-unverified with the reason), or the app's own .dmg or .zip in two cited steps: `curl -fL -o \
+unverified with the reason; --appdir and the tap and trust are this box's and Homebrew's needs, so when they are \
+all you added to the README's brew command, a pitfall about them is kind sandbox, never readme_wrong), or the \
+app's own .dmg or .zip in two cited steps: `curl -fL -o \
 ~/Downloads/<file>.dmg <url>`, then `mkdir -p ~/mnt/<name> ~/Applications && hdiutil attach -nobrowse -mountpoint ~/mnt/<name> \
 ~/Downloads/<file>.dmg && cp -R ~/mnt/<name>/<App>.app ~/Applications/ && hdiutil detach -force ~/mnt/<name>` \
 (~/Applications does not exist in a new box, and cp -R into a missing folder makes the folder the app; \
@@ -554,7 +570,9 @@ pickfit's judge reads the screenshot itself. Launch it even if it will ask for a
 the sign-in screen.
 """ + OPERATE_RULES + """ On this Mac, goals name the Mac's shortcuts (cmd+s to save, cmd+c to copy; not ctrl), \
 ~/ is /Users/sbx, a menu bar app's controls are in the menu of its item at the top right, and this VM has no \
-microphone or camera (needs_hardware)."""
+microphone or camera (needs_hardware). pickfit turns Spotlight indexing off in this VM: an app's search or quick \
+scan built on Spotlight finds nothing here (this VM's limit, not the app's): use the app's full or complete scan \
+when it offers one, and record the limit as a pitfall of kind sandbox."""
 
 FLATPAK_RULE = """ A Flatpak app installs per user as two cited steps, \
 `flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo` and then \
@@ -684,7 +702,7 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
         for t in ex.smoke_test_candidates:
             shown = f" (README shows: {t.expected_output})" if t.expected_output else ""
             lines.append(f"- {t.command}{shown}")
-    listed = feature_checks.render(ex.features)
+    listed = feature_checks.render(ex.features, gui=box.display)
     if listed:
         lines += ["", "Main features the README advertises:", *listed, feature_checks.guide(is_mcp(task))]
     if is_mcp(task):
