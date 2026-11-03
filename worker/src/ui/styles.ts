@@ -717,6 +717,9 @@ details[open]:not(.menu)>summary:not(:has(>.i))::before{transform:rotate(180deg)
 .steps{padding-left:24px;margin:0}.steps li{margin-bottom:12px}.steps li::marker{font:700 .9rem var(--display);color:var(--ink-2)}.steps li p{margin-bottom:4px}
 .caution{color:var(--caution)}
 /* README against reality: rows on hairlines (in his answer, his line colour), never tiles. */
+.issues-fold{margin:18px 0 6px}
+.issues-fold>summary{font:700 .95rem/1.3 var(--display)}
+.issues-fold>.issues{margin-top:6px}
 .issues{list-style:none;padding:0;margin:0}
 .issues li{padding:8px 0;margin:0}
 .issues li+li{border-top:1px solid var(--hair,var(--rule))}

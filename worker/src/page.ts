@@ -238,12 +238,13 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
   }
   const issueList = readerIssues(guide.known_issues);
   const issues = issueList.length
-    ? `<h4>${L('Where the README and reality differ', 'README 與實測不符之處')}</h4><ul class="issues">${issueList
+    ? // Folded: the steps above already work as written; the differences are for the curious.
+      `<details class="issues-fold"><summary>${L('Where the README and reality differ', 'README 與實測不符之處')}</summary><ul class="issues">${issueList
         .map(
           (i) =>
             `<li><span class="quiet">${L('README:', 'README 寫：')}</span> ${esc(i.readme_said)}<br><span class="quiet">${L('What worked:', '實際可行：')}</span> ${esc(i.actually_needed)}</li>`,
         )
-        .join('')}</ul>`
+        .join('')}</ul></details>`
     : '';
   const ran = guide.verified_in_pickfit;
   if (ran) cautions.push(...sandboxNotes(ran));
@@ -264,15 +265,11 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
   );
 }
 
-/** What a reader needs to know when the run's commands named pickfit's sandbox: how they were adapted, and what was not. */
+/** What a reader must act on when the run's commands named pickfit's sandbox: a path $HOME could not replace, a folder to make.
+ *  (That the sandbox's home became $HOME goes unsaid; the fold below keeps the commands exactly as run.) */
 function sandboxNotes(ran: VerifiedInPickfit): string[] {
   const home = `<code translate="no">${esc(ran.sandbox_home)}</code>`;
-  const notes = [
-    `<p class="quiet small">${L(
-      `pickfit ran these steps in its sandbox, whose home folder is ${home}. Here that folder is written as <code translate="no">$HOME</code>, so the commands use yours.`,
-      `pickfit 是在沙盒裡跑這些步驟的，沙盒的家目錄是 ${home}；這裡改寫成 <code translate="no">$HOME</code>，指令會用你自己的家目錄。`,
-    )}</p>`,
-  ];
+  const notes: string[] = [];
   if (ran.not_portable.length) {
     notes.push(
       `<p class="caution small">${L(
@@ -284,7 +281,7 @@ function sandboxNotes(ran: VerifiedInPickfit): string[] {
   if (ran.needs_workdir) {
     notes.push(
       `<p class="caution small">${L(
-        'These steps ran from a folder named <code translate="no">work</code> in that home folder, which already existed. Make it and run them from there:',
+        'These steps ran from a folder named <code translate="no">work</code> in the home folder, which already existed. Make it and run them from there:',
         '這些步驟是在家目錄裡一個已經存在的 <code translate="no">work</code> 資料夾裡跑的。請先建立它，再從那裡執行：',
       )}</p>${command('mkdir -p "$HOME/work" && cd "$HOME/work"')}`,
     );
