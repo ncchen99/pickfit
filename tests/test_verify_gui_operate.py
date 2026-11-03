@@ -127,6 +127,18 @@ class NonceServer(FakeServer):
         return super().__call__(request)
 
 
+@pytest.fixture(autouse=True)
+def no_aim(monkeypatch: pytest.MonkeyPatch) -> None:
+    """These fakes answer one operator call per step; the aim step's own tests below turn it back on."""
+    monkeypatch.setattr(op, "AIM", False)
+
+
+def aim_reply(found: bool, x: int | None = None, y: int | None = None) -> dict[str, Any]:
+    reply = operator_reply("done")
+    reply["output"][0]["content"][0]["text"] = json.dumps({"found": found, "x": x, "y": y, "why": "the checkbox"})
+    return reply
+
+
 def operate_args(**overrides: Any) -> OperateArgs:
     return OperateArgs.model_validate({"command": LAUNCH, "wait_s": 20, "feature": 1, "goal": NOTE_GOAL,
                                        "inputs": [], "check": FILE_CHECK, **overrides})
@@ -397,6 +409,71 @@ def test_a_file_the_app_deletes_passes_only_when_it_was_there_and_is_gone(tmp_pa
                                             check=GONE_CHECK), 6, log=lambda s: None,
                                             client=NonceServer(*clean_session()).client(), sleep=lambda s: None)
     assert not operation.passed
+
+
+def test_the_aim_crop_is_around_the_click_inside_the_screen_and_maps_back():
+    image = Image.new("RGB", (1280, 800), (240, 240, 240))
+    out = io.BytesIO()
+    image.save(out, "PNG")
+    png = out.getvalue()
+    shown, box = op.aim_crop(png, 640, 400)
+    assert box == (540, 338, 200, 125)  # AIM_CROP screen pixels centred on the click
+    crop = Image.open(io.BytesIO(shown))
+    assert crop.size == (200 * op.AIM_ZOOM, 125 * op.AIM_ZOOM)
+    cx, cy = (640 - 540) * op.AIM_ZOOM + op.AIM_ZOOM // 2, (400 - 338) * op.AIM_ZOOM + op.AIM_ZOOM // 2
+    assert crop.getpixel((cx + 10, cy))[0] > 200 and crop.getpixel((cx + 10, cy))[1] < 60  # the crosshair
+    assert crop.getpixel((cx, cy)) == (240, 240, 240)  # its centre is left open, so the target shows through
+    assert op.from_crop(500, 500, box) == (640, 400)
+    assert op.from_crop(0, 0, box) == (540, 338) and op.from_crop(1000, 1000, box) == (739, 462)
+    # At the screen's corners the crop moves inside it, and the crosshair stays on the click.
+    assert op.aim_crop(png, 5, 795)[1] == (0, 675, 200, 125)
+    assert op.aim_crop(png, 1279, 0)[1] == (1080, 0, 200, 125)
+    assert op.from_crop(25, 984, (0, 675, 200, 125)) == (5, 798)
+
+
+def test_an_xy_click_is_aimed_again_on_a_zoomed_crop_and_both_points_are_kept(tmp_path: Path,
+                                                                              monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(op, "AIM", True)
+    box = OperateBox(tmp_path / "home")
+    first = operator_reply("click", x=500, y=500, target="checkbox left of Downloads")
+    server = NonceServer(first, aim_reply(True, 750, 250), operator_reply("type", text="NONCE"),
+                         operator_reply("key", key="Ctrl+S"), operator_reply("done"))
+    _, operation, _ = op.run_operation(box, operate_args(), 3, log=lambda s: None, client=server.client(),
+                                       sleep=lambda s: None)
+    step = operation.steps[0]
+    assert step.aim["first"] == [640, 400] and step.aim["target"] == "checkbox left of Downloads"
+    assert step.aim["crop"] == [540, 338, 200, 125] and step.aim["second"] == [690, 369]
+    assert step.action == {"kind": "click", "x": 690, "y": 369, "count": 1}  # the aimed point is what ran
+    assert operation.actions()[0] == {"kind": "click", "x": 690, "y": 369, "count": 1}  # and what a replay reruns
+    assert operation.passed and len(server.requests) == 5
+    aim_request = json.dumps(server.requests[1])
+    assert "checkbox left of Downloads" in aim_request and "input_image" in aim_request
+    assert operation.to_dict()["steps"][0]["aim"]["second"] == [690, 369]
+    # Not found in the crop: the first point stands, and so does a failed aim call; only clicks are aimed.
+    server = NonceServer(first, aim_reply(False), operator_reply("type", text="NONCE"),
+                         operator_reply("key", key="Ctrl+S"), operator_reply("done"))
+    _, operation, _ = op.run_operation(box, operate_args(), 4, log=lambda s: None, client=server.client(),
+                                       sleep=lambda s: None)
+    assert operation.steps[0].action["x"] == 640 and operation.steps[0].aim["second"] is None
+    assert [s.aim is not None for s in operation.steps] == [True, False, False, False]
+    # Off: one call per step, as before.
+    monkeypatch.setattr(op, "AIM", False)
+    server = NonceServer(*note_session())
+    _, operation, _ = op.run_operation(box, operate_args(), 6, log=lambda s: None, client=server.client(),
+                                       sleep=lambda s: None)
+    assert operation.passed and len(server.requests) == 4 and operation.steps[0].aim is None
+
+
+def test_an_element_click_is_not_aimed():
+    from pickfit.verify import marks as marking
+
+    mark = marking.Mark(number=1, text="Downloads", x=989, y=120, width=70, height=16)
+    answer = op.MacOperatorAction.model_validate({
+        "observation": "", "action": "click", "x": None, "y": None, "element": 1, "target": "Downloads",
+        "clicks": None, "button": None, "text": None, "key": None, "direction": None, "seconds": None, "why": ""})
+    act, _ = op.to_action(answer, op.View(0, 0, 1280, 800), True, [mark])
+    assert act == {"kind": "click", "x": mark.center[0], "y": mark.center[1], "count": 1}
+    assert (getattr(answer, "element", None) or 0) >= 1  # operate() aims only when this is not so
 
 
 def test_the_operators_step_limit_is_28_unless_set_within_bounds():
