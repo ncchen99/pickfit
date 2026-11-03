@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{title}}</title>
+<meta name="description" content="{{description}}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="pickfit">
+<meta property="og:title" content="{{title}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:image" content="{{site}}/assets/og/pickfit-en.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/fitz-favicon.svg" type="image/svg+xml">
+<style>
+@font-face{font-family:"Bricolage Grotesque";src:url(assets/bricolage-grotesque.woff2) format("woff2");font-weight:200 800;font-display:swap}
+:root{
+  --paper:#F7F7F4;--raised:#FFFFFF;--voice:#F1F6E2;--voice-edge:#A9B77E;--sunk:#F0F1EC;--rule:#DEDFD9;--line-ctl:#80817A;
+  --ink:#1A1D17;--ink-2:#4F5149;--ink-3:#65655E;--tape:#F5C243;--tape-edge:#A57710;--tape-ink:#3A2905;
+  --stitch:#C4552D;--fitz-line:#4A2E22;--pass:#2E7A35;--info:#28698A;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,"PingFang TC","Noto Sans TC",sans-serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang TC","Noto Sans TC",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#161613;--raised:#2E2E29;--voice:#1E2413;--voice-edge:#5E6B40;--sunk:#0E0F0C;--rule:#393A34;--line-ctl:#7A7B74;
+  --ink:#EBEAE2;--ink-2:#BFBEB6;--ink-3:#A5A59D;--tape-edge:#F5C243;--stitch:#E07A4F;--fitz-line:#93938A;--pass:#7CCB7A;--info:#86C4E6;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#161613;--raised:#2E2E29;--voice:#1E2413;--voice-edge:#5E6B40;--sunk:#0E0F0C;--rule:#393A34;--line-ctl:#7A7B74;
+  --ink:#EBEAE2;--ink-2:#BFBEB6;--ink-3:#A5A59D;--tape-edge:#F5C243;--stitch:#E07A4F;--fitz-line:#93938A;--pass:#7CCB7A;--info:#86C4E6;
+  color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:24px;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.6 var(--sans);text-rendering:optimizeLegibility}
+a{color:inherit;text-decoration-color:var(--line-ctl);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--ink)}
+:focus-visible{outline:3px solid var(--stitch);outline-offset:2px;border-radius:2px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+
+/* header */
+.top{display:flex;align-items:center;gap:16px;padding:18px 0;border-bottom:1px solid var(--rule)}
+.brand{display:flex;align-items:center;gap:10px;font:800 24px/1 var(--display);letter-spacing:-.03em;text-decoration:none}
+.brand img{width:32px;height:32px}
+.i-dot{position:relative}
+.i-dot::after{content:"";position:absolute;left:50%;top:.02em;width:.26em;height:.26em;border-radius:50%;background:var(--stitch);transform:translateX(-50%);box-shadow:0 0 0 .07em var(--paper)}
+.top nav{margin-left:auto;display:flex;gap:20px;font:600 15px/1 var(--display)}
+.top nav a{text-decoration:none;color:var(--ink-2)}
+.top nav a:hover{color:var(--ink)}
+.btn{display:inline-block;padding:10px 16px;border-radius:4px;font:700 15px/1 var(--display);text-decoration:none}
+.btn-primary{background:var(--tape);color:var(--tape-ink);border:1px solid var(--tape-edge)}
+.btn-quiet{border:1px solid var(--line-ctl);color:var(--ink)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:32px;align-items:center;padding:72px 0 48px;border-bottom:1px solid var(--rule)}
+.eyebrow{font:600 14px/1.3 var(--display);color:var(--ink-3);letter-spacing:.02em;margin:0 0 16px}
+.hero h1{font:700 clamp(2.3rem,4.6vw,3.8rem)/1.03 var(--display);letter-spacing:-.03em;margin:0;max-width:18ch}
+.hero .lede{font-size:1.2rem;line-height:1.55;color:var(--ink-2);max-width:62ch;margin:20px 0 28px}
+.hero .actions{display:flex;flex-wrap:wrap;gap:12px}
+.hero img.fitz{width:220px;height:220px}
+.shots{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:40px 0 8px}
+.shots figure{margin:0}
+.shots img{width:100%;height:auto;display:block;border:1px solid var(--rule);border-radius:4px}
+.shots figcaption{font-size:.875rem;color:var(--ink-3);margin-top:8px}
+
+/* layout */
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:64px;padding:48px 0 96px}
+.toc{position:sticky;top:24px;align-self:start;max-height:calc(100vh - 48px);overflow:auto;font-size:.9rem;padding-right:8px}
+.toc summary{font:700 15px/1 var(--display);cursor:pointer;list-style:none;margin-bottom:12px}
+.toc summary::-webkit-details-marker{display:none}
+.toc ul{list-style:none;margin:0;padding:0}
+.toc li{margin:0}
+.toc a{display:block;padding:5px 0 5px 12px;border-left:2px solid var(--rule);text-decoration:none;color:var(--ink-2);line-height:1.35}
+.toc a:hover{color:var(--ink);border-left-color:var(--line-ctl)}
+.toc a.on{color:var(--ink);border-left-color:var(--stitch);font-weight:600}
+.toc ul ul a{padding-left:24px;font-size:.84rem;color:var(--ink-3)}
+
+/* article */
+article{max-width:72ch;min-width:0}
+article h2{font:700 clamp(1.6rem,2.6vw,2.2rem)/1.12 var(--display);letter-spacing:-.02em;margin:80px 0 20px;padding-top:28px;border-top:1px solid var(--rule)}
+article h2:first-child{margin-top:0}
+article h3{font:700 1.3rem/1.25 var(--display);margin:48px 0 12px}
+article h4{font:700 1.05rem/1.3 var(--display);margin:32px 0 8px}
+article p,article li{color:var(--ink)}
+article p{margin:0 0 16px}
+article ul,article ol{padding-left:1.4em;margin:0 0 16px}
+article li{margin:4px 0}
+article li::marker{color:var(--ink-3)}
+article strong{font-weight:650}
+.anchor{margin-left:.4em;text-decoration:none;color:var(--line-ctl);opacity:0;font-weight:400}
+h2:hover .anchor,h3:hover .anchor,h4:hover .anchor,.anchor:focus{opacity:1}
+article code{font:500 .86em/1.4 var(--mono);background:var(--sunk);padding:.1em .35em;border-radius:3px}
+article pre{margin:0 0 20px;padding:4px 0 4px 16px;border-left:2px solid var(--line-ctl);overflow-x:auto;font:400 .86rem/1.55 var(--mono)}
+article pre code{background:none;padding:0;font-size:inherit}
+/* verbatim and asides: a ruled margin, like the site's quotes */
+article blockquote{margin:0 0 20px;padding:2px 0 2px 18px;border-left:2px solid var(--line-ctl);color:var(--ink-2)}
+article hr{display:none} /* every h2 already starts on a rule */
+/* tables read like the measurement sheet: rows on hairlines, no boxes */
+.table{overflow-x:auto;margin:0 0 24px;-webkit-overflow-scrolling:touch}
+article table{border-collapse:collapse;width:100%;font-size:.92rem;line-height:1.45;font-variant-numeric:tabular-nums}
+article th{font:600 .84rem/1.25 var(--display);text-align:left;color:var(--ink-3);padding:8px 14px 8px 0;border-bottom:1px solid var(--line-ctl);vertical-align:bottom}
+article td{padding:9px 14px 9px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+article td:first-child{font-weight:550}
+article img{max-width:100%;height:auto}
+pre.mermaid{border:0;padding:16px 0;text-align:center;background:none;font-family:var(--sans)}
+.summary-box{background:var(--voice);border:1px solid var(--voice-edge);border-radius:4px;border-top-right-radius:16px;padding:20px 24px;margin:0 0 24px}
+
+footer{border-top:1px solid var(--rule);padding:32px 0 48px;color:var(--ink-3);font-size:.9rem;display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+footer img{width:28px;height:28px}
+
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr;gap:24px;padding-top:24px}
+  .toc{position:static;max-height:none;border-bottom:1px solid var(--rule);padding-bottom:16px}
+  .toc:not([open]) summary{margin-bottom:0}
+  .hero{grid-template-columns:1fr;padding:48px 0 32px}
+  .hero img.fitz{display:none}
+}
+@media (max-width:640px){
+  .wrap{padding:0 16px}
+  body{font-size:16px}
+  .top nav a.hide-s{display:none}
+  .shots{grid-template-columns:1fr}
+  article h2{margin-top:56px}
+}
+@media print{.toc,.top nav,.hero .actions{display:none}.layout{display:block}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="{{site}}"><img src="assets/fitz-64.svg" alt=""><span>pickf<span class="i-dot">i</span>t</span></a>
+    <nav aria-label="Links">
+      <a href="{{site}}">Try pickfit</a>
+      <a class="hide-s" href="{{site}}/agents">For agents</a>
+      <a href="https://github.com/ncchen99/pickfit">GitHub</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Final report · Meta Global AI Developer Hackathon · Oct 27 – Nov 4, 2026</p>
+      <h1>{{title}}</h1>
+      <p class="lede">{{description}}</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="{{site}}">Open pickfit.app</a>
+        <a class="btn btn-quiet" href="{{site}}/agents">Connect your agent</a>
+        <a class="btn btn-quiet" href="https://github.com/ncchen99/pickfit">Source on GitHub</a>
+      </div>
+    </div>
+    <img class="fitz" src="assets/fitz-success.svg" alt="Fitz the tailorbird, pickfit's mascot, with a green check">
+  </section>
+
+  <section class="shots" aria-label="Screenshots">
+    <figure><img src="assets/home.png" alt="pickfit home page: an 'I need…' search box over a ruler, with filters for OS, CPU, free, offline and data stays local" loading="lazy"><figcaption>Ask in one sentence. pickfit answers only with tools it has run.</figcaption></figure>
+    <figure><img src="assets/tool-page.png" alt="A pickfit tool page for OpenPets: tested on macOS, a video recorded by pickfit with a chapter for each checked feature" loading="lazy"><figcaption>Every tool page starts with pickfit's own recording of the run.</figcaption></figure>
+  </section>
+
+  <div class="layout">
+    <details class="toc" open>
+      <summary>Contents</summary>
+      {{toc}}
+    </details>
+    <article id="report">
+{{body}}
+    </article>
+  </div>
+
+  <footer>
+    <img src="assets/fitz-64.svg" alt="">
+    <span>pickfit · every tool, tested first · <a href="{{site}}">pickfit.app</a> · <a href="https://github.com/ncchen99/pickfit">github.com/ncchen99/pickfit</a></span>
+  </footer>
+</div>
+<script>
+// Contents: open on wide screens, folded on narrow ones; mark the section in view.
+const toc = document.querySelector('.toc');
+const narrow = matchMedia('(max-width:960px)');
+const fold = () => { toc.open = !narrow.matches; };
+fold(); narrow.addEventListener('change', fold);
+const links = new Map([...toc.querySelectorAll('a[href^="#"]')].map((a) => [decodeURIComponent(a.hash.slice(1)), a]));
+const io = new IntersectionObserver((entries) => {
+  for (const e of entries) if (e.isIntersecting) {
+    toc.querySelectorAll('a.on').forEach((a) => a.classList.remove('on'));
+    links.get(e.target.id)?.classList.add('on');
+  }
+}, { rootMargin: '0px 0px -75% 0px' });
+document.querySelectorAll('article h2[id], article h3[id]').forEach((h) => io.observe(h));
+</script>
+<script type="module">
+if (document.querySelector('pre.mermaid')) {
+  const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs');
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  mermaid.initialize({ startOnLoad: false, theme: 'base', fontFamily: 'system-ui, sans-serif', themeVariables: dark
+    ? { background: '#161613', primaryColor: '#2E2E29', primaryTextColor: '#EBEAE2', primaryBorderColor: '#93938A', lineColor: '#7A7B74', secondaryColor: '#1E2413', tertiaryColor: '#242521' }
+    : { background: '#F7F7F4', primaryColor: '#FFFFFF', primaryTextColor: '#1A1D17', primaryBorderColor: '#4A2E22', lineColor: '#80817A', secondaryColor: '#F1F6E2', tertiaryColor: '#F0F1EC' } });
+  await mermaid.run({ querySelector: 'pre.mermaid' });
+}
+</script>
+</body>
+</html>
