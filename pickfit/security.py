@@ -512,9 +512,13 @@ def informational(v: dict[str, Any]) -> bool:
     return any(b.get("informational") for b in blocks)
 
 
-def findings_for(nodes: list[Node], advisories: Advisories, unrated: list[str] | None = None) -> list[dict[str, Any]]:
-    """High and critical advisories (and malicious-package reports) on the given versions, one per vulnerability.
-    Advisories with no severity anywhere (no GHSA rating, no CVSS v3) are not counted; `unrated` collects them."""
+def findings_for(nodes: list[Node], advisories: Advisories, unrated: list[str] | None = None,
+                 aliases: list[set[str]] | None = None) -> list[dict[str, Any]]:
+    """High and critical advisories (and malicious-package reports) on the given versions, one per vulnerability on
+    each package version: two versions of one package hit by the same advisory are two findings, each with its own
+    fixed_in (11/3: zip 4.6.1 and 8.6.0 in one app). Advisories with no severity anywhere (no GHSA rating, no CVSS
+    v3) are not counted; `unrated` collects them. `aliases` collects each counted finding's IDs (its own and its
+    aliases), for advisory_count."""
     out: list[dict[str, Any]] = []
     seen: set[str] = set()
     for i in range(0, len(nodes), 500):
@@ -522,12 +526,13 @@ def findings_for(nodes: list[Node], advisories: Advisories, unrated: list[str] |
         queries = [{"package": {"name": n, "ecosystem": ECOSYSTEM[e]}, "version": v} for e, n, v in chunk]
         results = _http(f"{OSV}/querybatch", {"queries": queries}).get("results", [])
         for (eco, name, version), res in zip(chunk, results):
+            node = f"{eco}:{name}@{version}"
             for hit in res.get("vulns") or []:
                 v = advisories.get(hit["id"])
                 if v.get("withdrawn"):
                     continue
                 ids = {v["id"], *v.get("aliases", [])}
-                if f"{eco}:{name}" + "|" + v["id"] in seen or any(f"{eco}:{name}|{a}" in seen for a in ids):
+                if any(f"{node}|{a}" in seen for a in ids):
                     continue
                 malicious = v["id"].startswith("MAL-")
                 if not malicious and informational(v):
@@ -537,7 +542,9 @@ def findings_for(nodes: list[Node], advisories: Advisories, unrated: list[str] |
                     unrated.append(f"{eco}:{name}@{version} {v['id']}")
                 if severity not in COUNTED:
                     continue
-                seen |= {f"{eco}:{name}|{a}" for a in ids}
+                seen |= {f"{node}|{a}" for a in ids}
+                if aliases is not None:
+                    aliases.append(ids)
                 out.append({"package": f"{eco}:{name}", "version": version, "advisory": v["id"],
                             "cves": sorted(a for a in v.get("aliases", []) if a.startswith("CVE-"))[:10],
                             "severity": severity, "fixed_in": _fixed_above(v, eco, name, version),
@@ -545,6 +552,19 @@ def findings_for(nodes: list[Node], advisories: Advisories, unrated: list[str] |
                             "malicious": malicious})
     out.sort(key=lambda f: (not f["malicious"], f["severity"] != "CRITICAL", f["package"], f["advisory"]))
     return out
+
+
+def advisory_count(aliases: list[set[str]]) -> int:
+    """Distinct vulnerabilities among findings: findings whose IDs or aliases overlap are one (one vue-i18n advisory
+    on vue-i18n, @intlify/core-base and @intlify/shared is one vulnerability in three findings)."""
+    groups: list[set[str]] = []
+    for ids in aliases:
+        merged = set(ids)
+        for g in [g for g in groups if g & merged]:
+            merged |= g
+            groups.remove(g)
+        groups.append(merged)
+    return len(groups)
 
 
 def check(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones: Path = CLONES,
@@ -559,7 +579,7 @@ def check(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones:
 
     def unchecked(reason: str) -> dict[str, Any]:
         return base | {"status": "unchecked", "unchecked_reason": reason, "sources": [], "packages_checked": 0,
-                       "findings_total": 0, "findings": []}
+                       "findings_total": 0, "advisories_total": 0, "findings": []}
 
     nodes: list[Node] = []
     sources: list[str] = []
@@ -598,12 +618,13 @@ def check(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones:
                 if not complete and own and reason == "no_lockfile":
                     reason = "resolve_failed"  # its own package did not resolve to its dependencies either
     nodes = list(dict.fromkeys(nodes))
-    findings = findings_for(nodes, advisories, unrated) if nodes else []
+    aliases: list[set[str]] = []
+    findings = findings_for(nodes, advisories, unrated, aliases) if nodes else []
     if not findings and not complete:
         return unchecked(reason or "resolve_failed")
     return base | {"status": "vulnerable" if findings else "clean", "unchecked_reason": None, "sources": sources[:20],
                    "packages_checked": len(nodes), "findings_total": len(findings),
-                   "findings": findings[:MAX_FINDINGS]}
+                   "advisories_total": advisory_count(aliases), "findings": findings[:MAX_FINDINGS]}
 
 
 # --- writing ----------------------------------------------------------------------------------------------------------

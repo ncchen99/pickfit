@@ -14,19 +14,29 @@ export interface SecurityOut {
   /** unchecked only: why pickfit could not check it. */
   reason: SecurityReason | null;
   checked_at: string | null;
-  /** vulnerable: how many known high or critical vulnerabilities in all; 0 otherwise. */
+  /** vulnerable: how many findings in all, one per advisory on each package version; 0 otherwise. */
   count: number;
+  /** vulnerable: distinct known high or critical vulnerabilities among them; 0 otherwise. */
+  advisories: number;
   findings: { package: string; version: string; advisory: string; severity: 'CRITICAL' | 'HIGH'; fixed_in: string | null; malicious: boolean }[];
+}
+
+/** Distinct vulnerabilities of a vulnerable check, at least 1 and at most its findings; an older check without the
+ * field reads as its findings. */
+export function advisoriesOf(s: SecurityCheck, count: number): number {
+  return Math.max(1, Math.min(s.advisories ?? count, count));
 }
 
 export function securityOut(entry: Entry): SecurityOut {
   const s = securityOf(entry);
   const findings = s.status === 'vulnerable' ? (s.findings ?? []) : [];
+  const count = s.status === 'vulnerable' ? Math.max(s.count ?? 0, findings.length, 1) : 0;
   return {
     status: s.status,
     reason: s.status === 'unchecked' ? (s.reason ?? 'not_run') : null,
     checked_at: s.checked_at ?? null,
-    count: s.status === 'vulnerable' ? Math.max(s.count ?? 0, findings.length, 1) : 0,
+    count,
+    advisories: s.status === 'vulnerable' ? advisoriesOf(s, count) : 0,
     findings: findings.slice(0, SECURITY_FINDINGS_MAX).map((f) => ({
       package: f.package,
       version: f.version,
@@ -50,8 +60,8 @@ export function securityWarnings(out: SecurityOut, web = false): string[] {
     .map((f) => `${f.package} ${f.version} ${f.advisory} (${f.severity}), ${f.fixed_in ? `fixed in ${f.fixed_in}` : 'no fix yet'}`);
   const more = out.count - out.findings.length;
   if (known.length || more > 0 || !lines.length) {
-    const head = out.count === 1 ? 'Known vulnerability' : `Known vulnerabilities (${out.count} high or critical)`;
-    const list = [...known, ...(more > 0 ? [`${more} more`] : [])].join('; ');
+    const head = out.advisories === 1 ? 'Known vulnerability' : `Known vulnerabilities (${out.advisories} high or critical)`;
+    const list = [...known, ...(more > 0 ? [`${more} more ${more === 1 ? 'finding' : 'findings'}`] : [])].join('; ');
     lines.push(`${head}${list ? `: ${list}` : web ? ' in the packages the site is built from' : ' in a package it installs'}. ${web ? 'Tell the user before they use it.' : 'Tell the user before installing.'}`);
   }
   return lines;

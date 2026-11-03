@@ -107,6 +107,9 @@ def test_index_entry_says_what_the_page_shows() -> None:
     assert _security(SoftwareRecord.model_validate(scored_web())) == {"status": "unchecked", "reason": "not_run"}
     entry = _security(SoftwareRecord.model_validate(scored_web(check(findings_total=75))))
     assert entry["status"] == "vulnerable" and entry["count"] == 75 and entry["findings"][0]["fixed_in"] == "8.12.2"
+    assert "advisories" not in entry  # a check from before 11/3 evening has no distinct count
+    entry = _security(SoftwareRecord.model_validate(scored_web(check(findings_total=75, advisories_total=40))))
+    assert (entry["count"], entry["advisories"]) == (75, 40)
     entry = _security(SoftwareRecord.model_validate(scored_web(check("unchecked"))))
     assert entry == {"status": "unchecked", "checked_at": "2026-11-03", "reason": "no_source"}
 
@@ -347,7 +350,7 @@ def _resolving(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, graphs: dict[str
     monkeypatch.setattr(security, "RESOLVERS", {"npm": resolver, "pypi": resolver, "crates": resolver})
     monkeypatch.setattr(security, "clone", fake_clone)
     monkeypatch.setattr(security, "repo_nodes", lambda root: repo)
-    monkeypatch.setattr(security, "findings_for", lambda nodes, advisories, unrated=None: [])
+    monkeypatch.setattr(security, "findings_for", lambda nodes, advisories, unrated=None, aliases=None: [])
     return cloned
 
 
@@ -459,6 +462,42 @@ def test_findings_count_high_critical_and_malicious_only(monkeypatch: pytest.Mon
     for f in found:
         SecurityCheck.model_validate(check(findings=[f]))
 
+
+
+def test_two_versions_of_one_package_are_two_findings_and_one_advisory_on_three_packages_counts_once(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    # 11/3, MangoDisk: zip 4.6.1 and 8.6.0 share an advisory (each with its own fixed_in), and one vue-i18n advisory
+    # sits on vue-i18n, @intlify/core-base and @intlify/shared.
+    zip_hole = {"id": "GHSA-zzzz-zzzz-zzzz", "aliases": ["CVE-2026-7"], "database_specific": {"severity": "CRITICAL"},
+                "affected": [{"package": {"ecosystem": "crates.io", "name": "zip"},
+                              "ranges": [{"events": [{"introduced": "0"}, {"fixed": "4.7.0"},
+                                                     {"introduced": "8.0.0"}, {"fixed": "9.0.5"}]}]}]}
+    i18n = {"id": "GHSA-iiii-iiii-iiii", "aliases": ["CVE-2026-8"], "database_specific": {"severity": "HIGH"}}
+    i18n_alias = {"id": "RUSTSEC-0000-0000", "aliases": ["CVE-2026-8"], "database_specific": {"severity": "HIGH"}}
+    advisories = {a["id"]: a for a in (zip_hole, i18n, i18n_alias)}
+    hits = {("zip", "4.6.1"): ["GHSA-zzzz-zzzz-zzzz"], ("zip", "8.6.0"): ["GHSA-zzzz-zzzz-zzzz"],
+            ("vue-i18n", "11.4.13"): ["GHSA-iiii-iiii-iiii"], ("@intlify/core-base", "11.4.13"): ["GHSA-iiii-iiii-iiii"],
+            ("@intlify/shared", "11.4.13"): ["RUSTSEC-0000-0000"]}
+
+    def fake_http(url: str, body: Any = None, tries: int = 4) -> Any:
+        if url.endswith("/querybatch"):
+            return {"results": [{"vulns": [{"id": i} for i in hits.get((q["package"]["name"], q["version"]), [])]}
+                                for q in body["queries"]]}
+        return advisories[url.rsplit("/", 1)[1]]
+
+    monkeypatch.setattr(security, "_http", fake_http)
+    aliases: list[set[str]] = []
+    found = security.findings_for([("crates", "zip", "4.6.1"), ("crates", "zip", "8.6.0"), ("npm", "vue-i18n", "11.4.13"),
+                                   ("npm", "@intlify/core-base", "11.4.13"), ("npm", "@intlify/shared", "11.4.13")],
+                                  security.Advisories(), aliases=aliases)
+    assert sorted((f["package"], f["version"], f["fixed_in"]) for f in found if f["package"] == "crates:zip") == [
+        ("crates:zip", "4.6.1", "4.7.0"), ("crates:zip", "8.6.0", "9.0.5")]
+    assert len(found) == 5 and len(aliases) == 5
+    assert security.advisory_count(aliases) == 2  # the zip hole, and the vue-i18n one (its alias shares the CVE)
+    assert security.advisory_count([]) == 0
+    with pytest.raises(ValidationError):  # more distinct advisories than findings
+        SecurityCheck.model_validate(check(findings=found[:1], findings_total=1, advisories_total=2))
+    SecurityCheck.model_validate(check(findings=found, findings_total=5, advisories_total=2))
 
 def test_a_record_with_nothing_to_read_is_unchecked() -> None:
     raw = {"slug": "x", "verification": {"runs": []}, "scores": None, "repo": None}

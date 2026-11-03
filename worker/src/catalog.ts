@@ -312,8 +312,11 @@ export interface SecurityCheck {
   /** YYYY-MM-DD; absent when reason is not_run. */
   checked_at?: string;
   packages_checked?: number;
-  /** vulnerable: how many findings in all (findings lists at most 10). */
+  /** vulnerable: how many findings in all, one per advisory on each package version (findings lists at most 10). */
   count?: number;
+  /** vulnerable: distinct vulnerabilities among the findings (one advisory on several packages or versions counts once);
+   * absent on a check from before 11/3 evening, which reads as count. */
+  advisories?: number;
   findings?: SecurityFinding[];
 }
 

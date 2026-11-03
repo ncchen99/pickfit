@@ -7,6 +7,7 @@
  * which names the model that wrote them.
  */
 import { bestGuide, isVerified, isWebApp, OSES, securityOf, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo } from '../catalog.ts';
+import { advisoriesOf } from '../security.ts';
 import { featuresOut, type FeaturesOut } from '../features.ts';
 import { L } from '../i18n.ts';
 import { installGuide, type InstallOutput } from '../install.ts';
@@ -169,6 +170,7 @@ export function securityLine(entry: Entry): string {
   }
   const findings = s.findings ?? [];
   const count = Math.max(s.count ?? 0, findings.length, 1);
+  const vulns = advisoriesOf(s, count);
   const items = findings
     .slice(0, SECURITY_SHOWN)
     .map((f) => {
@@ -189,11 +191,11 @@ export function securityLine(entry: Entry): string {
   const more = count - Math.min(findings.length, SECURITY_SHOWN);
   return `<div class="small security-check" id="security"><p>${badge('fail', L('Known vulnerabilities', '已知漏洞'), { icon: 'triangle-alert' })} ` +
     L(
-      `${count} known high or critical ${count === 1 ? 'vulnerability' : 'vulnerabilities'} in ${isWebApp(entry) ? 'the packages the site is built from' : 'packages it installs'}. That keeps it out of hidden gems: quality is capped at 79.`,
-      `${isWebApp(entry) ? '這個網站用到的' : '它安裝的'}套件有 ${count} 個已知的高風險或嚴重漏洞，所以不列為寶藏：品質最高 79 分。`,
+      `${vulns} known high or critical ${vulns === 1 ? 'vulnerability' : 'vulnerabilities'}${count > vulns ? ` (${count} findings, one per affected package version)` : ''} in ${isWebApp(entry) ? 'the packages the site is built from' : 'packages it installs'}. That keeps it out of hidden gems: quality is capped at 79.`,
+      `${isWebApp(entry) ? '這個網站用到的' : '它安裝的'}套件有 ${vulns} 個已知的高風險或嚴重漏洞${count > vulns ? `（共 ${count} 筆，每個受影響的套件版本一筆）` : ''}，所以不列為寶藏：品質最高 79 分。`,
     ) +
     `</p>${items ? `<ul>${items}</ul>` : ''}` +
-    (more > 0 ? `<p class="quiet">${L(`${more} more not listed here.`, `另有 ${more} 個未列出。`)}</p>` : '') +
+    (more > 0 ? `<p class="quiet">${L(`${more} more ${more === 1 ? 'finding' : 'findings'} not listed here.`, `另有 ${more} 筆未列出。`)}</p>` : '') +
     `</div>`;
 }
 
@@ -204,6 +206,7 @@ export function securityNotice(entry: Entry): string {
   if (s.status !== 'vulnerable') return '';
   const all = s.findings ?? [];
   const count = Math.max(s.count ?? 0, all.length, 1);
+  const vulns = advisoriesOf(s, count);
   const web = isWebApp(entry);
   // The worst of the first two packages (findings come worst first), so two advisories on one package do not hide a second.
   const items = all
@@ -221,11 +224,11 @@ export function securityNotice(entry: Entry): string {
     `<div class="notice error security-notice" role="note">${fitz('sorry', 64)}<div>` +
     `<h3>${web ? L('Before you use it: known vulnerabilities', '使用前先知道：有已知漏洞') : L('Before you install: known vulnerabilities', '安裝前先知道：有已知漏洞')}</h3>` +
     `<p>${L(
-      `pickfit found ${count} known high or critical ${count === 1 ? 'vulnerability' : 'vulnerabilities'} in ${web ? 'the packages this site is built with' : 'the packages a fresh install brings'}${date ? ` (OSV.dev, ${esc(date)})` : ''}. Weigh this before you ${web ? 'use it' : 'install it'}.`,
-      `pickfit 在${web ? '這個網站用到的套件' : '安裝時會一併裝上的套件'}裡找到 ${count} 個已知的高風險或嚴重漏洞${date ? `（OSV.dev，${esc(date)}）` : ''}，${web ? '使用' : '安裝'}前請先考慮。`,
+      `pickfit found ${vulns} known high or critical ${vulns === 1 ? 'vulnerability' : 'vulnerabilities'} in ${web ? 'the packages this site is built with' : 'the packages a fresh install brings'}${date ? ` (OSV.dev, ${esc(date)})` : ''}. Weigh this before you ${web ? 'use it' : 'install it'}.`,
+      `pickfit 在${web ? '這個網站用到的套件' : '安裝時會一併裝上的套件'}裡找到 ${vulns} 個已知的高風險或嚴重漏洞${date ? `（OSV.dev，${esc(date)}）` : ''}，${web ? '使用' : '安裝'}前請先考慮。`,
     )}</p>` +
     (items ? `<ul class="small">${items}</ul>` : '') +
-    (count > 2 ? `<p class="small"><a href="#security">${L(`See all ${count}`, `看全部 ${count} 個`)}</a></p>` : '') +
+    (count > 2 ? `<p class="small"><a href="#security">${L(`See all ${count} findings`, `看全部 ${count} 筆`)}</a></p>` : '') +
     `</div></div>`
   );
 }
