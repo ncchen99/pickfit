@@ -10,12 +10,16 @@ never write a record.
     uv run python scripts/visual_review.py controls   # writes data/calibration/visual-review-controls.json
     uv run python scripts/visual_review.py packets OUT_DIR
     uv run python scripts/visual_review.py analyses   # consistency, unassessed apps, weight variants (JSON)
+    uv run python scripts/visual_review.py guard [REF]  # section 13: the second judge against the reviewers, and the
+                                                        # records' scores against REF (default main)
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -23,6 +27,9 @@ from typing import Any
 REPO = Path(__file__).resolve().parents[1]
 DATA = REPO / "data" / "software"
 CONTROLS = REPO / "data" / "calibration" / "visual-review-controls.json"
+REVIEWS = {"a": REPO / "data" / "calibration" / "visual-review-a.json",
+           "b": REPO / "data" / "calibration" / "visual-review-b.json"}
+SHORTLIST = REPO / "docs" / "demo-shortlist.md"
 SEED = "pickfit-visual-review-2026-11-03"
 DISPUTED = ("usdx", "capitolisation")
 GROUPS = (("desktop_app", 2), ("web_app", 2), ("desktop_app", 0), ("web_app", 0))
@@ -252,6 +259,111 @@ def analyses() -> dict[str, Any]:
     return {"consistency": consistency(), "unassessed": unassessed(now), "variants": variants(now)}
 
 
+# --- section 13: the second judge on major defects (guard.v1) ---------------------------------------------------
+
+
+def guard_validation() -> dict[str, Any]:
+    """The section 11 reviewers' judgements of defects the first judge called major (app-caused), next to the second
+    judge's answer on the same defect. Pre-registered reading: at least 3 of the confirmed majors kept major and at
+    least 6 of the disputed ones demoted."""
+    rows = []
+    for reviewer, path in REVIEWS.items():
+        for app in json.loads(path.read_text(encoding="utf-8"))["apps"]:
+            defects = json.loads((DATA / f"{app['slug']}.json").read_text(encoding="utf-8"))["visual_check"]["defects"]
+            for judged in app["defects"]:
+                d = defects[judged["number"] - 1]
+                if d["cause"] != "app" or d["severity"] != "major":
+                    continue
+                says = ("not_real" if judged["real"] != "yes"
+                        else judged["severity_should_be"] or ("major" if judged["severity_right"] else "minor"))
+                rows.append({"reviewer": reviewer, "slug": app["slug"], "number": judged["number"], "kind": d["kind"],
+                             "reviewers_say": says, "second_judge": d.get("second_severity")})
+    confirmed = [r for r in rows if r["reviewers_say"] == "major"]
+    disputed = [r for r in rows if r["reviewers_say"] != "major"]
+    kept = sum(r["second_judge"] == "major" for r in confirmed)
+    demoted = sum(r["second_judge"] != "major" for r in disputed)
+    return {"judgements": rows, "confirmed": len(confirmed), "confirmed_kept_major": kept,
+            "disputed": len(disputed), "disputed_demoted": demoted,
+            "disputed_answered_none": sum(r["second_judge"] == "none" for r in disputed),
+            "meets_preregistered_reading": kept >= 3 and demoted >= 6}
+
+
+def guard_answers() -> dict[str, Any]:
+    """Every app-caused major defect on the records and the second judge's answer; apps by their worst defect."""
+    answers: dict[str, int] = {}
+    apps = {"major": 0, "minor": 0, "clean": 0}
+    by_kind: dict[str, dict[str, int]] = {}
+    cost = 0.0
+    for slug, record in checked_records().items():
+        check = record["visual_check"]
+        cost += (check.get("guard") or {}).get("cost_usd", 0.0)
+        app = [d for d in check["defects"] if d["cause"] == "app"]
+        for d in app:
+            if d["severity"] == "major":
+                said = d.get("second_severity") or "unanswered"
+                answers[said] = answers.get(said, 0) + 1
+                by_kind.setdefault(d["kind"], {})[said] = by_kind.setdefault(d["kind"], {}).get(said, 0) + 1
+        confirmed = any(d["severity"] == "major" and d.get("second_severity") == "major" for d in app)
+        apps["major" if confirmed else "minor" if app else "clean"] += 1
+    return {"major_defects": answers, "by_kind": by_kind, "apps_by_worst": apps, "guard_cost_usd": round(cost, 4)}
+
+
+def _at_ref(ref: str, slugs: list[str]) -> dict[str, dict[str, Any] | None]:
+    """The records as REF has them (one git cat-file call)."""
+    names = [f"{ref}:data/software/{slug}.json" for slug in slugs]
+    out = subprocess.run(["git", "cat-file", "--batch"], input="\n".join(names).encode() + b"\n", cwd=REPO,
+                         capture_output=True, check=True).stdout
+    records: dict[str, dict[str, Any] | None] = {}
+    at = 0
+    for slug in slugs:
+        end = out.index(b"\n", at)
+        header = out[at:end].split()
+        if header[-1] == b"missing":
+            records[slug], at = None, end + 1
+            continue
+        size = int(header[2])
+        records[slug] = json.loads(out[end + 1:end + 1 + size])
+        at = end + 1 + size + 1
+    return records
+
+
+def shortlist() -> set[str]:
+    return set(re.findall(r"`([a-z0-9][a-z0-9-]+)`", SHORTLIST.read_text(encoding="utf-8")))
+
+
+def impact(ref: str) -> dict[str, Any]:
+    """The records' quality and treasures against REF: median and mean change over the checked apps, desktop and web;
+    treasures lost and gained (any record); apps that move more than 5 points, demo-shortlist ones marked."""
+    import statistics
+
+    now = all_records()
+    then = _at_ref(ref, list(now))
+    demo = shortlist()
+
+    def total(record: dict[str, Any] | None) -> float | None:
+        return ((record or {}).get("scores") or {}).get("quality", {}).get("total")
+
+    def treasure(record: dict[str, Any] | None) -> bool:
+        return bool(((record or {}).get("scores") or {}).get("treasure", {}).get("is_treasure"))
+
+    out: dict[str, Any] = {"ref": ref}
+    for kind in ("desktop_app", "web_app", None):
+        d = [total(r) - total(then[s]) for s, r in now.items() if r.get("visual_check")
+             and (kind is None or r["kind"] == kind) and total(r) is not None and total(then[s]) is not None]
+        out[kind or "all"] = {"n": len(d), "median": round(statistics.median(d), 2), "mean": round(statistics.mean(d), 2),
+                              "min": round(min(d), 1)}
+    out["changed_records"] = sorted(s for s, r in now.items() if total(r) != total(then[s]))
+    out["treasures"] = {"before": sum(treasure(r) for r in then.values()), "after": sum(treasure(r) for r in now.values()),
+                        "lost": sorted(s for s in now if treasure(then[s]) and not treasure(now[s])),
+                        "gained": sorted(s for s in now if treasure(now[s]) and not treasure(then[s]))}
+    out["moved_over_5"] = sorted(({"slug": s, "before": total(then[s]), "after": total(r), "demo_shortlist": s in demo}
+                                  for s, r in now.items() if total(r) is not None and total(then[s]) is not None
+                                  and abs(total(r) - total(then[s])) > 5), key=lambda x: x["slug"])
+    out["demo_shortlist_changed"] = sorted({"slug": s, "before": total(then[s]), "after": total(now[s])}
+                                           for s in demo & set(out["changed_records"]))
+    return out
+
+
 def main() -> int:
     command = sys.argv[1] if len(sys.argv) > 1 else ""
     if command == "controls":
@@ -262,6 +374,10 @@ def main() -> int:
         packets(Path(sys.argv[2]))
     elif command == "analyses":
         print(json.dumps(analyses(), ensure_ascii=False, indent=2))
+    elif command == "guard":
+        ref = sys.argv[2] if len(sys.argv) > 2 else "main"
+        print(json.dumps({"validation": guard_validation(), "answers": guard_answers(), "impact": impact(ref)},
+                         ensure_ascii=False, indent=2))
     else:
         print(__doc__)
         return 2
