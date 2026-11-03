@@ -487,7 +487,9 @@ file's name in the app's list) or deletes it in the app (gone), each citing that
 A check must hold the feature's own result: a file it saved or exported, text it converted, computed or \
 generated, a value it copied, or something it created and then lists or stores. Never a heading, a label, a \
 menu or the name of a screen: opening a screen shows nothing about a feature, a screen_text result must not \
-be on the screen before the first action, and pickfit's feature judge refuses such checks. \
+be on the screen before the first action, and pickfit's feature judge refuses such checks. A feature that \
+deletes, cleans up or removes files is checked by gone (the app deletes a file a setup made, in one operation \
+that also finds it first): a list that shows the file proves only the scan. \
 A passing operate_gui is the only way a GUI app reaches level function: cite it as a smoke test with \
 expected_signal `gui check: passed` and in features as checked. A feature that needs what this box lacks is \
 not a check: report it not_checked with the code that names our box's limit, never other: needs_gpu (a GPU), \
@@ -540,7 +542,9 @@ would without admin rights: a Homebrew cask with `brew install --cask --appdir=$
 <user>/<tap> && brew trust --tap <user>/<tap> && brew install --cask --appdir=$HOME/Applications \
 <user>/<tap>/<cask>`) \
 (you cannot write /Applications; a cask that runs a .pkg installer or needs sudo cannot install here: finish \
-unverified with the reason), or the app's own .dmg or .zip in two cited steps: `curl -fL -o \
+unverified with the reason; --appdir and the tap and trust are this box's and Homebrew's needs, so when they are \
+all you added to the README's brew command, a pitfall about them is kind sandbox, never readme_wrong), or the \
+app's own .dmg or .zip in two cited steps: `curl -fL -o \
 ~/Downloads/<file>.dmg <url>`, then `mkdir -p ~/mnt/<name> ~/Applications && hdiutil attach -nobrowse -mountpoint ~/mnt/<name> \
 ~/Downloads/<file>.dmg && cp -R ~/mnt/<name>/<App>.app ~/Applications/ && hdiutil detach -force ~/mnt/<name>` \
 (~/Applications does not exist in a new box, and cp -R into a missing folder makes the folder the app; \
