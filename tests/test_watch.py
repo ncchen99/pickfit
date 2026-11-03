@@ -212,7 +212,10 @@ def test_prescreen_and_extraction_rejections(env: dict[str, Any]) -> None:
 
 @pytest.mark.parametrize("override, reason", [
     ({"kind": cited("library_sdk", "A tiny jq-like query tool")}, "reads as a library"),
-    ({"category": cited("other", "A tiny jq-like query tool for JSON Lines.")}, "MCP servers for now"),
+    ({"kind": cited("library_sdk", "A tiny jq-like query tool"),
+      "category": cited("other", "A tiny jq-like query tool for JSON Lines.")}, "reads as a library"),
+    ({"kind": cited("curated_list", "A tiny jq-like query tool"),
+      "category": cited("other", "A tiny jq-like query tool for JSON Lines.")}, "reads as a library"),
 ])
 def test_records_outside_the_directory_are_refused(env: dict[str, Any], override: dict[str, Any],
                                                    reason: str) -> None:
@@ -540,6 +543,21 @@ def test_an_mcp_server_submission_is_verified_as_one(env: dict[str, Any]) -> Non
     assert task.category == "mcp_server"  # so the box gets pickfit's MCP probe
     record = SoftwareRecord.model_validate_json((env["data"] / "tinyq.json").read_text())
     assert (record.category, record.kind) == ("mcp_server", "mcp_server_or_agent_plugin")
+
+
+@pytest.mark.parametrize("kind", ["desktop_app", "cli_tool", "self_hosted_web_app"])
+def test_software_outside_the_three_categories_is_taken(env: dict[str, Any], kind: str) -> None:
+    # The directory lists desktop apps, web apps and other software people install under category "other".
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    pipeline = Pipeline(env["tmp"], result=extraction(
+        kind=cited(kind, "A tiny jq-like query tool"),
+        category=cited("other", "A tiny jq-like query tool for JSON Lines.")), display=True,
+        runs=[passed_run("run-20261030-linux-7", ["cargo install tinyq"], method="cargo", level="install")])
+    [job] = run_once(env, pipeline)
+    assert job.result == "ready" and submission(env["d1"], "sub_1")["reason"] == READY_REASON
+    assert "verify" in pipeline.calls and pipeline.verify.tasks[0].category == "other"
+    record = SoftwareRecord.model_validate_json((env["data"] / "tinyq.json").read_text())
+    assert (record.category, record.kind) == ("other", kind)
 
 
 def test_a_gui_app_gets_a_display_box_when_there_is_one(env: dict[str, Any]) -> None:

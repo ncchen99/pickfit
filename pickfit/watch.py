@@ -61,13 +61,16 @@ from pickfit.discover.github import normalize_repo
 from pickfit.discover.rules import RULES_VERSION, classify
 from pickfit.discover.store import PipelineDB, repo_key
 from pickfit.ledger import TAIPEI, BudgetExceeded, Ledger, taipei_now
-from pickfit.schema import LISTED_CATEGORIES, ExtractionResult, SoftwareRecord, is_passed
+from pickfit.schema import LISTED_CATEGORIES, TOOL_KINDS, ExtractionResult, SoftwareRecord, is_passed
 from pickfit.verify.batch import NEVER_RAN, not_in_box
 from pickfit.verify.task import VerifyTask
 
 MODEL = "muse-spark-1.3"
 EXTRACT_EFFORT = "minimal"
 COVERED = LISTED_CATEGORIES  # dev_cli, local_ai, mcp_server
+# Category "other" is taken too when the kind is software people install and run (desktop and web apps, CLI tools
+# and the like, as the directory already lists them); libraries and non-software stay out (11/3).
+OTHER_KINDS = TOOL_KINDS
 DEFAULT_INTERVAL_S = 60
 DEFAULT_CONCURRENCY = 2
 DEFAULT_MAX_USD = 5.0
@@ -649,9 +652,9 @@ class Watcher:
             if reason == "no_summary":
                 raise Rejected("pickfit could not tell from the README what the tool does.") from None
             raise Rejected("pickfit could not build a valid record from what the README says.") from None
-        if record.category not in COVERED:
-            raise Rejected("pickfit lists developer CLI tools, local AI tools and MCP servers for now; this is "
-                           "none of them.")
+        if record.category not in COVERED and record.kind not in OTHER_KINDS:
+            raise Rejected("pickfit lists software people install and run (CLI tools, desktop and web apps, "
+                           "local AI tools, MCP servers); this reads as a library or something else.")
         if record_dir.exists():
             shutil.rmtree(record_dir)
         record_dir.mkdir(parents=True)

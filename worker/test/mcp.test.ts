@@ -121,6 +121,17 @@ test('find tools: the unverified tag and no search narration', async () => {
   assert.match(tools.find_alternatives, /lead with "keep X" and why/);
 });
 
+test('submit_software says what it takes: desktop apps too, not libraries', async () => {
+  const { call } = setup();
+  const list = await message(
+    await call(rpc({ jsonrpc: '2.0', id: 1, method: 'tools/list' }, { 'mcp-protocol-version': '2025-11-25' })),
+  );
+  const tools = Object.fromEntries(list.result.tools.map((t: any) => [t.name, t.description as string]));
+  assert.match(tools.submit_software, /MCP servers, desktop GUI apps and web apps are taken/);
+  assert.match(tools.submit_software, /libraries and other code people import are rejected/);
+  assert.doesNotMatch(tools.submit_software, /other software may be rejected/);
+});
+
 test('modern clients: the model path end to end, then the install guide', async () => {
   const { call, sqlite, settle } = setup({ MATCH_MODE: 'model', MODEL_API_KEY: 'k' }, () => metaResponse(answer()));
   const headers = { 'mcp-protocol-version': '2026-07-28', 'mcp-method': 'tools/call' };
