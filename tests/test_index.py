@@ -254,3 +254,39 @@ def test_a_runs_video_reaches_the_index_for_the_worker_to_serve(tmp_path: Path) 
     assert all(r["feature_index"] is None or 0 <= r["feature_index"] < len(video["features"]) for r in video["raw"])
     linux = entry["install"]["linux"]["run"]
     assert linux["video"] == video or linux["video"] is None
+
+
+def test_desktop_and_web_apps_say_what_the_visual_check_found_or_that_there_was_none(data_dir: Path) -> None:
+    run_id = json.loads((data_dir / "fixture-web-sketch.json").read_text(encoding="utf-8"))["verification"]["runs"][0]["id"]
+    defect = {"item": "comfortable", "operation": None, "cause": "app", "problem": "A button covers the title.",
+              "screenshot": "after.png", "box": [0, 0, 10, 10], "quote": "Sketch", "found_by": "ocr",
+              "kind": "overlap", "severity": "minor"}
+    sandbox = defect | {"cause": "sandbox", "problem": "No window manager."}
+
+    def checked(record: dict) -> None:
+        record["visual_check"] = {"version": "comfort.v1", "run_id": run_id, "score": 1, "status": "scored",
+                                  "defects": [defect, sandbox], "screens": 2, "model": "muse-wonder-1.0",
+                                  "effort": "medium", "inputs_sha": "0" * 64,
+                                  "checked_at": "2026-11-03T20:00:00+08:00", "cost_usd": 0.03}
+
+    entries = {e["slug"]: e for e in build_index(data_dir).index["entries"]}
+    assert entries["fixture-web-sketch"]["visual"] == {"status": "not_checked"}  # a web app with no check
+    assert entries["fixture-json-query"]["visual"] is None  # not a desktop or web app
+    edit(data_dir / "fixture-web-sketch.json", checked)
+    visual = {e["slug"]: e for e in build_index(data_dir).index["entries"]}["fixture-web-sketch"]["visual"]
+    assert visual["status"] == "defect" and visual["factor"] == 0.95
+    assert visual["defects"] == [{"kind": "overlap", "problem": "A button covers the title.", "quote": "Sketch"}]
+
+    def clean(record: dict) -> None:
+        record["visual_check"].update(score=2, defects=[sandbox])
+
+    edit(data_dir / "fixture-web-sketch.json", clean)
+    visual = {e["slug"]: e for e in build_index(data_dir).index["entries"]}["fixture-web-sketch"]["visual"]
+    assert visual["status"] == "clean" and visual["defects"] == []
+
+    def gone(record: dict) -> None:
+        record["visual_check"]["run_id"] = "web-gone"
+
+    edit(data_dir / "fixture-web-sketch.json", gone)
+    assert {e["slug"]: e for e in build_index(data_dir).index["entries"]}["fixture-web-sketch"]["visual"] == {
+        "status": "not_checked"}

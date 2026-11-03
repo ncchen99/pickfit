@@ -112,6 +112,22 @@ export interface Chapter {
 }
 
 /** The clip's chapters for the page: a feature's plain title when there is one, fixed words for the two cards. */
+/** Desktop and web apps: what the visual check of pickfit's own screenshots found, as the quality score uses it. An
+ * app with no screenshots says so plainly: nothing is taken off for that. */
+export function visualLine(entry: Entry): string {
+  const v = entry.visual;
+  if (!v) return '';
+  if (v.status === 'not_checked') {
+    return `<p class="small quiet visual-check">${L('Not visually checked: pickfit has no screenshots of its own of this app, so nothing is taken off.', '沒有做視覺檢查：pickfit 沒有這個應用自己拍的截圖，所以不扣分。')}</p>`;
+  }
+  if (v.status === 'clean') {
+    return `<p class="small visual-check">${L('Visual check: no defect found.', '視覺檢查：沒有發現缺陷。')}</p>`;
+  }
+  const items = (v.defects ?? []).map((d) => `<li>${esc(d.problem)}</li>`).join('');
+  return `<div class="small visual-check"><p>${L('Visual check found a defect: −5%', '視覺檢查發現缺陷：−5%')}</p>` +
+    (items ? `<ul>${items}</ul>` : '') + `</div>`;
+}
+
 export function chaptersOf(entry: Entry, video: RunVideo): Chapter[] {
   const list = [...(video.chapters ?? [])].filter((c) => c.start_s >= 0 && c.start_s < video.seconds).sort((a, b) => a.start_s - b.start_s);
   return list.map((c, i) => ({
@@ -559,7 +575,7 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
     tape(L('Quality', '品質'), entry.scores?.quality ?? null, { pop: 'pop-quality' }) +
     tape(L('Popularity', '知名度'), entry.scores?.popularity ?? null, { pop: 'pop-popularity', tone: 'quiet' }) +
     coverage(features, { pop: 'pop-features' }) +
-    `</div><p class="small quiet">${L('Scored apart; ranked by neither.', '兩項分開計分，排序不看分數。')} <a href="/how#scores">${L('How scores work', '評分方式')}</a></p></div>` +
+    `</div>${visualLine(entry)}<p class="small quiet">${L('Scored apart; ranked by neither.', '兩項分開計分，排序不看分數。')} <a href="/how#scores">${L('How scores work', '評分方式')}</a></p></div>` +
     (sources ? `<details class="panel sources"><summary>${L('Sources', '來源')}</summary><ul class="small">${sources}</ul><p class="small quiet">${L('Every field in the profile cites one of these.', '簡介裡的每個欄位都引用下列其中一個來源。')}</p></details>` : '') +
     `</aside></div>`;
   return renderShell({

@@ -239,6 +239,8 @@ export interface Entry {
   mcp?: McpFacts | null;
   /** Hosted web apps only (kind web_app): no install guides, a URL to open instead. */
   web?: WebApp | null;
+  /** Desktop and web apps only: what pickfit's visual check of its own screenshots found (pickfit/index.py _visual). */
+  visual?: VisualCheck | null;
   scores: {
     quality: number | null;
     popularity: number | null;
@@ -247,6 +249,16 @@ export interface Entry {
     formula_version: string;
   } | null;
   sources: string[];
+}
+
+/** A desktop or web app's visual check: "defect" took 5% off quality, "clean" changed nothing, "not_checked" means
+ * pickfit has no screenshots of its own of the app (nothing is taken off for that). */
+export interface VisualCheck {
+  status: 'defect' | 'clean' | 'not_checked';
+  factor?: number;
+  defects?: { kind: string; problem: string; quote: string }[];
+  checked_at?: string;
+  model?: string;
 }
 
 export interface Catalog {

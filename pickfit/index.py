@@ -108,6 +108,23 @@ def _gui(run: VerificationRun) -> dict[str, Any] | None:
     return out
 
 
+def _visual(record: SoftwareRecord) -> dict[str, Any] | None:
+    """Desktop and web apps: what pickfit's visual check of its own screenshots found (comfort.v1), as the score uses
+    it: "defect" (the quality total took 5% off), "clean", or "not_checked" (no screenshots of pickfit's own, or the
+    check read a run the record no longer has). Only app-caused defects are listed. None for other kinds."""
+    from pickfit.score import visual_factor
+
+    if record.kind not in ("desktop_app", "web_app"):
+        return None
+    check = record.visual_check
+    factor = visual_factor(check, record.verification) if check is not None else None
+    if check is None or factor is None:
+        return {"status": "not_checked"}
+    defects = [{"kind": d.kind, "problem": d.problem, "quote": d.quote} for d in check.defects if d.cause == "app"]
+    return {"status": "defect" if factor < 1 else "clean", "factor": factor, "defects": defects[:6],
+            "checked_at": _iso(check.checked_at)[:10], "model": check.model}
+
+
 def _web(record: SoftwareRecord) -> dict[str, Any] | None:
     """A web app's URL and what its strongest passed browser run saw (latest first on a tie); check is None
     until a run passed. Operations' observed lines are pickfit's own."""
@@ -264,6 +281,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
         "install": install,
         "mcp": record.mcp.model_dump() if record.mcp else None,
         "web": _web(record),
+        "visual": _visual(record),
         "scores": {
             "quality": scores.quality.total,
             "popularity": scores.popularity.score,
