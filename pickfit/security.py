@@ -50,7 +50,8 @@ ECOSYSTEM = {"npm": "npm", "pypi": "PyPI", "crates": "crates.io", "go": "Go"}
 COUNTED = ("CRITICAL", "HIGH")
 # Parts of a repository a person installing the software does not get.
 PERIPHERAL = re.compile(r"(^|/)(website|site|docs?|landing|www|demo|examples?|bench(mark)?s?|playground|e2e|tests?|"
-                        r"__tests__|fixtures?|scripts|\.github|editors?|action|vscode|node_modules|vendor)/", re.I)
+                        r"__tests__|fixtures?|scripts|editors?|action|vscode|node_modules|vendor|tools|external|"
+                        r"third_party|reference|mockups|spikes|eval|\.[^/]+)/", re.I)
 UNSUPPORTED_LOCKS = ("pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb")
 MAX_FINDINGS = 60
 TIMEOUT = 300
@@ -149,10 +150,11 @@ def _run(cmd: list[str], cwd: Path | None = None, stdin: str | None = None) -> s
 
 
 def npm_lock_nodes(lock: dict[str, Any]) -> list[Node]:
-    """Non-dev packages of a package-lock.json (v2/v3), the root project left out."""
+    """Non-dev packages of a package-lock.json (v2/v3) from the registry: the root project and workspace members (local
+    code, entries outside node_modules/) are left out, so a local name is never looked up as someone else's package."""
     out = []
     for path, p in (lock.get("packages") or {}).items():
-        if not path or "version" not in p or p.get("dev") or p.get("link"):
+        if "node_modules/" not in path or "version" not in p or p.get("dev") or p.get("link"):
             continue
         out.append(("npm", p.get("name") or path.rsplit("node_modules/", 1)[-1], p["version"]))
     return out
@@ -192,7 +194,10 @@ def resolve_crate(name: str) -> list[Node]:
         raise RuntimeError("crate has no default version on deps.dev")
     ver = default[0]["versionKey"]["version"]
     graph = _http(f"{DEPS_DEV}/systems/cargo/packages/{q}/versions/{urllib.parse.quote(ver, safe='')}:dependencies")
-    return [("crates", n["versionKey"]["name"], n["versionKey"]["version"]) for n in graph.get("nodes", [])]
+    nodes = graph.get("nodes", [])
+    if not any(n.get("relation") == "SELF" for n in nodes):  # deps.dev has not resolved this version
+        raise RuntimeError("deps.dev has no dependency graph for this crate")
+    return [("crates", n["versionKey"]["name"], n["versionKey"]["version"]) for n in nodes]
 
 
 RESOLVERS = {"npm": resolve_npm, "pypi": resolve_pypi, "crates": resolve_crate}
@@ -216,11 +221,13 @@ def _uv_lock_nodes(lock: dict[str, Any]) -> list[Node]:
     return [("pypi", n, by_name[n]["version"]) for n in sorted(keep) if "version" in by_name[n]]
 
 
-def repo_nodes(root: Path) -> tuple[list[Node], list[str], bool]:
-    """(nodes, lockfiles read, saw only lockfiles pickfit cannot read) for a cloned repository."""
+def repo_nodes(root: Path) -> tuple[list[Node], list[str], bool, bool]:
+    """(nodes, lockfiles read, saw only lockfiles pickfit cannot read, a lockfile at the root could not be read) for a
+    cloned repository. The last means what was read may not be what installs, so a check without findings is not clean."""
     nodes: list[Node] = []
     read: list[str] = []
     unsupported = False
+    main_unread = False
     pyprojects: list[Path] = []
     py_locks: list[Path] = []
     for f in sorted(root.rglob("*")):
@@ -247,7 +254,9 @@ def repo_nodes(root: Path) -> tuple[list[Node], list[str], bool]:
                 py_locks.append(f)
             elif name in UNSUPPORTED_LOCKS:
                 unsupported = True
+                main_unread |= "/" not in rel
         except (ValueError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+            main_unread |= "/" not in rel
             continue
     # pip and uv install from pyproject.toml and resolve afresh; a lockfile only stands in when that fails.
     fresh_ok = False
@@ -258,6 +267,7 @@ def repo_nodes(root: Path) -> tuple[list[Node], list[str], bool]:
             fresh_ok = True
         except (RuntimeError, subprocess.TimeoutExpired):
             continue
+    lock_ok = False
     if not fresh_ok:
         for f in py_locks:
             rel = f.relative_to(root).as_posix()
@@ -265,48 +275,78 @@ def repo_nodes(root: Path) -> tuple[list[Node], list[str], bool]:
                 text = f.read_text(encoding="utf-8")
                 nodes += _uv_lock_nodes(tomllib.loads(text)) if f.suffix == ".lock" else _pins(text)
                 read.append(rel)
+                lock_ok = True
             except (ValueError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+                main_unread |= "/" not in rel
                 continue
-    return list(dict.fromkeys(nodes)), read, unsupported and not read
+    if any("/" not in p.relative_to(root).as_posix() for p in pyprojects) and not fresh_ok and not lock_ok:
+        main_unread = True  # a Python project at the root whose dependencies could not be resolved
+    return list(dict.fromkeys(nodes)), read, unsupported and not read, main_unread
 
 
-def clone(url: str, slug: str, clones: Path = CLONES) -> Path:
-    """A shallow clone, kept for the next run; files over 20 MB are left out. Only read as data, never run."""
+def _git(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, timeout=900,
+                          env=os.environ | {"GIT_TERMINAL_PROMPT": "0"})
+
+
+def clone(url: str, slug: str, clones: Path = CLONES) -> tuple[Path, str]:
+    """A shallow clone of the default branch as it is now, and its commit. A cached clone is fetched and reset to the
+    latest commit (cloned again if that fails); files over 20 MB are left out. Only read as data, never run."""
     dest = clones / slug
     if (dest / ".git").is_dir():
-        return dest
-    clones.mkdir(parents=True, exist_ok=True)
-    r = subprocess.run(["git", "clone", "--depth", "1", "--quiet", "--filter=blob:limit=20m", url, str(dest)],
-                       capture_output=True, text=True, timeout=900, env=os.environ | {"GIT_TERMINAL_PROMPT": "0"})
-    if r.returncode:
-        subprocess.run(["rm", "-rf", str(dest)])
-        raise RuntimeError(f"clone failed: {r.stderr.strip()[-200:]}")
-    return dest
+        fetched = _git("fetch", "--depth", "1", "--quiet", "--filter=blob:limit=20m", "origin", "HEAD", cwd=dest)
+        if fetched.returncode or _git("reset", "--hard", "--quiet", "FETCH_HEAD", cwd=dest).returncode:
+            subprocess.run(["rm", "-rf", str(dest)])
+    if not (dest / ".git").is_dir():
+        clones.mkdir(parents=True, exist_ok=True)
+        r = _git("clone", "--depth", "1", "--quiet", "--filter=blob:limit=20m", url, str(dest))
+        if r.returncode:
+            subprocess.run(["rm", "-rf", str(dest)])
+            raise RuntimeError(f"clone failed: {r.stderr.strip()[-200:]}")
+    return dest, _git("rev-parse", "HEAD", cwd=dest).stdout.strip()
 
 
 # --- what to check for a record ---------------------------------------------------------------------------------------
 
+_FLAGS = r"((?:\s+-{1,2}[\w=-]+)*)\s+"
 _INSTALLED = [
-    (re.compile(r"\bnpm (?:install|i) (?:-g|--global) ((?:@[\w.-]+/)?[\w.-]+)"), "npm"),
-    (re.compile(r"\b(?:uv tool install|pipx install)(?: --force)? \"?([A-Za-z][\w.-]*)(?=[\s\"]|$)"), "pypi"),
-    (re.compile(r"\bpip3? install (?:--user |--break-system-packages )*([A-Za-z][\w.-]*)(?=[\s]|$)"), "pypi"),
-    (re.compile(r"\bcargo install (?:--locked )?([A-Za-z][\w-]*)(?=\s|$)"), "crates"),
+    (re.compile(r"\bnpm\s+(?:install|i)" + _FLAGS + r"((?:@[\w.-]+/)?[\w.-]+)"), "npm"),
+    (re.compile(r"\b(?:uv\s+tool\s+install|pipx\s+install)" + _FLAGS + r"\"?([A-Za-z][\w.-]*)(?=[\s\"\[=<>]|$)"), "pypi"),
+    (re.compile(r"\bpip3?\s+install" + _FLAGS + r"\"?([A-Za-z][\w.-]*)(?=[\s\"\[=<>]|$)"), "pypi"),
+    (re.compile(r"\bcargo\s+install" + _FLAGS + r"([A-Za-z][\w-]*)(?=\s|$)"), "crates"),
 ]
 
 
+def _norm(name: str) -> str:
+    return re.sub(r"[-_.]+", "-", name.lower())
+
+
+def own_names(raw: dict[str, Any]) -> set[str]:
+    """What the software itself may be published as: its slug, name, repository name and aliases."""
+    repo = raw.get("repo") if isinstance(raw.get("repo"), dict) else {}
+    names = [raw.get("slug") or "", raw.get("name") or "", (repo.get("full_name") or "").rsplit("/", 1)[-1],
+             *[a.rsplit("/", 1)[-1] for a in raw.get("aliases") or []]]
+    return {_norm(n) for n in names if n}
+
+
 def packages_of(raw: dict[str, Any]) -> list[str]:
-    """Registry packages pickfit installed (its own steps), else those that link back to the repository."""
+    """The software's own registry packages: those that link back to its repository, and those pickfit's steps
+    installed under the software's own name (a global npm install, uv tool, pipx, pip, cargo install). A package a step
+    installed for something else (a prerequisite, a test tool) is not the software, so the repository decides then."""
+    linked = [p for p in (((raw.get("scores") or {}).get("popularity") or {}).get("packages") or [])
+              if p.split(":", 1)[0] in RESOLVERS]
+    own = own_names(raw) | {_norm(p.split(":", 1)[1].rsplit("/", 1)[-1]) for p in linked}
     found: list[str] = []
     for run in (raw.get("verification") or {}).get("runs", []):
         for step in run.get("steps", []):
             for pattern, eco in _INSTALLED:
                 for m in pattern.finditer(step.get("command", "")):
-                    name = m.group(1)
-                    if name not in (".", "-e", "-r", "git", "uv", "pipx", "pip") and not name.startswith("-"):
+                    flags, name = m.group(1), m.group(2)
+                    if eco == "npm" and not re.search(r"(^|\s)(-g|--global)(\s|$)", flags):
+                        continue  # a local npm install is a project's dependency, not the tool
+                    if _norm(name.rsplit("/", 1)[-1]) in own:
                         found.append(f"{eco}:{name}")
-    linked = (((raw.get("scores") or {}).get("popularity") or {}).get("packages") or [])
-    found += [p for p in linked if p.split(":", 1)[0] in RESOLVERS]
-    return list(dict.fromkeys(p for p in found if p.split(":", 1)[0] in RESOLVERS))
+    return list(dict.fromkeys(linked + found))
 
 
 def _repo_url(raw: dict[str, Any]) -> str | None:
@@ -376,16 +416,23 @@ def findings_for(nodes: list[Node], advisories: Advisories, unrated: list[str] |
 
 def check(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones: Path = CLONES,
           unrated: list[str] | None = None) -> dict[str, Any]:
-    """The security check (SecurityCheck as JSON) for one record."""
+    """The security check (SecurityCheck as JSON) for one record.
+
+    The software's own registry packages are resolved first. The repository is read too when none resolved, or when
+    each resolved to itself alone (a binary or wheel whose dependencies are compiled in, listed in the repository's
+    lockfiles). When part of what installs could not be read (a lockfile at the root pickfit cannot parse, a root
+    Python project that does not resolve, or a lone package with no repository behind it) a check without findings
+    is unchecked, never clean; findings still make it vulnerable."""
     base = {"version": VERSION, "database": "OSV.dev", "checked_at": now.isoformat(timespec="seconds")}
 
     def unchecked(reason: str) -> dict[str, Any]:
         return base | {"status": "unchecked", "unchecked_reason": reason, "sources": [], "packages_checked": 0,
-                       "findings": []}
+                       "findings_total": 0, "findings": []}
 
     nodes: list[Node] = []
     sources: list[str] = []
     failed = False
+    resolved = 0
     for pkg in packages_of(raw):
         eco, name = pkg.split(":", 1)
         try:
@@ -393,25 +440,43 @@ def check(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones:
         except (RuntimeError, subprocess.TimeoutExpired, urllib.error.URLError):
             failed = True
             continue
+        if not got:
+            failed = True
+            continue
+        resolved += 1
         nodes += got
         sources.append(f"{pkg} (fresh install, {len(got)} packages)")
+    self_only = resolved > 0 and len(set(nodes)) <= resolved
     unsupported = False
-    if not sources:
+    incomplete: str | None = None  # why part of what installs was not read
+    if not resolved or self_only:
         url = _repo_url(raw)
         if url is None:
-            return unchecked("resolve_failed" if failed else "no_source")
-        try:
-            got, read, unsupported = repo_nodes(clone(url, raw["slug"], clones))
-        except (RuntimeError, subprocess.TimeoutExpired):
-            return unchecked("resolve_failed")
-        nodes += got
-        sources += read
+            if not resolved:
+                return unchecked("resolve_failed" if failed else "no_source")
+            incomplete = "resolve_failed"
+        else:
+            try:
+                root, commit = clone(url, raw["slug"], clones)
+                got, read, unsupported, main_unread = repo_nodes(root)
+                incomplete = "lockfile_not_supported" if main_unread else None
+            except (RuntimeError, subprocess.TimeoutExpired):
+                if not resolved:
+                    return unchecked("resolve_failed")
+                got, read, incomplete = [], [], "resolve_failed"
+            else:
+                read = [f"{url.removeprefix('https://')}@{commit[:12]}"] + read if read else read
+            nodes += got
+            sources += read
     nodes = list(dict.fromkeys(nodes))
     if not nodes:
         return unchecked("lockfile_not_supported" if unsupported else "resolve_failed" if failed else "no_lockfile")
     findings = findings_for(nodes, advisories, unrated)
+    if incomplete and not findings:
+        return unchecked(incomplete)
     return base | {"status": "vulnerable" if findings else "clean", "unchecked_reason": None, "sources": sources[:20],
-                   "packages_checked": len(nodes), "findings": findings[:MAX_FINDINGS]}
+                   "packages_checked": len(nodes), "findings_total": len(findings),
+                   "findings": findings[:MAX_FINDINGS]}
 
 
 # --- writing ----------------------------------------------------------------------------------------------------------

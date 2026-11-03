@@ -30,7 +30,8 @@ def check(status: str = "vulnerable", **over: Any) -> dict[str, Any]:
             "checked_at": NOW.isoformat()}
     if status == "unchecked":
         base.update(unchecked_reason="no_source", sources=[], packages_checked=0)
-    return base | over
+    base |= over
+    return base | {"findings_total": over.get("findings_total", len(base["findings"]))}
 
 
 def scored_web(security_check: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -58,6 +59,7 @@ def test_the_cap_sits_just_below_treasure() -> None:
     {"status": "clean", "findings": [FINDING]},
     {"status": "unchecked", "unchecked_reason": None},
     {"status": "unchecked", "unchecked_reason": "no_source", "packages_checked": 4},
+    {"status": "vulnerable", "findings_total": 0},
 ])
 def test_status_follows_findings(bad: dict[str, Any]) -> None:
     with pytest.raises(ValidationError):
@@ -103,8 +105,8 @@ def test_write_security_stores_caps_and_hides_a_malicious_package(tmp_path: Path
 
 def test_index_entry_says_what_the_page_shows() -> None:
     assert _security(SoftwareRecord.model_validate(scored_web())) == {"status": "unchecked", "reason": "not_run"}
-    entry = _security(SoftwareRecord.model_validate(scored_web(check())))
-    assert entry["status"] == "vulnerable" and entry["count"] == 1 and entry["findings"][0]["fixed_in"] == "8.12.2"
+    entry = _security(SoftwareRecord.model_validate(scored_web(check(findings_total=75))))
+    assert entry["status"] == "vulnerable" and entry["count"] == 75 and entry["findings"][0]["fixed_in"] == "8.12.2"
     entry = _security(SoftwareRecord.model_validate(scored_web(check("unchecked"))))
     assert entry == {"status": "unchecked", "checked_at": "2026-11-03", "reason": "no_source"}
 
@@ -120,8 +122,9 @@ def test_cvss3_base_matches_the_specification() -> None:
     assert security.cvss3_base("not a vector") is None
 
 
-def test_npm_lock_leaves_out_dev_and_the_root() -> None:
+def test_npm_lock_leaves_out_dev_the_root_and_workspace_members() -> None:
     lock = {"packages": {"": {"name": "app", "version": "1.0.0"},
+                         "packages/core": {"name": "evil-name-on-npm", "version": "0.1.0"},
                          "node_modules/undici": {"version": "8.9.0"},
                          "node_modules/vite": {"version": "6.0.0", "dev": True},
                          "node_modules/a/node_modules/@s/b": {"version": "2.0.0"}}}
@@ -146,21 +149,95 @@ def test_repo_nodes_skip_parts_a_user_does_not_install(tmp_path: Path) -> None:
     (tmp_path / "website" / "package-lock.json").write_text(json.dumps(
         {"packages": {"node_modules/next": {"version": "16.0.0"}}}))
     (tmp_path / "go.mod").write_text("module example.com/t\n\ngo 1.22\n\nrequire (\n\tgithub.com/a/b v1.2.3 // indirect\n)\n")
-    nodes, read, unsupported = security.repo_nodes(tmp_path)
+    for part in (".claude/skills/x", "tools", "third_party/lib", "spikes"):  # agent and tooling folders
+        (tmp_path / part).mkdir(parents=True)
+        (tmp_path / part / "Cargo.lock").write_text('[[package]]\nname = "old"\nversion = "0.1.0"\nsource = "registry+x"\n')
+    nodes, read, unsupported, main_unread = security.repo_nodes(tmp_path)
     assert nodes == [("crates", "zip", "8.6.0"), ("go", "github.com/a/b", "v1.2.3")]
-    assert read == ["Cargo.lock", "go.mod"] and not unsupported
+    assert read == ["Cargo.lock", "go.mod"] and not unsupported and not main_unread
 
 
 def test_repo_with_only_an_unsupported_lockfile_says_so(tmp_path: Path) -> None:
     (tmp_path / "yarn.lock").write_text("# yarn lockfile v1\n")
-    assert security.repo_nodes(tmp_path) == ([], [], True)
+    assert security.repo_nodes(tmp_path) == ([], [], True, True)
 
 
-def test_packages_of_reads_pickfit_steps_then_linked_packages() -> None:
-    raw = {"verification": {"runs": [{"steps": [{"command": "npm install -g @scope/tool && tool --version"},
-                                                {"command": "uv tool install git+https://github.com/a/b"}]}]},
+def test_an_unreadable_root_lockfile_marks_the_check_incomplete(tmp_path: Path) -> None:
+    (tmp_path / "Cargo.lock").write_text("not toml [[[")
+    (tmp_path / "web").mkdir()
+    (tmp_path / "web" / "package-lock.json").write_text(json.dumps({"packages": {"node_modules/a": {"version": "1.0.0"}}}))
+    nodes, read, unsupported, main_unread = security.repo_nodes(tmp_path)
+    assert nodes == [("npm", "a", "1.0.0")] and main_unread
+
+
+def test_packages_of_takes_only_the_softwares_own_packages() -> None:
+    raw = {"slug": "tool", "name": "Tool", "repo": {"full_name": "someone/tool-repo"}, "aliases": [],
+           "verification": {"runs": [{"steps": [
+               {"command": "npm install -g @scope/tool && tool --version"},
+               {"command": "npm install left-pad"},  # local: a project's dependency
+               {"command": "pip install --user --break-system-packages numpy gmpy2"},  # prerequisites
+               {"command": "pip install --no-deps tool-repo"},  # its own, under the repository's name
+               {"command": "uv tool install git+https://github.com/a/b"},
+               {"command": "pipx install pytest"}]}]},
            "scores": {"popularity": {"packages": ["pypi:tool-py", "homebrew:tool"]}}}
-    assert security.packages_of(raw) == ["npm:@scope/tool", "pypi:tool-py"]
+    assert security.packages_of(raw) == ["pypi:tool-py", "npm:@scope/tool", "pypi:tool-repo"]
+    raw["verification"]["runs"][0]["steps"] = [{"command": "pip install aiohttp"}]
+    raw["scores"] = None
+    assert security.packages_of(raw) == []  # the repository decides
+
+
+def _resolving(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, graphs: dict[str, Any],
+               repo: tuple[list[Any], list[str], bool, bool] | None) -> list[str]:
+    """Stub the resolvers, the clone and OSV (no findings); returns the clones made."""
+    cloned: list[str] = []
+
+    def resolver(name: str) -> list[Any]:
+        if isinstance(graphs[name], Exception):
+            raise graphs[name]
+        return graphs[name]
+
+    def fake_clone(url: str, slug: str, clones: Path = tmp_path) -> tuple[Path, str]:
+        cloned.append(url)
+        return tmp_path, "0123456789abcdef"
+
+    monkeypatch.setattr(security, "RESOLVERS", {"npm": resolver, "pypi": resolver, "crates": resolver})
+    monkeypatch.setattr(security, "clone", fake_clone)
+    monkeypatch.setattr(security, "repo_nodes", lambda root: repo)
+    monkeypatch.setattr(security, "findings_for", lambda nodes, advisories, unrated=None: [])
+    return cloned
+
+
+RECORD = {"slug": "rtool", "name": "rtool", "repo": {"url": "https://github.com/o/rtool", "full_name": "o/rtool"},
+          "verification": {"runs": []}, "scores": {"popularity": {"packages": ["crates:rtool"]}}}
+
+
+def test_a_crate_without_a_dependency_graph_falls_back_to_the_repository(monkeypatch: pytest.MonkeyPatch,
+                                                                        tmp_path: Path) -> None:
+    cloned = _resolving(monkeypatch, tmp_path, {"rtool": RuntimeError("no graph")},
+                        ([("crates", "zip", "8.6.0")], ["Cargo.lock"], False, False))
+    result = security.check(RECORD, security.Advisories(), now=NOW)
+    assert cloned == ["https://github.com/o/rtool"] and result["status"] == "clean"
+    assert result["sources"] == ["github.com/o/rtool@0123456789ab", "Cargo.lock"]
+
+
+def test_a_package_that_resolves_to_itself_alone_also_reads_the_repository(monkeypatch: pytest.MonkeyPatch,
+                                                                          tmp_path: Path) -> None:
+    cloned = _resolving(monkeypatch, tmp_path, {"rtool": [("crates", "rtool", "1.0.0")]},
+                        ([("crates", "zip", "8.6.0")], ["Cargo.lock"], False, False))
+    result = security.check(RECORD, security.Advisories(), now=NOW)
+    assert cloned and result["packages_checked"] == 2
+
+
+def test_without_findings_an_incomplete_read_is_unchecked_not_clean(monkeypatch: pytest.MonkeyPatch,
+                                                                   tmp_path: Path) -> None:
+    _resolving(monkeypatch, tmp_path, {"rtool": RuntimeError("no graph")},
+               ([("npm", "a", "1.0.0")], ["web/package-lock.json"], False, True))
+    result = security.check(RECORD, security.Advisories(), now=NOW)
+    assert (result["status"], result["unchecked_reason"]) == ("unchecked", "lockfile_not_supported")
+    no_repo = {**RECORD, "repo": None}
+    _resolving(monkeypatch, tmp_path, {"rtool": [("crates", "rtool", "1.0.0")]}, None)
+    result = security.check(no_repo, security.Advisories(), now=NOW)
+    assert (result["status"], result["unchecked_reason"]) == ("unchecked", "resolve_failed")
 
 
 # --- OSV findings (no network) ----------------------------------------------------------------------------------------

@@ -137,7 +137,7 @@ def _security(record: SoftwareRecord) -> dict[str, Any]:
         return out
     out["packages_checked"] = check.packages_checked
     if check.findings:
-        out["count"] = len(check.findings)
+        out["count"] = max(check.findings_total, len(check.findings))
         out["findings"] = [{"package": f.package, "version": f.version, "advisory": f.advisory, "severity": f.severity,
                             "fixed_in": f.fixed_in, "summary": f.summary, "malicious": f.malicious}
                            for f in check.findings[:10]]

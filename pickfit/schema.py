@@ -1659,6 +1659,7 @@ class SecurityCheck(_Model):
     unchecked_reason: Literal["no_source", "no_lockfile", "lockfile_not_supported", "resolve_failed"] | None = None
     sources: list[str] = Field(default=[], max_length=20, description="What was resolved, e.g. 'npm:x@1.2.0' or a lockfile path.")
     packages_checked: int = Field(ge=0)
+    findings_total: int = Field(default=0, ge=0, description="Every finding, though findings keeps at most 60.")
     findings: list[SecurityFinding] = Field(default=[], max_length=60)
     database: Literal["OSV.dev"] = "OSV.dev"
     checked_at: AwareDatetime
@@ -1671,6 +1672,8 @@ class SecurityCheck(_Model):
             raise ValueError("an unchecked security check has no packages or findings")
         if (self.status == "vulnerable") != bool(self.findings):
             raise ValueError("status is vulnerable exactly when there are findings")
+        if self.findings_total < len(self.findings):
+            raise ValueError("findings_total counts at least the findings kept")
         return self
 
 

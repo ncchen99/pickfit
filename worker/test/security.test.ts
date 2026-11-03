@@ -254,3 +254,9 @@ test('web app, vulnerable: the notice sits beside the site, worded for using it'
   const zh = await (await site(indexWith(VULNERABLE, 'fixture-web-sketch'))('/tool/fixture-web-sketch?lang=zh-TW')).text();
   assert.match(zh, /使用前先知道：有已知漏洞/);
 });
+
+test('get_install_guide for a web app: the warning speaks of using the site, not installing it', () => {
+  const catalog = loadCatalog(indexWith(VULNERABLE, 'fixture-web-sketch'));
+  const out = installGuide(catalog, { slug: 'fixture-web-sketch' }) as unknown as { warnings: string[] };
+  assert.match(out.warnings[0], /^Known vulnerabilities \(7 high or critical\): .*Tell the user before they use it\.$/);
+});

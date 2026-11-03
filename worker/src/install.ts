@@ -125,7 +125,7 @@ function webGuide(entry: Entry, input: InstallInput, now: Date): InstallOutput {
     check_in: check ? webCheckIn(entry, web.url, now) : null,
     web_app: web,
     security,
-    warnings: [...securityWarnings(security), ...webWarnings(check)],
+    warnings: [...securityWarnings(security, true), ...webWarnings(check)],
     sources: entry.sources,
   };
 }

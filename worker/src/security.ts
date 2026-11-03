@@ -39,12 +39,12 @@ export function securityOut(entry: Entry): SecurityOut {
 }
 
 /** get_install_guide's warnings: one plain line naming the known vulnerabilities (and one per malicious package), so
- * the agent tells the user before installing. */
-export function securityWarnings(out: SecurityOut): string[] {
+ * the agent tells the user before installing; for a hosted web app, before they use it (the packages the site is built from). */
+export function securityWarnings(out: SecurityOut, web = false): string[] {
   if (out.status !== 'vulnerable') return [];
   const lines = out.findings
     .filter((f) => f.malicious)
-    .map((f) => `Malicious package: ${f.package} ${f.version} (${f.advisory}). Tell the user; do not install it.`);
+    .map((f) => `Malicious package: ${f.package} ${f.version} (${f.advisory}). Tell the user; ${web ? 'do not use the site' : 'do not install it'}.`);
   const known = out.findings
     .filter((f) => !f.malicious)
     .map((f) => `${f.package} ${f.version} ${f.advisory} (${f.severity}), ${f.fixed_in ? `fixed in ${f.fixed_in}` : 'no fix yet'}`);
@@ -52,7 +52,7 @@ export function securityWarnings(out: SecurityOut): string[] {
   if (known.length || more > 0 || !lines.length) {
     const head = out.count === 1 ? 'Known vulnerability' : `Known vulnerabilities (${out.count} high or critical)`;
     const list = [...known, ...(more > 0 ? [`${more} more`] : [])].join('; ');
-    lines.push(`${head}${list ? `: ${list}` : ' in a package it installs'}. Tell the user before installing.`);
+    lines.push(`${head}${list ? `: ${list}` : web ? ' in the packages the site is built from' : ' in a package it installs'}. ${web ? 'Tell the user before they use it.' : 'Tell the user before installing.'}`);
   }
   return lines;
 }
