@@ -314,6 +314,7 @@ def _add_security_command(sub: argparse._SubParsersAction) -> None:
                                         "(OSV.dev, no model call, $0); --write adds security and caps quality at 79")
     s.add_argument("--slug", action="append", help="check this record (repeatable)")
     s.add_argument("--all", action="store_true", help="every listed record")
+    s.add_argument("--unchecked", action="store_true", help="listed records not checked yet or left unchecked")
     s.add_argument("--data-dir", default=None, help="records (default data/software)")
     s.add_argument("--workers", type=int, default=6, help="records checked at once")
     s.add_argument("--write", action="store_true", help="store each check in its record and refresh its scores")

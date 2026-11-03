@@ -6,7 +6,8 @@ No model call and no paid API. Per record:
    - a registry package (npm, PyPI, crates: from pickfit's own install steps, else the packages that link back to the
      repository): `npm install --package-lock-only --ignore-scripts` and `uv pip compile --no-build` (neither runs
      package code), crates through deps.dev's dependency graph;
-   - otherwise the repository (a shallow clone, only read as data): package-lock.json without dev entries, Cargo.lock,
+   - otherwise the repository (a shallow clone, only read as data): package-lock.json without dev entries,
+     pnpm-lock.yaml (v6 to v9) without devDependencies except electron (its runtime ships in the app), Cargo.lock,
      go.mod, and Python re-resolved from pyproject.toml (pip and uv do not read uv.lock), else uv.lock's non-dev
      closure, poetry.lock or pinned requirements. Lockfiles of parts the person does not install (docs sites, editor
      extensions, CI actions, examples, tests) are skipped.
@@ -54,7 +55,7 @@ PERIPHERAL = re.compile(r"(^|/)(website|site|docs?|landing|www|demo|examples?|be
                         r"__tests__|fixtures?|scripts|editors?|action|vscode|node_modules|vendor|tools|external|"
                         r"third_party|reference|mockups|spikes?|eval|fuzz|testdata|experiments?|skill_assets|skills|qa|"
                         r"labs?|probes?|\.[^/]+)/", re.I)
-UNSUPPORTED_LOCKS = ("pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb")
+UNSUPPORTED_LOCKS = ("yarn.lock", "bun.lock", "bun.lockb")
 MAX_FINDINGS = 60
 TIMEOUT = 300
 
@@ -242,6 +243,86 @@ def _uv_lock_nodes(lock: dict[str, Any]) -> list[Node]:
     return [("pypi", n, by_name[n]["version"]) for n in sorted(keep) if "version" in by_name[n]]
 
 
+def _yaml_maps(text: str) -> dict[str, Any]:
+    """The nested maps of a pnpm-lock.yaml: `key: value` and `key:` lines nested by indentation. List items and the
+    body of flow values ({...}) are kept as plain strings; that is all pnpm-lock needs here. Not a YAML parser."""
+    root: dict[str, Any] = {}
+    stack: list[tuple[int, dict[str, Any]]] = [(-1, root)]
+    for line in text.splitlines():
+        body = line.lstrip(" ")
+        if not body or body.startswith(("#", "- ")):
+            continue
+        indent = len(line) - len(body)
+        m = re.match(r"""^('(?:[^']|'')*'|"[^"]*"|[^:'"][^:]*?|[^:]+?):(?:\s+(.*))?$""", body)
+        if not m:
+            continue
+        key = m.group(1)
+        if key[:1] in "'\"":
+            key = key[1:-1].replace("''", "'")
+        value = (m.group(2) or "").strip()
+        while stack[-1][0] >= indent:
+            stack.pop()
+        parent = stack[-1][1]
+        if value and value != "{}":
+            parent[key] = value.strip("'\"")
+        else:
+            child: dict[str, Any] = {}
+            parent[key] = child
+            stack.append((indent, child))
+    return root
+
+
+def _pnpm_version(raw: str) -> str | None:
+    """'1.3.1(peer@2)' -> '1.3.1'; workspace links, local files and git sources are not registry versions."""
+    v = raw.split("(", 1)[0].strip()
+    return None if not v or v.startswith(("link:", "file:", "workspace:", "git", "http")) else v
+
+
+def pnpm_lock_nodes(text: str, *, skip: re.Pattern[str] = PERIPHERAL) -> list[Node]:
+    """What a pnpm-lock.yaml (lockfile v6 or v9) installs at run time: the dependencies and optionalDependencies of
+    every workspace importer outside the parts a user does not install, and everything those pull in (v9 snapshots, v6
+    packages). devDependencies are left out, except `electron`, whose runtime is packaged into the app it builds."""
+    lock = _yaml_maps(text)
+    version = str(lock.get("lockfileVersion", "")).strip("'\"")
+    if not re.match(r"^(6|7|8|9)(\.|$)", version):
+        raise ValueError(f"pnpm lockfile version {version or 'unknown'} is not supported")
+    graph: dict[str, dict[str, Any]] = {}
+    for section in ("packages", "snapshots"):  # v6 keeps edges in packages, v9 in snapshots
+        for key, entry in (lock.get(section) or {}).items():
+            if isinstance(entry, dict):
+                graph.setdefault(key.lstrip("/"), {}).update(entry)
+    importers = lock.get("importers") or {".": lock}  # a lockfile without workspaces lists them at the top
+    nodes: list[Node] = []
+    seen: set[str] = set()
+    stack: list[tuple[str, str]] = []
+    for path, importer in importers.items():
+        if not isinstance(importer, dict) or (path != "." and skip.search(path.strip("./") + "/")):
+            continue
+        for group in ("dependencies", "optionalDependencies", "devDependencies"):
+            for name, spec in (importer.get(group) or {}).items():
+                ver = spec.get("version", "") if isinstance(spec, dict) else str(spec)
+                if group == "devDependencies":
+                    if name == "electron" and _pnpm_version(ver):
+                        nodes.append(("npm", name, _pnpm_version(ver) or ""))
+                    continue
+                stack.append((name, ver))
+    while stack:
+        name, ver = stack.pop()
+        plain = _pnpm_version(ver)
+        if plain is None:
+            continue
+        key = f"{name}@{ver}"
+        if key in seen:
+            continue
+        seen.add(key)
+        nodes.append(("npm", name, plain))
+        entry = graph.get(key) or graph.get(f"{name}@{plain}") or {}
+        for group in ("dependencies", "optionalDependencies"):
+            for dep, dep_ver in (entry.get(group) or {}).items():
+                stack.append((dep, str(dep_ver)))
+    return list(dict.fromkeys(nodes))
+
+
 @dataclass
 class RepoRead:
     """What a repository's lockfiles gave. complete: a main lockfile (at the root or one folder down) yielded packages,
@@ -281,6 +362,8 @@ def repo_nodes(root: Path) -> RepoRead:
         try:
             if name == "package-lock.json":
                 took(rel, npm_lock_nodes(json.loads(f.read_text(encoding="utf-8"))))
+            elif name == "pnpm-lock.yaml":
+                took(rel, pnpm_lock_nodes(f.read_text(encoding="utf-8")))
             elif name == "Cargo.lock":
                 took(rel, [("crates", p["name"], p["version"]) for p in tomllib.loads(f.read_text(encoding="utf-8"))
                            .get("package", []) if "source" in p])
@@ -560,10 +643,12 @@ def main_security(args: Any) -> int:
     paths = sorted(data_dir.glob("*.json"))
     if args.slug:
         paths = [p for p in paths if p.stem in set(args.slug)]
-    elif args.all:
-        paths = [p for p in paths if json.loads(p.read_text(encoding="utf-8")).get("status") == "listed"]
+    elif args.all or args.unchecked:
+        records = {p: json.loads(p.read_text(encoding="utf-8")) for p in paths}
+        paths = [p for p, d in records.items() if d.get("status") == "listed"
+                 and (args.all or (d.get("security") or {}).get("status", "unchecked") == "unchecked")]
     else:
-        print("pickfit security: name --slug or --all", file=sys.stderr)
+        print("pickfit security: name --slug, --all or --unchecked", file=sys.stderr)
         return 2
     now = taipei_now()
     advisories = Advisories()
