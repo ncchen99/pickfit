@@ -78,17 +78,14 @@ b3.v5 and gui.v1, and between web.v1 and web.v2, with no call.
 
 Measurable visual defects (record field visual_check, comfort.v1: Muse Wonder lists text cut off, overlaps, clipped
 controls, bad wraps, low contrast, tiny text, raw markup, broken images, misalignment and cramping on pickfit's own
-first screens; never taste) enter quality as visual_quality = visual_check.score / 2 (no app defect 1.0, minor ones only
-0.5, any major 0), under two formulas used while VISUAL_SCORED is on (念誠 11/3, docs/usability-pilot.md section 10):
-
-- gui.v2, a desktop_app with a visual check of a passed GUI run still on the record: sandbox_verification 35, visual_quality 15,
-  install_docs 20, maintenance 8, engineering_hygiene 4, responsiveness 8, usage_outcomes 10+ (as b3.v5, its extra
-  weight comes out of the four in SHRINKABLE).
-- web.v3, a web_app with one of a passed browser run still on the record: sandbox_verification 45, visual_quality 15,
-  browser_facts 30, usage_outcomes 10+ (from browser_facts).
-
-A record with no visual check (or one that read a run the record no longer has) stays on b3.v5 or web.v1; the
-treasure rule does not change. refresh_scores moves records in and out with no call.
+first screens; never taste) only ever lower quality (念誠 11/3, docs/usability-pilot.md sections 11 and 12). A
+desktop_app or web_app with a visual check of a passed run still on the record keeps its usual formula, b3.v5 or
+web.v1; when the check found at least one app-caused defect its total is multiplied by VISUAL_FACTOR (0.95), and a clean
+check leaves it as it is. Severity is not used until it is calibrated (section 11: the model's "major" held up in 4 of
+12 reviews). formula_version then reads b3.v5+visual.v1 or web.v1+visual.v1, and quality.visual keeps the factor, the
+total before it and the number of app defects. A record with no check (no screenshots of pickfit's own), or one whose
+check read a run the record no longer has, keeps b3.v5 or web.v1 with nothing added or taken. The treasure rule does
+not change. refresh_scores applies and removes the deduction with no call.
 
 Inputs are the record, the GitHub snapshot it was built from (runs/pipeline.db; fetched live
 when the pipeline database does not hold the repo), one REST call for issues and the registry
@@ -150,13 +147,16 @@ WEB_FORMULA_VERSION = "web.v1"
 EASE_SCORED = False
 GUI_FORMULA_VERSION = "gui.v1"
 WEB2_FORMULA_VERSION = "web.v2"
-# Measurable visual defects in quality (record field visual_check, comfort.v1; 念誠 11/3, docs/usability-pilot.md
-# section 10): a desktop app or web app whose current passed run has a visual check moves to these formulas.
+# Measurable visual defects (record field visual_check, comfort.v1; 念誠 11/3, docs/usability-pilot.md sections 11
+# and 12): a checked desktop or web app keeps its formula, named with VISUAL_SUFFIX, and an app-caused defect multiplies
+# its total by VISUAL_FACTOR. gui.v2 and web.v3 (an additive 15% share) were tried on a branch only; refresh moves them.
 VISUAL_SCORED = True
-GUI_VISUAL_VERSION = "gui.v2"
-WEB_VISUAL_VERSION = "web.v3"
-TOOL_FORMULAS = frozenset({FORMULA_VERSION, GUI_FORMULA_VERSION, GUI_VISUAL_VERSION, *REFRESHABLE_FROM})
-WEB_FORMULAS = frozenset({WEB_FORMULA_VERSION, WEB2_FORMULA_VERSION, WEB_VISUAL_VERSION})
+VISUAL_SUFFIX = "+visual.v1"
+VISUAL_FACTOR = 0.95
+GUI_VISUAL_VERSION = FORMULA_VERSION + VISUAL_SUFFIX
+WEB_VISUAL_VERSION = WEB_FORMULA_VERSION + VISUAL_SUFFIX
+TOOL_FORMULAS = frozenset({FORMULA_VERSION, GUI_FORMULA_VERSION, GUI_VISUAL_VERSION, "gui.v2", *REFRESHABLE_FROM})
+WEB_FORMULAS = frozenset({WEB_FORMULA_VERSION, WEB2_FORMULA_VERSION, WEB_VISUAL_VERSION, "web.v3"})
 STAGE = "score-rubric"
 REASONING_EFFORT = "low"
 MAX_OUTPUT_TOKENS = 8_000  # reasoning shares it; at effort low one call used 4,000 and ran out
@@ -174,15 +174,6 @@ NOMINAL_WEIGHTS: dict[str, float] = {
 }
 # Where extra usage_outcomes weight comes from; the measured sandbox component keeps its 40.
 SHRINKABLE = ("install_docs", "maintenance", "engineering_hygiene", "responsiveness")
-GUI_VISUAL_WEIGHTS: dict[str, float] = {
-    "sandbox_verification": 35,
-    "visual_quality": 15,
-    "install_docs": 20,
-    "maintenance": 8,
-    "engineering_hygiene": 4,
-    "responsiveness": 8,
-    "usage_outcomes": 10,
-}
 GUI_WEIGHTS: dict[str, float] = {
     "sandbox_verification": 25,
     "usability": 30,
@@ -741,8 +732,9 @@ def gui_formula(kind: str, verification: Verification) -> bool:
     return EASE_SCORED and kind == "desktop_app" and any(run.gui is not None for run in verification.runs)
 
 
-def visual_component(visual: Any, verification: Verification) -> float | None:
-    """visual_check.score / 2 while the run it read is still a passed GUI or web run of the record, else None."""
+def visual_factor(visual: Any, verification: Verification) -> float | None:
+    """1.0 for a clean visual check, VISUAL_FACTOR for one that found an app-caused defect; None without a current
+    check (none, one that read a run the record no longer has, or one the sandbox broke)."""
     if visual is None:
         return None
     if isinstance(visual, dict):
@@ -750,18 +742,36 @@ def visual_component(visual: Any, verification: Verification) -> float | None:
     else:
         run_id, score = visual.run_id, visual.score
     runs = {run.id for run in verification.runs if (run.gui or run.web) and is_passed(run.level)}
-    return round(score / 2, 4) if score is not None and run_id in runs else None
+    if score is None or run_id not in runs:
+        return None
+    return 1.0 if score == 2 else VISUAL_FACTOR
 
 
-def tool_formula(kind: str, verification: Verification, usability: Any, visual: Any
+def _app_defects(visual: Any) -> int:
+    defects = visual.get("defects", []) if isinstance(visual, dict) else visual.defects
+    return sum(1 for d in defects if (d.get("cause") if isinstance(d, dict) else d.cause) == "app")
+
+
+def apply_visual(quality: dict[str, Any], version: str, kind: str, verification: Verification, visual: Any
+                 ) -> tuple[dict[str, Any], str]:
+    """The quality and formula after the visual check: b3.v5 or web.v1 named +visual.v1, its total times
+    VISUAL_FACTOR when the check found an app-caused defect; unchanged without a current check."""
+    if not VISUAL_SCORED or kind not in ("desktop_app", "web_app") or version not in (FORMULA_VERSION, WEB_FORMULA_VERSION):
+        return quality, version
+    factor = visual_factor(visual, verification)
+    if factor is None:
+        return quality, version
+    before = quality["total"]
+    total = None if before is None else round(before * factor, 1)
+    return (quality | {"total": total, "visual": {"factor": factor, "before": before, "defects": _app_defects(visual)}},
+            version + VISUAL_SUFFIX)
+
+
+def tool_formula(kind: str, verification: Verification, usability: Any
                  ) -> tuple[str, dict[str, float], dict[str, float | None]]:
-    """A non-web record's formula, its weights and the components it adds: gui.v1 (usability, off), gui.v2 (a
-    desktop app with a current visual check), else b3.v5."""
+    """A non-web record's formula, its weights and the components it adds: gui.v1 (usability, off), else b3.v5."""
     if gui_formula(kind, verification):
         return GUI_FORMULA_VERSION, GUI_WEIGHTS, {"usability": usability_component(usability, verification)}
-    visual_score = visual_component(visual, verification)
-    if VISUAL_SCORED and kind == "desktop_app" and visual_score is not None:
-        return GUI_VISUAL_VERSION, GUI_VISUAL_WEIGHTS, {"visual_quality": visual_score}
     return FORMULA_VERSION, NOMINAL_WEIGHTS, {}
 
 
@@ -769,8 +779,6 @@ def tool_formula(kind: str, verification: Verification, usability: Any, visual: 
 
 WEB_WEIGHTS: dict[str, float] = {"sandbox_verification": 50, "browser_facts": 40, "usage_outcomes": 10}
 WEB2_WEIGHTS: dict[str, float] = {"sandbox_verification": 25, "usability": 35, "browser_facts": 30, "usage_outcomes": 10}
-WEB_VISUAL_WEIGHTS: dict[str, float] = {"sandbox_verification": 45, "visual_quality": 15, "browser_facts": 30,
-                                        "usage_outcomes": 10}
 WEB_DEPTH = {"install": 0.6, "function": 1.0}
 BROWSER_FACT_WEIGHTS = {"account": 0.3, "data": 0.3, "ads": 0.2, "offline": 0.2}
 WEB_POPULARITY_REFS = {"stars": 1047.6, "hn_top_score": 46.6}
@@ -857,31 +865,28 @@ def hn_points(registries: Any, item_id: int) -> int | None:
     return score if isinstance(score, int) and not isinstance(score, bool) else None
 
 
-def web_formula(verification: Verification, usability: Any, visual: Any
-                ) -> tuple[str, dict[str, float], dict[str, float | None]]:
-    """A web app's formula, its weights and the components it adds: web.v2 (usability, off), web.v3 (a current visual
-    check), else web.v1."""
+def web_formula(verification: Verification, usability: Any) -> tuple[str, dict[str, float], dict[str, float | None]]:
+    """A web app's formula, its weights and the components it adds: web.v2 (usability, off), else web.v1."""
     if EASE_SCORED:
         return WEB2_FORMULA_VERSION, WEB2_WEIGHTS, {"usability": usability_component(usability, verification)}
-    visual_score = visual_component(visual, verification)
-    if VISUAL_SCORED and visual_score is not None:
-        return WEB_VISUAL_VERSION, WEB_VISUAL_WEIGHTS, {"visual_quality": visual_score}
     return WEB_FORMULA_VERSION, WEB_WEIGHTS, {}
 
 
 def _web_quality(verification: Verification, outcomes: Outcomes, kind: str, archived: bool,
                  usability: Any = None, visual: Any = None) -> tuple[str, dict[str, Any]]:
-    """The web app's formula and its quality (web_formula picks it)."""
-    version, nominal, extra = web_formula(verification, usability, visual)
+    """The web app's formula and its quality (web_formula picks it; apply_visual takes a visual defect off)."""
+    version, nominal, extra = web_formula(verification, usability)
     components = {"sandbox_verification": web_sandbox_score(verification), "browser_facts": browser_facts_score(verification),
                   "usage_outcomes": usage_score(outcomes)} | extra
     cap_reason = binding_cap(kind, archived, verification.level)
-    return version, compose_web_quality(components, usage_outcomes_weight(outcomes.external.total()), cap_reason, nominal)
+    quality = compose_web_quality(components, usage_outcomes_weight(outcomes.external.total()), cap_reason, nominal)
+    quality, version = apply_visual(quality, version, kind, verification, visual)
+    return version, quality
 
 
 def build_web_scores(record: SoftwareRecord, *, stars: int | None, hn: int | None, now: datetime) -> dict[str, Any]:
-    """The scores object for a web app (web.v1; web.v3 with a visual check; web.v2 with usability, off). Stars only with
-    a repository; HN points only without one."""
+    """The scores object for a web app (web.v1, named web.v1+visual.v1 with a visual check; web.v2 with usability, off).
+    Stars only with a repository; HN points only without one."""
     archived = record.repo is not None and record.repo.archived
     version, quality = _web_quality(record.verification, record.outcomes, record.kind, archived, record.usability,
                                     record.visual_check)
@@ -941,9 +946,10 @@ def build_scores(record: SoftwareRecord, snapshot: dict[str, Any] | None, issues
     }
     archived = record.repo is not None and record.repo.archived
     cap_reason = binding_cap(record.kind, archived, record.verification.level)
-    version, nominal, extra = tool_formula(record.kind, record.verification, record.usability, record.visual_check)
+    version, nominal, extra = tool_formula(record.kind, record.verification, record.usability)
     components |= extra
     quality = compose_quality(components, usage_outcomes_weight(record.outcomes.external.total()), cap_reason, nominal)
+    quality, version = apply_visual(quality, version, record.kind, record.verification, record.visual_check)
     signals = popularity_signals(snapshot, registry) if snapshot else dict.fromkeys(POPULARITY_WEIGHTS)
     created = record.repo.created_at if record.repo else None
     age_days = max(0, int(_days(as_of, created))) if created else None
@@ -993,14 +999,15 @@ def refresh_scores(data: dict[str, Any], now: datetime) -> str | None:
         data["scores"] = None
         return f"scores cleared: formula {version} is not {FORMULA_VERSION} or {GUI_VISUAL_VERSION}; rescore"
     verification = Verification.model_validate(data["verification"])
-    target, nominal, extra = tool_formula(data["kind"], verification, data.get("usability"), data.get("visual_check"))
+    target, nominal, extra = tool_formula(data["kind"], verification, data.get("usability"))
     outcomes = Outcomes.model_validate(data.get("outcomes") or {})
     components = {name: c["score"] for name, c in scores["quality"]["components"].items()
-                  if name not in ("usability", "visual_quality")} | extra
+                  if name not in ("usability", "visual_quality")} | extra  # visual_quality: gui.v2, branch only
     components["sandbox_verification"] = sandbox_score(verification, data["category"])
     components["usage_outcomes"] = usage_score(outcomes)
     cap_reason = binding_cap(data["kind"], bool((data.get("repo") or {}).get("archived")), verification.level)
     quality = compose_quality(components, usage_outcomes_weight(outcomes.external.total()), cap_reason, nominal)
+    quality, target = apply_visual(quality, target, data["kind"], verification, data.get("visual_check"))
     if quality == scores["quality"] and version == target:
         return None
     scores["formula_version"] = target

@@ -119,40 +119,25 @@ def _treasure(total: float | None, popularity: float | None) -> bool:
 
 
 def variant_totals(name: str, records: dict[str, dict[str, Any]], now: Any) -> dict[str, tuple[float | None, bool]]:
-    """(quality, treasure) per checked record under a variant: current (additive, weight 15), w10 (additive, weight 10),
-    deduct15 / deduct10 (the old formula's total times 1 - w * (1 - visual): no defect changes nothing)."""
+    """(quality, treasure) per checked record: current (what refresh_scores gives: an app-caused defect takes 5% off the
+    old formula's total), or deduct10 (major -10%, minor -5%, in memory). The additive 15% and 10% versions of section 11
+    were computed with the code of commit 14251615."""
     import copy
 
     from pickfit import score as s
 
     out = {}
-    saved = (dict(s.GUI_VISUAL_WEIGHTS), dict(s.WEB_VISUAL_WEIGHTS))
-    try:
-        if name == "w10":
-            s.GUI_VISUAL_WEIGHTS.clear()
-            s.GUI_VISUAL_WEIGHTS.update({"sandbox_verification": 37, "visual_quality": 10, "install_docs": 22,
-                                         "maintenance": 9, "engineering_hygiene": 4, "responsiveness": 8,
-                                         "usage_outcomes": 10})
-            s.WEB_VISUAL_WEIGHTS.clear()
-            s.WEB_VISUAL_WEIGHTS.update({"sandbox_verification": 47, "visual_quality": 10, "browser_facts": 33,
-                                         "usage_outcomes": 10})
-        for slug, record in records.items():
-            pop = record["scores"]["popularity"]["score"]
-            if name in ("current", "w10"):
-                data = copy.deepcopy(record)
-                s.refresh_scores(data, now)
-                total = data["scores"]["quality"]["total"]
-            else:
-                w = {"deduct15": 0.15, "deduct10": 0.10}[name]
-                old = _without_visual(record, now)["scores"]["quality"]["total"]
-                v = record["visual_check"]["score"]
-                total = None if old is None else (old if v is None else round(old * (1 - w * (1 - v / 2)), 1))
-            out[slug] = (total, _treasure(total, pop))
-    finally:
-        s.GUI_VISUAL_WEIGHTS.clear()
-        s.GUI_VISUAL_WEIGHTS.update(saved[0])
-        s.WEB_VISUAL_WEIGHTS.clear()
-        s.WEB_VISUAL_WEIGHTS.update(saved[1])
+    for slug, record in records.items():
+        pop = record["scores"]["popularity"]["score"]
+        if name == "current":
+            data = copy.deepcopy(record)
+            s.refresh_scores(data, now)
+            total = data["scores"]["quality"]["total"]
+        else:
+            old = _without_visual(record, now)["scores"]["quality"]["total"]
+            v = record["visual_check"]["score"]
+            total = None if old is None else (old if v in (2, None) else round(old * (0.95 if v == 1 else 0.90), 1))
+        out[slug] = (total, _treasure(total, pop))
     return out
 
 
@@ -216,14 +201,14 @@ def unassessed(now: Any) -> dict[str, Any]:
 
     result: dict[str, Any] = {"unchecked": len(unchecked), "their_formulas": sorted(formulas),
                               "unchecked_with_visual_fields": sum(1 for r in unchecked.values()
-                                                                   if "visual_quality" in r["scores"]["quality"]["components"])}
+                                                                   if "visual" in r["scores"]["quality"])}
     main_values = {}
     for s, r in gui_web.items():
         old = _without_visual(r, now)["scores"] if r.get("visual_check") else r["scores"]
         main_values[s] = value(old["quality"]["total"], old["popularity"]["score"])
     main_rank = order(main_values)
     checked = {s: r for s, r in gui_web.items() if r.get("visual_check")}
-    for name in ("current", "deduct15", "deduct10", "w10"):
+    for name in ("current", "deduct10"):
         totals = variant_totals(name, checked, now)
         values = dict(main_values) | {s: value(t, gui_web[s]["scores"]["popularity"]["score"]) for s, (t, _) in totals.items()}
         rank = order(values)
@@ -242,7 +227,7 @@ def variants(now: Any) -> dict[str, Any]:
     checked = checked_records()
     main = {s: _without_visual(r, now)["scores"] for s, r in checked.items()}
     out = {}
-    for name in ("current", "w10", "deduct15", "deduct10"):
+    for name in ("current", "deduct10"):
         totals = variant_totals(name, checked, now)
         row: dict[str, Any] = {}
         for kind in ("desktop_app", "web_app", None):

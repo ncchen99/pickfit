@@ -1697,6 +1697,18 @@
               "type": "null"
             }
           ]
+        },
+        "visual": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VisualDeduction"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Formulas ending +visual.v1: the visual check's factor, the total before it, its app defects."
         }
       },
       "required": [
@@ -1785,18 +1797,6 @@
         "usage_outcomes": {
           "$ref": "#/$defs/QualityComponent",
           "description": "Only external reports count. <3 reports: weight 10, score null (dropped from the denominator); 3-9: 10; 10-29: 20; >=30: 30 (usage_outcomes_weight)."
-        },
-        "visual_quality": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/QualityComponent"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Formulas gui.v2 and web.v3 only: visual_check.score / 2, from measurable visual defects."
         }
       },
       "required": [
@@ -3016,6 +3016,43 @@
         "cost_usd"
       ],
       "title": "VisualCheck",
+      "type": "object"
+    },
+    "VisualDeduction": {
+      "additionalProperties": false,
+      "description": "What the visual check did to the total (formulas ending +visual.v1, pickfit/score.py apply_visual).",
+      "properties": {
+        "before": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The formula's total before the factor."
+        },
+        "defects": {
+          "description": "App-caused defects the check listed.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "factor": {
+          "description": "1.0 for a clean check; 0.95 when it found an app-caused defect.",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "type": "number"
+        }
+      },
+      "required": [
+        "factor",
+        "before",
+        "defects"
+      ],
+      "title": "VisualDeduction",
       "type": "object"
     },
     "WebApp": {

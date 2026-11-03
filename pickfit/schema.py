@@ -1253,14 +1253,23 @@ class QualityComponents(_Model):
         exclude_if=lambda value: value is None,
         description="Formulas gui.v1 and web.v2 only: the record's usability score / 100 (pickfit/usability.py).",
     )
-    visual_quality: QualityComponent | None = Field(
-        default=None,
-        exclude_if=lambda value: value is None,
-        description="Formulas gui.v2 and web.v3 only: visual_check.score / 2, from measurable visual defects.",
-    )
 
     def items(self) -> list[tuple[str, QualityComponent]]:
         return [(name, c) for name in type(self).model_fields if (c := getattr(self, name)) is not None]
+
+
+class VisualDeduction(_Model):
+    """What the visual check did to the total (formulas ending +visual.v1, pickfit/score.py apply_visual)."""
+
+    factor: float = Field(gt=0, le=1, description="1.0 for a clean check; 0.95 when it found an app-caused defect.")
+    before: float | None = Field(ge=0, le=100, description="The formula's total before the factor.")
+    defects: int = Field(ge=0, description="App-caused defects the check listed.")
+
+    @model_validator(mode="after")
+    def _factor_follows_defects(self) -> VisualDeduction:
+        if (self.factor < 1) != (self.defects > 0):
+            raise ValueError("the visual factor is below 1 exactly when the check found an app-caused defect")
+        return self
 
 
 class Quality(_Model):
@@ -1271,6 +1280,18 @@ class Quality(_Model):
     )
     cap_reason: CapReason | None = Field(description="binding_cap() of the record.")
     components: QualityComponents
+    visual: VisualDeduction | None = Field(
+        default=None, exclude_if=lambda value: value is None,
+        description="Formulas ending +visual.v1: the visual check's factor, the total before it, its app defects.")
+
+    @model_validator(mode="after")
+    def _check_visual(self) -> Quality:
+        v = self.visual
+        if v is not None and (v.before is None) != (self.total is None):
+            raise ValueError("a visual deduction has a total before it exactly when quality has a total")
+        if v is not None and v.before is not None and abs(self.total - round(v.before * v.factor, 1)) > 0.051:
+            raise ValueError("quality.total must be the total before the visual check times its factor")
+        return self
 
     @model_validator(mode="after")
     def _check_weights_and_cap(self) -> Quality:
@@ -1397,6 +1418,12 @@ class Scores(_Model):
             docs is None or abs(docs - self.docs_rubric.items.score()) > 0.001
         ):
             raise ValueError("install_docs.score must be docs_rubric points / 16")
+        return self
+
+    @model_validator(mode="after")
+    def _check_visual_formula(self) -> Scores:
+        if self.formula_version.endswith("+visual.v1") != (self.quality.visual is not None):
+            raise ValueError("a +visual.v1 formula carries quality.visual, and only it does")
         return self
 
     @model_validator(mode="after")

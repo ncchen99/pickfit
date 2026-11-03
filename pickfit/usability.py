@@ -1069,7 +1069,7 @@ def write_visual_check(path: Path, check: dict[str, Any]) -> None:
 def main_visual(args: Any) -> int:
     """`pickfit visual` (wired in pickfit/cli.py): measurable visual defects for desktop and web apps (comfort.v1),
     one Muse Wonder call each; --write adds them to the record as visual_check, which `pickfit score --refresh` turns
-    into the visual_quality component. A record whose visual_check, or a saved result, read the same screens with the
+    into the visual deduction (an app-caused defect: total x 0.95). A record whose visual_check, or a saved result, read the same screens with the
     same prompt is not checked again."""
     from pickfit.env import REPO_ROOT
     from pickfit.profiles import DEFAULT_OUT
