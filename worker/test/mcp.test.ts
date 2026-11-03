@@ -56,8 +56,9 @@ test('legacy clients: initialize, list and call without a session', async () => 
   assert.equal(init.headers.get('mcp-session-id'), null);
   const initMsg = await message(init);
   assert.match(initMsg.result.instructions, /^pickfit matches software to the user's need; each was installed and tested in a sandbox\. Scope: .*desktop GUI apps/);
-  // Every client loads these each session: keep them short (they grew past 512 with the answer guidance, past 900 with the GUI scope).
-  assert.ok(initMsg.result.instructions.length <= 920);
+  // Every client loads these each session: keep them short (they grew past 512 with the answer guidance, past 900 with the GUI scope,
+  // past 1000 with the known-vulnerability sentence).
+  assert.ok(initMsg.result.instructions.length <= 1030);
 
   const list = await message(
     await call(rpc({ jsonrpc: '2.0', id: 2, method: 'tools/list' }, { 'mcp-protocol-version': '2025-11-25' })),
@@ -103,6 +104,7 @@ test('instructions say how to write the answer: pick first, alternative before t
     assert.match(text, /Tag well_known_option "\(not verified by pickfit\)" beside its name/);
     assert.match(text, /Don't narrate the search or say pickfit found nothing; just answer/);
     assert.match(text, /No disclaimers about what you didn't run/);
+    assert.match(text, /If security\.status is vulnerable, warn the user before they install; if unchecked, don't call it safe\./);
   }
 });
 

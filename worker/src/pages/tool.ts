@@ -6,7 +6,7 @@
  * here calls a model. The plain feature titles, steps and open hint come from the record's usage_guide,
  * which names the model that wrote them.
  */
-import { bestGuide, isVerified, isWebApp, OSES, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo } from '../catalog.ts';
+import { bestGuide, isVerified, isWebApp, OSES, securityOf, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo } from '../catalog.ts';
 import { featuresOut, type FeaturesOut } from '../features.ts';
 import { L } from '../i18n.ts';
 import { installGuide, type InstallOutput } from '../install.ts';
@@ -126,6 +126,75 @@ export function visualLine(entry: Entry): string {
   const items = (v.defects ?? []).map((d) => `<li>${esc(d.problem)}</li>`).join('');
   return `<div class="small visual-check"><p>${L('Visual check found a defect: −5%', '視覺檢查發現缺陷：−5%')}</p>` +
     (items ? `<ul>${items}</ul>` : '') + `</div>`;
+}
+
+/** How many known vulnerabilities the page lists; the line still gives the full count. */
+const SECURITY_SHOWN = 5;
+
+/** Why a tool was not checked for known vulnerabilities, as the end of a sentence. */
+const securityReason = (reason: string | undefined): string => {
+  switch (reason) {
+    case 'no_source':
+      return L('there is no repository or package to read', '沒有可讀取的 repo 或套件');
+    case 'no_lockfile':
+      return L('there is no lockfile to read', '沒有可讀取的 lockfile');
+    case 'lockfile_not_supported':
+      return L('it uses a lockfile pickfit cannot read yet', '它用的 lockfile pickfit 還讀不了');
+    case 'resolve_failed':
+      return L('its dependencies could not be resolved', '無法解析它的相依套件');
+    default:
+      return '';
+  }
+};
+
+/** Every tool: known high or critical vulnerabilities (OSV.dev) in what a fresh install brings. One keeps it out of
+ * hidden gems (quality capped at 79); a tool pickfit could not check keeps its score and says so plainly. */
+export function securityLine(entry: Entry): string {
+  const s = securityOf(entry);
+  if (s.status === 'clean') {
+    const date = s.checked_at ? day(s.checked_at) : '';
+    const n = s.packages_checked ?? 0;
+    return `<p class="small security-check">${L(
+      `No known high or critical vulnerabilities (OSV.dev${date ? `, checked ${esc(date)}` : ''}, ${n} ${n === 1 ? 'package' : 'packages'}).`,
+      `沒有已知的高風險或嚴重漏洞（OSV.dev${date ? `，${esc(date)} 檢查` : ''}，共 ${n} 個套件）。`,
+    )}</p>`;
+  }
+  if (s.status === 'unchecked') {
+    const why = securityReason(s.reason);
+    return `<p class="small quiet security-check">${
+      why
+        ? L(`Not checked for known vulnerabilities: ${why}. Its score is unchanged.`, `沒有檢查已知漏洞：${why}，分數不變。`)
+        : L('Not checked for known vulnerabilities yet. Its score is unchanged.', '尚未檢查已知漏洞，分數不變。')
+    }</p>`;
+  }
+  const findings = s.findings ?? [];
+  const count = Math.max(s.count ?? 0, findings.length, 1);
+  const items = findings
+    .slice(0, SECURITY_SHOWN)
+    .map((f) => {
+      const advisory = link(`https://osv.dev/vulnerability/${encodeURIComponent(f.advisory)}`, esc(f.advisory));
+      const severity = f.malicious
+        ? L('malicious package', '惡意套件')
+        : f.severity === 'CRITICAL'
+          ? L('critical', '嚴重')
+          : L('high', '高風險');
+      const fix = f.malicious
+        ? ''
+        : f.fixed_in
+          ? L(`, fixed in ${esc(f.fixed_in)}`, `，${esc(f.fixed_in)} 已修正`)
+          : L(', no fix yet', '，尚無修正版本');
+      return `<li><code>${esc(f.package)} ${esc(f.version)}</code> — ${advisory}${L(` (${severity})`, `（${severity}）`)}${fix}</li>`;
+    })
+    .join('');
+  const more = count - Math.min(findings.length, SECURITY_SHOWN);
+  return `<div class="small security-check"><p>${badge('fail', L('Known vulnerabilities', '已知漏洞'), { icon: 'triangle-alert' })} ` +
+    L(
+      `${count} known high or critical ${count === 1 ? 'vulnerability' : 'vulnerabilities'} in packages it installs. That keeps it out of hidden gems: quality is capped at 79.`,
+      `它安裝的套件有 ${count} 個已知的高風險或嚴重漏洞，所以不列為寶藏：品質最高 79 分。`,
+    ) +
+    `</p>${items ? `<ul>${items}</ul>` : ''}` +
+    (more > 0 ? `<p class="quiet">${L(`${more} more not listed here.`, `另有 ${more} 個未列出。`)}</p>` : '') +
+    `</div>`;
 }
 
 export function chaptersOf(entry: Entry, video: RunVideo): Chapter[] {
@@ -575,7 +644,7 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
     tape(L('Quality', '品質'), entry.scores?.quality ?? null, { pop: 'pop-quality' }) +
     tape(L('Popularity', '知名度'), entry.scores?.popularity ?? null, { pop: 'pop-popularity', tone: 'quiet' }) +
     coverage(features, { pop: 'pop-features' }) +
-    `</div>${visualLine(entry)}<p class="small quiet">${L('Scored apart; ranked by neither.', '兩項分開計分，排序不看分數。')} <a href="/how#scores">${L('How scores work', '評分方式')}</a></p></div>` +
+    `</div>${visualLine(entry)}${securityLine(entry)}<p class="small quiet">${L('Scored apart; ranked by neither.', '兩項分開計分，排序不看分數。')} <a href="/how#scores">${L('How scores work', '評分方式')}</a></p></div>` +
     (sources ? `<details class="panel sources"><summary>${L('Sources', '來源')}</summary><ul class="small">${sources}</ul><p class="small quiet">${L('Every field in the profile cites one of these.', '簡介裡的每個欄位都引用下列其中一個來源。')}</p></details>` : '') +
     `</aside></div>`;
   return renderShell({
