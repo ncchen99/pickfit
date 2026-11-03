@@ -152,12 +152,28 @@ def labels(task_features: list[Any]) -> list[str]:
     return [str(f.value) for f in task_features if f.value]
 
 
-def render(task_features: list[Any]) -> list[str]:
-    """Task lines: one per feature, with the README passage that advertises it."""
+# A feature that deletes files (a cleaner, an uninstaller): its result is a file gone, which operate_gui's gone shows.
+_DELETES = re.compile(r"\b(clean\w*|delet\w*|remov\w*|uninstall\w*|purg\w*|wip\w*|eras\w*|reclaim\w*)\b", re.I)
+_FILES = re.compile(r"\b(files?|folders?|cache[sd]?|duplicates?|junk|leftovers?|apps?|applications?|space|"
+                    r"downloads?|logs?)\b", re.I)
+DELETES_HINT = ("it removes files: make them with a setup (above any size threshold the app shows), let the app "
+                "find and delete one, and check gone "
+                "(operate_gui)")
+
+
+def deletes_files(label: str) -> bool:
+    """A feature whose label says it removes files (clean caches, delete large files, uninstall apps)."""
+    return bool(_DELETES.search(label) and _FILES.search(label))
+
+
+def render(task_features: list[Any], gui: bool = False) -> list[str]:
+    """Task lines: one per feature, with the README passage that advertises it. In a box with a display, a feature
+    that removes files says how its result is checked (gone), since a list showing the file proves only a scan."""
     lines = []
     for i, f in enumerate(task_features, 1):
         if f.value:
-            lines.append(f'F{i}. {f.value} (README: "{_one_line(f.quote or "", 160)}")')
+            hint = f" [{DELETES_HINT}]" if gui and deletes_files(f.value) else ""
+            lines.append(f'F{i}. {f.value} (README: "{_one_line(f.quote or "", 160)}"){hint}')
     return lines
 
 

@@ -702,7 +702,7 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
         for t in ex.smoke_test_candidates:
             shown = f" (README shows: {t.expected_output})" if t.expected_output else ""
             lines.append(f"- {t.command}{shown}")
-    listed = feature_checks.render(ex.features)
+    listed = feature_checks.render(ex.features, gui=box.display)
     if listed:
         lines += ["", "Main features the README advertises:", *listed, feature_checks.guide(is_mcp(task))]
     if is_mcp(task):
