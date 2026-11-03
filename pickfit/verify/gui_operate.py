@@ -15,6 +15,9 @@ A launch (gui.py) shows that the app draws its own UI. Operating it shows that a
      it read with the expected text;
    - file: after root has stopped every box-user process, root reads the file (no symlink on the way, a
      regular file of the box user's, written after the app started) and checks its text and format;
+   - gone: a file the app deletes (a cleaner's job): root reads it before the app starts (a regular file of the
+     box user's, made beforehand, e.g. by a setup command) and, after every box-user process has stopped, finds
+     nothing at its path;
 5. root stops every box-user process, as after a launch.
 
 The goal, the inputs and the check come from the verify agent (operate_gui) and may hold {nonce}: pickfit
@@ -320,8 +323,9 @@ class GuiInput(BaseModel):
 
 
 class GuiCheckSpec(BaseModel):
-    kind: Literal["file", "clipboard", "screen_text"]
-    path: str | None = Field(default=None, description="file: the file, or a folder to search (ending in /).")
+    kind: Literal["file", "clipboard", "screen_text", "gone"]
+    path: str | None = Field(default=None, description="file: the file, or a folder to search (ending in /); "
+                                                       "gone: the file the app deletes.")
     contains: list[str] = Field(default=[], max_length=4)
     format: str | None = None
 
@@ -403,7 +407,21 @@ def spec_problems(args: OperateArgs, readme: str = "", home: str = BOX_HOME) -> 
         problems.append("each expected text is 1-200 characters")
     if check.format is not None and check.format not in FORMATS:
         problems.append(f"format must be one of {', '.join(FORMATS)}")
-    if check.kind == "file":
+    if check.kind == "gone":
+        if not check.path or check.path.strip().endswith("/"):
+            problems.append("a gone check needs the path of the one file the app deletes (made before the app "
+                            "starts, e.g. by a setup command)")
+        else:
+            try:
+                target = home_path(check.path, home)
+            except ValueError as err:
+                problems.append(str(err))
+            else:
+                if target.startswith(f"{home}/pickfit-out/"):
+                    problems.append("pickfit empties ~/pickfit-out/ before the app starts: make the file elsewhere")
+        if check.contains or check.format is not None:
+            problems.append("a gone check takes no expected text or format")
+    elif check.kind == "file":
         if not check.path:
             problems.append("a file check needs the path of the file (or of a folder to search, ending in /)")
         else:
@@ -418,7 +436,7 @@ def spec_problems(args: OperateArgs, readme: str = "", home: str = BOX_HOME) -> 
             problems.append("a file check needs expected text (contains) or a format")
     elif not check.contains:
         problems.append(f"a {check.kind} check needs the expected text (contains)")
-    if check.kind != "file" and (check.path or check.format):
+    if check.kind in ("clipboard", "screen_text") and (check.path or check.format):
         problems.append(f"a {check.kind} check takes no path or format")
     return problems
 
@@ -1311,6 +1329,28 @@ def check_file(box: Box, spec: GuiCheckSpec, nonce: str, since: float, before: s
     return result
 
 
+def check_gone(box: Box, spec: GuiCheckSpec, before: dict[str, Any]) -> dict[str, Any]:
+    """gone: the file was a regular file of the box user's before the app started (root's before probe read it) and,
+    after every box-user process stopped, nothing is at its path."""
+    target = home_path(spec.path or "", box_home(box))
+    if "error" in before:
+        return {"passed": False, "why": f"pickfit's file check failed: {before['error']}",
+                "line": f"file {target}: pickfit's check gave no answer"}
+    if before.get("before") is None:
+        why = "not there (a regular file of the box user's) before the app started"
+        return {"passed": False, "why": f"file {target}: {why}", "line": f"file {target}: {why}"}
+    report = file_probe(box, {"mode": "after", "target": target})
+    if "error" in report:
+        return {"passed": False, "why": f"pickfit's file check failed: {report['error']}",
+                "line": f"file {target}: pickfit's check gave no answer"}
+    if report.get("found") is None and report.get("why") == "missing":
+        return {"passed": True, "line": f"file {target}: there before the app started, gone after it stopped",
+                "sha256": before["before"]}
+    why = "still there" if report.get("found") else report.get("why") or "not gone"
+    return {"passed": False, "why": f"file {target}: {why} after the app stopped",
+            "line": f"file {target}: {why} after the app stopped"}
+
+
 def check_clipboard(display: Any, spec: GuiCheckSpec, nonce: str, typed: list[str],
                     words: list[str] | None = None) -> dict[str, Any]:
     try:
@@ -1424,7 +1464,7 @@ def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[
         path = home_path(item.path, home)
         box.write_file(path, sample_file(item.sample) if item.sample else fill(item.text or "", nonce))
         written.append(path)
-    target = home_path(args.check.path, home) if args.check.kind == "file" and args.check.path else None
+    target = home_path(args.check.path, home) if args.check.kind in ("file", "gone") and args.check.path else None
     before = file_probe(box, {"mode": "before", "target": target or home + "/"})
     try:
         return _operated(box, args, tag, op, nonce, words, written, before, mac=mac, actions=actions, model=model,
@@ -1500,6 +1540,8 @@ def _operated(box: Box, args: OperateArgs, tag: str | int, op: Operation, nonce:
         op.error = "; ".join(filter(None, [op.error, "box-user processes survived the stop"]))
     if op.stop != "no_window" and args.check.kind == "file":
         op.result = check_file(box, args.check, nonce, since, before.get("before"), written, op.typed(), words)
+    elif op.stop != "no_window" and args.check.kind == "gone":
+        op.result = check_gone(box, args.check, before)
     op.passed = bool(op.result.get("passed")) and not survived and not opened.timed_out and op.stop != "no_window"
     op.launch = shown.to_dict()
     op.seconds = round(time.monotonic() - began, 1)

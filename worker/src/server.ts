@@ -131,8 +131,10 @@ export const gui = z
         z.object({
           feature: z.string().nullable().describe('The listed feature this goal exercised'),
           check: z
-            .enum(['file', 'clipboard', 'screen_text'])
-            .describe("What pickfit checked: a file the app wrote, the clipboard, or text read off pickfit's screenshot"),
+            .enum(['file', 'clipboard', 'screen_text', 'gone'])
+            .describe(
+              "What pickfit checked: a file the app wrote, the clipboard, text read off pickfit's screenshot, or that a file the app deleted is gone",
+            ),
           passed: z.boolean(),
           replay: z
             .enum(['actions', 'operated'])

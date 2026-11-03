@@ -318,6 +318,87 @@ def test_the_clipboard_is_read_by_the_display_uid_and_screen_text_never_counts_a
         assert operation.passed is passed
 
 
+GONE_CHECK = {"kind": "gone", "path": "~/pickfit-plant/big-video.mov", "contains": [], "format": None}
+CLEAN_GOAL = "Scan for large files, select big-video.mov in the list and press Delete to remove it."
+
+
+class CleanerBox(OperateBox):
+    """OperateBox whose fake app deletes ~/pickfit-plant/big-video.mov on the Delete key, as a disk cleaner would."""
+
+    def __init__(self, home: Path, *, cleans: bool = True, **kwargs: Any) -> None:
+        super().__init__(home, **kwargs)
+        self.cleans = cleans
+
+    def harness_exec(self, argv: list[str], timeout_s: int, *, as_uid: int | None = None,
+                     stdin: bytes | None = None) -> ExecResult:
+        done = super().harness_exec(argv, timeout_s, as_uid=as_uid, stdin=stdin)
+        if "ACT = json.loads(" in (stdin or b"").decode() and self.cleans and \
+                self.acts[-1] == {"kind": "key", "name": "Delete"}:
+            (self.home / "pickfit-plant" / "big-video.mov").unlink(missing_ok=True)
+        return done
+
+
+def plant(home: Path) -> Path:
+    planted = home / "pickfit-plant" / "big-video.mov"
+    planted.parent.mkdir(parents=True, exist_ok=True)
+    planted.write_bytes(os.urandom(4096))
+    return planted
+
+
+def clean_session() -> list[dict[str, Any]]:
+    return [operator_reply("click", x=500, y=400), operator_reply("key", key="Delete"), operator_reply("done")]
+
+
+def test_pickfit_checks_specs_of_a_file_the_app_deletes():
+    assert op.spec_problems(operate_args(goal=CLEAN_GOAL, check=GONE_CHECK)) == []
+    for bad, why in (({"path": "~/pickfit-plant/"}, "the one file the app deletes"),
+                     ({"path": None}, "the one file the app deletes"),
+                     ({"path": "~/pickfit-out/big.mov"}, "pickfit empties ~/pickfit-out/"),
+                     ({"contains": ["big-video.mov"]}, "no expected text or format"),
+                     ({"format": "mp4"}, "no expected text or format")):
+        problems = op.spec_problems(operate_args(goal=CLEAN_GOAL, check={**GONE_CHECK, **bad}))
+        assert any(why in p for p in problems), (bad, problems)
+
+
+def test_a_file_the_app_deletes_passes_only_when_it_was_there_and_is_gone(tmp_path: Path):
+    home = tmp_path / "home"
+    planted = plant(home)
+    box = CleanerBox(home)
+    result, operation, _ = op.run_operation(box, operate_args(goal=CLEAN_GOAL, check=GONE_CHECK), 3,
+                                            log=lambda s: None, client=NonceServer(*clean_session()).client(),
+                                            sleep=lambda s: None)
+    assert result.exit_code == 0 and operation.passed and not planted.exists()
+    assert ("gui result: file /home/sbx/pickfit-plant/big-video.mov: there before the app started, gone after it "
+            "stopped") in result.stdout.splitlines()
+    # The replay makes the file again (its setup) and the recorded actions delete it again.
+    plant(home)
+    _, again, _ = op.run_operation(box, operate_args(goal=CLEAN_GOAL, check=GONE_CHECK), "replay-3-1",
+                                   actions=operation.actions(), log=lambda s: None, sleep=lambda s: None)
+    assert again.passed and again.mode == "actions" and not planted.exists()
+    # Nothing to delete: a file that was never there shows nothing about the app.
+    result, operation, _ = op.run_operation(box, operate_args(goal=CLEAN_GOAL, check=GONE_CHECK), 4,
+                                            log=lambda s: None, client=NonceServer(*clean_session()).client(),
+                                            sleep=lambda s: None)
+    assert not operation.passed and "not there (a regular file of the box user's) before the app started" in \
+        result.stdout
+    # An app that leaves the file where it was does not pass.
+    plant(home)
+    result, operation, _ = op.run_operation(CleanerBox(home, cleans=False), operate_args(goal=CLEAN_GOAL,
+                                            check=GONE_CHECK), 5, log=lambda s: None,
+                                            client=NonceServer(*clean_session()).client(), sleep=lambda s: None)
+    assert not operation.passed and planted.exists()
+    assert "gui check: failed (file /home/sbx/pickfit-plant/big-video.mov: still there after the app stopped)" in \
+        result.stdout
+    # A symlink planted in its place is never followed and is not a deletion.
+    planted.unlink()
+    planted.symlink_to(tmp_path / "elsewhere.mov")
+    (tmp_path / "elsewhere.mov").write_bytes(b"x")
+    result, operation, _ = op.run_operation(CleanerBox(home, cleans=False), operate_args(goal=CLEAN_GOAL,
+                                            check=GONE_CHECK), 6, log=lambda s: None,
+                                            client=NonceServer(*clean_session()).client(), sleep=lambda s: None)
+    assert not operation.passed
+
+
 def test_no_window_means_nothing_is_operated(tmp_path: Path):
     from test_verify_gui import report
 

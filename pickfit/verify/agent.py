@@ -196,7 +196,8 @@ OPERATE_GUI_TOOL = _fn(
     "operate_gui", "Start a GUI app as launch_gui does, then have it operated: Muse Spark sees pickfit's screenshots "
     "and picks clicks (right-clicks too, for an app whose commands are in a context menu), typing and keys "
     "toward the goal, pickfit performs them on the virtual display, and then "
-    "pickfit checks the result itself (a file the app wrote, the clipboard, or text on the screen). Every process "
+    "pickfit checks the result itself (a file the app wrote, the clipboard, text on the screen, or a file the app "
+    "deleted). Every process "
     "of the box user is stopped before and after. Returns its command_id and pickfit's own lines, ending with "
     "`gui check: passed` or `gui check: failed (why)`. Uses one unit of the command budget.",
     {"command": {"type": "string", "description": "The command that starts the app, as with launch_gui."},
@@ -215,14 +216,16 @@ OPERATE_GUI_TOOL = _fn(
                                               "or null."}},
                     "required": ["path", "text", "sample"], "additionalProperties": False}},
      "check": {"type": "object", "description": "What pickfit checks after the operation.", "properties": {
-         "kind": {"type": "string", "enum": ["file", "clipboard", "screen_text"]},
+         "kind": {"type": "string", "enum": ["file", "clipboard", "screen_text", "gone"]},
          "path": {**_NULL_STR, "description": (
              "file: the file the app saves or exports (under ~/pickfit-out/ when the goal chooses where), or a "
-             "folder to search ending in / (e.g. ~/ for wherever the app keeps its data); else null.")},
+             "folder to search ending in / (e.g. ~/ for wherever the app keeps its data); gone: the file the app "
+             "deletes, made before the app starts by a run_command you cite as this operation's setup (not under "
+             "~/pickfit-out/); else null.")},
          "contains": {"type": "array", "items": {"type": "string"}, "description": (
              "Text the result must hold ({nonce} allowed). For screen_text, a result the app computes or "
              "converts, never the text typed. In a box with a simulated microphone, the item {spoken} stands for "
-             "each word pickfit speaks into it during the operation.")},
+             "each word pickfit speaks into it during the operation. [] for gone.")},
          "format": {"type": ["string", "null"], "enum": [*gui_operate.FORMATS, None],
                     "description": "file: the format the file must have, or null."}},
          "required": ["kind", "path", "contains", "format"], "additionalProperties": False}},
@@ -464,14 +467,18 @@ After a launch shows a window, exercise each listed feature that the app's own U
 pickfit can check, one operate_gui per feature: a goal a user would do in the app (the exact text to type, \
 {nonce} where a unique word should go, and where to save), and a check: file (the app saves or exports a file: \
 its path under ~/pickfit-out/, or a folder to search such as ~/ where the app keeps its data, with the text it \
-must hold and/or its format), clipboard (the app copies a result), or screen_text (text the app computes or \
-converts, never the text typed). Put input files the goal needs in inputs (text, or pickfit's sample png, jpeg, \
-gif, pdf, wav, mp4 or zip). \
+must hold and/or its format), clipboard (the app copies a result), screen_text (text the app computes or \
+converts, never the text typed), or gone (the app deletes a file: its path; pickfit checks the file was there \
+before the app started and is gone after). Put input files the goal needs in inputs (text, or pickfit's sample \
+png, jpeg, gif, pdf, wav, mp4 or zip); a file too big for inputs, or one the app should find elsewhere, make with \
+a run_command and cite it as the operation's setup (setup_ids), so the fresh box makes it again. \
 Examples: a notes or editor app: type {nonce}, save to ~/pickfit-out/note.md, check that file contains {nonce}; \
 an image tool: open ~/pickfit-in/photo.png (sample png), export ~/pickfit-out/photo.webp, check format webp; \
 a model browser: download the smallest GGUF it lists, check folder ~/ for format gguf; a document search: an \
 input file holding {nonce}, search for {nonce}, check screen_text for the input file's name; a converter: \
-check the converted text, not the text typed. \
+check the converted text, not the text typed; a disk cleaner: a setup makes a big file (mkdir -p ~/pickfit-plant && dd \
+if=/dev/urandom of=$HOME/pickfit-plant/big-video.mov bs=1048576 count=150) or two copies of one file, one operation finds it \
+(screen_text: its name in the app's list) and another, with a file of its own, deletes it in the app (gone). \
 A check must hold the feature's own result: a file it saved or exported, text it converted, computed or \
 generated, a value it copied, or something it created and then lists or stores. Never a heading, a label, a \
 menu or the name of a screen: opening a screen shows nothing about a feature, a screen_text result must not \
