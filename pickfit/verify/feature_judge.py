@@ -50,7 +50,9 @@ promises (an action it should block was executed), only a help or usage text, a 
 capability rather than its use, or anything you cannot tell from. When unsure, choose does_not_show.
 A check of a desktop app may be an operation: pickfit operated the app's own UI toward a goal (the `gui goal` \
 line) and then checked the result itself (`gui result`, `gui check`). It shows the feature working when the \
-checked result is the feature's own (the file exported in its format, the text the app converted or computed). \
+checked result is the feature's own (the file exported in its format, the text the app converted or computed, \
+or, for a feature that deletes or cleans up files, a file that was there before the app started and is gone after \
+it stopped). \
 A result that only holds text the operator typed (marked "typed by the operator") shows that the app kept the \
 input: that is the feature only when keeping, saving or copying that input is what the feature promises. \
 A check may also use the box's simulated microphone (a `mic` line, or {spoken} in an operation's check): pickfit \

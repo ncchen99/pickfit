@@ -163,6 +163,22 @@ def test_the_task_lists_each_feature_with_its_readme_quote():
     assert set(item["required"]) == {"feature", "status", "command_ids", "reason", "failure", "note"}
 
 
+def test_a_feature_that_removes_files_is_told_to_check_gone_in_a_gui_box():
+    from pickfit.verify.features import DELETES_HINT, deletes_files, render
+
+    for label in ("find and clean largest files", "remove duplicate files safely", "deep clean system and app caches",
+                  "uninstall apps and their leftovers", "reclaim disk space"):
+        assert deletes_files(label), label
+    for label in ("analyze disk space visually", "remove image backgrounds", "clean up your writing",
+                  "save notes as Markdown files"):
+        assert not deletes_files(label), label
+    features = [Cited(value="find and clean largest files", quote="Quickly find the largest files"),
+                Cited(value="analyze disk space visually", quote="See where your disk space is going")]
+    gui, plain = render(features, gui=True), render(features)
+    assert gui[0].endswith(f"[{DELETES_HINT}]") and DELETES_HINT not in gui[1]
+    assert not any(DELETES_HINT in line for line in plain)  # no display, no operate_gui to check with
+
+
 def test_finish_feature_takes_null_strings_and_unknown_reasons():
     claim = FinishFeature.model_validate({"feature": 2, "status": "not_checked", "command_ids": [],
                                           "reason": "needs_microphone", "failure": "null", "note": ""})

@@ -131,8 +131,10 @@ export const gui = z
         z.object({
           feature: z.string().nullable().describe('The listed feature this goal exercised'),
           check: z
-            .enum(['file', 'clipboard', 'screen_text'])
-            .describe("What pickfit checked: a file the app wrote, the clipboard, or text read off pickfit's screenshot"),
+            .enum(['file', 'clipboard', 'screen_text', 'gone'])
+            .describe(
+              "What pickfit checked: a file the app wrote, the clipboard, text read off pickfit's screenshot, or that a file the app deleted is gone",
+            ),
           passed: z.boolean(),
           replay: z
             .enum(['actions', 'operated'])
@@ -591,7 +593,7 @@ export function buildServer(deps: Deps): McpServer {
       description:
         'Use only when the user asks to add a software project to pickfit, often their own. Takes the GitHub repository URL, or the https URL of a web app people use in a browser. ' +
         "pickfit's pipeline reads it with Meta's Muse Spark, tries it in a sandbox (a web app in a sandboxed browser) and lists it if it works; this takes minutes, so call again with the same url to check the status. " +
-        'Developer CLI tools, local AI/LLM tools, MCP servers and web apps are verified today; other software may be rejected or listed unverified. Nothing is published under the user\'s name.',
+        'Developer CLI tools, local AI/LLM tools, MCP servers, desktop GUI apps and web apps are taken; libraries and other code people import are rejected, and software pickfit cannot run in its sandbox is listed unverified. Nothing is published under the user\'s name.',
       inputSchema: submitInput,
       outputSchema: submitOutput,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
