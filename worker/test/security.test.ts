@@ -107,7 +107,7 @@ test('tool page, unchecked: why, and that its score is unchanged; an older index
 test('the tool page shows the line from the index, and the How page explains the check and the 79 cap', async () => {
   const get = site(indexWith(VULNERABLE));
   const html = await (await get(`/tool/${SLUG}`)).text();
-  assert.match(html, /<div class="small security-check"><p><span class="badge badge-fail">/);
+  assert.match(html, /<div class="small security-check" id="security"><p><span class="badge badge-fail">/);
   assert.match(html, /href="https:\/\/osv\.dev\/vulnerability\/GHSA-abcd-1234-wxyz"/);
   const zh = await (await get(`/tool/${SLUG}?lang=zh-TW`)).text();
   assert.match(zh, /所以不列為寶藏：品質最高 79 分/);
@@ -218,4 +218,39 @@ test('over MCP, a vulnerable tool passes the find_software and get_install_guide
   const found = await call(2, 'find_software', { need: 'run a language model offline on my laptop', os: 'macos', must_run_locally: true });
   assert.ok(!found.isError, JSON.stringify(found).slice(0, 300));
   assert.equal(found.structuredContent.picks.find((p: any) => p.slug === SLUG).security.count, 7);
+});
+
+test('tool page, vulnerable: a badge by the title that jumps to the list, and a notice before the first install step', async () => {
+  const get = site(indexWith(VULNERABLE));
+  const html = await (await get(`/tool/${SLUG}`)).text();
+  const head = html.slice(0, html.indexOf('class="wrap layout"'));
+  assert.match(head, /<a class="badge-link" href="#security"><span class="badge badge-fail"><svg[^>]*>.*?<\/svg>Known vulnerabilities<\/span><\/a>/);
+  const notice = html.indexOf('class="notice error security-notice"');
+  assert.ok(notice > 0 && notice < html.indexOf('class="run-card install-card"'), 'the notice comes before the install card');
+  assert.match(html, /<h3>Before you install: known vulnerabilities<\/h3>/);
+  assert.match(html, /found 7 known high or critical vulnerabilities in the packages a fresh install brings \(OSV\.dev, /);
+  // The two worst, escaped, each with its advisory, severity and fix; then a link to the whole list.
+  assert.match(html, /<code>npm:undici 8\.9\.0<\/code> A &lt;b&gt;bad&lt;\/b&gt; parser\. \(<a [^>]*href="https:\/\/osv\.dev\/vulnerability\/GHSA-abcd-1234-wxyz"[^>]*>GHSA-abcd-1234-wxyz<\/a>, high, fixed in 8\.12\.2\)/);
+  assert.match(html, /RUSTSEC-2020-0071<\/a>, critical, no fix yet\)/);
+  assert.match(html, /<a href="#security">See all 7<\/a>/);
+  const zh = await (await get(`/tool/${SLUG}?lang=zh-TW`)).text();
+  assert.match(zh, /有已知漏洞<\/span><\/a>/);
+  assert.match(zh, /<h3>安裝前先知道：有已知漏洞<\/h3>/);
+  assert.match(zh, /安裝時會一併裝上的套件裡找到 7 個已知的高風險或嚴重漏洞/);
+  assert.match(zh, /高風險，8\.12\.2 已修正）/);
+});
+
+test('tool page, clean or unchecked: no badge by the title and no notice', async () => {
+  for (const security of [CLEAN, undefined]) {
+    const html = await (await site(indexWith(security))(`/tool/${SLUG}`)).text();
+    assert.doesNotMatch(html, /class="badge-link"|class="notice error security-notice"/);
+  }
+});
+
+test('web app, vulnerable: the notice sits beside the site, worded for using it', async () => {
+  const html = await (await site(indexWith(VULNERABLE, 'fixture-web-sketch'))('/tool/fixture-web-sketch')).text();
+  assert.match(html, /<h3>Before you use it: known vulnerabilities<\/h3>/);
+  assert.match(html, /in the packages this site is built with/);
+  const zh = await (await site(indexWith(VULNERABLE, 'fixture-web-sketch'))('/tool/fixture-web-sketch?lang=zh-TW')).text();
+  assert.match(zh, /使用前先知道：有已知漏洞/);
 });

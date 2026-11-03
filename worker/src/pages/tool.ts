@@ -187,7 +187,7 @@ export function securityLine(entry: Entry): string {
     })
     .join('');
   const more = count - Math.min(findings.length, SECURITY_SHOWN);
-  return `<div class="small security-check"><p>${badge('fail', L('Known vulnerabilities', '已知漏洞'), { icon: 'triangle-alert' })} ` +
+  return `<div class="small security-check" id="security"><p>${badge('fail', L('Known vulnerabilities', '已知漏洞'), { icon: 'triangle-alert' })} ` +
     L(
       `${count} known high or critical ${count === 1 ? 'vulnerability' : 'vulnerabilities'} in packages it installs. That keeps it out of hidden gems: quality is capped at 79.`,
       `它安裝的套件有 ${count} 個已知的高風險或嚴重漏洞，所以不列為寶藏：品質最高 79 分。`,
@@ -195,6 +195,39 @@ export function securityLine(entry: Entry): string {
     `</p>${items ? `<ul>${items}</ul>` : ''}` +
     (more > 0 ? `<p class="quiet">${L(`${more} more not listed here.`, `另有 ${more} 個未列出。`)}</p>` : '') +
     `</div>`;
+}
+
+/** Before the first install step, or beside the site's address: a known vulnerability, so a person reading the page
+ * weighs it before installing, as an agent is told to through the install guide's warning. Nothing for clean or unchecked. */
+export function securityNotice(entry: Entry): string {
+  const s = securityOf(entry);
+  if (s.status !== 'vulnerable') return '';
+  const all = s.findings ?? [];
+  const count = Math.max(s.count ?? 0, all.length, 1);
+  const web = isWebApp(entry);
+  // The worst of the first two packages (findings come worst first), so two advisories on one package do not hide a second.
+  const items = all
+    .filter((f, i) => all.findIndex((g) => g.package === f.package) === i)
+    .slice(0, 2)
+    .map((f) => {
+      const severity = f.malicious ? L('malicious package', '惡意套件') : f.severity === 'CRITICAL' ? L('critical', '嚴重') : L('high', '高風險');
+      const fix = f.malicious ? '' : f.fixed_in ? L(`, fixed in ${esc(f.fixed_in)}`, `，${esc(f.fixed_in)} 已修正`) : L(', no fix yet', '，尚無修正版本');
+      const advisory = link(`https://osv.dev/vulnerability/${encodeURIComponent(f.advisory)}`, esc(f.advisory));
+      return `<li><code>${esc(f.package)} ${esc(f.version)}</code>${f.summary ? ` ${esc(f.summary)}` : ''} ${L(`(${advisory}, ${severity}${fix})`, `（${advisory}，${severity}${fix}）`)}</li>`;
+    })
+    .join('');
+  const date = s.checked_at ? day(s.checked_at) : '';
+  return (
+    `<div class="notice error security-notice" role="note">${fitz('sorry', 64)}<div>` +
+    `<h3>${web ? L('Before you use it: known vulnerabilities', '使用前先知道：有已知漏洞') : L('Before you install: known vulnerabilities', '安裝前先知道：有已知漏洞')}</h3>` +
+    `<p>${L(
+      `pickfit found ${count} known high or critical ${count === 1 ? 'vulnerability' : 'vulnerabilities'} in ${web ? 'the packages this site is built with' : 'the packages a fresh install brings'}${date ? ` (OSV.dev, ${esc(date)})` : ''}. Weigh this before you ${web ? 'use it' : 'install it'}.`,
+      `pickfit 在${web ? '這個網站用到的套件' : '安裝時會一併裝上的套件'}裡找到 ${count} 個已知的高風險或嚴重漏洞${date ? `（OSV.dev，${esc(date)}）` : ''}，${web ? '使用' : '安裝'}前請先考慮。`,
+    )}</p>` +
+    (items ? `<ul class="small">${items}</ul>` : '') +
+    (count > 2 ? `<p class="small"><a href="#security">${L(`See all ${count}`, `看全部 ${count} 個`)}</a></p>` : '') +
+    `</div></div>`
+  );
 }
 
 export function chaptersOf(entry: Entry, video: RunVideo): Chapter[] {
@@ -464,7 +497,7 @@ function install(catalog: Catalog, entry: Entry): string {
   const oses = OSES.filter((os) => entry.install[os]);
   if (!oses.length) {
     const needs = prerequisites(entry);
-    return needs ? `<section class="block" aria-labelledby="install-title">${installTitle('Use it', '使用')}${needs}</section>` : '';
+    return needs ? `<section class="block" aria-labelledby="install-title">${installTitle('Use it', '使用')}${securityNotice(entry)}${needs}</section>` : '';
   }
   const hint = entry.usage_guide?.open_hint ?? null;
   // What you need first sits in each system's install step, where it can differ by system.
@@ -492,7 +525,7 @@ function install(catalog: Catalog, entry: Entry): string {
       oses.map((os, i) => `<button type="button" role="tab" id="tab-${os}" aria-controls="install-${os}" aria-selected="${i === 0}" data-os="${os}"${i ? ' tabindex="-1"' : ''}>${sysLabel(os)}</button>`).join('') +
       `</div>`
     : '';
-  return `<section class="block" aria-labelledby="install-title">${installTitle('Use it', '使用')}<article class="run-card install-card">${tabs}${panels.join('')}</article></section>`;
+  return `<section class="block" aria-labelledby="install-title">${installTitle('Use it', '使用')}${securityNotice(entry)}<article class="run-card install-card">${tabs}${panels.join('')}</article></section>`;
 }
 
 /** A web app: open it, and the facts a person weighs before typing anything in. */
@@ -502,7 +535,7 @@ function webRun(entry: Entry): string {
   const open = link(url, `${icon('external-link')}${L('Open the site', '開啟網站')}`, 'btn btn-primary btn-sm');
   if (!check) {
     return (
-      `<section class="block" aria-labelledby="install-title">${installTitle('Open it', '開啟')}` +
+      `<section class="block" aria-labelledby="install-title">${installTitle('Open it', '開啟')}${securityNotice(entry)}` +
       `<div class="empty">${fitz('thinking', 80)}<div><p>` +
       L(
         `<b>pickfit hasn’t checked ${esc(entry.name)} in its browser yet</b>, so it never suggests it.`,
@@ -512,7 +545,7 @@ function webRun(entry: Entry): string {
     );
   }
   return (
-    `<section class="block" aria-labelledby="install-title">${installTitle('Open it', '開啟')}` +
+    `<section class="block" aria-labelledby="install-title">${installTitle('Open it', '開啟')}${securityNotice(entry)}` +
     `<article class="run-card" id="run-web"><div class="run-head"><h3>${esc(noInstallLabel())}</h3></div>` +
     // Where it opens, as a browser's address bar with the one action at its end; then what pickfit's browser saw.
     (open
@@ -613,6 +646,9 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
             marks: `<span aria-hidden="true">${L('Tested', '已測試')}</span>${verifiedOn(entry).map(osMark).join('')}`,
           })
         : badge('quiet', L('Not verified yet', '尚未驗證'), { icon: 'circle-dashed' }),
+    securityOf(entry).status === 'vulnerable'
+      ? `<a class="badge-link" href="#security">${badge('fail', L('Known vulnerabilities', '有已知漏洞'), { icon: 'triangle-alert' })}</a>`
+      : '',
     entry.scores?.treasure ? badge('gem', L('Hidden gem', '寶藏'), { icon: 'gem', pop: 'pop-gem' }) : '',
   ].join('');
   const webUrl = entry.web?.url ?? null;
