@@ -18,7 +18,8 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = join(HERE, '..', 'rec', 'web');
 const SITE = 'https://pickfit.app';
 const argv = process.argv.slice(2);
-const NEED = argv.includes('--need') ? argv[argv.indexOf('--need') + 1] : "My Mac's disk is full. I want a free cleaner I can trust.";
+const NEED = argv.includes('--need') ? argv[argv.indexOf('--need') + 1] : "My Mac's disk is full. I want a free, safe app to find and clean large files.";
+const SEEK = argv.includes('--seek') ? Number(argv[argv.indexOf('--seek') + 1]) : 12; // where the chapter's results show
 
 const CURSOR = `
 (() => {
@@ -120,12 +121,13 @@ async function main() {
   await sleep(1800);
   const video = page.locator('video').first();
   if (await video.count()) {
-    await page.evaluate(() => { const v = document.querySelector('video'); v.muted = true; v.play().catch(() => {}); });
-    mark('play');
-    await sleep(2500);
-    const chapter = page.locator('text=Find and clear largest files').first();
+    await page.evaluate(() => { document.querySelector('video').muted = true; });
+    const chapter = page.locator('text=Find and clean largest files').first();
     if (await chapter.count()) { await moveTo(chapter); mark('chapter-largest'); }
-    await sleep(7000);
+    await sleep(900);
+    await page.evaluate((s) => { const v = document.querySelector('video'); v.currentTime = s; v.play().catch(() => {}); }, SEEK);
+    mark('seek');
+    await sleep(17000);
   }
   mark('end');
   await cdp.send('Page.stopScreencast');
