@@ -276,9 +276,9 @@ tabDesk.castShadow = true;
 room.add(tabDesk);
 const TAPE_LIN = new THREE.Color(site.tape), WHITE = new THREE.Color('#ffffff');
 
-function setRibbon(len, held, flood) {
+function setRibbon(len, held, flood, lift = 0) {
   // the path: flat along the desk edge, then (when held) rising to the beak
-  const flatEnd = held ? cl(held.x - 0.07, RX0 + 0.004, RX0 + len) : RX0 + Math.max(0.004, len);
+  const flatEnd = held ? cl(held.x - 0.07 - lift, RX0 + 0.004, RX0 + len) : RX0 + Math.max(0.004, len);
   const P0 = V(flatEnd, RY, RZ);
   const curve = held ? new THREE.QuadraticBezierCurve3(P0, V(flatEnd + 0.05, RY, RZ), held) : null;
   const Lf = flatEnd - RX0, Lc = curve ? curve.getLength() : 0, Lg = Lf + Lc;
@@ -388,14 +388,6 @@ function minutesAt(tau) {
   }
   return 288;
 }
-function tauAt(min) {
-  if (min >= 288) return 26.0;
-  for (let i = MIN_KEYS.length - 1; i > 0; i--) {
-    const [t1, m1] = MIN_KEYS[i], [t0, m0] = MIN_KEYS[i - 1];
-    if (min >= m0 && m1 > m0) return lerp(t0, t1, (min - m0) / (m1 - m0));
-  }
-  return 7.0;
-}
 const fmt = (min) => {
   const tot = Math.round(19 * 60 + min);
   const h24 = Math.floor(tot / 60) % 24, mm = ((tot % 60) + 60) % 60;
@@ -403,16 +395,50 @@ const fmt = (min) => {
   return `${h}:${String(mm).padStart(2, '0')} ${h24 >= 12 ? 'PM' : 'AM'}`;
 };
 
-// The pull: Fitz's progress 0 -> 1 between 31.0 and 33.0, with a tug back before and an overshoot after.
-// a tug back first, then the pull, a little past 7:02, and it settles
-const P2IO = gsap.parseEase('power2.inOut');
-const PULL_T0 = 30.85, PULL_T1 = 32.7, PULL_T2 = 33.1;
-function pullAt(t) {
-  if (t < PULL_T0) return 0;
-  if (t < 31.05) return -0.025 * Math.sin(Math.PI * seg(t, PULL_T0, 31.05));
-  if (t < PULL_T1) return 1.035 * P2IO(seg(t, 31.05, PULL_T1));
-  return 1.035 - 0.035 * EIO(seg(t, PULL_T1, PULL_T2));
+// The turn. Fitz lands at 28.95 and takes the tape end in his beak at 29.42; he leans back on it
+// (the tug, a beat of tension, 29.75-30.2), then pulls it back 30.2-32.95 while the evening plays
+// backwards, goes a little past 7:02 and settles.
+const LAND_T0 = 28.35, LAND_T = 28.95, GRAB_T = 29.42, TUG_T0 = 29.75, REW_T0 = 30.2, REW_T1 = 32.95;
+const P1IO = gsap.parseEase('power1.inOut');
+function pullAt(t) { // Fitz's way along the desk edge: 0 at 11:48, 1 at 7:02
+  if (t < REW_T0) return 0;
+  if (t < REW_T1) return 1.03 * P1IO(seg(t, REW_T0, REW_T1));
+  return 1.03 - 0.03 * EIO(seg(t, REW_T1, REW_T1 + 0.25));
 }
+// A smooth monotone curve through keys (Fritsch-Carlson); flat at local turns and at the end.
+function monotone(pts, startSlope = 0.5) {
+  const n = pts.length, xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  const d = [], m = new Array(n);
+  for (let i = 0; i < n - 1; i++) d.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]));
+  m[0] = d[0] * startSlope; m[n - 1] = 0;
+  for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+  for (let i = 0; i < n - 1; i++) {
+    if (d[i] === 0) { m[i] = 0; m[i + 1] = 0; continue; }
+    const a = m[i] / d[i], b = m[i + 1] / d[i], q = a * a + b * b;
+    if (q > 9) { const r = 3 / Math.sqrt(q); m[i] = r * a * d[i]; m[i + 1] = r * b * d[i]; }
+  }
+  return (x) => {
+    if (x <= xs[0]) return ys[0];
+    if (x >= xs[n - 1]) return ys[n - 1];
+    let i = 0;
+    while (x > xs[i + 1]) i++;
+    const h = xs[i + 1] - xs[i], u = (x - xs[i]) / h, u2 = u * u, u3 = u2 * u;
+    return (2 * u3 - 3 * u2 + 1) * ys[i] + (u3 - 2 * u2 + u) * h * m[i] + (-2 * u3 + 3 * u2) * ys[i + 1] + (u3 - u2) * h * m[i + 1];
+  };
+}
+// The story clock while it rewinds: each layer gets its share of the 2.75 s, slower where things
+// fly back (icons out of the bin, tabs into the lid), quicker through the flurries.
+const rewTau = monotone([
+  [REW_T0, 26.0], // notes peel off, code un-types, v9 -> v1
+  [30.8, 22.2], // icons come back out of the bin, one by one
+  [31.35, 20.85], // and lift off the dock
+  [31.65, 19.6], // the doubt, the permission, the subscription
+  [32.2, 14.6], // the reviews, then the tabs sink back into the lid
+  [32.65, 11.5], // the search un-types, the alert goes back
+  [REW_T1, 7.3],
+  [33.1, 6.85], // a little past 7:02
+  [33.3, 7.0],
+]);
 const MIN_END = 2;
 
 // ------------------------------------------------------------------ the person
@@ -473,12 +499,13 @@ const CAM = [
   { t: 25.95, pos: V(-1.72, 2.72, 2.0), tgt: V(PX + 0.05, 1.82, -0.4), ap: 0.0032, e: LIN },
   // 25.95 eleven forty-eight: wide, frozen
   { t: 25.95, cut: true, pos: WIDE_F_POS, tgt: WIDE_F_TGT, ap: 0.0012 },
-  { t: 29.55, pos: WIDE_F_POS, tgt: WIDE_F_TGT, ap: 0.0012, e: LIN },
+  { t: 28.3, pos: WIDE_F_POS, tgt: WIDE_F_TGT, ap: 0.0012, e: LIN },
   // Fitz lands; the camera leans in on him and the tape
-  { t: 30.5, pos: V(3.45, 2.95, 4.8), tgt: V(1.05, 1.5, 0.45), ap: 0.0016, e: EIO },
-  { t: 31.0, pos: V(3.35, 2.92, 4.72), tgt: V(1.0, 1.5, 0.45), ap: 0.0016, e: LIN },
-  // the pull: follow him back along the edge
-  { t: 32.95, pos: V(2.75, 2.85, 4.45), tgt: V(0.35, 1.6, 0.25), ap: 0.0016, e: EIO },
+  { t: 29.25, pos: V(3.1, 2.45, 3.25), tgt: V(1.2, 1.45, 0.5), ap: 0.0022, e: EIO },
+  { t: 30.15, pos: V(2.98, 2.38, 3.1), tgt: V(1.2, 1.45, 0.5), ap: 0.0022, e: LIN },
+  // the pull: back out wide to see the evening fly back, then follow him along the edge
+  { t: 30.95, pos: V(3.5, 3.15, 5.0), tgt: V(0.6, 1.6, 0.2), ap: 0.0015, e: EIO },
+  { t: 32.95, pos: V(2.75, 2.85, 4.45), tgt: V(0.35, 1.6, 0.25), ap: 0.0016, e: SIO },
 ];
 const PUSH_T0 = 32.95, PUSH_T1 = 35.7;
 // PUSH_T0 -> PUSH_T1 into the screen along a curve that passes right of the person's head; then a slow settle
@@ -518,7 +545,7 @@ function lightAt(t) {
   // N: 0 day, 1 night
   let N;
   if (t < 7.0) N = 0.45 * k(t, 6.55, 6.98, EIO);
-  else N = 1 - k(t, 31.0, 33.1, EIO);
+  else N = 1 - k(t, 30.5, 32.95, SIO);
   const lampOn = t >= 7.0 ? k(t, 7.18, 7.3, EO) : 0;
   stage.key.intensity = lerp(1.55, 0.2, N);
   stage.key.color.copy(KEY_DAY).lerp(KEY_NIGHT, N);
@@ -722,13 +749,12 @@ let castersOff = false;
 function update(t) {
   cameraAt(t);
   // story clock
-  let tau, min, pull = 0;
+  let tau, min;
   if (t < 26.0) { tau = Math.max(7.0, t); min = minutesAt(tau); }
-  else if (t < PULL_T0) { tau = 26.0; min = 288; }
+  else if (t < REW_T0) { tau = 26.0; min = 288; }
   else {
-    pull = pullAt(t);
-    min = lerp(288, MIN_END, pull);
-    tau = tauAt(min);
+    tau = rewTau(t);
+    min = minutesAt(Math.max(tau, 7.0)) - Math.max(0, 7.0 - tau) * 25;
   }
   const N = lightAt(t);
 
@@ -752,14 +778,14 @@ function update(t) {
   }
 
   // the clock
-  const secs = t < PULL_T0 ? Math.floor(t) % 60 : 60 - ((t - PULL_T0) * 140) % 60;
+  const secs = t < REW_T0 ? Math.floor(t) % 60 : 60 - ((t - REW_T0) * 140) % 60;
   clock.setTime(min, secs);
 
   // the person
   {
     const { p, typing } = poseTau(tau);
-    let slump = t < PULL_T0 ? k(t, 26.05, 27.0, EIO) : 1 - k(t, 31.05, 31.7, EIO);
-    const settle = t >= 26.05 && t < PULL_T0 ? wob(t, 27.0, 0.025, 9, 5) : 0;
+    let slump = t < REW_T0 ? k(t, 26.05, 27.0, EIO) : 1 - k(t, 30.25, 30.95, EIO);
+    const settle = t >= 26.05 && t < REW_T0 ? wob(t, 27.0, 0.025, 9, 5) : 0;
     const q = mixPose(p, POSES.slump, slump);
     q.spine += settle;
     setPose(q, typing * (1 - slump), tau);
@@ -769,18 +795,17 @@ function update(t) {
   screenAt(tau, min, t);
 
   // Fitz
-  let held = null, flood = 0;
-  const fzOn = t >= 29.55;
+  let held = null, flood = 0, lift = 0;
+  const fzOn = t >= LAND_T0;
   fz.root.visible = fzOn;
   if (!fzOn) fzLight.intensity = 0;
   if (fzOn) {
-    const LAND_T = 30.15;
     const endX = RX0 + (288 / 60) * B.RULER.perHour;
     const landX = endX - 0.23;
     const land = V(landX, B.DESK.top, FZ_Z);
     let pos = V(), flap = 0, pitch = 0, sq = 1, turn = 0, lean = 0, hop = 0;
     if (t < LAND_T) {
-      const u = seg(t, 29.55, LAND_T);
+      const u = seg(t, LAND_T0, LAND_T);
       const start = V(landX + 1.0, B.DESK.top + 3.7, FZ_Z - 0.5);
       const ctrl = V(landX + 0.25, B.DESK.top + 1.2, FZ_Z - 0.1);
       new THREE.QuadraticBezierCurve3(start, ctrl, land).getPoint(P2O(u), pos);
@@ -791,28 +816,35 @@ function update(t) {
       pos.copy(land);
       sq = 1 - wob(t, LAND_T, 0.17, 20, 7);
       flap = 0.5 * (1 - seg(t, LAND_T, LAND_T + 0.25));
-      turn = k(t, 30.3, 30.55, EO);
+      turn = k(t, 29.1, 29.35, EO);
       // peck down to the tab and come up with it
-      const peck = Math.sin(Math.PI * seg(t, 30.5, 30.8));
+      const peck = Math.sin(Math.PI * seg(t, 29.3, 29.6));
       pitch = 0.3 * peck;
-      if (t >= 30.62) held = true;
-      flood = k(t, 30.66, 31.05, EO);
-      if (t >= PULL_T0) {
-        const pp = pullAt(t);
+      if (t >= GRAB_T) held = true;
+      flood = k(t, 29.45, 29.85, EO);
+      // the tug: he sets his feet and leans back on the tape end; it lifts off the desk, taut
+      const tug = t < REW_T0 ? P2O(seg(t, TUG_T0, 30.05)) : 1 - EIO(seg(t, REW_T0, REW_T0 + 0.3));
+      const tremble = t >= TUG_T0 && t < REW_T0 + 0.15 ? Math.sin(t * 2 * Math.PI * 16) * 0.03 * tug : 0;
+      lift = 0.2 * tug;
+      pos.x += 0.08 * tug;
+      lean = 0.5 * tug + tremble;
+      sq -= 0.08 * tug;
+      flap += 0.22 * tug;
+      if (t >= REW_T0) {
+        // the pull: he hops back along the edge, wings going, the tape coming with him
         const toX = RX0 + (MIN_END / 60) * B.RULER.perHour + (landX - endX) + 0.03;
-        pos.x = lerp(landX, toX, pp);
-        const u = seg(t, 31.05, PULL_T1);
-        const tug = Math.sin(Math.PI * seg(t, PULL_T0, 31.12));
-        hop = Math.abs(Math.sin(Math.PI * 5 * u)) * 0.12 * Math.sin(Math.PI * u);
-        flap = (0.3 + 0.3 * Math.sin(t * 2 * Math.PI * 7)) * Math.sin(Math.PI * cl(u * 1.1));
-        lean = 0.3 * tug + 0.24 * Math.sin(Math.PI * cl(u * 1.05));
-        sq = 1 - 0.08 * tug - wob(t, PULL_T1, 0.12, 18, 7);
+        pos.x = lerp(landX, toX, pullAt(t)) + 0.08 * tug;
+        const u = seg(t, REW_T0, REW_T1);
+        hop = Math.abs(Math.sin(Math.PI * 7 * u)) * 0.12 * Math.sin(Math.PI * cl(u * 1.05));
+        flap = 0.22 * tug + (0.3 + 0.3 * Math.sin(t * 2 * Math.PI * 7)) * Math.sin(Math.PI * cl(u * 1.1));
+        lean += 0.24 * Math.sin(Math.PI * cl(u * 1.05));
+        sq = 1 - 0.08 * tug - wob(t, REW_T1, 0.12, 18, 7);
       }
     }
     fz.root.position.copy(pos);
     fz.root.rotation.y = FITZ_RY;
     fzLight.position.copy(pos).add(V(0.35, 0.55, 0.6));
-    fzLight.intensity = 2.4 * k(t, 29.6, 30.2, EO) * N;
+    fzLight.intensity = 2.4 * k(t, LAND_T0, LAND_T, EO) * N;
     fz.bird.position.y = hop / FS;
     // lean back, away from +x
     // tilt toward (+) or away from (-) where the head faces
@@ -821,13 +853,13 @@ function update(t) {
     fz.flap(flap);
     fz.squash(sq);
     fz.turn(turn);
-    const bl = [30.32, 31.9, 33.55].some((b) => t > b && t < b + 0.12) ? 1 : 0;
+    const bl = [29.05, 31.8, 33.55].some((b) => t > b && t < b + 0.12) ? 1 : 0;
     fz.blink(bl);
     tabHeld.visible = !!held;
     if (held) { fz.root.updateMatrixWorld(true); held = tabHeld.getWorldPosition(V()); }
   }
-  const len = Math.max(0.004, (min / 60) * B.RULER.perHour);
-  setRibbon(len, held, flood);
+  const len = held ? 10 : Math.max(0.004, (min / 60) * B.RULER.perHour); // held: the tape follows Fitz
+  setRibbon(len, held, flood, lift);
   ribbon.visible = !disc;
 
   // the end: the screen becomes the page; the request card, its tape, the wordmark, the stitched dot

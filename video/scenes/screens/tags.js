@@ -1,7 +1,7 @@
 // Small paper tags stuck on the floating screens: the screen's name, the speed badge, Fitz's
-// olive notes and the English captions. Sized in on-screen pixels: PPU canvas pixels per world
-// unit is about what one world unit covers on screen when a screen is framed, so a 38 px font
-// here is about 38 px in the video.
+// olive notes and the English captions. Sized in on-screen pixels: a tag is built at PPU pixels
+// per world unit, and the scene scales it by PPU / (its screen's pixels per unit when framed),
+// so a 38 px font here is 38 px in the video on every screen.
 //
 // The kit's paperCard rounds its corners with a fixed 0.035-unit radius, too round for tags
 // this small, so tags build their own outline (same cut corner, matching printed edge).
@@ -11,7 +11,7 @@ import { canvasTexture } from '../../kit/stage.js';
 import { cardPath, text } from '../../kit/props.js';
 import { site, fonts } from '../../kit/tokens.js';
 
-export const PPU = 540;
+export const PPU = 510;
 const px = (v) => v / PPU;
 
 const mctx = document.createElement('canvas').getContext('2d');
@@ -111,11 +111,31 @@ export function tag({ wPx, hPx, rPx = 7, cutPx = 0, color = site.raised, edge = 
 
 const CLIP_FONT = { size: 28, weight: 700, family: fonts.display };
 const BADGE_FONT = { size: 34, weight: 700, family: fonts.mono };
-const NOTE_FONT = { size: 26, weight: 600, family: fonts.sans };
+const NOTE_FONT = { size: 27, weight: 600, family: fonts.sans };
 const CAPTION_FONT = { size: 38, weight: 600, family: fonts.sans };
 const fontStr = (f) => `${f.weight} ${f.size}px ${f.family}`;
 
 export const TAG_H = { clip: 48, badge: 54, note: 46, caption: 76 };
+const NOTE_LINE = 34, CAPTION_LINE = 48;
+
+// Split a long label into two lines, at the ' · ' (or else the space) that balances them best.
+export function twoLines(str, font) {
+  let best = null;
+  for (const sep of [' · ', ' → ', ' ']) {
+    let i = str.indexOf(sep);
+    while (i > 0) {
+      const a = str.slice(0, i), b = str.slice(i + sep.length);
+      const wMax = Math.max(measure(a, font), measure(b, font));
+      if (!best || wMax < best.w - 1) best = { lines: [a, sep === ' → ' ? '→ ' + b : b], w: wMax };
+      i = str.indexOf(sep, i + 1);
+    }
+    if (best && sep === ' · ') break; // prefer the dot separator when there is one
+  }
+  return best ? best.lines : [str];
+}
+function linesFor(str, font, maxW) {
+  return measure(str, font) > maxW ? twoLines(str, font) : [str];
+}
 
 // The screen's name: white paper, display type, ink.
 export function clipTag(str) {
@@ -151,19 +171,26 @@ export function badgeTag(str, wPx) {
 }
 
 // Fitz's note (what pickfit or Meta's model is doing): olive voice paper, cut corner, ink.
-export function noteTag(str) {
+// Long notes go on two lines (maxW is the widest a line may be, in px).
+export function noteTag(str, maxW = Infinity) {
   const padX = 18, cut = 12;
-  const wPx = Math.ceil(measure(str, fontStr(NOTE_FONT)) + padX * 2 + cut * 0.6);
-  return tag({ wPx, hPx: TAG_H.note, cutPx: cut, color: site.voice, edge: site.voiceEdge, edgeWidth: 2.5, draw: (ctx, w, h) => {
-    text(ctx, str, padX, h / 2 + 1, { ...NOTE_FONT, color: site.ink, baseline: 'middle' });
+  const font = fontStr(NOTE_FONT);
+  const lines = linesFor(str, font, maxW);
+  const wPx = Math.ceil(Math.max(...lines.map((l) => measure(l, font))) + padX * 2 + cut * 0.6);
+  const hPx = TAG_H.note + (lines.length - 1) * NOTE_LINE;
+  return tag({ wPx, hPx, cutPx: cut, color: site.voice, edge: site.voiceEdge, edgeWidth: 2.5, draw: (ctx, w, h) => {
+    lines.forEach((l, i) => text(ctx, l, padX, h / 2 + 1 + (i - (lines.length - 1) / 2) * NOTE_LINE, { ...NOTE_FONT, color: site.ink, baseline: 'middle' }));
   } });
 }
 
 // The English caption: a white paper card, centred, overlapping the screen's bottom edge.
-export function captionTag(str) {
+export function captionTag(str, maxW = Infinity) {
   const padX = 32;
-  const wPx = Math.ceil(measure(str, fontStr(CAPTION_FONT)) + padX * 2);
-  return tag({ wPx, hPx: TAG_H.caption, rPx: 8, edge: site.rule, edgeWidth: 2, draw: (ctx, w, h) => {
-    text(ctx, str, w / 2, h / 2 + 1, { ...CAPTION_FONT, color: site.ink, align: 'center', baseline: 'middle' });
+  const font = fontStr(CAPTION_FONT);
+  const lines = linesFor(str, font, maxW);
+  const wPx = Math.ceil(Math.max(...lines.map((l) => measure(l, font))) + padX * 2);
+  const hPx = TAG_H.caption + (lines.length - 1) * CAPTION_LINE;
+  return tag({ wPx, hPx, rPx: 8, edge: site.rule, edgeWidth: 2, draw: (ctx, w, h) => {
+    lines.forEach((l, i) => text(ctx, l, w / 2, h / 2 + 1 + (i - (lines.length - 1) / 2) * CAPTION_LINE, { ...CAPTION_FONT, color: site.ink, align: 'center', baseline: 'middle' }));
   } });
 }

@@ -14,13 +14,15 @@
 </script>
 </head><body>
 <script type="module">
-// 2:26.5–2:57 of the cut (segments J_maker and K_end): the other end of the thread, the Next
-// plan, and the end card. t = 0 is the segment start; cue times are from edit/timeline.json.
+// 2:26.5–2:57 of the cut (segments J_maker and K_end): the other end of the thread, makers
+// submitting (works today), the Next plan (outcomes coming back), and the end card.
+// t = 0 is the segment start. Cues: 0.3 maker · 3.7 "Makers can already submit…" ·
+// 9.5 "Next, what agents report back…" · 16.3 screens · 19.2 clock · 21.8 name · 22.7 line.
 
 // ---- swap these when the real frames and time are ready ------------------------------------
 const SCREEN_LEFT = './finale/left.png';   // a frame of the agent conversation (Claude app), 16:10
 const SCREEN_RIGHT = './finale/right.png'; // a frame of pickfit.app's results page, 16:10
-const CLOCK_TIME = '7:05 PM';             // the real time the recording ended
+const CLOCK_TIME = '7:08 PM';             // the real time the recording ended
 // ---------------------------------------------------------------------------------------------
 
 import * as THREE from 'three';
@@ -107,23 +109,6 @@ bench.chair.position.set(0.1, 0, 0.78);
 bench.chair.rotation.y = Math.PI + 0.55;
 zoneA.add(bench.group);
 
-// Source tags along the thread: where pickfit went looking.
-const SOURCES = ['GitHub', 'Show HN', 'Flathub', 'Homebrew Cask', 'submissions'];
-const tags = [];
-{
-  const gap = 0.32;
-  const built = SOURCES.map((s) => sourceTag(s));
-  const total = built.reduce((a, b) => a + b.w, 0) + gap * (built.length - 1);
-  let x = 0.3 - total / 2;
-  built.forEach((tg, i) => {
-    tg.pivot.position.set(x + tg.w / 2, 0, -0.12 + (i % 2) * 0.1);
-    tg.pivot.rotation.y = -0.04 * (x + tg.w / 2) / 3;
-    x += tg.w + gap;
-    zoneA.add(tg.pivot);
-    tags.push(tg);
-  });
-}
-
 // =============================================================================================
 // 2. Fitz
 // =============================================================================================
@@ -133,30 +118,14 @@ const happy = happyEyes(fz);
 const lf = leaf();
 fz.hold.add(lf);
 
-// The flight along the thread (This week, pickfit went looking).
-const flight = new THREE.CatmullRomCurve3([
-  V(-5.0, 1.55, 1.4), V(-3.0, 1.0, 1.0), V(-0.5, 0.95, 0.95), V(2.0, 1.0, 1.0), V(3.9, 1.1, 1.1), V(5.6, 1.9, 1.3),
-  V(8.0, 3.2, 1.2), V(10.5, 4.3, 0.9),
-]);
-const FLY0 = 3.75, FLY1 = 6.9;
-const flyU = (t) => {
-  const v = clamp01((t - FLY0) / (FLY1 - FLY0));
-  return E.p2io(v) * 0.2 + v * 0.8;
-};
-// Each tag pops up as Fitz comes to it.
-const popAt = tags.map((tg) => {
-  const tx = tg.pivot.position.x - 1.1;
-  for (let t = FLY0; t < FLY1; t += 0.01) if (flight.getPointAt(flyU(t)).x >= tx) return t;
-  return FLY1;
-});
-
 // =============================================================================================
-// 3. Next: makers submit; the same tests run; outcomes come back
+// 3. Makers submit and the same tests run (today); outcomes come back (Next)
 // =============================================================================================
 const zoneN = new THREE.Group();
 scene.add(zoneN);
 
 const next = nextTag();
+next.setSub('Real outcomes sharpen every match');
 camera.add(next.card);
 
 const sub = submitCard();
@@ -217,7 +186,7 @@ const REPORTS = ['installed', 'first run', 'still using'];
 const slips = REPORTS.map((label, i) => {
   const s = slip(label);
   zoneN.add(s.card);
-  return { ...s, t0: 12.4 + i * 0.45 };
+  return { ...s, t0: 10.1 + i * 0.65 };
 });
 
 // =============================================================================================
@@ -352,12 +321,10 @@ const FITZ_END = V(END.x - 2.45, 0, END.z + 0.95);
 const CAM = [
   [0.0, [-5.4, 8.4, 5.2], [-5.3, 0.0, -0.45]],
   [2.9, [4.6, 3.6, 7.9], [5.6, 0.6, 0.0], E.io],
-  [3.8, [4.75, 3.5, 7.7], [5.7, 0.6, 0.0], E.sine],
-  [5.0, [2.0, 5.2, 11.4], [2.0, 0.3, 0.1], E.io],
-  [6.2, [2.3, 5.1, 11.2], [2.3, 0.3, 0.1], E.sine],
-  [7.4, [12.8, 4.2, 8.7], [12.8, 0.95, 0.3], E.io],
-  [11.35, [13.2, 4.1, 8.5], [13.2, 0.95, 0.3], E.sine],
-  [12.7, [17.75, 3.75, 8.6], [17.75, 0.8, 0.45], E.io],
+  [3.4, [4.68, 3.55, 7.8], [5.65, 0.6, 0.0], E.sine],
+  [4.75, [12.8, 4.2, 8.7], [12.8, 0.95, 0.3], E.io],
+  [7.95, [13.2, 4.1, 8.5], [13.2, 0.95, 0.3], E.sine],
+  [9.15, [17.75, 3.75, 8.6], [17.75, 0.8, 0.45], E.io],
   [15.7, [17.65, 3.65, 8.35], [17.65, 0.8, 0.45], E.sine],
   [16.9, [19.2, 2.05, 11.9], [19.2, 1.5, 2.9], E.io],
   [19.8, [19.2, 2.1, 11.6], [19.2, 1.5, 2.9], E.sine],
@@ -395,75 +362,60 @@ function update(t) {
   poseCamera(t);
 
   // ---- 1. thread to the maker ---------------------------------------------------------------
-  zoneA.visible = t < 7.4;
+  zoneA.visible = t < 4.9;
   if (zoneA.visible) {
-    // this layer dims as the camera leaves it for the Next plan
-    const fadeA = 1 - prog(t, 6.3, 7.2, E.io);
+    // this layer dims as the camera follows the maker's submission to the test line
+    const fadeA = 1 - prog(t, 3.4, 4.2, E.io);
     stitchA.userData.progress(prog(t, 0.15, 2.7, E.p2io));
     setOpacity(stitchA, fadeA);
     setOpacity(maker.card, fadeA);
     setOpacity(bench.group, fadeA);
-    tags.forEach((tg, i) => {
-      const t0 = popAt[i];
-      const v = prog(t, t0, t0 + 0.55, E.back);
-      tg.pivot.rotation.x = -Math.PI / 2 * (1 - v);
-      setOpacity(tg.card, clamp01((t - t0) / 0.18) * fadeA);
-    });
   }
 
   // ---- 2. Fitz ------------------------------------------------------------------------------
-  fz.root.visible = (t > FLY0 && t < 6.9) || t > 16.55;
+  fz.root.visible = t > 16.55;
   fz.flap(0); fz.squash(1); fz.turn(0); fz.blink(0); happy(false);
   fz.bird.rotation.set(0, 0, 0); fz.bird.position.set(0, 0, 0);
   lf.visible = false;
-  if (t <= 6.9) {
-    const p = flight.getPointAt(flyU(t));
-    fz.root.position.copy(p);
-    fz.root.scale.setScalar(0.7);
-    fz.root.rotation.set(0, 0.95, 0);
-    fz.bird.rotation.x = 0.18;
-    fz.bird.position.y = Math.sin(t * Math.PI * 2 * 3) * 0.03;
-    fz.flap(0.5 + 0.5 * Math.sin(t * Math.PI * 2 * 7));
-  } else if (t > 16.55) {
-    poseFitzEnd(t);
-  }
+  if (t > 16.55) poseFitzEnd(t);
 
-  // ---- 3. Next ------------------------------------------------------------------------------
-  // the tag in the top-right corner of the frame
+  // ---- 3. Submit and the same tests (today), then Next: outcomes come back --------------------
+  // the Next tag, in the top-right corner of the frame, only for the part that is the plan
   {
     const d = camera.position.distanceTo(stage.target);
     const halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * d, halfW = halfH * camera.aspect;
     const s = (d / 8.6) * 0.86;
-    const e = entr(t, 6.2, { dur: 0.7, rise: 0.1 * s });
+    const e = entr(t, 9.5, { dur: 0.7, rise: 0.1 * s });
     const out = prog(t, 15.85, 16.35, E.io);
     setOpacity(next.card, e.op * (1 - out));
     next.card.scale.setScalar(s * e.s);
     next.card.position.set(halfW - (next.w / 2 + 0.32) * s, halfH - (next.h / 2 + 0.3) * s - e.lift, -d);
-    next.setSub(t < 12.3 ? 'Makers submit their own work' : 'Real outcomes sharpen every match');
   }
 
-  zoneN.visible = t > 6.4 && t < 17.35;
+  zoneN.visible = t > 3.6 && t < 17.35;
   if (zoneN.visible) {
     // the old layer dims when the screens come in
     const dim = 1 - 0.75 * prog(t, 15.75, 16.45, E.io) - 0.25 * prog(t, 16.45, 17.2, E.io);
-    // the submit card floats in, then rides the test line
-    const e = entr(t, 6.85, { dur: 0.9, rise: 0.25 });
+    // the submit card floats in from the maker's side, then rides the test line
+    const e = entr(t, 3.75, { dur: 0.9, rise: 0.25 });
     setOpacity(carrier, e.op * dim);
-    let x = 12.6, y = 1.72, z = 1.25, sc = 1;
-    const shrink = prog(t, 9.0, 9.6, E.io);
-    const STEP0 = 9.6, STEP = 0.55;
+    const arrive = prog(t, 3.75, 4.9, E.io);
+    let x = lerp(7.6, 12.6, arrive), y = lerp(2.45, 1.72, arrive), z = lerp(1.6, 1.25, arrive), sc = 1;
+    const shrink = prog(t, 5.9, 6.4, E.io);
+    const STEP0 = 6.4, STEP = 0.5;
     x = lerp(x, STATION_X[0], shrink); y = lerp(y, 1.12, shrink); z = lerp(z, 0.05, shrink); sc = lerp(1, 0.56, shrink);
     for (let i = 1; i < 4; i++) x = lerp(x, STATION_X[i], prog(t, STEP0 + (i - 1) * STEP + 0.22, STEP0 + i * STEP, E.io));
     // after the check: to the ticket spot, turning over
-    const go = prog(t, 11.35, 12.2, E.io);
+    const go = prog(t, 7.95, 8.75, E.io);
     x = lerp(x, TK.x, go); y = lerp(y, TK.y, go); z = lerp(z, TK.z, go); sc = lerp(sc, TK.s, go);
     carrier.position.set(x, y + e.lift, z);
     carrier.scale.setScalar(sc * e.s);
-    const fv = prog(t, 11.5, 12.2, E.io);
+    const fv = prog(t, 8.1, 8.75, E.io);
     flip.rotation.x = Math.PI * fv; // top edge comes forward, the ticket side turns up into the light
-    sub.card.visible = fv < 1; // once over, only the ticket side shows (no ghost when it dims)
+    sub.card.visible = fv < 1; // only the side that can be seen, so nothing ghosts through a fade
+    tk.card.visible = fv > 0;
     flip.rotation.y = 0.08 * Math.sin(Math.PI * fv);
-    seam.userData.progress(prog(t, 12.1, 12.6, E.p2out));
+    seam.userData.progress(prog(t, 8.65, 9.1, E.p2out));
     // stations light as the card arrives over each
     stations.forEach((s, i) => {
       const at = STEP0 + i * STEP - 0.05;
@@ -472,12 +424,12 @@ function update(t) {
       s.card.position.y = s.w / 2 + 0.05 * pop;
       setOpacity(s.card, dim);
     });
-    const sameRise = prog(t, 9.3, 9.85, E.back);
+    const sameRise = prog(t, 6.2, 6.75, E.back);
     same.pivot.rotation.x = -Math.PI / 2 * (1 - sameRise);
-    setOpacity(same.card, clamp01((t - 9.3) / 0.18) * dim);
+    setOpacity(same.card, clamp01((t - 6.2) / 0.18) * dim);
 
     // reports flow back into the ticket; then the reading rises a notch
-    stitchR.userData.progress(prog(t, 12.2, 12.9, E.p2io));
+    stitchR.userData.progress(prog(t, 9.55, 10.25, E.p2io));
     setOpacity(stitchR, dim);
     const tabX = TK.x + (tk.w * TK.s) / 2 + 0.625 - 0.3;
     slips.forEach((s, i) => {
@@ -491,7 +443,7 @@ function update(t) {
       s.card.rotation.set(0, 0, 0.03 * (1 - i) * k);
       setOpacity(s.card, clamp01((t - t0) / 0.3) * dim);
     });
-    setMeter(NOTCH * 6 + NOTCH * prog(t, 14.75, 15.2, E.back));
+    setMeter(NOTCH * 6 + NOTCH * prog(t, 13.0, 13.45, E.back));
   }
 
   // ---- 4. Screens, then the end card -------------------------------------------------------
