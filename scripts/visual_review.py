@@ -9,6 +9,7 @@ never write a record.
 
     uv run python scripts/visual_review.py controls   # writes data/calibration/visual-review-controls.json
     uv run python scripts/visual_review.py packets OUT_DIR
+    uv run python scripts/visual_review.py analyses   # consistency, unassessed apps, weight variants (JSON)
 """
 
 from __future__ import annotations
@@ -95,6 +96,177 @@ def packets(out_dir: Path) -> None:
         (folder / "packet.json").write_text(json.dumps(packet, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+# --- the analyses of section 11 (in memory; no record is written) ------------------------------------------------
+
+
+def _without_visual(record: dict[str, Any], now: Any) -> dict[str, Any]:
+    """The record as main has it: no visual_check, scores refreshed back to b3.v5 or web.v1."""
+    import copy
+
+    from pickfit.score import refresh_scores
+
+    out = copy.deepcopy(record)
+    out.pop("visual_check", None)
+    refresh_scores(out, now)
+    return out
+
+
+def _treasure(total: float | None, popularity: float | None) -> bool:
+    from pickfit.schema import TREASURE_MAX_POPULARITY, TREASURE_MIN_QUALITY
+
+    return total is not None and popularity is not None and total >= TREASURE_MIN_QUALITY and \
+        popularity <= TREASURE_MAX_POPULARITY
+
+
+def variant_totals(name: str, records: dict[str, dict[str, Any]], now: Any) -> dict[str, tuple[float | None, bool]]:
+    """(quality, treasure) per checked record under a variant: current (additive, weight 15), w10 (additive, weight 10),
+    deduct15 / deduct10 (the old formula's total times 1 - w * (1 - visual): no defect changes nothing)."""
+    import copy
+
+    from pickfit import score as s
+
+    out = {}
+    saved = (dict(s.GUI_VISUAL_WEIGHTS), dict(s.WEB_VISUAL_WEIGHTS))
+    try:
+        if name == "w10":
+            s.GUI_VISUAL_WEIGHTS.clear()
+            s.GUI_VISUAL_WEIGHTS.update({"sandbox_verification": 37, "visual_quality": 10, "install_docs": 22,
+                                         "maintenance": 9, "engineering_hygiene": 4, "responsiveness": 8,
+                                         "usage_outcomes": 10})
+            s.WEB_VISUAL_WEIGHTS.clear()
+            s.WEB_VISUAL_WEIGHTS.update({"sandbox_verification": 47, "visual_quality": 10, "browser_facts": 33,
+                                         "usage_outcomes": 10})
+        for slug, record in records.items():
+            pop = record["scores"]["popularity"]["score"]
+            if name in ("current", "w10"):
+                data = copy.deepcopy(record)
+                s.refresh_scores(data, now)
+                total = data["scores"]["quality"]["total"]
+            else:
+                w = {"deduct15": 0.15, "deduct10": 0.10}[name]
+                old = _without_visual(record, now)["scores"]["quality"]["total"]
+                v = record["visual_check"]["score"]
+                total = None if old is None else (old if v is None else round(old * (1 - w * (1 - v / 2)), 1))
+            out[slug] = (total, _treasure(total, pop))
+    finally:
+        s.GUI_VISUAL_WEIGHTS.clear()
+        s.GUI_VISUAL_WEIGHTS.update(saved[0])
+        s.WEB_VISUAL_WEIGHTS.clear()
+        s.WEB_VISUAL_WEIGHTS.update(saved[1])
+    return out
+
+
+def all_records() -> dict[str, dict[str, Any]]:
+    return {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in sorted(DATA.glob("*.json"))}
+
+
+def consistency() -> dict[str, Any]:
+    """Desktop against web: defects per app, kinds and severity, how quotes were verified, and how much each
+    screenshot shows (OCR lines, DOM text)."""
+    import collections
+    import statistics
+
+    from pickfit.usability import TextFinder, bundle_for
+
+    finder = TextFinder()
+    out: dict[str, Any] = {}
+    for kind in ("desktop_app", "web_app"):
+        recs = [r for r in checked_records().values() if r["kind"] == kind]
+        app = [[d for d in r["visual_check"]["defects"] if d["cause"] == "app"] for r in recs]
+        kinds = collections.Counter(d["kind"] for ds in app for d in ds)
+        major = collections.Counter(d["kind"] for ds in app for d in ds if d["severity"] == "major")
+        found = collections.Counter(d["found_by"] for ds in app for d in ds)
+        lines, chars = [], []
+        for r in recs:
+            bundle = bundle_for(r)
+            for shot in bundle.first_look_shots():
+                ocr = finder.lines(shot)
+                lines.append(len(ocr))
+                chars.append(sum(len(line.text) for line in ocr))
+        scores = collections.Counter(r["visual_check"]["score"] for r in recs)
+        out[kind] = {
+            "apps": len(recs), "scores": dict(scores),
+            "defects_per_app": round(sum(map(len, app)) / len(recs), 2),
+            "apps_with_a_defect": round(sum(1 for ds in app if ds) / len(recs), 2),
+            "kinds": dict(kinds.most_common()), "major_share_by_kind": {
+                k: round(major[k] / n, 2) for k, n in kinds.most_common()},
+            "major_share": round(sum(major.values()) / max(1, sum(kinds.values())), 2),
+            "quote_found_by": dict(found), "screens_per_app": round(len(lines) / len(recs), 2),
+            "ocr_lines_per_screen_median": statistics.median(lines), "ocr_chars_per_screen_median": statistics.median(chars),
+            "defects_per_100_ocr_lines": round(100 * sum(map(len, app)) / max(1, sum(lines)), 2),
+        }
+    return out
+
+
+def unassessed(now: Any) -> dict[str, Any]:
+    """Apps without a visual check: their formula, and how far they move in the treasure-value order (the Worker's
+    tie-break and filler) against all desktop and web apps, current against main."""
+    import statistics
+
+    records = all_records()
+    gui_web = {s: r for s, r in records.items() if r["kind"] in ("desktop_app", "web_app") and r.get("scores")}
+    unchecked = {s: r for s, r in gui_web.items() if not r.get("visual_check")}
+    formulas = {r["scores"]["formula_version"] for r in unchecked.values()}
+
+    def value(total: float | None, pop: float | None) -> float:
+        return -1.0 if total is None or pop is None else total * (1 - pop / 100)
+
+    def order(values: dict[str, float]) -> dict[str, int]:
+        return {s: i for i, s in enumerate(sorted(values, key=lambda s: (-values[s], s)))}
+
+    result: dict[str, Any] = {"unchecked": len(unchecked), "their_formulas": sorted(formulas),
+                              "unchecked_with_visual_fields": sum(1 for r in unchecked.values()
+                                                                   if "visual_quality" in r["scores"]["quality"]["components"])}
+    main_values = {}
+    for s, r in gui_web.items():
+        old = _without_visual(r, now)["scores"] if r.get("visual_check") else r["scores"]
+        main_values[s] = value(old["quality"]["total"], old["popularity"]["score"])
+    main_rank = order(main_values)
+    checked = {s: r for s, r in gui_web.items() if r.get("visual_check")}
+    for name in ("current", "deduct15", "deduct10", "w10"):
+        totals = variant_totals(name, checked, now)
+        values = dict(main_values) | {s: value(t, gui_web[s]["scores"]["popularity"]["score"]) for s, (t, _) in totals.items()}
+        rank = order(values)
+        falls = [rank[s] - main_rank[s] for s in unchecked]
+        result[name] = {"unchecked_that_fall": sum(1 for f in falls if f > 0),
+                        "median_fall": statistics.median([f for f in falls if f > 0] or [0]),
+                        "max_fall": max(falls), "unchecked_treasures_lost": 0}
+    return result
+
+
+def variants(now: Any) -> dict[str, Any]:
+    """Each variant against main, over the checked apps: quality median and mean change, desktop and web, and the
+    treasures lost and gained."""
+    import statistics
+
+    checked = checked_records()
+    main = {s: _without_visual(r, now)["scores"] for s, r in checked.items()}
+    out = {}
+    for name in ("current", "w10", "deduct15", "deduct10"):
+        totals = variant_totals(name, checked, now)
+        row: dict[str, Any] = {}
+        for kind in ("desktop_app", "web_app", None):
+            slugs = [s for s, r in checked.items() if kind is None or r["kind"] == kind]
+            d = [totals[s][0] - main[s]["quality"]["total"] for s in slugs
+                 if totals[s][0] is not None and main[s]["quality"]["total"] is not None]
+            row[kind or "all"] = {"n": len(d), "median": round(statistics.median(d), 1), "mean": round(statistics.mean(d), 1),
+                                  "min": round(min(d), 1), "max": round(max(d), 1)}
+        row["treasures_lost"] = sorted(s for s in checked if main[s]["treasure"]["is_treasure"] and not totals[s][1])
+        row["treasures_gained"] = sorted(s for s in checked if totals[s][1] and not main[s]["treasure"]["is_treasure"])
+        row["moved_over_5"] = sorted((s, main[s]["quality"]["total"], totals[s][0]) for s in checked
+                                     if totals[s][0] is not None and main[s]["quality"]["total"] is not None
+                                     and abs(totals[s][0] - main[s]["quality"]["total"]) > 5)
+        out[name] = row
+    return out
+
+
+def analyses() -> dict[str, Any]:
+    from pickfit.ledger import taipei_now
+
+    now = taipei_now()
+    return {"consistency": consistency(), "unassessed": unassessed(now), "variants": variants(now)}
+
+
 def main() -> int:
     command = sys.argv[1] if len(sys.argv) > 1 else ""
     if command == "controls":
@@ -103,6 +275,8 @@ def main() -> int:
         print(json.dumps(out, ensure_ascii=False, indent=2))
     elif command == "packets":
         packets(Path(sys.argv[2]))
+    elif command == "analyses":
+        print(json.dumps(analyses(), ensure_ascii=False, indent=2))
     else:
         print(__doc__)
         return 2
