@@ -127,14 +127,84 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-03T13:33:01+08:00",
-    "status": "clean",
+    "checked_at": "2026-11-03T15:50:51+08:00",
+    "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "npm:agmsg (fresh install, 1 packages)"
+      "npm:agmsg (fresh install, 1 packages)",
+      "github.com/fujibee/agmsg@eff8d41f5758",
+      "app/poc-inject/Cargo.lock",
+      "app/src-tauri/Cargo.lock",
+      "server/package-lock.json"
     ],
-    "packages_checked": 1,
-    "findings": []
+    "packages_checked": 610,
+    "findings_total": 6,
+    "findings": [
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "GHSA-m665-v7pm-7grj",
+        "cves": [
+          "CVE-2026-115905"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.5",
+        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.39.4",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.39.4",
+        "advisory": "RUSTSEC-2026-0195",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "GHSA-q7v9-x93c-xqv3",
+        "cves": [
+          "CVE-2026-115909"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "RUSTSEC-2026-0367",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+        "malicious": false
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v5",
@@ -512,5 +582,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-03T13:33:01+08:00"
+  "updated_at": "2026-11-03T15:50:51+08:00"
 }

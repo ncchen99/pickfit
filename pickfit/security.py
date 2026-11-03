@@ -51,7 +51,7 @@ COUNTED = ("CRITICAL", "HIGH")
 # Parts of a repository a person installing the software does not get.
 PERIPHERAL = re.compile(r"(^|/)(website|site|docs?|landing|www|demo|examples?|bench(mark)?s?|playground|e2e|tests?|"
                         r"__tests__|fixtures?|scripts|editors?|action|vscode|node_modules|vendor|tools|external|"
-                        r"third_party|reference|mockups|spikes|eval|\.[^/]+)/", re.I)
+                        r"third_party|reference|mockups|spikes?|eval|\.[^/]+)/", re.I)
 UNSUPPORTED_LOCKS = ("pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb")
 MAX_FINDINGS = 60
 TIMEOUT = 300
@@ -344,7 +344,8 @@ def packages_of(raw: dict[str, Any]) -> list[str]:
                     flags, name = m.group(1), m.group(2)
                     if eco == "npm" and not re.search(r"(^|\s)(-g|--global)(\s|$)", flags):
                         continue  # a local npm install is a project's dependency, not the tool
-                    if _norm(name.rsplit("/", 1)[-1]) in own:
+                    # @scope/name: the scope or the name may be the software's own (@agenticschema/server)
+                    if {_norm(part) for part in name.lstrip("@").split("/")} & own:
                         found.append(f"{eco}:{name}")
     return list(dict.fromkeys(linked + found))
 

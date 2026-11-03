@@ -181,6 +181,8 @@ def test_packages_of_takes_only_the_softwares_own_packages() -> None:
                {"command": "pipx install pytest"}]}]},
            "scores": {"popularity": {"packages": ["pypi:tool-py", "homebrew:tool"]}}}
     assert security.packages_of(raw) == ["pypi:tool-py", "npm:@scope/tool", "pypi:tool-repo"]
+    raw["verification"]["runs"][0]["steps"] = [{"command": "npm i -g @tool/server"}]  # its own scope
+    assert security.packages_of(raw) == ["pypi:tool-py", "npm:@tool/server"]
     raw["verification"]["runs"][0]["steps"] = [{"command": "pip install aiohttp"}]
     raw["scores"] = None
     assert security.packages_of(raw) == []  # the repository decides
