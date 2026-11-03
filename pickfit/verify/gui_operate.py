@@ -182,7 +182,8 @@ try:
     kind = ACT["kind"]
     out["t0"] = time.time()  # the box's clock, which its screen recording uses (record.py)
     if kind == "click":
-        xdo("mousemove", "--sync", ACT["x"], ACT["y"], "click", "--repeat", ACT.get("count", 1), "--delay", 90, 1)
+        xdo("mousemove", "--sync", ACT["x"], ACT["y"], "click", "--repeat", ACT.get("count", 1), "--delay", 90,
+            3 if ACT.get("button") == "right" else 1)
     elif kind == "type":
         xdo("type", "--delay", 35, "--", ACT["text"], timeout=150)
     elif kind == "key":
@@ -279,6 +280,9 @@ class XvfbDisplay:
 
     def click(self, x: int, y: int, count: int = 1) -> None:
         self._do({"kind": "click", "x": int(x), "y": int(y), "count": max(1, min(int(count), 3))})
+
+    def right_click(self, x: int, y: int) -> None:
+        self._do({"kind": "click", "x": int(x), "y": int(y), "count": 1, "button": "right"})
 
     def type_text(self, text: str) -> None:
         self._do({"kind": "type", "text": text}, 180)
@@ -679,7 +683,8 @@ screenshot of the part of the virtual screen the app draws on, the goal, and the
 no window manager: windows have no title bars, and there is no desktop, taskbar or terminal, only the app. \
 Return the one next action:
 - click: x and y of the point to click, normalized 0-1000 over the image (0,0 is the top left, 1000,1000 the \
-bottom right); aim at the middle of the control; clicks 2 for a double click.
+bottom right); aim at the middle of the control; clicks 2 for a double click; button right for a right-click, \
+which opens the context menu of what is under the pointer (some apps keep their commands there).
 - type: the text to type into the field that has focus (click the field first). Type exactly the text the \
 goal gives.
 - key: one key or combination, e.g. Return, Tab, Escape, BackSpace, ctrl+a, ctrl+s, ctrl+c.
@@ -705,6 +710,8 @@ class OperatorAction(BaseModel):
     x: int | None = Field(description="click, scroll: 0-1000 from the left; else null.")
     y: int | None = Field(description="click, scroll: 0-1000 from the top; else null.")
     clicks: int | None = Field(description="click: 1, or 2 for a double click; else null.")
+    button: Literal["left", "right"] | None = Field(
+        description="click: right for a right-click (a context menu), else left; null for other actions.")
     text: str | None = Field(description="type: the text; else null.")
     key: str | None = Field(description="key: e.g. Return or ctrl+s; else null.")
     direction: Literal["up", "down"] | None = Field(description="scroll: up or down; else null.")
@@ -812,7 +819,7 @@ def to_action(answer: OperatorAction, view: View, mac: bool = False, marks: list
         if mark is None:
             return None, f"no marked text numbered {element}"
         x, y = mark.center
-        return {"kind": "click", "x": x, "y": y, "count": 2 if answer.clicks == 2 else 1}, None
+        return _click(x, y, answer)
     if kind in ("click", "scroll"):
         if answer.x is None or answer.y is None or not (0 <= answer.x <= 1000 and 0 <= answer.y <= 1000):
             return None, f"{kind} needs x and y between 0 and 1000"
@@ -820,7 +827,7 @@ def to_action(answer: OperatorAction, view: View, mac: bool = False, marks: list
         if kind == "scroll":
             return ({"kind": "scroll", "x": x, "y": y, "direction": answer.direction}, None) if answer.direction \
                 else (None, "scroll needs a direction")
-        return {"kind": "click", "x": x, "y": y, "count": 2 if answer.clicks == 2 else 1}, None
+        return _click(x, y, answer)
     if kind == "type":
         text = answer.text or ""
         if not text or len(text) > TYPE_MAX or any(not (c.isprintable() or c in "\n\t") for c in text):
@@ -833,8 +840,17 @@ def to_action(answer: OperatorAction, view: View, mac: bool = False, marks: list
     return {"kind": "wait", "seconds": max(1, min(int(seconds), WAIT_MAX_S))}, None
 
 
+def _click(x: int, y: int, answer: OperatorAction) -> tuple[dict[str, Any] | None, str | None]:
+    """A click action; a right-click carries button right (a single click) and a left one no button, as before."""
+    if answer.button == "right":
+        return {"kind": "click", "x": x, "y": y, "count": 1, "button": "right"}, None
+    return {"kind": "click", "x": x, "y": y, "count": 2 if answer.clicks == 2 else 1}, None
+
+
 def describe(act: dict[str, Any]) -> str:
     kind = act["kind"]
+    if kind == "click" and act.get("button") == "right":
+        return f"right-click at {act['x']},{act['y']}"
     if kind == "click":
         return f"{'double-' if act.get('count') == 2 else ''}click at {act['x']},{act['y']}"
     if kind == "type":
@@ -850,7 +866,12 @@ def describe(act: dict[str, Any]) -> str:
 
 def perform(display: Display, act: dict[str, Any], sleep: Callable[[float], None] = time.sleep) -> None:
     kind = act["kind"]
-    if kind == "click":
+    if kind == "click" and act.get("button") == "right":
+        right_click = getattr(display, "right_click", None)
+        if right_click is None:
+            raise DisplayError("this display cannot right-click")
+        right_click(act["x"], act["y"])
+    elif kind == "click":
         display.click(act["x"], act["y"], act.get("count", 1))
     elif kind == "type":
         display.type_text(act["text"])
@@ -880,6 +901,10 @@ def _mac_instructions(text: str) -> str:
          "- click: element, the number of a marked text (magenta tags; listed with the turn) to click its middle: "
          "use it for any button, menu, tab or field that has text, since it is more precise; otherwise x and y "
          "of the point to click,"),
+        ("- scroll: x, y and direction up or down.",
+         "- scroll: x, y and direction up or down. On this Mac a scroll may leave the view where it was: when it "
+         "does, reach what is below with the keyboard instead (Tab moves the focus to the next control and the "
+         "view follows it; Page_Down, space or the arrow keys in a list)."),
         ("e.g. Return, Tab, Escape, BackSpace, ctrl+a, ctrl+s, ctrl+c.",
          "e.g. Return, Tab, Escape, BackSpace, cmd+a, cmd+s, cmd+c (a Mac's shortcuts use cmd, the Command key; "
          "alt is Option)."),

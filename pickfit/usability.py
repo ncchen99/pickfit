@@ -335,7 +335,8 @@ def _step_line(i: int, step: dict[str, Any]) -> str:
     kind = action.get("kind") or "no action"
     what = kind
     if kind == "click":
-        what = f"click at ({action.get('x')},{action.get('y')})" + (f" x{action['count']}" if action.get("count", 1) > 1 else "")
+        what = (f"{'right-' if action.get('button') == 'right' else ''}click at ({action.get('x')},{action.get('y')})"
+                + (f" x{action['count']}" if action.get("count", 1) > 1 else ""))
     elif kind == "scroll":
         what = f"scroll {action.get('direction')} at ({action.get('x')},{action.get('y')})"
     elif kind == "type":

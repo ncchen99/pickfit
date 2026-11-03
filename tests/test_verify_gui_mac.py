@@ -362,7 +362,7 @@ def test_the_operator_clicks_a_marked_text_by_number_on_a_mac():
     found = marks.parse(json.dumps([{"text": "Add Folder", "x": 672, "y": 442, "w": 72, "h": 12}]))
     view = gui_operate.View(0, 0, 1280, 800)
     answer = gui_operate.MacOperatorAction(observation="a button", action="click", x=556, y=631, clicks=None,
-                                           text=None, key=None, direction=None, seconds=None, why="add a folder",
+                                           button=None, text=None, key=None, direction=None, seconds=None, why="add a folder",
                                            element=1)
     assert gui_operate.to_action(answer, view, True, found) == ({"kind": "click", "x": 708, "y": 448, "count": 1}, None)
     missing = answer.model_copy(update={"element": 9})

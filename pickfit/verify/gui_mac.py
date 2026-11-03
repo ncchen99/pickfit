@@ -674,6 +674,9 @@ class VncDisplay:
     def double_click(self, x: int, y: int) -> None:
         self.click(x, y, 2)
 
+    def right_click(self, x: int, y: int) -> None:
+        self._do("right-click", lambda: self._connected().click(x, y, button="right"))
+
     def type_text(self, text: str) -> None:
         self._do("typing", lambda: self._connected().type_text(text))
 

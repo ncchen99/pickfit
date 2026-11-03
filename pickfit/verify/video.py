@@ -319,7 +319,8 @@ def events_of(op: dict[str, Any], changes: list[tuple[float, float]], duration: 
         a, b = round(max(0.0, at[0] - t0), 2), round(max(0.0, at[1] - t0), 2)
         kind = act["kind"]
         if kind == "click":
-            what = f"pickfit {'double-' if act.get('count', 1) == 2 else ''}clicks " + _where(act)
+            what = (f"pickfit {'right-' if act.get('button') == 'right' else 'double-' if act.get('count', 1) == 2 else ''}"
+                    "clicks " + _where(act))
         elif kind == "type":
             what = f"pickfit types {json.dumps(act['text'], ensure_ascii=False)}"
         elif kind == "key":
@@ -455,7 +456,8 @@ def action_log(op: dict[str, Any]) -> tuple[list[str], list[str]]:
         when = _clock(max(0.0, at[0] - t0)) if at and t0 else "     -"
         kind = act["kind"]
         if kind == "click":
-            what = f"{'double-' if act.get('count', 1) == 2 else ''}click " + _where(act)
+            what = ("right-" if act.get("button") == "right" else "double-" if act.get("count", 1) == 2 else "") \
+                + "click " + _where(act)
         elif kind == "type":
             typed.append(act["text"])
             what = f"type {json.dumps(act['text'], ensure_ascii=False)}"
@@ -531,7 +533,7 @@ def logged_caption(events: list[Event]) -> str | None:
         if e.kind not in ACTIONS:
             continue
         if e.kind == "click":
-            words.append("double-click" if "double-" in e.what else "click")
+            words.append("right-click" if "right-" in e.what else "double-click" if "double-" in e.what else "click")
         elif e.kind == "type":
             text = " ".join(json.JSONDecoder().raw_decode(e.what[len("pickfit types "):])[0].split())  # then "; ..."
             words.append(f'type "{text[:24]}..."' if len(text) > 24 else f'type "{text}"')
@@ -541,7 +543,7 @@ def logged_caption(events: list[Event]) -> str | None:
         return None
     merged: list[str] = []
     for w in words:  # click, click, click -> click (x3)
-        if merged and merged[-1].split(" (x")[0] == w and w in ("click", "double-click"):
+        if merged and merged[-1].split(" (x")[0] == w and w in ("click", "double-click", "right-click"):
             n = int(merged[-1].split(" (x")[1][:-1]) + 1 if " (x" in merged[-1] else 2
             merged[-1] = f"{w} (x{n})"
         else:
