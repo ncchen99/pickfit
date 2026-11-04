@@ -727,7 +727,7 @@ def test_openrouter_route_maps_models_and_refuses_what_it_cannot_serve(ledger: L
     monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
     assert "openrouter.ai" in str(make_client("openrouter").base_url)
     book = ledger_mod.openrouter_ledger()
-    assert book.budget == "openrouter" and book.caps.total_usd == 40.0
+    assert book.budget == "openrouter" and book.caps.total_usd == 50.0
 
 
 def test_openrouter_bills_its_own_budget_even_when_the_caller_passes_a_meta_ledger(ledger: Ledger, monkeypatch):
