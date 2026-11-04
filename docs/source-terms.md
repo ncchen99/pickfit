@@ -153,4 +153,5 @@
   - `needs_root` 5：`backgroundmusic`、`dog`、`stirling-pdf`、`lulu`（必須放在 `/Applications` 並載入系統網路延伸）、`iglance`（只有 x86_64 執行檔，Apple Silicon 上要 root 安裝 Rosetta 2）。
   - `not_run` 2：`itsycal`、`keepingyouawake`。兩者都裝得起來、程序常駐、選單列有新圖示，但點圖示沒有打開屬於 App 自己的視窗（KeepingYouAwake 左鍵是切換防睡眠，不開選單），截圖判讀沒有畫面可判，所以不算通過，照規則不寫成 install。
   - 念誠指定的 7 款：`gifski`、`clipy`、`scroll-reverser`、`stats`、`rectangle`、`thaw` 通過 install；`itsycal` 未驗證（理由同上）。
+  - **手動改過的紀錄（11/4 複查時補記）**：最後 5 款 macOS App 沒有重跑驗證 agent，而是用一支臨時腳本把先前 run 的紀錄直接拿去乾淨 VM 重播、判讀、寫回。其中 gifski 的第 3、4 步在重播前被手動改寫：拿掉 agent 串在後面的探查命令（`ls -R`、`ls -ld`、`plutil -p … | grep`），解壓前先建 `/tmp/gifski_extract`、`unzip` 加 `-o`；寫進紀錄的安裝步驟就是改寫後的版本，這些步驟在乾淨 VM 重播通過、截圖判讀 working。itsycal、keepingyouawake 的紀錄在重播前被改成「有視窗」，但重播仍然失敗，所以沒有寫回、維持未驗證。這些改動只留在本機的 `runs/verify/`（不進 repo），playcover、alacritty 沒有改紀錄。
   - 花費：OpenRouter 約 \$5.5、Modal 沙盒 < \$1，其餘留給線上 Demo。
