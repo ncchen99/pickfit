@@ -60,17 +60,17 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-stats-20261104-145622-2faa",
+      "run_id": "verify-stats-20261105-015305-e9bc",
       "method": "brew",
       "steps": [
         {
-          "command": "mkdir -p $HOME/Applications && brew install --cask --appdir=$HOME/Applications stats 2>&1",
-          "purpose": "Install Stats cask to user Applications via Homebrew"
+          "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications stats 2>&1",
+          "purpose": "Install Stats cask to user Applications"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "open \"$HOME/Applications/Stats.app\""
+      "first_task": "open ~/Applications/Stats.app"
     },
     "linux": null,
     "windows": null
@@ -88,102 +88,182 @@
     "url": "https://github.com/exelban/stats/releases/tag/v3.0.24"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T15:01:30.323330+08:00",
+    "checked_at": "2026-11-05T02:25:24.354066+08:00",
     "runs": [
       {
-        "id": "verify-stats-20261104-145622-2faa",
-        "level": "install",
+        "id": "verify-stats-20261105-015305-e9bc",
+        "level": "function",
         "unverified_reason": null,
         "os": "macos",
         "arch": "arm64",
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
-        "checked_at": "2026-11-04T15:01:30.323330+08:00",
-        "tool_version": "3.0.24",
+        "checked_at": "2026-11-05T02:25:24.354066+08:00",
+        "tool_version": "3.0.25",
         "install_method": "brew",
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p $HOME/Applications && brew install --cask --appdir=$HOME/Applications stats 2>&1",
-            "purpose": "Install Stats cask to user Applications via Homebrew"
+            "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications stats 2>&1",
+            "purpose": "Install Stats cask to user Applications"
           }
         ],
         "smoke_tests": [
           {
-            "command": "open \"$HOME/Applications/Stats.app\"",
+            "command": "open ~/Applications/Stats.app",
             "expected_signal": "gui tier: window",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "open ~/Applications/Stats.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"GB\": yes",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Stats.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Frequency\": no",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "open ~/Applications/Stats.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"°\": no",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "brew install stats installs to /Applications",
-            "actually_needed": "brew install --cask --appdir=$HOME/Applications stats for non-admin user without sudo",
+            "readme_said": "brew install stats",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications stats (default writes /Applications and asks for sudo password)",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The screenshot shows the Stats Setup welcome window with app icon and Previous/Next onboarding controls.",
+          "observed": "The app displays its Welcome to Stats setup wizard with icon and Previous/Next navigation.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-stats-20261104-145622-2faa/report.json",
-          "log_path": "runs/verify/verify-stats-20261104-145622-2faa/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-stats-20261104-145622-2faa/replay-4-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.022757,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 1.029748,
         "gui": {
-          "tier": "ui_rendered",
+          "tier": "action_checked",
           "screen": "first_run",
-          "command": "open \"$HOME/Applications/Stats.app\"",
+          "command": "open ~/Applications/Stats.app",
           "window_title": "",
-          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+          "operations": [
+            {
+              "feature": "monitor memory usage",
+              "goal": "In the Stats app window, open Settings or the main modules list, select/enable the Memory (RAM) module and open its detail popup or settings so the live memory usage value in GB is visible on screen.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "GB"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"GB\": yes",
+              "smoke_test": 1,
+              "actions": 2,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "monitor CPU utilization",
+              "goal": "In the Stats app, click the CPU menu bar indicator to open its popup, then click the gear/settings button in that popup to open CPU Settings showing the Frequency section.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "Frequency"
+              ],
+              "format": null,
+              "passed": false,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Frequency\": no",
+              "smoke_test": 2,
+              "actions": 27,
+              "replay": "operated",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "view temperature voltage power sensors",
+              "goal": "In the Stats app, open Settings, enable the Sensors module, and open the Sensors detail popup or settings so a live temperature degree reading is visible.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "°"
+              ],
+              "format": null,
+              "passed": false,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"°\": no",
+              "smoke_test": 3,
+              "actions": 11,
+              "replay": "operated",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            }
+          ]
         },
         "features": [
           {
             "feature": "monitor CPU utilization",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
           },
           {
             "feature": "monitor memory usage",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "monitor network usage",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "check_not_met",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: done after 4 actions; check: the expected text was on screen before the first action: it is not a result of the operation; Network popup opened showing 0 KB/s Download/Upload but KB/s already in menu bar; retry blocked by 6-operation cap"
           },
           {
             "feature": "view temperature voltage power sensors",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
           }
         ]
       }
@@ -192,7 +272,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
@@ -201,18 +281,35 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-stats-20261105-015305-e9bc",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 2,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "29c6600171f33961815456e0cd3cb71f4076a0e0de300561606455011863bf22",
+    "checked_at": "2026-11-05T03:29:29+08:00",
+    "cost_usd": 0.02334
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T15:13:24+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:29:29+08:00",
     "quality": {
-      "total": 72.5,
+      "total": 90.2,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -232,8 +329,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 90.2,
+        "defects": 0
       }
     },
     "popularity": {
@@ -252,7 +354,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 7.25
+      "value": 9.02
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -549,5 +651,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:28+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:29:29+08:00"
 }

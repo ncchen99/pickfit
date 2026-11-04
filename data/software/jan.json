@@ -62,24 +62,37 @@
     "api_keys": []
   },
   "install": {
-    "macos": null,
-    "linux": {
+    "macos": {
       "basis": "replayed",
-      "run_id": "verify-jan-20261104-133747-a9ad",
-      "method": "binary",
+      "run_id": "verify-jan-20261105-003051-d7b0",
+      "method": "brew",
       "steps": [
         {
-          "command": "curl -L -o /tmp/jan.AppImage \"https://app.jan.ai/download/latest/linux-amd64-appimage\"",
-          "purpose": "Download Jan AppImage from official CDN"
-        },
-        {
-          "command": "chmod +x /tmp/jan.AppImage",
-          "purpose": "Make AppImage executable"
+          "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications jan",
+          "purpose": "Install Jan macOS app via brew cask"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "/tmp/jan.AppImage --appimage-extract-and-run --no-sandbox"
+      "first_task": "open ~/Applications/Jan.app"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-jan-20261104-192122-5e99",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/apps && curl -fL -o ~/apps/Jan.AppImage https://github.com/janhq/jan/releases/download/v0.8.8/Jan_0.8.8_amd64.AppImage\nchmod +x ~/apps/Jan.AppImage",
+          "purpose": "Download Jan 0.8.8 AppImage from GitHub releases"
+        },
+        {
+          "command": "cd /tmp && rm -rf squashfs-root && ~/apps/Jan.AppImage --appimage-extract 2>&1",
+          "purpose": "Extract AppImage with --appimage-extract (FUSE not available)"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "/tmp/squashfs-root/AppRun"
     },
     "windows": null
   },
@@ -96,12 +109,12 @@
     "url": "https://github.com/janhq/jan/releases/tag/v0.8.8"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:40:26.220123+08:00",
+    "checked_at": "2026-11-05T00:58:01.305822+08:00",
     "runs": [
       {
-        "id": "verify-jan-20261104-133747-a9ad",
+        "id": "verify-jan-20261104-192122-5e99",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -109,23 +122,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx-gui:c74b9d4f5f6a",
-        "checked_at": "2026-11-04T13:40:26.220123+08:00",
+        "checked_at": "2026-11-04T19:34:46.938394+08:00",
         "tool_version": "0.8.8",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -L -o /tmp/jan.AppImage \"https://app.jan.ai/download/latest/linux-amd64-appimage\"",
-            "purpose": "Download Jan AppImage from official CDN"
+            "command": "mkdir -p ~/apps && curl -fL -o ~/apps/Jan.AppImage https://github.com/janhq/jan/releases/download/v0.8.8/Jan_0.8.8_amd64.AppImage\nchmod +x ~/apps/Jan.AppImage",
+            "purpose": "Download Jan 0.8.8 AppImage from GitHub releases"
           },
           {
-            "command": "chmod +x /tmp/jan.AppImage",
-            "purpose": "Make AppImage executable"
+            "command": "cd /tmp && rm -rf squashfs-root && ~/apps/Jan.AppImage --appimage-extract 2>&1",
+            "purpose": "Extract AppImage with --appimage-extract (FUSE not available)"
           }
         ],
         "smoke_tests": [
           {
-            "command": "/tmp/jan.AppImage --appimage-extract-and-run --no-sandbox",
+            "command": "/tmp/squashfs-root/AppRun",
             "expected_signal": "gui tier: window",
             "exit_code": 0,
             "passed": true,
@@ -136,31 +149,39 @@
         ],
         "pitfalls": [
           {
-            "readme_said": "README lists Linux AppImage download link",
-            "actually_needed": "AppImage must be run with --appimage-extract-and-run and --no-sandbox on this Debian box (no FUSE, no user namespaces)",
+            "readme_said": "Download jan.deb or jan.AppImage and run",
+            "actually_needed": "AppImage cannot mount without FUSE (fusermount missing); must extract with --appimage-extract and run /tmp/squashfs-root/AppRun with DISPLAY=:99",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "Build from source with make dev / Rust+Tauri",
+            "actually_needed": "Prebuilt AppImage is the practical install; building from source requires Rust toolchain and is slow, last-resort",
+            "kind": "note"
+          },
+          {
+            "readme_said": "install step 2 runs Jan.AppImage",
+            "actually_needed": "nothing to change; a note: the box ran Jan.AppImage, downloaded, without reading it first, so pickfit did not inspect it",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The Jan app shows its Step 1 of 4 initial setup card asking to set up the system, with sidebar navigation visible.",
+          "observed": "The app shows its sidebar and a centered Step 1 of 4 setup card saying Jan needs to set up with a Let's start button.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-jan-20261104-133747-a9ad/report.json",
-          "log_path": "runs/verify/verify-jan-20261104-133747-a9ad/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-jan-20261104-133747-a9ad/replay-3-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.037836,
+        "cost_usd": 0.332922,
         "gui": {
           "tier": "ui_rendered",
           "screen": "first_run",
-          "command": "/tmp/jan.AppImage --appimage-extract-and-run --no-sandbox",
+          "command": "/tmp/squashfs-root/AppRun",
           "window_title": "Jan",
           "display": "Xvfb 1280x800x24, no window manager, no GPU"
         },
@@ -169,33 +190,180 @@
             "feature": "Download and run local LLMs",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: error after 2 actions; check: no screenshot to read; Model catalog visible as Hub but automation got screenshot copy incomplete after click"
           },
           {
             "feature": "Connect to cloud AI models",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_account",
             "failure": null,
-            "note": "install-only run"
+            "note": "Cloud Integration needs OpenAI/Anthropic API keys; no keys in box"
           },
           {
             "feature": "Create specialized AI assistants",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "operator_limit",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: step_cap after 27 actions; check: \"pickfitc911b7\" was typed by the operator, so seeing it shows nothing; Create assistant/chat typed nonce but WebKit went black, screen_text never captured"
           },
           {
             "feature": "Serve OpenAI-compatible local API",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_service",
             "failure": null,
-            "note": "install-only run"
+            "note": "OpenAI-compatible API at localhost:1337 not exercisable without enabling via unstable UI; needs service interaction"
+          }
+        ]
+      },
+      {
+        "id": "verify-jan-20261105-003051-d7b0",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-05T00:58:01.305822+08:00",
+        "tool_version": "0.8.8",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications jan",
+            "purpose": "Install Jan macOS app via brew cask"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/Jan.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Jan.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: a file under /Users/sbx/Library/Application Support/Jan/: 45949216 bytes, written after the app started; format gguf: yes",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "open ~/Applications/Jan.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"running\": yes",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "download jan.dmg from app.jan.ai/download/latest/mac-universal or GitHub Releases",
+            "actually_needed": "installed published macOS build via Homebrew cask to ~/Applications: mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications jan",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The app shows its first-run setup wizard stating Jan needs to set up on your system with a Let's start button.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.648633,
+        "gui": {
+          "tier": "action_checked",
+          "screen": "first_run",
+          "command": "open ~/Applications/Jan.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+          "operations": [
+            {
+              "feature": "Download and run local LLMs",
+              "goal": "In Jan, open the Hub or Models catalog from the sidebar, find the smallest free downloadable local model (prefer TinyLlama, SmolLM2, Llama 3.2 1B or similar smallest size/quant), click Download for that one model only, wait for the download to finish, and leave it listed as downloaded/ready.",
+              "check": "file",
+              "target": "~/Library/Application Support/Jan/",
+              "expected": [],
+              "format": "gguf",
+              "passed": true,
+              "observed": "a file under /Users/sbx/Library/Application Support/Jan/: 45949216 bytes, written after the app started; format gguf: yes",
+              "smoke_test": 1,
+              "actions": 28,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "Serve OpenAI-compatible local API",
+              "goal": "In Jan open Settings, find Local API Server settings, turn on / start the local server, and leave the settings page showing the server status.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "running"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"running\": yes",
+              "smoke_test": 2,
+              "actions": 4,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            }
+          ]
+        },
+        "features": [
+          {
+            "feature": "Download and run local LLMs",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "Connect to cloud AI models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Needs OpenAI/Anthropic/Mistral API key; none available in box."
+          },
+          {
+            "feature": "Create specialized AI assistants",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "operator_limit",
+            "failure": null,
+            "note": "operation stopped: step_cap after 26 actions; check: the screen does not show the expected text; Add Assistant dialog opened but operator could not focus Name field twice (step_cap)."
+          },
+          {
+            "feature": "Serve OpenAI-compatible local API",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows settings text saying the server is running, with no request to or response from localhost:1337."
           }
         ]
       }
@@ -204,7 +372,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -353,18 +521,53 @@
       }
     ]
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-jan-20261105-003051-d7b0",
+    "score": 1,
+    "status": "scored",
+    "defects": [
+      {
+        "item": "comfortable",
+        "operation": null,
+        "cause": "app",
+        "problem": "The Default Model dropdown placeholder is truncated with an ellipsis inside its control on the right side of the Settings panel.",
+        "screenshot": "7-op-5.png",
+        "box": [
+          819,
+          330,
+          943,
+          369
+        ],
+        "quote": "Select a local ...",
+        "found_by": "ocr",
+        "kind": "text_cut_off",
+        "severity": "minor"
+      }
+    ],
+    "screens": 2,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "41ea3001ee0113d9138491ef4508492d8de6bac882bd95814bfde362fab0dd17",
+    "checked_at": "2026-11-05T03:26:43+08:00",
+    "cost_usd": 0.045688
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:26:43+08:00",
     "quality": {
-      "total": 67.0,
+      "total": 75.0,
       "confidence": 0.8,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -386,6 +589,11 @@
           "score": null,
           "weight": 10
         }
+      },
+      "visual": {
+        "factor": 0.95,
+        "before": 79.0,
+        "defects": 1
       }
     },
     "popularity": {
@@ -404,7 +612,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 6.7
+      "value": 7.5
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -703,5 +911,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:01+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:26:43+08:00"
 }

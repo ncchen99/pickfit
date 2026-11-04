@@ -70,24 +70,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-ollama-20261104-133428-d5c6",
-      "method": "binary",
+      "run_id": "verify-ollama-20261104-185636-3926",
+      "method": "other",
       "steps": [
         {
-          "command": "curl -fsSL https://ollama.com/install.sh -o /tmp/ollama_install.sh",
-          "purpose": "Download official install script to inspect (README method)"
-        },
-        {
-          "command": "mkdir -p ~/.local/bin ~/.local/lib && curl -fL --progress-bar https://ollama.com/download/ollama-linux-amd64.tar.zst | zstd -d | tar -xf - -C \"$HOME/.local\" && ~/.local/bin/ollama --version",
-          "purpose": "Manual user-local install: download tar.zst and extract to ~/.local"
+          "command": "curl -fsSL https://ollama.com/download/ollama-linux-amd64.tar.zst | zstd -d | tar -xf - -C /tmp && mkdir -p ~/.local/bin ~/.local/lib && cp /tmp/bin/ollama ~/.local/bin/ && cp -r /tmp/lib/ollama ~/.local/lib/ 2>&1; ~/.local/bin/ollama --version",
+          "purpose": "Manual install ollama binary to ~/.local without sudo by extracting ollama-linux-amd64.tar.zst"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "ollama --version",
-        "expected_signal": "0.40.14"
+        "command": "~/.local/bin/ollama --version 2>&1; echo \"---\"; ~/.local/bin/ollama --help 2>&1",
+        "expected_signal": "Large language model runner"
       },
-      "first_task": null
+      "first_task": "curl -s http://localhost:11434/api/tags\necho \"---VERSION---\"\ncurl -s http://localhost:11434/api/version"
     },
     "windows": {
       "basis": "readme_claim",
@@ -117,99 +113,168 @@
     "url": "https://github.com/ollama/ollama/releases/tag/v0.40.14"
   },
   "verification": {
-    "level": "install",
+    "level": "inference",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:35:41.796344+08:00",
+    "checked_at": "2026-11-04T18:59:37.814606+08:00",
     "runs": [
       {
-        "id": "verify-ollama-20261104-133428-d5c6",
-        "level": "install",
+        "id": "verify-ollama-20261104-185636-3926",
+        "level": "inference",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:35:41.796344+08:00",
+        "checked_at": "2026-11-04T18:59:37.814606+08:00",
         "tool_version": "0.40.14",
-        "install_method": "binary",
+        "install_method": "other",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://ollama.com/install.sh -o /tmp/ollama_install.sh",
-            "purpose": "Download official install script to inspect (README method)"
-          },
-          {
-            "command": "mkdir -p ~/.local/bin ~/.local/lib && curl -fL --progress-bar https://ollama.com/download/ollama-linux-amd64.tar.zst | zstd -d | tar -xf - -C \"$HOME/.local\" && ~/.local/bin/ollama --version",
-            "purpose": "Manual user-local install: download tar.zst and extract to ~/.local"
+            "command": "curl -fsSL https://ollama.com/download/ollama-linux-amd64.tar.zst | zstd -d | tar -xf - -C /tmp && mkdir -p ~/.local/bin ~/.local/lib && cp /tmp/bin/ollama ~/.local/bin/ && cp -r /tmp/lib/ollama ~/.local/lib/ 2>&1; ~/.local/bin/ollama --version",
+            "purpose": "Manual install ollama binary to ~/.local without sudo by extracting ollama-linux-amd64.tar.zst"
           }
         ],
         "smoke_tests": [
           {
-            "command": "ollama --version",
-            "expected_signal": "0.40.14",
+            "command": "~/.local/bin/ollama --version 2>&1; echo \"---\"; ~/.local/bin/ollama --help 2>&1",
+            "expected_signal": "Large language model runner",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Warning: client version is 0.40.14",
+            "observed_excerpt": "Large language model runner",
             "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://localhost:11434/api/tags\necho \"---VERSION---\"\ncurl -s http://localhost:11434/api/version",
+            "expected_signal": "\"version\":\"0.40.14\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"version\":\"0.40.14\"}",
+            "setup": [
+              {
+                "command": "LD_LIBRARY_PATH=$HOME/.local/lib/ollama:$LD_LIBRARY_PATH $HOME/.local/bin/ollama serve",
+                "background": true,
+                "port": 11434
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://localhost:11434/api/chat -d '{\"model\":\"smollm2:135m\",\"messages\":[{\"role\":\"user\",\"content\":\"Why is the sky blue?\"}],\"stream\":false}' 2>&1",
+            "expected_signal": "\"role\":\"assistant\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"model\":\"smollm2:135m\",\"created_at\":\"2026-11-04T10:59:18.021897278Z\",\"message\":{\"role\":\"assistant\",\"content\":\"The sky is blue because it consists of many tiny, colored particles, called blue light, scattered by the massive amount of air in the atmosphere. When sunlight enters our atmosphere, it en…",
+            "setup": [
+              {
+                "command": "LD_LIBRARY_PATH=$HOME/.local/lib/ollama:$LD_LIBRARY_PATH $HOME/.local/bin/ollama serve",
+                "background": true,
+                "port": 11434
+              },
+              {
+                "command": "ollama pull smollm2:135m 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s http://localhost:11434/api/generate -d '{\"model\":\"smollm2:135m\",\"prompt\":\"Hello world\",\"stream\":false, \"options\":{\"temperature\":0,\"num_predict\":16}}' 2>&1",
+            "expected_signal": "\"done\":true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"model\":\"smollm2:135m\",\"created_at\":\"2026-11-04T10:59:18.519463861Z\",\"response\":\"Hello world!\",\"done\":true,\"done_reason\":\"stop\",\"context\":[1,9690,198,2683,359,253,5356,5646,11173,3365,3511,308,34519,28,7018,411,407,19712,8182,2,198,1,4093,198,19556,905,2,198,1,520,9531,198,19556,905,17],\"total_dur…",
+            "setup": [
+              {
+                "command": "LD_LIBRARY_PATH=$HOME/.local/lib/ollama:$LD_LIBRARY_PATH $HOME/.local/bin/ollama serve",
+                "background": true,
+                "port": 11434
+              },
+              {
+                "command": "ollama pull smollm2:135m 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "ollama list 2>&1; echo \"---\"; ollama ps 2>&1; echo \"---\"; ollama launch --help 2>&1",
+            "expected_signal": "claude Claude Code",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "claude Claude Code",
+            "setup": [
+              {
+                "command": "LD_LIBRARY_PATH=$HOME/.local/lib/ollama:$LD_LIBRARY_PATH $HOME/.local/bin/ollama serve",
+                "background": true,
+                "port": 11434
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
             "readme_said": "curl -fsSL https://ollama.com/install.sh | sh installs Ollama",
-            "actually_needed": "Script requires sudo/superuser and fails for non-root; manually download https://ollama.com/download/ollama-linux-amd64.tar.zst and extract with zstd -d | tar -xf - -C ~/.local to install to user directory",
+            "actually_needed": "Install script requires sudo to write to /usr/local; in this sandbox without root manually extracted tarball with curl | zstd -d | tar -xf - and copied bin/ollama to ~/.local/bin with LD_LIBRARY_PATH to ~/.local/lib/ollama",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows ollama --version printing client version 0.40.14 with a warning about no running instance.",
+          "observed": "Screenshots show Ollama version/help, server listing smollm2 model with version, and a completed assistant chat answer.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-ollama-20261104-133428-d5c6/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-ollama-20261104-133428-d5c6/check-1-cmd6.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.039339,
+        "cost_usd": 0.089981,
         "features": [
           {
             "feature": "run and chat with open models",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              3
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "run and manage models via REST API",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "connect models to existing AI agents",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output shows only launch help listing integrations, not an actual agent connection."
           },
           {
             "feature": "turn Ollama into personal AI assistant",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output shows only help listing OpenClaw, not Ollama acting as personal assistant."
           }
         ]
       }
@@ -218,11 +283,11 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/ollama/ollama@e9fde36d75fe",
+      "github.com/ollama/ollama@2e7b870fbcec",
       "app/ui/app/package-lock.json",
       "go.mod"
     ],
@@ -377,17 +442,17 @@
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 64.9,
+      "total": 79.0,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40
+          "score": 0.85,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.375,
@@ -407,7 +472,11 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -712,5 +781,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:00+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

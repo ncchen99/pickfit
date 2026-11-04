@@ -49,20 +49,20 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-difftastic-20261104-140655-1889",
+      "run_id": "verify-difftastic-20261104-192041-e339",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install difftastic",
+          "command": "brew install difftastic\n",
           "purpose": "install difftastic via brew"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "difft --version",
+        "command": "difft --version\n",
         "expected_signal": "Difftastic 0.72.0"
       },
-      "first_task": null
+      "first_task": "difft /tmp/foo1.c /tmp/foo2.c"
     },
     "linux": null,
     "windows": null
@@ -80,37 +80,97 @@
     "url": "https://github.com/Wilfred/difftastic/releases/tag/0.72.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:09:35.219647+08:00",
+    "checked_at": "2026-11-04T19:23:23.120632+08:00",
     "runs": [
       {
-        "id": "verify-difftastic-20261104-140655-1889",
-        "level": "install",
+        "id": "verify-difftastic-20261104-192041-e339",
+        "level": "function",
         "unverified_reason": null,
         "os": "macos",
         "arch": "arm64",
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
-        "checked_at": "2026-11-04T14:09:35.219647+08:00",
+        "checked_at": "2026-11-04T19:23:23.120632+08:00",
         "tool_version": "0.72.0",
         "install_method": "brew",
         "replayed": true,
         "steps": [
           {
-            "command": "brew install difftastic",
+            "command": "brew install difftastic\n",
             "purpose": "install difftastic via brew"
           }
         ],
         "smoke_tests": [
           {
-            "command": "difft --version",
+            "command": "difft --version\n",
             "expected_signal": "Difftastic 0.72.0",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "Difftastic 0.72.0",
             "setup": [],
+            "offline": true
+          },
+          {
+            "command": "difft /tmp/foo1.c /tmp/foo2.c",
+            "expected_signal": "/tmp/foo2.c --- C",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/tmp/foo2.c --- C",
+            "setup": [
+              {
+                "command": "cat > /tmp/foo1.c <<'EOF'\nint main() {\n    int x = 1;\n    return x;\n}\nEOF\ncat > /tmp/foo2.c <<'EOF'\nint main() {\n    int x = 2;\n    return x;\n}\nEOF\ncat > /tmp/before.js <<'EOF'\nfunction add(a, b) { return a + b; }\nEOF\ncat > /tmp/after.js <<'EOF'\nfunction add(a, b) {\n    return a + b;\n}\nEOF\ncat > /tmp/after_changed.js <<'EOF'\nfunction add(a, b) {\n    return a - b;\n}\nEOF\ncat > /tmp/file_with_conflicts.js <<'EOF'\n<<<<<<< HEAD\nfunction foo() { return 1; }\n=======\nfunction foo() { return 2; }\n>>>>>>> branch\nEOF\ncat > /tmp/reformat_before.js <<'EOF'\nfunction greet(name) { console.log(\"hello \" + name); }\nEOF\ncat > /tmp/reformat_after.js <<'EOF'\nfunction greet(name) {\n    console.log(\"hello \" + name);\n}\nEOF\ncat > /tmp/reformat_after_changed.js <<'EOF'\nfunction greet(name) {\n    console.log(\"hi \" + name);\n}\nEOF\necho setup_done\nls -l /tmp/foo1.c /tmp/before.js /tmp/file_with_conflicts.js\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "difft /tmp/before.js /tmp/after_changed.js\n",
+            "expected_signal": "return a - b;",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2 return a - b;",
+            "setup": [
+              {
+                "command": "cat > /tmp/foo1.c <<'EOF'\nint main() {\n    int x = 1;\n    return x;\n}\nEOF\ncat > /tmp/foo2.c <<'EOF'\nint main() {\n    int x = 2;\n    return x;\n}\nEOF\ncat > /tmp/before.js <<'EOF'\nfunction add(a, b) { return a + b; }\nEOF\ncat > /tmp/after.js <<'EOF'\nfunction add(a, b) {\n    return a + b;\n}\nEOF\ncat > /tmp/after_changed.js <<'EOF'\nfunction add(a, b) {\n    return a - b;\n}\nEOF\ncat > /tmp/file_with_conflicts.js <<'EOF'\n<<<<<<< HEAD\nfunction foo() { return 1; }\n=======\nfunction foo() { return 2; }\n>>>>>>> branch\nEOF\ncat > /tmp/reformat_before.js <<'EOF'\nfunction greet(name) { console.log(\"hello \" + name); }\nEOF\ncat > /tmp/reformat_after.js <<'EOF'\nfunction greet(name) {\n    console.log(\"hello \" + name);\n}\nEOF\ncat > /tmp/reformat_after_changed.js <<'EOF'\nfunction greet(name) {\n    console.log(\"hi \" + name);\n}\nEOF\necho setup_done\nls -l /tmp/foo1.c /tmp/before.js /tmp/file_with_conflicts.js\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "difft /tmp/reformat_before.js /tmp/reformat_after.js\n",
+            "expected_signal": "No syntactic changes.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No syntactic changes.",
+            "setup": [
+              {
+                "command": "cat > /tmp/foo1.c <<'EOF'\nint main() {\n    int x = 1;\n    return x;\n}\nEOF\ncat > /tmp/foo2.c <<'EOF'\nint main() {\n    int x = 2;\n    return x;\n}\nEOF\ncat > /tmp/before.js <<'EOF'\nfunction add(a, b) { return a + b; }\nEOF\ncat > /tmp/after.js <<'EOF'\nfunction add(a, b) {\n    return a + b;\n}\nEOF\ncat > /tmp/after_changed.js <<'EOF'\nfunction add(a, b) {\n    return a - b;\n}\nEOF\ncat > /tmp/file_with_conflicts.js <<'EOF'\n<<<<<<< HEAD\nfunction foo() { return 1; }\n=======\nfunction foo() { return 2; }\n>>>>>>> branch\nEOF\ncat > /tmp/reformat_before.js <<'EOF'\nfunction greet(name) { console.log(\"hello \" + name); }\nEOF\ncat > /tmp/reformat_after.js <<'EOF'\nfunction greet(name) {\n    console.log(\"hello \" + name);\n}\nEOF\ncat > /tmp/reformat_after_changed.js <<'EOF'\nfunction greet(name) {\n    console.log(\"hi \" + name);\n}\nEOF\necho setup_done\nls -l /tmp/foo1.c /tmp/before.js /tmp/file_with_conflicts.js\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "difft --check-only --exit-code /tmp/reformat_before.js /tmp/reformat_after.js",
+            "expected_signal": "No syntactic changes.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No syntactic changes.",
+            "setup": [
+              {
+                "command": "cat > /tmp/foo1.c <<'EOF'\nint main() {\n    int x = 1;\n    return x;\n}\nEOF\ncat > /tmp/foo2.c <<'EOF'\nint main() {\n    int x = 2;\n    return x;\n}\nEOF\ncat > /tmp/before.js <<'EOF'\nfunction add(a, b) { return a + b; }\nEOF\ncat > /tmp/after.js <<'EOF'\nfunction add(a, b) {\n    return a + b;\n}\nEOF\ncat > /tmp/after_changed.js <<'EOF'\nfunction add(a, b) {\n    return a - b;\n}\nEOF\ncat > /tmp/file_with_conflicts.js <<'EOF'\n<<<<<<< HEAD\nfunction foo() { return 1; }\n=======\nfunction foo() { return 2; }\n>>>>>>> branch\nEOF\ncat > /tmp/reformat_before.js <<'EOF'\nfunction greet(name) { console.log(\"hello \" + name); }\nEOF\ncat > /tmp/reformat_after.js <<'EOF'\nfunction greet(name) {\n    console.log(\"hello \" + name);\n}\nEOF\ncat > /tmp/reformat_after_changed.js <<'EOF'\nfunction greet(name) {\n    console.log(\"hi \" + name);\n}\nEOF\necho setup_done\nls -l /tmp/foo1.c /tmp/before.js /tmp/file_with_conflicts.js\n",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
@@ -118,51 +178,57 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The screenshot shows difft --version outputting Difftastic 0.72.0.",
+          "observed": "Screenshots show difftastic displaying C and JavaScript side-by-side diffs and reporting version 0.72.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-difftastic-20261104-140655-1889/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-difftastic-20261104-140655-1889/check-1-cmd2.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.017734,
+        "cost_usd": 0.040595,
         "features": [
           {
             "feature": "compare files based on syntax",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "highlight changed syntax pieces in context",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "show actual changes ignoring reformatting",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "check files for same syntax tree",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           }
         ]
       }
@@ -171,11 +237,11 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
-      "github.com/Wilfred/difftastic@00e2173018a2",
+      "github.com/Wilfred/difftastic@87aad1aea4aa",
       "Cargo.lock",
       "vendored_parsers/tree-sitter-latex/package-lock.json"
     ],
@@ -185,17 +251,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 65.4,
+      "total": 83.2,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.5625,
@@ -216,6 +282,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -238,7 +308,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 0.98
+      "value": 1.25
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -511,5 +581,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:50+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

@@ -69,16 +69,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-delta-20261104-144647-9523",
+      "run_id": "verify-delta-20261104-191025-9117",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL -o /tmp/delta.tar.gz https://github.com/dandavison/delta/releases/download/0.20.1/delta-0.20.1-x86_64-unknown-linux-gnu.tar.gz",
-          "purpose": "download delta binary tarball and list contents"
+          "command": "curl -fsSL -L -o /tmp/delta.tar.gz https://github.com/dandavison/delta/releases/download/0.20.1/delta-0.20.1-x86_64-unknown-linux-gnu.tar.gz",
+          "purpose": "download delta-0.20.1 tarball from github releases"
         },
         {
-          "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/delta.tar.gz -C /tmp && cp /tmp/delta-0.20.1-x86_64-unknown-linux-gnu/delta ~/.local/bin/delta && chmod +x ~/.local/bin/delta",
-          "purpose": "install delta binary to local bin"
+          "command": "mkdir -p ~/.local/bin && tar xzf /tmp/delta.tar.gz -C /tmp && cp /tmp/delta-0.20.1-x86_64-unknown-linux-gnu/delta ~/.local/bin/delta && chmod +x ~/.local/bin/delta",
+          "purpose": "extract and install delta binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -86,7 +86,7 @@
         "command": "delta --version",
         "expected_signal": "delta 0.20.1"
       },
-      "first_task": null
+      "first_task": "cat /tmp/sample.diff | delta --show-syntax-themes > /tmp/themes2.txt 2>&1; echo done; wc -l /tmp/themes2.txt; head -n 5 /tmp/themes2.txt"
     },
     "windows": null
   },
@@ -103,31 +103,31 @@
     "url": "https://github.com/dandavison/delta/releases/tag/0.20.1"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:48:04.808556+08:00",
+    "checked_at": "2026-11-04T19:12:24.010177+08:00",
     "runs": [
       {
-        "id": "verify-delta-20261104-144647-9523",
-        "level": "install",
+        "id": "verify-delta-20261104-191025-9117",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T14:48:04.808556+08:00",
+        "checked_at": "2026-11-04T19:12:24.010177+08:00",
         "tool_version": "0.20.1",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL -o /tmp/delta.tar.gz https://github.com/dandavison/delta/releases/download/0.20.1/delta-0.20.1-x86_64-unknown-linux-gnu.tar.gz",
-            "purpose": "download delta binary tarball and list contents"
+            "command": "curl -fsSL -L -o /tmp/delta.tar.gz https://github.com/dandavison/delta/releases/download/0.20.1/delta-0.20.1-x86_64-unknown-linux-gnu.tar.gz",
+            "purpose": "download delta-0.20.1 tarball from github releases"
           },
           {
-            "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/delta.tar.gz -C /tmp && cp /tmp/delta-0.20.1-x86_64-unknown-linux-gnu/delta ~/.local/bin/delta && chmod +x ~/.local/bin/delta",
-            "purpose": "install delta binary to local bin"
+            "command": "mkdir -p ~/.local/bin && tar xzf /tmp/delta.tar.gz -C /tmp && cp /tmp/delta-0.20.1-x86_64-unknown-linux-gnu/delta ~/.local/bin/delta && chmod +x ~/.local/bin/delta",
+            "purpose": "extract and install delta binary to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -139,57 +139,125 @@
             "observed_excerpt": "delta 0.20.1",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "cat /tmp/sample.diff | delta --show-syntax-themes > /tmp/themes2.txt 2>&1; echo done; wc -l /tmp/themes2.txt; head -n 5 /tmp/themes2.txt",
+            "expected_signal": "Syntax theme:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Syntax theme: \u001b[1m1337\u001b[0m",
+            "setup": [
+              {
+                "command": "cat > /tmp/sample.diff <<'EOF'\ndiff --git a/example.py b/example.py\nindex 1111111..2222222 100644\n--- a/example.py\n+++ b/example.py\n@@ -1,5 +1,5 @@\n def hello(name):\n-    print(\"hello \" + name)\n+    print(f\"hello {name}\")\n     return 42\n\n if __name__ == \"__main__\":\nEOF\ncat /tmp/sample.diff\necho \"---sample ready---\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cat /tmp/sample.diff | delta --paging=never > /tmp/out_default.txt 2>&1; echo done; head -n 20 /tmp/out_default.txt",
+            "expected_signal": "example.py",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[34mexample.py\u001b[0m",
+            "setup": [
+              {
+                "command": "cat > /tmp/sample.diff <<'EOF'\ndiff --git a/example.py b/example.py\nindex 1111111..2222222 100644\n--- a/example.py\n+++ b/example.py\n@@ -1,5 +1,5 @@\n def hello(name):\n-    print(\"hello \" + name)\n+    print(f\"hello {name}\")\n     return 42\n\n if __name__ == \"__main__\":\nEOF\ncat /tmp/sample.diff\necho \"---sample ready---\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cat /tmp/sample.diff | delta --paging=never --side-by-side --wrap-max-lines=2 > /tmp/out_side.txt 2>&1; echo done; grep -c \"│\" /tmp/out_side.txt; head -n 30 /tmp/out_side.txt",
+            "expected_signal": "│",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[34m1\u001b[0m: \u001b[34m│\u001b[0m",
+            "setup": [
+              {
+                "command": "cat > /tmp/sample.diff <<'EOF'\ndiff --git a/example.py b/example.py\nindex 1111111..2222222 100644\n--- a/example.py\n+++ b/example.py\n@@ -1,5 +1,5 @@\n def hello(name):\n-    print(\"hello \" + name)\n+    print(f\"hello {name}\")\n     return 42\n\n if __name__ == \"__main__\":\nEOF\ncat /tmp/sample.diff\necho \"---sample ready---\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cat /tmp/sample.diff | delta --paging=never --line-numbers > /tmp/out_lines.txt 2>&1; echo done; head -n 20 /tmp/out_lines.txt",
+            "expected_signal": "⋮",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[34m\u001b[38;5;238m 1 \u001b[34m⋮\u001b[38;5;238m 1 \u001b[34m│\u001b[38;5;203mdef\u001b[38;5;231m \u001b[38;5;149mhello\u001b[38;5;231m(\u001b[38;5;208mname\u001b[38;5;231m):\u001b[0m",
+            "setup": [
+              {
+                "command": "cat > /tmp/sample.diff <<'EOF'\ndiff --git a/example.py b/example.py\nindex 1111111..2222222 100644\n--- a/example.py\n+++ b/example.py\n@@ -1,5 +1,5 @@\n def hello(name):\n-    print(\"hello \" + name)\n+    print(f\"hello {name}\")\n     return 42\n\n if __name__ == \"__main__\":\nEOF\ncat /tmp/sample.diff\necho \"---sample ready---\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "delta --show-syntax-themes --dark runs standalone",
+            "actually_needed": "requires piped diff input (e.g. cat sample.diff | delta --show-syntax-themes); without stdin it hangs waiting for input, and --paging=never avoids pager hang",
+            "kind": "readme_wrong"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows delta --version printing delta 0.20.1.",
+          "observed": "Screenshots show delta listing syntax themes, rendering example.py diff with highlighting, and reporting version 0.20.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-delta-20261104-144647-9523/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-delta-20261104-144647-9523/check-1-cmd3.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.017128,
+        "cost_usd": 0.069646,
         "features": [
           {
             "feature": "syntax highlight diffs by language",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output only lists theme names and plain diff text with no visible syntax colors."
           },
           {
             "feature": "highlight word-level changes in diffs",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output shows plain added/removed lines with no visible word-level emphasis."
           },
           {
             "feature": "view diffs side-by-side with wrapping",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "show line numbers in diffs",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           }
         ]
       }
@@ -198,7 +266,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -232,17 +300,17 @@
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 57.6,
+      "total": 73.2,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
-          "weight": 40
+          "score": 0.7225,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.4375,
@@ -262,7 +330,11 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -550,5 +622,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:50+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

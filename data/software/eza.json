@@ -77,16 +77,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-eza-20261104-133243-f364",
+      "run_id": "verify-eza-20261104-185321-9a85",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL -o /tmp/eza.tar.gz https://github.com/eza-community/eza/releases/download/v0.23.5/eza_x86_64-unknown-linux-gnu.tar.gz",
-          "purpose": "download prebuilt eza tarball from GitHub releases"
-        },
-        {
-          "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/eza.tar.gz -C /tmp && cp /tmp/eza ~/.local/bin/eza && chmod +x ~/.local/bin/eza",
-          "purpose": "extract and install binary to ~/.local/bin"
+          "command": "mkdir -p ~/.local/bin && cd /tmp && curl -fsSLO https://github.com/eza-community/eza/releases/download/v0.23.5/eza_x86_64-unknown-linux-gnu.tar.gz && tar -xzf eza_x86_64-unknown-linux-gnu.tar.gz && mv eza ~/.local/bin/eza && chmod +x ~/.local/bin/eza && ~/.local/bin/eza --version",
+          "purpose": "download official x86_64 linux-gnu tarball and install eza to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -94,7 +90,7 @@
         "command": "eza --version",
         "expected_signal": "v0.23.5"
       },
-      "first_task": null
+      "first_task": "eza --color=always /tmp/eza_test | od -c | head\npython3 -c \"\nimport subprocess\nout = subprocess.run(['eza','--color=always','/tmp/eza_test'], capture_output=True)\nprint(out.stdout[:500])\nprint(b'\\\\x1b' in out.stdout)\n\""
     },
     "windows": {
       "basis": "readme_claim",
@@ -124,31 +120,27 @@
     "url": "https://github.com/eza-community/eza/releases/tag/v0.23.5"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:33:40.782072+08:00",
+    "checked_at": "2026-11-04T18:54:41.796787+08:00",
     "runs": [
       {
-        "id": "verify-eza-20261104-133243-f364",
-        "level": "install",
+        "id": "verify-eza-20261104-185321-9a85",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:33:40.782072+08:00",
+        "checked_at": "2026-11-04T18:54:41.796787+08:00",
         "tool_version": "v0.23.5",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL -o /tmp/eza.tar.gz https://github.com/eza-community/eza/releases/download/v0.23.5/eza_x86_64-unknown-linux-gnu.tar.gz",
-            "purpose": "download prebuilt eza tarball from GitHub releases"
-          },
-          {
-            "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/eza.tar.gz -C /tmp && cp /tmp/eza ~/.local/bin/eza && chmod +x ~/.local/bin/eza",
-            "purpose": "extract and install binary to ~/.local/bin"
+            "command": "mkdir -p ~/.local/bin && cd /tmp && curl -fsSLO https://github.com/eza-community/eza/releases/download/v0.23.5/eza_x86_64-unknown-linux-gnu.tar.gz && tar -xzf eza_x86_64-unknown-linux-gnu.tar.gz && mv eza ~/.local/bin/eza && chmod +x ~/.local/bin/eza && ~/.local/bin/eza --version",
+            "purpose": "download official x86_64 linux-gnu tarball and install eza to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -160,63 +152,129 @@
             "observed_excerpt": "v0.23.5 [+git]",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "eza --color=always /tmp/eza_test | od -c | head\npython3 -c \"\nimport subprocess\nout = subprocess.run(['eza','--color=always','/tmp/eza_test'], capture_output=True)\nprint(out.stdout[:500])\nprint(b'\\\\x1b' in out.stdout)\n\"",
+            "expected_signal": "dir1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "b'\\x1b[1;34mdir1\\x1b[0m file.txt \\x1b[36mlink\\x1b[0m \\x1b[1;32mscript.sh\\x1b[0m\\n'",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/eza_test/dir1/sub && touch /tmp/eza_test/file.txt /tmp/eza_test/script.sh /tmp/eza_test/dir1/a.txt /tmp/eza_test/dir1/sub/b.txt && chmod +x /tmp/eza_test/script.sh && ln -s file.txt /tmp/eza_test/link && ls -R /tmp/eza_test",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "eza --long --git /tmp/git_test",
+            "expected_signal": "tracked.txt",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": ".rw-r--r-- 9 sbx 4 Nov 10:54 -M tracked.txt",
+            "setup": [
+              {
+                "command": "cd /tmp && rm -rf git_test && mkdir git_test && cd git_test && git init -q && git config user.email \"test@test.com\" && git config user.name \"test\" && touch tracked.txt && git add tracked.txt && git commit -qm init && echo modified >> tracked.txt && touch untracked.txt && echo \"git repo setup done\" && ls -la",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "eza --tree /tmp/eza_test",
+            "expected_signal": "├── dir1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "├── dir1",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/eza_test/dir1/sub && touch /tmp/eza_test/file.txt /tmp/eza_test/script.sh /tmp/eza_test/dir1/a.txt /tmp/eza_test/dir1/sub/b.txt && chmod +x /tmp/eza_test/script.sh && ln -s file.txt /tmp/eza_test/link && ls -R /tmp/eza_test",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "eza --icons=always /tmp/eza_test",
+            "expected_signal": "dir1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": " dir1  file.txt 󰡯 link  script.sh",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/eza_test/dir1/sub && touch /tmp/eza_test/file.txt /tmp/eza_test/script.sh /tmp/eza_test/dir1/a.txt /tmp/eza_test/dir1/sub/b.txt && chmod +x /tmp/eza_test/script.sh && ln -s file.txt /tmp/eza_test/link && ls -R /tmp/eza_test",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
             "readme_said": "nix run github:eza-community/eza",
-            "actually_needed": "Nix not available in box; used prebuilt binary eza_x86_64-unknown-linux-gnu.tar.gz from GitHub releases",
+            "actually_needed": "Nix not available in box; installed from GitHub release tarball eza_x86_64-unknown-linux-gnu.tar.gz to ~/.local/bin",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows eza --version printing v0.23.5 with description and GitHub URL.",
+          "observed": "All three screenshots show eza listing with colors, git status, and version v0.23.5.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-eza-20261104-133243-f364/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-eza-20261104-133243-f364/check-1-cmd5.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.04759,
+        "cost_usd": 0.047369,
         "features": [
           {
             "feature": "distinguish file types with colours",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "list files Git status",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "recurse into directories as tree",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "display icons for files",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           }
         ]
       }
@@ -225,7 +283,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -238,17 +296,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 53.9,
+      "total": 72.3,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
-          "weight": 40.0
+          "score": 0.85,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.4375,
@@ -269,6 +327,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -590,5 +652,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:45+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

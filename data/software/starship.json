@@ -72,24 +72,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-starship-20261104-133040-5ed4",
+      "run_id": "verify-starship-20261104-185134-ac5f",
       "method": "script",
       "steps": [
         {
           "command": "curl -sS https://starship.rs/install.sh -o /tmp/install.sh",
-          "purpose": "Download install script from starship.rs"
+          "purpose": "download install.sh"
         },
         {
-          "command": "sh /tmp/install.sh --bin-dir ~/.local/bin --yes 2>&1",
-          "purpose": "Install starship to ~/.local/bin via script"
+          "command": "sh /tmp/install.sh --yes --bin-dir ~/.local/bin 2>&1",
+          "purpose": "install starship via script to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "~/.local/bin/starship --version",
+        "command": "starship --version",
         "expected_signal": "starship 1.27.0"
       },
-      "first_task": null
+      "first_task": "STARSHIP_CONFIG=/tmp/starship.toml starship prompt --status 0 --path /tmp"
     },
     "windows": {
       "basis": "readme_claim",
@@ -119,99 +119,151 @@
     "url": "https://github.com/starship/starship/releases/tag/v1.27.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:31:31.895557+08:00",
+    "checked_at": "2026-11-04T18:52:57.960489+08:00",
     "runs": [
       {
-        "id": "verify-starship-20261104-133040-5ed4",
-        "level": "install",
+        "id": "verify-starship-20261104-185134-ac5f",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:31:31.895557+08:00",
+        "checked_at": "2026-11-04T18:52:57.960489+08:00",
         "tool_version": "1.27.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
             "command": "curl -sS https://starship.rs/install.sh -o /tmp/install.sh",
-            "purpose": "Download install script from starship.rs"
+            "purpose": "download install.sh"
           },
           {
-            "command": "sh /tmp/install.sh --bin-dir ~/.local/bin --yes 2>&1",
-            "purpose": "Install starship to ~/.local/bin via script"
+            "command": "sh /tmp/install.sh --yes --bin-dir ~/.local/bin 2>&1",
+            "purpose": "install starship via script to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "~/.local/bin/starship --version",
+            "command": "starship --version",
             "expected_signal": "starship 1.27.0",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "starship 1.27.0",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "STARSHIP_CONFIG=/tmp/starship.toml starship prompt --status 0 --path /tmp",
+            "expected_signal": "~/work",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[1;32m>\u001b[0m \u001b[1;36m~/work\u001b[0m",
+            "setup": [
+              {
+                "command": "cat > /tmp/test_starship.sh <<'EOS'\nmkdir -p /tmp/starship_test\ncat > /tmp/starship.toml <<'EOF'\nformat = \"$character$directory$git_branch\"\n[character]\nsuccess_symbol = \"[>](bold green)\"\nerror_symbol = \"[x](bold red)\"\n[directory]\ntruncation_length = 3\nEOF\necho \"config created\"\nEOS\nchmod +x /tmp/test_starship.sh\n/tmp/test_starship.sh\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "starship init bash",
+            "expected_signal": "starship init bash",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "eval -- \"$(/home/sbx/.local/bin/starship init bash --print-full-init)\"",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "starship explain 2>&1",
+            "expected_signal": "Here's a breakdown of your prompt:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Here's a breakdown of your prompt:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "starship module nodejs 2>&1; echo \"---nodejs module---\"\nstarship module python 2>&1; echo \"---python module---\"\nstarship module rust 2>&1; echo \"---rust module---\"\n# test with actual project context\nmkdir -p /tmp/node_proj && echo '{\"name\":\"test\"}' > /tmp/node_proj/package.json\nSTARSHIP_CONFIG=/tmp/starship.toml starship module nodejs --path /tmp/node_proj 2>&1; echo \"---nodejs with context---\"\nstarship --help 2>&1",
+            "expected_signal": "via",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "via \u001b[1;32m v22.23.4 \u001b[0m---nodejs with context---",
+            "setup": [
+              {
+                "command": "cat > /tmp/test_starship.sh <<'EOS'\nmkdir -p /tmp/starship_test\ncat > /tmp/starship.toml <<'EOF'\nformat = \"$character$directory$git_branch\"\n[character]\nsuccess_symbol = \"[>](bold green)\"\nerror_symbol = \"[x](bold red)\"\n[directory]\ntruncation_length = 3\nEOF\necho \"config created\"\nEOS\nchmod +x /tmp/test_starship.sh\n/tmp/test_starship.sh\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "curl -sS https://starship.rs/install.sh | sh installs to /usr/local/bin",
-            "actually_needed": "Pass --bin-dir ~/.local/bin --yes to install without root; default /usr/local/bin is not writable",
+            "readme_said": "curl -sS https://starship.rs/install.sh | sh",
+            "actually_needed": "download script first to /tmp/install.sh, read it, then run sh /tmp/install.sh --yes --bin-dir ~/.local/bin",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The screenshot shows starship --version printing starship 1.27.0 with build details and exit code 0.",
+          "observed": "Screenshots show Starship prompt rendering ~/work, bash init eval snippet, and version 1.27.0 output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-starship-20261104-133040-5ed4/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-starship-20261104-133040-5ed4/check-1-cmd3.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.02727,
+        "cost_usd": 0.0648,
         "features": [
           {
             "feature": "configure every aspect of prompt",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output shows only a default path prompt with no evidence config changed anything."
           },
           {
             "feature": "work on any shell and OS",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "show relevant information at glance",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "support favorite development tools",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           }
         ]
       }
@@ -220,7 +272,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -233,17 +285,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 65.4,
+      "total": 83.2,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -264,6 +316,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -561,5 +617,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:46+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

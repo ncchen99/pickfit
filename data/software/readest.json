@@ -55,18 +55,18 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-readest-20261104-232754-ca29",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask readest",
-          "purpose": null
+          "command": "brew install --cask --appdir=$HOME/Applications readest 2>&1",
+          "purpose": "Install Readest cask"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "flatpak run com.bilingify.readest"
+      "first_task": "open ~/Applications/Readest.app"
     },
     "linux": {
       "basis": "replayed",
@@ -114,9 +114,9 @@
     "url": "https://github.com/readest/readest/releases/tag/v0.12.16"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:43:14.576405+08:00",
+    "checked_at": "2026-11-04T23:55:26.267701+08:00",
     "runs": [
       {
         "id": "verify-readest-20261104-133747-acda",
@@ -216,17 +216,218 @@
             "note": "install-only run"
           }
         ]
+      },
+      {
+        "id": "verify-readest-20261104-232754-ca29",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T23:55:26.267701+08:00",
+        "tool_version": "0.12.16",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications readest 2>&1",
+            "purpose": "Install Readest cask"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/Readest.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Readest.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Zephyrmantle\": yes",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Readest.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Zephyrmantle\": yes",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Readest.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Zephyrmantle\": yes",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Readest.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Zephyrmantle\": yes",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask readest",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications readest",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The app shows its empty library screen with a search bar, Start your library prompt, and Import Books button.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.795371,
+        "gui": {
+          "tier": "action_checked",
+          "screen": "main_ui",
+          "command": "open ~/Applications/Readest.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+          "operations": [
+            {
+              "feature": "read EPUB, PDF, MOBI and other ebook formats",
+              "goal": "Open and read an ebook in Readest. Steps: 1) In the Readest library window, find and click the button to add/import/open a book (such as Add, Import, Open, or +). 2) When the file chooser appears, navigate to /Users/sbx/pickfit-in and open testbook.txt. 3) Open the book if needed and show its content on screen. The book contains the unique word Zephyrmantle.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "Zephyrmantle"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Zephyrmantle\": yes",
+              "smoke_test": 1,
+              "actions": 10,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "search full text inside books and library",
+              "goal": "Search full text inside the book in Readest. Steps: 1) In the library open the book testbook (in /Users/sbx/pickfit-in/testbook.txt, import it via Import Books > From Local File if not already in library). 2) Once the book is open, find and use the Search function (magnifying glass icon or search in the reader toolbar/menu). 3) Type Zephyrmantle in the search box and run the search. 4) Show the search results highlighting the matching section. The book contains the word Zephyrmantle.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "Zephyrmantle"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Zephyrmantle\": yes",
+              "smoke_test": 2,
+              "actions": 24,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "add highlights, bookmarks and notes",
+              "goal": "Add a highlight and note in the book in Readest. Steps: 1) Open the book testbook in the library (import from /Users/sbx/pickfit-in/testbook.txt via Import Books > From Local File if needed). 2) Select the sentence containing Zephyrmantle by dragging over it. 3) From the popup menu choose Highlight and add a note if offered. 4) Open the annotations/notes/highlights panel to show the saved highlight containing Zephyrmantle on screen.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "Zephyrmantle"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Zephyrmantle\": yes",
+              "smoke_test": 3,
+              "actions": 22,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "listen with multilingual text-to-speech narration",
+              "goal": "Use text-to-speech narration in Readest. Steps: 1) Open the book testbook in the library (import from /Users/sbx/pickfit-in/testbook.txt via Import Books > From Local File if needed, the book contains Zephyrmantle). 2) Find and click the Speak / Read Aloud / TTS button in the reader toolbar (headphone or speaker icon). 3) Start playback if needed and show the narration player bar with the book text Zephyrmantle visible on screen.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "Zephyrmantle"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"Zephyrmantle\": yes",
+              "smoke_test": 4,
+              "actions": 28,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            }
+          ]
+        },
+        "features": [
+          {
+            "feature": "read EPUB, PDF, MOBI and other ebook formats",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "search full text inside books and library",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows the book text Zephyrmantle, not a search box or search results."
+          },
+          {
+            "feature": "add highlights, bookmarks and notes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows the book text Zephyrmantle, not a highlight, bookmark, or notes panel."
+          },
+          {
+            "feature": "listen with multilingual text-to-speech narration",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows the book text Zephyrmantle, not a TTS player bar or narration."
+          }
+        ]
       }
     ]
   },
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/readest/readest@8f36b28982b8",
+      "github.com/readest/readest@052bbc8e773e",
       "Cargo.lock",
       "pnpm-lock.yaml"
     ],
@@ -312,18 +513,35 @@
       }
     ]
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-readest-20261104-232754-ca29",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 2,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "284500f600a3d7b8247731ec996113adc8e034602f9a740319ea65e1c55afc61",
+    "checked_at": "2026-11-05T03:29:03+08:00",
+    "cost_usd": 0.037104
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:29:03+08:00",
     "quality": {
-      "total": 71.8,
+      "total": 79.0,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -345,6 +563,11 @@
           "score": null,
           "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 79.0,
+        "defects": 0
       }
     },
     "popularity": {
@@ -363,7 +586,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 7.18
+      "value": 7.9
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -644,5 +867,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:43+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:29:03+08:00"
 }

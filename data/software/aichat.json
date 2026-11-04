@@ -74,21 +74,17 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-aichat-20261104-133343-a2b3",
+      "run_id": "verify-aichat-20261104-191108-7382",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -L -o /tmp/aichat.tar.gz https://github.com/sigoden/aichat/releases/download/v0.30.0/aichat-v0.30.0-x86_64-unknown-linux-musl.tar.gz",
-          "purpose": "download pre-built Linux x86_64 binary tarball from GitHub Releases"
-        },
-        {
-          "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/aichat.tar.gz -C /tmp && mv /tmp/aichat ~/.local/bin/aichat && chmod +x ~/.local/bin/aichat",
-          "purpose": "extract archive and install aichat binary to ~/.local/bin"
+          "command": "mkdir -p ~/.local/bin && curl -fL -o /tmp/aichat.tar.gz https://github.com/sigoden/aichat/releases/download/v0.30.0/aichat-v0.30.0-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/aichat.tar.gz -C /tmp && mv /tmp/aichat ~/.local/bin/aichat && chmod +x ~/.local/bin/aichat && ~/.local/bin/aichat --version",
+          "purpose": "Download pre-built Linux musl binary from GitHub Releases and install to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "aichat --version",
+        "command": "mkdir -p ~/.local/bin && curl -fL -o /tmp/aichat.tar.gz https://github.com/sigoden/aichat/releases/download/v0.30.0/aichat-v0.30.0-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/aichat.tar.gz -C /tmp && mv /tmp/aichat ~/.local/bin/aichat && chmod +x ~/.local/bin/aichat && ~/.local/bin/aichat --version",
         "expected_signal": "aichat 0.30.0"
       },
       "first_task": null
@@ -123,10 +119,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:34:28.603374+08:00",
+    "checked_at": "2026-11-04T19:13:39.494301+08:00",
     "runs": [
       {
-        "id": "verify-aichat-20261104-133343-a2b3",
+        "id": "verify-aichat-20261104-191108-7382",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -134,86 +130,94 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:34:28.603374+08:00",
+        "checked_at": "2026-11-04T19:13:39.494301+08:00",
         "tool_version": "0.30.0",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -L -o /tmp/aichat.tar.gz https://github.com/sigoden/aichat/releases/download/v0.30.0/aichat-v0.30.0-x86_64-unknown-linux-musl.tar.gz",
-            "purpose": "download pre-built Linux x86_64 binary tarball from GitHub Releases"
-          },
-          {
-            "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/aichat.tar.gz -C /tmp && mv /tmp/aichat ~/.local/bin/aichat && chmod +x ~/.local/bin/aichat",
-            "purpose": "extract archive and install aichat binary to ~/.local/bin"
+            "command": "mkdir -p ~/.local/bin && curl -fL -o /tmp/aichat.tar.gz https://github.com/sigoden/aichat/releases/download/v0.30.0/aichat-v0.30.0-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/aichat.tar.gz -C /tmp && mv /tmp/aichat ~/.local/bin/aichat && chmod +x ~/.local/bin/aichat && ~/.local/bin/aichat --version",
+            "purpose": "Download pre-built Linux musl binary from GitHub Releases and install to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "aichat --version",
+            "command": "mkdir -p ~/.local/bin && curl -fL -o /tmp/aichat.tar.gz https://github.com/sigoden/aichat/releases/download/v0.30.0/aichat-v0.30.0-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/aichat.tar.gz -C /tmp && mv /tmp/aichat ~/.local/bin/aichat && chmod +x ~/.local/bin/aichat && ~/.local/bin/aichat --version",
             "expected_signal": "aichat 0.30.0",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "aichat 0.30.0",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "aichat --help 2>&1",
+            "expected_signal": "All-in-one LLM CLI Tool",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "All-in-one LLM CLI Tool",
             "setup": [],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "cargo install aichat / pacman -S aichat / scoop install aichat / pkg install aichat",
-            "actually_needed": "used pre-built binary from GitHub Releases (README's Pre-built Binaries section) since cargo needs Rust toolchain and pacman/scoop/pkg not available on Debian",
+            "readme_said": "Install via cargo/pacman/scoop/pkg",
+            "actually_needed": "None of those apply on Debian x86_64 without Rust/Homebrew; used pre-built binary from GitHub Releases x86_64-unknown-linux-musl.tar.gz as README also documents",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "Run aichat --info / --dry-run immediately after install",
+            "actually_needed": "Requires manual creation of ~/.config/aichat/config.yaml; without it aichat exits with 'Failed to load config'",
+            "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The screenshot shows `aichat --version` printing `aichat 0.30.0`.",
+          "observed": "Screenshots show aichat --help displaying All-in-one LLM CLI Tool with options and aichat --version outputting aichat 0.30.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-aichat-20261104-133343-a2b3/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-aichat-20261104-133343-a2b3/check-1-cmd5.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.025079,
+        "cost_usd": 0.071371,
         "features": [
           {
             "feature": "convert natural language to shell commands",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_account",
             "failure": null,
-            "note": "install-only run"
+            "note": "Shell assistant requires LLM API key to generate commands"
           },
           {
             "feature": "chat interactively in REPL mode",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_account",
             "failure": null,
-            "note": "install-only run"
+            "note": "REPL mode is interactive and needs LLM for chat"
           },
           {
             "feature": "chat with external documents via RAG",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_account",
             "failure": null,
-            "note": "install-only run"
+            "note": "RAG needs embeddings model and documents via LLM provider"
           },
           {
             "feature": "use AI tools and agents",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_account",
             "failure": null,
-            "note": "install-only run"
+            "note": "AI tools/agents require LLM provider and external tools"
           }
         ]
       }
@@ -222,7 +226,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -302,17 +306,17 @@
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 50.5,
-      "confidence": 0.9,
+      "total": 56.5,
+      "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
-          "weight": 40
+          "score": 0.7225,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -332,7 +336,11 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -355,7 +363,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 3.28
+      "value": 3.67
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -630,5 +638,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:03+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

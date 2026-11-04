@@ -50,31 +50,31 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-handbrake-20261104-202618-5ad7",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask handbrake-app",
-          "purpose": null
+          "command": "brew install --cask --appdir=$HOME/Applications handbrake-app",
+          "purpose": "Install HandBrake via brew cask to user Applications"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "flatpak run fr.handbrake.ghb"
+      "first_task": "open ~/Applications/HandBrake.app"
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-handbrake-20261104-140211-8acf",
+      "run_id": "verify-handbrake-20261104-191319-77c3",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo\n",
           "purpose": "add flathub remote"
         },
         {
-          "command": "flatpak install --user -y flathub fr.handbrake.ghb",
-          "purpose": "install HandBrake flatpak"
+          "command": "flatpak install --user -y flathub fr.handbrake.ghb 2>&1",
+          "purpose": "install HandBrake flatpak fr.handbrake.ghb"
         }
       ],
       "manual_steps": [],
@@ -96,12 +96,12 @@
     "url": "https://github.com/HandBrake/HandBrake/releases/tag/1.11.2"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:05:01.751455+08:00",
+    "checked_at": "2026-11-04T20:59:58.327765+08:00",
     "runs": [
       {
-        "id": "verify-handbrake-20261104-140211-8acf",
+        "id": "verify-handbrake-20261104-191319-77c3",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -109,18 +109,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx-gui:c74b9d4f5f6a",
-        "checked_at": "2026-11-04T14:05:01.751455+08:00",
+        "checked_at": "2026-11-04T19:30:27.203354+08:00",
         "tool_version": "1.11.2",
         "install_method": "other",
         "replayed": true,
         "steps": [
           {
-            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo\n",
             "purpose": "add flathub remote"
           },
           {
-            "command": "flatpak install --user -y flathub fr.handbrake.ghb",
-            "purpose": "install HandBrake flatpak"
+            "command": "flatpak install --user -y flathub fr.handbrake.ghb 2>&1",
+            "purpose": "install HandBrake flatpak fr.handbrake.ghb"
           }
         ],
         "smoke_tests": [
@@ -134,7 +134,18 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak run fr.handbrake.ghb",
+            "actually_needed": "flatpak run with --filesystem=home and input file on command line to avoid portal file-chooser; typing output path directly instead of Browse button which requires portal",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "GUI converts video via Browse and Start Encode",
+            "actually_needed": "Save As field accepts typed absolute path /home/sbx/pickfit-out/... but operator needs >28 steps to set format and wait for encode to finish; step_cap reached before file appears",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
@@ -142,15 +153,13 @@
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-handbrake-20261104-140211-8acf/report.json",
-          "log_path": "runs/verify/verify-handbrake-20261104-140211-8acf/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-handbrake-20261104-140211-8acf/replay-4-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.025968,
+        "cost_usd": 0.549051,
         "gui": {
           "tier": "ui_rendered",
           "screen": "main_ui",
@@ -163,17 +172,17 @@
             "feature": "convert video from nearly any format",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "operator_limit",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: step_cap after 28 actions; check: file /home/sbx/pickfit-out/converted.mp4: missing; operate_gui tried to set Save As to /home/sbx/pickfit-out/converted.mp4 and click Start, but step_cap reached; file missing"
           },
           {
             "feature": "create MP4, MKV or WebM video files",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "operator_limit",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: step_cap after 27 actions; check: file /home/sbx/pickfit-out/test.mkv: missing; tried MKV conversion, format dropdown click looped, step_cap before Start"
           },
           {
             "feature": "make videos for phones, tablets, TVs, consoles",
@@ -181,7 +190,129 @@
             "smoke_tests": [],
             "reason": "not_attempted",
             "failure": null,
-            "note": "install-only run"
+            "note": "device presets visible in CLI preset list but not exercised in GUI due to budget"
+          }
+        ]
+      },
+      {
+        "id": "verify-handbrake-20261104-202618-5ad7",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T20:59:58.327765+08:00",
+        "tool_version": "1.11.2",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications handbrake-app",
+            "purpose": "Install HandBrake via brew cask to user Applications"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/HandBrake.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/HandBrake.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /Users/sbx/pickfit-out/hb-device.mp4: 11750 bytes, written after the app started; format mp4: yes",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask handbrake-app",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications handbrake-app with up to 1800s timeout (first try timed out at 600s with only ~14MB downloaded; retry resumed and finished in ~183s)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "GUI Start button starts encode",
+            "actually_needed": "Start the encode via File menu > Start Encoding; clicking the toolbar Start button repeatedly did not start the encode in automated operation",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "HandBrake main window is visible behind an open-source file chooser browsing folders.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.941819,
+        "gui": {
+          "tier": "action_checked",
+          "screen": "main_ui",
+          "command": "open ~/Applications/HandBrake.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+          "operations": [
+            {
+              "feature": "make videos for phones, tablets, TVs, consoles",
+              "goal": "Make a device-ready MP4: open ~/pickfit-in/source.mp4 via Open Source if needed. Open the Presets sidebar (Presets button top-right) and select a device preset such as General > Fast 1080p30 or Devices > Apple 1080p60. Set Format MP4 and Save As to /Users/sbx/pickfit-out/hb-device.mp4 via the Browse button. Then start the encode WITHOUT clicking the toolbar: click the File menu in the menu bar, choose Start Encode (or Add to Queue then Start Queue), and wait for ~/pickfit-out/hb-device.mp4 to appear.",
+              "check": "file",
+              "target": "~/pickfit-out/hb-device.mp4",
+              "expected": [],
+              "format": "mp4",
+              "passed": true,
+              "observed": "file /Users/sbx/pickfit-out/hb-device.mp4: 11750 bytes, written after the app started; format mp4: yes",
+              "smoke_test": 1,
+              "actions": 28,
+              "replay": "operated",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            }
+          ]
+        },
+        "features": [
+          {
+            "feature": "convert video from nearly any format",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "create MP4, MKV or WebM video files",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "make videos for phones, tablets, TVs, consoles",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
           }
         ]
       }
@@ -190,7 +321,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
@@ -199,18 +330,35 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-handbrake-20261104-202618-5ad7",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 2,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "737cf2e8eab60c2f84ec4c1fb4e8a4bac8b2507d69593df1e8aa78c22070eba2",
+    "checked_at": "2026-11-05T03:26:05+08:00",
+    "cost_usd": 0.027416
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:26:05+08:00",
     "quality": {
-      "total": 66.2,
+      "total": 84.0,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5,
@@ -230,8 +378,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 84.0,
+        "defects": 0
       }
     },
     "popularity": {
@@ -252,7 +405,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 2.78
+      "value": 3.53
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -531,5 +684,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:38+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:26:05+08:00"
 }

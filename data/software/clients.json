@@ -50,36 +50,36 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-clients-20261105-005802-c071",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask bitwarden",
-          "purpose": null
+          "command": "HOMEBREW_NO_AUTO_UPDATE=1 brew install --cask --appdir=$HOME/Applications bitwarden",
+          "purpose": "install Bitwarden via brew cask"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "flatpak run com.bitwarden.desktop"
+      "first_task": "open ~/Applications/Bitwarden.app"
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-clients-20261104-140133-7ce1",
+      "run_id": "verify-clients-20261104-191008-688c",
       "method": "other",
       "steps": [
         {
           "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
-          "purpose": "add Flathub remote for user installation"
+          "purpose": "add Flathub remote"
         },
         {
-          "command": "flatpak install --user -y flathub com.bitwarden.desktop",
-          "purpose": "install Bitwarden desktop via flatpak"
+          "command": "flatpak install --user -y flathub com.bitwarden.desktop 2>&1",
+          "purpose": "install Bitwarden Flatpak"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "dbus-run-session -- flatpak run com.bitwarden.desktop --no-sandbox"
+      "first_task": "dbus-run-session flatpak run com.bitwarden.desktop --no-sandbox"
     },
     "windows": null
   },
@@ -98,10 +98,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:06:42.916604+08:00",
+    "checked_at": "2026-11-05T01:24:53.704391+08:00",
     "runs": [
       {
-        "id": "verify-clients-20261104-140133-7ce1",
+        "id": "verify-clients-20261104-191008-688c",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -109,23 +109,23 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx-gui:c74b9d4f5f6a",
-        "checked_at": "2026-11-04T14:06:42.916604+08:00",
+        "checked_at": "2026-11-04T19:13:19.293935+08:00",
         "tool_version": "2026.10.2",
         "install_method": "other",
         "replayed": true,
         "steps": [
           {
             "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
-            "purpose": "add Flathub remote for user installation"
+            "purpose": "add Flathub remote"
           },
           {
-            "command": "flatpak install --user -y flathub com.bitwarden.desktop",
-            "purpose": "install Bitwarden desktop via flatpak"
+            "command": "flatpak install --user -y flathub com.bitwarden.desktop 2>&1",
+            "purpose": "install Bitwarden Flatpak"
           }
         ],
         "smoke_tests": [
           {
-            "command": "dbus-run-session -- flatpak run com.bitwarden.desktop --no-sandbox",
+            "command": "dbus-run-session flatpak run com.bitwarden.desktop --no-sandbox",
             "expected_signal": "gui tier: window",
             "exit_code": 0,
             "passed": true,
@@ -137,30 +137,28 @@
         "pitfalls": [
           {
             "readme_said": "flatpak run com.bitwarden.desktop",
-            "actually_needed": "dbus-run-session -- flatpak run com.bitwarden.desktop --no-sandbox needed for this box (no dbus session and no user namespaces for Electron sandbox)",
+            "actually_needed": "dbus-run-session flatpak run com.bitwarden.desktop --no-sandbox (needs D-Bus session and --no-sandbox to avoid zypak/bwrap sandbox errors on this box)",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows Bitwarden's login wall requesting email address with Continue button.",
+          "observed": "The Bitwarden app shows its login screen asking for an email address with Continue and single sign-on options.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-clients-20261104-140133-7ce1/report.json",
-          "log_path": "runs/verify/verify-clients-20261104-140133-7ce1/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-clients-20261104-140133-7ce1/replay-7-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.033154,
+        "cost_usd": 0.03681,
         "gui": {
           "tier": "window",
           "screen": "sign_in_wall",
-          "command": "dbus-run-session -- flatpak run com.bitwarden.desktop --no-sandbox",
+          "command": "dbus-run-session flatpak run com.bitwarden.desktop --no-sandbox",
           "window_title": "Bitwarden",
           "display": "Xvfb 1280x800x24, no window manager, no GPU"
         },
@@ -169,25 +167,110 @@
             "feature": "create, store and access passwords",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_account",
             "failure": null,
-            "note": "install-only run"
+            "note": "create/store passwords requires logged-in vault account"
           },
           {
             "feature": "store logins in encrypted synced vault",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_account",
             "failure": null,
-            "note": "install-only run"
+            "note": "encrypted synced vault requires account login"
           },
           {
             "feature": "sync passwords across devices",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_account",
             "failure": null,
-            "note": "install-only run"
+            "note": "sync across devices requires account and external service"
+          }
+        ]
+      },
+      {
+        "id": "verify-clients-20261105-005802-c071",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-05T01:24:53.704391+08:00",
+        "tool_version": "2026.10.3",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "HOMEBREW_NO_AUTO_UPDATE=1 brew install --cask --appdir=$HOME/Applications bitwarden",
+            "purpose": "install Bitwarden via brew cask"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/Bitwarden.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask bitwarden",
+            "actually_needed": "--appdir=$HOME/Applications (box user cannot write /Applications)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Bitwarden shows its login form asking for an email address with Continue and single sign-on options.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.140566,
+        "gui": {
+          "tier": "window",
+          "screen": "sign_in_wall",
+          "command": "open ~/Applications/Bitwarden.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "create, store and access passwords",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "requires Bitwarden account login; no accounts in box"
+          },
+          {
+            "feature": "store logins in encrypted synced vault",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "requires Bitwarden account login to access encrypted vault"
+          },
+          {
+            "feature": "sync passwords across devices",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "requires Bitwarden account and multiple devices/servers"
           }
         ]
       }
@@ -196,11 +279,11 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/bitwarden/clients@601701362c2c",
+      "github.com/bitwarden/clients@24dbac7b4469",
       "apps/desktop/desktop_native/Cargo.lock",
       "apps/desktop/native-messaging-test-runner/package-lock.json",
       "package-lock.json"
@@ -368,18 +451,35 @@
       }
     ]
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-clients-20261105-005802-c071",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 1,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "aeb08a22720784269acce0f6d839293adaa2d6ab90257cb9089d541f5c1c7b3c",
+    "checked_at": "2026-11-05T03:25:32+08:00",
+    "cost_usd": 0.018532
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:25:32+08:00",
     "quality": {
-      "total": 65.5,
-      "confidence": 0.9,
+      "total": 78.5,
+      "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.4375,
@@ -401,6 +501,11 @@
           "score": null,
           "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 78.5,
+        "defects": 0
       }
     },
     "popularity": {
@@ -419,7 +524,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 6.55
+      "value": 7.85
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -674,5 +779,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:41+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:25:32+08:00"
 }

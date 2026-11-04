@@ -42,17 +42,17 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-continue-20261104-144831-5887",
+      "run_id": "verify-continue-20261104-191154-64b4",
       "method": "npm",
       "steps": [
         {
-          "command": "npm install -g @continuedev/cli\n",
-          "purpose": "install @continuedev/cli globally via npm"
+          "command": "npm install -g @continuedev/cli 2>&1",
+          "purpose": "install Continue CLI via npm"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "cn --version",
+        "command": "cn --version 2>&1",
         "expected_signal": "1.5.47"
       },
       "first_task": null
@@ -72,70 +72,71 @@
     "url": "https://github.com/continuedev/continue/releases/tag/v2.0.0-vscode"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:49:10.973978+08:00",
+    "checked_at": "2026-11-04T19:13:14.118141+08:00",
     "runs": [
       {
-        "id": "verify-continue-20261104-144831-5887",
-        "level": "install",
+        "id": "verify-continue-20261104-191154-64b4",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T14:49:10.973978+08:00",
+        "checked_at": "2026-11-04T19:13:14.118141+08:00",
         "tool_version": "1.5.47",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm install -g @continuedev/cli\n",
-            "purpose": "install @continuedev/cli globally via npm"
+            "command": "npm install -g @continuedev/cli 2>&1",
+            "purpose": "install Continue CLI via npm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "cn --version",
+            "command": "cn --version 2>&1",
             "expected_signal": "1.5.47",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "1.5.47",
             "setup": [],
             "offline": true
-          }
-        ],
-        "pitfalls": [
+          },
           {
-            "readme_said": "README describes Continue CLI without naming the binary",
-            "actually_needed": "installed binary is named 'cn' (symlink at ~/.local/bin/cn -> ../lib/node_modules/@continuedev/cli/dist/cn.js), not 'continue'",
-            "kind": "note"
+            "command": "cn ls --help 2>&1\necho \"---EXIT:$?\"\ncn ls 2>&1",
+            "expected_signal": "No previous sessions found",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No previous sessions found. Start a new conversation with: cn",
+            "setup": [],
+            "offline": true
           }
         ],
+        "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows cn --version outputting 1.5.47.",
+          "observed": "Screenshots show cn printing version 1.5.47 and cn ls help followed by No previous sessions found.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-continue-20261104-144831-5887/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-continue-20261104-144831-5887/check-1-cmd4.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.015236
+        "cost_usd": 0.021994
       }
     ]
   },
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -157,7 +158,7 @@
       "manual-testing-sandbox/requirements.txt"
     ],
     "packages_checked": 2046,
-    "findings_total": 390,
+    "findings_total": 389,
     "advisories_total": 334,
     "findings": [
       {
@@ -274,18 +275,6 @@
       },
       {
         "package": "npm:protobufjs",
-        "version": "6.11.6",
-        "advisory": "GHSA-xq3m-2v4x-88gg",
-        "cves": [
-          "CVE-2026-41242"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "7.5.5",
-        "summary": "Arbitrary code execution in protobufjs",
-        "malicious": false
-      },
-      {
-        "package": "npm:protobufjs",
         "version": "7.5.4",
         "advisory": "GHSA-xq3m-2v4x-88gg",
         "cves": [
@@ -293,7 +282,7 @@
         ],
         "severity": "CRITICAL",
         "fixed_in": "7.5.5",
-        "summary": "Arbitrary code execution in protobufjs",
+        "summary": "protobufjs has an arbitrary code execution issue",
         "malicious": false
       },
       {
@@ -865,21 +854,33 @@
         "fixed_in": "1.15.2",
         "summary": "axios Vulnerable to Credential Theft and Response Hijacking via Prototype Pollution Gadget in Config Merge",
         "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "1.17.0",
+        "advisory": "GHSA-3pq3-5fj3-cg6v",
+        "cves": [
+          "CVE-2026-101898"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.0",
+        "summary": "Axios: HTTP/2 adapter bypasses configured DNS lookup and proxy controls",
+        "malicious": false
       }
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 54.4,
-      "confidence": 0.9,
+      "total": 64.3,
+      "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.1875,
@@ -899,7 +900,11 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -919,7 +924,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 5.44
+      "value": 6.43
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -1114,5 +1119,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:02+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

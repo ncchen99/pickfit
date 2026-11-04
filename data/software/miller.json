@@ -76,16 +76,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-miller-20261104-133040-ba26",
+      "run_id": "verify-miller-20261104-185134-bcd5",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fL -o /tmp/miller.tar.gz https://github.com/johnkerl/miller/releases/download/v6.22.0/miller-6.22.0-linux-amd64.tar.gz",
-          "purpose": "download Miller prebuilt binary tarball v6.22.0 for linux-amd64"
-        },
-        {
-          "command": "mkdir -p ~/.local/bin && tar xzf /tmp/miller.tar.gz -C /tmp && cp /tmp/miller-6.22.0-linux-amd64/mlr ~/.local/bin/mlr && chmod +x ~/.local/bin/mlr && ~/.local/bin/mlr --help",
-          "purpose": "extract and install mlr binary to ~/.local/bin"
+          "command": "mkdir -p ~/.local/bin && curl -L https://github.com/johnkerl/miller/releases/download/v6.22.0/miller-6.22.0-linux-amd64.tar.gz -o /tmp/miller.tar.gz && tar -xzf /tmp/miller.tar.gz -C /tmp && cp /tmp/miller-6.22.0-linux-amd64/mlr ~/.local/bin/mlr && chmod +x ~/.local/bin/mlr && ~/.local/bin/mlr --version",
+          "purpose": "download and install Miller binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -93,7 +89,7 @@
         "command": "mlr --version",
         "expected_signal": "mlr 6.22.0"
       },
-      "first_task": null
+      "first_task": "mlr --csv put '$double_salary = $salary * 2' /tmp/input.csv"
     },
     "windows": {
       "basis": "readme_claim",
@@ -123,31 +119,27 @@
     "url": "https://github.com/johnkerl/miller/releases/tag/v6.22.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:31:36.532000+08:00",
+    "checked_at": "2026-11-04T18:52:35.516370+08:00",
     "runs": [
       {
-        "id": "verify-miller-20261104-133040-ba26",
-        "level": "install",
+        "id": "verify-miller-20261104-185134-bcd5",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:31:36.532000+08:00",
+        "checked_at": "2026-11-04T18:52:35.516370+08:00",
         "tool_version": "6.22.0",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fL -o /tmp/miller.tar.gz https://github.com/johnkerl/miller/releases/download/v6.22.0/miller-6.22.0-linux-amd64.tar.gz",
-            "purpose": "download Miller prebuilt binary tarball v6.22.0 for linux-amd64"
-          },
-          {
-            "command": "mkdir -p ~/.local/bin && tar xzf /tmp/miller.tar.gz -C /tmp && cp /tmp/miller-6.22.0-linux-amd64/mlr ~/.local/bin/mlr && chmod +x ~/.local/bin/mlr && ~/.local/bin/mlr --help",
-            "purpose": "extract and install mlr binary to ~/.local/bin"
+            "command": "mkdir -p ~/.local/bin && curl -L https://github.com/johnkerl/miller/releases/download/v6.22.0/miller-6.22.0-linux-amd64.tar.gz -o /tmp/miller.tar.gz && tar -xzf /tmp/miller.tar.gz -C /tmp && cp /tmp/miller-6.22.0-linux-amd64/mlr ~/.local/bin/mlr && chmod +x ~/.local/bin/mlr && ~/.local/bin/mlr --version",
+            "purpose": "download and install Miller binary to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -159,63 +151,129 @@
             "observed_excerpt": "mlr 6.22.0",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "mlr --csv put '$double_salary = $salary * 2' /tmp/input.csv",
+            "expected_signal": "double_salary",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "name,age,salary,double_salary",
+            "setup": [
+              {
+                "command": "cat > /tmp/input.csv <<'EOF'\nname,age,salary\nalice,30,1000\nbob,25,2000\ncarol,35,1500\nEOF\ncat /tmp/input.csv\ncat > /tmp/input.json <<'EOF'\n{\"name\": \"alice\", \"age\": 30}\n{\"name\": \"bob\", \"age\": 25}\nEOF\ncat /tmp/input.json\ncat > /tmp/input2.csv <<'EOF'\na,b,c\n1,2,3\n4,5,6\n7,8,9\nEOF\ncat /tmp/input2.csv",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mlr --icsv --ojson cat /tmp/input.csv",
+            "expected_signal": "\"name\": \"alice\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"name\": \"alice\",",
+            "setup": [
+              {
+                "command": "cat > /tmp/input.csv <<'EOF'\nname,age,salary\nalice,30,1000\nbob,25,2000\ncarol,35,1500\nEOF\ncat /tmp/input.csv\ncat > /tmp/input.json <<'EOF'\n{\"name\": \"alice\", \"age\": 30}\n{\"name\": \"bob\", \"age\": 25}\nEOF\ncat /tmp/input.json\ncat > /tmp/input2.csv <<'EOF'\na,b,c\n1,2,3\n4,5,6\n7,8,9\nEOF\ncat /tmp/input2.csv",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mlr --icsv --opprint --barred cat /tmp/input.csv",
+            "expected_signal": "alice",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "| alice | 30 | 1000 |",
+            "setup": [
+              {
+                "command": "cat > /tmp/input.csv <<'EOF'\nname,age,salary\nalice,30,1000\nbob,25,2000\ncarol,35,1500\nEOF\ncat /tmp/input.csv\ncat > /tmp/input.json <<'EOF'\n{\"name\": \"alice\", \"age\": 30}\n{\"name\": \"bob\", \"age\": 25}\nEOF\ncat /tmp/input.json\ncat > /tmp/input2.csv <<'EOF'\na,b,c\n1,2,3\n4,5,6\n7,8,9\nEOF\ncat /tmp/input2.csv",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mlr --csv cut -f name,salary then filter '$salary > 1200' /tmp/input.csv",
+            "expected_signal": "bob,2000",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "bob,2000",
+            "setup": [
+              {
+                "command": "cat > /tmp/input.csv <<'EOF'\nname,age,salary\nalice,30,1000\nbob,25,2000\ncarol,35,1500\nEOF\ncat /tmp/input.csv\ncat > /tmp/input.json <<'EOF'\n{\"name\": \"alice\", \"age\": 30}\n{\"name\": \"bob\", \"age\": 25}\nEOF\ncat /tmp/input.json\ncat > /tmp/input2.csv <<'EOF'\na,b,c\n1,2,3\n4,5,6\n7,8,9\nEOF\ncat /tmp/input2.csv",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "apt-get install miller / yum install miller / snap install miller",
-            "actually_needed": "those package managers require root or are not installed in this sandbox; downloaded prebuilt binary tarball from GitHub releases and copied mlr to ~/.local/bin",
+            "readme_said": "apt-get install miller / yum install miller",
+            "actually_needed": "no root in sandbox; downloaded linux-amd64 tarball from GitHub releases and installed to ~/.local/bin",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows mlr --version printing mlr 6.22.0 with exit code 0.",
+          "observed": "Screenshots show Miller computing double_salary column, converting CSV to JSON with alice record, and reporting version 6.22.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-miller-20261104-133040-ba26/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-miller-20261104-133040-ba26/check-1-cmd6.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.03181,
+        "cost_usd": 0.04661,
         "features": [
           {
             "feature": "add and transform fields with functions",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "convert between CSV TSV JSON formats",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "process CSV TSV JSON data",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "slice dice reformat data for databases",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           }
         ]
       }
@@ -224,7 +282,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -237,17 +295,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 66.0,
+      "total": 84.4,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
-          "weight": 40.0
+          "score": 0.85,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -268,6 +326,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -289,7 +351,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 2.84
+      "value": 3.63
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -596,5 +658,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:07:37+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

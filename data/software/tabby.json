@@ -56,20 +56,28 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-tabby-20261104-144826-43b4",
+      "run_id": "verify-tabby-20261104-192300-fbcf",
       "method": "binary",
       "steps": [
         {
-          "command": "mkdir -p ~/.local/bin && curl -fL https://github.com/TabbyML/tabby/releases/download/v0.32.0/tabby_x86_64-manylinux_2_28.tar.gz -o /tmp/tabby.tar.gz && tar -xzf /tmp/tabby.tar.gz -C /tmp && mv /tmp/tabby_x86_64-manylinux_2_28/tabby ~/.local/bin/tabby && chmod +x ~/.local/bin/tabby",
-          "purpose": "Download v0.32.0 tabby_x86_64-manylinux_2_28.tar.gz and install binary to ~/.local/bin"
+          "command": "curl -fL -o /tmp/tabby.tar.gz https://github.com/TabbyML/tabby/releases/download/v0.32.0/tabby_x86_64-manylinux_2_28.tar.gz",
+          "purpose": "download binary tarball from GitHub releases"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/tabby.tar.gz -C /tmp && cp /tmp/tabby_x86_64-manylinux_2_28/tabby ~/.local/bin/tabby && chmod +x ~/.local/bin/tabby; ~/.local/bin/tabby --help 2>&1",
+          "purpose": "extract and install tabby binary to ~/.local/bin"
+        },
+        {
+          "command": "cp /tmp/tabby_x86_64-manylinux_2_28/llama-server ~/.local/bin/ && chmod +x ~/.local/bin/llama-server",
+          "purpose": "install co-located llama-server binary required for serve"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "~/.local/bin/tabby --version",
+        "command": "curl -i http://127.0.0.1:8085/v1beta/server_setting 2>&1\ncurl -s -w \"%{http_code}\" -o /tmp/out.txt http://127.0.0.1:8085/v1beta/server_setting && cat /tmp/out.txt && echo \"CODE\" && cat /tmp/out.txt\ntabby --version",
         "expected_signal": "tabby 0.32.0"
       },
-      "first_task": null
+      "first_task": "tabby serve --port 8085 --device cpu 2>&1"
     },
     "windows": null
   },
@@ -86,90 +94,117 @@
     "url": "https://github.com/TabbyML/tabby/releases/tag/v0.32.0"
   },
   "verification": {
-    "level": "install",
+    "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:49:02.702830+08:00",
+    "checked_at": "2026-11-04T19:24:10.795606+08:00",
     "runs": [
       {
-        "id": "verify-tabby-20261104-144826-43b4",
-        "level": "install",
+        "id": "verify-tabby-20261104-192300-fbcf",
+        "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T14:49:02.702830+08:00",
+        "checked_at": "2026-11-04T19:24:10.795606+08:00",
         "tool_version": "0.32.0",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p ~/.local/bin && curl -fL https://github.com/TabbyML/tabby/releases/download/v0.32.0/tabby_x86_64-manylinux_2_28.tar.gz -o /tmp/tabby.tar.gz && tar -xzf /tmp/tabby.tar.gz -C /tmp && mv /tmp/tabby_x86_64-manylinux_2_28/tabby ~/.local/bin/tabby && chmod +x ~/.local/bin/tabby",
-            "purpose": "Download v0.32.0 tabby_x86_64-manylinux_2_28.tar.gz and install binary to ~/.local/bin"
+            "command": "curl -fL -o /tmp/tabby.tar.gz https://github.com/TabbyML/tabby/releases/download/v0.32.0/tabby_x86_64-manylinux_2_28.tar.gz",
+            "purpose": "download binary tarball from GitHub releases"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/tabby.tar.gz -C /tmp && cp /tmp/tabby_x86_64-manylinux_2_28/tabby ~/.local/bin/tabby && chmod +x ~/.local/bin/tabby; ~/.local/bin/tabby --help 2>&1",
+            "purpose": "extract and install tabby binary to ~/.local/bin"
+          },
+          {
+            "command": "cp /tmp/tabby_x86_64-manylinux_2_28/llama-server ~/.local/bin/ && chmod +x ~/.local/bin/llama-server",
+            "purpose": "install co-located llama-server binary required for serve"
           }
         ],
         "smoke_tests": [
           {
-            "command": "~/.local/bin/tabby --version",
+            "command": "curl -i http://127.0.0.1:8085/v1beta/server_setting 2>&1\ncurl -s -w \"%{http_code}\" -o /tmp/out.txt http://127.0.0.1:8085/v1beta/server_setting && cat /tmp/out.txt && echo \"CODE\" && cat /tmp/out.txt\ntabby --version",
             "expected_signal": "tabby 0.32.0",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "tabby 0.32.0",
+            "observed_excerpt": "000tabby 0.32.0",
             "setup": [],
             "offline": true
           },
           {
-            "command": "tabby --help",
-            "expected_signal": "Usage: tabby <COMMAND>",
+            "command": "tabby serve --port 8085 --device cpu 2>&1",
+            "expected_signal": "Listening at http://0.0.0.0:8085",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Usage: tabby <COMMAND>",
+            "observed_excerpt": "🚀 Listening at http://0.0.0.0:8085",
             "setup": [],
-            "offline": true
+            "offline": false
+          },
+          {
+            "command": "curl -i http://127.0.0.1:8085/v1beta/server_setting 2>&1\ncurl -s -w \"%{http_code}\" -o /tmp/out.txt http://127.0.0.1:8085/v1beta/server_setting && cat /tmp/out.txt && echo \"CODE\" && cat /tmp/out.txt\ntabby --version",
+            "expected_signal": "401 Unauthorized",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "HTTP/1.1 401 Unauthorized",
+            "setup": [
+              {
+                "command": "tabby serve --port 8085 --device cpu 2>&1",
+                "background": true,
+                "port": 8085
+              }
+            ],
+            "offline": false
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "install from tabby_x86_64-manylinux_2_28.tar.gz",
+            "actually_needed": "must also place llama-server binary alongside tabby in same directory or serve crashes with 'Failed to locate llama-server binary'",
+            "kind": "readme_wrong"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows the version command outputting tabby 0.32.0.",
+          "observed": "Tabby server started and reported Listening at http://0.0.0.0:8085, and tabby --version printed tabby 0.32.0 while curl had no server to connect to.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-tabby-20261104-144826-43b4/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-tabby-20261104-144826-43b4/check-1-cmd3.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.029679,
+        "cost_usd": 0.063412,
         "features": [
           {
             "feature": "complete code with repository context",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_service",
             "failure": null,
-            "note": "install-only run"
+            "note": "RAG code completion requires repository index and model; server runs but no completion model loaded, no CLI example in README"
           },
           {
             "feature": "answer questions via Answer Engine",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_service",
             "failure": null,
-            "note": "install-only run"
+            "note": "Answer Engine requires configured knowledge sources and chat model; no unauthenticated CLI example"
           },
           {
             "feature": "chat and edit code in IDE",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_display",
             "failure": null,
-            "note": "install-only run"
+            "note": "chat in side-panel and editing via chat command require VSCode/IDE extension with GUI"
           }
         ]
       }
@@ -178,7 +213,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -817,17 +852,17 @@
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 53.3,
-      "confidence": 0.9,
+      "total": 56.4,
+      "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
-          "weight": 40
+          "score": 0.595,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.5,
@@ -847,7 +882,11 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -867,7 +906,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 5.33
+      "value": 5.64
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -1142,5 +1181,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:03+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

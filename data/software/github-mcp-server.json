@@ -73,12 +73,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-github-mcp-server-20261104-144846-0326",
+      "run_id": "verify-github-mcp-server-20261104-185921-6855",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL -o /tmp/github-mcp-server.tar.gz https://github.com/github/github-mcp-server/releases/download/v2.1.0/github-mcp-server_Linux_x86_64.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/github-mcp-server.tar.gz -C ~/.local/bin && chmod +x ~/.local/bin/github-mcp-server && ~/.local/bin/github-mcp-server --help 2>&1",
-          "purpose": "download and install github-mcp-server Linux x86_64 binary to ~/.local/bin"
+          "command": "curl -fL https://github.com/github/github-mcp-server/releases/download/v2.1.0/github-mcp-server_Linux_x86_64.tar.gz -o /tmp/github-mcp-server.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/github-mcp-server.tar.gz -C ~/.local/bin && chmod +x ~/.local/bin/github-mcp-server",
+          "purpose": "Download and install github-mcp-server_Linux_x86_64.tar.gz binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -118,10 +118,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:49:28.015093+08:00",
+    "checked_at": "2026-11-04T19:00:54.499804+08:00",
     "runs": [
       {
-        "id": "verify-github-mcp-server-20261104-144846-0326",
+        "id": "verify-github-mcp-server-20261104-185921-6855",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -129,14 +129,14 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T14:49:28.015093+08:00",
+        "checked_at": "2026-11-04T19:00:54.499804+08:00",
         "tool_version": "2.1.0",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL -o /tmp/github-mcp-server.tar.gz https://github.com/github/github-mcp-server/releases/download/v2.1.0/github-mcp-server_Linux_x86_64.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/github-mcp-server.tar.gz -C ~/.local/bin && chmod +x ~/.local/bin/github-mcp-server && ~/.local/bin/github-mcp-server --help 2>&1",
-            "purpose": "download and install github-mcp-server Linux x86_64 binary to ~/.local/bin"
+            "command": "curl -fL https://github.com/github/github-mcp-server/releases/download/v2.1.0/github-mcp-server_Linux_x86_64.tar.gz -o /tmp/github-mcp-server.tar.gz && mkdir -p ~/.local/bin && tar xzf /tmp/github-mcp-server.tar.gz -C ~/.local/bin && chmod +x ~/.local/bin/github-mcp-server",
+            "purpose": "Download and install github-mcp-server_Linux_x86_64.tar.gz binary to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -163,20 +163,17 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show MCP handshake succeeding with 46 tools listed and --version reporting 2.1.0.",
+          "observed": "Both screenshots show successful outputs: MCP probe completed handshake with 46 tools, and --version printed Version 2.1.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-github-mcp-server-20261104-144846-0326/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-github-mcp-server-20261104-144846-0326/check-1-cmd5.judged.png",
-            "runs/verify/verify-github-mcp-server-20261104-144846-0326/check-2-cmd4.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.057919,
+        "cost_usd": 0.057698,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -244,33 +241,33 @@
             "feature": "read repositories and code files",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_account",
             "failure": null,
-            "note": "install-only run"
+            "note": "All repo/code tools require GITHUB_PERSONAL_ACCESS_TOKEN"
           },
           {
             "feature": "manage issues and pull requests",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_account",
             "failure": null,
-            "note": "install-only run"
+            "note": "Issue/PR tools require GitHub PAT"
           },
           {
             "feature": "monitor GitHub Actions workflow runs",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_account",
             "failure": null,
-            "note": "install-only run"
+            "note": "Actions workflow tools require GitHub PAT"
           },
           {
             "feature": "examine security findings and alerts",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_account",
             "failure": null,
-            "note": "install-only run"
+            "note": "Security/Dependabot tools require GitHub PAT"
           }
         ]
       }
@@ -315,11 +312,11 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/github/github-mcp-server@4bcdcdf8d7be",
+      "github.com/github/github-mcp-server@99d6d6503a7b",
       "go.mod",
       "ui/package-lock.json"
     ],
@@ -342,17 +339,17 @@
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 74.5,
-      "confidence": 0.9,
+      "total": 79.0,
+      "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.68,
-          "weight": 40
+          "score": 0.85,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.75,
@@ -372,7 +369,11 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -394,7 +395,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 3.95
+      "value": 4.19
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -797,5 +798,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:07+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

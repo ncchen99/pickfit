@@ -88,87 +88,64 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "needs_root",
-    "checked_at": "2026-11-04T15:57:21.043341+08:00",
+    "unverified_reason": "needs_more_resources",
+    "checked_at": "2026-11-04T19:40:40.259686+08:00",
     "runs": [
       {
-        "id": "verify-iglance-20261104-155254-d5a8",
+        "id": "verify-iglance-20261104-192620-7ada",
         "level": "unverified",
-        "unverified_reason": "needs_root",
+        "unverified_reason": "needs_more_resources",
         "os": "macos",
         "arch": "arm64",
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
-        "checked_at": "2026-11-04T15:57:21.043341+08:00",
-        "tool_version": "2.1.0",
-        "install_method": "binary",
-        "replayed": true,
-        "steps": [
-          {
-            "command": "curl -fL -o ~/Downloads/iGlance_v2.1.0.zip https://github.com/iglance/iGlance/releases/download/v2.1.0/iGlance_v2.1.0.zip",
-            "purpose": "Download iGlance_v2.1.0.zip from GitHub releases"
-          },
-          {
-            "command": "mkdir -p ~/Applications && unzip -q ~/Downloads/iGlance_v2.1.0.zip -d ~/Applications",
-            "purpose": "Extract zip to ~/Applications (creates iGlance.app)"
-          }
-        ],
-        "smoke_tests": [
-          {
-            "command": "open ~/Applications/iGlance.app",
-            "expected_signal": "gui tier: none (the app showed no window and is not running)",
-            "exit_code": 1,
-            "passed": true,
-            "observed_excerpt": "gui tier: none (the app showed no window and is not running)",
-            "setup": [],
-            "offline": false
-          }
-        ],
+        "checked_at": "2026-11-04T19:40:40.259686+08:00",
+        "tool_version": null,
+        "install_method": null,
+        "replayed": false,
+        "steps": [],
+        "smoke_tests": [],
         "pitfalls": [
           {
             "readme_said": "brew install --cask iglance",
-            "actually_needed": "cask no longer available in homebrew/cask (No Cask with this name exists); installed directly from GitHub release https://github.com/iglance/iGlance/releases/download/v2.1.0/iGlance_v2.1.0.zip",
+            "actually_needed": "Cask not found: Warning: Cask 'iglance' is unavailable: No Cask with this name exists (command 1)",
             "kind": "readme_wrong"
           },
           {
-            "readme_said": "App shows stats in menu bar",
-            "actually_needed": "launch_gui reports gui tier none - expected for menu-bar-only app that shows no window, not a failure to launch; app binary is x86_64-only (Mach-O thin x86_64) relying on Rosetta on arm64",
-            "kind": "note"
+            "readme_said": "Download iGlance.dmg from GitHub releases",
+            "actually_needed": "Release asset is iGlance_v2.1.0.zip 11.5MB; download at ~40KB/s needs >5min and timed out after 120-180s with incomplete file, GitHub API rate-limited (403) so direct version URLs returned 404",
+            "kind": "sandbox"
           }
         ],
-        "blocking_error": "iGlance v2.1.0 is an x86_64-only Mach-O binary; running on arm64 requires root to install Rosetta 2 (softwareupdate --install-rosetta; arch -x86_64 exits 77: Bad CPU type in executable).",
-        "judge": {
-          "verdict": "inconclusive",
-          "observed": "the GUI launch left no screenshot to judge",
-          "model": "muse-spark-1.3"
-        },
+        "blocking_error": null,
+        "judge": null,
         "evidence": {
-          "trace_path": "runs/verify/verify-iglance-20261104-155254-d5a8/report.json",
-          "log_path": "runs/verify/verify-iglance-20261104-155254-d5a8/app.log",
+          "trace_path": null,
+          "log_path": null,
           "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.038768
+        "cost_usd": 0.104996
       }
     ]
   },
   "security": {
     "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
     "packages_checked": 0,
     "findings_total": 0,
     "advisories_total": 0,
-    "findings": [],
-    "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00"
+    "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T15:14:21+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
       "total": 38.3,
       "confidence": 0.5,
@@ -177,7 +154,7 @@
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 40.0
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.4375,
@@ -198,6 +175,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -508,5 +489,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:35+08:00",
-  "updated_at": "2026-11-04T17:27:08.052133+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

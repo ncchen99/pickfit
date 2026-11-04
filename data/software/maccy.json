@@ -53,20 +53,17 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-maccy-20261104-170402-cbdd",
+      "run_id": "verify-maccy-20261105-011726-2aee",
       "method": "brew",
       "steps": [
         {
-          "command": "mkdir -p $HOME/Applications && brew install --cask --appdir=$HOME/Applications maccy",
-          "purpose": "brew install --cask --appdir=$HOME/Applications maccy"
+          "command": "brew install --cask --appdir=$HOME/Applications maccy",
+          "purpose": "Install Maccy cask"
         }
       ],
       "manual_steps": [],
-      "check": {
-        "command": "ls -la $HOME/Applications/Maccy.app && file $HOME/Applications/Maccy.app/Contents/MacOS/Maccy 2>&1",
-        "expected_signal": "Maccy.app"
-      },
-      "first_task": "open $HOME/Applications/Maccy.app"
+      "check": null,
+      "first_task": "open ~/Applications/Maccy.app"
     },
     "linux": null,
     "windows": null
@@ -84,112 +81,182 @@
     "url": "https://github.com/p0deje/Maccy/releases/tag/2.8.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T17:09:02.062015+08:00",
+    "checked_at": "2026-11-05T01:47:46.481907+08:00",
     "runs": [
       {
-        "id": "verify-maccy-20261104-170402-cbdd",
-        "level": "install",
+        "id": "verify-maccy-20261105-011726-2aee",
+        "level": "function",
         "unverified_reason": null,
         "os": "macos",
         "arch": "arm64",
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
-        "checked_at": "2026-11-04T17:09:02.062015+08:00",
+        "checked_at": "2026-11-05T01:47:46.481907+08:00",
         "tool_version": "2.8.0",
         "install_method": "brew",
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p $HOME/Applications && brew install --cask --appdir=$HOME/Applications maccy",
-            "purpose": "brew install --cask --appdir=$HOME/Applications maccy"
+            "command": "brew install --cask --appdir=$HOME/Applications maccy",
+            "purpose": "Install Maccy cask"
           }
         ],
         "smoke_tests": [
           {
-            "command": "ls -la $HOME/Applications/Maccy.app && file $HOME/Applications/Maccy.app/Contents/MacOS/Maccy 2>&1",
-            "expected_signal": "Maccy.app",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "/Users/sbx/Applications/Maccy.app/Contents/MacOS/Maccy: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64]",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "open $HOME/Applications/Maccy.app",
+            "command": "open ~/Applications/Maccy.app",
             "expected_signal": "gui tier: window",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "open ~/Applications/Maccy.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"pickfit5bacbd\": yes",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "open ~/Applications/Maccy.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "gui result: clipboard (read by the display user): 22 characters; contains \"pickfitabcd91\": no",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "open ~/Applications/Maccy.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "gui result: clipboard (read by the display user): 22 characters; contains \"pickfitac8e6e\": no",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
             "readme_said": "brew install maccy",
-            "actually_needed": "brew install --cask --appdir=$HOME/Applications maccy (standard user cannot write /Applications, needs user Applications dir)",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications maccy",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows Maccy.app exists with Contents directory and its MacOS/Maccy binary is a Mach-O universal binary for x86_64 and arm64. / The Maccy menu-bar panel is open showing a search field and its Clear, Preferences, About, Quit commands.",
+          "observed": "The screenshot shows Maccy's menu bar panel with a search field and its Clear, Preferences, About, and Quit commands.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-maccy-20261104-170402-cbdd/report.json",
-          "log_path": "runs/verify/verify-maccy-20261104-170402-cbdd/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-maccy-20261104-170402-cbdd/check-1-cmd3.judged.png",
-            "runs/verify/verify-maccy-20261104-170402-cbdd/replay-4-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.027822,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 1.138375,
         "gui": {
-          "tier": "ui_rendered",
+          "tier": "action_checked",
           "screen": "main_ui",
-          "command": "open $HOME/Applications/Maccy.app",
+          "command": "open ~/Applications/Maccy.app",
           "window_title": "",
-          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+          "operations": [
+            {
+              "feature": "Search clipboard history",
+              "goal": "In Finder double-click /Users/sbx/pickfit-in/search2.txt to open it in TextEdit. Press Command+A then Command+C to copy its contents (do not retype the word). Press Shift+Command+C to open the Maccy popup. In the Maccy search field type the word code and verify the full copied line remains in the list. Do not type the long word itself, only type code.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "{nonce}"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"pickfit5bacbd\": yes",
+              "smoke_test": 1,
+              "actions": 19,
+              "replay": "operated",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "Paste history items",
+              "goal": "In Finder open /Users/sbx/pickfit-in/paste.txt in TextEdit. The file contains a line like code WORD end. Press Command+A then Command+C to copy it. Then change the clipboard by typing a different word xyz999 in TextEdit, selecting it and copying it. Then click the Maccy menu bar icon to open history, use arrow keys to select the earlier code WORD end entry and press Enter to copy it back to the clipboard.",
+              "check": "clipboard",
+              "target": null,
+              "expected": [
+                "{nonce}"
+              ],
+              "format": null,
+              "passed": false,
+              "observed": "clipboard (read by the display user): 22 characters; contains \"pickfitabcd91\": no",
+              "smoke_test": 2,
+              "actions": 27,
+              "replay": "operated",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "Paste history items",
+              "goal": "Double-click /Users/sbx/pickfit-in/paste2.txt to open in TextEdit, press Command+A then Command+C. Then double-click /Users/sbx/pickfit-in/other.txt to open it, press Command+A then Command+C so the clipboard now holds the other text. Then press Shift+Command+C to open Maccy history, press the Up arrow if needed to highlight the earlier line starting with code, and press Enter to copy it back. Do not type the long word anywhere.",
+              "check": "clipboard",
+              "target": null,
+              "expected": [
+                "{nonce}"
+              ],
+              "format": null,
+              "passed": false,
+              "observed": "clipboard (read by the display user): 22 characters; contains \"pickfitac8e6e\": no",
+              "smoke_test": 3,
+              "actions": 12,
+              "replay": "operated",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            }
+          ]
         },
         "features": [
           {
             "feature": "Keep history of copied items",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "check_not_met",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: done after 5 actions; check: the screen does not show the expected text; both F1-only checks failed: typed detection and empty history when copied before launch"
           },
           {
             "feature": "Search clipboard history",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "Paste history items",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
           },
           {
             "feature": "Pin history items to top",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "operator_limit",
             "failure": null,
-            "note": "install-only run"
+            "note": "operate budget exhausted (6 ops used)"
           }
         ]
       }
@@ -198,7 +265,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
@@ -207,18 +274,35 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-maccy-20261105-011726-2aee",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 2,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "f191772346aedc0372004c343e9760ad149665485bdbe49c0855932c126f8d78",
+    "checked_at": "2026-11-05T03:28:29+08:00",
+    "cost_usd": 0.025624
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:09:02+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:28:29+08:00",
     "quality": {
-      "total": 67.4,
+      "total": 85.2,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.75,
@@ -238,8 +322,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 85.2,
+        "defects": 0
       }
     },
     "popularity": {
@@ -258,7 +347,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 6.74
+      "value": 8.52
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -547,5 +636,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:31+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:28:29+08:00"
 }

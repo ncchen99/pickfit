@@ -60,35 +60,41 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-keepassxc-20261104-210916-c118",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask keepassxc",
-          "purpose": null
+          "command": "brew install --cask --appdir=$HOME/Applications keepassxc",
+          "purpose": "Install KeePassXC via brew cask"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "keepassxc-cli --version",
+        "expected_signal": "keepassxc-cli 2.8.0"
+      },
+      "first_task": "open ~/Applications/KeePassXC.app"
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-keepassxc-20261104-135727-477c",
+      "run_id": "verify-keepassxc-20261104-191008-d507",
       "method": "other",
       "steps": [
         {
           "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
-          "purpose": "add Flathub remote for user"
+          "purpose": "add flathub remote per user"
         },
         {
           "command": "flatpak install --user -y flathub org.keepassxc.KeePassXC",
-          "purpose": "install KeePassXC Flatpak from Flathub"
+          "purpose": "install KeePassXC flatpak"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "flatpak run --command=keepassxc-cli org.keepassxc.KeePassXC --help; echo ---; flatpak run --command=keepassxc-cli org.keepassxc.KeePassXC --version 2>&1",
+        "expected_signal": "Available commands"
+      },
       "first_task": "flatpak run org.keepassxc.KeePassXC"
     },
     "windows": {
@@ -121,10 +127,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:02:49.898244+08:00",
+    "checked_at": "2026-11-04T21:47:22.234343+08:00",
     "runs": [
       {
-        "id": "verify-keepassxc-20261104-135727-477c",
+        "id": "verify-keepassxc-20261104-191008-d507",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -132,21 +138,39 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx-gui:c74b9d4f5f6a",
-        "checked_at": "2026-11-04T14:02:49.898244+08:00",
+        "checked_at": "2026-11-04T19:17:19.939533+08:00",
         "tool_version": "2.8.0",
         "install_method": "other",
         "replayed": true,
         "steps": [
           {
             "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
-            "purpose": "add Flathub remote for user"
+            "purpose": "add flathub remote per user"
           },
           {
             "command": "flatpak install --user -y flathub org.keepassxc.KeePassXC",
-            "purpose": "install KeePassXC Flatpak from Flathub"
+            "purpose": "install KeePassXC flatpak"
           }
         ],
         "smoke_tests": [
+          {
+            "command": "flatpak run --command=keepassxc-cli org.keepassxc.KeePassXC --help; echo ---; flatpak run --command=keepassxc-cli org.keepassxc.KeePassXC --version 2>&1",
+            "expected_signal": "Available commands",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Available commands:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "printf \"TestPass123!\\nmySecret123\\n\" | flatpak run --command=keepassxc-cli org.keepassxc.KeePassXC add -q -u testuser --url https://example.com ~/pickfit-out/test.kdbx \"/TestEntry\" --password-prompt\nprintf \"TestPass123!\\n\" | flatpak run --command=keepassxc-cli org.keepassxc.KeePassXC ls ~/pickfit-out/test.kdbx\nprintf \"TestPass123!\\n\" | flatpak run --command=keepassxc-cli org.keepassxc.KeePassXC show ~/pickfit-out/test.kdbx \"/TestEntry\"",
+            "expected_signal": "TestEntry",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Failed to open database file /home/sbx/pickfit-out/test.kdbx: not found",
+            "setup": [],
+            "offline": null
+          },
           {
             "command": "flatpak run org.keepassxc.KeePassXC",
             "expected_signal": "gui tier: window",
@@ -157,26 +181,30 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "Flatpak install and GUI launch works",
+            "actually_needed": "GUI renders black in headless X (no window manager/GPU); main content area stays black though window opens. CLI verification still works via keepassxc-cli",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The app shows its welcome screen with options to create, open, or import a password database.",
+          "observed": "Screenshot shows keepassxc-cli help with Available commands list and version 2.8.0. / KeePassXC main window is fully drawn with menu, toolbar, and a welcome empty state offering Create, Open, and Import database.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-keepassxc-20261104-135727-477c/report.json",
-          "log_path": "runs/verify/verify-keepassxc-20261104-135727-477c/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-keepassxc-20261104-135727-477c/replay-4-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.021175,
+        "cost_usd": 0.201515,
         "gui": {
           "tier": "ui_rendered",
-          "screen": "first_run",
+          "screen": "main_ui",
           "command": "flatpak run org.keepassxc.KeePassXC",
           "window_title": "KeePassXC",
           "display": "Xvfb 1280x800x24, no window manager, no GPU"
@@ -186,33 +214,135 @@
             "feature": "store passwords in organized encrypted entries",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "operator_limit",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: step_cap after 28 actions; check: no file under /home/sbx/pickfit-out/: no file of the box user's was written there after the app started; operate_gui failed: black rendering, no file saved; CLI add/ls/show succeeded proving encrypted entries work"
           },
           {
             "feature": "generate passwords and passphrases",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "operator_limit",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: step_cap after 28 actions; check: no file under /home/sbx/pickfit-out/: no file of the box user's was written there after the app started; GUI generator not reachable due to black screen; CLI generate and diceware succeeded"
           },
           {
             "feature": "auto-type passwords into applications",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_desktop",
             "failure": null,
-            "note": "install-only run"
+            "note": "Auto-Type needs target application window to type into, not testable in sandbox"
           },
           {
             "feature": "integrate with web browsers",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_service",
             "failure": null,
-            "note": "install-only run"
+            "note": "Browser integration requires Chrome/Firefox extension and native messaging host"
+          }
+        ]
+      },
+      {
+        "id": "verify-keepassxc-20261104-210916-c118",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T21:47:22.234343+08:00",
+        "tool_version": "2.8.0",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications keepassxc",
+            "purpose": "Install KeePassXC via brew cask"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "keepassxc-cli --version",
+            "expected_signal": "keepassxc-cli 2.8.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "keepassxc-cli 2.8.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/KeePassXC.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask keepassxc",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications keepassxc",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows keepassxc-cli --version printed keepassxc-cli 2.8.0. / KeePassXC welcome window offering Create, Open, and Import database options with a first-run prompt asking to check for updates on startup.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 1.213701,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open ~/Applications/KeePassXC.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "store passwords in organized encrypted entries",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "operator_limit",
+            "failure": null,
+            "note": "operation stopped: step_cap after 24 actions; check: file /Users/sbx/pickfit-out/keepass-export.csv: missing; operator looped clicking password field, file missing"
+          },
+          {
+            "feature": "generate passwords and passphrases",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "operator_limit",
+            "failure": null,
+            "note": "operation stopped: step_cap after 25 actions; check: file /Users/sbx/pickfit-out/gen2.txt: missing; clipboard timeout and Generate loop, file missing"
+          },
+          {
+            "feature": "auto-type passwords into applications",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "operator_limit",
+            "failure": null,
+            "note": "operation stopped: step_cap after 28 actions; check: file /Users/sbx/pickfit-out/autotype.txt: missing; stuck in Open dialog navigating to kdbx"
+          },
+          {
+            "feature": "integrate with web browsers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "operator_limit",
+            "failure": null,
+            "note": "operation stopped: budget after 8 actions; check: the clipboard is empty; Settings navigation failed, clipboard empty"
           }
         ]
       }
@@ -221,7 +351,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
@@ -230,18 +360,35 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-keepassxc-20261104-210916-c118",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 1,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "50688fa286a249212ee31eb951143717bd5ca7c9c7e2db27578dbd5f0795cb10",
+    "checked_at": "2026-11-05T03:27:18+08:00",
+    "cost_usd": 0.02184
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:27:18+08:00",
     "quality": {
-      "total": 66.9,
-      "confidence": 0.9,
+      "total": 80.3,
+      "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5,
@@ -261,8 +408,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 80.3,
+        "defects": 0
       }
     },
     "popularity": {
@@ -281,7 +433,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 6.69
+      "value": 8.03
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -600,5 +752,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:41+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:27:18+08:00"
 }

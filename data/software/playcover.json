@@ -48,12 +48,12 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-playcover-20261104-161033-cd83",
+      "run_id": "verify-playcover-20261105-031040-9a54",
       "method": "brew",
       "steps": [
         {
           "command": "brew tap PlayCover/playcover && brew trust --tap PlayCover/playcover && brew install --cask --appdir=$HOME/Applications PlayCover/playcover/playcover-community",
-          "purpose": "install PlayCover via brew cask"
+          "purpose": "Install PlayCover via brew tap cask"
         }
       ],
       "manual_steps": [],
@@ -78,10 +78,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T17:40:50.093105+08:00",
+    "checked_at": "2026-11-05T03:15:08.145751+08:00",
     "runs": [
       {
-        "id": "verify-playcover-20261104-161033-cd83",
+        "id": "verify-playcover-20261105-031040-9a54",
         "level": "install",
         "unverified_reason": null,
         "os": "macos",
@@ -89,14 +89,14 @@
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
-        "checked_at": "2026-11-04T17:40:50.093105+08:00",
+        "checked_at": "2026-11-05T03:15:08.145751+08:00",
         "tool_version": "3.1.0",
         "install_method": "brew",
         "replayed": true,
         "steps": [
           {
             "command": "brew tap PlayCover/playcover && brew trust --tap PlayCover/playcover && brew install --cask --appdir=$HOME/Applications PlayCover/playcover/playcover-community",
-            "purpose": "install PlayCover via brew cask"
+            "purpose": "Install PlayCover via brew tap cask"
           }
         ],
         "smoke_tests": [
@@ -113,26 +113,24 @@
         "pitfalls": [
           {
             "readme_said": "brew install --cask PlayCover/playcover/playcover-community",
-            "actually_needed": "brew tap + brew trust --tap + brew install --cask --appdir=$HOME/Applications (required for third-party tap and non-admin install)",
+            "actually_needed": "brew tap PlayCover/playcover && brew trust --tap PlayCover/playcover && brew install --cask --appdir=$HOME/Applications PlayCover/playcover/playcover-community",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The PlayCover App Library window is fully drawn showing an empty library with No IPAs Installed and an Import IPA button.",
+          "observed": "The PlayCover App Library window is fully drawn showing an empty library with a No IPAs Installed prompt and Import button.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-playcover-20261104-161033-cd83/report.json",
-          "log_path": "runs/verify/verify-playcover-20261104-161033-cd83/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-playcover-20261104-161033-cd83/replay-3-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.020385,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.080902,
         "gui": {
           "tier": "ui_rendered",
           "screen": "main_ui",
@@ -145,25 +143,25 @@
             "feature": "run iOS apps and games on Mac",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_service",
             "failure": null,
-            "note": "install-only run"
+            "note": "Needs a decrypted iOS .ipa from the App Store; box has none and no Apple ID"
           },
           {
             "feature": "map touch controls to keyboard",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_service",
             "failure": null,
-            "note": "install-only run"
+            "note": "Keymapping editor requires an installed iOS app first; no .ipa in box"
           },
           {
             "feature": "run apps through iPad-emulating wrapper",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_service",
             "failure": null,
-            "note": "install-only run"
+            "note": "iPad-emulating wrapper only runs with an installed iOS app; no .ipa in box"
           }
         ]
       }
@@ -171,28 +169,45 @@
   },
   "security": {
     "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
     "packages_checked": 0,
     "findings_total": 0,
     "advisories_total": 0,
-    "findings": [],
-    "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00"
+    "findings": []
+  },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-playcover-20261105-031040-9a54",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 1,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "48029272edf5db32ad20ab301f31a92d886cc43249077db5137437b91ae8ae08",
+    "checked_at": "2026-11-05T03:28:45+08:00",
+    "cost_usd": 0.0161
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:40:50+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:28:45+08:00",
     "quality": {
-      "total": 60.7,
-      "confidence": 0.9,
+      "total": 72.4,
+      "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5625,
@@ -212,8 +227,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 72.4,
+        "defects": 0
       }
     },
     "popularity": {
@@ -232,7 +252,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 9.35
+      "value": 11.15
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -521,5 +541,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:32+08:00",
-  "updated_at": "2026-11-04T17:40:50.095066+08:00"
+  "updated_at": "2026-11-05T03:28:45+08:00"
 }

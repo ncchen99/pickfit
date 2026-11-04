@@ -66,7 +66,8 @@ def test_dry_run_prints_per_slug_and_writes_nothing(tmp_path: Path) -> None:
                         "left out by --exclude: 1; outside reports for 2 slugs")
     assert lines[1] == "  not-a-record: reported, but not in " + str(data) + "; skipped"
     assert lines[2].startswith('  rei: installed 0->1; still_using 0->1; replaced 0->1; replaced_by {}->{"other-cli": 1} '
-                               '· 3 outside reports · last_used {"this_month": 1, "unknown": 1} · quality 73.7 -> ')
+                               '· 3 outside reports · last_used {"this_month": 1, "unknown": 1} · quality '
+                               f'{json.loads(before)["scores"]["quality"]["total"]} -> ')
     assert lines[-1] == "1 record would change (--dry-run: nothing written)"
 
 

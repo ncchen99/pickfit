@@ -55,24 +55,24 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-memos-20261104-150138-4241",
+      "run_id": "verify-memos-20261104-211459-5344",
       "method": "binary",
       "steps": [
         {
-          "command": "cd /home/sbx/work && curl -fL -o memos_26.11.0_linux_amd64.tar.gz https://github.com/usememos/memos/releases/download/26.11.0/memos_26.11.0_linux_amd64.tar.gz",
-          "purpose": "Download memos_26.11.0_linux_amd64.tar.gz from GitHub releases"
+          "command": "mkdir -p /tmp/memos-dl ~/.local/bin && curl -fsSL -o /tmp/memos-dl/memos.tar.gz https://github.com/usememos/memos/releases/download/26.11.0/memos_26.11.0_linux_amd64.tar.gz",
+          "purpose": "download memos_26.11.0_linux_amd64.tar.gz"
         },
         {
-          "command": "cd /home/sbx/work && tar -xzf memos_26.11.0_linux_amd64.tar.gz && mkdir -p ~/.local/bin && mv memos ~/.local/bin/memos && chmod +x ~/.local/bin/memos",
-          "purpose": "Extract tarball and install binary to ~/.local/bin/memos"
+          "command": "tar xzf /tmp/memos-dl/memos.tar.gz -C /tmp/memos-dl && install -m 755 /tmp/memos-dl/memos ~/.local/bin/memos && ~/.local/bin/memos --help",
+          "purpose": "extract memos binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "memos --help",
+        "command": "tar xzf /tmp/memos-dl/memos.tar.gz -C /tmp/memos-dl && install -m 755 /tmp/memos-dl/memos ~/.local/bin/memos && ~/.local/bin/memos --help",
         "expected_signal": "Available Commands:"
       },
-      "first_task": null
+      "first_task": "curl -fsSL http://localhost:5230/healthz"
     },
     "windows": null
   },
@@ -89,36 +89,36 @@
     "url": "https://github.com/usememos/memos/releases/tag/26.11.0"
   },
   "verification": {
-    "level": "install",
+    "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T15:02:25.621932+08:00",
+    "checked_at": "2026-11-04T21:18:32.360258+08:00",
     "runs": [
       {
-        "id": "verify-memos-20261104-150138-4241",
-        "level": "install",
+        "id": "verify-memos-20261104-211459-5344",
+        "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T15:02:25.621932+08:00",
+        "checked_at": "2026-11-04T21:18:32.360258+08:00",
         "tool_version": "26.11.0",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "cd /home/sbx/work && curl -fL -o memos_26.11.0_linux_amd64.tar.gz https://github.com/usememos/memos/releases/download/26.11.0/memos_26.11.0_linux_amd64.tar.gz",
-            "purpose": "Download memos_26.11.0_linux_amd64.tar.gz from GitHub releases"
+            "command": "mkdir -p /tmp/memos-dl ~/.local/bin && curl -fsSL -o /tmp/memos-dl/memos.tar.gz https://github.com/usememos/memos/releases/download/26.11.0/memos_26.11.0_linux_amd64.tar.gz",
+            "purpose": "download memos_26.11.0_linux_amd64.tar.gz"
           },
           {
-            "command": "cd /home/sbx/work && tar -xzf memos_26.11.0_linux_amd64.tar.gz && mkdir -p ~/.local/bin && mv memos ~/.local/bin/memos && chmod +x ~/.local/bin/memos",
-            "purpose": "Extract tarball and install binary to ~/.local/bin/memos"
+            "command": "tar xzf /tmp/memos-dl/memos.tar.gz -C /tmp/memos-dl && install -m 755 /tmp/memos-dl/memos ~/.local/bin/memos && ~/.local/bin/memos --help",
+            "purpose": "extract memos binary to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "memos --help",
+            "command": "tar xzf /tmp/memos-dl/memos.tar.gz -C /tmp/memos-dl && install -m 755 /tmp/memos-dl/memos ~/.local/bin/memos && ~/.local/bin/memos --help",
             "expected_signal": "Available Commands:",
             "exit_code": 0,
             "passed": true,
@@ -127,64 +127,79 @@
             "offline": true
           },
           {
-            "command": "memos --version",
-            "expected_signal": "26.11.0",
+            "command": "curl -fsSL http://localhost:5230/healthz",
+            "expected_signal": "Service ready.",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "26.11.0",
-            "setup": [],
+            "observed_excerpt": "Service ready.",
+            "setup": [
+              {
+                "command": "memos --port 5230 --data /tmp/memos-data",
+                "background": true,
+                "port": 5230
+              }
+            ],
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "Quick start shows only docker run",
+            "actually_needed": "binary tarball memos_26.11.0_linux_amd64.tar.gz from GitHub releases runs without Docker",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Open http://localhost:5230",
+            "actually_needed": "pass --port 5230; binary defaults to port 8081 per --help",
+            "kind": "readme_wrong"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows memos --help output with Usage, Available Commands, and Flags.",
+          "observed": "Screenshots show health endpoint returning Service ready and memos --help listing Available Commands.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-memos-20261104-150138-4241/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-memos-20261104-150138-4241/check-1-cmd4.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.028456,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.393655,
         "features": [
           {
             "feature": "write memos with Markdown formatting",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check failed in the agent's box but not again in a fresh box"
           },
           {
             "feature": "browse memos in personal timeline",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check failed in the agent's box but not again in a fresh box"
           },
           {
             "feature": "control private and shared publishing",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check failed in the agent's box but not again in a fresh box"
           },
           {
             "feature": "connect memos with tags",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check failed in the agent's box but not again in a fresh box"
           }
         ]
       }
@@ -193,7 +208,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -302,17 +317,17 @@
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-04T21:18:32+08:00",
     "quality": {
-      "total": 66.1,
-      "confidence": 0.9,
+      "total": 76.5,
+      "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
-          "weight": 40
+          "score": 0.7225,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -332,7 +347,11 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -352,7 +371,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 6.61
+      "value": 7.65
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -603,5 +622,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:10+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

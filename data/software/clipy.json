@@ -49,12 +49,12 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-clipy-20261104-153459-48c3",
+      "run_id": "verify-clipy-20261105-005802-def2",
       "method": "brew",
       "steps": [
         {
-          "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications clipy",
-          "purpose": "install Clipy via brew cask to ~/Applications"
+          "command": "brew install --cask --appdir=$HOME/Applications clipy",
+          "purpose": "install Clipy via brew cask"
         }
       ],
       "manual_steps": [],
@@ -79,10 +79,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T15:41:24.307739+08:00",
+    "checked_at": "2026-11-05T01:17:26.225761+08:00",
     "runs": [
       {
-        "id": "verify-clipy-20261104-153459-48c3",
+        "id": "verify-clipy-20261105-005802-def2",
         "level": "install",
         "unverified_reason": null,
         "os": "macos",
@@ -90,14 +90,14 @@
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
-        "checked_at": "2026-11-04T15:41:24.307739+08:00",
+        "checked_at": "2026-11-05T01:17:26.225761+08:00",
         "tool_version": "1.4.1",
         "install_method": "brew",
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications clipy",
-            "purpose": "install Clipy via brew cask to ~/Applications"
+            "command": "brew install --cask --appdir=$HOME/Applications clipy",
+            "purpose": "install Clipy via brew cask"
           }
         ],
         "smoke_tests": [
@@ -114,26 +114,29 @@
         "pitfalls": [
           {
             "readme_said": "brew install --cask clipy",
-            "actually_needed": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications clipy (standard user cannot write /Applications, needs --appdir)",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications clipy",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "README lists shortcuts with no permission note",
+            "actually_needed": "selecting a history entry triggers macOS Accessibility permission prompt; viewing history/snippets menus works without it",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "A small Clipy dialog asks whether to launch on system startup with setup buttons.",
+          "observed": "The screenshot shows Clipy's first-run prompt asking whether to launch on system startup with setup choice buttons.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-clipy-20261104-153459-48c3/report.json",
-          "log_path": "runs/verify/verify-clipy-20261104-153459-48c3/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-clipy-20261104-153459-48c3/replay-4-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.018318,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.776876,
         "gui": {
           "tier": "ui_rendered",
           "screen": "first_run",
@@ -146,25 +149,25 @@
             "feature": "access clipboard history",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "operator_limit",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: step_cap after 24 actions; check: the clipboard does not hold what the check expects; selecting history needs Accessibility to paste; standard user cannot grant, selection blocked"
           },
           {
             "feature": "select saved snippets",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed in the agent's box but is too long for the record"
           },
           {
             "feature": "open clipboard history and settings",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed in the agent's box but is too long for the record"
           }
         ]
       }
@@ -173,7 +176,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
@@ -182,18 +185,35 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-clipy-20261105-005802-def2",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 1,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "7126958512c1dbdf9f5025fa5d96ee9e4fc1c2c47efda5cf56c2c301f6f8e67b",
+    "checked_at": "2026-11-05T03:25:39+08:00",
+    "cost_usd": 0.016332
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T15:41:24+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:25:39+08:00",
     "quality": {
-      "total": 66.8,
-      "confidence": 0.9,
+      "total": 80.1,
+      "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -213,8 +233,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 80.1,
+        "defects": 0
       }
     },
     "popularity": {
@@ -233,7 +258,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 11.42
+      "value": 13.7
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -482,5 +507,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:26+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:25:39+08:00"
 }

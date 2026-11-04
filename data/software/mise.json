@@ -58,16 +58,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-mise-20261104-133245-ee78",
+      "run_id": "verify-mise-20261104-185323-9692",
       "method": "script",
       "steps": [
         {
           "command": "curl -fsSL https://mise.run -o /tmp/mise-install.sh",
-          "purpose": "download mise install script"
+          "purpose": "Download mise installer script from mise.run"
         },
         {
           "command": "sh /tmp/mise-install.sh 2>&1",
-          "purpose": "install mise via script"
+          "purpose": "Install mise to ~/.local/bin/mise via script"
         }
       ],
       "manual_steps": [],
@@ -75,7 +75,7 @@
         "command": "~/.local/bin/mise --version",
         "expected_signal": "2026.10.25"
       },
-      "first_task": null
+      "first_task": "cd /tmp/mise-test-env && ~/.local/bin/mise env 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -105,31 +105,31 @@
     "url": "https://github.com/jdx/mise/releases/tag/v2026.11.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:33:28.411161+08:00",
+    "checked_at": "2026-11-04T18:55:02.149430+08:00",
     "runs": [
       {
-        "id": "verify-mise-20261104-133245-ee78",
-        "level": "install",
+        "id": "verify-mise-20261104-185323-9692",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:33:28.411161+08:00",
+        "checked_at": "2026-11-04T18:55:02.149430+08:00",
         "tool_version": "2026.10.25",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
             "command": "curl -fsSL https://mise.run -o /tmp/mise-install.sh",
-            "purpose": "download mise install script"
+            "purpose": "Download mise installer script from mise.run"
           },
           {
             "command": "sh /tmp/mise-install.sh 2>&1",
-            "purpose": "install mise via script"
+            "purpose": "Install mise to ~/.local/bin/mise via script"
           }
         ],
         "smoke_tests": [
@@ -141,57 +141,115 @@
             "observed_excerpt": "2026.10.25 linux-x64 (2026-10-31)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "~/.local/bin/mise exec node@24 -- node --version 2>&1",
+            "expected_signal": "v24.22.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[2mmise\u001b[0m \u001b[34mnode\u001b[0m@24.22.2 v24.22.2",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "cd /tmp/mise-test-env && ~/.local/bin/mise env 2>&1",
+            "expected_signal": "MY_TEST_VAR=hello_mise_env",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "export MY_TEST_VAR=hello_mise_env",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/mise-test-env && cat > /tmp/mise-test-env/mise.toml <<'EOF'\n[env]\nMY_TEST_VAR = \"hello_mise_env\"\nEOF\ncat /tmp/mise-test-env/mise.toml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/mise-test-tasks && ~/.local/bin/mise run test 2>&1",
+            "expected_signal": "building",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[34m[build]\u001b[0m \u001b[1m$ echo building\u001b[0m",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/mise-test-tasks && cat > /tmp/mise-test-tasks/mise.toml <<'EOF'\n[tasks.hello]\nrun = 'echo hello_from_mise_task'\n\n[tasks.build]\ndescription = \"Build task\"\nrun = 'echo building'\n\n[tasks.test]\ndescription = \"Run test with dep\"\ndepends = [\"build\"]\nrun = 'echo testing'\nEOF\ncat /tmp/mise-test-tasks/mise.toml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/mise-test-bootstrap && ~/.local/bin/mise bootstrap --dry-run 2>&1",
+            "expected_signal": "mise bootstrap:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[2mmise\u001b[0m all tools are installed",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/mise-test-bootstrap && cat > /tmp/mise-test-bootstrap/mise.toml <<'EOF'\n[bootstrap.packages]\n\"apt:curl\" = \"latest\"\nEOF\ncat /tmp/mise-test-bootstrap/mise.toml; ~/.local/bin/mise bootstrap --help 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows mise --version outputting 2026.10.25 linux-x64 (2026-10-31).",
+          "observed": "Screenshots show mise installing node and printing v24.22.2, exporting MY_TEST_VAR=hello_mise_env, and reporting version 2026.10.25.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-mise-20261104-133245-ee78/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-mise-20261104-133245-ee78/check-1-cmd3.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.023604,
+        "cost_usd": 0.045424,
         "features": [
           {
             "feature": "install dev tools like Node.js Python",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "load environment variables automatically",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "run tasks with dependencies",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "set up machine with bootstrap",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Dry-run only reports already installed with nothing set up."
           }
         ]
       }
@@ -200,12 +258,12 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
       "npm:mise (fresh install, 1 packages)",
-      "github.com/jdx/mise@02d59ef93faf",
+      "github.com/jdx/mise@7435da0970b9",
       "Cargo.lock"
     ],
     "packages_checked": 1147,
@@ -225,17 +283,17 @@
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 71.8,
+      "total": 79.0,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -255,7 +313,11 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -522,5 +584,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:58+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

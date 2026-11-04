@@ -56,7 +56,7 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-anki-20261104-135727-100d",
+      "run_id": "verify-anki-20261104-191008-bf55",
       "method": "other",
       "steps": [
         {
@@ -65,7 +65,7 @@
         },
         {
           "command": "flatpak install --user -y flathub net.ankiweb.Anki",
-          "purpose": "install Anki flatpak from Flathub"
+          "purpose": "install Anki flatpak net.ankiweb.Anki"
         }
       ],
       "manual_steps": [],
@@ -89,10 +89,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:02:11.221972+08:00",
+    "checked_at": "2026-11-04T19:21:22.937443+08:00",
     "runs": [
       {
-        "id": "verify-anki-20261104-135727-100d",
+        "id": "verify-anki-20261104-191008-bf55",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -100,7 +100,7 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx-gui:c74b9d4f5f6a",
-        "checked_at": "2026-11-04T14:02:11.221972+08:00",
+        "checked_at": "2026-11-04T19:21:22.937443+08:00",
         "tool_version": "26.09.3",
         "install_method": "other",
         "replayed": true,
@@ -111,7 +111,7 @@
           },
           {
             "command": "flatpak install --user -y flathub net.ankiweb.Anki",
-            "purpose": "install Anki flatpak from Flathub"
+            "purpose": "install Anki flatpak net.ankiweb.Anki"
           }
         ],
         "smoke_tests": [
@@ -125,23 +125,32 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak run net.ankiweb.Anki",
+            "actually_needed": "first add Flathub remote with flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Anki launches and renders normally",
+            "actually_needed": "On headless Xvfb without GPU, Anki main window renders black after dismissing startup dialogs; Qt OpenGL warnings (QXcbIntegration: Cannot create platform OpenGL context) appear and UI is not operable. Workaround env QT_XCB_GL_INTEGRATION=none etc still leaves persistent black screen preventing car…",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Anki's first-run language chooser lists languages with English (United States) selected and an OK button.",
+          "observed": "The screenshot shows a language selection list with English (United States) highlighted and an OK button.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-anki-20261104-135727-100d/report.json",
-          "log_path": "runs/verify/verify-anki-20261104-135727-100d/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-anki-20261104-135727-100d/replay-3-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.017285,
+        "cost_usd": 0.374843,
         "gui": {
           "tier": "ui_rendered",
           "screen": "first_run",
@@ -154,25 +163,25 @@
             "feature": "study with spaced repetition flashcards",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "operator_limit",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: give_up after 23 actions; check: no file under /home/sbx/ written after the app started has the expected text; Two operate attempts failed: persistent black screen after language/prefs dialogs, operator gave up; no collection file containing nonce created"
           },
           {
             "feature": "create cards with images, audio, video",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "operator_limit",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: give_up after 25 actions; check: no file under /home/sbx/ written after the app started has the expected text; First attempt no window (exit 133), second with software GL env showed window but black screen persisted, no image card created"
           },
           {
             "feature": "create cards with scientific markup via LaTeX",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "operator_limit",
             "failure": null,
-            "note": "install-only run"
+            "note": "Command budget exhausted before testing LaTeX scientific markup; would also require GPU rendering"
           }
         ]
       }
@@ -181,30 +190,20 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/ankitects/anki@8ee487f60ca3",
+      "github.com/ankitects/anki@d88ae6eb159a",
       "Cargo.lock",
       "pylib/pyproject.toml (resolved today)",
       "uv.lock",
       "qt/pyproject.toml (resolved today)"
     ],
     "packages_checked": 633,
-    "findings_total": 5,
-    "advisories_total": 5,
+    "findings_total": 4,
+    "advisories_total": 4,
     "findings": [
-      {
-        "package": "crates:pulldown-cmark",
-        "version": "0.13.5",
-        "advisory": "RUSTSEC-2026-0433",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.13.6",
-        "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
-        "malicious": false
-      },
       {
         "package": "crates:quinn-proto",
         "version": "0.11.16",
@@ -251,18 +250,35 @@
       }
     ]
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-anki-20261104-191008-bf55",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 1,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "07a01023dcc1cd724f38e61fbb0510d98d19d1eeedc665d60a373630add77391",
+    "checked_at": "2026-11-05T03:25:03+08:00",
+    "cost_usd": 0.020124
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:25:03+08:00",
     "quality": {
-      "total": 63.4,
-      "confidence": 0.9,
+      "total": 75.8,
+      "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5,
@@ -284,6 +300,11 @@
           "score": null,
           "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 75.8,
+        "defects": 0
       }
     },
     "popularity": {
@@ -302,7 +323,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 8.43
+      "value": 10.08
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -549,5 +570,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:37+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:25:03+08:00"
 }

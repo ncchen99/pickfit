@@ -55,17 +55,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-serena-20261104-133503-01fa",
+      "run_id": "verify-serena-20261104-193327-b02e",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install -p 3.13 serena-agent",
-          "purpose": "install serena via uv tool install -p 3.13 serena-agent"
+          "command": "uv tool install -p 3.13 serena-agent 2>&1\n",
+          "purpose": "install serena-agent via uv tool install -p 3.13"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "serena --help 2>&1 | head -n 100; echo \"---VERSION---\"; serena --version 2>&1",
+        "expected_signal": "Usage: serena"
+      },
+      "first_task": "serena init 2>&1"
     },
     "windows": null
   },
@@ -82,72 +85,112 @@
     "url": "https://github.com/oraios/serena/releases/tag/v2.1.0"
   },
   "verification": {
-    "level": "function",
+    "level": "service",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:36:05.532626+08:00",
+    "checked_at": "2026-11-04T19:35:39.703850+08:00",
     "runs": [
       {
-        "id": "verify-serena-20261104-133503-01fa",
-        "level": "function",
+        "id": "verify-serena-20261104-193327-b02e",
+        "level": "service",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:36:05.532626+08:00",
+        "checked_at": "2026-11-04T19:35:39.703850+08:00",
         "tool_version": "2.1.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install -p 3.13 serena-agent",
-            "purpose": "install serena via uv tool install -p 3.13 serena-agent"
+            "command": "uv tool install -p 3.13 serena-agent 2>&1\n",
+            "purpose": "install serena-agent via uv tool install -p 3.13"
           }
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py -- serena start-mcp-server --enable-web-dashboard False --open-web-dashboard False 2>&1",
+            "command": "serena --help 2>&1 | head -n 100; echo \"---VERSION---\"; serena --version 2>&1",
+            "expected_signal": "Usage: serena",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: serena [OPTIONS] COMMAND [ARGS]...",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "serena init 2>&1",
+            "expected_signal": "Serena has been initialised successfully.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Serena has been initialised successfully.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- serena start-mcp-server --project-from-cwd 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
-            "setup": [
-              {
-                "command": "serena init 2>&1; echo EXIT:$?\nls -la ~/.serena 2>&1 || ls -la ~/.config/serena 2>&1; ls -la /home/sbx/work/.serena 2>&1 || true",
-                "background": false,
-                "port": null
-              }
-            ],
+            "setup": [],
             "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --call initial_instructions --args '{}' -- serena start-mcp-server --project-from-cwd 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=initial_instructions content=text text_chars=7617",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/demo_proj && python3 ~/.pickfit/mcp_probe.py --call serena_repl --args '{\"session\":\"s1\",\"code\":\"print(await s.lsp.find_symbol(name_path=\\\"greet\\\", include_body=True))\"}' -- serena start-mcp-server --project-from-cwd 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "/usr/bin/bash: line 1: cd: /tmp/demo_proj: No such file or directory",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "cd /tmp/demo_proj && python3 ~/.pickfit/mcp_probe.py --call serena_repl --args '{\"session\":\"s2\",\"code\":\"print(await s.lsp.find_referencing_symbols(name_path=\\\"greet\\\", include_body=True))\"}' -- serena start-mcp-server --project-from-cwd 2>&1",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "/usr/bin/bash: line 1: cd: /tmp/demo_proj: No such file or directory",
+            "setup": [],
+            "offline": null
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "serena-agent tools require only activate_project without session",
+            "actually_needed": "activate_project requires both project* and session* arguments",
+            "kind": "readme_wrong"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The screenshot shows the Serena MCP server initializing, listing 3 tools, and completing handshake ok with exit 0.",
+          "observed": "Screenshots show serena help with version 2.1.0, successful init, and successful MCP handshake with 3 tools.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-serena-20261104-133503-01fa/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-serena-20261104-133503-01fa/check-1-cmd5.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.029483,
+        "cost_usd": 0.074577,
         "mcp": {
           "transport": "stdio",
           "launch": [
             "serena",
             "start-mcp-server",
-            "--enable-web-dashboard",
-            "False",
-            "--open-web-dashboard",
-            "False"
+            "--project-from-cwd"
           ],
           "url": null,
           "protocol_version": "2025-11-25",
@@ -159,7 +202,7 @@
             "serena_repl"
           ],
           "tool_count": 3,
-          "called_tool": null,
+          "called_tool": "initial_instructions",
           "offline": true
         },
         "features": [
@@ -167,33 +210,33 @@
             "feature": "semantic code retrieval and editing",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
           },
           {
             "feature": "find referencing symbols",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
           },
           {
             "feature": "rename symbols",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output only shows initial_instructions handshake with no rename operation result."
           },
           {
             "feature": "interactive debugging with breakpoints",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "interactive debugging requires JetBrains plugin backend, not available in LSP mode"
           }
         ]
       }
@@ -214,7 +257,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -417,17 +460,17 @@
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 77.5,
-      "confidence": 0.9,
+      "total": 78.2,
+      "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.8,
-          "weight": 40
+          "score": 0.85,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -447,7 +490,11 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -469,7 +516,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 5.04
+      "value": 5.08
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -736,5 +783,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:08+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

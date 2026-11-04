@@ -74,24 +74,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-k9s-20261104-133228-848a",
+      "run_id": "verify-k9s-20261104-185240-b708",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://webinstall.dev/k9s -o /tmp/k9s-webinstall.sh",
-          "purpose": "download webinstall script to /tmp/k9s-webinstall.sh"
+          "command": "curl -fsSL https://webinstall.dev/k9s -o /tmp/k9s-install.sh",
+          "purpose": "download webinstall script for k9s"
         },
         {
-          "command": "bash /tmp/k9s-webinstall.sh",
-          "purpose": "run webinstall script to install k9s to ~/.local/bin"
+          "command": "bash /tmp/k9s-install.sh 2>&1",
+          "purpose": "run script to install k9s to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "k9s version",
+        "command": "export PATH=\"$HOME/.local/bin:$PATH\" && k9s version 2>&1",
         "expected_signal": "Version: v0.51.0"
       },
-      "first_task": "k9s version"
+      "first_task": "export PATH=\"$HOME/.local/bin:$PATH\" && k9s version 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -121,40 +121,58 @@
     "url": "https://github.com/derailed/k9s/releases/tag/v0.51.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:33:31.874837+08:00",
+    "checked_at": "2026-11-04T18:53:56.283526+08:00",
     "runs": [
       {
-        "id": "verify-k9s-20261104-133228-848a",
-        "level": "install",
+        "id": "verify-k9s-20261104-185240-b708",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:33:31.874837+08:00",
+        "checked_at": "2026-11-04T18:53:56.283526+08:00",
         "tool_version": "v0.51.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL https://webinstall.dev/k9s -o /tmp/k9s-webinstall.sh",
-            "purpose": "download webinstall script to /tmp/k9s-webinstall.sh"
+            "command": "curl -fsSL https://webinstall.dev/k9s -o /tmp/k9s-install.sh",
+            "purpose": "download webinstall script for k9s"
           },
           {
-            "command": "bash /tmp/k9s-webinstall.sh",
-            "purpose": "run webinstall script to install k9s to ~/.local/bin"
+            "command": "bash /tmp/k9s-install.sh 2>&1",
+            "purpose": "run script to install k9s to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "k9s version",
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && k9s version 2>&1",
             "expected_signal": "Version: v0.51.0",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "\u001b[36mDate:\u001b[0m 2026-06-06T14:04:25Z",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && k9s version && echo \"---VERSION_OK---\" && k9s help 2>&1",
+            "expected_signal": "K9s is a CLI to view and manage your Kubernetes clusters.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "K9s is a CLI to view and manage your Kubernetes clusters.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && k9s info 2>&1",
+            "expected_signal": "Config:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[36mConfig:\u001b[0m /home/sbx/.config/k9s/config.yaml",
             "setup": [],
             "offline": true
           }
@@ -163,51 +181,49 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows k9s version output with Version v0.51.0, commit and date.",
+          "observed": "Screenshots show k9s version v0.51.0, k9s help flags, and k9s info config paths all printing successfully with exit 0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-k9s-20261104-133228-848a/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-k9s-20261104-133228-848a/check-1-cmd5.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.034695,
+        "cost_usd": 0.040446,
         "features": [
           {
             "feature": "interact with Kubernetes clusters via terminal UI",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_service",
             "failure": null,
-            "note": "install-only run"
+            "note": "No Kubernetes cluster/kubeconfig in box to interact with via terminal UI"
           },
           {
             "feature": "watch Kubernetes for changes and interact",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_service",
             "failure": null,
-            "note": "install-only run"
+            "note": "Watching Kubernetes requires a cluster connection"
           },
           {
             "feature": "view resource logs",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_service",
             "failure": null,
-            "note": "install-only run"
+            "note": "Viewing logs requires pods on a cluster"
           },
           {
             "feature": "shell into containers",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_service",
             "failure": null,
-            "note": "install-only run"
+            "note": "Shell into container requires a running cluster"
           }
         ]
       }
@@ -216,7 +232,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -229,17 +245,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 69.4,
-      "confidence": 0.9,
+      "total": 83.5,
+      "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -260,6 +276,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -281,7 +301,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 0.35
+      "value": 0.42
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -588,5 +608,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:57+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

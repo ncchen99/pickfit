@@ -52,12 +52,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-jq-20261104-144647-49b8",
+      "run_id": "verify-jq-20261104-185356-ab34",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -Ls -o /tmp/jq \"https://github.com/jqlang/jq/releases/latest/download/jq-linux-amd64\" && chmod +x /tmp/jq && mkdir -p ~/.local/bin && mv /tmp/jq ~/.local/bin/jq && ~/.local/bin/jq --version",
-          "purpose": "download jq-linux-amd64 binary from GitHub releases and install to ~/.local/bin"
+          "command": "curl -fL https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-linux-amd64 -o /tmp/jq && chmod +x /tmp/jq && mkdir -p ~/.local/bin && mv /tmp/jq ~/.local/bin/jq && ~/.local/bin/jq --version",
+          "purpose": "Download jq-linux-amd64 binary from GitHub releases and install to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -65,7 +65,7 @@
         "command": "jq --version",
         "expected_signal": "jq-1.8.2"
       },
-      "first_task": null
+      "first_task": "jq '.items[1:4]' /tmp/sample.json"
     },
     "windows": null
   },
@@ -82,27 +82,27 @@
     "url": "https://github.com/jqlang/jq/releases/tag/jq-1.8.2"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:47:57.474262+08:00",
+    "checked_at": "2026-11-04T18:55:02.146992+08:00",
     "runs": [
       {
-        "id": "verify-jq-20261104-144647-49b8",
-        "level": "install",
+        "id": "verify-jq-20261104-185356-ab34",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T14:47:57.474262+08:00",
-        "tool_version": "jq-1.8.2",
+        "checked_at": "2026-11-04T18:55:02.146992+08:00",
+        "tool_version": "1.8.2",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -Ls -o /tmp/jq \"https://github.com/jqlang/jq/releases/latest/download/jq-linux-amd64\" && chmod +x /tmp/jq && mkdir -p ~/.local/bin && mv /tmp/jq ~/.local/bin/jq && ~/.local/bin/jq --version",
-            "purpose": "download jq-linux-amd64 binary from GitHub releases and install to ~/.local/bin"
+            "command": "curl -fL https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-linux-amd64 -o /tmp/jq && chmod +x /tmp/jq && mkdir -p ~/.local/bin && mv /tmp/jq ~/.local/bin/jq && ~/.local/bin/jq --version",
+            "purpose": "Download jq-linux-amd64 binary from GitHub releases and install to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -114,9 +114,74 @@
             "observed_excerpt": "jq-1.8.2",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "jq '.items[1:4]' /tmp/sample.json",
+            "expected_signal": "20",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "20,",
+            "setup": [
+              {
+                "command": "cat > /tmp/sample.json <<'JSON'\n{\"name\": \"test\", \"version\": \"1.2.3\", \"items\": [10,20,30,40,50], \"users\": [{\"id\":1,\"active\":true,\"name\":\"alice\"},{\"id\":2,\"active\":false,\"name\":\"bob\"},{\"id\":3,\"active\":true,\"name\":\"carol\"}]}\nJSON\ncat > /tmp/package.json <<'JSON'\n{\"name\": \"myapp\", \"version\": \"2.5.0\"}\nJSON\ncat /tmp/sample.json && echo \"---\" && cat /tmp/package.json",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "jq '[.users[] | select(.active==true) | .name]' /tmp/sample.json",
+            "expected_signal": "alice",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"alice\",",
+            "setup": [
+              {
+                "command": "cat > /tmp/sample.json <<'JSON'\n{\"name\": \"test\", \"version\": \"1.2.3\", \"items\": [10,20,30,40,50], \"users\": [{\"id\":1,\"active\":true,\"name\":\"alice\"},{\"id\":2,\"active\":false,\"name\":\"bob\"},{\"id\":3,\"active\":true,\"name\":\"carol\"}]}\nJSON\ncat > /tmp/package.json <<'JSON'\n{\"name\": \"myapp\", \"version\": \"2.5.0\"}\nJSON\ncat /tmp/sample.json && echo \"---\" && cat /tmp/package.json",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "jq '.users | map({username: .name, id: (.id*10)})' /tmp/sample.json",
+            "expected_signal": "username",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"username\": \"alice\",",
+            "setup": [
+              {
+                "command": "cat > /tmp/sample.json <<'JSON'\n{\"name\": \"test\", \"version\": \"1.2.3\", \"items\": [10,20,30,40,50], \"users\": [{\"id\":1,\"active\":true,\"name\":\"alice\"},{\"id\":2,\"active\":false,\"name\":\"bob\"},{\"id\":3,\"active\":true,\"name\":\"carol\"}]}\nJSON\ncat > /tmp/package.json <<'JSON'\n{\"name\": \"myapp\", \"version\": \"2.5.0\"}\nJSON\ncat /tmp/sample.json && echo \"---\" && cat /tmp/package.json",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "jq '.version' /tmp/package.json",
+            "expected_signal": "2.5.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"2.5.0\"",
+            "setup": [
+              {
+                "command": "cat > /tmp/sample.json <<'JSON'\n{\"name\": \"test\", \"version\": \"1.2.3\", \"items\": [10,20,30,40,50], \"users\": [{\"id\":1,\"active\":true,\"name\":\"alice\"},{\"id\":2,\"active\":false,\"name\":\"bob\"},{\"id\":3,\"active\":true,\"name\":\"carol\"}]}\nJSON\ncat > /tmp/package.json <<'JSON'\n{\"name\": \"myapp\", \"version\": \"2.5.0\"}\nJSON\ncat /tmp/sample.json && echo \"---\" && cat /tmp/package.json",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [
+          {
+            "readme_said": "docker run --rm -i ghcr.io/jqlang/jq:latest < package.json '.version'",
+            "actually_needed": "Docker not available in box; used native binary equivalent: jq '.version' package.json",
+            "kind": "sandbox"
+          },
           {
             "readme_said": "install step 1 runs jq",
             "actually_needed": "nothing to change; a note: the box ran jq, downloaded, without reading it first, so pickfit did not inspect it",
@@ -126,43 +191,47 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows jq --version printing jq-1.8.2.",
+          "observed": "Screenshots show jq slicing items to 20,30,40, filtering active users to alice and carol, and reporting version jq-1.8.2.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-jq-20261104-144647-49b8/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-jq-20261104-144647-49b8/check-1-cmd2.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.012925,
+        "cost_usd": 0.031253,
         "features": [
           {
             "feature": "slice JSON data",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "filter JSON data",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "transform structured data",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           }
         ]
       }
@@ -171,7 +240,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
@@ -181,17 +250,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T15:02:29+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 59.1,
+      "total": 77.6,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
-          "weight": 40.0
+          "score": 0.85,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.5,
@@ -212,6 +281,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -498,5 +571,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:53+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

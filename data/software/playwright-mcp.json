@@ -47,7 +47,7 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-playwright-mcp-20261104-133509-071d",
+      "run_id": "verify-playwright-mcp-20261104-192527-a1f9",
       "method": "npm",
       "steps": [
         {
@@ -76,10 +76,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:36:02.751055+08:00",
+    "checked_at": "2026-11-04T19:29:26.467200+08:00",
     "runs": [
       {
-        "id": "verify-playwright-mcp-20261104-133509-071d",
+        "id": "verify-playwright-mcp-20261104-192527-a1f9",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -87,7 +87,7 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:36:02.751055+08:00",
+        "checked_at": "2026-11-04T19:29:26.467200+08:00",
         "tool_version": null,
         "install_method": "npm",
         "replayed": true,
@@ -99,7 +99,7 @@
         ],
         "smoke_tests": [
           {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- playwright-mcp",
+            "command": "python3 ~/.pickfit/mcp_probe.py -- playwright-mcp 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
@@ -108,23 +108,32 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "npx @playwright/mcp@latest launches server",
+            "actually_needed": "global install provides `playwright-mcp` binary; default browser is chrome channel which is not included in default `install-browser` and requires system deps needing root",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "browser automation works out of box",
+            "actually_needed": "Playwright Host validation warns missing libs (libgtk-3, libasound, etc.) and browser_tabs/browser_navigate fail with 'Chromium distribution chrome is not found'",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows successful MCP initialize and tools/list with 25 Playwright browser tools and handshake ok.",
+          "observed": "Screenshot shows MCP probe initializing Playwright server, listing 25 tools, and reporting handshake ok.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-playwright-mcp-20261104-133509-071d/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-playwright-mcp-20261104-133509-071d/check-1-cmd4.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.032633,
+        "cost_usd": 0.058945,
         "mcp": {
           "transport": "stdio",
           "launch": [
@@ -170,17 +179,17 @@
             "feature": "interact with web pages via accessibility snapshots",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_root",
             "failure": null,
-            "note": "install-only run"
+            "note": "requires Chrome/Chromium system deps not installable without sudo; browser_navigate failed"
           },
           {
             "feature": "automate browser via accessibility tree",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_root",
             "failure": null,
-            "note": "install-only run"
+            "note": "same browser dependency; browser_tabs/browser_navigate returned call_error"
           }
         ]
       }
@@ -245,7 +254,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -257,17 +266,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 85.9,
-      "confidence": 0.9,
+      "total": 93.3,
+      "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.8,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.8125,
@@ -288,6 +297,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -665,5 +678,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:06+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

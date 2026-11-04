@@ -60,16 +60,16 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-libresprite-20261104-140249-102f",
+      "run_id": "verify-libresprite-20261104-191755-508f",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak --version; flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
-          "purpose": "add flathub remote and verify flatpak available"
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add Flathub remote for flatpak"
         },
         {
-          "command": "flatpak install --user -y flathub com.github.libresprite.LibreSprite",
-          "purpose": "install LibreSprite via flatpak"
+          "command": "flatpak install --user -y flathub com.github.libresprite.LibreSprite 2>&1",
+          "purpose": "install LibreSprite flatpak com.github.libresprite.LibreSprite"
         }
       ],
       "manual_steps": [],
@@ -93,10 +93,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:05:17.834890+08:00",
+    "checked_at": "2026-11-04T19:51:54.381338+08:00",
     "runs": [
       {
-        "id": "verify-libresprite-20261104-140249-102f",
+        "id": "verify-libresprite-20261104-191755-508f",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -104,18 +104,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx-gui:c74b9d4f5f6a",
-        "checked_at": "2026-11-04T14:05:17.834890+08:00",
-        "tool_version": "1.2-dev",
+        "checked_at": "2026-11-04T19:51:54.381338+08:00",
+        "tool_version": "1.1-dev",
         "install_method": "other",
         "replayed": true,
         "steps": [
           {
-            "command": "flatpak --version; flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
-            "purpose": "add flathub remote and verify flatpak available"
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add Flathub remote for flatpak"
           },
           {
-            "command": "flatpak install --user -y flathub com.github.libresprite.LibreSprite",
-            "purpose": "install LibreSprite via flatpak"
+            "command": "flatpak install --user -y flathub com.github.libresprite.LibreSprite 2>&1",
+            "purpose": "install LibreSprite flatpak com.github.libresprite.LibreSprite"
           }
         ],
         "smoke_tests": [
@@ -127,64 +127,166 @@
             "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "flatpak run com.github.libresprite.LibreSprite",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /home/sbx/pickfit-out/sprite-test.png: 96 bytes, written after the app started; format png: yes",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "flatpak run com.github.libresprite.LibreSprite",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /home/sbx/pickfit-out/tiled-test.png: 91 bytes, written after the app started; format png: yes",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "flatpak run com.github.libresprite.LibreSprite",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /home/sbx/pickfit-out/anim-test.gif: 119 bytes, written after the app started; format gif: yes",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "flatpak run com.github.libresprite.LibreSprite",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /home/sbx/pickfit-out/onion-test2.gif: 121 bytes, written after the app started; format gif: yes",
+            "setup": [],
+            "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak run com.github.libresprite.LibreSprite",
+            "actually_needed": "flatpak remote-add --user flathub first, then flatpak install before run; multi-frame sprites cannot be saved as single PNG (prompts for 2 files) — save as GIF instead",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The screenshot shows LibreSprite's Home dashboard with menu bar, empty Recent files and Recent folders panels, and version footer.",
+          "observed": "LibreSprite's Home screen is fully drawn with its menu bar, Recent files and Recent folders panels, and version footer.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-libresprite-20261104-140249-102f/report.json",
-          "log_path": "runs/verify/verify-libresprite-20261104-140249-102f/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-libresprite-20261104-140249-102f/replay-3-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.021133,
+        "cost_usd": 0.414621,
         "gui": {
           "tier": "ui_rendered",
           "screen": "main_ui",
           "command": "flatpak run com.github.libresprite.LibreSprite",
           "window_title": "LibreSprite 1.2-dev",
-          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+          "display": "Xvfb 1280x800x24, no window manager, no GPU",
+          "operations": [
+            {
+              "feature": "edit sprites with layers and frames",
+              "goal": "Create a new sprite with layers and frames and save it. Press Ctrl+N to open New Sprite, press Enter to create it. Click in the middle of the canvas to draw with pencil. Press Ctrl+S to save, type /home/sbx/pickfit-out/sprite-test.png and press Enter. If a dialog asks for format, confirm.",
+              "check": "file",
+              "target": "~/pickfit-out/sprite-test.png",
+              "expected": [],
+              "format": "png",
+              "passed": true,
+              "observed": "file /home/sbx/pickfit-out/sprite-test.png: 96 bytes, written after the app started; format png: yes",
+              "smoke_test": 1,
+              "actions": 8,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "draw in tiled mode",
+              "goal": "Test tiled drawing mode. Press Ctrl+N then Enter to create new sprite. Enable Tiled Mode via menu View > Tiled Mode (click View then Tiled Mode). Then draw a dot on canvas. Save via Ctrl+S, type /home/sbx/pickfit-out/tiled-test.png and press Enter.",
+              "check": "file",
+              "target": "~/pickfit-out/tiled-test.png",
+              "expected": [],
+              "format": "png",
+              "passed": true,
+              "observed": "file /home/sbx/pickfit-out/tiled-test.png: 91 bytes, written after the app started; format png: yes",
+              "smoke_test": 2,
+              "actions": 11,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "preview animations in real time",
+              "goal": "Test real-time animation preview. Press Ctrl+N then Enter to create new sprite. Draw a dot. Create a second frame: press Alt+N or go to Frame > New Frame > New Frame. Draw another dot in different place. Press Enter key to start animation preview (play). Let it play briefly. Then save as GIF: press Ctrl+S, type /home/sbx/pickfit-out/anim-test.gif and press Enter, click Agree if asked about exporting animation.",
+              "check": "file",
+              "target": "~/pickfit-out/anim-test.gif",
+              "expected": [],
+              "format": "gif",
+              "passed": true,
+              "observed": "file /home/sbx/pickfit-out/anim-test.gif: 119 bytes, written after the app started; format gif: yes",
+              "smoke_test": 3,
+              "actions": 13,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "use onion skinning",
+              "goal": "Test onion skinning. Press Ctrl+N then Enter to create new sprite. Draw a dot on canvas. Create second frame via Alt+N. Click the onion skin button in timeline (bottom bar, icon with overlapping frames) to enable onion skinning. Then save as GIF: press Ctrl+S, type /home/sbx/pickfit-out/onion-test2.gif and press Enter, confirm any dialogs.",
+              "check": "file",
+              "target": "~/pickfit-out/onion-test2.gif",
+              "expected": [],
+              "format": "gif",
+              "passed": true,
+              "observed": "file /home/sbx/pickfit-out/onion-test2.gif: 121 bytes, written after the app started; format gif: yes",
+              "smoke_test": 4,
+              "actions": 11,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            }
+          ]
         },
         "features": [
           {
             "feature": "preview animations in real time",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output only shows a GIF file was written, not that real-time preview playback occurred."
           },
           {
             "feature": "use onion skinning",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output only shows a GIF file was written, not that onion-skin overlay was enabled or visible."
           },
           {
             "feature": "draw in tiled mode",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output only shows a PNG file was written, not that tiled mode was enabled or produced tiling."
           },
           {
             "feature": "edit sprites with layers and frames",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output only shows a PNG file was written, with no evidence of layers or frames being used."
           }
         ]
       }
@@ -193,7 +295,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
@@ -202,18 +304,70 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-libresprite-20261104-191755-508f",
+    "score": 1,
+    "status": "scored",
+    "defects": [
+      {
+        "item": "comfortable",
+        "operation": null,
+        "cause": "app",
+        "problem": "The copyright line at the bottom of the Home screen is truncated at the right edge of the window, ending mid-year.",
+        "screenshot": "replay-4-1.app.png",
+        "box": [
+          18,
+          932,
+          980,
+          978
+        ],
+        "quote": "LibreSprite 1.2-dev | Copyright (C) 2001 -2016 David Capello, 2016-20",
+        "found_by": "ocr",
+        "kind": "text_cut_off",
+        "severity": "minor"
+      },
+      {
+        "item": "comfortable",
+        "operation": null,
+        "cause": "app",
+        "problem": "The brush-size field in the top toolbar of the editor shows only '1p', with the rest of the value cut off by the narrow input box.",
+        "screenshot": "7-op-16.png",
+        "box": [
+          397,
+          247,
+          448,
+          298
+        ],
+        "quote": "1p",
+        "found_by": "unverified",
+        "kind": "text_cut_off",
+        "severity": "minor"
+      }
+    ],
+    "screens": 2,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "a9dc0ba060cbe28f443b8e2ae7078252a57a499a8b942332b5bac1ee71fe3560",
+    "checked_at": "2026-11-05T03:27:45+08:00",
+    "cost_usd": 0.053884
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:27:45+08:00",
     "quality": {
-      "total": 56.2,
-      "confidence": 0.9,
+      "total": 63.3,
+      "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.4375,
@@ -233,8 +387,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 0.95,
+        "before": 66.6,
+        "defects": 2
       }
     },
     "popularity": {
@@ -253,7 +412,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 5.62
+      "value": 6.33
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -534,5 +693,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:40+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:27:45+08:00"
 }

@@ -76,20 +76,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-bat-20261104-133331-b2ff",
+      "run_id": "verify-bat-20261104-191106-5a37",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL -o /tmp/bat.tar.gz https://github.com/sharkdp/bat/releases/download/v0.26.1/bat-v0.26.1-x86_64-unknown-linux-gnu.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/bat.tar.gz -C /tmp && cp /tmp/bat-v0.26.1-x86_64-unknown-linux-gnu/bat ~/.local/bin/bat && chmod +x ~/.local/bin/bat && ~/.local/bin/bat --version",
-          "purpose": "download prebuilt bat v0.26.1 tarball and install binary to ~/.local/bin"
+          "command": "cd /tmp && curl -fL -o bat.tar.gz https://github.com/sharkdp/bat/releases/download/v0.26.1/bat-v0.26.1-x86_64-unknown-linux-gnu.tar.gz && tar xzf bat.tar.gz && mkdir -p ~/.local/bin && cp bat-v0.26.1-x86_64-unknown-linux-gnu/bat ~/.local/bin/bat && chmod +x ~/.local/bin/bat && ~/.local/bin/bat --version",
+          "purpose": "Download and install bat binary from GitHub releases to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "bat --version",
+        "command": "bat --version\n",
         "expected_signal": "bat 0.26.1"
       },
-      "first_task": null
+      "first_task": "bat --color=always --paging=never /tmp/sample.py > /tmp/out_f1.txt && grep -q \"38;5;\" /tmp/out_f1.txt && echo \"F1_COLOR_OK\" && cat /tmp/out_f1.txt"
     },
     "windows": {
       "basis": "readme_claim",
@@ -119,100 +119,164 @@
     "url": "https://github.com/sharkdp/bat/releases/tag/v0.26.1"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:34:14.778770+08:00",
+    "checked_at": "2026-11-04T19:12:10.122769+08:00",
     "runs": [
       {
-        "id": "verify-bat-20261104-133331-b2ff",
-        "level": "install",
+        "id": "verify-bat-20261104-191106-5a37",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:34:14.778770+08:00",
-        "tool_version": "0.26.1",
+        "checked_at": "2026-11-04T19:12:10.122769+08:00",
+        "tool_version": "bat 0.26.1 (979ba22)",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fsSL -o /tmp/bat.tar.gz https://github.com/sharkdp/bat/releases/download/v0.26.1/bat-v0.26.1-x86_64-unknown-linux-gnu.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/bat.tar.gz -C /tmp && cp /tmp/bat-v0.26.1-x86_64-unknown-linux-gnu/bat ~/.local/bin/bat && chmod +x ~/.local/bin/bat && ~/.local/bin/bat --version",
-            "purpose": "download prebuilt bat v0.26.1 tarball and install binary to ~/.local/bin"
+            "command": "cd /tmp && curl -fL -o bat.tar.gz https://github.com/sharkdp/bat/releases/download/v0.26.1/bat-v0.26.1-x86_64-unknown-linux-gnu.tar.gz && tar xzf bat.tar.gz && mkdir -p ~/.local/bin && cp bat-v0.26.1-x86_64-unknown-linux-gnu/bat ~/.local/bin/bat && chmod +x ~/.local/bin/bat && ~/.local/bin/bat --version",
+            "purpose": "Download and install bat binary from GitHub releases to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "bat --version",
+            "command": "bat --version\n",
             "expected_signal": "bat 0.26.1",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "bat 0.26.1 (979ba22)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "bat --color=always --paging=never /tmp/sample.py > /tmp/out_f1.txt && grep -q \"38;5;\" /tmp/out_f1.txt && echo \"F1_COLOR_OK\" && cat /tmp/out_f1.txt",
+            "expected_signal": "F1_COLOR_OK",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "F1_COLOR_OK",
+            "setup": [
+              {
+                "command": "cat > /tmp/sample.py <<'PY'\ndef hello(name: str) -> str:\n    return f\"Hello, {name}!\"\nclass Foo:\n    pass\nPY\ncat /tmp/sample.py\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/batgit && bat --style=changes --color=always --paging=never test.txt > /tmp/out_f2.txt && cat /tmp/out_f2.txt && echo \"F2_GIT_OK\"\n",
+            "expected_signal": "F2_GIT_OK",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "F2_GIT_OK",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/batgit && cd /tmp/batgit && git init -q && git config user.email \"test@test.com\" && git config user.name \"test\" && echo \"original line\" > test.txt && git add test.txt && git commit -qm init && echo \"modified line\" > test.txt && echo \"new line\" >> test.txt && git status --porcelain\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "bat -A --paging=never /tmp/nonprint.txt > /tmp/out_f3.txt && cat /tmp/out_f3.txt && echo \"F3_SHOWALL_OK\"\n",
+            "expected_signal": "F3_SHOWALL_OK",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "F3_SHOWALL_OK",
+            "setup": [
+              {
+                "command": "cat > /tmp/nonprint.txt <<'EOF'\nhello\tworld\nline2\nEOF\nprintf 'visible\\x01\\x02\\x7f\\n' >> /tmp/nonprint.txt\ncat -A /tmp/nonprint.txt; echo \"---created---\"\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "bat --paging=never /tmp/large.txt > /tmp/out_f4.txt && wc -l /tmp/out_f4.txt && echo \"F4_PAGING_OK\" && bat --help | grep -q \"\\-\\-paging\" && echo \"PAGING_OPTION_OK\"\n",
+            "expected_signal": "F4_PAGING_OK",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "F4_PAGING_OK",
+            "setup": [
+              {
+                "command": "seq 1 200 > /tmp/large.txt && wc -l /tmp/large.txt\n",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
             "readme_said": "cargo install --locked bat",
-            "actually_needed": "Rust toolchain not available in box; used prebuilt binary from GitHub releases instead",
+            "actually_needed": "Rust toolchain not available in box; used prebuilt binary from GitHub releases",
             "kind": "sandbox"
           },
           {
             "readme_said": "sudo apt install bat",
-            "actually_needed": "no sudo/root in box; installed binary directly to ~/.local/bin",
+            "actually_needed": "No sudo/root in box; installed binary to ~/.local/bin instead",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows bat --version printing bat 0.26.1 (979ba22).",
+          "observed": "Screenshots show bat printing syntax-highlighted Python with color, git change markers, and version 0.26.1 with F1_COLOR_OK and F2_GIT_OK signals.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-bat-20261104-133331-b2ff/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-bat-20261104-133331-b2ff/check-1-cmd4.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.031371,
+        "cost_usd": 0.057652,
         "features": [
           {
             "feature": "highlight file syntax with colors",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "show Git modifications in sidebar",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "show non-printable characters",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "page large output automatically",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: check used --paging=never and only shows help option exists, not paging."
           }
         ]
       }
@@ -221,11 +285,11 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
-      "github.com/sharkdp/bat@41931bc4ad54",
+      "github.com/sharkdp/bat@5bdd8e280018",
       "Cargo.lock"
     ],
     "packages_checked": 316,
@@ -234,17 +298,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 60.1,
+      "total": 78.6,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
-          "weight": 40.0
+          "score": 0.85,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -265,6 +329,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -586,5 +654,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:44+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

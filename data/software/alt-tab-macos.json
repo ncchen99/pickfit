@@ -49,7 +49,7 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-alt-tab-macos-20261104-163921-c8ea",
+      "run_id": "verify-alt-tab-macos-20261105-025103-e106",
       "method": "brew",
       "steps": [
         {
@@ -79,10 +79,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T16:43:10.028420+08:00",
+    "checked_at": "2026-11-05T03:03:09.535192+08:00",
     "runs": [
       {
-        "id": "verify-alt-tab-macos-20261104-163921-c8ea",
+        "id": "verify-alt-tab-macos-20261105-025103-e106",
         "level": "install",
         "unverified_reason": null,
         "os": "macos",
@@ -90,7 +90,7 @@
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
-        "checked_at": "2026-11-04T16:43:10.028420+08:00",
+        "checked_at": "2026-11-05T03:03:09.535192+08:00",
         "tool_version": "11.10.1",
         "install_method": "brew",
         "replayed": true,
@@ -114,26 +114,29 @@
         "pitfalls": [
           {
             "readme_said": "brew install --cask alt-tab",
-            "actually_needed": "brew install --cask --appdir=$HOME/Applications alt-tab (standard user cannot write /Applications)",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications alt-tab",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "Enable Windows-like alt-tab",
+            "actually_needed": "granting Accessibility (and Screen Recording) in System Settings prompts for admin authentication, which a standard user cannot provide",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The window shows AltTab's initial setup flow requesting Accessibility and Screen Recording permissions.",
+          "observed": "The window shows AltTab's setup screen requesting Accessibility and Screen Recording permissions.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-alt-tab-macos-20261104-163921-c8ea/report.json",
-          "log_path": "runs/verify/verify-alt-tab-macos-20261104-163921-c8ea/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-alt-tab-macos-20261104-163921-c8ea/replay-3-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.019151,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.39562,
         "gui": {
           "tier": "ui_rendered",
           "screen": "first_run",
@@ -146,9 +149,9 @@
             "feature": "switch windows with Windows-like alt-tab",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_root",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: step_cap after 28 actions; check: the screen does not show the expected text; AltTab onboarding requires Accessibility permission; enabling it prompts for admin authentication which sbx lacks, so switcher never appears"
           }
         ]
       }
@@ -157,11 +160,11 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
-      "github.com/lwouis/alt-tab-macos@c500294bdb01",
+      "github.com/lwouis/alt-tab-macos@ec4f94a8b98a",
       "package-lock.json"
     ],
     "packages_checked": 20,
@@ -169,18 +172,35 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-alt-tab-macos-20261105-025103-e106",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 1,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "e82e3ccfd431c646ee10f00f71735738abfbc23d08cb51b51150a21ff18a87b4",
+    "checked_at": "2026-11-05T03:24:53+08:00",
+    "cost_usd": 0.022352
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T16:43:10+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:24:53+08:00",
     "quality": {
-      "total": 61.9,
-      "confidence": 0.9,
+      "total": 73.8,
+      "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.3125,
@@ -200,8 +220,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 73.8,
+        "defects": 0
       }
     },
     "popularity": {
@@ -220,7 +245,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 6.19
+      "value": 7.38
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -445,5 +470,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:30+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:24:53+08:00"
 }

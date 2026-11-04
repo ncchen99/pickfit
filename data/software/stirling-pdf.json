@@ -68,78 +68,84 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "needs_root",
-    "checked_at": "2026-11-04T15:02:36.139225+08:00",
+    "unverified_reason": "gui_only",
+    "checked_at": "2026-11-04T18:58:26.510807+08:00",
     "runs": [
       {
-        "id": "verify-stirling-pdf-20261104-150138-f253",
+        "id": "verify-stirling-pdf-20261104-185709-1725",
         "level": "unverified",
-        "unverified_reason": "needs_root",
+        "unverified_reason": "gui_only",
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T15:02:36.139225+08:00",
-        "tool_version": "3.2.2",
+        "checked_at": "2026-11-04T18:58:26.510807+08:00",
+        "tool_version": "v3.2.2",
         "install_method": "binary",
         "replayed": false,
         "steps": [
           {
-            "command": "curl -fL -o /home/sbx/Stirling-PDF-linux-x86_64.AppImage https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v3.2.2/Stirling-PDF-linux-x86_64.AppImage && chmod +x /home/sbx/Stirling-PDF-linux-x86_64.AppImage && ls -lh /home/sbx/Stirling-PDF-linux-x86_64.AppImage",
-            "purpose": "Download Stirling-PDF-linux-x86_64.AppImage from GitHub releases v3.2.2 and chmod +x"
-          }
-        ],
-        "smoke_tests": [
+            "command": "cd /home/sbx/work && curl -L -o Stirling-PDF-linux-x86_64.AppImage \"https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v3.2.2/Stirling-PDF-linux-x86_64.AppImage\" 2>&1 | tail -5\nls -lh Stirling-PDF-linux-x86_64.AppImage\nchmod +x Stirling-PDF-linux-x86_64.AppImage",
+            "purpose": "Download Stirling-PDF-linux-x86_64.AppImage v3.2.2"
+          },
           {
-            "command": "mkdir -p /tmp/stirling-extract && cd /tmp/stirling-extract && /home/sbx/Stirling-PDF-linux-x86_64.AppImage --appimage-extract > /tmp/extract.log 2>&1; echo EX:$?; ls -l; ls squashfs-root 2>&1 | head -n 80",
-            "expected_signal": "squashfs-root",
-            "exit_code": 0,
-            "passed": false,
-            "observed_excerpt": "drwx------ 1 sbx sbx 200 Nov 4 07:02 squashfs-root",
-            "setup": [
-              {
-                "command": "curl -fL -o /home/sbx/Stirling-PDF-linux-x86_64.AppImage https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v3.2.2/Stirling-PDF-linux-x86_64.AppImage && chmod +x /home/sbx/Stirling-PDF-linux-x86_64.AppImage && ls -lh /home/sbx/Stirling-PDF-linux-x86_64.AppImage",
-                "background": false,
-                "port": null
-              }
-            ],
-            "offline": null
+            "command": "cd /home/sbx/work && ./Stirling-PDF-linux-x86_64.AppImage --appimage-extract 2>&1 | tail -20\nls -lh squashfs-root/ 2>&1 | head -30",
+            "purpose": "Extract AppImage with --appimage-extract"
+          },
+          {
+            "command": "curl -L -o /tmp/jdk.tar.gz \"https://api.adoptium.net/v3/binary/latest/21/ga/linux/x64/jdk/hotspot/normal/eclipse\" 2>&1 | tail -5\nls -lh /tmp/jdk.tar.gz\ntar -xzf /tmp/jdk.tar.gz -C /tmp 2>&1 | tail -5\nls /tmp/ 2>&1 | head -20\n/tmp/jdk-*/bin/java -version 2>&1",
+            "purpose": "Download Temurin JDK 21"
+          },
+          {
+            "command": "export JAVA_HOME=/tmp/jdk-21.0.13+9\ncurl -L -o /tmp/jdk25.tar.gz \"https://api.adoptium.net/v3/binary/latest/25/ga/linux/x64/jdk/hotspot/normal/eclipse\" 2>&1 | tail -5\nls -lh /tmp/jdk25.tar.gz\ntar -xzf /tmp/jdk25.tar.gz -C /tmp 2>&1 | tail -5\nls /tmp/jdk* -d 2>&1\n/tmp/jdk-25*/bin/java -version 2>&1",
+            "purpose": "Download Temurin JDK 25 required by jar (class version 69)"
           }
         ],
+        "smoke_tests": [],
         "pitfalls": [
           {
-            "readme_said": "docker run and generic binary install",
-            "actually_needed": "AppImage requires FUSE (fusermount) and system libfontconfig.so.1 not present in box; --appimage-extract works but extracted binary still fails with missing libfontconfig.so.1",
+            "readme_said": "Quick Start via docker run, desktop AppImage available",
+            "actually_needed": "AppImage fails without FUSE: 'No suitable fusermount binary found' and needs --appimage-extract",
             "kind": "sandbox"
           },
           {
-            "readme_said": "no Java prerequisite mentioned for desktop AppImage",
-            "actually_needed": "Java not preinstalled; JDK 21 must be manually downloaded to run jar variants",
+            "readme_said": "Desktop app runs directly",
+            "actually_needed": "Extracted Electron binary requires libfontconfig.so.1 not present and needs display/GUI",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "No Java version mentioned",
+            "actually_needed": "Bundled jar stirling-pdf-3.2.2.jar requires Java 25 (class file version 69.0), JDK 21 fails with UnsupportedClassVersionError",
+            "kind": "note"
+          },
+          {
+            "readme_said": "install step 2 runs Stirling-PDF-linux-x86_64.AppImage",
+            "actually_needed": "nothing to change; a note: the box ran Stirling-PDF-linux-x86_64.AppImage, downloaded, without reading it first, so pickfit did not inspect it",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": null,
         "evidence": {
-          "trace_path": "runs/verify/verify-stirling-pdf-20261104-150138-f253/report.json",
+          "trace_path": null,
           "log_path": null,
           "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.0396
+        "cost_usd": 0.063687
       }
     ]
   },
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/Stirling-Tools/Stirling-PDF@00cd05d229f5",
+      "github.com/Stirling-Tools/Stirling-PDF@b78729215bf3",
       "frontend/package-lock.json",
       "frontend/src-tauri/Cargo.lock",
       "frontend/src-tauri/provisioner/Cargo.lock",
@@ -288,8 +294,8 @@
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
       "total": 46.8,
       "confidence": 0.5,
@@ -298,7 +304,7 @@
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 40.0
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.375,
@@ -319,6 +325,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -573,5 +583,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:09+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

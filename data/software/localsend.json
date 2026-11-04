@@ -54,16 +54,16 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-localsend-20261104-154708-87e4",
+      "run_id": "verify-localsend-20261105-014747-4b65",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install localsend-cli",
-          "purpose": "install localsend-cli terminal client via brew"
+          "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications localsend",
+          "purpose": "install LocalSend GUI via brew cask"
         },
         {
-          "command": "brew install --cask --appdir=$HOME/Applications localsend",
-          "purpose": "install localsend GUI app cask to ~/Applications"
+          "command": "brew install localsend-cli",
+          "purpose": "install LocalSend CLI for terminal features"
         }
       ],
       "manual_steps": [],
@@ -71,7 +71,7 @@
         "command": "localsend-cli --help",
         "expected_signal": "LocalSend CLI"
       },
-      "first_task": null
+      "first_task": "open ~/Applications/LocalSend.app"
     },
     "linux": {
       "basis": "readme_claim",
@@ -104,10 +104,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T15:52:54.096306+08:00",
+    "checked_at": "2026-11-05T02:01:47.337689+08:00",
     "runs": [
       {
-        "id": "verify-localsend-20261104-154708-87e4",
+        "id": "verify-localsend-20261105-014747-4b65",
         "level": "install",
         "unverified_reason": null,
         "os": "macos",
@@ -115,18 +115,18 @@
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
-        "checked_at": "2026-11-04T15:52:54.096306+08:00",
+        "checked_at": "2026-11-05T02:01:47.337689+08:00",
         "tool_version": "1.18.2",
         "install_method": "brew",
         "replayed": true,
         "steps": [
           {
-            "command": "brew install localsend-cli",
-            "purpose": "install localsend-cli terminal client via brew"
+            "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications localsend",
+            "purpose": "install LocalSend GUI via brew cask"
           },
           {
-            "command": "brew install --cask --appdir=$HOME/Applications localsend",
-            "purpose": "install localsend GUI app cask to ~/Applications"
+            "command": "brew install localsend-cli",
+            "purpose": "install LocalSend CLI for terminal features"
           }
         ],
         "smoke_tests": [
@@ -140,67 +140,94 @@
             "offline": true
           },
           {
-            "command": "localsend-cli --version",
-            "expected_signal": "localsend-cli 1.18.2",
+            "command": "open ~/Applications/LocalSend.app",
+            "expected_signal": "gui tier: window",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "localsend-cli 1.18.2",
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "localsend-cli send report.pdf",
+            "expected_signal": "",
+            "exit_code": 2,
+            "passed": false,
+            "observed_excerpt": "error: unexpected argument 'send' found Usage: localsend-cli [OPTIONS] For more information, try '--help'.",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "localsend-cli send --to \"Cute Tomato\" --text \"https://localsend.org\"",
+            "expected_signal": "",
+            "exit_code": 2,
+            "passed": false,
+            "observed_excerpt": "error: unexpected argument 'send' found Usage: localsend-cli [OPTIONS] For more information, try '--help'.",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "brew install localsend-cli",
-            "actually_needed": "GUI app requires brew install --cask --appdir=$HOME/Applications localsend (separate cask) as non-admin cannot write /Applications",
+            "readme_said": "Download via Homebrew (cask localsend)",
+            "actually_needed": "installed the desktop GUI with brew install --cask --appdir=$HOME/Applications localsend (standard user cannot write /Applications)",
             "kind": "sandbox"
           },
           {
-            "readme_said": "localsend-cli send report.pdf ... and localsend-cli send --to ... --text",
-            "actually_needed": "installed localsend-cli 1.18.2 has no `send` subcommand; usage is `localsend-cli --file <PATH>` / `localsend-cli -f` and interactive device list; `localsend-cli send` exits 2 'unexpected argument send'",
+            "readme_said": "localsend-cli send report.pdf photo.jpg ./project-backup and send --to/--text examples",
+            "actually_needed": "installed CLI 1.18.2 uses -f/--file and interactive device list; there is no `send` subcommand, so `localsend-cli send ...` exits 2",
             "kind": "readme_wrong"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The help output shows LocalSend CLI title, usage, options, events and hotkeys with exit code 0.",
+          "observed": "Screenshot shows LocalSend CLI help with usage, options, events and hotkeys. / The LocalSend window shows its main Receive interface with sidebar navigation and device name Neat Coconut fully drawn.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-localsend-20261104-154708-87e4/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-localsend-20261104-154708-87e4/check-1-cmd6.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.041913,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.731558,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "open ~/Applications/LocalSend.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
         "features": [
           {
             "feature": "share files and messages nearby",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "check_not_met",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: done after 10 actions; check: the screen does not show the expected text; operator added share.txt (Selection showed 1 file 26B) but screen judge read no text"
           },
           {
             "feature": "send files via terminal client",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
-            "failure": null,
-            "note": "install-only run"
+            "status": "test_failed",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": "tool",
+            "note": "unexpected argument 'send' found; CLI 1.18.2 has no send subcommand"
           },
           {
             "feature": "send text messages to devices",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
-            "failure": null,
-            "note": "install-only run"
+            "status": "test_failed",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": "tool",
+            "note": "unexpected argument 'send' found; --text/--to send example absent"
           }
         ]
       }
@@ -209,7 +236,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -221,18 +248,35 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-localsend-20261105-014747-4b65",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 1,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "9664fe37ef50b3a1ab169903d1334f6f37601defca63649b4c72bc76bec26d59",
+    "checked_at": "2026-11-05T03:27:51+08:00",
+    "cost_usd": 0.013736
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T15:52:54+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:27:51+08:00",
     "quality": {
-      "total": 64.9,
+      "total": 61.1,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
-          "weight": 40.0
+          "score": 0.85,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 0.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -252,8 +296,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 61.1,
+        "defects": 0
       }
     },
     "popularity": {
@@ -274,7 +323,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 4.35
+      "value": 4.09
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -571,5 +620,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:42+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:27:51+08:00"
 }
