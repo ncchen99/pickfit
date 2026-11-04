@@ -23,7 +23,7 @@ const params = new URLSearchParams(location.search);
 export const RENDER = params.has('render');
 
 export class Stage {
-  constructor({ background = site.paper, ground = true, ao = true, dof = null, fov = 30, exposure = 1 } = {}) {
+  constructor({ background = site.room, ground = true, ao = true, dof = null, fov = 30, exposure = 1 } = {}) {
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
     Object.assign(document.body.style, { margin: 0, background: '#111', overflow: 'hidden' });
