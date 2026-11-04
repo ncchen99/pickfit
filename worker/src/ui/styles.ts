@@ -13,7 +13,7 @@ const TOKENS = `
    answer; --voice-edge is the answer's own edge (2:1 light, 3.15:1 dark), so its cut corner reads beside your request's. */
 :root{
 --paper:#F7F7F4;--tag:#FFFFFF;--raised:#FFFFFF;--voice:#F1F6E2;--voice-line:#CDD7AB;--voice-edge:#A9B77E;
---sunk:#F0F1EC;--code-bg:#FFFFFF;--rule:#DEDFD9;--line-ctl:#80817A;
+--sunk:#F0F1EC;--code-bg:#FFFFFF;--cmd-bg:color-mix(in srgb,var(--ink) 5.5%,transparent);--rule:#DEDFD9;--line-ctl:#80817A;
 --ink:#1A1D17;--ink-2:#4F5149;--ink-3:#65655E;
 --tape:#F5C243;--tape-edge:#A57710;--tape-deep:#D9A21B;--tape-ink:#3A2905;--tape-tab:#C3CAD2;
 --stitch:#C4552D;--fitz-line:#4A2E22;--fitz-ink:#4A2E22;
@@ -308,8 +308,9 @@ button.badge{cursor:help;min-height:24px;text-decoration:underline dotted;text-d
    the line breaks inside it. A wrapped part
    hangs 2ch in, so it never reads as the next command; each line of several is its own block (.ln) and starts flush.
    Copy is a quiet text button right after the command, on the first line's baseline (align-items:baseline). */
-.cmd{display:flex;align-items:baseline;gap:4px 16px;margin:8px 0 12px;min-width:0;padding:0;background:none;border:0;border-left:2px solid var(--line-ctl);border-radius:0;color:var(--ink)}
-.cmd pre{flex:0 1 auto;min-width:0;margin:0;padding:3px 0 3px calc(14px + 2ch);text-indent:-2ch;line-height:1.6;white-space:pre-wrap;word-break:normal;overflow-wrap:anywhere}
+/* A command is a faint block (a tint of the ink, so it holds on the ground and inside Fitz's answer), with Copy at its right edge. */
+.cmd{display:flex;align-items:baseline;gap:4px 16px;margin:8px 0 12px;min-width:0;padding:6px 10px 6px 0;background:var(--cmd-bg);border:0;border-radius:var(--r-ctl);color:var(--ink)}
+.cmd pre{flex:1 1 auto;min-width:0;margin:0;padding:3px 0 3px calc(14px + 2ch);text-indent:-2ch;line-height:1.6;white-space:pre-wrap;word-break:normal;overflow-wrap:anywhere}
 .cmd .ln{display:block}
 /* A word with a hyphen or a slash in it is one piece (command() marks it): the line wraps at the space before it. Only a
    word longer than the line breaks, inside itself; its own text-indent is reset, so the hanging indent stays the block's. */
