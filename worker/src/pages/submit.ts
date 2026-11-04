@@ -38,7 +38,6 @@ const STEPS = (repo: boolean): { name: string; line: string }[] => [
 
 export interface SubmitFormInput {
   url?: string;
-  author?: boolean;
   error?: string | null;
 }
 
@@ -46,12 +45,11 @@ export function renderSubmitForm(nonce: string, input: SubmitFormInput = {}): st
   const error = input.error ?? null;
   const form =
     `<form id="submit-form" class="ask-card sub-form${error ? ' is-invalid' : ''}" method="post" action="/submit">` +
-    `<div class="ask"><label for="sub-url">${L('Add', '加入')}</label>` +
+    `<div class="ask"><label for="sub-url">${L('Recommend', '推薦')}</label>` +
     `<input id="sub-url" name="url" type="text" inputmode="url" required maxlength="300" autocomplete="off" autocapitalize="off" spellcheck="false" ` +
     `placeholder="github.com/you/your-app"${input.url ? ` value="${esc(input.url)}"` : ''}${error ? ' aria-invalid="true" aria-describedby="sub-err"' : ''}></div>` +
     (error ? `<p class="sub-err" id="sub-err" role="alert">${esc(error)}</p>` : '') +
-    `<div class="ask-meta"><div class="ask-opts"><label class="chip"><input type="checkbox" name="author" value="1"${input.author ? ' checked' : ''}>${L('I made this', '這是我做的')}</label></div>` +
-    `<div class="ask-go"><button type="submit" class="btn btn-primary go"><span class="btn-label">${L('Send it to Fitz', '交給 Fitz')}</span></button></div></div>` +
+    `<div class="ask-meta"><div class="ask-go"><button type="submit" class="btn btn-primary go"><span class="btn-label">${L('Send it to Fitz', '交給 Fitz')}</span></button></div></div>` +
     `</form>`;
   const steps = STEPS(true)
     .slice(1)
@@ -59,24 +57,16 @@ export function renderSubmitForm(nonce: string, input: SubmitFormInput = {}): st
     .join('');
   const main =
     head(
-      L('Add your software to pickfit', '把你的軟體加進 pickfit'),
-      L('Paste a link. Fitz reads it, tries it in a clean sandbox, and lists it if it works. No account, nothing to install.', '貼上連結。Fitz 會讀它、在乾淨的沙盒裡試用，能用就收進來。不用註冊，也不用安裝任何東西。'),
+      L('Recommend software to pickfit', '推薦軟體給 pickfit'),
+      L('Paste a link. Fitz tries it in a clean sandbox and lists it if it works.', '貼上連結。Fitz 會在乾淨的沙盒裡試用，能用就收進來。'),
       'hello',
     ) +
-    `<div class="wrap sub-page">${form}` +
-    `<p class="sub-takes">${L(
-      'A GitHub repository, or the https address of a public web app. Command-line tools, local AI tools, MCP servers, desktop apps and web apps are taken; libraries are not.',
-      'GitHub 專案，或公開網頁應用的 https 網址。收命令列工具、本機 AI 工具、MCP 伺服器、桌面 App 和網頁應用；不收函式庫。',
-    )}</p>` +
-    `<h2 class="sub-h">${L('What happens next', '接下來會發生什麼事')}</h2><ol class="sub-next">${steps}</ol>` +
-    `<p class="sub-fine">${L(
-      'Every submission gets the same tests as everything else, and submitting never earns a better rank. You can watch it run, or keep the link and come back. ',
-      '每筆提交都做一樣的測試，提交也不會換來更好的排名。你可以看著它跑，也可以留下連結晚點再回來看。',
-    )}<a href="/agents">${L('Your agent can submit too.', '也可以讓你的 agent 提交。')}</a></p></div>`;
+    `<div class="wrap sub-page"><div class="sub-main">${form}</div>` +
+    `<aside class="sub-side"><h2 class="sub-h">${L('What happens next', '接下來會發生什麼事')}</h2><ol class="sub-next">${steps}</ol></aside></div>`;
   return renderShell({
     nonce,
-    title: L('Add your software · pickfit', '加入你的軟體 · pickfit'),
-    description: L('Submit a GitHub project or a web app. pickfit tries it in a sandbox and lists it if it works.', '提交 GitHub 專案或網頁應用。pickfit 會在沙盒裡試用，能用就收錄。'),
+    title: L('Recommend software · pickfit', '推薦軟體 · pickfit'),
+    description: L('Recommend a GitHub project or a web app. pickfit tries it in a sandbox and lists it if it works.', '推薦 GitHub 專案或網頁應用。pickfit 會在沙盒裡試用，能用就收錄。'),
     active: 'submit',
     main,
     tray: false,
@@ -197,14 +187,20 @@ export function renderSubmissionLive(view: SubmissionView, now: Date): string {
   const go = view.toolHref
     ? `<a class="btn ${view.status === 'rejected' ? 'btn-quiet' : 'btn-primary'}" href="${esc(view.toolHref)}">${view.status === 'listed' ? L('See its page', '看它的頁面') : L('See what the run found', '看測試結果')}</a>`
     : '';
-  const again = isFinal(view.status) ? `<a class="btn btn-quiet" href="/submit">${L('Submit another', '再提交一款')}</a>` : '';
+  const again = isFinal(view.status) ? `<a class="btn btn-quiet" href="/submit">${L('Recommend another', '再推薦一款')}</a>` : '';
+  const keep =
+    view.id && !isFinal(view.status)
+      ? `<p class="sub-keep"><span>${L('You can close this page. This link keeps the result.', '可以關掉這一頁，這個連結會保留結果。')}</span> ` +
+        `<button type="button" class="btn btn-ghost btn-sm js-only" data-copy-page>${L('Copy link', '複製連結')}</button>` +
+        `<noscript><a href="">${L('Check again', '重新整理')}</a></noscript></p>`
+      : '';
   return (
-    `<div data-sub-state="${isFinal(view.status) ? 'final' : 'running'}" data-sub-key="${esc(`${view.status}|${say.title}|${say.line}`)}" data-sub-tab="${esc(`${say.tab} · ${shortUrl(view.url)}`)}">` +
-    `<div class="says sub-says" role="status">${fitz(say.who, 104, { eager: true })}<div class="bubble"><h2>${esc(say.title)}</h2><p>${esc(say.line)}</p></div></div>` +
-    `<ol class="sub-steps">${steps}</ol>` +
+    `<div class="sub-grid" data-sub-state="${isFinal(view.status) ? 'final' : 'running'}" data-sub-key="${esc(`${view.status}|${say.title}|${say.line}`)}" data-sub-tab="${esc(`${say.tab} · ${shortUrl(view.url)}`)}">` +
+    `<div class="sub-main"><div class="says sub-says" role="status">${fitz(say.who, 104, { eager: true })}<div class="bubble"><h2>${esc(say.title)}</h2><p>${esc(say.line)}</p></div></div>` +
     (passed ? `<div class="seam" aria-hidden="true"></div>` : '') +
     (go || again ? `<div class="sub-go">${go}${again}</div>` : '') +
-    `</div>`
+    keep +
+    `</div><ol class="sub-steps sub-side">${steps}</ol></div>`
   );
 }
 
@@ -222,22 +218,16 @@ export function renderSubmissionPage(view: SubmissionView, now: Date, nonce: str
   const say = saying(view, now);
   const name = shortUrl(view.url);
   const when = view.submitted_at
-    ? `<p class="sub-when">${L('Submitted', '送出於')} <time datetime="${esc(view.submitted_at)}" data-sub-since>${esc(ago(view.submitted_at, now))}</time></p>`
+    ? `<p class="lede">${L('Submitted', '送出於')} <time datetime="${esc(view.submitted_at)}" data-sub-since>${esc(ago(view.submitted_at, now))}</time></p>`
     : '';
-  const keep =
-    view.id && !isFinal(view.status)
-      ? `<p class="sub-keep"><span>${L('You can close this page. This link keeps the result.', '可以關掉這一頁，這個連結會保留結果。')}</span> ` +
-        `<button type="button" class="btn btn-ghost btn-sm js-only" data-copy-page>${L('Copy link', '複製連結')}</button>` +
-        `<noscript><a href="">${L('Check again', '重新整理')}</a></noscript></p>` +
-        `<p class="sub-offline" data-sub-offline hidden>${L('Can’t reach pickfit right now. Still trying.', '暫時連不上 pickfit，會繼續重試。')}</p>`
-      : '';
+  const offline = view.id && !isFinal(view.status) ? `<p class="sub-offline" data-sub-offline hidden>${L('Can’t reach pickfit right now. Still trying.', '暫時連不上 pickfit，會繼續重試。')}</p>` : '';
   const main =
-    `<div class="wrap sub-page sub-status"><h1 translate="no">${esc(name)}</h1>${when}` +
-    `<div data-sub-live aria-live="off">${renderSubmissionLive(view, now)}</div>${keep}</div>`;
+    `<section class="head mat after-top"><div class="wrap head-row"><div><h1 translate="no">${esc(name)}</h1>${when}</div></div><div class="ruler" aria-hidden="true"></div></section>` +
+    `<div class="wrap sub-status"><div data-sub-live aria-live="off">${renderSubmissionLive(view, now)}</div>${offline}</div>`;
   return renderShell({
     nonce,
     title: `${say.tab} · ${name}`,
-    description: L('The progress of one submission to pickfit.', '一筆 pickfit 提交的進度。'),
+    description: L('The progress of one recommendation to pickfit.', '一筆 pickfit 推薦的進度。'),
     active: 'submit',
     main,
     tray: false,

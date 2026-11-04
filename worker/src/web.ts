@@ -453,13 +453,12 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
         }
         const nonce = newNonce();
         const form = new URLSearchParams(await request.text().then((body) => body.slice(0, 2_000)));
-        const author = form.get('author') === '1';
         const given = (form.get('url') ?? '').trim().slice(0, 300);
         const failed = (error: string, status: number, extra: Record<string, string> = {}) =>
-          html(withLang(lang, () => renderSubmitForm(nonce, { url: given, author, error })), status, nonce, { ...keep, ...extra });
+          html(withLang(lang, () => renderSubmitForm(nonce, { url: given, error })), status, nonce, { ...keep, ...extra });
         try {
           const out = await submitSoftware(
-            { url: given, submitter_role: author ? 'author' : 'unknown' },
+            { url: given },
             { catalog: shown, db: env.DB, now, hourlyCap: settings(env).submitHourlyCap, client: 'web' },
           );
           if (out.submission_id) return new Response(null, { status: 303, headers: { location: `/submit/${out.submission_id}`, 'cache-control': 'no-store', ...keep } });

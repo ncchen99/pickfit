@@ -786,7 +786,7 @@ test('a new link is queued and redirects to its status page, which follows the r
 
   // the fragment the page polls: only the part that changes, no page around it
   const fragment = await (await getPage(s, path, { 'x-pickfit-fragment': '1' })).text();
-  assert.ok(fragment.startsWith('<div data-sub-state="running"'));
+  assert.ok(fragment.startsWith('<div class="sub-grid" data-sub-state="running"'));
   assert.doesNotMatch(fragment, /<html/);
 
   const step = async (status: string, slug: string | null, reason: string | null) => {

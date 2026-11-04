@@ -61,7 +61,7 @@ export const script = () => `
           subLive.setAttribute('aria-live', 'polite'); // only a change is news; not the page as it loads
           subLive.replaceChildren(row);
           document.title = row.dataset.subTab;
-          if (!running()) for (const el of $$('.sub-keep, .sub-offline')) el.remove();
+          if (!running() && offline) offline.remove();
         }
       } catch {
         if (offline) offline.hidden = false;
@@ -71,13 +71,12 @@ export const script = () => `
     document.addEventListener('visibilitychange', () => { if (!document.hidden && running()) poll(); });
     next();
   }
-  const copyPage = $('[data-copy-page]');
-  if (copyPage) {
-    copyPage.addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText(location.href); toast(${J('Link copied', '已複製連結')}); }
-      catch { toast(${J('Couldn’t copy. The link is in the address bar.', '無法複製，連結就在網址列。')}); }
-    });
-  }
+  // Delegated: the status part, with this button in it, is replaced as the submission moves on.
+  document.addEventListener('click', async (e) => {
+    if (!e.target.closest || !e.target.closest('[data-copy-page]')) return;
+    try { await navigator.clipboard.writeText(location.href); toast(${J('Link copied', '已複製連結')}); }
+    catch { toast(${J('Couldn’t copy. The link is in the address bar.', '無法複製，連結就在網址列。')}); }
+  });
   const subForm = $('#submit-form');
   if (subForm) subForm.addEventListener('submit', () => {
     const go = $('.go', subForm);

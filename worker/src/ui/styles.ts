@@ -772,25 +772,25 @@ details[open]:not(.menu)>summary:not(:has(>.i))::before{transform:rotate(180deg)
 .ask input[type=text]{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:500 1.4rem/1.3 var(--display);letter-spacing:-.015em;padding:0}
 .ask input[type=text]::placeholder{color:var(--ink-3);opacity:1}
 .ask input[type=text]:focus-visible{outline:none}
-/* /submit: the request surface, then what happens as rows on the ground. A status page reads as one column. */
-.sub-page{max-width:calc(760px + 48px);padding-top:32px;padding-bottom:64px}
+/* /submit and a submission's page: left-aligned on the site's own column, like every other page, in the same two
+   columns: what you act on or read first on the left, the steps on the right, hairlines and no boxes. */
+.sub-page,.sub-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:32px 64px;align-items:start}
+.sub-page{padding-top:32px;padding-bottom:64px}
+.sub-status{padding-top:32px;padding-bottom:64px}
 .sub-err{margin:12px 0 0;color:var(--fail);font-weight:500}
 .sub-form.is-invalid{border-color:var(--fail)}
-.sub-takes{margin:16px 0 0;color:var(--ink-2)}
-.sub-h{font-size:var(--t-head);margin:48px 0 4px}
+.sub-form .ask-meta{justify-content:flex-end}
+.sub-h{font-size:var(--t-head);margin:0 0 4px}
 .sub-next{list-style:none;margin:0;padding:0}
-.sub-next li{display:grid;grid-template-columns:5.5rem minmax(0,1fr);gap:4px 16px;padding:12px 0;border-bottom:1px solid var(--rule)}
+.sub-next li{display:grid;grid-template-columns:4.5rem minmax(0,1fr);gap:4px 12px;padding:12px 0;border-bottom:1px solid var(--rule)}
 .sub-next b{font:700 1rem/1.5 var(--display)}
 .sub-next span{color:var(--ink-2)}
-.sub-fine{margin:24px 0 0;color:var(--ink-3);font-size:.92rem;max-width:68ch}
-.sub-status h1{font-size:clamp(1.6rem,2.6vw,2.2rem);overflow-wrap:anywhere}
-.sub-when{margin:4px 0 0;color:var(--ink-3);font-size:.92rem;font-variant-numeric:tabular-nums}
-.sub-says{margin-top:24px}
 .sub-says .bubble{flex:1;min-width:0;padding:16px 20px}
 .sub-says .bubble h2{font-size:1.35rem;margin:0 0 4px}
 .sub-says .bubble p{margin:0}
-.sub-steps{list-style:none;margin:24px 0 0;padding:0}
+.sub-steps{list-style:none;margin:0;padding:0}
 .sub-step{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;padding:14px 0;border-bottom:1px solid var(--rule)}
+.sub-step:first-child{padding-top:0}
 .sub-step h3{font:700 1.05rem/1.4 var(--display);margin:0}
 .sub-step p{margin:2px 0 0;color:var(--ink-2);font-size:.95rem}
 .sub-mark{display:grid;place-items:center;width:24px;height:24px;margin-top:1px}
@@ -804,7 +804,8 @@ details[open]:not(.menu)>summary:not(:has(>.i))::before{transform:rotate(180deg)
 .sub-status .seam{margin:24px 0 0}
 .sub-go{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
 .sub-keep{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;margin:24px 0 0;color:var(--ink-2)}
-.sub-offline{margin:8px 0 0;color:var(--caution);font-size:.92rem}
+.sub-offline{margin:16px 0 0;color:var(--caution);font-size:.92rem}
+@media (max-width:900px){.sub-page,.sub-grid{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:640px){.sub-next li{grid-template-columns:minmax(0,1fr)}.ask input[type=text]{width:100%}}
 /* waiting: Fitz talks (his --voice bubble) while his tape unrolls; one dashed outline shows where the answer will land */
 .loading{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;margin-top:32px;max-width:1040px}
