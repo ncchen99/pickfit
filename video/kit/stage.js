@@ -23,7 +23,7 @@ const params = new URLSearchParams(location.search);
 export const RENDER = params.has('render');
 
 export class Stage {
-  constructor({ background = site.room, ground = true, ao = true, dof = null, fov = 30, exposure = 1 } = {}) {
+  constructor({ background = site.room, ground = true, ao = true, dof = null, fov = 30, exposure = 1, near = 0.05 } = {}) {
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
     Object.assign(document.body.style, { margin: 0, background: '#111', overflow: 'hidden' });
@@ -46,7 +46,7 @@ export class Stage {
     scene.environmentIntensity = 0.42;
     this.scene = scene;
 
-    const camera = new THREE.PerspectiveCamera(fov, W / H, 0.05, 200);
+    const camera = new THREE.PerspectiveCamera(fov, W / H, near, 200);
     camera.position.set(0, 2.2, 7);
     this.camera = camera;
     this.target = new THREE.Vector3(0, 0.6, 0);
@@ -74,9 +74,13 @@ export class Stage {
       floor.rotation.x = -Math.PI / 2;
       // 0.5 mm above the paper is not enough depth precision from 15+ units away: on some camera
       // positions the paper won and whole shadows blinked out for one frame. The offset settles it.
-      const catcher = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.ShadowMaterial({ color: '#2b2a20', opacity: 0.16, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -8 }));
+      // A scene that keeps the camera far away (near >= 0.1) has the precision without an offset: the offset pulls the
+      // catcher toward the camera, at a grazing view far enough to draw a floor shadow over thin cards lying on the floor,
+      // on some frames and not others (the flickering shadows at the wall of tickets).
+      const offset = near < 0.1 ? { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -8 } : {};
+      const catcher = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.ShadowMaterial({ color: '#2b2a20', opacity: 0.16, ...offset }));
       catcher.rotation.x = -Math.PI / 2;
-      catcher.position.y = 0.0005;
+      catcher.position.y = near < 0.1 ? 0.0005 : 0.002;
       catcher.renderOrder = 1;
       catcher.receiveShadow = true;
       scene.add(floor, catcher);

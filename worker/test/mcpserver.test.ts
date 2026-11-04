@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { toCard } from '../src/cards.ts';
 import { installGuide } from '../src/install.ts';
-import { clientConfig, shellQuote } from '../src/mcpconfig.ts';
+import { withLang } from '../src/i18n.ts';
+import { clientConfig, shellQuote, userLaunch } from '../src/mcpconfig.ts';
 import { fixtureCatalog } from './helpers.ts';
 
 const catalog = fixtureCatalog();
@@ -11,14 +12,15 @@ const catalog = fixtureCatalog();
 test('the client config comes from the launch argv the sandbox started', () => {
   const out = installGuide(catalog, { slug: 'fixture-notes-mcp', os: 'linux' });
   const config = out.mcp_client_config!;
-  assert.deepEqual([config.command, config.args], ['notes-mcp', ['--root', '~/work']]);
-  assert.equal(config.claude_code, "claude mcp add fixture-notes-mcp -e NOTES_SYNC_TOKEN='<NOTES_SYNC_TOKEN>' -- notes-mcp --root ~/work");
+  assert.deepEqual([config.command, config.args], ['notes-mcp', ['--root', '<root>']]);
+  assert.equal(config.claude_code, "claude mcp add fixture-notes-mcp -e NOTES_SYNC_TOKEN='<NOTES_SYNC_TOKEN>' -- notes-mcp --root '<root>'");
   assert.deepEqual(JSON.parse(config.json), {
-    mcpServers: { 'fixture-notes-mcp': { command: 'notes-mcp', args: ['--root', '~/work'], env: { NOTES_SYNC_TOKEN: '<NOTES_SYNC_TOKEN>' } } },
+    mcpServers: { 'fixture-notes-mcp': { command: 'notes-mcp', args: ['--root', '<root>'], env: { NOTES_SYNC_TOKEN: '<NOTES_SYNC_TOKEN>' } } },
   });
   // Only variables the README marks required become placeholders; pickfit never had a value.
   assert.deepEqual(config.env.map((v) => v.name), ['NOTES_SYNC_TOKEN']);
-  assert.match(config.note ?? '', /paths inside pickfit's sandbox/);
+  assert.match(config.note ?? '', /Replace <root> with your own path/);
+  assert.doesNotMatch(config.note ?? '', /sandbox/);
   assert.match(config.note ?? '', /Ask the user for NOTES_SYNC_TOKEN/);
   assert.deepEqual([config.tools, config.tool_count, config.called_tool, config.works_offline], [['search_notes', 'read_note'], 2, 'search_notes', true]);
   // The probe exists only in pickfit's sandbox: never a check or first task for the user.
@@ -70,6 +72,55 @@ test('variables an HTTP server was started with stay in the start command, not i
   };
   const config = clientConfig(entry, guide)!;
   assert.deepEqual([config.command, config.args], ['notes-mcp', []]);
-  assert.match(config.note ?? '', /keep it running \(VAULT_PATH=\/tmp\/v PORT=3001 notes-mcp/);
-  assert.match(config.note ?? '', /paths inside pickfit's sandbox/);
+  assert.match(config.note ?? '', /keep it running \('VAULT_PATH=<VAULT_PATH>' PORT=3001 notes-mcp/);
+  assert.match(config.note ?? '', /Replace <VAULT_PATH> with your own path/);
+});
+
+test('the launch is written the way a user starts it, never with the sandbox paths', () => {
+  const cases: [string[], string[]][] = [
+    [['node', '/home/sbx/.local/lib/node_modules/x/s.mjs'], ['node', '$HOME/.local/lib/node_modules/x/s.mjs']],
+    [['/Users/sbx/.local/bin/x', 'serve'], ['$HOME/.local/bin/x', 'serve']],
+    [['~/.local/bin/x'], ['$HOME/.local/bin/x']],
+    [['${HOME}/.local/bin/x'], ['$HOME/.local/bin/x']],
+    [['x', '--root', '/home/sbx/work'], ['x', '--root', '<root>']],
+    [['x', '--config', '/tmp/x.toml'], ['x', '--config', '<config>']],
+    [['x', '--config=/tmp/x.toml'], ['x', '--config=<config>']],
+    [['env', 'X_DB=/tmp/x.db', 'FlowState/.venv/bin/python', '-m', 'x'], ['env', 'X_DB=<X_DB>', '<install-folder>/FlowState/.venv/bin/python', '-m', 'x']],
+    [['node', 'dist/index.js'], ['node', '<install-folder>/dist/index.js']],
+    [['node', './dist/index.js'], ['node', '<install-folder>/dist/index.js']],
+    [['x', '--', 'npx', '-y', '@scope/server', '/tmp'], ['x', '--', 'npx', '-y', '@scope/server', '<path>']],
+    [['uvx', '--from', 'git+https://github.com/a/b', 'b'], ['uvx', '--from', 'git+https://github.com/a/b', 'b']],
+    [['/opt/homebrew/bin/x'], ['/opt/homebrew/bin/x']],
+    [['x', 'python3', '~/.pickfit/mcp_probe.py', '--call', 't', '--', 'x-server', '--stdio'], ['x-server', '--stdio']],
+  ];
+  for (const [ran, want] of cases) assert.deepEqual(userLaunch(ran).words, want, ran.join(' '));
+});
+
+test('a JSON client gets a small shell where $HOME has to expand; the one-liner lets the shell do it', () => {
+  const entry = catalog.bySlug.get('fixture-notes-mcp')!;
+  const guide = entry.install.linux!;
+  const config = clientConfig(entry, { ...guide, mcp: { ...guide.mcp!, launch: ['node', '/home/sbx/.local/lib/x/s.mjs', '--verbose'] } })!;
+  assert.match(config.claude_code, /-- node \$HOME\/\.local\/lib\/x\/s\.mjs --verbose$/);
+  const server = JSON.parse(config.json).mcpServers['fixture-notes-mcp'];
+  assert.deepEqual([server.command, server.args], ['sh', ['-c', 'exec node "$HOME/.local/lib/x/s.mjs" --verbose']]);
+  assert.doesNotMatch(JSON.stringify(config), /home\/sbx/);
+  assert.doesNotMatch(config.note ?? '', /sandbox/);
+});
+
+test('a relative launch says which folder to put in', () => {
+  const entry = catalog.bySlug.get('fixture-notes-mcp')!;
+  const guide = entry.install.linux!;
+  const config = clientConfig(entry, { ...guide, mcp: { ...guide.mcp!, launch: ['node', 'dist/index.js'] } })!;
+  assert.deepEqual([config.command, config.args], ['node', ['<install-folder>/dist/index.js']]);
+  assert.match(config.note ?? '', /Replace <install-folder> with the folder you ran the install steps in/);
+});
+
+test('the notes follow the page language; an agent over MCP, outside any page, gets English', () => {
+  const entry = catalog.bySlug.get('fixture-notes-mcp')!;
+  const guide = entry.install.linux!;
+  const zh = withLang('zh-TW', () => clientConfig(entry, guide)!);
+  assert.match(zh.note ?? '', /請把 <root> 換成你自己的路徑/);
+  assert.match(zh.note ?? '', /NOTES_SYNC_TOKEN 要填你自己的值/);
+  assert.doesNotMatch(zh.note ?? '', /Replace|Ask the user/);
+  assert.match(clientConfig(entry, guide)!.note ?? '', /Replace <root> with your own path/);
 });

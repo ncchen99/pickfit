@@ -1,10 +1,10 @@
-"""Scores (P5.1, arch B.3): quality, popularity and treasure, kept apart, formula "b3.v5".
+"""Scores (P5.1, arch B.3): quality, popularity and treasure, kept apart, formula "b3.v6".
 
-quality (0-100) is a weighted mean of six components, each 0-1:
+quality (0-100) is a weighted mean of seven components, each 0-1:
 
-- sandbox_verification 40: the best passed run's depth x step tier x 0.85 per README fix; a
-  failed run 0; no run: no data. Depth is how far the run got (VERIFICATION_DEPTH, per category:
-  a dev CLI is fully checked at function, a local AI tool at inference). Step tiers: <=3 install
+- sandbox_verification 20: did it install? The best passed run's step tier x 0.85 per README fix; a
+  failed run 0; no run: no data. How far the run got no longer matters: a tool that installs cleanly
+  gets the full score whether or not its features were tried. Step tiers: <=3 install
   actions 1.0, 4-6 0.85, more 0.7. Actions are counted inside the recorded steps, which chain
   commands with && (install_actions); looking around (ls, head, wc, --version, a VAR=$(...) that
   only looks) is not an action, and heredoc lines are file content. A pitfall tagged with a kind
@@ -12,6 +12,11 @@ quality (0-100) is a weighted mean of six components, each 0-1:
   explains it (no root, no toolchains, scripts read first, no GPU, Docker, keys or
   configuration...), it says the README was right or the tool did the step by itself, it follows
   from a step the box blocked, or it is only about pickfit's --version/--help check (readme_fixes).
+- feature_results 20: of the features the passed runs reached a verdict on, the share that worked:
+  checked / (checked + test_failed with failure "tool"). A feature counts as checked if any passed run
+  checked it. Features not tried, or that failed because of the box or the operator, are left out; with
+  none left the component has no data and drops out of the denominator, which lowers confidence, not the
+  total (feature_score).
 - install_docs 25: muse-spark-1.3 grades the README against B.3's 8-item rubric (0/1/2 each,
   points / 16). Every item above 0 needs a verbatim quote; an item whose quote is not in the
   sources counts 0. The answer is kept in scores.docs_rubric and reused while the sources stay
@@ -45,6 +50,9 @@ bare personal or company domain. A rescore with --no-github or --no-registries k
 responsiveness and registry signals.
 b3.v5: a pitfall tagged with a kind counts as a README fix only when it is readme_wrong; since only
 the record-derived parts changed, b3.v4 scores move to b3.v5 by refresh_scores, with no rescore.
+b3.v6 (念誠 11/4): the single sandbox 40, which paid for how far a run got, is split into installing 20 and
+features 20. Under b3.v5 a tool nobody tried the features of lost up to 16 points, and a feature that was tried and
+found broken lost nothing. Only record-derived parts changed, so b3.v5 scores move by refresh_scores.
 
 Hosted web apps (kind web_app, brief 2.2) use formula "web.v1" (WEB_FORMULA_VERSION), whether or not they
 have a repository, since what a user meets is the site, not the code:
@@ -73,18 +81,18 @@ docs/usability-pilot.md twice (11/2), so usability is shown, not scored:
 usability is the record's usability score / 100, while the run it read is still among the record's passed runs (a
 re-verified record drops it until it is judged again); without one it drops out of the denominator. A treasure under
 either formula also needs usability >= 0.70; a first look alone has no usability score. Other kinds, and
-desktop apps with no GUI run, stay on b3.v5 and carry no usability component. refresh_scores moves records between
-b3.v5 and gui.v1, and between web.v1 and web.v2, with no call.
+desktop apps with no GUI run, stay on b3.v6 and carry no usability component. refresh_scores moves records between
+b3.v6 and gui.v1, and between web.v1 and web.v2, with no call.
 
 Measurable visual defects (record field visual_check, comfort.v1: Muse Wonder lists text cut off, overlaps, clipped
 controls, bad wraps, low contrast, tiny text, raw markup, broken images, misalignment and cramping on pickfit's own
 first screens; never taste) only ever lower quality (念誠 11/3, docs/usability-pilot.md sections 11 and 12). A
-desktop_app or web_app with a visual check of a passed run still on the record keeps its usual formula, b3.v5 or
+desktop_app or web_app with a visual check of a passed run still on the record keeps its usual formula, b3.v6 or
 web.v1; when the check found at least one app-caused defect its total is multiplied by VISUAL_FACTOR (0.95), and a clean
 check leaves it as it is. Severity is not used until it is calibrated (section 11: the model's "major" held up in 4 of
-12 reviews). formula_version then reads b3.v5+visual.v1 or web.v1+visual.v1, and quality.visual keeps the factor, the
+12 reviews). formula_version then reads b3.v6+visual.v1 or web.v1+visual.v1, and quality.visual keeps the factor, the
 total before it and the number of app defects. A record with no check (no screenshots of pickfit's own), or one whose
-check read a run the record no longer has, keeps b3.v5 or web.v1 with nothing added or taken. The treasure rule does
+check read a run the record no longer has, keeps b3.v6 or web.v1 with nothing added or taken. The treasure rule does
 not change. refresh_scores applies and removes the deduction with no call.
 
 Known vulnerabilities (record field security, sec.v1, pickfit/security.py; 念誠 11/3) bound quality like the other caps:
@@ -141,12 +149,12 @@ from pickfit.schema import (
     visual_check_factor,
 )
 
-FORMULA_VERSION = "b3.v5"
+FORMULA_VERSION = "b3.v6"
 # Earlier formulas that differ from this one only in what refresh_scores recomputes from the record
 # (sandbox and usage components, cap, total, treasure). Their other components are still valid, so
 # their scores move to this formula instead of being cleared. b3.v5 changed only how README fixes
-# are counted: a tagged pitfall's kind decides.
-REFRESHABLE_FROM = frozenset({"b3.v4"})
+# are counted: a tagged pitfall's kind decides. b3.v6 changed only the sandbox part (see the module docstring).
+REFRESHABLE_FROM = frozenset({"b3.v4", "b3.v5", "b3.v5+visual.v1"})
 WEB_FORMULA_VERSION = "web.v1"
 # Usability in quality (pickfit/usability.py). Off: the ease.v1 pilot failed its calibration twice (11/2,
 # docs/usability-pilot.md section 6), so usability is shown, not scored. Turning it on would move records to these
@@ -171,14 +179,15 @@ PROMPT_CACHE_KEY = "pickfit-rubric-v1"
 DEFAULT_CONCURRENCY = 4
 
 NOMINAL_WEIGHTS: dict[str, float] = {
-    "sandbox_verification": 40,
+    "sandbox_verification": 20,
+    "feature_results": 20,
     "install_docs": 25,
     "maintenance": 10,
     "engineering_hygiene": 5,
     "responsiveness": 10,
     "usage_outcomes": 10,
 }
-# Where extra usage_outcomes weight comes from; the measured sandbox component keeps its 40.
+# Where extra usage_outcomes weight comes from; the measured sandbox components keep their 40.
 SHRINKABLE = ("install_docs", "maintenance", "engineering_hygiene", "responsiveness")
 GUI_WEIGHTS: dict[str, float] = {
     "sandbox_verification": 25,
@@ -409,21 +418,11 @@ def readme_fixes(pitfalls: list[Pitfall]) -> int:
                and (p.kind is not None or not any(key in p.actually_needed.lower() for key in blocked)))
 
 
-# How much of the tool a passed run proved (C.3). A dev CLI is fully checked once a README example
-# runs; a local AI tool once a tiny model generates text, and a one-shot CLI run proves less. An MCP
-# server's function run is its handshake (it starts and lists its tools); only a tool call (service)
-# shows it does its job. Install never passes an MCP server (verify/mcp.py), so its entry is unused.
-VERIFICATION_DEPTH: dict[str, dict[str, float]] = {
-    "dev_cli": {"install": 0.6, "function": 1.0, "service": 1.0, "inference": 1.0},
-    "local_ai": {"install": 0.6, "function": 0.8, "service": 0.9, "inference": 1.0},
-    "mcp_server": {"install": 0.6, "function": 0.8, "service": 1.0, "inference": 1.0},
-}
 README_FIX_FACTOR = 0.85
 
 
-def sandbox_score(verification: Verification, category: str) -> float | None:
-    """Best passed run's depth x step tier x 0.85 per README fix; 0 for a failure; None when nothing ran."""
-    depth = VERIFICATION_DEPTH.get(category, VERIFICATION_DEPTH["dev_cli"])
+def sandbox_score(verification: Verification) -> float | None:
+    """Best passed run's step tier x 0.85 per README fix; 0 for a failure; None when nothing ran."""
     best: float | None = None
     for run in verification.runs:
         if not is_passed(run.level):
@@ -431,18 +430,39 @@ def sandbox_score(verification: Verification, category: str) -> float | None:
         n = install_actions([s.command for s in run.steps])
         tier = 1.0 if n <= 3 else 0.85 if n <= 6 else 0.7
         fixes = readme_fixes(run.pitfalls)
-        score = round(depth[run.level] * tier * README_FIX_FACTOR ** fixes, 4)
+        score = round(tier * README_FIX_FACTOR ** fixes, 4)
         best = score if best is None else max(best, score)
     if best is not None:
         return best
     return 0.0 if verification.level == "failed" else None
 
 
+def feature_score(verification: Verification) -> float | None:
+    """Of the features the passed runs reached a verdict on, the share that worked; None without a verdict.
+
+    Only a failure the run puts on the tool counts against it (test_failed, failure "tool"): one the box or
+    the operator explains, and a feature nobody tried, say nothing about the software. A feature checked on
+    any passed run counts as working, so one OS's failure does not outweigh another's success.
+    """
+    worked: set[str] = set()
+    broken: set[str] = set()
+    for run in verification.runs:
+        if not is_passed(run.level):
+            continue
+        for feature in run.features:
+            if feature.status == "checked":
+                worked.add(feature.feature)
+            elif feature.status == "test_failed" and feature.failure == "tool":
+                broken.add(feature.feature)
+    judged = len(worked | broken)
+    return round(len(worked) / judged, 4) if judged else None
+
+
 def feature_coverage(verification: Verification) -> dict[str, int] | None:
     """Advertised features the strongest passed run exercised, and how many it reported on.
 
-    Carried next to the scores, not into them: the formula does not use it. None when no passed run
-    recorded features.
+    Shown next to the scores. The formula uses feature_score, which reads every passed run. None when no
+    passed run recorded features.
     """
     passed = [r for r in verification.runs if is_passed(r.level) and r.features]
     if not passed:
@@ -751,7 +771,7 @@ def _app_defects(visual: Any) -> int:
 
 def apply_visual(quality: dict[str, Any], version: str, kind: str, verification: Verification, visual: Any
                  ) -> tuple[dict[str, Any], str]:
-    """The quality and formula after the visual check: b3.v5 or web.v1 named +visual.v1, its total times
+    """The quality and formula after the visual check: b3.v6 or web.v1 named +visual.v1, its total times
     VISUAL_FACTOR when the check found an app-caused defect; unchanged without a current check."""
     if not VISUAL_SCORED or kind not in ("desktop_app", "web_app") or version not in (FORMULA_VERSION, WEB_FORMULA_VERSION):
         return quality, version
@@ -766,7 +786,7 @@ def apply_visual(quality: dict[str, Any], version: str, kind: str, verification:
 
 def tool_formula(kind: str, verification: Verification, usability: Any
                  ) -> tuple[str, dict[str, float], dict[str, float | None]]:
-    """A non-web record's formula, its weights and the components it adds: gui.v1 (usability, off), else b3.v5."""
+    """A non-web record's formula, its weights and the components it adds: gui.v1 (usability, off), else b3.v6."""
     if gui_formula(kind, verification):
         return GUI_FORMULA_VERSION, GUI_WEIGHTS, {"usability": usability_component(usability, verification)}
     return FORMULA_VERSION, NOMINAL_WEIGHTS, {}
@@ -812,7 +832,7 @@ def browser_facts_score(verification: Verification) -> float | None:
 
 
 def web_weights(usage_weight: float, nominal: dict[str, float] = WEB_WEIGHTS) -> dict[str, float]:
-    out = dict.fromkeys(NOMINAL_WEIGHTS, 0.0) | nominal | {"usage_outcomes": usage_weight}
+    out = dict.fromkeys(set(NOMINAL_WEIGHTS) - {"feature_results"}, 0.0) | nominal | {"usage_outcomes": usage_weight}
     out["browser_facts"] = nominal["browser_facts"] - (usage_weight - nominal["usage_outcomes"])
     return out
 
@@ -934,7 +954,8 @@ def build_scores(record: SoftwareRecord, snapshot: dict[str, Any] | None, issues
     if registry is None and kept is not None:
         registry = kept_registry(kept)
     components: dict[str, float | None] = {
-        "sandbox_verification": sandbox_score(record.verification, record.category),
+        "sandbox_verification": sandbox_score(record.verification),
+        "feature_results": feature_score(record.verification),
         "install_docs": round(rubric.items.score(), 4) if rubric else None,
         "maintenance": maintenance_score(snapshot, as_of) if snapshot else None,
         "engineering_hygiene": hygiene_score(snapshot, record.open_source) if snapshot else None,
@@ -1000,7 +1021,8 @@ def refresh_scores(data: dict[str, Any], now: datetime) -> str | None:
     outcomes = Outcomes.model_validate(data.get("outcomes") or {})
     components = {name: c["score"] for name, c in scores["quality"]["components"].items()
                   if name not in ("usability", "visual_quality")} | extra  # visual_quality: gui.v2, branch only
-    components["sandbox_verification"] = sandbox_score(verification, data["category"])
+    components["sandbox_verification"] = sandbox_score(verification)
+    components["feature_results"] = feature_score(verification)
     components["usage_outcomes"] = usage_score(outcomes)
     cap_reason = binding_cap(data["kind"], bool((data.get("repo") or {}).get("archived")), verification.level,
                              data.get("security"))

@@ -307,6 +307,43 @@ export function tape(label: string, value: number | null, opts: { pop?: string; 
   );
 }
 
+/** Why a part of the quality score has no data, in a reader's words. */
+const UNMEASURED: Record<string, () => string> = {
+  sandbox_verification: () => L('no install test yet', '還沒有安裝測試'),
+  install_docs: () => L('install docs not graded', '安裝文件沒有評分'),
+  maintenance: () => L('no maintenance data', '沒有維護資料'),
+  engineering_hygiene: () => L('no engineering data', '沒有工程品質資料'),
+  responsiveness: () => L('too few outside issues to judge responses', '外部 issue 太少，無法評估回應速度'),
+  usage_outcomes: () => L('fewer than 3 reports from real use', '實際使用的回報不到 3 筆'),
+  browser_facts: () => L('nothing the browser could tell', '瀏覽器沒有觀察到相關資訊'),
+};
+
+/**
+ * How much of the quality score rests on evidence, and in a tooltip (hover, or focus on a touch screen) what is
+ * missing: the features nobody reached a verdict on come first, by name, since that is what a reader can act on.
+ */
+export function confidenceRow(confidence: number | undefined, unmeasured: string[] | undefined, features: FeaturesOut): string {
+  if (confidence === undefined) return '';
+  const pct = Math.round(confidence * 100);
+  const lines = [L(`Quality rests on ${pct}% of what it could.`, `品質分數有 ${pct}% 的項目有資料。`)];
+  const gaps = unmeasured ?? [];
+  if (gaps.includes('feature_results')) {
+    const names = features.not_checked.filter((f) => f.reason !== 'test_failed').map((f) => f.feature);
+    const shown = names.slice(0, 4).join(L(', ', '、'));
+    const more = names.length > 4 ? L(` and ${names.length - 4} more`, ` 等 ${names.length} 項`) : '';
+    lines.push(names.length
+      ? L(`Features not confirmed: ${shown}${more}.`, `沒有驗證到的功能：${shown}${more}。`)
+      : L('No feature was tested one by one.', '沒有逐項測試功能。'));
+  }
+  const others = gaps.filter((g) => g !== 'feature_results').map((g) => UNMEASURED[g]?.() ?? g);
+  if (others.length) lines.push(L(`Also missing: ${others.join(', ')}.`, `另外缺少：${others.join('、')}。`));
+  const say = lines.join(' ');
+  return (
+    `<div class="meter meter-none meter-conf"><span class="meter-label">${L('Quality confidence', '品質信心度')}</span>` +
+    `<span class="meter-read conf-read" tabindex="0" data-tip="${esc(say)}">${pct}%<span class="sr"> ${esc(say)}</span></span></div>`
+  );
+}
+
 /** Features the run exercised vs the README's list: one segmented bar, counts in words beside it. */
 export function coverage(features: FeaturesOut, opts: { pop?: string } = {}): string {
   const checked = features.checked.length;

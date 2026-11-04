@@ -16,12 +16,14 @@
 <script type="module">
 // 2:26.5–2:57 of the cut (segments J_maker and K_end): the other end of the thread, makers
 // submitting (works today), the Next plan (outcomes coming back), and the end card.
-// t = 0 is the segment start. Cues: 0.3 maker · 3.7 "Makers can already submit…" ·
+// t = 0 is the segment start. Cues: 0.3 maker · 3.7 "Makers can already submit on the website:" · 6.55 "paste a link…" ·
 // 9.5 "Next, what agents report back…" · 16.3 screens · 19.2 clock · 21.8 name · 22.7 line.
 
 // ---- swap these when the real frames and time are ready ------------------------------------
 const SCREEN_LEFT = './finale/left.png';   // a frame of the agent conversation (Claude app), 16:10
 const SCREEN_RIGHT = './finale/right.png'; // a frame of pickfit.app's results page, 16:10
+// pickfit.app/submit itself, 16:10: the empty form, the link pasted in, and the status page while it runs.
+const SCREEN_SUBMIT = ['./finale/submit-empty.png', './finale/submit-typed.png', './finale/submit-status.png'];
 const CLOCK_TIME = '7:08 PM';             // the real time the recording ended
 // ---------------------------------------------------------------------------------------------
 
@@ -32,10 +34,13 @@ import { paperCard, text, drawSeam, stitchThread, screenPanel, aboveFloor } from
 import { site, fonts } from '../kit/tokens.js';
 import {
   E, prog, lerp, clamp01, rng, setOpacity, noShadows, measure, decal, sourceTag, workbench, makerCard,
-  nextTag, submitCard, appTicket, station, slip, clockTag, screenTexture, happyEyes,
+  nextTag, appTicket, station, slip, clockTag, screenTexture, happyEyes,
 } from './finale/parts.js';
 
-const DURATION = 30.5;
+// 1.2 s shorter than the build's clock: the hold after "sharpen every match" ran long (念誠 11/4). Scene times below stay
+// on the build's clock; warp() runs the still stretch 13.7-15.7 in 0.8 s.
+const DURATION = 29.3;
+const warp = (t) => (t < 13.7 ? t : t < 14.5 ? 13.7 + (t - 13.7) * 2.5 : t + 1.2);
 
 const stage = new Stage({ dof: { aperture: 0.0008, maxblur: 0.005 } });
 await stage.ready;
@@ -85,7 +90,8 @@ const mangoTag = paperCard({ w: 1.42, h: 0.42, depth: 0.016, color: site.voice, 
   text(ctx, 'MangoDisk', 26, 88, { size: 64, weight: 700, family: fonts.display });
 } });
 mangoTag.rotation.x = -1.0;
-mangoTag.position.set(MANGO.x + 0.12, 0.21 * Math.cos(1.0), MANGO.z + 0.72 - 0.21 * Math.sin(1.0));
+// 0.04 above the floor so its lower edge clears the tickets it leans over (they cut it off when it stood on the floor).
+mangoTag.position.set(MANGO.x + 0.12, 0.04 + 0.21 * Math.cos(1.0), MANGO.z + 0.72 - 0.21 * Math.sin(1.0));
 zoneA.add(mangoTag);
 
 // The thread runs off the MangoDisk ticket to the maker's card.
@@ -128,9 +134,15 @@ const next = nextTag();
 next.setSub('Real outcomes sharpen every match');
 camera.add(next.card);
 
-const sub = submitCard();
+// The real page, held up where you can read it; it then rides the line and turns over into the ticket.
+const SUB_W = 3.5, SUB_H = SUB_W / 1.6, SUB_HOLD = 1.34, SUB_RIDE = 0.34;
+const subTex = await Promise.all(SCREEN_SUBMIT.map((path) => screenTexture(path, 'web')));
+const sub = { card: screenPanel({ w: SUB_W, h: SUB_H }), face: null };
+sub.face = sub.card.userData.face;
+sub.face.material.map = subTex[0];
+sub.face.material.needsUpdate = true;
 const tk = appTicket();
-const flip = new THREE.Group(); // the submit card, with the ticket on its back
+const flip = new THREE.Group(); // the page, with the ticket on its back
 flip.add(sub.card);
 tk.card.rotation.x = Math.PI;
 tk.card.position.z = -0.06;
@@ -139,6 +151,8 @@ const carrier = new THREE.Group();
 carrier.add(flip);
 zoneN.add(carrier);
 
+// When the page changes and when it starts down the line, on the words of s15 ("submit on the website: paste a link, and the same tests run").
+const PAGE_TYPED = 6.3, PAGE_STATUS = 6.95, RIDE0 = 7.65;
 const STATION_X = [10.75, 12.15, 13.55, 14.95];
 const stations = ['sieve', 'readme', 'sandbox', 'check'].map((k, i) => {
   const s = station(k);
@@ -281,7 +295,7 @@ function glyphDot(ch, o) {
   return { cx: (xa + xb + 1) / 2, up: base - (y0 + y1) / 2, r: Math.max(xb + 1 - xa, y1 - y0) / 2 };
 }
 // The wordmark: Bricolage 800, tracking -0.03em, the i's dot replaced by the stitch colour (the
-// site paints a paper ring over the glyph's dot and a rufous dot on top; here the dot is a bead).
+// site paints a paper ring over the glyph's dot and a rufous dot on top).
 const WM = { size: 0.74, y: 0.8 };
 const wmDot = {};
 const wordmark = print('pickfit', { size: WM.size, weight: 800, family: fonts.display, tracking: -0.03 * WM.size, x: TX, y: WM.y,
@@ -302,12 +316,11 @@ const url = print('pickfit.app', { size: 0.15, weight: 600, family: fonts.mono, 
 const small1 = print('Add pickfit to your agent over MCP', { size: 0.098, weight: 400, color: site.ink2, x: TX + 0.03, y: 1.74 });
 const small2 = print('pickfit runs on Meta’s Muse Spark 1.3 and Muse Spark Open', { size: 0.098, weight: 400, color: site.ink2, x: TX + 0.03, y: 1.9 });
 
-// The dot itself: a small rufous bead sewn onto the card.
-const knot = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 20), new THREE.MeshPhysicalMaterial({ color: site.stitch, roughness: 0.55, sheen: 0.6, sheenColor: new THREE.Color('#ffd9c8') }));
+// The dot itself: flat, as on the site and at the end of the opening scene.
+const knot = new THREE.Mesh(new THREE.CircleGeometry(1, 48), new THREE.MeshBasicMaterial({ color: site.stitch, toneMapped: false }));
 {
   const d = wordmark.decal;
   knot.position.set(d.position.x - wordmark.w / 2 + wmDot.cx, d.position.y + wordmark.h / 2 - wmDot.cy, 0.008);
-  knot.castShadow = true;
   endCard.add(knot);
 }
 
@@ -323,8 +336,8 @@ const CAM = [
   [2.9, [4.6, 3.6, 7.9], [5.6, 0.6, 0.0], E.io],
   [3.4, [4.68, 3.55, 7.8], [5.65, 0.6, 0.0], E.sine],
   [4.75, [12.8, 4.2, 8.7], [12.8, 0.95, 0.3], E.io],
-  [7.95, [13.2, 4.1, 8.5], [13.2, 0.95, 0.3], E.sine],
-  [9.15, [17.75, 3.75, 8.6], [17.75, 0.8, 0.45], E.io],
+  [8.65, [13.2, 4.1, 8.5], [13.2, 0.95, 0.3], E.sine],
+  [9.45, [17.75, 3.75, 8.6], [17.75, 0.8, 0.45], E.io],
   [15.7, [17.65, 3.65, 8.35], [17.65, 0.8, 0.45], E.sine],
   [16.9, [19.2, 2.05, 11.9], [19.2, 1.5, 2.9], E.io],
   [19.8, [19.2, 2.1, 11.6], [19.2, 1.5, 2.9], E.sine],
@@ -396,26 +409,32 @@ function update(t) {
   if (zoneN.visible) {
     // the old layer dims when the screens come in
     const dim = 1 - 0.75 * prog(t, 15.75, 16.45, E.io) - 0.25 * prog(t, 16.45, 17.2, E.io);
-    // the submit card floats in from the maker's side, then rides the test line
-    const e = entr(t, 3.75, { dur: 0.9, rise: 0.25 });
+    // the page comes up once the camera has left the maker's card, then rides the test line
+    const e = entr(t, 4.25, { dur: 0.8, rise: 0.25 });
     setOpacity(carrier, e.op * dim);
-    const arrive = prog(t, 3.75, 4.9, E.io);
-    let x = lerp(7.6, 12.6, arrive), y = lerp(2.45, 1.72, arrive), z = lerp(1.6, 1.25, arrive), sc = 1;
-    const shrink = prog(t, 5.9, 6.4, E.io);
-    const STEP0 = 6.4, STEP = 0.5;
-    x = lerp(x, STATION_X[0], shrink); y = lerp(y, 1.12, shrink); z = lerp(z, 0.05, shrink); sc = lerp(1, 0.56, shrink);
+    const arrive = prog(t, 4.25, 5.05, E.io);
+    let x = lerp(13.3, 12.85, arrive), y = 1.52, z = 1.25, sc = SUB_HOLD;
+    const page = t < PAGE_TYPED ? 0 : t < PAGE_STATUS ? 1 : 2;
+    if (sub.face.material.map !== subTex[page]) sub.face.material.map = subTex[page];
+    const shrink = prog(t, RIDE0, RIDE0 + 0.4, E.io);
+    const STEP0 = RIDE0 + 0.3, STEP = 0.3;
+    x = lerp(x, STATION_X[0], shrink); y = lerp(y, 1.62, shrink); z = lerp(z, 0.05, shrink); sc = lerp(SUB_HOLD, SUB_RIDE, shrink);
     for (let i = 1; i < 4; i++) x = lerp(x, STATION_X[i], prog(t, STEP0 + (i - 1) * STEP + 0.22, STEP0 + i * STEP, E.io));
     // after the check: to the ticket spot, turning over
-    const go = prog(t, 7.95, 8.75, E.io);
+    const go = prog(t, STEP0 + 3 * STEP + 0.05, STEP0 + 3 * STEP + 0.6, E.io);
     x = lerp(x, TK.x, go); y = lerp(y, TK.y, go); z = lerp(z, TK.z, go); sc = lerp(sc, TK.s, go);
     carrier.position.set(x, y + e.lift, z);
     carrier.scale.setScalar(sc * e.s);
-    const fv = prog(t, 8.1, 8.75, E.io);
+    // Held, the page leans back to face the camera, so it reads square rather than as a wedge.
+    carrier.rotation.x = -0.36 * (1 - shrink);
+    // The ticket grows on the way to its spot; the page on its other side keeps its size until it has turned away.
+    sub.card.scale.setScalar(go > 0 ? SUB_RIDE / sc : 1);
+    const fv = prog(t, STEP0 + 3 * STEP + 0.15, STEP0 + 3 * STEP + 0.6, E.io);
     flip.rotation.x = Math.PI * fv; // top edge comes forward, the ticket side turns up into the light
-    sub.card.visible = fv < 1; // only the side that can be seen, so nothing ghosts through a fade
-    tk.card.visible = fv > 0;
+    sub.card.visible = fv < 0.5; // only the side that can be seen, so nothing ghosts through a fade
+    tk.card.visible = fv >= 0.5;
     flip.rotation.y = 0.08 * Math.sin(Math.PI * fv);
-    seam.userData.progress(prog(t, 8.65, 9.1, E.p2out));
+    seam.userData.progress(prog(t, STEP0 + 3 * STEP + 0.5, STEP0 + 3 * STEP + 0.85, E.p2out));
     // stations light as the card arrives over each
     stations.forEach((s, i) => {
       const at = STEP0 + i * STEP - 0.05;
@@ -424,9 +443,9 @@ function update(t) {
       s.card.position.y = s.w / 2 + 0.05 * pop;
       setOpacity(s.card, dim);
     });
-    const sameRise = prog(t, 6.2, 6.75, E.back);
+    const sameRise = prog(t, RIDE0 + 0.2, RIDE0 + 0.75, E.back);
     same.pivot.rotation.x = -Math.PI / 2 * (1 - sameRise);
-    setOpacity(same.card, clamp01((t - 6.2) / 0.18) * dim);
+    setOpacity(same.card, clamp01((t - (RIDE0 + 0.2)) / 0.18) * dim);
 
     // reports flow back into the ticket; then the reading rises a notch
     stitchR.userData.progress(prog(t, 9.55, 10.25, E.p2io));
@@ -496,7 +515,7 @@ function update(t) {
     const dv = prog(t, 22.1, 22.55, E.back);
     knot.visible = t > 22.1;
     const kr = wmDot.r * (0.6 + 0.4 * dv);
-    knot.scale.set(kr, kr, kr * 0.5);
+    knot.scale.setScalar(kr);
   }
 }
 
@@ -552,6 +571,6 @@ function poseFitzEnd(t) {
   fz.blink(t > 23 && cyc > 1.5 && cyc < 1.62 ? 1 : 0);
 }
 
-stage.run({ duration: DURATION, update });
+stage.run({ duration: DURATION, update: (t) => update(warp(t)) });
 </script>
 </body></html>

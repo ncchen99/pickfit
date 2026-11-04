@@ -31,8 +31,10 @@ import { catalogShowcase, EMPTY_FORM, renderNotice, renderPage, renderResults, t
 import { renderBrowse } from './pages/browse.ts';
 import { renderCompare } from './pages/compare.ts';
 import { renderAgents, renderHow, renderNotFound } from './pages/info.ts';
+import { renderSubmissionLive, renderSubmissionPage, renderSubmitForm, type SubmissionView } from './pages/submit.ts';
 import { renderTool } from './pages/tool.ts';
 import { findInput } from './server.ts';
+import { submissionById, SubmitError, submitSoftware } from './submit.ts';
 import { osName } from './ui/facts.ts';
 import { SLUG } from './ui/html.ts';
 
@@ -150,7 +152,9 @@ function html(body: string, status: number, nonce: string | null, extra: Record<
       vary: 'Accept, Cookie, Accept-Language',
       'content-security-policy': csp(nonce),
       'x-content-type-options': 'nosniff',
-      'referrer-policy': 'no-referrer',
+      // same-origin, not no-referrer: under no-referrer a browser sends `Origin: null` with a posted form, which the
+      // cross-site guard refuses. Links to other sites still carry no referrer.
+      'referrer-policy': 'same-origin',
       ...extra,
     },
   });
@@ -442,6 +446,46 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
         if (request.method !== 'GET' || !wantsHtml(request)) return null;
         return page(lang, url.origin, EMPTY_FORM, '', 200, keep);
       }
+      if (url.pathname === '/submit' && request.method === 'POST') {
+        // The same guard as a search: only a page on this site may post here.
+        if (!validateHostHeader(request.headers.get('host') ?? url.host, hosts).ok || !validateOriginHeader(request.headers.get('origin'), hosts).ok) {
+          return new Response('Forbidden', { status: 403 });
+        }
+        const nonce = newNonce();
+        const form = new URLSearchParams(await request.text().then((body) => body.slice(0, 2_000)));
+        const given = (form.get('url') ?? '').trim().slice(0, 300);
+        const failed = (error: string, status: number, extra: Record<string, string> = {}) =>
+          html(withLang(lang, () => renderSubmitForm(nonce, { url: given, error })), status, nonce, { ...keep, ...extra });
+        try {
+          const out = await submitSoftware(
+            { url: given },
+            { catalog: shown, db: env.DB, now, hourlyCap: settings(env).submitHourlyCap, client: 'web' },
+          );
+          if (out.submission_id) return new Response(null, { status: 303, headers: { location: `/submit/${out.submission_id}`, 'cache-control': 'no-store', ...keep } });
+          const view: SubmissionView = { id: null, url: out.url, status: out.status, reason: null, submitted_at: null, toolHref: out.slug ? `/tool/${out.slug}` : null };
+          return html(withLang(lang, () => renderSubmissionPage(view, now(), nonce)), 200, nonce, keep);
+        } catch (err) {
+          if (!(err instanceof SubmitError)) throw err;
+          if (err.code === 'busy') return failed(withLang(lang, () => L('pickfit has taken as many submissions as it can this hour. Try again in an hour; what you typed is still here.', '這一小時收的提交已經滿了。請一小時後再試，你輸入的內容還在。')), 429, { 'retry-after': '3600' });
+          return failed(withLang(lang, () => L('That isn’t a link Fitz can take. Paste a GitHub repository, like github.com/you/your-app, or the https address of a public web app.', '這個連結 Fitz 收不了。請貼上 GitHub 專案，例如 github.com/you/your-app，或公開網頁應用的 https 網址。')), 400);
+        }
+      }
+      const submission = /^\/submit\/(sub_[a-z0-9]{1,64})\/?$/.exec(url.pathname);
+      if (submission && (request.method === 'GET' || request.method === 'HEAD')) {
+        const row = await submissionById(env.DB, submission[1]);
+        if (!row) return render((nonce) => renderNotFound(nonce), 404);
+        const view: SubmissionView = {
+          id: row.id,
+          url: row.url,
+          status: row.status,
+          reason: row.reason,
+          submitted_at: row.submitted_at,
+          toolHref: row.slug && shown.bySlug.has(row.slug) ? `/tool/${row.slug}` : null,
+        };
+        // The page script polls this URL for the part that changes.
+        if (request.headers.get('x-pickfit-fragment')) return html(withLang(lang, () => renderSubmissionLive(view, now())), 200, null, keep);
+        return render((nonce) => renderSubmissionPage(view, now(), nonce));
+      }
       if (url.pathname !== '/search') {
         // The catalog pages: read from the bundled index only, no model call and no D1.
         if (request.method !== 'GET' && request.method !== 'HEAD') return null;
@@ -455,6 +499,7 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
         if (url.pathname === '/compare') return render((nonce) => renderCompare(shown, url.searchParams, nonce));
         if (url.pathname === '/how') return render((nonce) => renderHow(shown, nonce));
         if (url.pathname === '/agents') return render((nonce) => renderAgents(url.origin, nonce));
+        if (url.pathname === '/submit') return render((nonce) => renderSubmitForm(nonce));
         // Anything else a browser asks for gets the not-found page; other clients keep the plain 404.
         return wantsHtml(request) ? render((nonce) => renderNotFound(nonce), 404) : null;
       }

@@ -43,6 +43,7 @@ from pickfit.score import (
     readme_fixes,
     refresh_scores,
     responsiveness_score,
+    feature_score,
     sandbox_score,
     score_records,
     treasure,
@@ -106,18 +107,16 @@ def fake_grade(points: int = 2, calls: list[str] | None = None):
 # --- components ---------------------------------------------------------------------------------
 
 
-def test_sandbox_component_follows_depth_steps_readme_fixes_and_failure() -> None:
-    assert sandbox_score(verification(run(steps=3)), "dev_cli") == 1.0
-    assert sandbox_score(verification(run(steps=5)), "dev_cli") == 0.85
-    assert sandbox_score(verification(run(steps=7)), "dev_cli") == 0.7
-    assert sandbox_score(verification(run(steps=2, pitfalls=1)), "dev_cli") == 0.85
-    assert sandbox_score(verification(run(steps=2, pitfalls=2)), "dev_cli") == 0.7225
-    assert sandbox_score(verification(run(level="install")), "dev_cli") == 0.6  # no README example ran
-    assert sandbox_score(verification(run()), "local_ai") == 0.8  # a one-shot CLI run, no model served
-    assert sandbox_score(verification(run(level="service")), "local_ai") == 0.9
-    assert sandbox_score(verification(run(level="inference")), "local_ai") == 1.0
-    assert sandbox_score(verification(run(level="failed")), "dev_cli") == 0.0
-    assert sandbox_score(verification(), "dev_cli") is None
+def test_sandbox_component_follows_steps_readme_fixes_and_failure_not_how_far_the_run_got() -> None:
+    assert sandbox_score(verification(run(steps=3))) == 1.0
+    assert sandbox_score(verification(run(steps=5))) == 0.85
+    assert sandbox_score(verification(run(steps=7))) == 0.7
+    assert sandbox_score(verification(run(steps=2, pitfalls=1))) == 0.85
+    assert sandbox_score(verification(run(steps=2, pitfalls=2))) == 0.7225
+    for level in ("install", "function", "service", "inference"):
+        assert sandbox_score(verification(run(level=level))) == 1.0  # installing is installing
+    assert sandbox_score(verification(run(level="failed"))) == 0.0
+    assert sandbox_score(verification()) is None
 
 
 def test_install_actions_count_inside_chained_steps_but_not_looking_around() -> None:
@@ -215,9 +214,9 @@ def test_kinds_and_untagged_pitfalls_mix_in_one_run() -> None:
     assert readme_fixes([blocked, follows, note]) == 0  # a sandbox-tagged step blocks an untagged follower too
     assert readme_fixes([blocked, tagged_follows, note]) == 1  # a tagged follower keeps its kind
     notes = verification({**run(), "pitfalls": [{"readme_said": "a", "actually_needed": "b", "kind": "note"}] * 3})
-    assert sandbox_score(notes, "dev_cli") == 1.0  # recording notes costs nothing
+    assert sandbox_score(notes) == 1.0  # recording notes costs nothing
     wrong = verification({**run(), "pitfalls": [{"readme_said": "a", "actually_needed": "b", "kind": "readme_wrong"}]})
-    assert sandbox_score(wrong, "dev_cli") == 0.85
+    assert sandbox_score(wrong) == 0.85
 
 
 def test_a_pitfall_that_follows_from_a_box_blocked_step_is_not_a_readme_fix() -> None:
@@ -263,7 +262,7 @@ def test_usage_outcomes_need_three_external_reports_and_take_weight_from_four_co
                                                      "abandoned": 2}, "eval": {"installed": 50}})
     assert usage_score(outcomes) == pytest.approx((0.4 * 0.75 + 0.3 * 0.5) / 0.7, abs=1e-4)
     w = weights(20)
-    assert sum(w.values()) == pytest.approx(100) and w["sandbox_verification"] == 40
+    assert sum(w.values()) == pytest.approx(100) and w["sandbox_verification"] == 20 and w["feature_results"] == 20
     assert w["install_docs"] == pytest.approx(25 * (1 - 10 / 50), abs=1e-3)
 
 
@@ -323,7 +322,7 @@ def test_missing_components_leave_the_denominator_and_caps_bind() -> None:
     components = {"sandbox_verification": 1.0, "install_docs": 0.5, "maintenance": None,
                   "engineering_hygiene": None, "responsiveness": None, "usage_outcomes": None}
     q = compose_quality(components, 10, None)
-    assert q["total"] == pytest.approx(100 * (40 + 12.5) / 65, abs=0.05) and q["confidence"] == 0.65
+    assert q["total"] == pytest.approx(100 * (20 + 12.5) / 45, abs=0.05) and q["confidence"] == 0.45
     assert compose_quality(components, 10, "unverified")["total"] == 69.0
     assert compose_quality(dict.fromkeys(components), 10, None)["total"] is None
 
@@ -389,14 +388,61 @@ def test_scoring_writes_only_scores_and_reuses_the_rubric(tmp_path: Path) -> Non
     assert again.unchanged == ["tinyq"] and again.reused == 1 and calls == ["score:tinyq"]
 
 
-def test_feature_coverage_rides_along_and_leaves_the_formula_alone(tmp_path: Path) -> None:
+def feature(name: str, status: str, failure: str | None = None) -> dict[str, Any]:
+    if status == "checked":
+        return {"feature": name, "status": status, "smoke_tests": [0]}
+    if status == "test_failed":
+        return {"feature": name, "status": status, "smoke_tests": [0], "failure": failure}
+    return {"feature": name, "status": status, "reason": "not_attempted"}
+
+
+def with_features(*features: dict[str, Any], level: str = "function", os: str = "linux") -> dict[str, Any]:
+    """A run whose smoke tests follow its features: one passing test for a checked feature, one failing for a failed one."""
+    smoke, listed = [{"command": "tool --help", "expected_signal": "x", "exit_code": 0, "passed": True}], []
+    for item in features:
+        if item["status"] != "not_checked":
+            smoke.append({"command": f"tool {item['feature']}", "expected_signal": "x",
+                          "exit_code": 0 if item["status"] == "checked" else 1, "passed": item["status"] == "checked"})
+            item = item | {"smoke_tests": [len(smoke) - 1]}
+        listed.append(item)
+    return run(f"verify-{os}", level=level) | {"features": listed, "os": os, "smoke_tests": smoke}
+
+
+def test_feature_results_count_only_what_says_something_about_the_software() -> None:
+    def score(*runs: dict[str, Any]) -> float | None:
+        return feature_score(verification(*runs))
+
+    assert score(with_features(feature("a", "not_checked"))) is None  # nothing tried: no data, not zero
+    assert score(with_features(feature("a", "test_failed", "sandbox"))) is None  # the box's fault
+    assert score(with_features(feature("a", "checked"), feature("b", "not_checked"))) == 1.0
+    assert score(with_features(feature("a", "checked"), feature("b", "test_failed", "sandbox"))) == 1.0
+    assert score(with_features(feature("a", "checked"), feature("b", "test_failed", "tool"))) == 0.5
+    assert score(with_features(feature("a", "test_failed", "tool"))) == 0.0
+    # Checked on one OS and broken on another counts as working; a run that did not pass says nothing.
+    assert score(with_features(feature("a", "test_failed", "tool")), with_features(feature("a", "checked"), os="macos")) == 1.0
+    assert score(with_features(feature("a", "not_checked"), level="unverified") | {"unverified_reason": "other"}) is None
+
+
+def test_an_untried_tool_loses_nothing_for_it_and_a_broken_feature_costs_points(tmp_path: Path) -> None:
+    def quality(sandbox: float, features: float | None) -> dict[str, Any]:
+        return compose_quality({"sandbox_verification": sandbox, "feature_results": features, "install_docs": 0.5,
+                                "maintenance": 0.5, "engineering_hygiene": 0.5, "responsiveness": 0.5,
+                                "usage_outcomes": None}, 10, None)
+
+    untried, works, broken = quality(1.0, None), quality(1.0, 1.0), quality(1.0, 0.0)
+    assert untried["total"] == pytest.approx(100 * (20 + 25) / 70, abs=0.05) and untried["confidence"] == 0.7
+    assert works["total"] == pytest.approx(100 * (40 + 25) / 90, abs=0.05) and works["confidence"] == 0.9
+    assert broken["total"] == pytest.approx(100 * (20 + 25) / 90, abs=0.05) and broken["total"] < untried["total"]
+
+
+def test_feature_coverage_is_shown_and_refresh_follows_the_features(tmp_path: Path) -> None:
     db_path, out = setup_records(tmp_path)
     plain = score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER,
                           grade=fake_grade())
     assert plain.rows[0]["features"] is None
     path = out / "tinyq.json"
     record = json.loads(path.read_text())
-    before = record["scores"]
+    assert record["scores"]["quality"]["components"]["feature_results"]["score"] is None
     smoke = record["verification"]["runs"][0]["smoke_tests"]
     smoke.append({"command": "tinyq .a sample.jsonl", "expected_signal": "1", "exit_code": 0, "passed": True})
     record["verification"]["runs"][0]["features"] = [
@@ -405,10 +451,25 @@ def test_feature_coverage_rides_along_and_leaves_the_formula_alone(tmp_path: Pat
     path.write_text(json.dumps(record))
     covered = score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER,
                             grade=fake_grade())
-    assert covered.unchanged == ["tinyq"] and covered.rows[0]["features"] == {"checked": 1, "listed": 2}
+    assert covered.rows[0]["features"] == {"checked": 1, "listed": 2}
     after = json.loads(path.read_text())
-    assert after["scores"] == before and after["verification"]["runs"][0]["features"][0]["status"] == "checked"
+    assert after["scores"]["quality"]["components"]["feature_results"]["score"] == 1.0
     assert refresh_scores(after, LATER) is None  # write-back's refresh sees nothing to change either
+
+
+def test_b3_v5_scores_move_to_b3_v6_by_refresh(tmp_path: Path) -> None:
+    db_path, out = setup_records(tmp_path)
+    score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER, grade=fake_grade())
+    record = json.loads((out / "tinyq.json").read_text())
+    new_total = record["scores"]["quality"]["total"]
+    components = record["scores"]["quality"]["components"]
+    old = {**record["scores"], "formula_version": "b3.v5", "quality": {**record["scores"]["quality"], "total": 1.0,
+           "components": {k: v for k, v in components.items() if k != "feature_results"}}}
+    moved = {**record, "scores": old}
+    note = refresh_scores(moved, LATER)
+    assert note == "scores moved from formula b3.v5 to b3.v6, refreshed from the record"
+    assert moved["scores"]["quality"]["total"] == new_total
+    SoftwareRecord.model_validate(moved)
 
 
 def test_scores_of_an_older_formula_that_break_todays_rules_are_replaced_and_the_rubric_kept(
@@ -503,7 +564,8 @@ def test_refresh_moves_scores_of_a_refreshable_formula_and_score_refresh_writes_
                   grade=fake_grade())
     path = out / "tinyq.json"
     data = json.loads(path.read_text())
-    old = next(iter(REFRESHABLE_FROM))
+    assert "b3.v5" in REFRESHABLE_FROM and "b3.v5+visual.v1" in REFRESHABLE_FROM
+    old = "b3.v5"
     data["scores"]["formula_version"] = old
     data["verification"]["runs"][0]["pitfalls"] = [{"readme_said": "tool link", "actually_needed": "tool pair",
                                                     "kind": "note"},
@@ -574,14 +636,13 @@ def test_grade_docs_sends_a_strict_schema_and_zeroes_unquoted_items(tmp_path: Pa
 
 
 def test_mcp_servers_have_their_own_popularity_refs() -> None:
-    from pickfit.score import POPULARITY_REFS, VERIFICATION_DEPTH, popularity
+    from pickfit.score import POPULARITY_REFS, popularity
 
     assert set(POPULARITY_REFS["mcp_server"]) == set(POPULARITY_REFS["dev_cli"])
     signals = {"stars": 40, "forks": 5, "monthly_downloads": 20000, "release_downloads": None, "dependents": None,
                "hn_top_score": 0, "registries_count": 1}
     # The same npm download count says less about an MCP server, which npx fetches on every client start.
     assert popularity(signals, "mcp_server", 60) < popularity(signals, "dev_cli", 60)
-    assert VERIFICATION_DEPTH["mcp_server"]["function"] < VERIFICATION_DEPTH["mcp_server"]["service"] == 1.0
 
 
 # --- hosted web apps: web.v1 -----------------------------------------------------------------
@@ -761,16 +822,16 @@ def test_gui_v1_weighs_usability_and_a_treasure_needs_seventy(monkeypatch: pytes
     assert scores["formula_version"] == "gui.v1"
     components = scores["quality"]["components"]
     assert {k: c["weight"] for k, c in components.items()} == GUI_WEIGHTS
-    assert components["usability"]["score"] == 0.85 and components["sandbox_verification"]["score"] == 0.6
-    assert scores["quality"]["total"] == round(100 * (0.6 * 25 + 0.85 * 30) / 55, 1)
+    assert components["usability"]["score"] == 0.85 and components["sandbox_verification"]["score"] == 1.0
+    assert scores["quality"]["total"] == round(100 * (1.0 * 25 + 0.85 * 30) / 55, 1)
     Scores.model_validate(scores)
-    # A command-line tool keeps b3.v5 and no usability component.
+    # A command-line tool keeps b3.v6 and no usability component.
     tool = json.loads(CHAT_FIXTURE.read_text(encoding="utf-8"))
     assert build_scores(SoftwareRecord.model_validate(tool), None, None, None, now=NOW)["formula_version"] == FORMULA_VERSION
     high = {"total": 90.0, "components": {"usability": {"score": 0.69, "weight": 30}}}
     assert treasure(high, 30.0, ease=True)["is_treasure"] is False
     assert treasure(high | {"components": {"usability": {"score": 0.7, "weight": 30}}}, 30.0, ease=True)["is_treasure"]
-    assert treasure(high, 30.0)["is_treasure"]  # b3.v5 and web.v1 do not look at usability
+    assert treasure(high, 30.0)["is_treasure"]  # b3.v6 and web.v1 do not look at usability
     shown = scores | {"popularity": scores["popularity"] | {"score": 30.0},
                       "quality": scores["quality"] | {"total": 90.0, "components": components | {
                           "usability": {"score": 0.69, "weight": 30}}},
@@ -786,7 +847,7 @@ def test_refresh_moves_records_to_the_usability_formulas_and_back(monkeypatch: p
     web["usability"] = ease(web["verification"]["runs"][0]["id"], 60.0)
     web["scores"] = web_scores(web)
     monkeypatch.setattr(score_module, "EASE_SCORED", True)
-    assert refresh_scores(data, LATER) == "scores moved from formula b3.v5 to gui.v1, refreshed from the record"
+    assert refresh_scores(data, LATER) == "scores moved from formula b3.v6 to gui.v1, refreshed from the record"
     assert data["scores"]["quality"]["components"]["usability"]["score"] == 0.85
     assert refresh_scores(web, LATER) == "scores moved from formula web.v1 to web.v2, refreshed from the record"
     components = web["scores"]["quality"]["components"]
@@ -799,13 +860,13 @@ def test_refresh_moves_records_to_the_usability_formulas_and_back(monkeypatch: p
     assert refresh_scores(data, LATER) == "scores refreshed from the record"
     assert data["scores"]["quality"]["components"]["usability"]["score"] is None
     monkeypatch.setattr(score_module, "EASE_SCORED", False)
-    assert refresh_scores(data, LATER) == "scores moved from formula gui.v1 to b3.v5, refreshed from the record"
+    assert refresh_scores(data, LATER) == "scores moved from formula gui.v1 to b3.v6, refreshed from the record"
     assert "usability" not in data["scores"]["quality"]["components"]
     assert refresh_scores(web, LATER) == "scores moved from formula web.v2 to web.v1, refreshed from the record"
     SoftwareRecord.model_validate(data)
 
 
-# --- measurable visual defects: an app-caused defect takes 5% off (b3.v5+visual.v1, web.v1+visual.v1) ------------
+# --- measurable visual defects: an app-caused defect takes 5% off (b3.v6+visual.v1, web.v1+visual.v1) ------------
 
 
 def visual(run_id: str, score: int = 1) -> dict[str, Any]:
@@ -827,8 +888,8 @@ def test_a_visual_defect_takes_five_percent_off_and_a_clean_or_missing_check_cha
     for score, factor in ((0, 0.95), (1, 0.95), (2, 1.0)):  # severity is not used
         desk["visual_check"] = visual(run_id, score)
         scores = build_scores(SoftwareRecord.model_validate(desk), None, None, None, now=NOW)
-        assert scores["formula_version"] == "b3.v5+visual.v1"
-        assert scores["quality"]["components"] == plain["quality"]["components"]  # the formula itself is b3.v5
+        assert scores["formula_version"] == "b3.v6+visual.v1"
+        assert scores["quality"]["components"] == plain["quality"]["components"]  # the formula itself is b3.v6
         assert scores["quality"]["total"] == round(plain["quality"]["total"] * factor, 1)
         assert scores["quality"]["visual"] == {"factor": factor, "before": plain["quality"]["total"],
                                                "defects": 0 if score == 2 else 1}
@@ -870,7 +931,7 @@ def test_refresh_applies_and_removes_the_deduction_and_moves_the_branch_formulas
     web["scores"] = web_scores(web)
     desk["visual_check"] = visual(desk["verification"]["runs"][0]["id"], 0)
     web["visual_check"] = visual(web["verification"]["runs"][0]["id"], 2)
-    assert refresh_scores(desk, LATER) == "scores moved from formula b3.v5 to b3.v5+visual.v1, refreshed from the record"
+    assert refresh_scores(desk, LATER) == "scores moved from formula b3.v6 to b3.v6+visual.v1, refreshed from the record"
     assert desk["scores"]["quality"]["total"] == round(before * 0.95, 1)
     assert refresh_scores(web, LATER) == "scores moved from formula web.v1 to web.v1+visual.v1, refreshed from the record"
     assert web["scores"]["quality"]["visual"]["factor"] == 1.0
@@ -879,12 +940,12 @@ def test_refresh_applies_and_removes_the_deduction_and_moves_the_branch_formulas
         assert refresh_scores(record, LATER) is None
     # A re-verified record whose check read a run it no longer has goes back until it is checked again.
     desk["visual_check"]["run_id"] = "verify-gone"
-    assert refresh_scores(desk, LATER) == "scores moved from formula b3.v5+visual.v1 to b3.v5, refreshed from the record"
+    assert refresh_scores(desk, LATER) == "scores moved from formula b3.v6+visual.v1 to b3.v6, refreshed from the record"
     assert desk["scores"]["quality"]["total"] == before and "visual" not in desk["scores"]["quality"]
     # gui.v2 (the additive version tried on this branch) moves to the deduction.
     desk["visual_check"]["run_id"] = desk["verification"]["runs"][0]["id"]
     desk["scores"]["formula_version"] = "gui.v2"
-    assert "to b3.v5+visual.v1" in refresh_scores(desk, LATER)
+    assert "to b3.v6+visual.v1" in refresh_scores(desk, LATER)
     assert "visual_quality" not in desk["scores"]["quality"]["components"]
 
 

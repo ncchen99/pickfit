@@ -132,8 +132,9 @@ BASETEN_CAPS = Caps(total_usd=100.0, daily_usd=baseten_daily_cap)
 MODAL_LLM_CAPS = Caps(total_usd=100.0, daily_usd=lambda day: 50.0)
 # Meta's models through OpenRouter (PICKFIT_META_VIA=openrouter), paid from 念誠's OpenRouter balance: its own
 # budget. 11/3 Meta's API refused the team's key with 402 billing errors; 念誠 topped OpenRouter up with $50. The
-# live Worker spends the same balance (its own caps, in D1), so the pipeline stops at $40 and leaves it about $10.
-OPENROUTER_CAPS = Caps(total_usd=40.0, daily_usd=lambda day: 40.0)
+# live Worker spends the same balance (its own caps, in D1), so the pipeline stopped at $40 and left it about $10.
+# 11/4 evening: $26.15 spent here and $44 left on the balance; 念誠 allowed $24 more and keeps $20 for the live site.
+OPENROUTER_CAPS = Caps(total_usd=50.0, daily_usd=lambda day: 40.0)
 
 
 def taipei_now(clock: Callable[[], datetime] | None = None) -> datetime:

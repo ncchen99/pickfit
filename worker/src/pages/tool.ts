@@ -15,7 +15,7 @@ import { EMPTY_FORM, installSection, levelLine, stepText, webFactList } from '..
 import { day, guideTitle, guiSentence, KIND, KIND_PLURAL, levelLabel, OS_NAME, PRICE, PROCESSING, passed, webLevelLabel, webRunWords } from '../ui/facts.ts';
 import { esc, link, listOf, safeUrl } from '../ui/html.ts';
 import { icon, osMark, type IconName } from '../ui/icons.ts';
-import { age, badge, compareToggle, coverage, fitz, kindTag, levelIcon, measure, osList, popover, runFacts, tape, type FitzName, type MeasureRow } from '../ui/kit.ts';
+import { age, badge, compareToggle, confidenceRow, coverage, fitz, kindTag, levelIcon, measure, osList, popover, runFacts, tape, type FitzName, type MeasureRow } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 import { posterOf, videoPath } from '../video.ts';
 import { NO_INSTALL_LABEL, noInstallLabel } from '../webapp.ts';
@@ -790,6 +790,7 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
     `</div></div><aside class="side" aria-label="${L('At a glance', '一覽')}">` +
     `<div class="panel"><h2>${L('At a glance', '一覽')}</h2>${factSheet(entry, now)}<div class="panel-measure">` +
     tape(L('Quality', '品質'), entry.scores?.quality ?? null, { pop: 'pop-quality' }) +
+    confidenceRow(entry.scores?.confidence, entry.scores?.unmeasured, features) +
     tape(L('Popularity', '知名度'), entry.scores?.popularity ?? null, { pop: 'pop-popularity', tone: 'quiet' }) +
     coverage(features, { pop: 'pop-features' }) +
     checkMarks(entry) +

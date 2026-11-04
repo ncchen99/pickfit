@@ -1755,7 +1755,7 @@
     },
     "QualityComponents": {
       "additionalProperties": false,
-      "description": "The six quality components of B.3 (nominal weights 35/20/15/10/10/10+).\n\nA hosted web app (formula web.v1, pickfit/score.py) adds browser_facts and gives the four components a\nREADME and a repository feed weight 0: it is opened, not installed. Other records never carry it.",
+      "description": "The quality components of formula b3.v6 (nominal weights 20/20/25/10/5/10/10+; pickfit/score.py).\n\nA hosted web app (formula web.v1, pickfit/score.py) adds browser_facts and gives the four components a\nREADME and a repository feed weight 0: it is opened, not installed. Other records never carry it.",
       "properties": {
         "browser_facts": {
           "anyOf": [
@@ -1771,6 +1771,18 @@
         },
         "engineering_hygiene": {
           "$ref": "#/$defs/QualityComponent"
+        },
+        "feature_results": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/QualityComponent"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Formula b3.v6: checked / (checked + failed because of the tool), over the passed runs. Null score when no feature reached a verdict (dropped from the denominator)."
         },
         "install_docs": {
           "$ref": "#/$defs/QualityComponent"

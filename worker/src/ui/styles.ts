@@ -13,7 +13,7 @@ const TOKENS = `
    answer; --voice-edge is the answer's own edge (2:1 light, 3.15:1 dark), so its cut corner reads beside your request's. */
 :root{
 --paper:#F7F7F4;--tag:#FFFFFF;--raised:#FFFFFF;--voice:#F1F6E2;--voice-line:#CDD7AB;--voice-edge:#A9B77E;
---sunk:#F0F1EC;--code-bg:#FFFFFF;--rule:#DEDFD9;--line-ctl:#80817A;
+--sunk:#F0F1EC;--code-bg:#FFFFFF;--cmd-bg:color-mix(in srgb,var(--ink) 5.5%,transparent);--rule:#DEDFD9;--line-ctl:#80817A;
 --ink:#1A1D17;--ink-2:#4F5149;--ink-3:#65655E;
 --tape:#F5C243;--tape-edge:#A57710;--tape-deep:#D9A21B;--tape-ink:#3A2905;--tape-tab:#C3CAD2;
 --stitch:#C4552D;--fitz-line:#4A2E22;--fitz-ink:#4A2E22;
@@ -267,6 +267,14 @@ button.badge{cursor:help;min-height:24px;text-decoration:underline dotted;text-d
 .meter-wide{grid-row:auto;grid-column:1/-1;font:500 var(--t-small)/1.3 var(--sans);text-align:left;color:var(--ink-2)}
 .meter-note{grid-column:1/-1;font-size:var(--t-small);color:var(--ink-2)}
 .meter-none .meter-read{font:500 var(--t-small)/1 var(--sans);color:var(--ink-2)}
+/* The tip is long and the number sits at the panel's right edge, so it opens to the left, on focus too (a touch screen). */
+/* It qualifies the quality score above it, so it sits close under that tape, smaller, and popularity starts a new group. */
+.meter-conf{margin-top:-6px;margin-bottom:6px}
+.meter-conf .meter-label{font:500 .8rem/1.2 var(--sans);color:var(--ink-3)}
+.meter-conf .conf-read{position:relative;grid-row:auto;font-variant-numeric:tabular-nums;text-decoration:underline dotted;text-decoration-color:var(--line-ctl);text-underline-offset:4px;cursor:help}
+.meter-conf .conf-read:focus-visible{outline:3px solid var(--stitch);outline-offset:2px}
+.meter-conf .conf-read[data-tip]:hover::after,.meter-conf .conf-read[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:auto;right:0;bottom:calc(100% + 6px);z-index:3;padding:8px 10px;border-radius:var(--r-ctl);background:var(--ink);color:var(--paper);font:600 .78rem/1.35 var(--sans);text-align:left;width:max-content;max-width:280px;white-space:normal;pointer-events:none}
+@media (hover:none){.meter-conf .conf-read{cursor:default}}
 .tape-track{fill:var(--sunk)}
 .meter-none .tape-track{fill:none;stroke:var(--rule);stroke-width:1.5;stroke-dasharray:4 4;vector-effect:non-scaling-stroke}
 /* A reading, not an action: the tape's ticks in ink, never yellow (the screen's one solid yellow is its action).
@@ -303,8 +311,9 @@ button.badge{cursor:help;min-height:24px;text-decoration:underline dotted;text-d
    the line breaks inside it. A wrapped part
    hangs 2ch in, so it never reads as the next command; each line of several is its own block (.ln) and starts flush.
    Copy is a quiet text button right after the command, on the first line's baseline (align-items:baseline). */
-.cmd{display:flex;align-items:baseline;gap:4px 16px;margin:8px 0 12px;min-width:0;padding:0;background:none;border:0;border-left:2px solid var(--line-ctl);border-radius:0;color:var(--ink)}
-.cmd pre{flex:0 1 auto;min-width:0;margin:0;padding:3px 0 3px calc(14px + 2ch);text-indent:-2ch;line-height:1.6;white-space:pre-wrap;word-break:normal;overflow-wrap:anywhere}
+/* A command is a faint block (a tint of the ink, so it holds on the ground and inside Fitz's answer), with Copy at its right edge. */
+.cmd{display:flex;align-items:baseline;gap:4px 16px;margin:8px 0 12px;min-width:0;padding:6px 10px 6px 0;background:var(--cmd-bg);border:0;border-radius:var(--r-ctl);color:var(--ink)}
+.cmd pre{flex:1 1 auto;min-width:0;margin:0;padding:3px 0 3px calc(14px + 2ch);text-indent:-2ch;line-height:1.6;white-space:pre-wrap;word-break:normal;overflow-wrap:anywhere}
 .cmd .ln{display:block}
 /* A word with a hyphen or a slash in it is one piece (command() marks it): the line wraps at the space before it. Only a
    word longer than the line breaks, inside itself; its own text-indent is reset, so the hanging indent stays the block's. */
@@ -468,6 +477,8 @@ ${MEASURE_FITS.map((w, i) => {
 .foot-links a{display:inline-block;padding:4px 0;color:var(--ink-2);font:500 .95rem/1.3 var(--sans);text-decoration-color:var(--line-ctl);text-underline-offset:4px}
 .foot-links a:hover{color:var(--ink);text-decoration-color:var(--stitch)}
 .foot-row p{margin:0;max-width:62ch;font-size:var(--t-small);color:var(--ink-3)}
+.foot-row .foot-brand{grid-column:1/-1;margin-top:8px;font-variant-numeric:tabular-nums}
+.foot-brand>span{font:800 1rem/1 var(--display);letter-spacing:-.03em;color:var(--ink-2);margin-right:4px}
 `;
 
 const RESULTS = `
@@ -764,6 +775,44 @@ details[open]:not(.menu)>summary:not(:has(>.i))::before{transform:rotate(180deg)
 .picks+p{margin-top:28px}
 .sbs>summary::-webkit-details-marker{display:none}
 .sbs[open]>summary{margin-bottom:16px}
+.ask input[type=text]{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:500 1.4rem/1.3 var(--display);letter-spacing:-.015em;padding:0}
+.ask input[type=text]::placeholder{color:var(--ink-3);opacity:1}
+.ask input[type=text]:focus-visible{outline:none}
+/* /submit and a submission's page: left-aligned on the site's own column, like every other page, in the same two
+   columns: what you act on or read first on the left, the steps on the right, hairlines and no boxes. */
+.sub-page,.sub-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:32px 64px;align-items:start}
+.sub-page{padding-top:32px;padding-bottom:64px}
+.sub-status{padding-top:32px;padding-bottom:64px}
+.sub-err{margin:12px 0 0;color:var(--fail);font-weight:500}
+.sub-form.is-invalid{border-color:var(--fail)}
+.sub-form .ask-meta{justify-content:flex-end}
+.sub-h{font-size:var(--t-head);margin:0 0 4px}
+.sub-next{list-style:none;margin:0;padding:0}
+.sub-next li{display:grid;grid-template-columns:4.5rem minmax(0,1fr);gap:4px 12px;padding:12px 0;border-bottom:1px solid var(--rule)}
+.sub-next b{font:700 1rem/1.5 var(--display)}
+.sub-next span{color:var(--ink-2)}
+.sub-says .bubble{flex:1;min-width:0;padding:16px 20px}
+.sub-says .bubble h2{font-size:1.35rem;margin:0 0 4px}
+.sub-says .bubble p{margin:0}
+.sub-steps{list-style:none;margin:0;padding:0}
+.sub-step{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;padding:14px 0;border-bottom:1px solid var(--rule)}
+.sub-step:first-child{padding-top:0}
+.sub-step h3{font:700 1.05rem/1.4 var(--display);margin:0}
+.sub-step p{margin:2px 0 0;color:var(--ink-2);font-size:.95rem}
+.sub-mark{display:grid;place-items:center;width:24px;height:24px;margin-top:1px}
+.sub-mark .i{width:20px;height:20px}
+.sub-step.is-done .sub-mark{color:var(--pass)}
+.sub-step.is-stopped .sub-mark{color:var(--fail)}
+.sub-step.is-todo .sub-mark{color:var(--ink-3)}
+.sub-step.is-todo h3,.sub-step.is-todo p{color:var(--ink-3)}
+.sub-step.is-now .sub-mark::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--stitch)}
+.sub-step .unroll{max-width:320px;margin-top:10px}
+.sub-status .seam{margin:24px 0 0}
+.sub-go{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.sub-keep{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;margin:24px 0 0;color:var(--ink-2)}
+.sub-offline{margin:16px 0 0;color:var(--caution);font-size:.92rem}
+@media (max-width:900px){.sub-page,.sub-grid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:640px){.sub-next li{grid-template-columns:minmax(0,1fr)}.ask input[type=text]{width:100%}}
 /* waiting: Fitz talks (his --voice bubble) while his tape unrolls; one dashed outline shows where the answer will land */
 .loading{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;margin-top:32px;max-width:1040px}
 .loading .bubble{max-width:760px;padding:20px 24px}
@@ -958,10 +1007,10 @@ a.check-mark:hover .check-count,button.check-mark:hover .check-count{text-decora
 .tool-clip+.layout{margin-top:48px}
 .showcase{margin:0 0 48px}
 /* The clip gives up width, never its bar: at any window height the head, the clip and its bar (play, chapters) fit
-   in the first view, down to a 280px-tall clip. The player shrinks to the clip, so there are no black bars beside it. */
-.showcase video{display:block;width:auto;max-width:100%;height:auto;max-height:max(280px,calc(100svh - 356px));object-fit:contain;background:#000}
+   in the first view, down to a 400px-tall clip (a smaller one is hard to read on a short 16:9 screen; there the bar may need a little scroll). The player shrinks to the clip, so there are no black bars beside it. */
+.showcase video{display:block;width:auto;max-width:100%;height:auto;max-height:max(400px,calc(100svh - 356px));object-fit:contain;background:#000}
 /* With tools pinned, the compare tray covers the window's foot: the clip gives up the tray's height too, so its bar stays in view. */
-body.has-tray .showcase video{max-height:max(280px,calc(100svh - 356px - var(--tray-h)))}
+body.has-tray .showcase video{max-height:max(400px,calc(100svh - 356px - var(--tray-h)))}
 .showcase figcaption{margin-top:8px;font-size:var(--t-small);color:var(--ink-3)}
 /* Media, not a card: the player keeps its dark frame with straight edges. */
 .player{width:fit-content;max-width:100%;border-radius:0;overflow:hidden;background:#000}
@@ -1190,10 +1239,6 @@ ul.levels li{display:grid;grid-template-columns:minmax(0,15rem) minmax(0,1fr);ga
 .tip h3{margin:0 0 6px}
 /* A sentence to say to your agent: still verbatim and copied exactly, but it wraps between words like prose, with no hanging indent */
 .prompt .cmd pre{word-break:normal;overflow-wrap:anywhere;text-indent:0;padding-left:14px}
-/* /agents: its one action is copying the first command, so that Copy is the screen's one solid yellow (as on results) */
-.agents-doc>.cmd:first-of-type .copy{background:var(--tape);color:var(--tape-ink);border:1px solid var(--tape-edge);text-decoration:none;min-height:32px;padding:0 14px;font-weight:700}
-.agents-doc>.cmd:first-of-type .copy:hover{background:color-mix(in srgb,var(--tape) 88%,#fff)}
-.agents-doc>.cmd:first-of-type .copy.done{background:transparent;color:var(--pass);border-color:var(--pass)}
 .nf{display:grid;place-items:center;text-align:center;gap:16px;padding:48px 0}
 `;
 

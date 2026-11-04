@@ -727,3 +727,129 @@ test('pages say what a score or a mark means to the reader, not the rules behind
   assert.doesNotMatch(loading, /Muse Spark reads|Code checks each reason|<ol>/);
   assert.doesNotMatch(home, /Each reason is checked/);
 });
+
+test('confidence: the number beside quality, and a tooltip that names the features with no verdict', async () => {
+  const { confidenceRow } = await import('../src/ui/kit.ts');
+  const features = {
+    recorded: true,
+    checked: [],
+    not_checked: [
+      { feature: 'search history', reason: 'not_attempted' as const, detail: '' },
+      { feature: 'sync across machines', reason: 'needs_account' as const, detail: '' },
+    ],
+  };
+  const row = confidenceRow(0.7, ['feature_results', 'usage_outcomes'], features);
+  assert.match(row, />70%</);
+  assert.match(row, /data-tip="[^"]*search history, sync across machines/);
+  assert.match(row, /data-tip="[^"]*fewer than 3 reports/);
+  assert.match(row, /tabindex="0"/); // a touch screen has no hover: a tap focuses it
+  const none = confidenceRow(0.9, ['usage_outcomes'], { recorded: true, checked: [{ feature: 'x', check: 'y' }], not_checked: [] });
+  assert.doesNotMatch(none, /Features not confirmed/);
+  assert.equal(confidenceRow(undefined, undefined, features), ''); // an older index
+});
+
+
+// ---------------------------------------------------------------- /submit, the web door to submit_software
+
+async function postSubmit(s: ReturnType<typeof site>, url: string, extra: Record<string, string> = {}) {
+  return s.send(
+    new Request('http://127.0.0.1:8787/submit', {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'text/html', origin: 'http://127.0.0.1:8787', ...extra },
+      body: new URLSearchParams({ url }).toString(),
+    }),
+  );
+}
+const getPage = (s: ReturnType<typeof site>, path: string, headers: Record<string, string> = {}) =>
+  s.send(new Request(`http://127.0.0.1:8787${path}`, { headers: { accept: 'text/html', ...headers } }));
+
+test('/submit shows the form and is in the nav', async () => {
+  const res = await getPage(site(), '/submit');
+  assert.equal(res.status, 200);
+  const body = await res.text();
+  assert.match(body, /<form id="submit-form"[^>]*method="post" action="\/submit"/);
+  assert.match(body, /<a[^>]*href="\/submit"/);
+});
+
+test('a new link is queued and redirects to its status page, which follows the row', async () => {
+  const s = site();
+  const res = await postSubmit(s, 'github.com/Someone/New-Tool');
+  assert.equal(res.status, 303);
+  const path = res.headers.get('location')!;
+  assert.match(path, /^\/submit\/sub_[0-9a-f]+$/);
+  const id = path.split('/').pop()!;
+
+  const page = await (await getPage(s, path)).text();
+  assert.match(page, /someone\/new-tool/);
+  assert.match(page, /data-sub-state="running"/);
+  assert.match(page, /You’re in line/);
+
+  // the fragment the page polls: only the part that changes, no page around it
+  const fragment = await (await getPage(s, path, { 'x-pickfit-fragment': '1' })).text();
+  assert.ok(fragment.startsWith('<div class="sub-grid" data-sub-state="running"'));
+  assert.doesNotMatch(fragment, /<html/);
+
+  const step = async (status: string, slug: string | null, reason: string | null) => {
+    await s.sqlite.prepare('UPDATE submissions SET status = ?, slug = ?, reason = ? WHERE id = ?').run(status, slug, reason, id);
+    return (await getPage(s, path, { 'x-pickfit-fragment': '1' })).text();
+  };
+  assert.match(await step('reading', null, null), /Fitz is reading it/);
+  assert.match(await step('verifying', null, null), /Fitz is trying it/);
+  const ready = await step('verifying', null, "Installed, replayed in a fresh sandbox and checked; goes live at pickfit's next publish.");
+  assert.match(ready, /It passed/);
+  assert.match(ready, /data-sub-state="running"/);
+  const listed = await step('listed', null, null);
+  assert.match(listed, /It’s listed/);
+  assert.match(listed, /data-sub-state="final"/);
+  assert.match(listed, /class="seam"/);
+  const unverified = await step('listed_unverified', null, 'Added without a verified install: the sandbox run did not pass (needs_root).');
+  assert.match(unverified, /Listed, but not verified/);
+  assert.match(unverified, /needs_root/);
+  assert.doesNotMatch(unverified, /class="seam"/); // no stitch without a verified run
+  const rejected = await step('rejected', null, 'It is a library.');
+  assert.match(rejected, /Not listed/);
+  assert.match(rejected, /It is a library/);
+});
+
+test('a queued repository that nobody takes says the line looks paused; a website says batches', async () => {
+  const s = site();
+  const path = (await postSubmit(s, 'https://github.com/someone/slow-tool')).headers.get('location')!;
+  await s.sqlite.prepare('UPDATE submissions SET submitted_at = ?').run(new Date(NOW.getTime() - 3_600_000).toISOString());
+  assert.match(await (await getPage(s, path)).text(), /looks paused/);
+  const web = (await postSubmit(s, 'https://some-app.dev/tool')).headers.get('location')!;
+  assert.match(await (await getPage(s, web)).text(), /tested in batches/);
+});
+
+test('software already in the catalog goes to its page, and a bad link stays on the form with the error', async () => {
+  const index = fixtureIndex() as any;
+  index.entries[0].repo_url = 'https://github.com/fixture/fixture-chat-tui';
+  const worker = makeWorker(index, { now: () => NOW });
+  const listed = await worker.fetch(
+    new Request('http://127.0.0.1:8787/submit', {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'text/html', origin: 'http://127.0.0.1:8787' },
+      body: new URLSearchParams({ url: 'github.com/fixture/fixture-chat-tui' }).toString(),
+    }),
+    { DB: makeD1().db, MODEL_API_KEY: 'test-key' } as unknown as Env,
+    { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext,
+  );
+  assert.equal(listed.status, 200);
+  const body = await listed.text();
+  assert.match(body, /already in pickfit/);
+  assert.ok(body.includes(`/tool/${index.entries[0].slug}`));
+
+  const bad = await postSubmit(site(), 'https://gitlab.com/owner/repo');
+  assert.equal(bad.status, 400);
+  const form = await bad.text();
+  assert.match(form, /role="alert"/);
+  assert.ok(form.includes('value="https://gitlab.com/owner/repo"'), 'what you typed stays');
+});
+
+test('the hourly cap and a post from another site are refused; an unknown id is not found', async () => {
+  const capped = site({ SUBMIT_HOURLY_CAP: '0' });
+  const res = await postSubmit(capped, 'github.com/someone/capped');
+  assert.equal(res.status, 429);
+  assert.equal(res.headers.get('retry-after'), '3600');
+  assert.equal((await postSubmit(site(), 'github.com/someone/x', { origin: 'https://evil.example' })).status, 403);
+  assert.equal((await getPage(site(), '/submit/sub_doesnotexist')).status, 404);
+});
