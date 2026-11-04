@@ -583,6 +583,10 @@ Flathub remote until the cited step adds it."""
 
 INSTALL_ONLY_RULE = """ This run checks install only: there is no operate_gui here. After the launch_gui, report each listed feature not_checked with reason not_attempted and the note "install-only run", and finish."""
 
+CLI_INSTALL_ONLY_RULE = """ This run checks install only: after installing the tool and running one --version or --help check that exits 0, do not run feature checks, background servers or model downloads. Report level install, report each listed feature not_checked with reason not_attempted and the note "install-only run", and finish."""
+
+MCP_INSTALL_ONLY_RULE = """ This run checks install and startup only: after installing the MCP server and running one handshake probe (without --call), do not run tool calls. Report each listed feature not_checked with reason not_attempted and the note "install-only run", and finish."""
+
 # Public models small enough for an inference check, licenses and URLs checked 2026-10-29.
 # stories260K: karpathy/tinyllamas weights (MIT), GGUF by ggml-org. SmolLM2-135M-Instruct:
 # HuggingFaceTB (Apache-2.0), GGUF by bartowski; Ollama's smollm2:135m is the same model.
@@ -706,7 +710,9 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
             lines.append(f"- {t.command}{shown}")
     listed = feature_checks.render(ex.features, gui=box.display)
     if listed:
-        lines += ["", "Main features the README advertises:", *listed, feature_checks.guide(is_mcp(task))]
+        lines += ["", "Main features the README advertises:", *listed]
+        if limits.max_operations > 0:
+            lines.append(feature_checks.guide(is_mcp(task)))
     if is_mcp(task):
         lines += ["", MCP_GUIDE]
         mcp = ex.mcp
@@ -715,7 +721,7 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
         if mcp.env_vars:
             named = ", ".join(f"{e.name}{' (required)' if e.required else ''}" for e in mcp.env_vars)
             lines.append(f"Environment variables the README names: {named}")
-    elif ex.category.value == "local_ai":
+    elif ex.category.value == "local_ai" and limits.max_operations > 0:
         lines += ["", TINY_MODELS]
     pre = ex.prerequisites
     stated = [*(r.value for r in pre.runtimes), *(s.value for s in pre.system_packages)]
@@ -862,6 +868,8 @@ class VerifyAgent:
         if box.display and limits.max_operations <= 0:
             self.instructions += INSTALL_ONLY_RULE
             self.tools = [t for t in self.tools if t is not OPERATE_GUI_TOOL]
+        elif not box.display and limits.max_operations <= 0:
+            self.instructions += MCP_INSTALL_ONLY_RULE if is_mcp(task) else CLI_INSTALL_ONLY_RULE
         self.commands_used = 0
         self.finish_retries = 0
         self.verdict: LogVerdict | None = None

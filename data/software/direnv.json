@@ -3,7 +3,7 @@
   "slug": "direnv",
   "repo_id": "gh:1219305",
   "name": "direnv",
-  "summary": "direnv loads and unloads shell environment variables based on current directory.",
+  "summary": "Loads and unloads shell environment variables based on the current directory.",
   "aliases": [],
   "status": "listed",
   "status_reason": null,
@@ -28,13 +28,15 @@
   ],
   "alternatives_to": [
     "autoenv",
-    "mise",
-    "shadowenv"
+    "asdf",
+    "shadowenv",
+    "mise"
   ],
   "features": [
     "load and unload environment variables per directory",
-    "create per-project isolated development environments",
-    "load secrets for deployment"
+    "hook into common shells like bash and zsh",
+    "prepend paths with PATH_add stdlib function",
+    "load .env files via dotenv"
   ],
   "why_worth_it": null,
   "homepage": "http://direnv.net",
@@ -58,12 +60,38 @@
     "api_keys": []
   },
   "install": {
-    "macos": null,
-    "linux": null,
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install direnv",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "direnv allow ."
+    },
+    "linux": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install direnv",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "direnv allow ."
+    },
     "windows": null
   },
   "pricing": {
-    "model": "free",
+    "model": null,
     "note": null
   },
   "open_source": true,
@@ -140,16 +168,22 @@
       "kind": "release",
       "url": "https://github.com/direnv/direnv/releases/tag/v2.38.2",
       "fetched_at": "2026-11-04T13:05:40+08:00"
+    },
+    {
+      "id": "homebrew_cask:direnv",
+      "kind": "package_registry",
+      "url": "https://formulae.brew.sh/formula/direnv",
+      "fetched_at": "2026-11-04T13:28:18+08:00"
     }
   ],
   "evidence": [
     {
       "field": "/kind",
       "source_id": "readme",
-      "quote": "Because direnv is compiled into a single static executable, it is fast enough",
+      "quote": "`direnv` is an extension for your shell.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:47+08:00"
+      "checked_at": "2026-11-04T13:28:44+08:00"
     },
     {
       "field": "/audience",
@@ -157,7 +191,7 @@
       "quote": "To follow along in your shell once direnv is installed.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:47+08:00"
+      "checked_at": "2026-11-04T13:28:44+08:00"
     },
     {
       "field": "/category",
@@ -165,7 +199,7 @@
       "quote": "It supports hooks for all the common shells like bash, zsh, tcsh and fish.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:47+08:00"
+      "checked_at": "2026-11-04T13:28:44+08:00"
     },
     {
       "field": "/summary",
@@ -173,23 +207,23 @@
       "quote": "new feature that can load and unload environment variables depending on the\ncurrent directory.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:47+08:00"
+      "checked_at": "2026-11-04T13:28:44+08:00"
     },
     {
       "field": "/name",
       "source_id": "readme",
-      "quote": "`direnv` is an extension for your shell.",
+      "quote": "direnv -- unclutter your .profile",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:47+08:00"
+      "checked_at": "2026-11-04T13:28:44+08:00"
     },
     {
       "field": "/platforms",
       "source_id": "readme",
-      "quote": "* Unix-like operating system (macOS, Linux, ...)",
+      "quote": "Unix-like operating system (macOS, Linux, ...)",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:47+08:00"
+      "checked_at": "2026-11-04T13:28:44+08:00"
     },
     {
       "field": "/repo",
@@ -242,26 +276,26 @@
     {
       "field": "/use_cases/0",
       "source_id": "readme",
-      "quote": "* Load [12factor apps](https://12factor.net/) environment variables",
+      "quote": "Load [12factor apps](https://12factor.net/) environment variables",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:47+08:00"
+      "checked_at": "2026-11-04T13:28:44+08:00"
     },
     {
       "field": "/use_cases/1",
       "source_id": "readme",
-      "quote": "* Create per-project isolated development environments",
+      "quote": "Create per-project isolated development environments",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:47+08:00"
+      "checked_at": "2026-11-04T13:28:44+08:00"
     },
     {
       "field": "/use_cases/2",
       "source_id": "readme",
-      "quote": "* Load secrets for deployment",
+      "quote": "Load secrets for deployment",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:47+08:00"
+      "checked_at": "2026-11-04T13:28:44+08:00"
     },
     {
       "field": "/alternatives_to/0",
@@ -269,57 +303,81 @@
       "quote": "[autoenv](https://github.com/hyperupcall/autoenv) - older, popular, and lightweight.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:47+08:00"
+      "checked_at": "2026-11-04T13:28:44+08:00"
     },
     {
       "field": "/alternatives_to/1",
       "source_id": "readme",
-      "quote": "[mise](https://github.com/jdx/mise) - direnv, make and asdf all in one tool.",
+      "quote": "[asdf](https://github.com/asdf-vm/asdf) - a pure bash solution that has a plugin system.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:47+08:00"
+      "checked_at": "2026-11-04T13:28:44+08:00"
     },
     {
       "field": "/alternatives_to/2",
       "source_id": "readme",
-      "quote": "[shadowenv](https://shopify.github.io/shadowenv/) - uses an s-expression format to define environment changes that should be executed",
+      "quote": "[shadowenv](https://shopify.github.io/shadowenv/) - uses an s-expression format to define environment changes",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:47+08:00"
+      "checked_at": "2026-11-04T13:28:44+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "[mise](https://github.com/jdx/mise) - direnv, make and asdf all in one tool.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:28:44+08:00"
     },
     {
       "field": "/features/0",
       "source_id": "readme",
-      "quote": "new feature that can load and unload environment variables depending on the\ncurrent directory.",
+      "quote": "new feature that can load and unload environment variables depending on the",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:47+08:00"
+      "checked_at": "2026-11-04T13:28:44+08:00"
     },
     {
       "field": "/features/1",
       "source_id": "readme",
-      "quote": "* Create per-project isolated development environments",
+      "quote": "It supports hooks for all the common shells like bash, zsh, tcsh and fish.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:47+08:00"
+      "checked_at": "2026-11-04T13:28:44+08:00"
     },
     {
       "field": "/features/2",
       "source_id": "readme",
-      "quote": "* Load secrets for deployment",
+      "quote": "the `PATH_add` function is used to expand and prepend a path to",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:47+08:00"
+      "checked_at": "2026-11-04T13:28:44+08:00"
     },
     {
-      "field": "/pricing",
+      "field": "/features/3",
       "source_id": "readme",
-      "quote": "[MIT licence](LICENSE) - Copyright (C) 2019 @zimbatm and [contributors](https://github.com/direnv/direnv/graphs/contributors)",
+      "quote": "append `dotenv` at the end of it to instruct direnv to also read the `.env`",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:47+08:00"
+      "checked_at": "2026-11-04T13:28:44+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "homebrew_cask:direnv",
+      "quote": "brew install direnv",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:28:44+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "homebrew_cask:direnv",
+      "quote": "brew install direnv",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:28:44+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:04:59+08:00",
-  "updated_at": "2026-11-04T13:16:32+08:00"
+  "updated_at": "2026-11-04T13:28:44+08:00"
 }

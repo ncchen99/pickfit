@@ -3,7 +3,7 @@
   "slug": "hurl",
   "repo_id": "gh:290243101",
   "name": "Hurl",
-  "summary": "Command line tool that runs HTTP requests from plain text files and asserts responses.",
+  "summary": "Command line tool that runs HTTP requests from plain text files and checks responses.",
   "aliases": [],
   "status": "listed",
   "status_reason": null,
@@ -22,17 +22,17 @@
     "testing-tools"
   ],
   "use_cases": [
-    "chain HTTP requests passing values",
-    "test HTTP response status and headers",
+    "chain multiple HTTP requests",
     "test REST and JSON APIs",
-    "check endpoint response performance"
+    "test performance of HTTP endpoints"
   ],
-  "alternatives_to": [],
+  "alternatives_to": [
+    "curl"
+  ],
   "features": [
-    "chain requests and capture values",
+    "chain HTTP requests in plain text",
     "test HTTP responses with asserts",
-    "integrate in CI/CD with reports",
-    "work with REST SOAP GraphQL APIs"
+    "integrate tests in CI/CD with reports"
   ],
   "why_worth_it": null,
   "homepage": "https://hurl.dev",
@@ -49,11 +49,24 @@
     "gpu": null,
     "apple_silicon_only": null,
     "min_ram_gb": null,
-    "network": null,
+    "network": "required",
     "api_keys": []
   },
   "install": {
-    "macos": null,
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install hurl",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "hurl sample.hurl"
+    },
     "linux": null,
     "windows": null
   },
@@ -135,32 +148,38 @@
       "kind": "release",
       "url": "https://github.com/Orange-OpenSource/hurl/releases/tag/8.1.0",
       "fetched_at": "2026-11-04T13:05:38+08:00"
+    },
+    {
+      "id": "homebrew_cask:hurl",
+      "kind": "package_registry",
+      "url": "https://formulae.brew.sh/formula/hurl",
+      "fetched_at": "2026-11-04T13:28:17+08:00"
     }
   ],
   "evidence": [
     {
       "field": "/kind",
       "source_id": "readme",
-      "quote": "Hurl is a command line tool that runs <b>HTTP requests</b> defined in a simple <b>plain text format</b>.",
+      "quote": "Hurl is a command line tool that runs <b>HTTP requests</b>",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:11:10+08:00"
+      "checked_at": "2026-11-04T13:28:41+08:00"
     },
     {
       "field": "/audience",
-      "source_id": "readme",
-      "quote": "$ hurl sample.hurl",
+      "source_id": "homebrew_cask:hurl",
+      "quote": "run command shown by the store: hurl",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:11:10+08:00"
+      "checked_at": "2026-11-04T13:28:41+08:00"
     },
     {
       "field": "/category",
       "source_id": "readme",
-      "quote": "<li><b>Fast CLI:</b> a command line for local dev and continuous integration</li>",
+      "quote": "Hurl is a command line tool that runs <b>HTTP requests</b>",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:11:10+08:00"
+      "checked_at": "2026-11-04T13:28:41+08:00"
     },
     {
       "field": "/summary",
@@ -168,7 +187,7 @@
       "quote": "Hurl is a command line tool that runs <b>HTTP requests</b> defined in a simple <b>plain text format</b>.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:11:10+08:00"
+      "checked_at": "2026-11-04T13:28:41+08:00"
     },
     {
       "field": "/name",
@@ -176,7 +195,15 @@
       "quote": "Hurl, run and test HTTP requests with plain text.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:11:10+08:00"
+      "checked_at": "2026-11-04T13:28:41+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "it can be used for both <b>fetching data</b> and <b>testing HTTP</b> sessions.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:28:41+08:00"
     },
     {
       "field": "/repo",
@@ -229,34 +256,34 @@
     {
       "field": "/use_cases/0",
       "source_id": "readme",
-      "quote": "It can chain requests, capture values and evaluate queries on headers and body response.",
+      "quote": "Chaining multiple requests is easy:",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:11:10+08:00"
+      "checked_at": "2026-11-04T13:28:41+08:00"
     },
     {
       "field": "/use_cases/1",
       "source_id": "readme",
-      "quote": "Hurl can run HTTP requests but can also be used to <b>test HTTP responses</b>.",
+      "quote": "It is well adapted for <b>REST / JSON APIs</b>",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:11:10+08:00"
+      "checked_at": "2026-11-04T13:28:41+08:00"
     },
     {
       "field": "/use_cases/2",
       "source_id": "readme",
-      "quote": "It is well adapted for <b>REST / JSON APIs</b>",
-      "method": "model",
-      "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:11:10+08:00"
-    },
-    {
-      "field": "/use_cases/3",
-      "source_id": "readme",
       "quote": "Hurl can also be used to test the <b>performance</b> of HTTP endpoints",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:11:10+08:00"
+      "checked_at": "2026-11-04T13:28:41+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "but it's still the [curl] that we love",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:28:41+08:00"
     },
     {
       "field": "/features/0",
@@ -264,7 +291,7 @@
       "quote": "It can chain requests, capture values and evaluate queries on headers and body response.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:11:10+08:00"
+      "checked_at": "2026-11-04T13:28:41+08:00"
     },
     {
       "field": "/features/1",
@@ -272,7 +299,7 @@
       "quote": "Hurl can run HTTP requests but can also be used to <b>test HTTP responses</b>.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:11:10+08:00"
+      "checked_at": "2026-11-04T13:28:41+08:00"
     },
     {
       "field": "/features/2",
@@ -280,17 +307,17 @@
       "quote": "Finally, Hurl is easy to <b>integrate in CI/CD</b>, with text, JUnit, TAP and HTML reports",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:11:10+08:00"
+      "checked_at": "2026-11-04T13:28:41+08:00"
     },
     {
-      "field": "/features/3",
-      "source_id": "readme",
-      "quote": "Hurl makes it easy to work with <b>HTML</b> content, <b>REST / SOAP / GraphQL</b> APIs",
+      "field": "/install/macos/steps/0",
+      "source_id": "homebrew_cask:hurl",
+      "quote": "brew install hurl",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:11:10+08:00"
+      "checked_at": "2026-11-04T13:28:41+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:04:56+08:00",
-  "updated_at": "2026-11-04T13:16:32+08:00"
+  "updated_at": "2026-11-04T13:28:44+08:00"
 }
