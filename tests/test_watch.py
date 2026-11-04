@@ -58,6 +58,7 @@ class Pipeline:
         self.score_error = score_error
         self.display = display
         self.calls: list[str] = []
+        self.security: Any = None
 
     def steps(self) -> Steps:
         def prescreen(c: dict[str, Any], run_id: str) -> list[dict[str, Any]]:
@@ -78,7 +79,7 @@ class Pipeline:
             return self.score_error
 
         return Steps(github=self.github, prescreen=prescreen, extract=extract, verify=verify, score=score,
-                     display=self.display)
+                     display=self.display, security=self.security)
 
 
 @pytest.fixture
@@ -589,3 +590,48 @@ def test_the_live_sha_is_read_with_a_user_agent(env: dict[str, Any], monkeypatch
     monkeypatch.setattr(urllib.request, "urlopen", urlopen)
     assert live_data_sha(env["worker"])() == "abc"
     assert seen[0].full_url == "https://pickfit.app/"  # the first ALLOWED_HOSTS name in worker/wrangler.jsonc
+
+
+def test_a_submission_gets_the_vulnerability_check_before_it_lands(env: dict[str, Any]) -> None:
+    pipeline = Pipeline(env["tmp"])
+    seen: list[str] = []
+
+    def security(data_dir: Path, slug: str) -> None:
+        seen.append(slug)
+        assert (data_dir / f"{slug}.json").exists() and not (env["data"] / f"{slug}.json").exists()
+
+    pipeline.security = security
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    [job] = run_once(env, pipeline)
+    assert seen == ["tinyq"]
+    assert submission(env["d1"], "sub_1")["status"] == "verifying"
+    assert "security" in job.stages
+
+
+def test_a_vulnerability_check_that_cannot_run_does_not_lose_the_run(env: dict[str, Any]) -> None:
+    pipeline = Pipeline(env["tmp"])
+    pipeline.security = lambda data_dir, slug: "URLError: OSV.dev is down"
+    lines: list[str] = []
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    run_once(env, pipeline, lines=lines)
+    assert submission(env["d1"], "sub_1")["status"] == "verifying"
+    assert (env["data"] / "tinyq.json").exists()
+    assert any("security check did not run" in line for line in lines)
+
+
+def test_a_malicious_package_stops_the_listing(env: dict[str, Any]) -> None:
+    pipeline = Pipeline(env["tmp"])
+
+    def security(data_dir: Path, slug: str) -> None:
+        path = data_dir / f"{slug}.json"
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        raw["status"] = "hidden"
+        path.write_text(json.dumps(raw), encoding="utf-8")
+
+    pipeline.security = security
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    run_once(env, pipeline)
+    row = submission(env["d1"], "sub_1")
+    assert row["status"] == "rejected"
+    assert "malicious" in row["reason"]
+    assert not (env["data"] / "tinyq.json").exists()

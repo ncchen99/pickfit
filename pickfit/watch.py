@@ -7,7 +7,7 @@ pipeline:
 
   GitHub details -> rules -> prescreen (Muse Spark Open on Baseten, review by
   muse-spark-1.3) -> extraction (muse-spark-1.3) -> record -> verification on
-  Modal (agent, fresh-box replay, judge) -> scores
+  Modal (agent, fresh-box replay, judge) -> scores -> known vulnerabilities (OSV.dev, no model call)
 
 The record is built in runs/watch/<submission>/software/, so data/software
 changes only when a record is finished: then it is copied in and committed
@@ -234,6 +234,7 @@ class Steps:
     verify(task, data_dir, log) -> verify.pipeline.Outcome, written back into data_dir
     score(data_dir, slug) -> None, or the error that kept the record from being scored
     display: verify gives a GUI app (kind desktop_app) a box with a virtual display
+    security(data_dir, slug) -> None, or why the known-vulnerability check could not run; the record stays "unchecked"
     """
 
     github: Any
@@ -242,6 +243,7 @@ class Steps:
     verify: Callable[[VerifyTask, Path, Callable[[str], None]], Any]
     score: Callable[[Path, str], str | None]
     display: bool = False
+    security: Callable[[Path, str], str | None] | None = None
 
 
 def live_steps(*, runner: str = "modal") -> Steps:
@@ -279,11 +281,22 @@ def live_steps(*, runner: str = "modal") -> Steps:
         summary = score_records(data_dir, db_path=pipeline_db_path(), model=MODEL, slugs=[slug], concurrency=1)
         return summary.errors.get(slug)
 
+    def security(data_dir: Path, slug: str) -> str | None:
+        from pickfit.security import Advisories, check, write_security
+
+        path = data_dir / f"{slug}.json"
+        now = taipei_now()
+        try:
+            write_security(path, check(json.loads(path.read_text(encoding="utf-8")), Advisories(), now=now), now)
+        except Exception as err:  # noqa: BLE001 - OSV.dev or a clone being down must not lose a finished run
+            return f"{type(err).__name__}: {str(err)[:200]}"
+        return None
+
     return Steps(github=GitHub(github_token()),
                  prescreen=lambda c, run_id: screen_and_review(c, run_id=run_id),
                  extract=lambda c, run_id: extract_with_retries(c, model=MODEL, run_id=run_id,
                                                                 reasoning_effort=EXTRACT_EFFORT),
-                 verify=verify, score=score, display=display)
+                 verify=verify, score=score, display=display, security=security)
 
 
 def hourly_cap(worker_dir: Path) -> int:
@@ -568,7 +581,24 @@ class Watcher:
             error = self.steps.score(record_dir, job.slug)
         if error:
             raise Retry(f"scores: {error}")
+        self._security(job, record_dir, log)
         self._land(job, record_dir, not_passed, log)
+
+    def _security(self, job: Job, record_dir: Path, log: Callable[[str], None]) -> None:
+        """The known-vulnerability check, as `pickfit security --write` does it: a finding caps quality, a malicious
+        package stops the listing, and a check that could not run leaves the record marked unchecked."""
+        if self.steps.security is None:
+            return
+        with self._stage(job, "security"):
+            error = self.steps.security(record_dir, job.slug)
+        if error:
+            job.notes.append(f"security check did not run: {error}")
+            log(f"security check did not run: {error}")
+            return
+        data = json.loads((record_dir / f"{job.slug}.json").read_text(encoding="utf-8"))
+        log(f"security: {(data.get('security') or {}).get('status')}")
+        if data.get("status") == "hidden":
+            raise Rejected("A package it installs is reported as malicious on OSV.dev.")
 
     def _refuse_known(self, job: Job) -> None:
         """A repository another submission took (or is taking) is refused; one already in data/software
