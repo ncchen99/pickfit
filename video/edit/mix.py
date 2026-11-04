@@ -53,7 +53,7 @@ for cue in timeline["vo"]:
         cache[sec] = load(HERE / "audio" / "vo" / f"{sec}.mp3")
     src = cache[sec]
     seg = fade(src[int(p["start"] * SR): int(p["end"] * SR)].copy(), 0.012, 0.03)
-    place(vo, seg, cue["at"])
+    place(vo, seg, cue["at"], db(cue.get("gain_db", 0)))
 
 # The score, ducked while the narration speaks.
 music = np.zeros((N, 2), np.float32)
