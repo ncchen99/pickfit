@@ -75,16 +75,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-appflowy-20261104-135727-7258",
+      "run_id": "verify-appflowy-20261104-191008-edc3",
       "method": "other",
       "steps": [
         {
           "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
-          "purpose": "add Flathub remote for user"
+          "purpose": "add flathub remote for flatpak"
         },
         {
-          "command": "flatpak install --user -y flathub io.appflowy.AppFlowy 2>&1",
-          "purpose": "install AppFlowy Flatpak from Flathub"
+          "command": "flatpak install --user -y flathub io.appflowy.AppFlowy",
+          "purpose": "install AppFlowy flatpak io.appflowy.AppFlowy"
         }
       ],
       "manual_steps": [],
@@ -121,10 +121,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:04:23.542383+08:00",
+    "checked_at": "2026-11-04T19:42:52.555752+08:00",
     "runs": [
       {
-        "id": "verify-appflowy-20261104-135727-7258",
+        "id": "verify-appflowy-20261104-191008-edc3",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -132,18 +132,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx-gui:c74b9d4f5f6a",
-        "checked_at": "2026-11-04T14:04:23.542383+08:00",
+        "checked_at": "2026-11-04T19:42:52.555752+08:00",
         "tool_version": "0.15.0",
         "install_method": "other",
         "replayed": true,
         "steps": [
           {
             "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
-            "purpose": "add Flathub remote for user"
+            "purpose": "add flathub remote for flatpak"
           },
           {
-            "command": "flatpak install --user -y flathub io.appflowy.AppFlowy 2>&1",
-            "purpose": "install AppFlowy Flatpak from Flathub"
+            "command": "flatpak install --user -y flathub io.appflowy.AppFlowy",
+            "purpose": "install AppFlowy flatpak io.appflowy.AppFlowy"
           }
         ],
         "smoke_tests": [
@@ -155,64 +155,118 @@
             "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "flatpak run io.appflowy.AppFlowy",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: a file under /home/sbx/: 35559 bytes, written after the app started; contains \"pickfit038394\": yes (typed by the operator)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "flatpak run io.appflowy.AppFlowy",
+            "expected_signal": "gui check: passed",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "gui result: no file under /home/sbx/ written after the app started has the expected text (50022 entries scanned)",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows AppFlowy welcome screen asking for email and offering Continue login options.",
+          "observed": "Screenshot shows AppFlowy welcome screen asking for email address with Continue with email, password, and Google options.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-appflowy-20261104-135727-7258/report.json",
-          "log_path": "runs/verify/verify-appflowy-20261104-135727-7258/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-appflowy-20261104-135727-7258/replay-4-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.033955,
+        "cost_usd": 0.688105,
         "gui": {
           "tier": "window",
           "screen": "sign_in_wall",
           "command": "flatpak run io.appflowy.AppFlowy",
           "window_title": "AppFlowy",
-          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+          "display": "Xvfb 1280x800x24, no window manager, no GPU",
+          "operations": [
+            {
+              "feature": "Manage notes, tasks and databases",
+              "goal": "Create a new note: click the New Page or + button in the sidebar to create a page, type the unique text {nonce} (type it exactly), and wait for auto-save. The app auto-saves locally.",
+              "check": "file",
+              "target": "~/",
+              "expected": [
+                "{nonce}"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "a file under /home/sbx/: 35559 bytes, written after the app started; contains \"pickfit038394\": yes (typed by the operator)",
+              "smoke_test": 1,
+              "actions": 5,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "Combine database views in dashboards",
+              "goal": "Create a database: In the existing AppFlowy workspace, click to create a new page, then in the editor type / and select Grid or Board or Database from the slash menu to insert a database view. If a database appears, type {nonce} into one of its cells.",
+              "check": "file",
+              "target": "~/",
+              "expected": [
+                "{nonce}"
+              ],
+              "format": null,
+              "passed": false,
+              "observed": "no file under /home/sbx/ written after the app started has the expected text (50022 entries scanned)",
+              "smoke_test": 2,
+              "actions": 20,
+              "replay": "operated",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            }
+          ]
         },
         "features": [
           {
             "feature": "Manage notes, tasks and databases",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "Combine database views in dashboards",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
           },
           {
             "feature": "Create charts with grouping controls",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_account",
             "failure": null,
-            "note": "install-only run"
+            "note": "Number charts require Pro workspace features; attempted but Pro not available"
           },
           {
             "feature": "Use AI in team wikis",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_account",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: done after 18 actions; check: \"pickfita5e52f\" was typed by the operator, so seeing it shows nothing; Ask AI prompt found but disabled without account; requires AI service"
           }
         ]
       }
@@ -221,7 +275,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -514,18 +568,35 @@
       }
     ]
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-appflowy-20261104-191008-edc3",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 2,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "5ccc309079f37f736981abd6911ae55578634d35d924e8b162838dcdc1439bc7",
+    "checked_at": "2026-11-05T03:25:15+08:00",
+    "cost_usd": 0.032204
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:25:15+08:00",
     "quality": {
-      "total": 67.0,
+      "total": 79.0,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5625,
@@ -547,6 +618,11 @@
           "score": null,
           "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 79.0,
+        "defects": 0
       }
     },
     "popularity": {
@@ -565,7 +641,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 6.7
+      "value": 7.9
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -860,5 +936,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:36+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:25:15+08:00"
 }

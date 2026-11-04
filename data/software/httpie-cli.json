@@ -58,20 +58,20 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-httpie-cli-20261104-152142-6fd4",
+      "run_id": "verify-httpie-cli-20261104-191639-696d",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install httpie\n",
-          "purpose": "install httpie via brew install httpie"
+          "command": "brew install httpie",
+          "purpose": "install httpie via brew"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "http --version\n",
+        "command": "http --version",
         "expected_signal": "3.2.4"
       },
-      "first_task": null
+      "first_task": "http --offline --ignore-stdin pie.dev/post hello=offline"
     },
     "linux": null,
     "windows": null
@@ -89,89 +89,137 @@
     "url": "https://github.com/httpie/cli/releases/tag/3.2.4"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T15:26:10.913091+08:00",
+    "checked_at": "2026-11-04T19:23:05.716970+08:00",
     "runs": [
       {
-        "id": "verify-httpie-cli-20261104-152142-6fd4",
-        "level": "install",
+        "id": "verify-httpie-cli-20261104-191639-696d",
+        "level": "function",
         "unverified_reason": null,
         "os": "macos",
         "arch": "arm64",
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
-        "checked_at": "2026-11-04T15:26:10.913091+08:00",
+        "checked_at": "2026-11-04T19:23:05.716970+08:00",
         "tool_version": "3.2.4",
         "install_method": "brew",
         "replayed": true,
         "steps": [
           {
-            "command": "brew install httpie\n",
-            "purpose": "install httpie via brew install httpie"
+            "command": "brew install httpie",
+            "purpose": "install httpie via brew"
           }
         ],
         "smoke_tests": [
           {
-            "command": "http --version\n",
+            "command": "http --version",
             "expected_signal": "3.2.4",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "3.2.4",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "http --offline --ignore-stdin pie.dev/post hello=offline",
+            "expected_signal": "{\"hello\": \"offline\"}",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"hello\": \"offline\"}",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "http --offline --ignore-stdin PUT pie.dev/put X-API-Token:123 name=John",
+            "expected_signal": "X-API-Token: 123",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "X-API-Token: 123",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "http --offline --ignore-stdin --pretty=colors pie.dev/post hello=world | od -c | head\necho \"---CAT-V---\"\nhttp --offline --ignore-stdin --pretty=colors pie.dev/post hello=world | cat -v | head\necho \"---CHECK JSON FORMAT---\"\nhttp --offline --ignore-stdin --pretty=format pie.dev/post hello=world",
+            "expected_signal": "^[[32mPOST",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "^[[32mPOST^[[39;49;00m ^[[04m^[[36m/post^[[39;49;00m ^[[34mHTTP^[[39;49;00m/^[[34m1.1^[[39;49;00m",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "cat /tmp/testsession 2>&1\necho \"---SECOND REQUEST CHECK---\"\nhttp --ignore-stdin --session=/tmp/testsession --offline pie.dev/post hello=second 2>&1",
+            "expected_signal": "\"__meta__\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"__meta__\": {",
+            "setup": [],
+            "offline": false
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "http --offline pie.dev/post hello=offline and http PUT pie.dev/put X-API-Token:123 name=John work as written",
+            "actually_needed": "add --ignore-stdin flag in this sandbox because stdin is not a TTY and HTTPie errors with 'Request body and request data cannot be mixed'; e.g., http --offline --ignore-stdin pie.dev/post hello=offline",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The terminal shows http --version executed and printed version 3.2.4.",
+          "observed": "Screenshots show HTTPie building correct offline POST/PUT requests with expected JSON bodies and header, and printing version 3.2.4.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-httpie-cli-20261104-152142-6fd4/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-httpie-cli-20261104-152142-6fd4/check-1-cmd2.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.013208,
+        "cost_usd": 0.055074,
         "features": [
           {
             "feature": "expressive and intuitive syntax",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "formatted and colorized terminal output",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "built-in JSON support",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "persistent sessions",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           }
         ]
       }
@@ -180,7 +228,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -205,17 +253,17 @@
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 43.5,
+      "total": 61.3,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.4375,
@@ -235,7 +283,11 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -258,7 +310,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 3.61
+      "value": 5.09
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -531,5 +583,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:16:09+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

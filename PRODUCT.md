@@ -31,6 +31,7 @@ Unique mechanism, in one sentence: *nothing is suggested until pickfit has insta
 | `/browse` | Operate | Explore the verified catalog by kind, OS and hidden gems |
 | `/how` | Read | How verification, matching and scoring work, and what each label means |
 | `/agents` | Read | Connect an agent over MCP |
+| `/submit`, `/submit/<id>` | Operate | Recommend a repository or web app, then follow its run or come back by link |
 
 ## Constraints that shape the design
 

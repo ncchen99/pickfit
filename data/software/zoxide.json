@@ -78,16 +78,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-zoxide-20261104-133040-0acb",
+      "run_id": "verify-zoxide-20261104-191025-7f70",
       "method": "script",
       "steps": [
         {
           "command": "curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh -o /tmp/install.sh",
-          "purpose": "download zoxide install script"
+          "purpose": "download install script"
         },
         {
-          "command": "sh /tmp/install.sh",
-          "purpose": "run install script to install zoxide"
+          "command": "sh /tmp/install.sh 2>&1",
+          "purpose": "install zoxide via script"
         }
       ],
       "manual_steps": [],
@@ -95,7 +95,7 @@
         "command": "zoxide --version",
         "expected_signal": "zoxide 0.10.0"
       },
-      "first_task": null
+      "first_task": "export _ZO_DATA_DIR=/tmp/zoxide_test_db && mkdir -p \"$_ZO_DATA_DIR\" && zoxide add /tmp/zoxide_test/foo && zoxide add /tmp/zoxide_test/bar_test && zoxide query -l 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -125,31 +125,31 @@
     "url": "https://github.com/ajeetdsouza/zoxide/releases/tag/v0.10.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:31:27.479515+08:00",
+    "checked_at": "2026-11-04T19:11:28.309283+08:00",
     "runs": [
       {
-        "id": "verify-zoxide-20261104-133040-0acb",
-        "level": "install",
+        "id": "verify-zoxide-20261104-191025-7f70",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:31:27.479515+08:00",
+        "checked_at": "2026-11-04T19:11:28.309283+08:00",
         "tool_version": "0.10.0",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
             "command": "curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh -o /tmp/install.sh",
-            "purpose": "download zoxide install script"
+            "purpose": "download install script"
           },
           {
-            "command": "sh /tmp/install.sh",
-            "purpose": "run install script to install zoxide"
+            "command": "sh /tmp/install.sh 2>&1",
+            "purpose": "install zoxide via script"
           }
         ],
         "smoke_tests": [
@@ -161,57 +161,103 @@
             "observed_excerpt": "zoxide 0.10.0",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "export _ZO_DATA_DIR=/tmp/zoxide_test_db && mkdir -p \"$_ZO_DATA_DIR\" && zoxide add /tmp/zoxide_test/foo && zoxide add /tmp/zoxide_test/bar_test && zoxide query -l 2>&1",
+            "expected_signal": "/tmp/zoxide_test/foo",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/tmp/zoxide_test/foo",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/zoxide_test/foo /tmp/zoxide_test/bar_test",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "export _ZO_DATA_DIR=/tmp/zoxide_test_db && zoxide query foo 2>&1; echo \"---\"; zoxide query --list foo 2>&1",
+            "expected_signal": "/tmp/zoxide_test/foo",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/tmp/zoxide_test/foo",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/zoxide_test/foo /tmp/zoxide_test/bar_test",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "zoxide init bash 2>&1",
+            "expected_signal": "function z()",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "function z() {",
+            "setup": [],
+            "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh",
+            "actually_needed": "download script first to /tmp/install.sh then run sh /tmp/install.sh (do not pipe directly); script tries sudo but succeeds without it for ~/.local/bin",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows zoxide --version printing zoxide 0.10.0.",
+          "observed": "Screenshots show zoxide listing added directories, resolving query foo to /tmp/zoxide_test/foo, and reporting version 0.10.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-zoxide-20261104-133040-0acb/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-zoxide-20261104-133040-0acb/check-1-cmd3.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.02406,
+        "cost_usd": 0.061957,
         "features": [
           {
             "feature": "jump to frequently used directories",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "select directories interactively with fzf",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output only shows init script mentioning --interactive, not an actual interactive selection."
           },
           {
             "feature": "show interactive shell completions",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output only shows init completion code, not completions actually displayed."
           },
           {
             "feature": "import history from other jump tools",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; zoxide import --help lists atuin/autojump/fasd/z etc"
           }
         ]
       }
@@ -220,7 +266,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -233,17 +279,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 68.0,
+      "total": 85.8,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.5625,
@@ -264,6 +310,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -593,5 +643,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:45+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

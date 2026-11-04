@@ -45,19 +45,16 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-rectangle-20261104-144303-b446",
+      "run_id": "verify-rectangle-20261105-014747-b659",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask --appdir=$HOME/Applications rectangle 2>&1",
-          "purpose": "Install Rectangle via Homebrew cask"
+          "command": "brew install --cask --appdir=$HOME/Applications rectangle",
+          "purpose": "Install Rectangle via brew cask"
         }
       ],
       "manual_steps": [],
-      "check": {
-        "command": "ls -ld ~/Applications/Rectangle.app && plutil -p ~/Applications/Rectangle.app/Contents/Info.plist | grep -i CFBundleShortVersionString -A1 | head -20; echo \"---\"; defaults read ~/Applications/Rectangle.app/Contents/Info.plist CFBundleShortVersionString 2>&1",
-        "expected_signal": "2.0.4"
-      },
+      "check": null,
       "first_task": "open ~/Applications/Rectangle.app"
     },
     "linux": null,
@@ -78,10 +75,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:49:18.067738+08:00",
+    "checked_at": "2026-11-05T01:53:05.760670+08:00",
     "runs": [
       {
-        "id": "verify-rectangle-20261104-144303-b446",
+        "id": "verify-rectangle-20261105-014747-b659",
         "level": "install",
         "unverified_reason": null,
         "os": "macos",
@@ -89,26 +86,17 @@
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
-        "checked_at": "2026-11-04T14:49:18.067738+08:00",
+        "checked_at": "2026-11-05T01:53:05.760670+08:00",
         "tool_version": "2.0.4",
         "install_method": "brew",
         "replayed": true,
         "steps": [
           {
-            "command": "brew install --cask --appdir=$HOME/Applications rectangle 2>&1",
-            "purpose": "Install Rectangle via Homebrew cask"
+            "command": "brew install --cask --appdir=$HOME/Applications rectangle",
+            "purpose": "Install Rectangle via brew cask"
           }
         ],
         "smoke_tests": [
-          {
-            "command": "ls -ld ~/Applications/Rectangle.app && plutil -p ~/Applications/Rectangle.app/Contents/Info.plist | grep -i CFBundleShortVersionString -A1 | head -20; echo \"---\"; defaults read ~/Applications/Rectangle.app/Contents/Info.plist CFBundleShortVersionString 2>&1",
-            "expected_signal": "2.0.4",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "\"CFBundleShortVersionString\" => \"2.0.4\"",
-            "setup": [],
-            "offline": true
-          },
           {
             "command": "open ~/Applications/Rectangle.app",
             "expected_signal": "gui tier: window",
@@ -122,27 +110,24 @@
         "pitfalls": [
           {
             "readme_said": "brew install --cask rectangle",
-            "actually_needed": "brew install --cask --appdir=$HOME/Applications rectangle to install without admin rights",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications rectangle",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows Rectangle.app exists and both plist queries report version 2.0.4. / The window shows Rectangle's authorization setup screen asking for permission to control window positions.",
+          "observed": "The screenshot shows Rectangle's authorize/setup dialog asking for permission to control window positions via Accessibility.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-rectangle-20261104-144303-b446/report.json",
-          "log_path": "runs/verify/verify-rectangle-20261104-144303-b446/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-rectangle-20261104-144303-b446/check-1-cmd2.judged.png",
-            "runs/verify/verify-rectangle-20261104-144303-b446/replay-3-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.022413,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.079476,
         "gui": {
           "tier": "ui_rendered",
           "screen": "first_run",
@@ -155,33 +140,33 @@
             "feature": "move and resize windows with keyboard shortcuts",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_root",
             "failure": null,
-            "note": "install-only run"
+            "note": "Requires Accessibility permission to move/resize windows, cannot grant as standard user"
           },
           {
             "feature": "snap windows by dragging to screen edges",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_root",
             "failure": null,
-            "note": "install-only run"
+            "note": "Requires Accessibility permission for snap areas, cannot grant as standard user"
           },
           {
             "feature": "tile windows in rows or columns",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_root",
             "failure": null,
-            "note": "install-only run"
+            "note": "Requires Accessibility permission to tile windows, cannot grant as standard user"
           },
           {
             "feature": "cycle stacked windows in same area",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_root",
             "failure": null,
-            "note": "install-only run"
+            "note": "Requires Accessibility permission to cycle stacked windows, cannot grant as standard user"
           }
         ]
       }
@@ -190,7 +175,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
@@ -199,18 +184,35 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-rectangle-20261105-014747-b659",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 1,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "d322be505b7b6859b03f92036e488651e5bb1cf6c1d4b1f0e6da100ef958d3ce",
+    "checked_at": "2026-11-05T03:29:11+08:00",
+    "cost_usd": 0.016764
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T15:02:29+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:29:11+08:00",
     "quality": {
-      "total": 71.1,
-      "confidence": 0.9,
+      "total": 85.7,
+      "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.75,
@@ -230,8 +232,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 85.7,
+        "defects": 0
       }
     },
     "popularity": {
@@ -250,7 +257,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 7.11
+      "value": 8.57
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -499,5 +506,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:28+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:29:11+08:00"
 }

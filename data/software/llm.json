@@ -46,18 +46,18 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-llm-20261104-133436-d230",
+      "run_id": "verify-llm-20261104-192410-4f27",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install llm",
-          "purpose": "install via uv tool"
+          "purpose": "install llm via uv tool install llm"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "llm --version",
-        "expected_signal": "llm, version 0.37.1"
+        "command": "llm --help && echo \"---HELP OK---\"\nllm --version 2>&1",
+        "expected_signal": "Usage: llm [OPTIONS] COMMAND [ARGS]..."
       },
       "first_task": null
     },
@@ -78,10 +78,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:35:09.778349+08:00",
+    "checked_at": "2026-11-04T19:26:22.862530+08:00",
     "runs": [
       {
-        "id": "verify-llm-20261104-133436-d230",
+        "id": "verify-llm-20261104-192410-4f27",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -89,76 +89,116 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:35:09.778349+08:00",
+        "checked_at": "2026-11-04T19:26:22.862530+08:00",
         "tool_version": "0.37.1",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install llm",
-            "purpose": "install via uv tool"
+            "purpose": "install llm via uv tool install llm"
           }
         ],
         "smoke_tests": [
           {
-            "command": "llm --version",
-            "expected_signal": "llm, version 0.37.1",
+            "command": "llm --help && echo \"---HELP OK---\"\nllm --version 2>&1",
+            "expected_signal": "Usage: llm [OPTIONS] COMMAND [ARGS]...",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "llm, version 0.37.1",
+            "observed_excerpt": "Usage: llm [OPTIONS] COMMAND [ARGS]...",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "llm logs list --json 2>&1 | head -n 50\necho \"---LOGS LIST---\"\nllm logs path 2>&1\necho \"---LOGS PATH---\"\nllm logs status 2>&1",
+            "expected_signal": "Logging is ON for all prompts",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "No log database found at /home/sbx/.config/io.datasette.llm/logs.db",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "llm -m echo \"Hello from llm test\" 2>&1",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Error: 'Unknown model: echo'",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "llm embed -m echo-embed -c test-collection \"hello world\" 2>&1\necho \"---EMBED DONE---\"\nllm collections list 2>&1\necho \"---COLLECTIONS---\"\nllm similar -c test-collection -n 1 \"hello world\" 2>&1\necho \"---SIMILAR DONE---\"\n# F4 schema extraction in same command\nllm -m echo --schema 'name, age int, bio' 'Invent three dogs' 2>&1",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "Error: 'Unknown model: echo'",
+            "setup": [],
+            "offline": null
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "pip install llm works directly",
+            "actually_needed": "used uv tool install llm to avoid PEP668 isolated install as ranked candidate",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "llm prompt examples run without extra setup",
+            "actually_needed": "prompt execution hung with echo test plugin causing timeout exit 137; logging test showed empty db",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows `llm --version` printing `llm, version 0.37.1`.",
+          "observed": "Screenshot shows llm help text with usage header, full command list, HELP OK marker, and version 0.37.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-llm-20261104-133436-d230/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-llm-20261104-133436-d230/check-1-cmd2.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.015325,
+        "cost_usd": 0.086586,
         "features": [
           {
             "feature": "run prompts from command-line",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
-            "failure": null,
-            "note": "install-only run"
+            "status": "test_failed",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "llm -m echo timed out exit 137 after 15s"
           },
           {
             "feature": "store prompts and responses in SQLite",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
           },
           {
             "feature": "generate and store embeddings",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
-            "failure": null,
-            "note": "install-only run"
+            "status": "test_failed",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "llm embed reported Must provide both collection and id and No collections table"
           },
           {
             "feature": "extract structured content from text and images",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "operator_limit",
             "failure": null,
-            "note": "install-only run"
+            "note": "budget exhausted before successful schema extraction"
           }
         ]
       }
@@ -167,7 +207,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -179,17 +219,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 62.5,
-      "confidence": 0.9,
+      "total": 74.6,
+      "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.5,
@@ -210,6 +250,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -231,7 +275,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 0.25
+      "value": 0.3
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -468,5 +512,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:04+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

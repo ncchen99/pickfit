@@ -50,20 +50,20 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-whisper-cpp-20261104-151317-1206",
+      "run_id": "verify-whisper-cpp-20261104-191006-644e",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install whisper-cpp",
+          "command": "brew install whisper-cpp 2>&1",
           "purpose": "brew install whisper-cpp"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "whisper-cli --help 2>&1 | head -n 50; echo \"---exit:$?\" ; which whisper-cli; whisper-cli -h 2>&1",
-        "expected_signal": "--print-colors"
+        "command": "whisper-cli --version 2>&1",
+        "expected_signal": "whisper.cpp version: 1.9.5"
       },
-      "first_task": null
+      "first_task": "whisper-cli -m /tmp/whisper_test/models/ggml-tiny.en.bin -f /tmp/whisper_test/samples/jfk.wav 2>&1"
     },
     "linux": null,
     "windows": null
@@ -81,89 +81,135 @@
     "url": "https://github.com/ggml-org/whisper.cpp/releases/tag/v1.9.5"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T15:17:39.929616+08:00",
+    "checked_at": "2026-11-04T19:16:39.095379+08:00",
     "runs": [
       {
-        "id": "verify-whisper-cpp-20261104-151317-1206",
-        "level": "install",
+        "id": "verify-whisper-cpp-20261104-191006-644e",
+        "level": "function",
         "unverified_reason": null,
         "os": "macos",
         "arch": "arm64",
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
-        "checked_at": "2026-11-04T15:17:39.929616+08:00",
+        "checked_at": "2026-11-04T19:16:39.095379+08:00",
         "tool_version": "1.9.5",
         "install_method": "brew",
         "replayed": true,
         "steps": [
           {
-            "command": "brew install whisper-cpp",
+            "command": "brew install whisper-cpp 2>&1",
             "purpose": "brew install whisper-cpp"
           }
         ],
         "smoke_tests": [
           {
-            "command": "whisper-cli --help 2>&1 | head -n 50; echo \"---exit:$?\" ; which whisper-cli; whisper-cli -h 2>&1",
-            "expected_signal": "--print-colors",
+            "command": "whisper-cli --version 2>&1",
+            "expected_signal": "whisper.cpp version: 1.9.5",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "-pc, --print-colors [false ] print colors",
+            "observed_excerpt": "whisper.cpp version: 1.9.5",
             "setup": [],
+            "offline": true
+          },
+          {
+            "command": "whisper-cli -m /tmp/whisper_test/models/ggml-tiny.en.bin -f /tmp/whisper_test/samples/jfk.wav 2>&1",
+            "expected_signal": "And so my fellow Americans ask not what your country can do for you",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[00:00:00.000 --> 00:00:07.960] And so my fellow Americans ask not what your country can do for you",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/whisper_test/models /tmp/whisper_test/samples\n# Download jfk.wav sample\ncurl -fL -o /tmp/whisper_test/samples/jfk.wav https://github.com/ggml-org/whisper.cpp/raw/master/samples/jfk.wav 2>&1 | tail -n 5\nls -lh /tmp/whisper_test/samples/jfk.wav",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "curl -fL -o /tmp/whisper_test/models/ggml-tiny.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin 2>&1 | tail -n 5\nls -lh /tmp/whisper_test/models/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "whisper-cli -m /tmp/whisper_test/models/ggml-tiny.en.bin -f /tmp/whisper_test/samples/jfk.wav --print-colors 2>&1",
+            "expected_signal": "color scheme",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "main: color scheme: red (low confidence), yellow (medium), green (high confidence)",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/whisper_test/models /tmp/whisper_test/samples\n# Download jfk.wav sample\ncurl -fL -o /tmp/whisper_test/samples/jfk.wav https://github.com/ggml-org/whisper.cpp/raw/master/samples/jfk.wav 2>&1 | tail -n 5\nls -lh /tmp/whisper_test/samples/jfk.wav",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "curl -fL -o /tmp/whisper_test/models/ggml-tiny.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin 2>&1 | tail -n 5\nls -lh /tmp/whisper_test/models/",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "./build/bin/whisper-cli -f samples/jfk.wav with model in models/",
+            "actually_needed": "brew install places binaries as whisper-cli on PATH; sample wav and ggml models are not bundled and must be downloaded separately (e.g., curl jfk.wav and ggml-tiny.en.bin from Hugging Face huggingface.co/ggerganov/whisper.cpp)",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows whisper-cli help output listing usage and options including --print-colors.",
+          "observed": "Screenshots show whisper.cpp version 1.9.5 and correct JFK transcription with and without color-coded confidence output.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-whisper-cpp-20261104-151317-1206/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-whisper-cpp-20261104-151317-1206/check-1-cmd2.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.030851,
+        "cost_usd": 0.082301,
         "features": [
           {
             "feature": "transcribe audio files to text",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "transcribe microphone audio in real time",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_hardware",
             "failure": null,
-            "note": "install-only run"
+            "note": "whisper-stream requires microphone/capture device, headless VM has no audio hardware"
           },
           {
             "feature": "quantize Whisper models to integers",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; whisper-quantize q5_0 produced 29M file and re-transcribed correctly"
           },
           {
             "feature": "highlight transcription confidence with colors",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output shows plain transcription text with no visible color coding, only a color-scheme notice."
           }
         ]
       }
@@ -172,7 +218,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
@@ -182,17 +228,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:09+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 64.8,
+      "total": 82.5,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.5625,
@@ -213,6 +259,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -234,7 +284,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 2.92
+      "value": 3.71
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -461,5 +511,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:04+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

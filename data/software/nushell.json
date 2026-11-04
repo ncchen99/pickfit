@@ -67,16 +67,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-nushell-20261104-144647-23c5",
+      "run_id": "verify-nushell-20261104-185134-1203",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fL -o /tmp/nu.tar.gz https://github.com/nushell/nushell/releases/download/0.116.1/nu-0.116.1-x86_64-unknown-linux-gnu.tar.gz",
-          "purpose": "download Nushell binary tarball nu-0.116.1-x86_64-unknown-linux-gnu.tar.gz from GitHub releases"
+          "command": "curl -fL -o /tmp/nu.tar.gz https://github.com/nushell/nushell/releases/download/0.116.1/nu-0.116.1-x86_64-unknown-linux-gnu.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/nu.tar.gz -C /tmp",
+          "purpose": "Download nushell binary tarball"
         },
         {
-          "command": "mkdir -p ~/.local/bin && tar xzf /tmp/nu.tar.gz -C /tmp && cp /tmp/nu-0.116.1-x86_64-unknown-linux-gnu/nu ~/.local/bin/ && chmod +x ~/.local/bin/nu && cp /tmp/nu-0.116.1-x86_64-unknown-linux-gnu/nu_plugin_* ~/.local/bin/ 2>&1; ~/.local/bin/nu --version",
-          "purpose": "extract tarball and install nu and plugins to ~/.local/bin"
+          "command": "cp /tmp/nu-0.116.1-x86_64-unknown-linux-gnu/nu ~/.local/bin/ && cp /tmp/nu-0.116.1-x86_64-unknown-linux-gnu/nu_plugin_* ~/.local/bin/ 2>&1; chmod +x ~/.local/bin/nu ~/.local/bin/nu_plugin_* && ~/.local/bin/nu --version",
+          "purpose": "Install nushell binary to PATH"
         }
       ],
       "manual_steps": [],
@@ -84,7 +84,7 @@
         "command": "nu --version",
         "expected_signal": "0.116.1"
       },
-      "first_task": null
+      "first_task": "nu -c \"ls /tmp/nu_test\""
     },
     "windows": {
       "basis": "readme_claim",
@@ -114,31 +114,31 @@
     "url": "https://github.com/nushell/nushell/releases/tag/0.116.1"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:53:11.042336+08:00",
+    "checked_at": "2026-11-04T18:52:40.500634+08:00",
     "runs": [
       {
-        "id": "verify-nushell-20261104-144647-23c5",
-        "level": "install",
+        "id": "verify-nushell-20261104-185134-1203",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T14:53:11.042336+08:00",
+        "checked_at": "2026-11-04T18:52:40.500634+08:00",
         "tool_version": "0.116.1",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fL -o /tmp/nu.tar.gz https://github.com/nushell/nushell/releases/download/0.116.1/nu-0.116.1-x86_64-unknown-linux-gnu.tar.gz",
-            "purpose": "download Nushell binary tarball nu-0.116.1-x86_64-unknown-linux-gnu.tar.gz from GitHub releases"
+            "command": "curl -fL -o /tmp/nu.tar.gz https://github.com/nushell/nushell/releases/download/0.116.1/nu-0.116.1-x86_64-unknown-linux-gnu.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/nu.tar.gz -C /tmp",
+            "purpose": "Download nushell binary tarball"
           },
           {
-            "command": "mkdir -p ~/.local/bin && tar xzf /tmp/nu.tar.gz -C /tmp && cp /tmp/nu-0.116.1-x86_64-unknown-linux-gnu/nu ~/.local/bin/ && chmod +x ~/.local/bin/nu && cp /tmp/nu-0.116.1-x86_64-unknown-linux-gnu/nu_plugin_* ~/.local/bin/ 2>&1; ~/.local/bin/nu --version",
-            "purpose": "extract tarball and install nu and plugins to ~/.local/bin"
+            "command": "cp /tmp/nu-0.116.1-x86_64-unknown-linux-gnu/nu ~/.local/bin/ && cp /tmp/nu-0.116.1-x86_64-unknown-linux-gnu/nu_plugin_* ~/.local/bin/ 2>&1; chmod +x ~/.local/bin/nu ~/.local/bin/nu_plugin_* && ~/.local/bin/nu --version",
+            "purpose": "Install nushell binary to PATH"
           }
         ],
         "smoke_tests": [
@@ -150,57 +150,124 @@
             "observed_excerpt": "0.116.1",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "nu -c \"ls /tmp/nu_test\"",
+            "expected_signal": "/tmp/nu_test/Cargo.toml",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ 0 │ /tmp/nu_test/Cargo.toml │ file │ 89 B │ now │",
+            "setup": [
+              {
+                "command": "cat > /tmp/test_setup.sh <<'EOS'\nmkdir -p /tmp/nu_test/subdir1\nmkdir -p /tmp/nu_test/subdir2\ntouch /tmp/nu_test/file.txt\ncat > /tmp/nu_test/Cargo.toml <<'EOF'\n[package]\nname = \"test\"\nversion = \"1.2.3\"\nedition = \"2021\"\n\n[dependencies]\nserde = \"1.0\"\nEOF\ncat /tmp/nu_test/Cargo.toml\nls -R /tmp/nu_test\nEOS\nchmod +x /tmp/test_setup.sh\nbash /tmp/test_setup.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "nu -c \"ls /tmp/nu_test | where type == dir\"",
+            "expected_signal": "/tmp/nu_test/subdir1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ 0 │ /tmp/nu_test/subdir1 │ dir │ 40 B │ now │",
+            "setup": [
+              {
+                "command": "cat > /tmp/test_setup.sh <<'EOS'\nmkdir -p /tmp/nu_test/subdir1\nmkdir -p /tmp/nu_test/subdir2\ntouch /tmp/nu_test/file.txt\ncat > /tmp/nu_test/Cargo.toml <<'EOF'\n[package]\nname = \"test\"\nversion = \"1.2.3\"\nedition = \"2021\"\n\n[dependencies]\nserde = \"1.0\"\nEOF\ncat /tmp/nu_test/Cargo.toml\nls -R /tmp/nu_test\nEOS\nchmod +x /tmp/test_setup.sh\nbash /tmp/test_setup.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "nu -c \"open /tmp/nu_test/Cargo.toml | get package.version\"",
+            "expected_signal": "1.2.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.2.3",
+            "setup": [
+              {
+                "command": "cat > /tmp/test_setup.sh <<'EOS'\nmkdir -p /tmp/nu_test/subdir1\nmkdir -p /tmp/nu_test/subdir2\ntouch /tmp/nu_test/file.txt\ncat > /tmp/nu_test/Cargo.toml <<'EOF'\n[package]\nname = \"test\"\nversion = \"1.2.3\"\nedition = \"2021\"\n\n[dependencies]\nserde = \"1.0\"\nEOF\ncat /tmp/nu_test/Cargo.toml\nls -R /tmp/nu_test\nEOS\nchmod +x /tmp/test_setup.sh\nbash /tmp/test_setup.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "nu -c \"plugin list\"",
+            "expected_signal": "empty list",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ empty list │",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "nu -c \"\\$nu.config-path\"",
+            "expected_signal": "/home/sbx/.config/nushell/config.nu",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/home/sbx/.config/nushell/config.nu",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows nu --version printing 0.116.1.",
+          "observed": "Screenshots show Nushell listing /tmp/nu_test, filtering to directories, and printing version 0.116.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-nushell-20261104-144647-23c5/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-nushell-20261104-144647-23c5/check-1-cmd3.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.027457,
+        "cost_usd": 0.037381,
         "features": [
           {
             "feature": "list directory contents as structured table",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "pipe commands through structured pipelines",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "open files as structured data",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "extend shell with plugins",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output shows empty list with no plugin loaded or extended functionality demonstrated."
           }
         ]
       }
@@ -209,14 +276,14 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/nushell/nushell@e6b30c87a959",
+      "github.com/nushell/nushell@c27defbfe692",
       "Cargo.lock"
     ],
-    "packages_checked": 989,
+    "packages_checked": 986,
     "findings_total": 2,
     "advisories_total": 2,
     "findings": [
@@ -243,17 +310,17 @@
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 66.2,
+      "total": 79.0,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
-          "weight": 40
+          "score": 0.85,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -273,7 +340,11 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -296,7 +367,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 0.6
+      "value": 0.71
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -595,5 +666,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:47+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

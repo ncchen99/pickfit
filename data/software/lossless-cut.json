@@ -55,18 +55,18 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-lossless-cut-20261104-224720-71f9",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask losslesscut",
-          "purpose": null
+          "command": "brew install --cask --appdir=$HOME/Applications losslesscut",
+          "purpose": "Install LosslessCut cask to ~/Applications"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "flatpak run no.mifi.losslesscut"
+      "first_task": "open ~/Applications/LosslessCut.app"
     },
     "linux": {
       "basis": "replayed",
@@ -101,9 +101,9 @@
     "url": "https://github.com/mifi/lossless-cut/releases/tag/v3.70.2"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:57:37.565598+08:00",
+    "checked_at": "2026-11-04T23:27:54.605088+08:00",
     "runs": [
       {
         "id": "verify-lossless-cut-20261104-145315-9d56",
@@ -203,13 +203,182 @@
             "note": "install-only run"
           }
         ]
+      },
+      {
+        "id": "verify-lossless-cut-20261104-224720-71f9",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T23:27:54.605088+08:00",
+        "tool_version": "3.70.2",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications losslesscut",
+            "purpose": "Install LosslessCut cask to ~/Applications"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/LosslessCut.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/LosslessCut.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: a file under /Users/sbx/pickfit-out/: 10998 bytes, written after the app started; format mp4: yes",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "open ~/Applications/LosslessCut.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: a file under /Users/sbx/pickfit-out/: 21203 bytes, written after the app started; format mp4: yes",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "open ~/Applications/LosslessCut.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "gui result: no file under /Users/sbx/pickfit-out/: no file of the box user's was written there after the app started",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask losslesscut",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications losslesscut",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The LosslessCut editor window is open showing its empty drop-files workspace with cutpoint instructions and playback controls.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 1.089771,
+        "gui": {
+          "tier": "action_checked",
+          "screen": "main_ui",
+          "command": "open ~/Applications/LosslessCut.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+          "operations": [
+            {
+              "feature": "remux format without re-encoding",
+              "goal": "In LosslessCut: use File > Open to open ~/pickfit-in/sample.mp4. Set working/output folder to /Users/sbx/pickfit-out using the folder icon. Then click Export with default settings and wait until an mp4 file appears in /Users/sbx/pickfit-out (this is a lossless remux/export).",
+              "check": "file",
+              "target": "~/pickfit-out/",
+              "expected": [],
+              "format": "mp4",
+              "passed": true,
+              "observed": "a file under /Users/sbx/pickfit-out/: 10998 bytes, written after the app started; format mp4: yes",
+              "smoke_test": 1,
+              "actions": 21,
+              "replay": "operated",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "merge cut segments or files losslessly",
+              "goal": "In LosslessCut: File > Open ~/pickfit-in/a.mp4, then add ~/pickfit-in/b.mp4 and choose Merge/concatenate when asked. Set output folder to /Users/sbx/pickfit-out if asked, then run Merge/Concatenate with default file name and wait until a merged mp4 appears in /Users/sbx/pickfit-out.",
+              "check": "file",
+              "target": "~/pickfit-out/",
+              "expected": [],
+              "format": "mp4",
+              "passed": true,
+              "observed": "a file under /Users/sbx/pickfit-out/: 21203 bytes, written after the app started; format mp4: yes",
+              "smoke_test": 2,
+              "actions": 28,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "add remove or extract audio subtitle tracks",
+              "goal": "In LosslessCut: File > Open ~/pickfit-in/sample.mp4. Open the Tracks panel/list, disable or remove the audio track (uncheck it) to demonstrate track handling, set output folder to /Users/sbx/pickfit-out, then Export with default name and wait until an mp4 appears in /Users/sbx/pickfit-out.",
+              "check": "file",
+              "target": "~/pickfit-out/",
+              "expected": [],
+              "format": "mp4",
+              "passed": false,
+              "observed": "no file under /Users/sbx/pickfit-out/: no file of the box user's was written there after the app started",
+              "smoke_test": 3,
+              "actions": 21,
+              "replay": "operated",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            }
+          ]
+        },
+        "features": [
+          {
+            "feature": "cut and trim video and audio losslessly",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "operator_limit",
+            "failure": null,
+            "note": "operation stopped: step_cap after 25 actions; check: file /Users/sbx/pickfit-out/cut.mp4: missing; two attempts hit operator step_cap while renaming export template"
+          },
+          {
+            "feature": "merge cut segments or files losslessly",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "remux format without re-encoding",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows mp4-to-mp4 export only, not a format change like MKV to MP4."
+          },
+          {
+            "feature": "add remove or extract audio subtitle tracks",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          }
+        ]
       }
     ]
   },
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "lockfile_not_supported",
     "sources": [],
@@ -218,18 +387,70 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-lossless-cut-20261104-224720-71f9",
+    "score": 1,
+    "status": "scored",
+    "defects": [
+      {
+        "item": "comfortable",
+        "operation": null,
+        "cause": "app",
+        "problem": "The output-format button at the top right is truncated mid-word, showing only 'Output conte' instead of the full label.",
+        "screenshot": "replay-4-1.app.png",
+        "box": [
+          834,
+          79,
+          962,
+          115
+        ],
+        "quote": "Output conte",
+        "found_by": "ocr",
+        "kind": "text_cut_off",
+        "severity": "minor"
+      },
+      {
+        "item": "comfortable",
+        "operation": null,
+        "cause": "app",
+        "problem": "The format selector in the top toolbar is truncated after an opening parenthesis, showing only 'mp4 - MP4 (' before the dropdown arrow.",
+        "screenshot": "10-op-28.png",
+        "box": [
+          563,
+          170,
+          641,
+          204
+        ],
+        "quote": "mp4 - MP4 (",
+        "found_by": "ocr",
+        "kind": "text_cut_off",
+        "severity": "minor"
+      }
+    ],
+    "screens": 2,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "1a27863c07c3ab0e71f2c0c9ad0c98603b2e8b6a2d1446c3837105debeaea99d",
+    "checked_at": "2026-11-05T03:28:15+08:00",
+    "cost_usd": 0.053292
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T15:02:29+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:28:15+08:00",
     "quality": {
-      "total": 65.2,
+      "total": 78.8,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.4375,
@@ -249,8 +470,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 0.95,
+        "before": 83.0,
+        "defects": 2
       }
     },
     "popularity": {
@@ -269,7 +495,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 6.52
+      "value": 7.88
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -548,5 +774,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:39+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:28:15+08:00"
 }

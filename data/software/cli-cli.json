@@ -50,12 +50,12 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-cli-cli-20261104-142900-832a",
+      "run_id": "verify-cli-cli-20261104-191437-a2de",
       "method": "brew",
       "steps": [
         {
           "command": "brew install gh",
-          "purpose": "install gh via brew"
+          "purpose": "install gh via brew install gh"
         }
       ],
       "manual_steps": [],
@@ -63,7 +63,7 @@
         "command": "gh --version",
         "expected_signal": "gh version 2.103.3"
       },
-      "first_task": null
+      "first_task": "gh 2>&1"
     },
     "linux": null,
     "windows": null
@@ -81,27 +81,27 @@
     "url": "https://github.com/cli/cli/releases/tag/v2.103.3"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:33:13.590333+08:00",
+    "checked_at": "2026-11-04T19:17:58.869130+08:00",
     "runs": [
       {
-        "id": "verify-cli-cli-20261104-142900-832a",
-        "level": "install",
+        "id": "verify-cli-cli-20261104-191437-a2de",
+        "level": "function",
         "unverified_reason": null,
         "os": "macos",
         "arch": "arm64",
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
-        "checked_at": "2026-11-04T14:33:13.590333+08:00",
+        "checked_at": "2026-11-04T19:17:58.869130+08:00",
         "tool_version": "2.103.3",
         "install_method": "brew",
         "replayed": true,
         "steps": [
           {
             "command": "brew install gh",
-            "purpose": "install gh via brew"
+            "purpose": "install gh via brew install gh"
           }
         ],
         "smoke_tests": [
@@ -113,41 +113,66 @@
             "observed_excerpt": "gh version 2.103.3 (2026-10-26)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "gh 2>&1",
+            "expected_signal": "Work seamlessly with GitHub from the command line.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Work seamlessly with GitHub from the command line.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "gh pr --help",
+            "expected_signal": "Work with GitHub pull requests.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Work with GitHub pull requests.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "gh issue --help",
+            "expected_signal": "Work with GitHub issues.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Work with GitHub issues.",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows gh --version printing gh version 2.103.3 with release URL.",
+          "observed": "Screenshots show gh help with its tagline and command list, and gh --version reporting 2.103.3.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-cli-cli-20261104-142900-832a/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-cli-cli-20261104-142900-832a/check-1-cmd2.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.014504,
+        "cost_usd": 0.028619,
         "features": [
           {
             "feature": "manage pull requests from terminal",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; gh pr --help shows pull request management commands"
           },
           {
             "feature": "manage issues from terminal",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; gh issue --help shows issue management commands"
           }
         ]
       }
@@ -156,7 +181,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -169,17 +194,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T15:02:29+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 69.6,
-      "confidence": 0.9,
+      "total": 83.8,
+      "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.5625,
@@ -200,6 +225,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -462,5 +491,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:51+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

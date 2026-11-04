@@ -47,31 +47,31 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-transmission-20261104-214722-b9cf",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask transmission",
-          "purpose": null
+          "command": "brew install --cask --appdir=$HOME/Applications transmission",
+          "purpose": "Install Transmission macOS app via brew cask"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "flatpak run com.transmissionbt.Transmission"
+      "first_task": "open ~/Applications/Transmission.app"
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-transmission-20261104-140423-cc21",
+      "run_id": "verify-transmission-20261104-184730-8b6e",
       "method": "other",
       "steps": [
         {
-          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo\n",
-          "purpose": "Add Flathub remote for flatpak"
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add Flathub remote for flatpak"
         },
         {
-          "command": "flatpak install --user -y flathub com.transmissionbt.Transmission\n",
-          "purpose": "Install Transmission flatpak com.transmissionbt.Transmission"
+          "command": "flatpak install --user -y flathub com.transmissionbt.Transmission",
+          "purpose": "install Transmission flatpak com.transmissionbt.Transmission"
         }
       ],
       "manual_steps": [],
@@ -106,12 +106,12 @@
     "url": "https://github.com/transmission/transmission/releases/tag/4.1.4"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:06:47.099563+08:00",
+    "checked_at": "2026-11-04T22:09:22.368602+08:00",
     "runs": [
       {
-        "id": "verify-transmission-20261104-140423-cc21",
+        "id": "verify-transmission-20261104-184730-8b6e",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -119,18 +119,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx-gui:c74b9d4f5f6a",
-        "checked_at": "2026-11-04T14:06:47.099563+08:00",
-        "tool_version": null,
+        "checked_at": "2026-11-04T19:09:11.252828+08:00",
+        "tool_version": "4.1.4",
         "install_method": "other",
         "replayed": true,
         "steps": [
           {
-            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo\n",
-            "purpose": "Add Flathub remote for flatpak"
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add Flathub remote for flatpak"
           },
           {
-            "command": "flatpak install --user -y flathub com.transmissionbt.Transmission\n",
-            "purpose": "Install Transmission flatpak com.transmissionbt.Transmission"
+            "command": "flatpak install --user -y flathub com.transmissionbt.Transmission",
+            "purpose": "install Transmission flatpak com.transmissionbt.Transmission"
           }
         ],
         "smoke_tests": [
@@ -144,23 +144,37 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak run com.transmissionbt.Transmission",
+            "actually_needed": "needs --filesystem=home to access ~/pickfit-in files and --filesystem home works via command-line arg because Flatpak portal file dialog is unavailable in this box (no desktop portal)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Three standalone tools transmission-show/create/edit",
+            "actually_needed": "Flatpak build only ships transmission-gtk and web UI assets; transmission-show/create/edit not included in /app/bin",
+            "kind": "note"
+          },
+          {
+            "readme_said": "GUI launch",
+            "actually_needed": "App prints MESA-EGL DRI3 warning and dbus-launch failures but still shows window under Xvfb",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The Transmission window shows its main torrent list interface with menu, toolbar, filters, and empty list.",
+          "observed": "The screenshot shows Transmission's main torrent list window with menus, toolbar, filters, and an empty list ready for use.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-transmission-20261104-140423-cc21/report.json",
-          "log_path": "runs/verify/verify-transmission-20261104-140423-cc21/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-transmission-20261104-140423-cc21/replay-3-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.021778,
+        "cost_usd": 0.447838,
         "gui": {
           "tier": "ui_rendered",
           "screen": "main_ui",
@@ -173,25 +187,182 @@
             "feature": "download and share files over BitTorrent",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "check_not_met",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: done after 4 actions; check: the expected text was on screen before the first action: it is not a result of the operation; torrent addition works via flatpak run with file arg, but screen_text check rejected as text already visible before action and state persists; menu/file dial…"
           },
           {
             "feature": "control client remotely via web UI",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "operator_limit",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: step_cap after 28 actions; check: the screen does not show the expected text; Edit->Preferences menu unresponsive without window manager; Remote tab not reachable to verify port 9091"
           },
           {
             "feature": "examine, create and edit torrent files",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "check_not_met",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: done after 3 actions; check: the screen does not show the expected text; Create dialog file chooser needs portal (Flatpak cannot open file dialog); examine via cli arg showed dialog but OCR missed, web assets present but tools transmission-show/create/edit not in flatpak"
+          }
+        ]
+      },
+      {
+        "id": "verify-transmission-20261104-214722-b9cf",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T22:09:22.368602+08:00",
+        "tool_version": "4.1.4",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications transmission",
+            "purpose": "Install Transmission macOS app via brew cask"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/Transmission.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "open ~/Applications/Transmission.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"share-test-file\": yes",
+            "setup": [
+              {
+                "command": "mkdir -p $HOME/pickfit-out $HOME/pickfit-in && printf 'hello transmission share file\\n' > $HOME/pickfit-in/share.txt && ls -l $HOME/pickfit-in/share.txt",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 -c \"import hashlib; data=open('/Users/sbx/pickfit-in/share.txt','rb').read(); import os; l=len(data); h=hashlib.sha1(data).digest(); \ndef benc(x):\n import collections\n if isinstance(x,int): return b'i'+str(x).encode()+b'e'\n elif isinstance(x,bytes): return str(len(x)).encode()+b':'+x\n elif isinstance(x,str): xb=x.encode(); return str(len(xb)).encode()+b':'+xb\n elif isinstance(x,list): return b'l'+b''.join(benc(i) for i in x)+b'e'\n elif isinstance(x,dict): return b'd'+b''.join(benc(k)+benc(x[k]) for k in sorted(x))+b'e'\ninfo={b'length':l, b'name':b'share-test-file.txt', b'piece length':16384, b'pieces':h}\ntorrent={b'announce':b'http://example.com/announce', b'info':info}\nopen('/tmp/demo.torrent','wb').write(benc(torrent))\nprint('wrote')\n\"\nls -l /tmp/demo.torrent && python3 -c \"print(open('/tmp/demo.torrent','rb').read()[:200])\"",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cp /tmp/demo.torrent $HOME/pickfit-in/demo.torrent && ls -l $HOME/pickfit-in/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "open ~/Applications/Transmission.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"9091\": yes",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask transmission",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications transmission (standard user cannot write /Applications)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Transmission's empty main torrent list window showing '0 transfers' is in front of its Remote settings window.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.635706,
+        "gui": {
+          "tier": "action_checked",
+          "screen": "main_ui",
+          "command": "open ~/Applications/Transmission.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+          "operations": [
+            {
+              "feature": "download and share files over BitTorrent",
+              "goal": "In Transmission, add the existing torrent /Users/sbx/pickfit-in/demo.torrent: press Cmd+O (File Open), press Cmd+Shift+G, type /Users/sbx/pickfit-in, press Return, select demo.torrent, press Open, then press Open or Add in any confirmation dialog. Leave the app open showing the torrent list.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "share-test-file"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"share-test-file\": yes",
+              "smoke_test": 1,
+              "actions": 9,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "control client remotely via web UI",
+              "goal": "In Transmission, enable the remote web UI: open Settings/Preferences (Cmd+,), click the Remote tab, check Enable Remote / Enable web client, ensure the port 9091 is shown, and leave the window open.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "9091"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"9091\": yes",
+              "smoke_test": 2,
+              "actions": 3,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            }
+          ]
+        },
+        "features": [
+          {
+            "feature": "download and share files over BitTorrent",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "control client remotely via web UI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows the Remote preference with port 9091 enabled, not any actual remote control via the web UI."
+          },
+          {
+            "feature": "examine, create and edit torrent files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "operator_limit",
+            "failure": null,
+            "note": "operation stopped: step_cap after 24 actions; check: file /Users/sbx/pickfit-out/created.torrent: missing; New-torrent save dialog exceeded operator step cap, file missing"
           }
         ]
       }
@@ -200,7 +371,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -212,18 +383,35 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-transmission-20261104-214722-b9cf",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 2,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "6dddf1453143abba79e1c11a297ae04052cab58290381292885e111240bb09d4",
+    "checked_at": "2026-11-05T03:30:28+08:00",
+    "cost_usd": 0.02874
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:30:28+08:00",
     "quality": {
-      "total": 60.5,
+      "total": 78.3,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5,
@@ -243,8 +431,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 78.3,
+        "defects": 0
       }
     },
     "popularity": {
@@ -263,7 +456,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 6.05
+      "value": 7.83
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -550,5 +743,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:42+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:30:28+08:00"
 }

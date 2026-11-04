@@ -129,10 +129,10 @@ def funnel():
     W, H = 740, 300
     rows = [
         (970, "records in the catalogue", "f-gray"),
-        (963, "listed (7 hidden by the developer)", "f-ink2bar"),
-        (652, "verified at least through install", "f-pass"),
-        (567, "replayed in a fresh sandbox", "f-pass"),
-        (132, "hidden gems", "f-tape"),
+        (1050, "listed (8 not listed)", "f-ink2bar"),
+        (732, "verified at least through install", "f-pass"),
+        (647, "replayed in a fresh sandbox", "f-pass"),
+        (159, "hidden gems", "f-tape"),
     ]
     lx, bx, bwid = 10, 300, 360
     out = [t(lx, 24, "The catalogue on 4 Nov 2026", "t-h")]
@@ -143,7 +143,7 @@ def funnel():
         out.append(f'<rect x="{bx}" y="{y+4}" width="{bwid*n/970:.1f}" height="26" rx="3" class="{cls}"/>')
         out.append(t(bx + bwid + 12, y + 23, f"{n:,}", "t-n"))
     out.append(t(lx, H - 14, "A hidden gem is verified, scores at least 80 on quality and at most 45 on popularity, and has no known high or critical vulnerability.", "t-s"))
-    svg("funnel", W, H, "The catalogue: 970 records, 963 listed, 652 verified, 567 replayed, 132 hidden gems", out)
+    svg("funnel", W, H, "The catalogue: 1,058 records, 1,050 listed, 732 verified, 647 replayed, 159 hidden gems", out)
 
 
 # 3. The verification ladder -------------------------------------------------------------------
@@ -242,7 +242,7 @@ def timeline():
 
     pts = [((10, 29, 0, 58), 39), ((10, 29, 12, 12), 96), ((10, 31, 2, 24), 165), ((10, 31, 2, 57), 503),
            ((11, 1, 1, 52), 604), ((11, 1, 1, 59), 648), ((11, 1, 22, 57), 689), ((11, 2, 7, 48), 768),
-           ((11, 2, 17, 14), 856), ((11, 2, 22, 15), 961), ((11, 3, 20, 16), 963)]
+           ((11, 2, 17, 14), 856), ((11, 2, 22, 15), 961), ((11, 3, 20, 16), 963), ((11, 5, 1, 44), 1050)]
     out = [t(10, 22, "Records in the catalogue, day by day (Taipei time)", "t-h")]
     for n in (0, 250, 500, 750, 1000):
         out.append(f'<path d="M{px0} {Y(n):.1f}H{px1}" class="f-rule"/>')
@@ -295,7 +295,7 @@ def timeline():
         out.append(f'<circle cx="{x:.1f}" cy="{py1+22}" r="3.5" class="f-tape"/>')
         labels.append(t(x - 2 if anchor == "start" else x + 2, ly, label, "t-s t-halo", anchor))
     out += labels
-    svg("timeline", W, H, "The week: catalogue growth from 39 records on 29 Oct to 963 on 3 Nov, with milestones", out)
+    svg("timeline", W, H, "The week: catalogue growth from 39 records on 29 Oct to 1,050 on 5 Nov, with milestones", out)
 
 
 # 6. The evaluation -------------------------------------------------------------------------------
@@ -334,7 +334,7 @@ def ledger():
         ("Open-weight prescreen", "agreed with Muse Spark 1.3 on 34 of 34"),
         ("Resend history each turn", "1–7 s a turn instead of 11–25 s"),
         ("Spark Open runs the sandbox agent", "0.92 of 1.3's pass rate, bar 0.85"),
-        ("Quality formula b3.v1 → b3.v5", "gems stopped being 22 of 25 verified"),
+        ("Quality formula b3.v1 → b3.v6", "gems stopped being 22 of 25 verified"),
         ("Relevance shortlist, rules ranking", "held-out P@5 25.9% → 32.9%"),
         ("Aimed clicks (zoom and re-aim)", "small controls hit 5 of 14 → 13 of 14"),
         ("Visual-defect deduction", "×0.95 for app-caused defects, 186 checked"),

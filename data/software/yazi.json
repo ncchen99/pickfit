@@ -73,16 +73,16 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-yazi-20261104-144824-5867",
+      "run_id": "verify-yazi-20261104-191122-0a9f",
       "method": "binary",
       "steps": [
         {
-          "command": "curl -fL -o /tmp/yazi.zip \"https://github.com/sxyazi/yazi/releases/download/v26.9.1/yazi-x86_64-unknown-linux-gnu.zip\"",
-          "purpose": "download yazi binary zip"
+          "command": "curl -fsSL -o /tmp/yazi.zip https://github.com/sxyazi/yazi/releases/latest/download/yazi-x86_64-unknown-linux-gnu.zip",
+          "purpose": "download yazi-x86_64-unknown-linux-gnu.zip from GitHub releases"
         },
         {
-          "command": "mkdir -p ~/.local/bin && unzip -o /tmp/yazi.zip -d /tmp && install -m 755 /tmp/yazi-x86_64-unknown-linux-gnu/yazi ~/.local/bin/yazi && install -m 755 /tmp/yazi-x86_64-unknown-linux-gnu/ya ~/.local/bin/ya",
-          "purpose": "install yazi binaries to PATH"
+          "command": "mkdir -p ~/.local/bin && unzip -o /tmp/yazi.zip -d /tmp && cp /tmp/yazi-x86_64-unknown-linux-gnu/yazi ~/.local/bin/ && cp /tmp/yazi-x86_64-unknown-linux-gnu/ya ~/.local/bin/ && chmod +x ~/.local/bin/yazi ~/.local/bin/ya",
+          "purpose": "unzip and install yazi and ya to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -109,10 +109,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:49:02.328744+08:00",
+    "checked_at": "2026-11-04T19:12:13.608651+08:00",
     "runs": [
       {
-        "id": "verify-yazi-20261104-144824-5867",
+        "id": "verify-yazi-20261104-191122-0a9f",
         "level": "install",
         "unverified_reason": null,
         "os": "linux",
@@ -120,18 +120,18 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T14:49:02.328744+08:00",
+        "checked_at": "2026-11-04T19:12:13.608651+08:00",
         "tool_version": "26.9.1",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "curl -fL -o /tmp/yazi.zip \"https://github.com/sxyazi/yazi/releases/download/v26.9.1/yazi-x86_64-unknown-linux-gnu.zip\"",
-            "purpose": "download yazi binary zip"
+            "command": "curl -fsSL -o /tmp/yazi.zip https://github.com/sxyazi/yazi/releases/latest/download/yazi-x86_64-unknown-linux-gnu.zip",
+            "purpose": "download yazi-x86_64-unknown-linux-gnu.zip from GitHub releases"
           },
           {
-            "command": "mkdir -p ~/.local/bin && unzip -o /tmp/yazi.zip -d /tmp && install -m 755 /tmp/yazi-x86_64-unknown-linux-gnu/yazi ~/.local/bin/yazi && install -m 755 /tmp/yazi-x86_64-unknown-linux-gnu/ya ~/.local/bin/ya",
-            "purpose": "install yazi binaries to PATH"
+            "command": "mkdir -p ~/.local/bin && unzip -o /tmp/yazi.zip -d /tmp && cp /tmp/yazi-x86_64-unknown-linux-gnu/yazi ~/.local/bin/ && cp /tmp/yazi-x86_64-unknown-linux-gnu/ya ~/.local/bin/ && chmod +x ~/.local/bin/yazi ~/.local/bin/ya",
+            "purpose": "unzip and install yazi and ya to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -145,55 +145,69 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "yazi runs via `yazi` TUI example",
+            "actually_needed": "yazi --help fails with 'Inappropriate ioctl for device (os error 25)' in non-TTY box; use yazi --version / ya --version for verification",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "binary zip yazi-x86_64-unknown-linux-gnu.zip",
+            "actually_needed": "URL is https://github.com/sxyazi/yazi/releases/latest/download/yazi-x86_64-unknown-linux-gnu.zip; unzip then copy yazi and ya to ~/.local/bin",
+            "kind": "note"
+          },
+          {
+            "readme_said": "preview strings check via strings",
+            "actually_needed": "strings not on PATH; use grep -a -i preview on binary which shows append_previewer and previewer symbols",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows yazi --version printing Yazi version 26.9.1 with build details.",
+          "observed": "Screenshot shows yazi --version printing Yazi 26.9.1 with build details.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-yazi-20261104-144824-5867/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-yazi-20261104-144824-5867/check-1-cmd5.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.024659,
+        "cost_usd": 0.049371,
         "features": [
           {
             "feature": "manage files in terminal asynchronously",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; ya --version prints Ya 26.9.1, companion to yazi terminal file manager"
           },
           {
             "feature": "preview videos, PDFs, archives and code",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed in the agent's box but is too long for the record"
           },
           {
             "feature": "install plugins and themes with one command",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; ya pkg --help shows Manage packages with add/delete/install/list/upgrade"
           },
           {
             "feature": "manage remote files via virtual filesystem",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; ya pub/sub --help shows DDS publish-subscribe for remote VFS management"
           }
         ]
       }
@@ -202,30 +216,30 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
-      "github.com/sxyazi/yazi@606096f6af22",
+      "github.com/sxyazi/yazi@b4f0d123952e",
       "Cargo.lock"
     ],
-    "packages_checked": 517,
+    "packages_checked": 516,
     "findings_total": 0,
     "advisories_total": 0,
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T15:02:29+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 62.3,
-      "confidence": 0.9,
+      "total": 75.2,
+      "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
-          "weight": 40.0
+          "score": 0.85,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.4375,
@@ -246,6 +260,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -267,7 +285,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 0.87
+      "value": 1.05
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -548,5 +566,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:49+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

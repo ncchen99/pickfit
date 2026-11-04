@@ -60,18 +60,22 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-joplin-20261104-224720-ca03",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask joplin",
-          "purpose": null
+          "command": "mkdir -p ~/Applications",
+          "purpose": "Create user Applications folder for cask"
+        },
+        {
+          "command": "brew install --cask --appdir=$HOME/Applications joplin",
+          "purpose": "Install Joplin macOS cask into ~/Applications"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "flatpak run net.cozic.joplin_desktop"
+      "first_task": "open ~/Applications/Joplin.app"
     },
     "linux": {
       "basis": "replayed",
@@ -112,7 +116,7 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:29:56.270227+08:00",
+    "checked_at": "2026-11-04T23:41:29.432605+08:00",
     "runs": [
       {
         "id": "verify-joplin-20261104-142321-77e8",
@@ -216,17 +220,147 @@
             "note": "install-only run"
           }
         ]
+      },
+      {
+        "id": "verify-joplin-20261104-224720-ca03",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T23:41:29.432605+08:00",
+        "tool_version": "3.7.22",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/Applications",
+            "purpose": "Create user Applications folder for cask"
+          },
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications joplin",
+            "purpose": "Install Joplin macOS cask into ~/Applications"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/Joplin.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Joplin.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"41184\": yes",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask joplin",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications joplin; DMG ~180MB took ~16 min total, first two 600s runs timed out while fetching before third run completed",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "macOS install via cask",
+            "actually_needed": "Gatekeeper accepted notarized app with Open, no xattr needed",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Joplin's main note-taking interface is fully drawn with notebooks sidebar, note list, and rendered welcome note in the editor.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.628054,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "open ~/Applications/Joplin.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+          "operations": [
+            {
+              "feature": "save web pages with Web Clipper",
+              "goal": "Open Joplin Settings (Joplin menu > Settings or Tools > Options), go to Web Clipper section, and Enable the Web Clipper Service so it shows its Port number.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "41184"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"41184\": yes",
+              "smoke_test": 1,
+              "actions": 7,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            }
+          ]
+        },
+        "features": [
+          {
+            "feature": "organize notes into notebooks",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "operator_limit",
+            "failure": null,
+            "note": "operation stopped: step_cap after 28 actions; check: file /Users/sbx/pickfit-out/note.md: missing; Notebook and note creation worked but export hit operator step_cap; second try stuck on Creating new note"
+          },
+          {
+            "feature": "sync notes with end-to-end encryption",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Sync with E2EE needs Nextcloud/Dropbox/OneDrive/Joplin Cloud account"
+          },
+          {
+            "feature": "search notes with full text search",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "check_not_met",
+            "failure": null,
+            "note": "operation stopped: done after 4 actions; check: the expected text was on screen before the first action: it is not a result of the operation; Search works but checks rejected: typed text, then text already on screen"
+          },
+          {
+            "feature": "save web pages with Web Clipper",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output only shows Web Clipper service started on port 41184, not a web page saved."
+          }
+        ]
       }
     ]
   },
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/laurent22/joplin@54bde206029d",
+      "github.com/laurent22/joplin@d6d28fb49e7b",
       "packages/app-clipper/popup/package-lock.json",
       "packages/onenote-converter/Cargo.lock"
     ],
@@ -248,18 +382,53 @@
       }
     ]
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-joplin-20261104-224720-ca03",
+    "score": 1,
+    "status": "scored",
+    "defects": [
+      {
+        "item": "comfortable",
+        "operation": null,
+        "cause": "app",
+        "problem": "The rightmost editor toolbar button is cut off by the right edge of the Joplin window, leaving only part of the button visible.",
+        "screenshot": "replay-5-1.app.png",
+        "box": [
+          975,
+          132,
+          1000,
+          174
+        ],
+        "quote": "M",
+        "found_by": "ocr",
+        "kind": "clipped",
+        "severity": "minor"
+      }
+    ],
+    "screens": 2,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "95ba4f4200fdad7df059d514b0def58ff5713058641ac4dff8bae95ee203c1da",
+    "checked_at": "2026-11-05T03:27:09+08:00",
+    "cost_usd": 0.052376
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:27:09+08:00",
     "quality": {
-      "total": 58.8,
-      "confidence": 0.9,
+      "total": 71.3,
+      "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
-          "weight": 40
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.4375,
@@ -281,6 +450,11 @@
           "score": null,
           "weight": 10
         }
+      },
+      "visual": {
+        "factor": 0.95,
+        "before": 75.1,
+        "defects": 1
       }
     },
     "popularity": {
@@ -299,7 +473,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 5.88
+      "value": 7.13
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -602,5 +776,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:37+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:27:09+08:00"
 }

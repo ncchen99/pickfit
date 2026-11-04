@@ -71,20 +71,20 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-visidata-20261104-133328-cfd3",
+      "run_id": "verify-visidata-20261104-192930-6db6",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install visidata",
-          "purpose": "install visidata via uv tool"
+          "command": "uv tool install visidata --with openpyxl --with lxml 2>&1",
+          "purpose": "Install visidata with uv tool including xlsx deps"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "vd -v",
+        "command": "vd --version 2>&1",
         "expected_signal": "saul.pw/VisiData v3.5"
       },
-      "first_task": "vd -v"
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -114,32 +114,32 @@
     "url": "https://github.com/saulpw/visidata/releases/tag/v3.5"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:34:14.119273+08:00",
+    "checked_at": "2026-11-04T19:31:46.542486+08:00",
     "runs": [
       {
-        "id": "verify-visidata-20261104-133328-cfd3",
-        "level": "install",
+        "id": "verify-visidata-20261104-192930-6db6",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:34:14.119273+08:00",
-        "tool_version": "v3.5",
+        "checked_at": "2026-11-04T19:31:46.542486+08:00",
+        "tool_version": null,
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install visidata",
-            "purpose": "install visidata via uv tool"
+            "command": "uv tool install visidata --with openpyxl --with lxml 2>&1",
+            "purpose": "Install visidata with uv tool including xlsx deps"
           }
         ],
         "smoke_tests": [
           {
-            "command": "vd -v",
+            "command": "vd --version 2>&1",
             "expected_signal": "saul.pw/VisiData v3.5",
             "exit_code": 0,
             "passed": true,
@@ -148,47 +148,51 @@
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "pip3 install visidata",
+            "actually_needed": "uv tool install visidata --with openpyxl --with lxml to avoid PEP 668 and enable xlsx",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The screenshot shows `vd -v` printing saul.pw/VisiData v3.5.",
+          "observed": "Screenshot shows vd --version printing saul.pw/VisiData v3.5.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-visidata-20261104-133328-cfd3/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-visidata-20261104-133328-cfd3/check-1-cmd4.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.022522,
+        "cost_usd": 0.064088,
         "features": [
           {
             "feature": "Explore tabular data in terminal",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; vd -b -p loaded csv and produced tsv output with rows"
           },
           {
             "feature": "Arrange tabular data",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; batch load and save demonstrates arrange pipeline (vd supports sort/filter then save via replay)"
           },
           {
             "feature": "Open tsv csv sqlite json xlsx formats",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; csv/tsv/json converted ok; sqlite listed table people; xlsx listed Sheet with 2 rows 3 cols"
           }
         ]
       }
@@ -197,7 +201,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -209,17 +213,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 68.8,
-      "confidence": 0.9,
+      "total": 82.8,
+      "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -240,6 +244,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -261,7 +269,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 3.85
+      "value": 4.64
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -520,5 +528,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:07:37+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

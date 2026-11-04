@@ -28,7 +28,7 @@ A software advisor for people and their AI agents. pickfit installs and tests so
 
 AI agents made building software cheap, so new tools appear every day on GitHub, Show HN, Flathub and the web. Finding the right one got harder. Search and directories reward popularity, models don't know what shipped after their training cutoff, and small projects often have install steps that don't work. So people and agents rebuild what already exists, and pay for it later in maintenance and tokens.
 
-pickfit belongs to no vendor and runs no ads or referral links. It reads each project, **installs it in a fresh sandbox, checks that the features work, replays the steps offline**, and only then lets it be recommended. Results are ranked by fit, not stars, and lesser-known tools that do the job well get surfaced as *hidden gems*. Credits are limited, so deep feature tests go to lesser-known tools; well-known, high-star projects are checked to install level ([list](docs/discovery/curated-well-known-v2.md)).
+pickfit belongs to no vendor and runs no ads or referral links. It reads each project, **installs it in a fresh sandbox, checks that the features work, replays the steps offline**, and only then lets it be recommended. Results are ranked by fit, not stars, and lesser-known tools that do the job well get surfaced as *hidden gems*.
 
 Fitz, the mascot, is a tailorbird. Real tailorbirds pick leaves and stitch them into a nest that fits exactly. Fitz never recommends what it hasn't tried.
 
@@ -38,13 +38,15 @@ Fitz, the mascot, is a tailorbird. Real tailorbirds pick leaves and stitch them 
 |---|---|
 | <img src="brand/screenshots/home.png" alt="pickfit home page: an 'I need…' search box over a ruler, with filters for OS, CPU, free, offline and data stays local" width="420"> | <img src="brand/screenshots/tool-page.png" alt="A pickfit tool page for OpenPets: tested on macOS, a video recorded by pickfit with chapters for each checked feature" width="420"> |
 
-As of 3 Nov 2026: **963** projects read, **652** verified at least through install, **567** replayed in a fresh sandbox, **85** web apps tried in a browser, **132** hidden gems. CLI tools, local AI tools, MCP servers, desktop apps (Linux and macOS) and web apps.
+As of 5 Nov 2026: **1,050** projects read, **732** verified at least through install, **647** replayed in a fresh sandbox, **85** web apps tried in a browser, **159** hidden gems. CLI tools, local AI tools, MCP servers, desktop apps (Linux and macOS) and web apps.
 
 <p align="center"><a href="https://www.youtube.com/watch?v=AkYyI8kSsiQ"><img src="brand/screenshots/demo-video.jpg" alt="Watch the pickfit demo video on YouTube (2:57)" width="640"></a><br><sub>Watch the 3-minute demo: Claude Code finds and installs MangoDisk through pickfit, then the app's first use.</sub></p>
 
 ## Try it
 
 **On the web:** open [pickfit.app](https://pickfit.app) and describe what you need. The site is in English and Traditional Chinese.
+
+**Made something, or found a tool that belongs here?** Paste its link at [pickfit.app/submit](https://pickfit.app/submit) and watch it go through the same tests. Your agent can do the same with `submit_software`.
 
 **In your agent:** pickfit is a stateless MCP server at `https://pickfit.app/mcp`. No account needed.
 

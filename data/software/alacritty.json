@@ -54,23 +54,20 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-alacritty-20261104-162129-095d",
+      "run_id": "verify-alacritty-20261105-001905-0f08",
       "method": "binary",
       "steps": [
         {
           "command": "curl -fL -o ~/Downloads/Alacritty-v0.17.0.dmg https://github.com/alacritty/alacritty/releases/download/v0.17.0/Alacritty-v0.17.0.dmg",
-          "purpose": "download Alacritty v0.17.0 dmg from GitHub releases"
+          "purpose": "Download Alacritty dmg"
         },
         {
           "command": "mkdir -p ~/mnt/alacritty ~/Applications && hdiutil attach -nobrowse -mountpoint ~/mnt/alacritty ~/Downloads/Alacritty-v0.17.0.dmg && cp -R ~/mnt/alacritty/Alacritty.app ~/Applications/ && hdiutil detach -force ~/mnt/alacritty",
-          "purpose": "mount dmg and copy Alacritty.app to ~/Applications"
+          "purpose": "Mount dmg and install app"
         }
       ],
       "manual_steps": [],
-      "check": {
-        "command": "~/Applications/Alacritty.app/Contents/MacOS/alacritty --version",
-        "expected_signal": "alacritty 0.17.0"
-      },
+      "check": null,
       "first_task": "open ~/Applications/Alacritty.app"
     },
     "linux": null,
@@ -89,52 +86,34 @@
     "url": "https://github.com/alacritty/alacritty/releases/tag/v0.17.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T17:42:33.390451+08:00",
+    "checked_at": "2026-11-05T00:30:51.167486+08:00",
     "runs": [
       {
-        "id": "verify-alacritty-20261104-162129-095d",
-        "level": "install",
+        "id": "verify-alacritty-20261105-001905-0f08",
+        "level": "function",
         "unverified_reason": null,
         "os": "macos",
         "arch": "arm64",
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
-        "checked_at": "2026-11-04T17:42:33.390451+08:00",
+        "checked_at": "2026-11-05T00:30:51.167486+08:00",
         "tool_version": "0.17.0",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
             "command": "curl -fL -o ~/Downloads/Alacritty-v0.17.0.dmg https://github.com/alacritty/alacritty/releases/download/v0.17.0/Alacritty-v0.17.0.dmg",
-            "purpose": "download Alacritty v0.17.0 dmg from GitHub releases"
+            "purpose": "Download Alacritty dmg"
           },
           {
             "command": "mkdir -p ~/mnt/alacritty ~/Applications && hdiutil attach -nobrowse -mountpoint ~/mnt/alacritty ~/Downloads/Alacritty-v0.17.0.dmg && cp -R ~/mnt/alacritty/Alacritty.app ~/Applications/ && hdiutil detach -force ~/mnt/alacritty",
-            "purpose": "mount dmg and copy Alacritty.app to ~/Applications"
+            "purpose": "Mount dmg and install app"
           }
         ],
         "smoke_tests": [
-          {
-            "command": "~/Applications/Alacritty.app/Contents/MacOS/alacritty --version",
-            "expected_signal": "alacritty 0.17.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "alacritty 0.17.0 (94e7c88)",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "~/Applications/Alacritty.app/Contents/MacOS/alacritty --help",
-            "expected_signal": "A fast, cross-platform, OpenGL terminal emulator",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "A fast, cross-platform, OpenGL terminal emulator",
-            "setup": [],
-            "offline": true
-          },
           {
             "command": "open ~/Applications/Alacritty.app",
             "expected_signal": "gui tier: window",
@@ -143,47 +122,74 @@
             "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "open ~/Applications/Alacritty.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"80235\": yes",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
             "readme_said": "brew install --cask alacritty",
-            "actually_needed": "Homebrew reports Cask 'alacritty' has been disabled because it does not pass the macOS Gatekeeper check (disabled 2026-09-01); installed via direct .dmg download from GitHub releases instead",
-            "kind": "readme_wrong"
+            "actually_needed": "downloaded Alacritty-v0.17.0.dmg from GitHub releases and copied Alacritty.app to ~/Applications (curl download has no quarantine)",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The screenshot shows the --version command outputting alacritty 0.17.0. / Alacritty terminal window shows login text and an interactive shell prompt ready for input.",
+          "observed": "The screenshot shows an Alacritty terminal window displaying login text and a shell prompt ready for input.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-alacritty-20261104-162129-095d/report.json",
-          "log_path": "runs/verify/verify-alacritty-20261104-162129-095d/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-alacritty-20261104-162129-095d/check-1-cmd7.judged.png",
-            "runs/verify/verify-alacritty-20261104-162129-095d/replay-6-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.034543,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.652949,
         "gui": {
-          "tier": "ui_rendered",
+          "tier": "action_checked",
           "screen": "main_ui",
           "command": "open ~/Applications/Alacritty.app",
           "window_title": "",
-          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+          "operations": [
+            {
+              "feature": "run GPU-accelerated terminal emulation",
+              "goal": "Click in the Alacritty terminal to focus it, type expr 12345 + 67890 and press Enter. Wait for the result 80235 to appear as command output.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "80235"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, muse-spark-1.3, from pickfit's last screenshot): \"80235\": yes",
+              "smoke_test": 1,
+              "actions": 7,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            }
+          ]
         },
         "features": [
           {
             "feature": "run GPU-accelerated terminal emulation",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "configure terminal via config file",
@@ -191,7 +197,7 @@
             "smoke_tests": [],
             "reason": "not_attempted",
             "failure": null,
-            "note": "install-only run"
+            "note": "budget exhausted before config test"
           }
         ]
       }
@@ -199,6 +205,8 @@
   },
   "security": {
     "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -229,22 +237,37 @@
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false
       }
-    ],
-    "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00"
+    ]
+  },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-alacritty-20261105-001905-0f08",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 2,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "0e768093809e6fd7497220f36a872f2e26a1b91b95ba9fa6486889e14d4c5e51",
+    "checked_at": "2026-11-05T03:24:43+08:00",
+    "cost_usd": 0.017424
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:42:33+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:24:43+08:00",
     "quality": {
-      "total": 62.3,
+      "total": 79.0,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.4335,
-          "weight": 40.0
+          "score": 0.85,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -264,8 +287,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 79.0,
+        "defects": 0
       }
     },
     "popularity": {
@@ -284,7 +312,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 6.23
+      "value": 7.9
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -525,5 +553,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:49+08:00",
-  "updated_at": "2026-11-04T17:42:33.391676+08:00"
+  "updated_at": "2026-11-05T03:24:43+08:00"
 }

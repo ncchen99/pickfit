@@ -55,20 +55,20 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-hurl-20261104-152610-4894",
+      "run_id": "verify-hurl-20261104-191758-12a7",
       "method": "brew",
       "steps": [
         {
           "command": "brew install hurl",
-          "purpose": "install hurl via brew"
+          "purpose": "brew install hurl"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "hurl --version",
+        "command": "hurl --version && which hurl",
         "expected_signal": "hurl 8.1.0"
       },
-      "first_task": null
+      "first_task": "hurl --test /tmp/chain.hurl"
     },
     "linux": null,
     "windows": null
@@ -86,9 +86,9 @@
     "url": "https://github.com/Orange-OpenSource/hurl/releases/tag/8.1.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T15:29:23.272465+08:00",
+    "checked_at": "2026-11-04T19:20:41.610090+08:00",
     "runs": [
       {
         "id": "verify-hurl-20261104-144804-e3e1",
@@ -145,76 +145,139 @@
         "cost_usd": 0.05821
       },
       {
-        "id": "verify-hurl-20261104-152610-4894",
-        "level": "install",
+        "id": "verify-hurl-20261104-191758-12a7",
+        "level": "function",
         "unverified_reason": null,
         "os": "macos",
         "arch": "arm64",
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
-        "checked_at": "2026-11-04T15:29:23.272465+08:00",
+        "checked_at": "2026-11-04T19:20:41.610090+08:00",
         "tool_version": "8.1.0",
         "install_method": "brew",
         "replayed": true,
         "steps": [
           {
             "command": "brew install hurl",
-            "purpose": "install hurl via brew"
+            "purpose": "brew install hurl"
           }
         ],
         "smoke_tests": [
           {
-            "command": "hurl --version",
+            "command": "hurl --version && which hurl",
             "expected_signal": "hurl 8.1.0",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "hurl 8.1.0 (x86_64-apple-darwin25.0) libcurl/8.7.1 (SecureTransport) LibreSSL/3.3.6 zlib/1.2.12 nghttp2/1.68.1",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "hurl --test /tmp/chain.hurl",
+            "expected_signal": "Success",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Success /tmp/chain.hurl (4 request(s) in 1 ms)",
+            "setup": [
+              {
+                "command": "cat > /tmp/server.py <<'PY'\nfrom http.server import HTTPServer, BaseHTTPRequestHandler\nimport json, urllib.parse\n\nclass H(BaseHTTPRequestHandler):\n    def do_GET(self):\n        path = self.path.split('?')[0]\n        if path in (\"/api/health\", \"/api/step1\", \"/api/step2\", \"/api/step3\", \"/\"):\n            self.send_response(200)\n            self.send_header(\"Content-Type\", \"application/json\")\n            self.end_headers()\n            body = json.dumps({\"status\":\"ok\", \"path\": path}).encode()\n            self.wfile.write(body)\n        elif path == \"/api/tests\":\n            self.send_response(200)\n            self.send_header(\"Content-Type\", \"application/json\")\n            self.send_header(\"X-Frame-Options\", \"SAMEORIGIN\")\n            self.end_headers()\n            body = json.dumps({\"status\":\"RUNNING\",\"tests\": list(range(25)), \"id\":\"4568\"}).encode()\n            self.wfile.write(body)\n        elif path == \"/html\":\n            self.send_response(200)\n            self.send_header(\"Content-Type\", \"text/html\")\n            self.end_headers()\n            self.wfile.write(b\"<html><head><title>Hello world!</title></head><body><p>hi</p><p>there</p></body></html>\")\n        else:\n            self.send_response(404)\n            self.end_headers()\n            self.wfile.write(b\"not found\")\n    def do_POST(self):\n        length = int(self.headers.get('Content-Length', 0))\n        body = self.rfile.read(length) if length else b''\n        # For /api/tests POST, return same\n        path = self.path.split('?')[0]\n        if path == \"/api/tests\":\n            self.send_response(200)\n            self.send_header(\"Content-Type\", \"application/json\")\n            self.send_header(\"X-Frame-Options\", \"SAMEORIGIN\")\n            self.end_headers()\n            resp = json.dumps({\"status\":\"RUNNING\",\"tests\": list(range(25)), \"id\":\"4568\"}).encode()\n            self.wfile.write(resp)\n        elif path == \"/echo\":\n            self.send_response(200)\n            self.send_header(\"Content-Type\", \"application/json\")\n            self.end_headers()\n            self.wfile.write(body or b'{}')\n        else:\n            self.send_response(200)\n            self.send_header(\"Content-Type\", \"application/json\")\n            self.end_headers()\n            self.wfile.write(b'{\"ok\":true}')\n    def log_message(self, *a, **k): pass\n\nHTTPServer((\"127.0.0.1\", 8005), H).serve_forever()\nPY",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > /tmp/chain.hurl <<'HURL'\nGET http://127.0.0.1:8005/api/health\nHTTP 200\n[Captures]\nhealth_status: jsonpath \"$.status\"\nGET http://127.0.0.1:8005/api/step1\nHTTP 200\nGET http://127.0.0.1:8005/api/step2\nHTTP 200\nGET http://127.0.0.1:8005/api/step3\nHTTP 200\nHURL\ncat /tmp/chain.hurl\n\ncat > /tmp/asserts.hurl <<'HURL'\nPOST http://127.0.0.1:8005/api/tests\n{\n    \"id\": \"4568\",\n    \"evaluate\": true\n}\nHTTP 200\n[Asserts]\nheader \"X-Frame-Options\" == \"SAMEORIGIN\"\njsonpath \"$.status\" == \"RUNNING\"\njsonpath \"$.tests\" count == 25\njsonpath \"$.id\" matches /\\d{4}/\nHURL\ncat /tmp/asserts.hurl\n\ncat > /tmp/report.hurl <<'HURL'\nGET http://127.0.0.1:8005/api/health\nHTTP 200\n[Asserts]\njsonpath \"$.status\" == \"ok\"\nHURL\ncat /tmp/report.hurl\n",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /tmp/server.py",
+                "background": true,
+                "port": 8005
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "hurl --test /tmp/asserts.hurl",
+            "expected_signal": "Success",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Success /tmp/asserts.hurl (1 request(s) in 0 ms)",
+            "setup": [
+              {
+                "command": "cat > /tmp/server.py <<'PY'\nfrom http.server import HTTPServer, BaseHTTPRequestHandler\nimport json, urllib.parse\n\nclass H(BaseHTTPRequestHandler):\n    def do_GET(self):\n        path = self.path.split('?')[0]\n        if path in (\"/api/health\", \"/api/step1\", \"/api/step2\", \"/api/step3\", \"/\"):\n            self.send_response(200)\n            self.send_header(\"Content-Type\", \"application/json\")\n            self.end_headers()\n            body = json.dumps({\"status\":\"ok\", \"path\": path}).encode()\n            self.wfile.write(body)\n        elif path == \"/api/tests\":\n            self.send_response(200)\n            self.send_header(\"Content-Type\", \"application/json\")\n            self.send_header(\"X-Frame-Options\", \"SAMEORIGIN\")\n            self.end_headers()\n            body = json.dumps({\"status\":\"RUNNING\",\"tests\": list(range(25)), \"id\":\"4568\"}).encode()\n            self.wfile.write(body)\n        elif path == \"/html\":\n            self.send_response(200)\n            self.send_header(\"Content-Type\", \"text/html\")\n            self.end_headers()\n            self.wfile.write(b\"<html><head><title>Hello world!</title></head><body><p>hi</p><p>there</p></body></html>\")\n        else:\n            self.send_response(404)\n            self.end_headers()\n            self.wfile.write(b\"not found\")\n    def do_POST(self):\n        length = int(self.headers.get('Content-Length', 0))\n        body = self.rfile.read(length) if length else b''\n        # For /api/tests POST, return same\n        path = self.path.split('?')[0]\n        if path == \"/api/tests\":\n            self.send_response(200)\n            self.send_header(\"Content-Type\", \"application/json\")\n            self.send_header(\"X-Frame-Options\", \"SAMEORIGIN\")\n            self.end_headers()\n            resp = json.dumps({\"status\":\"RUNNING\",\"tests\": list(range(25)), \"id\":\"4568\"}).encode()\n            self.wfile.write(resp)\n        elif path == \"/echo\":\n            self.send_response(200)\n            self.send_header(\"Content-Type\", \"application/json\")\n            self.end_headers()\n            self.wfile.write(body or b'{}')\n        else:\n            self.send_response(200)\n            self.send_header(\"Content-Type\", \"application/json\")\n            self.end_headers()\n            self.wfile.write(b'{\"ok\":true}')\n    def log_message(self, *a, **k): pass\n\nHTTPServer((\"127.0.0.1\", 8005), H).serve_forever()\nPY",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > /tmp/chain.hurl <<'HURL'\nGET http://127.0.0.1:8005/api/health\nHTTP 200\n[Captures]\nhealth_status: jsonpath \"$.status\"\nGET http://127.0.0.1:8005/api/step1\nHTTP 200\nGET http://127.0.0.1:8005/api/step2\nHTTP 200\nGET http://127.0.0.1:8005/api/step3\nHTTP 200\nHURL\ncat /tmp/chain.hurl\n\ncat > /tmp/asserts.hurl <<'HURL'\nPOST http://127.0.0.1:8005/api/tests\n{\n    \"id\": \"4568\",\n    \"evaluate\": true\n}\nHTTP 200\n[Asserts]\nheader \"X-Frame-Options\" == \"SAMEORIGIN\"\njsonpath \"$.status\" == \"RUNNING\"\njsonpath \"$.tests\" count == 25\njsonpath \"$.id\" matches /\\d{4}/\nHURL\ncat /tmp/asserts.hurl\n\ncat > /tmp/report.hurl <<'HURL'\nGET http://127.0.0.1:8005/api/health\nHTTP 200\n[Asserts]\njsonpath \"$.status\" == \"ok\"\nHURL\ncat /tmp/report.hurl\n",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /tmp/server.py",
+                "background": true,
+                "port": 8005
+              }
+            ],
+            "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "brew install hurl",
+            "actually_needed": "works as documented (owns /opt/homebrew, no sudo needed)",
+            "kind": "note"
+          },
+          {
+            "readme_said": "hurl --test --report-junit expects usage",
+            "actually_needed": "--report-junit takes a FILE path, not a DIR; creating a file path is required",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows hurl --version printing hurl 8.1.0 with libcurl and feature details.",
+          "observed": "Screenshots show hurl 8.1.0 installed and both hurl test files succeeding with zero failures.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-hurl-20261104-152610-4894/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-hurl-20261104-152610-4894/check-1-cmd2.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.015603,
+        "cost_usd": 0.064976,
         "features": [
           {
             "feature": "chain HTTP requests in plain text",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "test HTTP responses with asserts",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "integrate tests in CI/CD with reports",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; generated JUnit XML with <testsuites>"
           }
         ]
       }
@@ -223,17 +286,17 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/Orange-OpenSource/hurl@4253603a1962",
+      "github.com/Orange-OpenSource/hurl@42758592ff41",
       "Cargo.lock",
       "contrib/npm/hurl/package-lock.json",
       "contrib/sample/Cargo.lock",
       "bin/requirements.txt"
     ],
-    "packages_checked": 352,
+    "packages_checked": 351,
     "findings_total": 2,
     "advisories_total": 2,
     "findings": [
@@ -264,17 +327,17 @@
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 64.2,
+      "total": 79.0,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.75,
@@ -294,7 +357,11 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -316,7 +383,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 2.76
+      "value": 3.4
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -589,5 +656,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:56+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

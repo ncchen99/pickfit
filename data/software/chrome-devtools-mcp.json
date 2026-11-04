@@ -59,18 +59,18 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-chrome-devtools-mcp-20261104-133502-3ec2",
+      "run_id": "verify-chrome-devtools-mcp-20261104-211601-1b86",
       "method": "npm",
       "steps": [
         {
-          "command": "npm i chrome-devtools-mcp@latest -g",
-          "purpose": "install chrome-devtools-mcp globally via npm"
+          "command": "npm i chrome-devtools-mcp@latest -g && chrome-devtools-mcp --help",
+          "purpose": "npm global install chrome-devtools-mcp"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "which chrome-devtools-mcp && ls -la ~/.local/bin/chrome* 2>&1; chrome-devtools-mcp --help 2>&1 | head -n 100; echo ---; chrome-devtools --help 2>&1",
-        "expected_signal": "--help"
+        "command": "chrome-devtools-mcp --help",
+        "expected_signal": "Print CLI options"
       },
       "first_task": null
     },
@@ -91,10 +91,10 @@
   "verification": {
     "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:35:50.493475+08:00",
+    "checked_at": "2026-11-04T21:20:05.863764+08:00",
     "runs": [
       {
-        "id": "verify-chrome-devtools-mcp-20261104-133502-3ec2",
+        "id": "verify-chrome-devtools-mcp-20261104-211601-1b86",
         "level": "function",
         "unverified_reason": null,
         "os": "linux",
@@ -102,68 +102,96 @@
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:35:50.493475+08:00",
+        "checked_at": "2026-11-04T21:20:05.863764+08:00",
         "tool_version": "1.12.0",
         "install_method": "npm",
         "replayed": true,
         "steps": [
           {
-            "command": "npm i chrome-devtools-mcp@latest -g",
-            "purpose": "install chrome-devtools-mcp globally via npm"
+            "command": "npm i chrome-devtools-mcp@latest -g && chrome-devtools-mcp --help",
+            "purpose": "npm global install chrome-devtools-mcp"
           }
         ],
         "smoke_tests": [
           {
-            "command": "which chrome-devtools-mcp && ls -la ~/.local/bin/chrome* 2>&1; chrome-devtools-mcp --help 2>&1 | head -n 100; echo ---; chrome-devtools --help 2>&1",
-            "expected_signal": "--help",
+            "command": "chrome-devtools-mcp --help",
+            "expected_signal": "Print CLI options",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Run 'chrome-devtools <command> --help' for help on the specific command.",
+            "observed_excerpt": "npx chrome-devtools-mcp@latest --help Print CLI options",
             "setup": [],
             "offline": true
           },
           {
-            "command": "chrome-devtools-mcp --version 2>&1; chrome-devtools --version 2>&1",
-            "expected_signal": "1.12.0",
-            "exit_code": 0,
-            "passed": true,
-            "observed_excerpt": "1.12.0",
-            "setup": [],
-            "offline": true
-          },
-          {
-            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- chrome-devtools-mcp",
+            "command": "CI=1 CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS=1 CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS=1 python3 ~/.pickfit/mcp_probe.py -- chrome-devtools-mcp --headless --no-sandbox --isolated 2>&1",
             "expected_signal": "handshake: ok",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "handshake: ok",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "CI=1 python3 ~/.pickfit/mcp_probe.py --call performance_start_trace --args '{\"pageId\":\"0\",\"reload\":true}' -- chrome-devtools-mcp --headless --isolated --executablePath /home/sbx/.cache/puppeteer/chrome/linux-157.0.8103.38/chrome-linux64/chrome --chrome-arg=--no-sandbox --chrome-arg=--disable-dev-shm-usage 2>&1",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"performance_start_trace\", \"count\": 32, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"chrome-devtools-mcp\", \"--headless\", \"--isolated\", \"--executablePath\", \"/home/sbx/.cache/puppeteer/chrome/linux-157.0.8103.38/chrome-linux64/chrome\", \"--chrome-arg=--no-sandbox\", …",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "CI=1 python3 ~/.pickfit/mcp_probe.py --call list_network_requests --args '{\"pageId\":\"0\"}' -- chrome-devtools-mcp --headless --isolated --executablePath /home/sbx/.cache/puppeteer/chrome/linux-157.0.8103.38/chrome-linux64/chrome --chrome-arg=--no-sandbox --chrome-arg=--disable-dev-shm-usage 2>&1",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"list_network_requests\", \"count\": 32, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"chrome-devtools-mcp\", \"--headless\", \"--isolated\", \"--executablePath\", \"/home/sbx/.cache/puppeteer/chrome/linux-157.0.8103.38/chrome-linux64/chrome\", \"--chrome-arg=--no-sandbox\", \"-…",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "CI=1 python3 ~/.pickfit/mcp_probe.py --call new_page --args '{\"url\":\"about:blank\"}' -- chrome-devtools-mcp --headless --isolated --executablePath /home/sbx/.cache/puppeteer/chrome/linux-157.0.8103.38/chrome-linux64/chrome --chrome-arg=--no-sandbox --chrome-arg=--disable-dev-shm-usage 2>&1",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"new_page\", \"count\": 32, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"chrome-devtools-mcp\", \"--headless\", \"--isolated\", \"--executablePath\", \"/home/sbx/.cache/puppeteer/chrome/linux-157.0.8103.38/chrome-linux64/chrome\", \"--chrome-arg=--no-sandbox\", \"--chrome-arg=-…",
+            "setup": [],
+            "offline": null
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "Requires Chrome current stable version or newer",
+            "actually_needed": "global npm install to ~/.local plus a locally installed Chrome binary via @puppeteer/browsers; bundled Chrome still failed to start: libnspr4.so missing, system libraries need apt/root",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "MCP config uses npx -y chrome-devtools-mcp@latest which fetches on every launch",
+            "actually_needed": "run installed binary chrome-devtools-mcp directly so rerun works with network off",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show --help output with commands and options, version 1.12.0 printed twice, and MCP probe listing 32 tools with handshake ok.",
+          "observed": "Screenshots show MCP probe handshake ok with 32 tools and --help printing CLI options.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-chrome-devtools-mcp-20261104-133502-3ec2/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-chrome-devtools-mcp-20261104-133502-3ec2/check-1-cmd2.judged.png",
-            "runs/verify/verify-chrome-devtools-mcp-20261104-133502-3ec2/check-2-cmd4.judged.png",
-            "runs/verify/verify-chrome-devtools-mcp-20261104-133502-3ec2/check-3-cmd3.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.036223,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.444564,
         "mcp": {
           "transport": "stdio",
           "launch": [
-            "chrome-devtools-mcp"
+            "chrome-devtools-mcp",
+            "--headless",
+            "--no-sandbox",
+            "--isolated"
           ],
           "url": null,
           "protocol_version": "2025-11-25",
@@ -210,27 +238,33 @@
         "features": [
           {
             "feature": "record traces and extract performance insights",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
-            "failure": null,
-            "note": "install-only run"
+            "status": "test_failed",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "performance_start_trace error: Chrome cannot start, libnspr4.so missing"
           },
           {
             "feature": "analyze network requests and console messages",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
-            "failure": null,
-            "note": "install-only run"
+            "status": "test_failed",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "list_network_requests error: Chrome cannot start, libnspr4.so missing"
           },
           {
             "feature": "automate actions in Chrome browser",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
-            "failure": null,
-            "note": "install-only run"
+            "status": "test_failed",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "new_page error: Chrome cannot start, libnspr4.so missing"
           }
         ]
       }
@@ -267,7 +301,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "resolve_failed",
     "sources": [],
@@ -277,17 +311,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-04T21:20:05+08:00",
     "quality": {
-      "total": 86.4,
-      "confidence": 0.9,
+      "total": 94.0,
+      "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.8,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.875,
@@ -308,6 +342,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -629,5 +667,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:07+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

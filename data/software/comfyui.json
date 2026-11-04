@@ -72,20 +72,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-comfyui-20261104-133414-f81c",
+      "run_id": "verify-comfyui-20261104-211208-7634",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install comfy-cli 2>&1",
-          "purpose": "install comfy-cli via uv tool install comfy-cli"
+          "purpose": "Install comfy-cli via uv tool (candidate 1)"
+        },
+        {
+          "command": "git clone --depth 1 https://github.com/Comfy-Org/ComfyUI.git ComfyUI 2>&1",
+          "purpose": "Clone ComfyUI source shallow"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "comfy --help 2>&1",
-        "expected_signal": "comfy cloud login"
+        "command": "comfy --version 2>&1",
+        "expected_signal": "\"ok\": true"
       },
-      "first_task": null
+      "first_task": "python3 -c \"import json; d=json.load(open('ComfyUI/default_workflow.json')); print('nodes:', len(d['nodes'])); print('links:', len(d['links'])); print('version:', d.get('version')); print('has KSampler:', any(n.get('type')=='KSampler' for n in d['nodes']))\""
     },
     "windows": {
       "basis": "readme_claim",
@@ -115,89 +119,120 @@
     "url": "https://github.com/Comfy-Org/ComfyUI/releases/tag/v0.44.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:35:03.867945+08:00",
+    "checked_at": "2026-11-04T21:15:24.305476+08:00",
     "runs": [
       {
-        "id": "verify-comfyui-20261104-133414-f81c",
-        "level": "install",
+        "id": "verify-comfyui-20261104-211208-7634",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:35:03.867945+08:00",
+        "checked_at": "2026-11-04T21:15:24.305476+08:00",
         "tool_version": "1.25.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install comfy-cli 2>&1",
-            "purpose": "install comfy-cli via uv tool install comfy-cli"
+            "purpose": "Install comfy-cli via uv tool (candidate 1)"
+          },
+          {
+            "command": "git clone --depth 1 https://github.com/Comfy-Org/ComfyUI.git ComfyUI 2>&1",
+            "purpose": "Clone ComfyUI source shallow"
           }
         ],
         "smoke_tests": [
           {
-            "command": "comfy --help 2>&1",
-            "expected_signal": "comfy cloud login",
+            "command": "comfy --version 2>&1",
+            "expected_signal": "\"ok\": true",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "comfy cloud login → comfy run --workflow wf.json --where cloud (prints a prompt_id) → comfy",
+            "observed_excerpt": "{\"schema\": \"envelope/1\", \"type\": \"envelope\", \"ok\": true, \"command\": \"version\", \"version\": \"1.25.0\", \"where\": null, \"data\": {\"version\": \"1.25.0\"}, \"error\": null}",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ComfyUI/main.py --help 2>&1",
+            "expected_signal": "--front-end-version",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[--front-end-version FRONT_END_VERSION] [--front-end-root FRONT_END_ROOT]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 -c \"import json; d=json.load(open('ComfyUI/default_workflow.json')); print('nodes:', len(d['nodes'])); print('links:', len(d['links'])); print('version:', d.get('version')); print('has KSampler:', any(n.get('type')=='KSampler' for n in d['nodes']))\"",
+            "expected_signal": "nodes:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "nodes: 10",
             "setup": [],
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "pip install comfy-cli",
+            "actually_needed": "uv tool install comfy-cli into an isolated environment",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "pip install -r requirements.txt then python main.py",
+            "actually_needed": "python3 ComfyUI/main.py --help prints full options with exit 0 and no dependency install (arg parsing runs before torch imports)",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows comfy --help output listing commands including cloud and a quickstart containing 'comfy cloud login'.",
+          "observed": "Screenshots show version 1.25.0 with ok true, help output referencing --front-end-version, and default workflow with 10 nodes including KSampler.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-comfyui-20261104-133414-f81c/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-comfyui-20261104-133414-f81c/check-1-cmd3.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.032129,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.369687,
         "features": [
           {
             "feature": "build workflows with visual node graph",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_display",
             "failure": null,
-            "note": "install-only run"
+            "note": "visual node graph needs a browser/GUI, no GUI in box"
           },
           {
             "feature": "generate images, videos, 3D and audio",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_gpu",
             "failure": null,
-            "note": "install-only run"
+            "note": "image/video/3D/audio generation needs GPU and GB-sized checkpoints"
           },
           {
             "feature": "run diffusion models efficiently locally",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_gpu",
             "failure": null,
-            "note": "install-only run"
+            "note": "async queueing/VRAM offload needs GPU hardware"
           },
           {
             "feature": "save and load workflows as JSON",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output only shows Python parsing an existing JSON file, not ComfyUI saving or loading a workflow."
           }
         ]
       }
@@ -206,11 +241,11 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
-      "github.com/Comfy-Org/ComfyUI@70bcb4e9fc70",
+      "github.com/Comfy-Org/ComfyUI@5f415e31abfd",
       "requirements.txt"
     ],
     "packages_checked": 5,
@@ -219,17 +254,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-04T21:15:24+08:00",
     "quality": {
-      "total": 71.2,
-      "confidence": 0.8,
+      "total": 88.3,
+      "confidence": 0.6,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.75,
@@ -250,6 +285,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -269,7 +308,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 7.12
+      "value": 8.83
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -584,5 +623,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:06+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

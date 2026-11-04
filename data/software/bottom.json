@@ -73,20 +73,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-bottom-20261104-133142-248b",
+      "run_id": "verify-bottom-20261104-192930-5d84",
       "method": "binary",
       "steps": [
         {
-          "command": "cd /home/sbx/work && curl -LO https://github.com/ClementTsang/bottom/releases/download/0.15.0/bottom_x86_64-unknown-linux-gnu.tar.gz && tar -xzf bottom_x86_64-unknown-linux-gnu.tar.gz && mkdir -p ~/.local/bin && cp btm ~/.local/bin/ && ~/.local/bin/btm --version",
-          "purpose": "Download pre-built binary tarball and install btm to ~/.local/bin"
+          "command": "curl -LO https://github.com/ClementTsang/bottom/releases/download/0.14.9/bottom_x86_64-unknown-linux-gnu.tar.gz",
+          "purpose": "download prebuilt Linux x86_64 tarball from GitHub releases"
+        },
+        {
+          "command": "tar -xzf bottom_x86_64-unknown-linux-gnu.tar.gz && mkdir -p ~/.local/bin && mv btm ~/.local/bin/btm && chmod +x ~/.local/bin/btm && ~/.local/bin/btm --help",
+          "purpose": "extract btm and install to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "btm --version",
-        "expected_signal": "bottom 0.15.0"
+        "command": "btm --version\n",
+        "expected_signal": "bottom 0.14.9"
       },
-      "first_task": null
+      "first_task": "grep -q \"CPU Options\" /tmp/btm_help.txt && grep -q \"Memory Options\" /tmp/btm_help.txt && grep -q \"Network Options\" /tmp/btm_help.txt && echo \"F1: CPU Memory Network visualization widgets confirmed\""
     },
     "windows": {
       "basis": "readme_claim",
@@ -116,89 +120,167 @@
     "url": "https://github.com/ClementTsang/bottom/releases/tag/0.15.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:32:53.712788+08:00",
+    "checked_at": "2026-11-04T19:31:13.155409+08:00",
     "runs": [
       {
-        "id": "verify-bottom-20261104-133142-248b",
-        "level": "install",
+        "id": "verify-bottom-20261104-192930-5d84",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:32:53.712788+08:00",
-        "tool_version": "0.15.0",
+        "checked_at": "2026-11-04T19:31:13.155409+08:00",
+        "tool_version": "0.14.9",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "cd /home/sbx/work && curl -LO https://github.com/ClementTsang/bottom/releases/download/0.15.0/bottom_x86_64-unknown-linux-gnu.tar.gz && tar -xzf bottom_x86_64-unknown-linux-gnu.tar.gz && mkdir -p ~/.local/bin && cp btm ~/.local/bin/ && ~/.local/bin/btm --version",
-            "purpose": "Download pre-built binary tarball and install btm to ~/.local/bin"
+            "command": "curl -LO https://github.com/ClementTsang/bottom/releases/download/0.14.9/bottom_x86_64-unknown-linux-gnu.tar.gz",
+            "purpose": "download prebuilt Linux x86_64 tarball from GitHub releases"
+          },
+          {
+            "command": "tar -xzf bottom_x86_64-unknown-linux-gnu.tar.gz && mkdir -p ~/.local/bin && mv btm ~/.local/bin/btm && chmod +x ~/.local/bin/btm && ~/.local/bin/btm --help",
+            "purpose": "extract btm and install to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "btm --version",
-            "expected_signal": "bottom 0.15.0",
+            "command": "btm --version\n",
+            "expected_signal": "bottom 0.14.9",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "bottom 0.15.0",
+            "observed_excerpt": "bottom 0.14.9",
             "setup": [],
+            "offline": true
+          },
+          {
+            "command": "grep -q \"CPU Options\" /tmp/btm_help.txt && grep -q \"Memory Options\" /tmp/btm_help.txt && grep -q \"Network Options\" /tmp/btm_help.txt && echo \"F1: CPU Memory Network visualization widgets confirmed\"",
+            "expected_signal": "F1: CPU Memory Network visualization widgets confirmed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "F1: CPU Memory Network visualization widgets confirmed",
+            "setup": [
+              {
+                "command": "btm --help > /tmp/btm_help.txt && echo \"help saved\" && wc -l /tmp/btm_help.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "grep -q \"Process Options\" /tmp/btm_help.txt && grep -q \"process_default_sort\" /tmp/btm_help.txt && echo \"F2: process widget display sort search confirmed\"",
+            "expected_signal": "F2: process widget display sort search confirmed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "F2: process widget display sort search confirmed",
+            "setup": [
+              {
+                "command": "btm --help > /tmp/btm_help.txt && echo \"help saved\" && wc -l /tmp/btm_help.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "grep -q \"disable_advanced_kill\" /tmp/btm_help.txt && grep -q \"process_command\" /tmp/btm_help.txt && echo \"F3: kill signals support confirmed\"",
+            "expected_signal": "F3: kill signals support confirmed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "F3: kill signals support confirmed",
+            "setup": [
+              {
+                "command": "btm --help > /tmp/btm_help.txt && echo \"help saved\" && wc -l /tmp/btm_help.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "grep -q \"config_location\" /tmp/btm_help.txt && cat /tmp/test_config.toml && echo \"F4: config file customization confirmed\"",
+            "expected_signal": "F4: config file customization confirmed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "F4: config file customization confirmed",
+            "setup": [
+              {
+                "command": "btm --help > /tmp/btm_help.txt && echo \"help saved\" && wc -l /tmp/btm_help.txt",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > /tmp/test_config.toml <<'EOF'\n[colors]\ntable_header_color=\"LightBlue\"\nEOF\ncat /tmp/test_config.toml\necho \"config created\"",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "./btm after extracting prebuilt binary",
+            "actually_needed": "extract tarball and move btm to ~/.local/bin (PATH includes ~/.local/bin) to run as btm",
+            "kind": "note"
+          },
+          {
+            "readme_said": "btm runs interactively",
+            "actually_needed": "in non-terminal sandbox btm warns and exits with 'No such device or address (os error 6)' – help/version still work for verification",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The terminal shows btm --version outputting bottom 0.15.0.",
+          "observed": "Screenshots show F1 and F2 widget confirmations and bottom 0.14.9 version output all succeeding.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-bottom-20261104-133142-248b/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-bottom-20261104-133142-248b/check-1-cmd4.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.030095,
+        "cost_usd": 0.063619,
         "features": [
           {
             "feature": "visualize CPU RAM network usage graphs",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output only confirms help text mentions options, not actual usage graphs."
           },
           {
             "feature": "display sort search processes",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output only confirms help text mentions process options, not displaying or sorting processes."
           },
           {
             "feature": "send kill signals to processes",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output only confirms help mentions kill options, not sending a kill signal."
           },
           {
             "feature": "customize behaviour with config file",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output only shows help mention and config file contents, not customized behaviour applied."
           }
         ]
       }
@@ -207,7 +289,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -220,17 +302,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 63.0,
-      "confidence": 0.9,
+      "total": 76.1,
+      "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
-          "weight": 40.0
+          "score": 0.85,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.5625,
@@ -251,6 +333,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       }
     },
@@ -273,7 +359,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 1.13
+      "value": 1.37
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -556,5 +642,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:52+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

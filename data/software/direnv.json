@@ -76,12 +76,12 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-direnv-20261104-144647-3caa",
+      "run_id": "verify-direnv-20261104-185242-3dd0",
       "method": "binary",
       "steps": [
         {
-          "command": "mkdir -p ~/.local/bin && curl -fL https://github.com/direnv/direnv/releases/download/v2.38.2/direnv.linux-amd64 -o ~/.local/bin/direnv && chmod +x ~/.local/bin/direnv",
-          "purpose": "download direnv.linux-amd64 v2.38.2 to ~/.local/bin and make executable"
+          "command": "curl -L -o /tmp/direnv.linux-amd64 https://github.com/direnv/direnv/releases/latest/download/direnv.linux-amd64 && chmod +x /tmp/direnv.linux-amd64 && mkdir -p ~/.local/bin && mv /tmp/direnv.linux-amd64 ~/.local/bin/direnv && ~/.local/bin/direnv --help 2>&1",
+          "purpose": "download direnv.linux-amd64 binary from GitHub releases to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -89,7 +89,7 @@
         "command": "direnv --version",
         "expected_signal": "2.38.2"
       },
-      "first_task": null
+      "first_task": "cd /tmp/testdirenv_f1 && direnv allow . && direnv export bash"
     },
     "windows": null
   },
@@ -106,27 +106,27 @@
     "url": "https://github.com/direnv/direnv/releases/tag/v2.38.2"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:48:46.737831+08:00",
+    "checked_at": "2026-11-04T18:54:07.092183+08:00",
     "runs": [
       {
-        "id": "verify-direnv-20261104-144647-3caa",
-        "level": "install",
+        "id": "verify-direnv-20261104-185242-3dd0",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T14:48:46.737831+08:00",
+        "checked_at": "2026-11-04T18:54:07.092183+08:00",
         "tool_version": "2.38.2",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p ~/.local/bin && curl -fL https://github.com/direnv/direnv/releases/download/v2.38.2/direnv.linux-amd64 -o ~/.local/bin/direnv && chmod +x ~/.local/bin/direnv",
-            "purpose": "download direnv.linux-amd64 v2.38.2 to ~/.local/bin and make executable"
+            "command": "curl -L -o /tmp/direnv.linux-amd64 https://github.com/direnv/direnv/releases/latest/download/direnv.linux-amd64 && chmod +x /tmp/direnv.linux-amd64 && mkdir -p ~/.local/bin && mv /tmp/direnv.linux-amd64 ~/.local/bin/direnv && ~/.local/bin/direnv --help 2>&1",
+            "purpose": "download direnv.linux-amd64 binary from GitHub releases to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -138,57 +138,117 @@
             "observed_excerpt": "2.38.2",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "cd /tmp/testdirenv_f1 && direnv allow . && direnv export bash",
+            "expected_signal": "export FOO",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "export DIRENV_DIFF=$'eJxkyrmSokAYAOB3-WNdaQQRqjboEUQu5XCE2YSyOEYOuxsbEbR89422Npj8ewED7fWeAQHtBboVGvtTqlshaDBf9Fe26Ave59WtIENaIpj9I1vLNUCDn2TxqyDDLfsvY3zc7IwINCjsKRMM1D2eOAgOpnL-EKsmDtnebR0njrkZm3opOS2rmjafz6sK6bS75FLpTom79FufXV2eiKrYrfpp-aQ5ud-eTEb3cbkl3rSKZDXZh8Vuq38c19y3Vzt0H_60rq8qKEuYyAg6ieuz4k…",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testdirenv_f1 && cat > /tmp/testdirenv_f1/.envrc <<'EOF'\nexport FOO=foo\nEOF\ncat /tmp/testdirenv_f1/.envrc && echo \"F1 setup done\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "direnv hook bash",
+            "expected_signal": "_direnv_hook",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "_direnv_hook() {",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/testdirenv_f3 && direnv allow . && direnv export bash",
+            "expected_signal": "/tmp/testdirenv_f3/bin",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "export DIRENV_DIFF=$'eJyskkuPqkwQhv9Lr3XQD2mUZBYdaT5AUQRtlE2HS48gcr87mf9-4knmnMnM9uyq3jyVqlSed1AA6R2Y6KgCCXBRnjKu9gfu5Z4H3p3z40z6EgZedc2_hZ9BW1fcl6Fn-7vw4wx8TED2XCNrFt4RKmsWkMCUa9KCa1jdhHHFso6-8WDyiSjaFj8P-oFwLyzrquAv6aDjWsU2kADTx-CRzPeHER_Qfi3W_y82Bt2jnATDcO37AvPsSE3kpDsYDkEL6w1R6G3szqNbLsbH3krEe1…",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testdirenv_f3/bin && cat > /tmp/testdirenv_f3/.envrc <<'EOF'\nPATH_add bin\nexport MYTEST=pathadd_ok\nEOF\ncat /tmp/testdirenv_f3/.envrc && mkdir -p /tmp/testdirenv_f4 && cat > /tmp/testdirenv_f4/.envrc <<'EOF'\ndotenv\nEOF\ncat > /tmp/testdirenv_f4/.env <<'EOF'\nBAR=bar_from_dotenv\nEOF\ncat /tmp/testdirenv_f4/.envrc && cat /tmp/testdirenv_f4/.env && echo \"F3/F4 setup done\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/testdirenv_f4 && direnv allow . && direnv export bash && echo \"---DOTENV_EXPORTED---\" && direnv status",
+            "expected_signal": "BAR",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "export DIRENV_DIFF=$'eJxkyruWojAAANB_ST2swA6idAkGxDVIEBVtchgeboZXiIiKx3_fs5XF1Pc-gQDW8_UBGmA9AYIhsMBXIlkh25plbZ83A_gACy_E_p4tvP-sTPpaTPr80mdc5s3Ais93cbw1Bhb4WSa_8maQ6XseYGQv8RZYIF89UhVrf9ACU7pxzdNCI2XZVaXSSY7PVZdBn0W--vl95r973eGae_wbc3SfZaZSwdgUJKlyU4ZxJob0sfzy85gP7UVnsTftosNQhIYTxQm1DeyeUbCtjXGq6j…",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/testdirenv_f3/bin && cat > /tmp/testdirenv_f3/.envrc <<'EOF'\nPATH_add bin\nexport MYTEST=pathadd_ok\nEOF\ncat /tmp/testdirenv_f3/.envrc && mkdir -p /tmp/testdirenv_f4 && cat > /tmp/testdirenv_f4/.envrc <<'EOF'\ndotenv\nEOF\ncat > /tmp/testdirenv_f4/.env <<'EOF'\nBAR=bar_from_dotenv\nEOF\ncat /tmp/testdirenv_f4/.envrc && cat /tmp/testdirenv_f4/.env && echo \"F3/F4 setup done\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The terminal shows direnv --version outputting 2.38.2.",
+          "observed": "Screenshots show direnv exporting FOO, printing the bash hook with _direnv_hook, and reporting version 2.38.2.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-direnv-20261104-144647-3caa/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-direnv-20261104-144647-3caa/check-1-cmd3.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.02713,
+        "cost_usd": 0.051698,
         "features": [
           {
             "feature": "load and unload environment variables per directory",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "hook into common shells like bash and zsh",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "prepend paths with PATH_add stdlib function",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "load .env files via dotenv",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           }
         ]
       }
@@ -197,7 +257,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -210,17 +270,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T15:02:29+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 70.5,
+      "total": 84.9,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 0.85,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.8125,
@@ -241,6 +301,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -575,5 +639,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:59+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

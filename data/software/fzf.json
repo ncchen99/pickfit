@@ -66,28 +66,28 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-fzf-20261104-133251-fa2b",
+      "run_id": "verify-fzf-20261104-185407-6111",
       "method": "source",
       "steps": [
         {
-          "command": "git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf",
-          "purpose": "clone fzf source (candidate 1)"
+          "command": "git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf 2>&1",
+          "purpose": "git clone fzf repo"
         },
         {
-          "command": "~/.fzf/install --bin\n",
-          "purpose": "download fzf binary via install script"
+          "command": "~/.fzf/install --bin 2>&1\n~/.fzf/bin/fzf --version 2>&1",
+          "purpose": "download binary via install --bin"
         },
         {
-          "command": "mkdir -p ~/.local/bin && ln -sf ~/.fzf/bin/fzf ~/.local/bin/fzf; fzf --help",
-          "purpose": "expose fzf on PATH and verify version/help"
+          "command": "mkdir -p ~/.local/bin && ln -sf ~/.fzf/bin/fzf ~/.local/bin/fzf\nexport PATH=\"$HOME/.local/bin:$PATH\"\nfzf --help 2>&1",
+          "purpose": "link binary to ~/.local/bin for PATH"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "fzf --version\n",
+        "command": "fzf --version",
         "expected_signal": "0.74.5"
       },
-      "first_task": null
+      "first_task": "mkdir -p /tmp/fzfsel && echo \"hello\" > /tmp/fzfsel/file1.txt && echo \"world\" > /tmp/fzfsel/file2.txt && cd /tmp/fzfsel && find . -type f | fzf --filter=\"file1\" > /tmp/fzf_test/selected.txt && cat /tmp/fzf_test/selected.txt"
     },
     "windows": {
       "basis": "readme_claim",
@@ -117,108 +117,141 @@
     "url": "https://github.com/junegunn/fzf/releases/tag/v0.74.5"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:33:50.636273+08:00",
+    "checked_at": "2026-11-04T18:55:33.123927+08:00",
     "runs": [
       {
-        "id": "verify-fzf-20261104-133251-fa2b",
-        "level": "install",
+        "id": "verify-fzf-20261104-185407-6111",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:33:50.636273+08:00",
+        "checked_at": "2026-11-04T18:55:33.123927+08:00",
         "tool_version": "0.74.5",
         "install_method": "source",
         "replayed": true,
         "steps": [
           {
-            "command": "git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf",
-            "purpose": "clone fzf source (candidate 1)"
+            "command": "git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf 2>&1",
+            "purpose": "git clone fzf repo"
           },
           {
-            "command": "~/.fzf/install --bin\n",
-            "purpose": "download fzf binary via install script"
+            "command": "~/.fzf/install --bin 2>&1\n~/.fzf/bin/fzf --version 2>&1",
+            "purpose": "download binary via install --bin"
           },
           {
-            "command": "mkdir -p ~/.local/bin && ln -sf ~/.fzf/bin/fzf ~/.local/bin/fzf; fzf --help",
-            "purpose": "expose fzf on PATH and verify version/help"
+            "command": "mkdir -p ~/.local/bin && ln -sf ~/.fzf/bin/fzf ~/.local/bin/fzf\nexport PATH=\"$HOME/.local/bin:$PATH\"\nfzf --help 2>&1",
+            "purpose": "link binary to ~/.local/bin for PATH"
           }
         ],
         "smoke_tests": [
           {
-            "command": "fzf --version\n",
+            "command": "fzf --version",
             "expected_signal": "0.74.5",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "0.74.5 (c0a193e0)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/fzfsel && echo \"hello\" > /tmp/fzfsel/file1.txt && echo \"world\" > /tmp/fzfsel/file2.txt && cd /tmp/fzfsel && find . -type f | fzf --filter=\"file1\" > /tmp/fzf_test/selected.txt && cat /tmp/fzf_test/selected.txt",
+            "expected_signal": "./file1.txt",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "./file1.txt",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cat /tmp/fzf_test/input.txt | fzf --filter=\"ap\" --no-sort 2>&1",
+            "expected_signal": "apple",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "apple",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/fzf_test && printf \"apple\\nbanana\\napricot\\navocado\\nblueberry\\n\" > /tmp/fzf_test/input.txt && cat /tmp/fzf_test/input.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "printf \"hello.txt\\nworld.txt\\n\" | fzf --filter=\"hello\" --preview 'echo preview:{}' 2>&1",
+            "expected_signal": "hello.txt",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hello.txt",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "git clone then build or sudo apt install fzf",
-            "actually_needed": "install script downloaded prebuilt binary (v0.74.5) because Go toolchain not present; binary then symlinked to ~/.local/bin for PATH",
-            "kind": "sandbox"
+            "readme_said": "git clone then ~/.fzf/install builds from source",
+            "actually_needed": "install script downloads prebuilt binary without Go; use --bin to avoid interactive prompts",
+            "kind": "tool_handled"
           },
           {
-            "readme_said": "sudo apt install fzf",
-            "actually_needed": "not runnable as non-root user sbx; skipped",
+            "readme_said": "sudo apt install fzf for Debian",
+            "actually_needed": "no root/sudo in box, binary download method required",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows fzf --version printing 0.74.5 (c0a193e0).",
+          "observed": "Screenshots show fzf filtering to ./file1.txt, filtering to apple/apricot, and reporting version 0.74.5.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-fzf-20261104-133251-fa2b/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-fzf-20261104-133251-fa2b/check-1-cmd5.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.04898,
+        "cost_usd": 0.058824,
         "features": [
           {
             "feature": "select files with fuzzy matching",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "browse command history interactively",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; fzf --bash prints FZF_CTRL_R_COMMAND history binding"
           },
           {
             "feature": "preview items in preview window",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output shows only filtered hello.txt with no preview output."
           },
           {
             "feature": "fuzzy complete files and commands",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; fzf --bash prints completion function __fzf_orig_completion"
           }
         ]
       }
@@ -227,7 +260,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -240,17 +273,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 68.0,
+      "total": 86.4,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
-          "weight": 40.0
+          "score": 0.85,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -271,6 +304,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -543,5 +580,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:46+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

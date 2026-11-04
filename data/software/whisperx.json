@@ -77,20 +77,24 @@
     },
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-whisperx-20261104-133427-0d92",
+      "run_id": "verify-whisperx-20261104-211259-0dc5",
       "method": "uv",
       "steps": [
         {
           "command": "uv tool install whisperx 2>&1",
-          "purpose": "install whisperx via uv tool install"
+          "purpose": "Install whisperx via uv tool"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/ffdl && curl -L -o /tmp/ffdl/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz 2>&1 && tar -xf /tmp/ffdl/ffmpeg.tar.xz -C /tmp/ffdl && cp /tmp/ffdl/ffmpeg-*-amd64-static/ffmpeg ~/.local/bin/ffmpeg && chmod +x ~/.local/bin/ffmpeg && ~/.local/bin/ffmpeg -version 2>&1",
+          "purpose": "Install static ffmpeg to ~/.local/bin"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "whisperx --version 2>&1",
-        "expected_signal": "whisperx 3.8.6"
+        "command": "whisperx --help 2>&1",
+        "expected_signal": "Show whisperx version information and exit"
       },
-      "first_task": null
+      "first_task": "whisperx sample.wav --model tiny --device cpu --compute_type int8 --language en --output_dir wxout 2>&1"
     },
     "windows": {
       "basis": "readme_claim",
@@ -123,91 +127,130 @@
     "url": "https://github.com/m-bain/whisperX/releases/tag/v3.8.6"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:37:39.140943+08:00",
+    "checked_at": "2026-11-04T21:20:50.886091+08:00",
     "runs": [
       {
-        "id": "verify-whisperx-20261104-133427-0d92",
-        "level": "install",
+        "id": "verify-whisperx-20261104-211259-0dc5",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:37:39.140943+08:00",
+        "checked_at": "2026-11-04T21:20:50.886091+08:00",
         "tool_version": "3.8.6",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
             "command": "uv tool install whisperx 2>&1",
-            "purpose": "install whisperx via uv tool install"
+            "purpose": "Install whisperx via uv tool"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/ffdl && curl -L -o /tmp/ffdl/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz 2>&1 && tar -xf /tmp/ffdl/ffmpeg.tar.xz -C /tmp/ffdl && cp /tmp/ffdl/ffmpeg-*-amd64-static/ffmpeg ~/.local/bin/ffmpeg && chmod +x ~/.local/bin/ffmpeg && ~/.local/bin/ffmpeg -version 2>&1",
+            "purpose": "Install static ffmpeg to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "whisperx --version 2>&1",
-            "expected_signal": "whisperx 3.8.6",
+            "command": "whisperx --help 2>&1",
+            "expected_signal": "Show whisperx version information and exit",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "whisperx 3.8.6",
+            "observed_excerpt": "--version, -V Show whisperx version information and exit",
             "setup": [],
             "offline": true
           },
           {
-            "command": "whisperx --help 2>&1",
-            "expected_signal": "--help",
+            "command": "whisperx sample.wav --model tiny --device cpu --compute_type int8 --language en --output_dir wxout 2>&1",
+            "expected_signal": "Performing alignment...",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "-h, --help show this help message and exit",
-            "setup": [],
-            "offline": true
+            "observed_excerpt": "2026-11-04 13:20:21 - whisperx.transcribe - INFO - Performing alignment...",
+            "setup": [
+              {
+                "command": "curl -L -o audio.wav https://www.voiptroubleshooter.com/open_speech/american/OSR_us_000_0010_8k.wav && ~/.local/bin/ffmpeg -hide_banner -y -i audio.wav -ar 16000 -ac 1 sample.wav && ls -lh sample.wav",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "ls -lh wxout && python3 -c \"import json,glob; f=glob.glob('wxout/*.json')[0]; d=json.load(open(f)); print('segments:', len(d['segments'])); print('first_seg_keys:', list(d['segments'][0].keys())); w=d['segments'][0].get('words',[]); print('num_words_first_seg:', len(w)); print('first_word:', w[0] if w else None)\"",
+            "expected_signal": "first_seg_keys:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "first_seg_keys: ['start', 'end', 'text', 'words', 'avg_logprob']",
+            "setup": [
+              {
+                "command": "curl -L -o audio.wav https://www.voiptroubleshooter.com/open_speech/american/OSR_us_000_0010_8k.wav && ~/.local/bin/ffmpeg -hide_banner -y -i audio.wav -ar 16000 -ac 1 sample.wav && ls -lh sample.wav",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "You may also need to install ffmpeg",
+            "actually_needed": "downloaded johnvansickle static ffmpeg 7.0.2 tar.xz and copied ffmpeg binary to ~/.local/bin/ffmpeg on PATH",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "whisperx path/to/audio.wav (defaults) and --model large-v2 examples",
+            "actually_needed": "ran whisperx sample.wav --model tiny --device cpu --compute_type int8 --language en instead of default small/GPU and large-v2 examples",
+            "kind": "sandbox"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show whisperx 3.8.6 version output and full whisperx help usage with options.",
+          "observed": "Help lists options including version, transcription produced transcripts and started alignment, and output directory contains JSON with word-level timestamps.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-whisperx-20261104-133427-0d92/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-whisperx-20261104-133427-0d92/check-1-cmd3.judged.png",
-            "runs/verify/verify-whisperx-20261104-133427-0d92/check-2-cmd2.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.021762,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.341436,
         "features": [
           {
             "feature": "transcribe speech with word-level timestamps",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "label transcript with speaker IDs",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_account",
             "failure": null,
-            "note": "install-only run"
+            "note": "requires Hugging Face token and gated diarization model agreement"
           },
           {
             "feature": "align words using wav2vec2 models",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           }
         ]
       }
@@ -216,7 +259,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -337,17 +380,17 @@
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-04T21:20:50+08:00",
     "quality": {
-      "total": 66.4,
+      "total": 77.5,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40
+          "score": 0.7,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -367,7 +410,11 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -389,7 +436,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 3.32
+      "value": 3.88
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -696,5 +743,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:07:40+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

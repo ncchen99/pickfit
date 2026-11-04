@@ -46,12 +46,12 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-keycastr-20261104-133042-068d",
+      "run_id": "verify-keycastr-20261105-022525-1d56",
       "method": "brew",
       "steps": [
         {
           "command": "brew install --cask --appdir=$HOME/Applications keycastr",
-          "purpose": "install KeyCastr via brew cask"
+          "purpose": "Install KeyCastr via brew cask"
         }
       ],
       "manual_steps": [],
@@ -76,10 +76,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:35:36.910903+08:00",
+    "checked_at": "2026-11-05T02:30:40.227986+08:00",
     "runs": [
       {
-        "id": "verify-keycastr-20261104-133042-068d",
+        "id": "verify-keycastr-20261105-022525-1d56",
         "level": "install",
         "unverified_reason": null,
         "os": "macos",
@@ -87,14 +87,14 @@
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
-        "checked_at": "2026-11-04T13:35:36.910903+08:00",
+        "checked_at": "2026-11-05T02:30:40.227986+08:00",
         "tool_version": "0.11.1",
         "install_method": "brew",
         "replayed": true,
         "steps": [
           {
             "command": "brew install --cask --appdir=$HOME/Applications keycastr",
-            "purpose": "install KeyCastr via brew cask"
+            "purpose": "Install KeyCastr via brew cask"
           }
         ],
         "smoke_tests": [
@@ -111,26 +111,24 @@
         "pitfalls": [
           {
             "readme_said": "brew install --cask keycastr",
-            "actually_needed": "brew install --cask --appdir=$HOME/Applications keycastr to install without admin rights",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications keycastr",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The screenshot shows KeyCastr's menu bar menu with About, Preferences, Start Casting, and Quit options.",
+          "observed": "The image shows KeyCastr's menu bar menu with its main commands including About, Preferences, Start Casting, and Quit.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-keycastr-20261104-133042-068d/report.json",
-          "log_path": "runs/verify/verify-keycastr-20261104-133042-068d/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-keycastr-20261104-133042-068d/replay-3-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.029435,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.065722,
         "gui": {
           "tier": "ui_rendered",
           "screen": "main_ui",
@@ -143,25 +141,25 @@
             "feature": "display command keys, modified keys or keystrokes",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_root",
             "failure": null,
-            "note": "install-only run"
+            "note": "keystroke display needs Input Monitoring enabled via unlock, not possible as standard user"
           },
           {
             "feature": "include mouse clicks in display",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_root",
             "failure": null,
-            "note": "install-only run"
+            "note": "mouse-click display needs same Input Monitoring enablement"
           },
           {
             "feature": "develop custom visualizers on KeyCastr",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "developer API to build custom visualizer, no UI action to exercise"
           }
         ]
       }
@@ -170,7 +168,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
@@ -179,18 +177,35 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-keycastr-20261105-022525-1d56",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 1,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "9fbc8d611ba9cd594ddfba0379fd38364ce920ad943113e89aa809036d2878bc",
+    "checked_at": "2026-11-05T03:27:24+08:00",
+    "cost_usd": 0.0125
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:27:24+08:00",
     "quality": {
-      "total": 60.7,
-      "confidence": 0.9,
+      "total": 72.3,
+      "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -210,8 +225,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 72.3,
+        "defects": 0
       }
     },
     "popularity": {
@@ -230,7 +250,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 6.07
+      "value": 7.23
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -495,5 +515,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:35+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:27:24+08:00"
 }

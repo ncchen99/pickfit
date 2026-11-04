@@ -45,7 +45,7 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-jj-20261104-140935-b167",
+      "run_id": "verify-jj-20261104-192305-fc23",
       "method": "brew",
       "steps": [
         {
@@ -55,10 +55,10 @@
       ],
       "manual_steps": [],
       "check": {
-        "command": "jj --version\n",
+        "command": "jj --version",
         "expected_signal": "jj 0.46.0"
       },
-      "first_task": null
+      "first_task": "mkdir -p /tmp/jjtest && cd /tmp/jjtest && rm -rf repo1 && mkdir repo1 && cd repo1 && jj git init && jj config set --repo user.name \"Test\" && jj config set --repo user.email \"test@test.com\" && echo \"init done\" && jj log --limit 2 && echo \"---status before file---\" && jj status && echo \"hello\" > file."
     },
     "linux": null,
     "windows": null
@@ -76,20 +76,20 @@
     "url": "https://github.com/jj-vcs/jj/releases/tag/v0.46.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T14:12:34.709596+08:00",
+    "checked_at": "2026-11-04T19:26:19.286583+08:00",
     "runs": [
       {
-        "id": "verify-jj-20261104-140935-b167",
-        "level": "install",
+        "id": "verify-jj-20261104-192305-fc23",
+        "level": "function",
         "unverified_reason": null,
         "os": "macos",
         "arch": "arm64",
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
-        "checked_at": "2026-11-04T14:12:34.709596+08:00",
+        "checked_at": "2026-11-04T19:26:19.286583+08:00",
         "tool_version": "0.46.0",
         "install_method": "brew",
         "replayed": true,
@@ -101,64 +101,95 @@
         ],
         "smoke_tests": [
           {
-            "command": "jj --version\n",
+            "command": "jj --version",
             "expected_signal": "jj 0.46.0",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "jj 0.46.0",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/jjtest && cd /tmp/jjtest && rm -rf repo1 && mkdir repo1 && cd repo1 && jj git init && jj config set --repo user.name \"Test\" && jj config set --repo user.email \"test@test.com\" && echo \"init done\" && jj log --limit 2 && echo \"---status before file---\" && jj status && echo \"hello\" > file.txt && echo \"---status after file---\" && jj status && echo \"---diff---\" && jj diff --stat",
+            "expected_signal": "Working copy changes:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Working copy changes:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/jjtest/repo1 && jj op log --limit 5 && echo \"---op log done---\" && jj describe -m \"my description\" && jj log --limit 3 && jj undo && echo \"---after undo---\" && jj log --limit 3 && jj status",
+            "expected_signal": "snapshot working copy",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ snapshot working copy",
+            "setup": [],
+            "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "README example is just 'jj' with no args",
+            "actually_needed": "jj requires a repo; jj --version and jj help work outside repo, other commands need jj git init",
+            "kind": "note"
+          },
+          {
+            "readme_said": "jj help new",
+            "actually_needed": "jj new --help prints global help; use jj help -k or trial error to learn revset syntax like @- for parent",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows jj --version printing jj 0.46.0.",
+          "observed": "Screenshots show jj init, status detecting new file with diff, op log/describe/undo working, and version 0.46.0.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-jj-20261104-140935-b167/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-jj-20261104-140935-b167/check-1-cmd2.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.016268,
+        "cost_usd": 0.087976,
         "features": [
           {
             "feature": "auto-commit working copy changes",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "record and undo repository operations",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "automatically rebase descendant commits",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; Rebased 2 descendant commits onto updated working copy after editing ancestor"
           },
           {
             "feature": "record conflicts in commits",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; Child became (conflict) after parent edit rebased descendant"
           }
         ]
       }
@@ -167,7 +198,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "resolve_failed",
     "sources": [],
@@ -177,17 +208,17 @@
     "findings": []
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T14:24:12+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 69.7,
+      "total": 87.5,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -208,6 +239,10 @@
         "usage_outcomes": {
           "score": null,
           "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -229,7 +264,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 1.39
+      "value": 1.75
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -486,5 +521,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:51+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

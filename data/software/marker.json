@@ -51,20 +51,20 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-marker-20261104-133040-7cd0",
+      "run_id": "verify-marker-20261104-210948-8a0d",
       "method": "uv",
       "steps": [
         {
-          "command": "uv tool install marker-pdf",
-          "purpose": "install marker-pdf via uv tool"
+          "command": "uv tool install marker-pdf 2>&1",
+          "purpose": "Install marker-pdf via uv tool"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "$HOME/.local/bin/marker_single --help",
+        "command": "marker_single --help 2>&1",
         "expected_signal": "Show this message and exit."
       },
-      "first_task": null
+      "first_task": "mkdir -p /tmp/mout && marker_single /tmp/sample.pdf --output_dir /tmp/mout --disable_ocr 2>&1"
     },
     "windows": null
   },
@@ -81,89 +81,193 @@
     "url": "https://github.com/datalab-to/marker/releases/tag/v2.1.0"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:32:51.902322+08:00",
+    "checked_at": "2026-11-04T21:17:55.529774+08:00",
     "runs": [
       {
-        "id": "verify-marker-20261104-133040-7cd0",
-        "level": "install",
+        "id": "verify-marker-20261104-210948-8a0d",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:32:51.902322+08:00",
+        "checked_at": "2026-11-04T21:17:55.529774+08:00",
         "tool_version": "2.1.0",
         "install_method": "uv",
         "replayed": true,
         "steps": [
           {
-            "command": "uv tool install marker-pdf",
-            "purpose": "install marker-pdf via uv tool"
+            "command": "uv tool install marker-pdf 2>&1",
+            "purpose": "Install marker-pdf via uv tool"
           }
         ],
         "smoke_tests": [
           {
-            "command": "$HOME/.local/bin/marker_single --help",
+            "command": "marker_single --help 2>&1",
             "expected_signal": "Show this message and exit.",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "--help Show this message and exit.",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/mout && marker_single /tmp/sample.pdf --output_dir /tmp/mout --disable_ocr 2>&1",
+            "expected_signal": "Saved markdown to /tmp/mout/sample",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2026-11-04 13:17:10,884 [INFO] marker: Saved markdown to /tmp/mout/sample",
+            "setup": [
+              {
+                "command": "cat > /tmp/makepdf.py << 'PY'\n# minimal PDF writer with correct xref, stdlib only\ndef make_pdf(path, lines):\n    objs = []\n    objs.append(\"<< /Type /Catalog /Pages 2 0 R >>\")\n    objs.append(\"<< /Type /Pages /Kids [3 0 R] /Count 1 >>\")\n    objs.append(\"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\")\n    # content stream\n    y = 750\n    stream_lines = [\"BT\", \"/F1 12 Tf\"]\n    for text in lines:\n        esc = text.replace(\"\\\\\", \"\\\\\\\\\").replace(\"(\", \"\\\\(\").replace(\")\", \"\\\\)\")\n        stream_lines.append(f\"50 {y} Td ({esc}) Tj\")\n        # reset position trick: move back\n        # use Td relative; simpler: use Tm absolute per line\n        # redo with Tm:\n        stream_lines.pop()\n        stream_lines.append(f\"BT /F1 12 Tf 50 {y} Td ({esc}) Tj ET\")\n        y -= 20\n    # Actually wrap: we already have BT open; simplify: join\n    stream = \"\\n\".join(stream_lines[2:]) if len(stream_lines)>2 else \"\"\n    # rebuild cleanly\n    parts = []\n    for i, text in enumerate(lines):\n        esc = text.replace(\"\\\\\", \"\\\\\\\\\").replace(\"(\", \"\\\\(\").replace(\")\", \"\\\\)\")\n        yy = 750 - i*20\n        parts.append(f\"BT /F1 12 Tf 50 {yy} Td ({esc}) Tj ET\")\n    stream = \"\\n\".join(parts) + \"\\n\"\n    objs.append(f\"<< /Length {len(stream.encode())} >>\\nstream\\n{stream}endstream\")\n    objs.append(\"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\")\n    out = bytearray()\n    out += b\"%PDF-1.4\\n\"\n    offsets = [0]\n    for i, body in enumerate(objs, start=1):\n        offsets.append(len(out))\n        out += f\"{i} 0 obj\\n{body}\\nendobj\\n\".encode()\n    xref_pos = len(out)\n    out += f\"xref\\n0 {len(objs)+1}\\n0000000000 65535 f \\n\".encode()\n    for off in offsets[1:]:\n        out += f\"{off:010d} 00000 n \\n\".encode()\n    out += f\"trailer\\n<< /Size {len(objs)+1} /Root 1 0 R >>\\nstartxref\\n{xref_pos}\\n%%EOF\".encode()\n    open(path, \"wb\").write(out)\n    print(f\"wrote {path} {len(out)} bytes\")\n\nlines = [\n    \"Hello Marker Test Document\",\n    \"This is a paragraph for conversion testing.\",\n    \"Name Age City\",\n    \"Alice 30 Paris\",\n    \"Bob 25 London\",\n    \"def hello(): print('hi')\",\n]\nmake_pdf(\"/tmp/sample.pdf\", lines)\nPY\npython3 /tmp/makepdf.py && ls -l /tmp/sample.pdf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "ls -R /tmp/mout 2>&1 && cat /tmp/mout/sample/sample.md 2>&1",
+            "expected_signal": "Hello Marker Test Document",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Hello Marker Test Document This is a paragraph for conversion testing. Name Age City Alice 30 Paris Bob 25 London def hello(): print('hi')",
+            "setup": [
+              {
+                "command": "cat > /tmp/makepdf.py << 'PY'\n# minimal PDF writer with correct xref, stdlib only\ndef make_pdf(path, lines):\n    objs = []\n    objs.append(\"<< /Type /Catalog /Pages 2 0 R >>\")\n    objs.append(\"<< /Type /Pages /Kids [3 0 R] /Count 1 >>\")\n    objs.append(\"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\")\n    # content stream\n    y = 750\n    stream_lines = [\"BT\", \"/F1 12 Tf\"]\n    for text in lines:\n        esc = text.replace(\"\\\\\", \"\\\\\\\\\").replace(\"(\", \"\\\\(\").replace(\")\", \"\\\\)\")\n        stream_lines.append(f\"50 {y} Td ({esc}) Tj\")\n        # reset position trick: move back\n        # use Td relative; simpler: use Tm absolute per line\n        # redo with Tm:\n        stream_lines.pop()\n        stream_lines.append(f\"BT /F1 12 Tf 50 {y} Td ({esc}) Tj ET\")\n        y -= 20\n    # Actually wrap: we already have BT open; simplify: join\n    stream = \"\\n\".join(stream_lines[2:]) if len(stream_lines)>2 else \"\"\n    # rebuild cleanly\n    parts = []\n    for i, text in enumerate(lines):\n        esc = text.replace(\"\\\\\", \"\\\\\\\\\").replace(\"(\", \"\\\\(\").replace(\")\", \"\\\\)\")\n        yy = 750 - i*20\n        parts.append(f\"BT /F1 12 Tf 50 {yy} Td ({esc}) Tj ET\")\n    stream = \"\\n\".join(parts) + \"\\n\"\n    objs.append(f\"<< /Length {len(stream.encode())} >>\\nstream\\n{stream}endstream\")\n    objs.append(\"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\")\n    out = bytearray()\n    out += b\"%PDF-1.4\\n\"\n    offsets = [0]\n    for i, body in enumerate(objs, start=1):\n        offsets.append(len(out))\n        out += f\"{i} 0 obj\\n{body}\\nendobj\\n\".encode()\n    xref_pos = len(out)\n    out += f\"xref\\n0 {len(objs)+1}\\n0000000000 65535 f \\n\".encode()\n    for off in offsets[1:]:\n        out += f\"{off:010d} 00000 n \\n\".encode()\n    out += f\"trailer\\n<< /Size {len(objs)+1} /Root 1 0 R >>\\nstartxref\\n{xref_pos}\\n%%EOF\".encode()\n    open(path, \"wb\").write(out)\n    print(f\"wrote {path} {len(out)} bytes\")\n\nlines = [\n    \"Hello Marker Test Document\",\n    \"This is a paragraph for conversion testing.\",\n    \"Name Age City\",\n    \"Alice 30 Paris\",\n    \"Bob 25 London\",\n    \"def hello(): print('hi')\",\n]\nmake_pdf(\"/tmp/sample.pdf\", lines)\nPY\npython3 /tmp/makepdf.py && ls -l /tmp/sample.pdf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/mout && marker_single /tmp/sample.pdf --output_dir /tmp/mout --disable_ocr 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 -c \"import json; d=json.load(open('/tmp/mjson/sample/sample.json')); print(type(d).__name__); print(json.dumps(d, indent=1)[:2000])\" 2>&1",
+            "expected_signal": "block_type",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"block_type\": \"Page\",",
+            "setup": [
+              {
+                "command": "cat > /tmp/makepdf.py << 'PY'\n# minimal PDF writer with correct xref, stdlib only\ndef make_pdf(path, lines):\n    objs = []\n    objs.append(\"<< /Type /Catalog /Pages 2 0 R >>\")\n    objs.append(\"<< /Type /Pages /Kids [3 0 R] /Count 1 >>\")\n    objs.append(\"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\")\n    # content stream\n    y = 750\n    stream_lines = [\"BT\", \"/F1 12 Tf\"]\n    for text in lines:\n        esc = text.replace(\"\\\\\", \"\\\\\\\\\").replace(\"(\", \"\\\\(\").replace(\")\", \"\\\\)\")\n        stream_lines.append(f\"50 {y} Td ({esc}) Tj\")\n        # reset position trick: move back\n        # use Td relative; simpler: use Tm absolute per line\n        # redo with Tm:\n        stream_lines.pop()\n        stream_lines.append(f\"BT /F1 12 Tf 50 {y} Td ({esc}) Tj ET\")\n        y -= 20\n    # Actually wrap: we already have BT open; simplify: join\n    stream = \"\\n\".join(stream_lines[2:]) if len(stream_lines)>2 else \"\"\n    # rebuild cleanly\n    parts = []\n    for i, text in enumerate(lines):\n        esc = text.replace(\"\\\\\", \"\\\\\\\\\").replace(\"(\", \"\\\\(\").replace(\")\", \"\\\\)\")\n        yy = 750 - i*20\n        parts.append(f\"BT /F1 12 Tf 50 {yy} Td ({esc}) Tj ET\")\n    stream = \"\\n\".join(parts) + \"\\n\"\n    objs.append(f\"<< /Length {len(stream.encode())} >>\\nstream\\n{stream}endstream\")\n    objs.append(\"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\")\n    out = bytearray()\n    out += b\"%PDF-1.4\\n\"\n    offsets = [0]\n    for i, body in enumerate(objs, start=1):\n        offsets.append(len(out))\n        out += f\"{i} 0 obj\\n{body}\\nendobj\\n\".encode()\n    xref_pos = len(out)\n    out += f\"xref\\n0 {len(objs)+1}\\n0000000000 65535 f \\n\".encode()\n    for off in offsets[1:]:\n        out += f\"{off:010d} 00000 n \\n\".encode()\n    out += f\"trailer\\n<< /Size {len(objs)+1} /Root 1 0 R >>\\nstartxref\\n{xref_pos}\\n%%EOF\".encode()\n    open(path, \"wb\").write(out)\n    print(f\"wrote {path} {len(out)} bytes\")\n\nlines = [\n    \"Hello Marker Test Document\",\n    \"This is a paragraph for conversion testing.\",\n    \"Name Age City\",\n    \"Alice 30 Paris\",\n    \"Bob 25 London\",\n    \"def hello(): print('hi')\",\n]\nmake_pdf(\"/tmp/sample.pdf\", lines)\nPY\npython3 /tmp/makepdf.py && ls -l /tmp/sample.pdf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/mjson && marker_single /tmp/sample.pdf --output_dir /tmp/mjson --disable_ocr --output_format json 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "mkdir -p /tmp/mchunk && marker_single /tmp/sample.pdf --output_dir /tmp/mchunk --disable_ocr --output_format chunks 2>&1 && ls -R /tmp/mchunk 2>&1 && cat /tmp/mchunk/sample/sample.json 2>&1",
+            "expected_signal": "\"blocks\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"blocks\": [",
+            "setup": [
+              {
+                "command": "cat > /tmp/makepdf.py << 'PY'\n# minimal PDF writer with correct xref, stdlib only\ndef make_pdf(path, lines):\n    objs = []\n    objs.append(\"<< /Type /Catalog /Pages 2 0 R >>\")\n    objs.append(\"<< /Type /Pages /Kids [3 0 R] /Count 1 >>\")\n    objs.append(\"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\")\n    # content stream\n    y = 750\n    stream_lines = [\"BT\", \"/F1 12 Tf\"]\n    for text in lines:\n        esc = text.replace(\"\\\\\", \"\\\\\\\\\").replace(\"(\", \"\\\\(\").replace(\")\", \"\\\\)\")\n        stream_lines.append(f\"50 {y} Td ({esc}) Tj\")\n        # reset position trick: move back\n        # use Td relative; simpler: use Tm absolute per line\n        # redo with Tm:\n        stream_lines.pop()\n        stream_lines.append(f\"BT /F1 12 Tf 50 {y} Td ({esc}) Tj ET\")\n        y -= 20\n    # Actually wrap: we already have BT open; simplify: join\n    stream = \"\\n\".join(stream_lines[2:]) if len(stream_lines)>2 else \"\"\n    # rebuild cleanly\n    parts = []\n    for i, text in enumerate(lines):\n        esc = text.replace(\"\\\\\", \"\\\\\\\\\").replace(\"(\", \"\\\\(\").replace(\")\", \"\\\\)\")\n        yy = 750 - i*20\n        parts.append(f\"BT /F1 12 Tf 50 {yy} Td ({esc}) Tj ET\")\n    stream = \"\\n\".join(parts) + \"\\n\"\n    objs.append(f\"<< /Length {len(stream.encode())} >>\\nstream\\n{stream}endstream\")\n    objs.append(\"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\")\n    out = bytearray()\n    out += b\"%PDF-1.4\\n\"\n    offsets = [0]\n    for i, body in enumerate(objs, start=1):\n        offsets.append(len(out))\n        out += f\"{i} 0 obj\\n{body}\\nendobj\\n\".encode()\n    xref_pos = len(out)\n    out += f\"xref\\n0 {len(objs)+1}\\n0000000000 65535 f \\n\".encode()\n    for off in offsets[1:]:\n        out += f\"{off:010d} 00000 n \\n\".encode()\n    out += f\"trailer\\n<< /Size {len(objs)+1} /Root 1 0 R >>\\nstartxref\\n{xref_pos}\\n%%EOF\".encode()\n    open(path, \"wb\").write(out)\n    print(f\"wrote {path} {len(out)} bytes\")\n\nlines = [\n    \"Hello Marker Test Document\",\n    \"This is a paragraph for conversion testing.\",\n    \"Name Age City\",\n    \"Alice 30 Paris\",\n    \"Bob 25 London\",\n    \"def hello(): print('hi')\",\n]\nmake_pdf(\"/tmp/sample.pdf\", lines)\nPY\npython3 /tmp/makepdf.py && ls -l /tmp/sample.pdf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cat /tmp/mhtml/sample/sample.html 2>&1",
+            "expected_signal": "<p block-type=\"Text\">",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<p block-type=\"Text\">",
+            "setup": [
+              {
+                "command": "cat > /tmp/makepdf.py << 'PY'\n# minimal PDF writer with correct xref, stdlib only\ndef make_pdf(path, lines):\n    objs = []\n    objs.append(\"<< /Type /Catalog /Pages 2 0 R >>\")\n    objs.append(\"<< /Type /Pages /Kids [3 0 R] /Count 1 >>\")\n    objs.append(\"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\")\n    # content stream\n    y = 750\n    stream_lines = [\"BT\", \"/F1 12 Tf\"]\n    for text in lines:\n        esc = text.replace(\"\\\\\", \"\\\\\\\\\").replace(\"(\", \"\\\\(\").replace(\")\", \"\\\\)\")\n        stream_lines.append(f\"50 {y} Td ({esc}) Tj\")\n        # reset position trick: move back\n        # use Td relative; simpler: use Tm absolute per line\n        # redo with Tm:\n        stream_lines.pop()\n        stream_lines.append(f\"BT /F1 12 Tf 50 {y} Td ({esc}) Tj ET\")\n        y -= 20\n    # Actually wrap: we already have BT open; simplify: join\n    stream = \"\\n\".join(stream_lines[2:]) if len(stream_lines)>2 else \"\"\n    # rebuild cleanly\n    parts = []\n    for i, text in enumerate(lines):\n        esc = text.replace(\"\\\\\", \"\\\\\\\\\").replace(\"(\", \"\\\\(\").replace(\")\", \"\\\\)\")\n        yy = 750 - i*20\n        parts.append(f\"BT /F1 12 Tf 50 {yy} Td ({esc}) Tj ET\")\n    stream = \"\\n\".join(parts) + \"\\n\"\n    objs.append(f\"<< /Length {len(stream.encode())} >>\\nstream\\n{stream}endstream\")\n    objs.append(\"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\")\n    out = bytearray()\n    out += b\"%PDF-1.4\\n\"\n    offsets = [0]\n    for i, body in enumerate(objs, start=1):\n        offsets.append(len(out))\n        out += f\"{i} 0 obj\\n{body}\\nendobj\\n\".encode()\n    xref_pos = len(out)\n    out += f\"xref\\n0 {len(objs)+1}\\n0000000000 65535 f \\n\".encode()\n    for off in offsets[1:]:\n        out += f\"{off:010d} 00000 n \\n\".encode()\n    out += f\"trailer\\n<< /Size {len(objs)+1} /Root 1 0 R >>\\nstartxref\\n{xref_pos}\\n%%EOF\".encode()\n    open(path, \"wb\").write(out)\n    print(f\"wrote {path} {len(out)} bytes\")\n\nlines = [\n    \"Hello Marker Test Document\",\n    \"This is a paragraph for conversion testing.\",\n    \"Name Age City\",\n    \"Alice 30 Paris\",\n    \"Bob 25 London\",\n    \"def hello(): print('hi')\",\n]\nmake_pdf(\"/tmp/sample.pdf\", lines)\nPY\npython3 /tmp/makepdf.py && ls -l /tmp/sample.pdf",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/mhtml && marker_single /tmp/sample.pdf --output_dir /tmp/mhtml --disable_ocr --output_format html 2>&1",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
-        "pitfalls": [],
+        "pitfalls": [
+          {
+            "readme_said": "marker_single /path/to/file.pdf",
+            "actually_needed": "pass --disable_ocr on this CPU-only box so no VLM/llama.cpp server is started; conversion then uses pure text-layer extraction",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "log reports saved format-specific output",
+            "actually_needed": "correct sample.json/sample.html/chunks files are written despite the log line always saying Saved markdown",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows marker_single help with usage, conversion description, options, and --help trailer.",
+          "observed": "Screenshots show help text, successful markdown save log, and extracted document content.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-marker-20261104-133040-7cd0/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-marker-20261104-133040-7cd0/check-1-cmd2.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.023198,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.315281,
         "features": [
           {
             "feature": "convert documents to markdown JSON chunks HTML",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              3,
+              4,
+              5
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "convert PDF image PPTX DOCX XLSX HTML EPUB",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output shows only a PDF converted to markdown, with no image, PPTX, DOCX, XLSX, HTML, or EPUB conversion shown."
           },
           {
             "feature": "format tables forms equations and code blocks",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Outputs collapse table and code content into one plain Text paragraph with no table, equation, or code-block formatting."
           },
           {
             "feature": "extract and save images",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; image converted to markdown with extracted _page_0_Picture_0.jpeg saved"
           }
         ]
       }
@@ -172,7 +276,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -641,17 +745,17 @@
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-04T21:17:55+08:00",
     "quality": {
-      "total": 64.2,
+      "total": 79.0,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40
+          "score": 1.0,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.75,
@@ -671,7 +775,11 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -693,7 +801,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 3.27
+      "value": 4.03
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -976,5 +1084,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:16:07+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

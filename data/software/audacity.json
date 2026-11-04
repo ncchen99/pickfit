@@ -59,17 +59,17 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-audacity-20261104-161635-aee9",
+      "run_id": "verify-audacity-20261104-202618-7a87",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask --appdir=$HOME/Applications audacity 2>&1",
-          "purpose": "brew install Audacity cask"
+          "command": "HOMEBREW_NO_AUTO_UPDATE=1 brew install --cask --appdir=$HOME/Applications audacity",
+          "purpose": "Install Audacity via brew cask"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "open ~/Applications/Audacity\\ 4.app"
+      "first_task": "open \"$HOME/Applications/Audacity 4.app\""
     },
     "linux": {
       "basis": "readme_claim",
@@ -100,102 +100,152 @@
     "url": "https://github.com/audacity/audacity/releases/tag/Audacity-4.0.2"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T16:21:29.137928+08:00",
+    "checked_at": "2026-11-04T21:09:06.851340+08:00",
     "runs": [
       {
-        "id": "verify-audacity-20261104-161635-aee9",
-        "level": "install",
+        "id": "verify-audacity-20261104-202618-7a87",
+        "level": "function",
         "unverified_reason": null,
         "os": "macos",
         "arch": "arm64",
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
-        "checked_at": "2026-11-04T16:21:29.137928+08:00",
+        "checked_at": "2026-11-04T21:09:06.851340+08:00",
         "tool_version": "4.0.2",
         "install_method": "brew",
         "replayed": true,
         "steps": [
           {
-            "command": "brew install --cask --appdir=$HOME/Applications audacity 2>&1",
-            "purpose": "brew install Audacity cask"
+            "command": "HOMEBREW_NO_AUTO_UPDATE=1 brew install --cask --appdir=$HOME/Applications audacity",
+            "purpose": "Install Audacity via brew cask"
           }
         ],
         "smoke_tests": [
           {
-            "command": "open ~/Applications/Audacity\\ 4.app",
+            "command": "open \"$HOME/Applications/Audacity 4.app\"",
             "expected_signal": "gui tier: window",
             "exit_code": 0,
             "passed": true,
             "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "open \"$HOME/Applications/Audacity 4.app\"",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /Users/sbx/pickfit-out/edited.wav: 32044 bytes, written after the app started; format wav: yes",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open \"$HOME/Applications/Audacity 4.app\"",
+            "expected_signal": "gui check: passed",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "gui result: file /Users/sbx/pickfit-out/cut.wav: missing",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [
           {
             "readme_said": "brew install --cask audacity",
-            "actually_needed": "brew install --cask --appdir=$HOME/Applications audacity (standard user cannot write /Applications)",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications audacity (app installed as Audacity 4.app)",
             "kind": "sandbox"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Audacity 4.0 multitrack editor shows its Tracks timeline behind an Audio plugin validation dialog.",
+          "observed": "Audacity 4.0 main multi-track editor with timeline and controls visible behind an audio plugin validation prompt.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-audacity-20261104-161635-aee9/report.json",
-          "log_path": "runs/verify/verify-audacity-20261104-161635-aee9/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-audacity-20261104-161635-aee9/replay-2-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.01505,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.866619,
         "gui": {
-          "tier": "ui_rendered",
+          "tier": "action_checked",
           "screen": "main_ui",
-          "command": "open ~/Applications/Audacity\\ 4.app",
+          "command": "open \"$HOME/Applications/Audacity 4.app\"",
           "window_title": "",
-          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+          "operations": [
+            {
+              "feature": "edit WAV, AIFF, FLAC, MP3, Ogg files",
+              "goal": "Open the audio file ~/pickfit-in/input.wav in Audacity (File > Open or File > Import > Audio, choose the file), then export it as WAV to ~/pickfit-out/edited.wav (File > Export > Export as WAV or File > Export Audio, choose WAV, save to that path, accept defaults and overwrite if asked).",
+              "check": "file",
+              "target": "~/pickfit-out/edited.wav",
+              "expected": [],
+              "format": "wav",
+              "passed": true,
+              "observed": "file /Users/sbx/pickfit-out/edited.wav: 32044 bytes, written after the app started; format wav: yes",
+              "smoke_test": 1,
+              "actions": 28,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "cut, copy, splice and mix sounds",
+              "goal": "Open ~/pickfit-in/input.wav in Audacity (File > Open/Import), select a middle portion of the waveform by dragging on it, Cut it (Edit > Cut or cmd+x), then export the remaining audio as WAV to ~/pickfit-out/cut.wav (File > Export, format WAV).",
+              "check": "file",
+              "target": "~/pickfit-out/cut.wav",
+              "expected": [],
+              "format": "wav",
+              "passed": false,
+              "observed": "file /Users/sbx/pickfit-out/cut.wav: missing",
+              "smoke_test": 2,
+              "actions": 27,
+              "replay": "operated",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            }
+          ]
         },
         "features": [
           {
             "feature": "record live audio",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_hardware",
             "failure": null,
-            "note": "install-only run"
+            "note": "No microphone/camera in VM; recording needs audio input hardware"
           },
           {
             "feature": "edit WAV, AIFF, FLAC, MP3, Ogg files",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "cut, copy, splice and mix sounds",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
           },
           {
             "feature": "change speed or pitch of recording",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "operator_limit",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: step_cap after 28 actions; check: file /Users/sbx/pickfit-out/speed.wav: missing; Effect menu navigation hit 28-step cap before export; file missing"
           }
         ]
       }
@@ -204,7 +254,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
@@ -213,18 +263,35 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-audacity-20261104-202618-7a87",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 2,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "90446b3da3d011ac23f6f7ac38fa5af94c3b0342952f31a90d9f1d0da1ab389a",
+    "checked_at": "2026-11-05T03:25:26+08:00",
+    "cost_usd": 0.0284
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T16:21:29+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:25:26+08:00",
     "quality": {
-      "total": 64.7,
+      "total": 82.5,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5625,
@@ -244,8 +311,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 82.5,
+        "defects": 0
       }
     },
     "popularity": {
@@ -264,7 +336,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 6.47
+      "value": 8.25
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -567,5 +639,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:40+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:25:26+08:00"
 }

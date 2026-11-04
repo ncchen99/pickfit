@@ -52,16 +52,12 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-dive-20261104-133407-e260",
+      "run_id": "verify-dive-20261104-185603-42a2",
       "method": "binary",
       "steps": [
         {
-          "command": "DIVE_VERSION=$(curl -sL \"https://api.github.com/repos/wagoodman/dive/releases/latest\" | grep '\"tag_name\":' | sed -E 's/.*\"v([^\"]+)\".*/\\1/')\ncurl -fL \"https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.tar.gz\" -o /tmp/dive.tar.gz\nmkdir -p ~/.local/bin\ntar -xzf /tmp/dive.tar.gz -C /tmp",
-          "purpose": "Download dive 0.13.1 linux_amd64 tarball from GitHub releases"
-        },
-        {
-          "command": "install -m 755 /tmp/dive ~/.local/bin/dive && ~/.local/bin/dive --help 2>&1",
-          "purpose": "Install binary to ~/.local/bin and verify --version/--help"
+          "command": "DIVE_VERSION=0.13.1\ncurl -fL \"https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.tar.gz\" -o /tmp/dive.tar.gz\nmkdir -p ~/.local/bin\ntar -xzf /tmp/dive.tar.gz -C /tmp && mv /tmp/dive ~/.local/bin/dive && chmod +x ~/.local/bin/dive && ~/.local/bin/dive --version",
+          "purpose": "Download dive v0.13.1 linux_amd64 tarball from GitHub releases and install to ~/.local/bin"
         }
       ],
       "manual_steps": [],
@@ -69,7 +65,7 @@
         "command": "dive --version",
         "expected_signal": "dive 0.13.1"
       },
-      "first_task": null
+      "first_task": "dive --source docker-archive /tmp/test-image.tar --json /tmp/dive-output.json"
     },
     "windows": null
   },
@@ -86,31 +82,27 @@
     "url": "https://github.com/wagoodman/dive/releases/tag/v0.13.1"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:34:50.246112+08:00",
+    "checked_at": "2026-11-04T18:57:22.007498+08:00",
     "runs": [
       {
-        "id": "verify-dive-20261104-133407-e260",
-        "level": "install",
+        "id": "verify-dive-20261104-185603-42a2",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:34:50.246112+08:00",
+        "checked_at": "2026-11-04T18:57:22.007498+08:00",
         "tool_version": "0.13.1",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
-            "command": "DIVE_VERSION=$(curl -sL \"https://api.github.com/repos/wagoodman/dive/releases/latest\" | grep '\"tag_name\":' | sed -E 's/.*\"v([^\"]+)\".*/\\1/')\ncurl -fL \"https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.tar.gz\" -o /tmp/dive.tar.gz\nmkdir -p ~/.local/bin\ntar -xzf /tmp/dive.tar.gz -C /tmp",
-            "purpose": "Download dive 0.13.1 linux_amd64 tarball from GitHub releases"
-          },
-          {
-            "command": "install -m 755 /tmp/dive ~/.local/bin/dive && ~/.local/bin/dive --help 2>&1",
-            "purpose": "Install binary to ~/.local/bin and verify --version/--help"
+            "command": "DIVE_VERSION=0.13.1\ncurl -fL \"https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.tar.gz\" -o /tmp/dive.tar.gz\nmkdir -p ~/.local/bin\ntar -xzf /tmp/dive.tar.gz -C /tmp && mv /tmp/dive ~/.local/bin/dive && chmod +x ~/.local/bin/dive && ~/.local/bin/dive --version",
+            "purpose": "Download dive v0.13.1 linux_amd64 tarball from GitHub releases and install to ~/.local/bin"
           }
         ],
         "smoke_tests": [
@@ -122,68 +114,129 @@
             "observed_excerpt": "dive 0.13.1",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "dive --source docker-archive /tmp/test-image.tar --json /tmp/dive-output.json",
+            "expected_signal": "Exporting image to '/tmp/dive-output.json'",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[1mExporting image to '/tmp/dive-output.json'...\u001b[0m",
+            "setup": [
+              {
+                "command": "cat > /tmp/make_archive.py <<'PYEOF'\nimport tarfile, json, os, io, tempfile, hashlib\n\ntmpdir = \"/tmp/dive-image\"\nos.makedirs(tmpdir, exist_ok=True)\n\n# Create two layers to test layer diff\n# Layer 1: contains /hello.txt\n# Layer 2: adds /world.txt and modifies /hello.txt\n\ndef make_layer_tar(files, path):\n    buf = io.BytesIO()\n    with tarfile.open(fileobj=buf, mode='w') as tf:\n        for name, content in files.items():\n            data = content.encode()\n            ti = tarfile.TarInfo(name=name)\n            ti.size = len(data)\n            ti.mtime = 0\n            tf.addfile(ti, io.BytesIO(data))\n    data = buf.getvalue()\n    with open(path, 'wb') as f:\n        f.write(data)\n    return hashlib.sha256(data).hexdigest()\n\nlayer1_hash = make_layer_tar({\"hello.txt\": \"hello from layer1\\n\"}, \"/tmp/dive-image/layer1.tar\")\nlayer2_hash = make_layer_tar({\"world.txt\": \"hello world\\n\", \"hello.txt\": \"modified hello\\n\"}, \"/tmp/dive-image/layer2.tar\")\n\n# Create config json\nconfig = {\n    \"architecture\": \"amd64\",\n    \"os\": \"linux\",\n    \"rootfs\": {\"type\": \"layers\", \"diff_ids\": [f\"sha256:{layer1_hash}\", f\"sha256:{layer2_hash}\"]},\n    \"history\": [{\"created\": \"2025-01-01T00:00:00Z\"}, {\"created\": \"2025-01-02T00:00:00Z\"}],\n    \"config\": {}\n}\nimport hashlib as hl\nconfig_data = json.dumps(config).encode()\nconfig_hash = hl.sha256(config_data).hexdigest()\n\nwith open(f\"/tmp/dive-image/{config_hash}.json\", \"wb\") as f:\n    f.write(config_data)\n\n# manifest.json\nmanifest = [{\n    \"Config\": f\"{config_hash}.json\",\n    \"RepoTags\": [\"test:latest\"],\n    \"Layers\": [\"layer1.tar\", \"layer2.tar\"]\n}]\nwith open(\"/tmp/dive-image/manifest.json\", \"w\") as f:\n    json.dump(manifest, f)\n\nwith open(\"/tmp/dive-image/repositories\", \"w\") as f:\n    json.dump({\"test\": {\"latest\": \"layer2\"}}, f)\n\n# Create docker save tarball\nwith tarfile.open(\"/tmp/test-image.tar\", \"w\") as out:\n    for fname in [\"manifest.json\", \"repositories\", f\"{config_hash}.json\", \"layer1.tar\", \"layer2.tar\"]:\n        out.add(f\"/tmp/dive-image/{fname}\", arcname=fname)\n\nprint(f\"Created /tmp/test-image.tar with layers {layer1_hash[:12]}, {layer2_hash[:12]}, config {config_hash[:12]}\")\nprint(f\"Size: {os.path.getsize('/tmp/test-image.tar')}\")\n\nPYEOF\npython3 /tmp/make_archive.py\ntar -tvf /tmp/test-image.tar",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cat /tmp/dive-output.json",
+            "expected_signal": "\"file\": \"/hello.txt\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"file\": \"/hello.txt\"",
+            "setup": [
+              {
+                "command": "cat > /tmp/make_archive.py <<'PYEOF'\nimport tarfile, json, os, io, tempfile, hashlib\n\ntmpdir = \"/tmp/dive-image\"\nos.makedirs(tmpdir, exist_ok=True)\n\n# Create two layers to test layer diff\n# Layer 1: contains /hello.txt\n# Layer 2: adds /world.txt and modifies /hello.txt\n\ndef make_layer_tar(files, path):\n    buf = io.BytesIO()\n    with tarfile.open(fileobj=buf, mode='w') as tf:\n        for name, content in files.items():\n            data = content.encode()\n            ti = tarfile.TarInfo(name=name)\n            ti.size = len(data)\n            ti.mtime = 0\n            tf.addfile(ti, io.BytesIO(data))\n    data = buf.getvalue()\n    with open(path, 'wb') as f:\n        f.write(data)\n    return hashlib.sha256(data).hexdigest()\n\nlayer1_hash = make_layer_tar({\"hello.txt\": \"hello from layer1\\n\"}, \"/tmp/dive-image/layer1.tar\")\nlayer2_hash = make_layer_tar({\"world.txt\": \"hello world\\n\", \"hello.txt\": \"modified hello\\n\"}, \"/tmp/dive-image/layer2.tar\")\n\n# Create config json\nconfig = {\n    \"architecture\": \"amd64\",\n    \"os\": \"linux\",\n    \"rootfs\": {\"type\": \"layers\", \"diff_ids\": [f\"sha256:{layer1_hash}\", f\"sha256:{layer2_hash}\"]},\n    \"history\": [{\"created\": \"2025-01-01T00:00:00Z\"}, {\"created\": \"2025-01-02T00:00:00Z\"}],\n    \"config\": {}\n}\nimport hashlib as hl\nconfig_data = json.dumps(config).encode()\nconfig_hash = hl.sha256(config_data).hexdigest()\n\nwith open(f\"/tmp/dive-image/{config_hash}.json\", \"wb\") as f:\n    f.write(config_data)\n\n# manifest.json\nmanifest = [{\n    \"Config\": f\"{config_hash}.json\",\n    \"RepoTags\": [\"test:latest\"],\n    \"Layers\": [\"layer1.tar\", \"layer2.tar\"]\n}]\nwith open(\"/tmp/dive-image/manifest.json\", \"w\") as f:\n    json.dump(manifest, f)\n\nwith open(\"/tmp/dive-image/repositories\", \"w\") as f:\n    json.dump({\"test\": {\"latest\": \"layer2\"}}, f)\n\n# Create docker save tarball\nwith tarfile.open(\"/tmp/test-image.tar\", \"w\") as out:\n    for fname in [\"manifest.json\", \"repositories\", f\"{config_hash}.json\", \"layer1.tar\", \"layer2.tar\"]:\n        out.add(f\"/tmp/dive-image/{fname}\", arcname=fname)\n\nprint(f\"Created /tmp/test-image.tar with layers {layer1_hash[:12]}, {layer2_hash[:12]}, config {config_hash[:12]}\")\nprint(f\"Size: {os.path.getsize('/tmp/test-image.tar')}\")\n\nPYEOF\npython3 /tmp/make_archive.py\ntar -tvf /tmp/test-image.tar",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "dive --source docker-archive /tmp/test-image.tar --ci 2>&1",
+            "expected_signal": "efficiency: 60.0000 %",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "efficiency: 60.0000 %",
+            "setup": [
+              {
+                "command": "cat > /tmp/make_archive.py <<'PYEOF'\nimport tarfile, json, os, io, tempfile, hashlib\n\ntmpdir = \"/tmp/dive-image\"\nos.makedirs(tmpdir, exist_ok=True)\n\n# Create two layers to test layer diff\n# Layer 1: contains /hello.txt\n# Layer 2: adds /world.txt and modifies /hello.txt\n\ndef make_layer_tar(files, path):\n    buf = io.BytesIO()\n    with tarfile.open(fileobj=buf, mode='w') as tf:\n        for name, content in files.items():\n            data = content.encode()\n            ti = tarfile.TarInfo(name=name)\n            ti.size = len(data)\n            ti.mtime = 0\n            tf.addfile(ti, io.BytesIO(data))\n    data = buf.getvalue()\n    with open(path, 'wb') as f:\n        f.write(data)\n    return hashlib.sha256(data).hexdigest()\n\nlayer1_hash = make_layer_tar({\"hello.txt\": \"hello from layer1\\n\"}, \"/tmp/dive-image/layer1.tar\")\nlayer2_hash = make_layer_tar({\"world.txt\": \"hello world\\n\", \"hello.txt\": \"modified hello\\n\"}, \"/tmp/dive-image/layer2.tar\")\n\n# Create config json\nconfig = {\n    \"architecture\": \"amd64\",\n    \"os\": \"linux\",\n    \"rootfs\": {\"type\": \"layers\", \"diff_ids\": [f\"sha256:{layer1_hash}\", f\"sha256:{layer2_hash}\"]},\n    \"history\": [{\"created\": \"2025-01-01T00:00:00Z\"}, {\"created\": \"2025-01-02T00:00:00Z\"}],\n    \"config\": {}\n}\nimport hashlib as hl\nconfig_data = json.dumps(config).encode()\nconfig_hash = hl.sha256(config_data).hexdigest()\n\nwith open(f\"/tmp/dive-image/{config_hash}.json\", \"wb\") as f:\n    f.write(config_data)\n\n# manifest.json\nmanifest = [{\n    \"Config\": f\"{config_hash}.json\",\n    \"RepoTags\": [\"test:latest\"],\n    \"Layers\": [\"layer1.tar\", \"layer2.tar\"]\n}]\nwith open(\"/tmp/dive-image/manifest.json\", \"w\") as f:\n    json.dump(manifest, f)\n\nwith open(\"/tmp/dive-image/repositories\", \"w\") as f:\n    json.dump({\"test\": {\"latest\": \"layer2\"}}, f)\n\n# Create docker save tarball\nwith tarfile.open(\"/tmp/test-image.tar\", \"w\") as out:\n    for fname in [\"manifest.json\", \"repositories\", f\"{config_hash}.json\", \"layer1.tar\", \"layer2.tar\"]:\n        out.add(f\"/tmp/dive-image/{fname}\", arcname=fname)\n\nprint(f\"Created /tmp/test-image.tar with layers {layer1_hash[:12]}, {layer2_hash[:12]}, config {config_hash[:12]}\")\nprint(f\"Size: {os.path.getsize('/tmp/test-image.tar')}\")\n\nPYEOF\npython3 /tmp/make_archive.py\ntar -tvf /tmp/test-image.tar",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "dive build --help",
+            "expected_signal": "cannot find docker client executable",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "cannot find docker client executable",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "go install github.com/wagoodman/dive@latest (requires Go 1.26+) and pacman -S dive",
-            "actually_needed": "Go toolchain not present in box and pacman not available on Debian; installed via direct download of linux_amd64 tarball from GitHub releases to ~/.local/bin",
+            "readme_said": "Install via go install or pacman -S dive (and brew/docker)",
+            "actually_needed": "On Debian without Go/Docker, downloaded prebuilt linux_amd64 tarball from GitHub releases and extracted to ~/.local/bin",
             "kind": "sandbox"
           },
           {
-            "readme_said": "Ubuntu/Debian install via sudo apt install .deb",
-            "actually_needed": "No sudo/root in box, so extracted tarball instead of installing deb",
+            "readme_said": "dive nginx:latest uses Docker daemon by default",
+            "actually_needed": "Used --source docker-archive with a crafted docker save tarball to test without Docker daemon; registry source not available in v0.13.1",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "dive build builds via Docker",
+            "actually_needed": "dive build requires docker client executable; fails gracefully when absent",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshot shows dive --version printing dive 0.13.1.",
+          "observed": "Screenshots show dive extracting and analyzing the docker archive, exporting JSON containing \"/hello.txt\", and reporting version 0.13.1.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-dive-20261104-133407-e260/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-dive-20261104-133407-e260/check-1-cmd4.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
         "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.025274,
+        "cost_usd": 0.068303,
         "features": [
           {
             "feature": "show Docker image contents by layer",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output only logs extracting and exporting without showing any layer contents."
           },
           {
             "feature": "indicate what changed in each layer",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "estimate image efficiency and wasted space",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "build image and analyze immediately",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check did not pass in the log; dive build exists; fails without docker client but help and invocation work"
           }
         ]
       }
@@ -192,7 +245,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -218,17 +271,17 @@
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-05T03:16:32+08:00",
     "quality": {
-      "total": 54.8,
+      "total": 73.3,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
-          "weight": 40
+          "score": 0.85,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -248,7 +301,11 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -270,7 +327,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 2.03
+      "value": 2.71
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -513,5 +570,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:58+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }

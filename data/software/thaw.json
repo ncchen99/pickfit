@@ -52,12 +52,12 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-thaw-20261104-150505-e7fa",
+      "run_id": "verify-thaw-20261105-023051-7123",
       "method": "brew",
       "steps": [
         {
-          "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications thaw 2>&1",
-          "purpose": "install Thaw via brew cask to ~/Applications"
+          "command": "brew install --cask --appdir=$HOME/Applications thaw 2>&1",
+          "purpose": "Install Thaw via brew cask"
         }
       ],
       "manual_steps": [],
@@ -82,10 +82,10 @@
   "verification": {
     "level": "install",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T15:10:26.288090+08:00",
+    "checked_at": "2026-11-05T02:51:02.479431+08:00",
     "runs": [
       {
-        "id": "verify-thaw-20261104-150505-e7fa",
+        "id": "verify-thaw-20261105-023051-7123",
         "level": "install",
         "unverified_reason": null,
         "os": "macos",
@@ -93,14 +93,14 @@
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
-        "checked_at": "2026-11-04T15:10:26.288090+08:00",
+        "checked_at": "2026-11-05T02:51:02.479431+08:00",
         "tool_version": "2.1.0",
         "install_method": "brew",
         "replayed": true,
         "steps": [
           {
-            "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications thaw 2>&1",
-            "purpose": "install Thaw via brew cask to ~/Applications"
+            "command": "brew install --cask --appdir=$HOME/Applications thaw 2>&1",
+            "purpose": "Install Thaw via brew cask"
           }
         ],
         "smoke_tests": [
@@ -117,26 +117,29 @@
         "pitfalls": [
           {
             "readme_said": "brew install thaw",
-            "actually_needed": "brew install --cask --appdir=$HOME/Applications thaw with mkdir -p ~/Applications to install without admin rights",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications thaw",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "README install shows only brew install with no permissions note",
+            "actually_needed": "app opens to a 608x480 Enable Permissions window and stays there until system privacy permissions are granted in System Settings",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The app shows a welcome screen with its icon, introductory text, and a Continue button.",
+          "observed": "The window shows a welcome screen with the Thaw icon, 'Welcome to Thaw' description, and a Continue button.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-thaw-20261104-150505-e7fa/report.json",
-          "log_path": "runs/verify/verify-thaw-20261104-150505-e7fa/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-thaw-20261104-150505-e7fa/replay-3-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.022131,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.67616,
         "gui": {
           "tier": "ui_rendered",
           "screen": "first_run",
@@ -149,33 +152,33 @@
             "feature": "hide unneeded menu bar items",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_root",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: step_cap after 25 actions; check: no file under /Users/sbx/Library/Application Support/Thaw/Profiles/: no file of the box user's was written there after the app started; Enable Permissions screen blocks settings; Continue does not advance without System Settings grant"
           },
           {
             "feature": "organize items into groups",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_root",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: give_up after 8 actions; check: no file under /Users/sbx/Library/Application Support/Thaw/Profiles/: no file of the box user's was written there after the app started; Enable Permissions screen blocks Groups; needs System Settings grant"
           },
           {
             "feature": "switch between profiles",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_root",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: step_cap after 27 actions; check: no file under /Users/sbx/Library/Application Support/Thaw/Profiles/: no file of the box user's was written there after the app started; Enable Permissions screen blocks Profiles; needs System Settings grant"
           },
           {
             "feature": "close menu bar with Zen Mode",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_root",
             "failure": null,
-            "note": "install-only run"
+            "note": "operation stopped: step_cap after 22 actions; check: no file under /Users/sbx/Library/Application Support/Thaw/Profiles/: no file of the box user's was written there after the app started; Enable Permissions screen blocks Zen Mode; needs System Settings grant"
           }
         ]
       }
@@ -184,7 +187,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
@@ -193,18 +196,35 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-thaw-20261105-023051-7123",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 1,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "3ba96bfbc7d42535432467ec71a7a20edfb71d816f27523aa8d6606e2fdcbb6c",
+    "checked_at": "2026-11-05T03:29:48+08:00",
+    "cost_usd": 0.036588
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T15:13:24+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:29:48+08:00",
     "quality": {
-      "total": 72.5,
-      "confidence": 0.9,
+      "total": 87.5,
+      "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -224,8 +244,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 87.5,
+        "defects": 0
       }
     },
     "popularity": {
@@ -244,7 +269,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 12.4
+      "value": 14.96
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -501,5 +526,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:29+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:29:48+08:00"
 }

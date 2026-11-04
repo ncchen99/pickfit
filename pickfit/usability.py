@@ -359,7 +359,8 @@ def gui_bundle(record: dict[str, Any], run: dict[str, Any], evidence_dir: Path =
                         if Path(p).name.startswith("replay-") and ".app." in Path(p).name), None)
     launch = _shot(folder, launch_name, "the app's windows right after it started") if launch_name else None
     if launch is None:
-        found = sorted(folder.glob("replay-*-1.app.png"))
+        # A run whose app window could not be cropped keeps only the full screen of its first replayed launch.
+        found = sorted(folder.glob("replay-*-1.app.png")) or sorted(folder.glob("replay-*-1.png"))
         if not found:
             raise FileNotFoundError(f"{run['id']}: no launch screenshot in {folder}")
         launch = Shot(found[0], "the app's windows right after it started", _sha(found[0]))
@@ -1098,7 +1099,11 @@ def main_visual(args: Any) -> int:
     for slug in slugs:
         path = data_dir / f"{slug}.json"
         raw = json.loads(path.read_text(encoding="utf-8"))
-        bundle = bundle_for(raw)
+        try:
+            bundle = bundle_for(raw)
+        except (OSError, ValueError) as err:  # this app's evidence only: the others still get their check
+            summary["errors"][slug] = f"{type(err).__name__}: {str(err)[:200]}"
+            continue
         if bundle is None:
             summary["no_evidence"].append(slug)
             continue

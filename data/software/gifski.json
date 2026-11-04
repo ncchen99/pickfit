@@ -54,16 +54,16 @@
   "install": {
     "macos": {
       "basis": "replayed",
-      "run_id": "verify-gifski-20261104-182809-8837",
+      "run_id": "verify-gifski-20261104-235527-f9ab",
       "method": "binary",
       "steps": [
         {
           "command": "curl -fL -o ~/Downloads/Gifski.zip \"https://www.dropbox.com/scl/fi/kavioam2qu6feughgznl7/Gifski-1781358496.zip?rlkey=2yk36qdq3t7jitmdmptakh6si&raw=1\"",
-          "purpose": "download Gifski zip from Dropbox"
+          "purpose": "Download Gifski zip"
         },
         {
-          "command": "mkdir -p ~/Applications && unzip -q ~/Downloads/Gifski.zip -d ~/Applications",
-          "purpose": "unzip Gifski.app to ~/Applications"
+          "command": "unzip -q ~/Downloads/Gifski.zip -d ~/Applications",
+          "purpose": "Extract Gifski to Applications"
         }
       ],
       "manual_steps": [],
@@ -86,31 +86,31 @@
     "url": "https://github.com/sindresorhus/Gifski/releases/tag/v3.0.6"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T18:31:00.760098+08:00",
+    "checked_at": "2026-11-05T00:19:05.516464+08:00",
     "runs": [
       {
-        "id": "verify-gifski-20261104-182809-8837",
-        "level": "install",
+        "id": "verify-gifski-20261104-235527-f9ab",
+        "level": "function",
         "unverified_reason": null,
         "os": "macos",
         "arch": "arm64",
         "method": "sandbox",
         "runner": "tart-vz",
         "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
-        "checked_at": "2026-11-04T18:31:00.760098+08:00",
+        "checked_at": "2026-11-05T00:19:05.516464+08:00",
         "tool_version": "3.0.3",
         "install_method": "binary",
         "replayed": true,
         "steps": [
           {
             "command": "curl -fL -o ~/Downloads/Gifski.zip \"https://www.dropbox.com/scl/fi/kavioam2qu6feughgznl7/Gifski-1781358496.zip?rlkey=2yk36qdq3t7jitmdmptakh6si&raw=1\"",
-            "purpose": "download Gifski zip from Dropbox"
+            "purpose": "Download Gifski zip"
           },
           {
-            "command": "mkdir -p ~/Applications && unzip -q ~/Downloads/Gifski.zip -d ~/Applications",
-            "purpose": "unzip Gifski.app to ~/Applications"
+            "command": "unzip -q ~/Downloads/Gifski.zip -d ~/Applications",
+            "purpose": "Extract Gifski to Applications"
           }
         ],
         "smoke_tests": [
@@ -122,64 +122,138 @@
             "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
             "setup": [],
             "offline": true
+          },
+          {
+            "command": "open ~/Applications/Gifski.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /Users/sbx/pickfit-out/gifski-test.gif: 138190 bytes, written after the app started; format gif: yes",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Gifski.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /Users/sbx/pickfit-out/gifski-small.gif: 112909 bytes, written after the app started; format gif: yes",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Gifski.app",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: file /Users/sbx/pickfit-out/gifski-bounce.gif: 88511 bytes, written after the app started; format gif: yes",
+            "setup": [],
+            "offline": true
           }
         ],
         "pitfalls": [],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The app shows a 'Welcome to Gifski!' onboarding dialog with usage notes and a Get Started button.",
+          "observed": "A centered 'Welcome to Gifski!' onboarding dialog with usage notes and a blue 'Get Started' button.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-gifski-20261104-182809-8837/report.json",
-          "log_path": "runs/verify/verify-gifski-20261104-182809-8837/app.log",
-          "screenshot_paths": [
-            "runs/verify/verify-gifski-20261104-182809-8837/replay-5-1.app.judged.png"
-          ],
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.025401,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.639586,
         "gui": {
-          "tier": "ui_rendered",
+          "tier": "action_checked",
           "screen": "first_run",
           "command": "open ~/Applications/Gifski.app",
           "window_title": "",
-          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host",
+          "operations": [
+            {
+              "feature": "convert videos to GIF animations",
+              "goal": "Convert the sample video to a GIF: open/import the file ~/pickfit-in/sample.mp4 in Gifski (via Open dialog or drag-drop onto the Gifski window), wait for the conversion/preview to finish, then save or export the result to ~/pickfit-out/gifski-test.gif using Cmd+S or the Save button. Accept any default settings.",
+              "check": "file",
+              "target": "~/pickfit-out/gifski-test.gif",
+              "expected": [],
+              "format": "gif",
+              "passed": true,
+              "observed": "file /Users/sbx/pickfit-out/gifski-test.gif: 138190 bytes, written after the app started; format gif: yes",
+              "smoke_test": 1,
+              "actions": 28,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "adjust dimensions, speed, frame rate and quality",
+              "goal": "Convert with changed settings: import ~/pickfit-in/sample.mp4 into Gifski, then change at least one setting in the editor (for example set Width to 320 or lower quality / lower FPS using the visible dimension, FPS, quality or speed controls), then save the GIF to ~/pickfit-out/gifski-small.gif via Cmd+S.",
+              "check": "file",
+              "target": "~/pickfit-out/gifski-small.gif",
+              "expected": [],
+              "format": "gif",
+              "passed": true,
+              "observed": "file /Users/sbx/pickfit-out/gifski-small.gif: 112909 bytes, written after the app started; format gif: yes",
+              "smoke_test": 2,
+              "actions": 28,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            },
+            {
+              "feature": "create bounce playback GIFs",
+              "goal": "Create a bounce GIF: import ~/pickfit-in/sample.mp4, in the editor tick the Bounce checkbox (near Loop/playback options), wait for preview, then press Cmd+S and in the Save dialog type exactly gifski-bounce.gif as filename in folder ~/pickfit-out and click Save. If a Replace confirmation appears click Replace.",
+              "check": "file",
+              "target": "~/pickfit-out/gifski-bounce.gif",
+              "expected": [],
+              "format": "gif",
+              "passed": true,
+              "observed": "file /Users/sbx/pickfit-out/gifski-bounce.gif: 88511 bytes, written after the app started; format gif: yes",
+              "smoke_test": 3,
+              "actions": 24,
+              "replay": "actions",
+              "operator_model": "meta-models/Muse-Spark-Open-816B-A42B",
+              "screenshots": []
+            }
+          ]
         },
         "features": [
           {
             "feature": "convert videos to GIF animations",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "adjust dimensions, speed, frame rate and quality",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output only shows a GIF was written, with no evidence any dimension/speed/FPS/quality setting was changed."
           },
           {
             "feature": "create bounce playback GIFs",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "not_shown",
             "failure": null,
-            "note": "install-only run"
+            "note": "its check passed, but the output does not show it: Output only shows a GIF was written, with no evidence bounce playback was enabled."
           },
           {
             "feature": "share videos to Gifski via extension",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "other",
             "failure": null,
-            "note": "install-only run"
+            "note": "share extension is invoked from other apps' Share menu, not from Gifski window"
           }
         ]
       }
@@ -188,7 +262,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T18:31:19+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -200,18 +274,35 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-gifski-20261104-235527-f9ab",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 2,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "b09afa65f60c524684be02c11dfc45bf53557a6343b107414fc1a98e03cdc579",
+    "checked_at": "2026-11-05T03:25:52+08:00",
+    "cost_usd": 0.0295
+  },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T18:31:00+08:00",
+    "formula_version": "b3.v6+visual.v1",
+    "computed_at": "2026-11-05T03:25:52+08:00",
     "quality": {
-      "total": 66.8,
+      "total": 84.6,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 40.0
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -231,8 +322,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 84.6,
+        "defects": 0
       }
     },
     "popularity": {
@@ -251,7 +347,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 13.36
+      "value": 16.92
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -494,5 +590,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:26+08:00",
-  "updated_at": "2026-11-04T18:31:19+08:00"
+  "updated_at": "2026-11-05T03:25:52+08:00"
 }

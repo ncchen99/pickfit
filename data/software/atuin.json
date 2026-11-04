@@ -53,32 +53,28 @@
     "macos": null,
     "linux": {
       "basis": "replayed",
-      "run_id": "verify-atuin-20261104-133127-19e6",
+      "run_id": "verify-atuin-20261104-210948-2a77",
       "method": "script",
       "steps": [
         {
-          "command": "curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh -o /tmp/setup-atuin.sh",
-          "purpose": "download setup script from https://setup.atuin.sh"
+          "command": "curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh -o /tmp/atuin-setup.sh",
+          "purpose": "Download Atuin setup script"
         },
         {
-          "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/atuinsh/atuin/releases/latest/download/atuin-installer.sh -o /tmp/atuin-installer.sh",
-          "purpose": "download nested installer atuin-installer.sh for inspection"
+          "command": "sh /tmp/atuin-setup.sh --non-interactive && ~/.atuin/bin/atuin --version",
+          "purpose": "Run Atuin setup script"
         },
         {
-          "command": "sh /tmp/setup-atuin.sh --non-interactive 2>&1",
-          "purpose": "run setup script non-interactively to install binary"
-        },
-        {
-          "command": "ln -sf $HOME/.atuin/bin/atuin $HOME/.local/bin/atuin && $HOME/.local/bin/atuin --version",
-          "purpose": "symlink binary into ~/.local/bin for PATH"
+          "command": "mkdir -p ~/.local/bin && ln -sf ~/.atuin/bin/atuin ~/.local/bin/atuin && export PATH=\"$HOME/.local/bin:$PATH\" && atuin --version",
+          "purpose": "Put atuin on PATH"
         }
       ],
       "manual_steps": [],
       "check": {
-        "command": "$HOME/.atuin/bin/atuin --version && ls -lh $HOME/.atuin/bin/atuin",
+        "command": "mkdir -p ~/.local/bin && ln -sf ~/.atuin/bin/atuin ~/.local/bin/atuin && export PATH=\"$HOME/.local/bin:$PATH\" && atuin --version",
         "expected_signal": "atuin 18.24.5"
       },
-      "first_task": null
+      "first_task": "export PATH=\"$HOME/.local/bin:$PATH\" && export ATUIN_SESSION=test-session-123 && HID=$(atuin history start \"make hello-test-xyz\") && atuin history end \"$HID\" --exit 0 --duration 2000000000 && ATUIN_SESSION=test-session-123 atuin history list --format \"{command} {exit} {duration}\""
     },
     "windows": null
   },
@@ -95,44 +91,40 @@
     "url": "https://github.com/atuinsh/atuin/releases/tag/v18.24.5"
   },
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-04T13:32:45.367560+08:00",
+    "checked_at": "2026-11-04T21:12:37.253632+08:00",
     "runs": [
       {
-        "id": "verify-atuin-20261104-133127-19e6",
-        "level": "install",
+        "id": "verify-atuin-20261104-210948-2a77",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
         "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T13:32:45.367560+08:00",
+        "checked_at": "2026-11-04T21:12:37.253632+08:00",
         "tool_version": "18.24.5",
         "install_method": "script",
         "replayed": true,
         "steps": [
           {
-            "command": "curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh -o /tmp/setup-atuin.sh",
-            "purpose": "download setup script from https://setup.atuin.sh"
+            "command": "curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh -o /tmp/atuin-setup.sh",
+            "purpose": "Download Atuin setup script"
           },
           {
-            "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/atuinsh/atuin/releases/latest/download/atuin-installer.sh -o /tmp/atuin-installer.sh",
-            "purpose": "download nested installer atuin-installer.sh for inspection"
+            "command": "sh /tmp/atuin-setup.sh --non-interactive && ~/.atuin/bin/atuin --version",
+            "purpose": "Run Atuin setup script"
           },
           {
-            "command": "sh /tmp/setup-atuin.sh --non-interactive 2>&1",
-            "purpose": "run setup script non-interactively to install binary"
-          },
-          {
-            "command": "ln -sf $HOME/.atuin/bin/atuin $HOME/.local/bin/atuin && $HOME/.local/bin/atuin --version",
-            "purpose": "symlink binary into ~/.local/bin for PATH"
+            "command": "mkdir -p ~/.local/bin && ln -sf ~/.atuin/bin/atuin ~/.local/bin/atuin && export PATH=\"$HOME/.local/bin:$PATH\" && atuin --version",
+            "purpose": "Put atuin on PATH"
           }
         ],
         "smoke_tests": [
           {
-            "command": "$HOME/.atuin/bin/atuin --version && ls -lh $HOME/.atuin/bin/atuin",
+            "command": "mkdir -p ~/.local/bin && ln -sf ~/.atuin/bin/atuin ~/.local/bin/atuin && export PATH=\"$HOME/.local/bin:$PATH\" && atuin --version",
             "expected_signal": "atuin 18.24.5",
             "exit_code": 0,
             "passed": true,
@@ -141,76 +133,130 @@
             "offline": true
           },
           {
-            "command": "mkdir -p $HOME/.local/bin && ln -sf $HOME/.atuin/bin/atuin $HOME/.local/bin/atuin && atuin --version && atuin --help",
-            "expected_signal": "Magical shell history",
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && export ATUIN_SESSION=test-session-123 && HID=$(atuin history start \"make hello-test-xyz\") && atuin history end \"$HID\" --exit 0 --duration 2000000000 && ATUIN_SESSION=test-session-123 atuin history list --format \"{command} {exit} {duration}\"",
+            "expected_signal": "make hello-test-xyz 0 2s",
             "exit_code": 0,
             "passed": true,
-            "observed_excerpt": "Magical shell history",
+            "observed_excerpt": "make hello-test-xyz 0 2s",
             "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && export ATUIN_SESSION=test-session-123 && atuin search --exit 0 --after \"yesterday 3pm\" make",
+            "expected_signal": "make hello-test-xyz",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2026-11-04 13:12:19 make hello-test-xyz 2s",
+            "setup": [
+              {
+                "command": "export PATH=\"$HOME/.local/bin:$PATH\" && export ATUIN_SESSION=test-session-123 && HID=$(atuin history start \"make hello-test-xyz\") && atuin history end \"$HID\" --exit 0 --duration 2000000000 && ATUIN_SESSION=test-session-123 atuin history list --format \"{command} {exit} {duration}\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && python3 -c \"import sqlite3,os;db=os.path.expanduser('~/.atuin/data/history.db');con=sqlite3.connect(db);rows=con.execute('SELECT command FROM history ORDER BY timestamp DESC LIMIT 5').fetchall();print(rows)\"",
+            "expected_signal": "make hello-test-xyz",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[('make hello-test-xyz',)]",
+            "setup": [
+              {
+                "command": "export PATH=\"$HOME/.local/bin:$PATH\" && export ATUIN_SESSION=test-session-123 && HID=$(atuin history start \"make hello-test-xyz\") && atuin history end \"$HID\" --exit 0 --duration 2000000000 && ATUIN_SESSION=test-session-123 atuin history list --format \"{command} {exit} {duration}\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.local/bin:$PATH\" && python3 -c \"import sqlite3,os;db=os.path.expanduser('~/.atuin/data/history.db');con=sqlite3.connect(db);print([r[1] for r in con.execute('PRAGMA table_info(history)')]);print(con.execute('SELECT command,cwd,exit,duration FROM history LIMIT 1').fetchall())\"",
+            "expected_signal": "2000000000",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[('make hello-test-xyz', '/home/sbx/work', 0, 2000000000)]",
+            "setup": [
+              {
+                "command": "export PATH=\"$HOME/.local/bin:$PATH\" && export ATUIN_SESSION=test-session-123 && HID=$(atuin history start \"make hello-test-xyz\") && atuin history end \"$HID\" --exit 0 --duration 2000000000 && ATUIN_SESSION=test-session-123 atuin history list --format \"{command} {exit} {duration}\"",
+                "background": false,
+                "port": null
+              }
+            ],
             "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh | sh",
-            "actually_needed": "download script first, read it, then run; it fetches a second installer from releases/latest/download/atuin-installer.sh which also should be inspected",
+            "readme_said": "curl setup.atuin.sh | sh then run atuin",
+            "actually_needed": "binary installs to ~/.atuin/bin, not on PATH in non-interactive shell; linked to ~/.local/bin and exported PATH",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "atuin search/history commands work after shell setup",
+            "actually_needed": "export ATUIN_SESSION=test-session-123 before history start/end/list/search; without it history commands fail with Failed to find $ATUIN_SESSION",
             "kind": "note"
           },
           {
-            "readme_said": "install adds atuin to PATH automatically",
-            "actually_needed": "binary installed to ~/.atuin/bin/atuin; shell profiles modified but ~/.local/bin not updated - manual symlink/copy to ~/.local/bin needed for PATH verification",
-            "kind": "sandbox"
+            "readme_said": "curl setup.atuin.sh | sh",
+            "actually_needed": "setup script fetches atuin-installer.sh which downloads a prebuilt binary tarball that cannot be read as text",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "Screenshots show atuin 18.24.5 version output and help containing Magical shell history.",
+          "observed": "Screenshots show atuin recording the test command, finding it via search, and reporting version 18.24.5.",
           "model": "muse-spark-1.3"
         },
         "evidence": {
-          "trace_path": "runs/verify/verify-atuin-20261104-133127-19e6/report.json",
+          "trace_path": null,
           "log_path": null,
-          "screenshot_paths": [
-            "runs/verify/verify-atuin-20261104-133127-19e6/check-1-cmd4.judged.png",
-            "runs/verify/verify-atuin-20261104-133127-19e6/check-2-cmd5.judged.png"
-          ],
+          "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.03867,
+        "actor_model": "muse-spark-1.3",
+        "cost_usd": 0.428198,
         "features": [
           {
             "feature": "store shell history in SQLite database",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              3,
+              4
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           },
           {
             "feature": "search history in full screen UI",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_display",
             "failure": null,
-            "note": "install-only run"
+            "note": "full-screen ctrl-r/up UI needs interactive terminal"
           },
           {
             "feature": "back up and sync encrypted history",
             "status": "not_checked",
             "smoke_tests": [],
-            "reason": "not_attempted",
+            "reason": "needs_account",
             "failure": null,
-            "note": "install-only run"
+            "note": "sync needs Atuin account/server login"
           },
           {
             "feature": "log exit code, cwd and duration",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              4
+            ],
+            "reason": null,
             "failure": null,
-            "note": "install-only run"
+            "note": null
           }
         ]
       }
@@ -219,7 +265,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "checked_at": "2026-11-05T03:16:33+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -253,17 +299,17 @@
     ]
   },
   "scores": {
-    "formula_version": "b3.v5",
-    "computed_at": "2026-11-04T17:17:43+08:00",
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-04T21:12:37+08:00",
     "quality": {
-      "total": 61.5,
+      "total": 79.0,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": 0.51,
-          "weight": 40
+          "score": 0.85,
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.4375,
@@ -283,7 +329,11 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       }
     },
@@ -564,5 +614,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:47+08:00",
-  "updated_at": "2026-11-04T17:17:43+08:00"
+  "updated_at": "2026-11-05T03:16:33+08:00"
 }
