@@ -446,8 +446,26 @@ class TartBox(Box):
             sized = self._tart("set", self.name, "--cpu", str(self.cpus), "--memory", str(self.memory_mb))
             if sized.returncode != 0:
                 raise BoxError(f"tart set failed: {sized.stderr.strip()[-300:]}")
-            self._boot()
-            self._setup()
+            for attempt in range(3):
+                self._boot()
+                try:
+                    self._setup()
+                    break
+                except BoxError as err:
+                    if attempt == 2 or "internet unreachable online" not in str(err):
+                        raise
+                    if self.vm_proc is not None and self.vm_proc.poll() is None:
+                        try:
+                            self._tart("stop", self.name, "--timeout", "10", timeout_s=60)
+                        except BoxError:
+                            pass
+                        try:
+                            self.vm_proc.wait(timeout=20)
+                        except subprocess.TimeoutExpired:
+                            self.vm_proc.kill()
+                            self.vm_proc.wait()
+                    self.vm_proc = None
+                    time.sleep(10)
         except BaseException:
             self.close()
             raise
@@ -479,10 +497,26 @@ class TartBox(Box):
                 raise BoxError("tart did not print its VNC server's address")
             time.sleep(0.5)
 
+    def _wait_bridge_down(self, timeout_s: float = 15.0) -> None:
+        """Wait for macOS vmnet to finish tearing down bridge100 from a just-stopped VM before starting softnet."""
+        if self.tart != TART or not os.path.exists("/sbin/ifconfig"):
+            return
+        deadline = time.monotonic() + timeout_s
+        saw_up = False
+        while time.monotonic() < deadline:
+            res = subprocess.run(["/sbin/ifconfig", "bridge100"], capture_output=True, timeout=5)
+            if res.returncode != 0:
+                if saw_up:
+                    time.sleep(1.0)
+                return
+            saw_up = True
+            time.sleep(0.5)
+
     def _boot(self) -> None:
         setup = softnet_ready()
         if setup:
             raise BoxError(setup)
+        self._wait_bridge_down()
         if self.control is not None:  # a second boot (prepare_base reboots the hardened base)
             self.control.close()
             self.control = None
@@ -823,7 +857,13 @@ class TartBox(Box):
         be unreachable (any non-zero; there is no route, so curl fails fast with 7). The public internet
         must be reachable (0) online and dropped (28) offline. Fails closed if a probe cannot run.
         """
-        codes, out = self._curl_codes(self._firewall_targets(online))
+        targets = self._firewall_targets(online)
+        codes, out = self._curl_codes(targets)
+        if online and codes.get("public") != 0:
+            time.sleep(2)
+            retry_codes, retry_out = self._curl_codes({"public": targets["public"]}, timeout=8)
+            codes["public"] = retry_codes["public"]
+            out = f"{out.rstrip()}\n{retry_out}"
         where = "online" if online else "offline"
         bad: list[str] = []
         must_drop = ["private", *(k for k in codes if k.startswith("host"))]
