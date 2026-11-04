@@ -7,7 +7,10 @@ import { site, fonts } from './tokens.js';
 
 // A card outline: 4px-style rounded corners, and optionally the cut top-right corner of the
 // two conversation surfaces (your request, Fitz's answer).
-function cardShape(w, h, cut, r = 0.035) {
+const CORNER = 0.035;
+// The corner radius in pixels for a border stroked at this inset on a card printed at ppu.
+export const cornerPx = (ppu, inset) => Math.max(0, CORNER * ppu - inset);
+function cardShape(w, h, cut, r = CORNER) {
   const s = new THREE.Shape();
   const x0 = -w / 2, y0 = -h / 2, x1 = w / 2, y1 = h / 2;
   s.moveTo(x0 + r, y0);
@@ -59,17 +62,20 @@ export function paperCard({ w = 3, h = 1, depth = 0.025, cut = 0, color = site.r
   geo.translate(0, 0, -depth);
   const pw = Math.round(w * ppu), ph = Math.round(h * ppu);
   const cutPx = cut * ppu;
+  // the printed border follows the card's own corners (CORNER in world units, so in pixels it
+  // depends on ppu); a fixed 7 px radius was cut off by the rounded corner on high-ppu cards
+  const border = (ctx) => { if (edge) { ctx.strokeStyle = edge; ctx.lineWidth = edgeWidth; cardPath(ctx, pw, ph, cutPx, cornerPx(ppu, edgeWidth / 2), edgeWidth / 2); ctx.stroke(); } };
   const tex = canvasTexture(pw, ph, (ctx) => {
     ctx.fillStyle = color; ctx.fillRect(0, 0, pw, ph);
     if (draw) draw(ctx, pw, ph);
-    if (edge) { ctx.strokeStyle = edge; ctx.lineWidth = edgeWidth; cardPath(ctx, pw, ph, cutPx, 7, edgeWidth / 2); ctx.stroke(); }
+    border(ctx);
   });
   const face = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.92, metalness: 0 });
   const side = new THREE.MeshStandardMaterial({ color, roughness: 0.92 });
   const mesh = new THREE.Mesh(geo, [face, side]);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
-  mesh.userData = { tex, pw, ph, redraw: (fn) => tex.userData.redraw((ctx) => { ctx.fillStyle = color; ctx.fillRect(0, 0, pw, ph); fn(ctx, pw, ph); if (edge) { ctx.strokeStyle = edge; ctx.lineWidth = edgeWidth; cardPath(ctx, pw, ph, cutPx, 7, edgeWidth / 2); ctx.stroke(); } }) };
+  mesh.userData = { tex, pw, ph, redraw: (fn) => tex.userData.redraw((ctx) => { ctx.fillStyle = color; ctx.fillRect(0, 0, pw, ph); fn(ctx, pw, ph); border(ctx); }) };
   return mesh;
 }
 
@@ -139,6 +145,14 @@ export function stitchThread(curve, { stitch = 0.09, gap = 0.06, radius = 0.011,
     mesh.count = shown;
   };
   return mesh;
+}
+
+// A curve kept off the floor: a Catmull-Rom spline that comes down a slope onto the paper
+// overshoots below it, and the stitches there sink out of sight (a gap in the seam).
+export function aboveFloor(curve, y) {
+  const c = new THREE.Curve();
+  c.getPoint = (u, out = new THREE.Vector3()) => { curve.getPoint(u, out); out.y = Math.max(out.y, y); return out; };
+  return c;
 }
 
 // A floating screen for a real recording: a dark-framed slab whose face shows a texture

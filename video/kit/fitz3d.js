@@ -293,12 +293,13 @@ function feet() {
   return grp;
 }
 
-// The stitched leaf Fitz holds out when it recommends something.
+// The stitched leaf Fitz holds out when it recommends something. He holds it by the narrow end
+// (the leaf starts at the beak, -x, and widens outward).
 export function leaf() {
   const pts = [];
   for (let i = 0; i <= 40; i++) {
     const t = (i / 40) * Math.PI * 2;
-    pts.push(new THREE.Vector2(Math.cos(t) * 0.26, Math.sin(t) * 0.1 * (1 - 0.4 * Math.cos(t))));
+    pts.push(new THREE.Vector2(Math.cos(t) * 0.26, Math.sin(t) * 0.1 * (1 + 0.4 * Math.cos(t))));
   }
   const m = extrudePath(pts, 0.012, C.leaf, 0.01, 0.006);
   const rib = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.012, 0.03), new THREE.MeshStandardMaterial({ color: C.leafDark }));

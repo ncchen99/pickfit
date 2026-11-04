@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { gsap } from 'gsap';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { canvasTexture } from '../../kit/stage.js';
-import { paperCard, text, drawTape, drawSeam, cardPath } from '../../kit/props.js';
+import { paperCard, text, drawTape, drawSeam, cardPath, cornerPx } from '../../kit/props.js';
 import { site, fonts, fitz as FC } from '../../kit/tokens.js';
 
 // ---- time helpers -------------------------------------------------------------------------
@@ -110,7 +110,7 @@ export function sourceTag(label, { size = 60, h = 0.42, ppu = 360 } = {}) {
   const tw = measure(label, { size, weight: 500 }).width;
   const w = (tw + 120) / ppu;
   const card = paperCard({ w, h, color: site.raised, edge: site.rule, edgeWidth: 3, ppu, draw: (ctx, pw, ph) => {
-    ctx.fillStyle = site.paper;
+    ctx.fillStyle = site.room;
     ctx.strokeStyle = site.lineCtl;
     ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(38, ph / 2, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
@@ -210,7 +210,7 @@ export function nextTag() {
     ctx.fillStyle = site.raised; ctx.fillRect(0, 0, pw, ph);
     ctx.setLineDash([16, 12]);
     ctx.strokeStyle = site.ink3; ctx.lineWidth = 4;
-    cardPath(ctx, pw, ph, 0, 7, 6); ctx.stroke();
+    cardPath(ctx, pw, ph, 0, cornerPx(360, 6), 6); ctx.stroke();
     ctx.setLineDash([]);
     text(ctx, 'Next', 40, 104, { size: 92, weight: 700, family: fonts.display, color: site.ink });
     // a small arrow after the word
@@ -312,7 +312,7 @@ export function station(kind) {
       ctx.beginPath(); ctx.arc(pw - 40, 40, 22, 0, Math.PI * 2); ctx.fill();
       drawTick(ctx, pw - 40, 40, 22, '#FFFFFF', 5);
     }
-    ctx.strokeStyle = lit ? site.lineCtl : site.rule; ctx.lineWidth = 3; cardPath(ctx, pw, ph, 0, 7, 1.5); ctx.stroke();
+    ctx.strokeStyle = lit ? site.lineCtl : site.rule; ctx.lineWidth = 3; cardPath(ctx, pw, ph, 0, cornerPx(360, 1.5), 1.5); ctx.stroke();
   };
   const card = paperCard({ w, h: w, color: site.raised, ppu: 360, draw: draw(false) });
   const base = card.userData.tex;
@@ -368,7 +368,7 @@ export function clockTag(label) {
   const off = canvasTexture(card.userData.pw, card.userData.ph, (ctx, pw, ph) => {
     ctx.fillStyle = site.raised; ctx.fillRect(0, 0, pw, ph);
     draw(false)(ctx, pw, ph);
-    ctx.strokeStyle = site.rule; ctx.lineWidth = 3; cardPath(ctx, pw, ph, 0, 7, 1.5); ctx.stroke();
+    ctx.strokeStyle = site.rule; ctx.lineWidth = 3; cardPath(ctx, pw, ph, 0, cornerPx(ppu, 1.5), 1.5); ctx.stroke();
   });
   let colonOn = true;
   // the second hand, a thin ink needle over the printed face

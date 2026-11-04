@@ -50,8 +50,8 @@ const smooth = (a, b, x) => { const u = cl((x - a) / (b - a)); return u * u * (3
 const wob = (t, t0, amp = 1, f = 16, d = 7) => (t < t0 ? 0 : amp * Math.exp(-d * (t - t0)) * Math.cos(f * (t - t0)));
 
 // ------------------------------------------------------------------ the room: fog, a lit floor for the night, lights
-const PAPER = new THREE.Color(site.paper), NIGHT = new THREE.Color('#2A2F37'), DUSK_FLOOR = new THREE.Color('#5E636B');
-scene.fog = new THREE.Fog(site.paper, 60, 140);
+const PAPER = new THREE.Color(site.room), NIGHT = new THREE.Color('#2A2F37'), DUSK_FLOOR = new THREE.Color('#5E636B');
+scene.fog = new THREE.Fog(site.room, 60, 140);
 const litFloor = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshStandardMaterial({ color: '#C2C1BB', roughness: 1, transparent: true, opacity: 0, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -8 }));
 litFloor.rotation.x = -Math.PI / 2;
 litFloor.position.y = 0.0002;
@@ -261,7 +261,8 @@ ribGeo.setIndex(rIdx);
 ribGeo.setAttribute('position', new THREE.BufferAttribute(rPos, 3));
 ribGeo.setAttribute('uv', new THREE.BufferAttribute(rUv, 2));
 ribGeo.setAttribute('color', new THREE.BufferAttribute(rCol, 3));
-const ribbon = new THREE.Mesh(ribGeo, new THREE.MeshPhysicalMaterial({ map: rulerTex, vertexColors: true, roughness: 0.42, sheen: 0.35, sheenRoughness: 0.5, side: THREE.DoubleSide }));
+const ribbon = new THREE.Mesh(ribGeo, new THREE.MeshPhysicalMaterial({ map: rulerTex, vertexColors: true, roughness: 0.42, sheen: 0.35, sheenRoughness: 0.5, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -8 }));
+// (the offset: 3.5 mm over the desk top is too little depth precision from the wide shots, and the tape flickered)
 ribbon.castShadow = true;
 ribbon.receiveShadow = true;
 ribbon.frustumCulled = false;
@@ -278,7 +279,7 @@ const TAPE_LIN = new THREE.Color(site.tape), WHITE = new THREE.Color('#ffffff');
 
 function setRibbon(len, held, flood, lift = 0) {
   // the path: flat along the desk edge, then (when held) rising to the beak
-  const flatEnd = held ? cl(held.x - 0.07 - lift, RX0 + 0.004, RX0 + len) : RX0 + Math.max(0.004, len);
+  const flatEnd = held ? cl(held.x - HELD_AHEAD - lift, RX0 + 0.004, RX0 + len) : RX0 + Math.max(0.004, len);
   const P0 = V(flatEnd, RY, RZ);
   const curve = held ? new THREE.QuadraticBezierCurve3(P0, V(flatEnd + 0.05, RY, RZ), held) : null;
   const Lf = flatEnd - RX0, Lc = curve ? curve.getLength() : 0, Lg = Lf + Lc;
@@ -319,8 +320,17 @@ tabHeld.position.set(0, -0.02, 0.06);
 tabHeld.castShadow = true;
 tabHeld.visible = false;
 fz.hold.add(tabHeld);
-const FITZ_RY = Math.PI / 2 - 0.62; // the turned head faces +x, along the desk edge
 const FZ_Z = RZ - 0.1;
+// Which way Fitz faces (yaw; his beak is +z): at the camera as he lands, the tape end (+x) for the
+// peck, the person and the start of the evening (-x) as he runs, and back over his shoulder at us.
+const FACE_CAM = 0.56, FACE_END = Math.PI / 2, FACE_RUN = -Math.PI / 2, FACE_STOP = -0.35;
+const HELD_AHEAD = 0.12; // the tape leaves the desk this far ahead of his beak
+const RUN_REACH = (() => { // how far ahead of him his beak is, facing -x
+  fz.root.rotation.y = FACE_RUN; fz.root.updateMatrixWorld(true);
+  const r = -tabHeld.getWorldPosition(V()).x;
+  fz.root.rotation.y = 0;
+  return r;
+})();
 
 // once the camera is inside the screen, the bezel turns to paper too, so no dark edge slips into frame
 const bleed = new THREE.Mesh(new THREE.PlaneGeometry(B.LAP.w - 0.03, B.LAP.h - 0.03), new THREE.MeshBasicMaterial({ color: site.paper, transparent: true, opacity: 0, toneMapped: false }));
@@ -803,7 +813,7 @@ function update(t) {
     const endX = RX0 + (288 / 60) * B.RULER.perHour;
     const landX = endX - 0.23;
     const land = V(landX, B.DESK.top, FZ_Z);
-    let pos = V(), flap = 0, pitch = 0, sq = 1, turn = 0, lean = 0, hop = 0;
+    let pos = V(), flap = 0, pitch = 0, sq = 1, hop = 0, roll = 0, face = FACE_CAM;
     if (t < LAND_T) {
       const u = seg(t, LAND_T0, LAND_T);
       const start = V(landX + 1.0, B.DESK.top + 3.7, FZ_Z - 0.5);
@@ -816,43 +826,39 @@ function update(t) {
       pos.copy(land);
       sq = 1 - wob(t, LAND_T, 0.17, 20, 7);
       flap = 0.5 * (1 - seg(t, LAND_T, LAND_T + 0.25));
-      turn = k(t, 29.1, 29.35, EO);
-      // peck down to the tab and come up with it
-      const peck = Math.sin(Math.PI * seg(t, 29.3, 29.6));
-      pitch = 0.3 * peck;
+      // he lands facing us, turns to the tape end and pecks it up
+      face = lerp(FACE_CAM, FACE_END, k(t, 29.1, 29.35, EO));
+      pitch = 0.3 * Math.sin(Math.PI * seg(t, 29.3, 29.6));
       if (t >= GRAB_T) held = true;
       flood = k(t, 29.45, 29.85, EO);
-      // the tug: he sets his feet and leans back on the tape end; it lifts off the desk, taut
-      const tug = t < REW_T0 ? P2O(seg(t, TUG_T0, 30.05)) : 1 - EIO(seg(t, REW_T0, REW_T0 + 0.3));
-      const tremble = t >= TUG_T0 && t < REW_T0 + 0.15 ? Math.sin(t * 2 * Math.PI * 16) * 0.03 * tug : 0;
-      lift = 0.2 * tug;
-      pos.x += 0.08 * tug;
-      lean = 0.5 * tug + tremble;
-      sq -= 0.08 * tug;
-      flap += 0.22 * tug;
+      // then turns his back to us, the tape end in his beak, toward the person at the desk
+      face = lerp(face, FACE_RUN, k(t, 29.62, 30.05, EIO));
+      // a crouch, and he runs: the evening reels in ahead of him while it plays backwards
+      sq -= 0.09 * Math.sin(Math.PI * seg(t, 29.95, 30.3));
       if (t >= REW_T0) {
-        // the pull: he hops back along the edge, wings going, the tape coming with him
-        const toX = RX0 + (MIN_END / 60) * B.RULER.perHour + (landX - endX) + 0.03;
-        pos.x = lerp(landX, toX, pullAt(t)) + 0.08 * tug;
+        const toX = RX0 + (MIN_END / 60) * B.RULER.perHour + RUN_REACH + HELD_AHEAD;
+        pos.x = lerp(landX, toX, pullAt(t));
         const u = seg(t, REW_T0, REW_T1);
-        hop = Math.abs(Math.sin(Math.PI * 7 * u)) * 0.12 * Math.sin(Math.PI * cl(u * 1.05));
-        flap = 0.22 * tug + (0.3 + 0.3 * Math.sin(t * 2 * Math.PI * 7)) * Math.sin(Math.PI * cl(u * 1.1));
-        lean += 0.24 * Math.sin(Math.PI * cl(u * 1.05));
-        sq = 1 - 0.08 * tug - wob(t, REW_T1, 0.12, 18, 7);
+        const run = Math.sin(Math.PI * cl(u * 1.05)), step = Math.sin(Math.PI * 11 * u);
+        hop = Math.abs(step) * 0.07 * run;
+        roll = 0.12 * step * run;
+        pitch += 0.2 * run;
+        flap = (0.25 + 0.25 * Math.sin(t * 2 * Math.PI * 7)) * run;
+        sq -= wob(t, REW_T1, 0.12, 18, 7);
+        // stopped at 7:02, he looks back at us over his shoulder
+        face = lerp(FACE_RUN, FACE_STOP, k(t, REW_T1 + 0.05, REW_T1 + 0.55, EO));
       }
     }
     fz.root.position.copy(pos);
-    fz.root.rotation.y = FITZ_RY;
+    fz.root.rotation.y = face;
     fzLight.position.copy(pos).add(V(0.35, 0.55, 0.6));
     fzLight.intensity = 2.4 * k(t, LAND_T0, LAND_T, EO) * N;
     fz.bird.position.y = hop / FS;
-    // lean back, away from +x
-    // tilt toward (+) or away from (-) where the head faces
-    const fa = 0.62 * turn;
-    fz.bird.quaternion.setFromAxisAngle(V(Math.cos(fa), 0, -Math.sin(fa)), pitch - lean);
+    // pitch tips him toward where he faces; roll is the waddle of the run
+    fz.bird.quaternion.setFromAxisAngle(V(1, 0, 0), pitch).multiply(tmpQ.setFromAxisAngle(V(0, 0, 1), roll));
     fz.flap(flap);
     fz.squash(sq);
-    fz.turn(turn);
+    fz.turn(0);
     const bl = [29.05, 31.8, 33.55].some((b) => t > b && t < b + 0.12) ? 1 : 0;
     fz.blink(bl);
     tabHeld.visible = !!held;

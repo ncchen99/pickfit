@@ -3,6 +3,9 @@
 
 export const site = {
   paper: '#F7F7F4',
+  // the floor and sky of the 3D room, a step darker than the site's paper so white cards and the
+  // recordings (which keep the site's paper) stand off it (念誠 11/4: greyer, more muted)
+  room: '#E2E2DC',
   raised: '#FFFFFF',
   voice: '#F1F6E2',
   voiceLine: '#CDD7AB',

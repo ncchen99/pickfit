@@ -22,7 +22,7 @@ import * as THREE from 'three';
 import { gsap } from 'gsap';
 import { Stage, canvasTexture } from '../kit/stage.js';
 import { createFitz } from '../kit/fitz3d.js';
-import { paperCard, text, drawTape, cardPath } from '../kit/props.js';
+import { paperCard, text, drawTape, cardPath, cornerPx } from '../kit/props.js';
 import { site, fonts, ease } from '../kit/tokens.js';
 
 const DURATION = 4.2;
@@ -80,7 +80,7 @@ const holes = ['scanner?', 'books?'].map((name, i) => {
   const pw = Math.round(slotW * 420), ph = Math.round(slotH * 420);
   const tex = canvasTexture(pw, ph, (ctx) => {
     ctx.strokeStyle = site.lineCtl; ctx.lineWidth = 4; ctx.setLineDash([16, 12]);
-    cardPath(ctx, pw, ph, 0, 10, 4); ctx.stroke(); ctx.setLineDash([]);
+    cardPath(ctx, pw, ph, 0, cornerPx(420, 4), 4); ctx.stroke(); ctx.setLineDash([]);
     text(ctx, name, pw / 2, ph / 2 + 15, { size: 44, weight: 500, family: fonts.mono, color: site.ink3, align: 'center' });
   });
   const m = new THREE.Mesh(new THREE.PlaneGeometry(slotW, slotH), new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: 0.95 }));

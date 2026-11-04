@@ -23,7 +23,7 @@ const params = new URLSearchParams(location.search);
 export const RENDER = params.has('render');
 
 export class Stage {
-  constructor({ background = site.paper, ground = true, ao = true, dof = null, fov = 30, exposure = 1 } = {}) {
+  constructor({ background = site.room, ground = true, ao = true, dof = null, fov = 30, exposure = 1 } = {}) {
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
     Object.assign(document.body.style, { margin: 0, background: '#111', overflow: 'hidden' });
@@ -72,9 +72,12 @@ export class Stage {
       // The paper keeps its exact colour (unlit); a shadow catcher on top takes the shadows.
       const floor = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({ color: background }));
       floor.rotation.x = -Math.PI / 2;
-      const catcher = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.ShadowMaterial({ color: '#2b2a20', opacity: 0.16 }));
+      // 0.5 mm above the paper is not enough depth precision from 15+ units away: on some camera
+      // positions the paper won and whole shadows blinked out for one frame. The offset settles it.
+      const catcher = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.ShadowMaterial({ color: '#2b2a20', opacity: 0.16, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -8 }));
       catcher.rotation.x = -Math.PI / 2;
       catcher.position.y = 0.0005;
+      catcher.renderOrder = 1;
       catcher.receiveShadow = true;
       scene.add(floor, catcher);
       this.floor = floor;
