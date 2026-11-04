@@ -28,7 +28,7 @@ const CLOCK_TIME = '7:08 PM';             // the real time the recording ended
 import * as THREE from 'three';
 import { Stage } from '../kit/stage.js';
 import { createFitz, leaf } from '../kit/fitz3d.js';
-import { paperCard, text, drawSeam, stitchThread, screenPanel } from '../kit/props.js';
+import { paperCard, text, drawSeam, stitchThread, screenPanel, aboveFloor } from '../kit/props.js';
 import { site, fonts } from '../kit/tokens.js';
 import {
   E, prog, lerp, clamp01, rng, setOpacity, noShadows, measure, decal, sourceTag, workbench, makerCard,
@@ -89,10 +89,10 @@ mangoTag.position.set(MANGO.x + 0.12, 0.21 * Math.cos(1.0), MANGO.z + 0.72 - 0.2
 zoneA.add(mangoTag);
 
 // The thread runs off the MangoDisk ticket to the maker's card.
-const threadA = new THREE.CatmullRomCurve3([
+const threadA = aboveFloor(new THREE.CatmullRomCurve3([
   V(-5.25, 0.034, -0.02), V(-4.98, 0.03, -0.04), V(-4.6, 0.016, 0.02), V(-3.9, 0.016, 0.42), V(-2.6, 0.016, 0.74),
   V(-0.6, 0.016, 0.66), V(1.4, 0.016, 0.78), V(3.0, 0.016, 0.68), V(4.1, 0.016, 0.5), V(4.45, 0.06, 0.32), V(4.5, 0.16, 0.24),
-], false, 'catmullrom', 0.4);
+], false, 'catmullrom', 0.4), 0.016);
 const stitchA = stitchThread(threadA, { stitch: 0.12, gap: 0.075, radius: 0.015 });
 stitchA.frustumCulled = false; // the kit's InstancedMesh keeps the bounds of its first (empty) frame
 zoneA.add(stitchA);
@@ -176,9 +176,9 @@ function setMeter(v) { // v = reading in units along the tape
 
 // The thread out to the agents, and the reports that come back along it.
 const TK = { x: 16.6, y: 0.98, z: 0.25, s: 0.9 };
-const threadR = new THREE.CatmullRomCurve3([
+const threadR = aboveFloor(new THREE.CatmullRomCurve3([
   V(17.55, TK.y - 0.4, 0.31), V(17.75, 0.3, 0.42), V(18.15, 0.016, 0.72), V(19.6, 0.016, 0.92), V(22.2, 0.016, 1.04), V(25.5, 0.016, 1.12),
-]);
+]), 0.016);
 const stitchR = stitchThread(threadR, { stitch: 0.12, gap: 0.075, radius: 0.015 });
 stitchR.frustumCulled = false;
 zoneN.add(stitchR);

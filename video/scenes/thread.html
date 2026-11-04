@@ -21,7 +21,7 @@
 import * as THREE from 'three';
 import { gsap } from 'gsap';
 import { Stage, canvasTexture } from '../kit/stage.js';
-import { paperCard, text, drawSeam, drawMeasure, stitchThread, cardPath } from '../kit/props.js';
+import { paperCard, text, drawSeam, drawMeasure, stitchThread, cardPath, aboveFloor } from '../kit/props.js';
 import { site, fonts, ease } from '../kit/tokens.js';
 
 const DURATION = 36.5;
@@ -149,7 +149,7 @@ const threadPts = [
   P(1.3, -9.45), P(2.75, -10.1), P(3.45, -11.1), P(3.5, -12.3), // under the record
   P(2.9, -13.3), P(1.95, -14.35), P(1.55, -15.3), P(1.42, -16.2), P(0.9, -17.2), P(0.25, -18.1), P(MANGO.x - 0.06, MANGO.z + 0.02, 0.03), // macOS VM, then MangoDisk on the wall
 ];
-const curve = new THREE.CatmullRomCurve3(threadPts, false, 'centripetal');
+const curve = aboveFloor(new THREE.CatmullRomCurve3(threadPts, false, 'centripetal'), 0.013);
 const thread = stitchThread(curve);
 scene.add(thread);
 

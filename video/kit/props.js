@@ -147,6 +147,14 @@ export function stitchThread(curve, { stitch = 0.09, gap = 0.06, radius = 0.011,
   return mesh;
 }
 
+// A curve kept off the floor: a Catmull-Rom spline that comes down a slope onto the paper
+// overshoots below it, and the stitches there sink out of sight (a gap in the seam).
+export function aboveFloor(curve, y) {
+  const c = new THREE.Curve();
+  c.getPoint = (u, out = new THREE.Vector3()) => { curve.getPoint(u, out); out.y = Math.max(out.y, y); return out; };
+  return c;
+}
+
 // A floating screen for a real recording: a dark-framed slab whose face shows a texture
 // (an image sequence or a video frame drawn in by the scene).
 export function screenPanel({ w = 3.2, h = 1.8, bezel = 0.03, depth = 0.04 } = {}) {
