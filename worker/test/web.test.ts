@@ -727,3 +727,23 @@ test('pages say what a score or a mark means to the reader, not the rules behind
   assert.doesNotMatch(loading, /Muse Spark reads|Code checks each reason|<ol>/);
   assert.doesNotMatch(home, /Each reason is checked/);
 });
+
+test('confidence: the number beside quality, and a tooltip that names the features with no verdict', async () => {
+  const { confidenceRow } = await import('../src/ui/kit.ts');
+  const features = {
+    recorded: true,
+    checked: [],
+    not_checked: [
+      { feature: 'search history', reason: 'not_attempted' as const, detail: '' },
+      { feature: 'sync across machines', reason: 'needs_account' as const, detail: '' },
+    ],
+  };
+  const row = confidenceRow(0.7, ['feature_results', 'usage_outcomes'], features);
+  assert.match(row, />70%</);
+  assert.match(row, /data-tip="[^"]*search history, sync across machines/);
+  assert.match(row, /data-tip="[^"]*fewer than 3 reports/);
+  assert.match(row, /tabindex="0"/); // a touch screen has no hover: a tap focuses it
+  const none = confidenceRow(0.9, ['usage_outcomes'], { recorded: true, checked: [{ feature: 'x', check: 'y' }], not_checked: [] });
+  assert.doesNotMatch(none, /Features not confirmed/);
+  assert.equal(confidenceRow(undefined, undefined, features), ''); // an older index
+});

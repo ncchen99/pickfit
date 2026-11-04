@@ -340,6 +340,10 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
             "treasure": scores.treasure.is_treasure,
             "treasure_value": scores.treasure.value,
             "formula_version": scores.formula_version,
+            "confidence": scores.quality.confidence,
+            # The parts of the quality score with weight but no data: they drop out, which is why confidence is below 1.
+            "unmeasured": [name for name, part in scores.quality.components if part is not None
+                           and part.weight > 0 and part.score is None],
         } if scores else None,
         "sources": [s.url for s in record.sources if s.url][:5],
     }

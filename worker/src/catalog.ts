@@ -273,6 +273,10 @@ export interface Entry {
     treasure: boolean;
     treasure_value: number | null;
     formula_version: string;
+    /** Share of the quality score's weight that had data, 0-1. Older indexes lack it. */
+    confidence?: number;
+    /** The parts with weight but no data, so they dropped out: why confidence is below 1. */
+    unmeasured?: string[];
   } | null;
   sources: string[];
 }

@@ -17,7 +17,7 @@ import { compareTable } from './pages/compare.ts';
 import { day, guiSentence, howRan, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system, webLevelLabel, webRunWords } from './ui/facts.ts';
 import { esc, link, listOf } from './ui/html.ts';
 import { icon, osMark, type IconName } from './ui/icons.ts';
-import { badge, command, compareToggle, coverage, fitz, kindTag, levelIcon, measure, notice, osList, runFacts, says, SEAM, sysTag, tape, type FitzName, type MeasureRow } from './ui/kit.ts';
+import { badge, command, compareToggle, confidenceRow, coverage, fitz, kindTag, levelIcon, measure, notice, osList, runFacts, says, SEAM, sysTag, tape, type FitzName, type MeasureRow } from './ui/kit.ts';
 import { renderShell } from './ui/shell.ts';
 import { NO_INSTALL_LABEL, noInstallLabel, webFacts } from './webapp.ts';
 
@@ -614,6 +614,7 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
     facts(pick) +
     `</div><div class="t-measure">` +
     tape(L('Quality', '品質'), pick.scores.quality, { pop: 'pop-quality' }) +
+    confidenceRow(entry?.scores?.confidence, entry?.scores?.unmeasured, pick.features) +
     tape(L('Popularity', '知名度'), pick.scores.popularity, { pop: 'pop-popularity', tone: 'quiet', note: gemNote }) +
     coverage(pick.features, { pop: 'pop-features' }) +
     `</div></div>` +

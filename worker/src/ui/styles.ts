@@ -267,6 +267,11 @@ button.badge{cursor:help;min-height:24px;text-decoration:underline dotted;text-d
 .meter-wide{grid-row:auto;grid-column:1/-1;font:500 var(--t-small)/1.3 var(--sans);text-align:left;color:var(--ink-2)}
 .meter-note{grid-column:1/-1;font-size:var(--t-small);color:var(--ink-2)}
 .meter-none .meter-read{font:500 var(--t-small)/1 var(--sans);color:var(--ink-2)}
+/* The tip is long and the number sits at the panel's right edge, so it opens to the left, on focus too (a touch screen). */
+.meter-conf .conf-read{position:relative;grid-row:auto;font-variant-numeric:tabular-nums;text-decoration:underline dotted;text-decoration-color:var(--line-ctl);text-underline-offset:4px;cursor:help}
+.meter-conf .conf-read:focus-visible{outline:3px solid var(--stitch);outline-offset:2px}
+.meter-conf .conf-read[data-tip]:hover::after,.meter-conf .conf-read[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:auto;right:0;bottom:calc(100% + 6px);z-index:3;padding:8px 10px;border-radius:var(--r-ctl);background:var(--ink);color:var(--paper);font:600 .78rem/1.35 var(--sans);text-align:left;width:max-content;max-width:280px;white-space:normal;pointer-events:none}
+@media (hover:none){.meter-conf .conf-read{cursor:default}}
 .tape-track{fill:var(--sunk)}
 .meter-none .tape-track{fill:none;stroke:var(--rule);stroke-width:1.5;stroke-dasharray:4 4;vector-effect:non-scaling-stroke}
 /* A reading, not an action: the tape's ticks in ink, never yellow (the screen's one solid yellow is its action).
