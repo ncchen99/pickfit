@@ -20,11 +20,17 @@ def build(clip, sources):
     for i, p in enumerate(clip["pieces"]):
         src = sources[p["src"]]
         span = p["out"] - p["in"]
-        args += ["-ss", f"{p['in']:.3f}", "-t", f"{span + 0.5:.3f}", "-i", str(HERE / src["file"])]
+        # The screen recorder writes no frames while nothing changes. Seek a little early and cut at
+        # the exact 'in' on a constant-rate copy, so a piece that starts inside such a gap shows the
+        # frame held there; rebasing on the first frame found after 'in' started some pieces up to
+        # 0.4 s late and replayed the previous moment at the next cut (the delete dialog at 1:20).
+        pre = min(3.0, p["in"])
+        args += ["-ss", f"{p['in'] - pre:.3f}", "-t", f"{pre + span + 0.5:.3f}", "-i", str(HERE / src["file"])]
         crop = src.get("crop")
         speed = span / p["dur"]
-        # The screen recorder writes no frames while nothing changes, so hold the last frame (tpad) to fill the piece.
-        chain = f"[{i}:v]setpts=PTS-STARTPTS,setpts=PTS/{speed:.5f},fps={FPS},tpad=stop_mode=clone:stop_duration={p['dur'] + 1:.2f},trim=duration={p['dur']:.4f},setpts=PTS-STARTPTS"
+        # tpad holds the last frame to fill the piece.
+        chain = (f"[{i}:v]fps=60,trim=start={pre:.4f},setpts=PTS-STARTPTS,setpts=PTS/{speed:.5f},fps={FPS},"
+                 f"tpad=stop_mode=clone:stop_duration={p['dur'] + 1:.2f},trim=duration={p['dur']:.4f},setpts=PTS-STARTPTS")
         if crop:
             w, h, x, y = crop[2], crop[3], crop[0], crop[1]
             chain += f",crop={w}:{h}:{x}:{y}"
