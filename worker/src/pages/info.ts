@@ -71,7 +71,7 @@ export function renderAgents(origin: string, nonce: string): string {
       'recommending',
     ) +
     `<div class="wrap"><article class="prose agents-doc">` +
-    `<h2>${L('Connect', '連線')}</h2><p>${L(`Any MCP client that speaks streamable HTTP can connect to <code translate="no">${esc(mcp)}</code>. For Claude Code:`, `任何支援 streamable HTTP 的 MCP 用戶端都能連到 <code translate="no">${esc(mcp)}</code>。Claude Code：`)}</p>` +
+    `<h2>${L('Connect', '連線')}</h2><p>${L(`Any MCP client that speaks streamable HTTP can connect to <code translate="no">${esc(mcp)}</code>.`, `任何支援 streamable HTTP 的 MCP 用戶端都能連到 <code translate="no">${esc(mcp)}</code>。`)}</p><p>${L('For Claude Code:', 'Claude Code：')}</p>` +
     command(`claude mcp add --transport http pickfit ${mcp}`) +
     `<p>${L('For Claude Desktop, Cursor and other clients, add it to the MCP config:', 'Claude Desktop、Cursor 等用戶端，請加進 MCP 設定：')}</p>` +
     command(JSON.stringify({ mcpServers: { pickfit: { type: 'http', url: mcp } } }, null, 2)) +

@@ -1235,10 +1235,6 @@ ul.levels li{display:grid;grid-template-columns:minmax(0,15rem) minmax(0,1fr);ga
 .tip h3{margin:0 0 6px}
 /* A sentence to say to your agent: still verbatim and copied exactly, but it wraps between words like prose, with no hanging indent */
 .prompt .cmd pre{word-break:normal;overflow-wrap:anywhere;text-indent:0;padding-left:14px}
-/* /agents: its one action is copying the first command, so that Copy is the screen's one solid yellow (as on results) */
-.agents-doc>.cmd:first-of-type .copy{background:var(--tape);color:var(--tape-ink);border:1px solid var(--tape-edge);text-decoration:none;min-height:32px;padding:0 14px;font-weight:700}
-.agents-doc>.cmd:first-of-type .copy:hover{background:color-mix(in srgb,var(--tape) 88%,#fff)}
-.agents-doc>.cmd:first-of-type .copy.done{background:transparent;color:var(--pass);border-color:var(--pass)}
 .nf{display:grid;place-items:center;text-align:center;gap:16px;padding:48px 0}
 `;
 

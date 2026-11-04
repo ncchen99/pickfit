@@ -119,7 +119,7 @@ export function renderBrowse(catalog: Catalog, params: URLSearchParams, nonce: s
   const osPart = q.os ? L(` · verified on ${esc(OS_NAME[q.os])}`, ` · 已在 ${esc(OS_NAME[q.os])} 驗證`) : '';
   const main =
     `<section class="head"><div class="wrap head-row"><div><h1>${L('Browse verified tools', '所有驗證過的工具')}</h1>` +
-    `<p class="lede">${L('Every tool here was installed by pickfit in a fresh sandbox; every web app was opened and used in a sandboxed browser', '這裡的每款工具，pickfit 都在全新沙盒裡裝過；網頁應用也都在瀏覽器裡實際用過')}</p></div>` +
+    `<p class="lede">${L('pickfit has tried every tool here itself', '這裡的每款工具，pickfit 都親自試過')}</p></div>` +
     `${fitz('idle', 96, { eager: true })}</div></section>` +
     `<div class="wrap layout layout-browse"><aside class="side side-left">${filters}</aside><div>` +
     `<p class="cat-count">${L(
