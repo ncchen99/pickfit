@@ -134,7 +134,8 @@ function saying(view: SubmissionView, now: Date): { who: FitzName; title: string
       return {
         who: 'testing',
         title: L('Fitz is trying it.', 'Fitz 正在試用。'),
-        line: repo ? L('A few minutes for most software. Keep this page open, or come back later.', '大多數軟體要幾分鐘。可以開著這一頁，也可以晚點再回來。') : L('A few minutes. Keep this page open, or come back later.', '要幾分鐘。可以開著這一頁，也可以晚點再回來。'),
+        // 3 to 12 minutes from submission to listed in the real runs so far (matchify, MangoDisk, glow).
+        line: L('Usually 3 to 15 minutes. Keep this page open, or come back later.', '通常要 3 到 15 分鐘。可以開著這一頁，也可以晚點再回來。'),
         tab: L('Trying it', '試用中'),
       };
     case 'listed':
