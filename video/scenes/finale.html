@@ -285,7 +285,7 @@ function glyphDot(ch, o) {
   return { cx: (xa + xb + 1) / 2, up: base - (y0 + y1) / 2, r: Math.max(xb + 1 - xa, y1 - y0) / 2 };
 }
 // The wordmark: Bricolage 800, tracking -0.03em, the i's dot replaced by the stitch colour (the
-// site paints a paper ring over the glyph's dot and a rufous dot on top; here the dot is a bead).
+// site paints a paper ring over the glyph's dot and a rufous dot on top).
 const WM = { size: 0.74, y: 0.8 };
 const wmDot = {};
 const wordmark = print('pickfit', { size: WM.size, weight: 800, family: fonts.display, tracking: -0.03 * WM.size, x: TX, y: WM.y,
@@ -306,12 +306,11 @@ const url = print('pickfit.app', { size: 0.15, weight: 600, family: fonts.mono, 
 const small1 = print('Add pickfit to your agent over MCP', { size: 0.098, weight: 400, color: site.ink2, x: TX + 0.03, y: 1.74 });
 const small2 = print('pickfit runs on Meta’s Muse Spark 1.3 and Muse Spark Open', { size: 0.098, weight: 400, color: site.ink2, x: TX + 0.03, y: 1.9 });
 
-// The dot itself: a small rufous bead sewn onto the card.
-const knot = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 20), new THREE.MeshPhysicalMaterial({ color: site.stitch, roughness: 0.55, sheen: 0.6, sheenColor: new THREE.Color('#ffd9c8') }));
+// The dot itself: flat, as on the site and at the end of the opening scene.
+const knot = new THREE.Mesh(new THREE.CircleGeometry(1, 48), new THREE.MeshBasicMaterial({ color: site.stitch, toneMapped: false }));
 {
   const d = wordmark.decal;
   knot.position.set(d.position.x - wordmark.w / 2 + wmDot.cx, d.position.y + wordmark.h / 2 - wmDot.cy, 0.008);
-  knot.castShadow = true;
   endCard.add(knot);
 }
 
@@ -500,7 +499,7 @@ function update(t) {
     const dv = prog(t, 22.1, 22.55, E.back);
     knot.visible = t > 22.1;
     const kr = wmDot.r * (0.6 + 0.4 * dv);
-    knot.scale.set(kr, kr, kr * 0.5);
+    knot.scale.setScalar(kr);
   }
 }
 

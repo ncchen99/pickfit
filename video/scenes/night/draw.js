@@ -207,9 +207,11 @@ export function drawAccess(ctx, w, h) {
 export function drawNote(line) {
   return (ctx, w, h) => {
     ctx.fillStyle = 'rgba(0,0,0,0.06)'; ctx.fillRect(0, 0, w, 26);
+    // One word a line, the block centred in the paper below the strip, so a third line still has margins.
     const words = line.split(' ');
-    const size = words.length > 2 ? 44 : 50;
-    words.forEach((wd, i) => text(ctx, wd, 26, 84 + i * size * 1.08, { size, weight: 700, family: fonts.display, color: site.ink, tracking: -1 }));
+    const size = words.length > 2 ? 40 : 50, lead = size * 1.08, strip = 26;
+    const first = strip + (h - strip - (words.length - 1) * lead) / 2 + size * 0.32;
+    words.forEach((wd, i) => text(ctx, wd, 26, first + i * lead, { size, weight: 700, family: fonts.display, color: site.ink, tracking: -1 }));
   };
 }
 

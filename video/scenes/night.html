@@ -518,8 +518,8 @@ const CAM = [
   { t: 32.95, pos: V(2.75, 2.85, 4.45), tgt: V(0.35, 1.6, 0.25), ap: 0.0016, e: SIO },
 ];
 const PUSH_T0 = 32.95, PUSH_T1 = 35.7;
-// PUSH_T0 -> PUSH_T1 into the screen along a curve that passes right of the person's head; then a slow settle
-const PUSH = new THREE.CubicBezierCurve3(V(2.75, 2.85, 4.45), V(1.6, 2.75, 3.3), FINAL_POS.clone().add(V(0.75, 0.12, 0.55)), FINAL_POS.clone().addScaledVector(SN, 0.1));
+// PUSH_T0 -> PUSH_T1 into the screen along a curve that swings wide of the person's head, so it leaves the frame early and never sweeps across it; then a slow settle
+const PUSH = new THREE.CubicBezierCurve3(V(2.75, 2.85, 4.45), V(2.2, 2.9, 3.2), FINAL_POS.clone().add(V(1.7, 0.4, 0.2)), FINAL_POS.clone().addScaledVector(SN, 0.1));
 const camPos = V(), camTgt = V();
 function cameraAt(t) {
   let ap;
@@ -660,7 +660,7 @@ function propsAt(tau, t) {
     question.quaternion.copy(camera.quaternion);
     question.rotateZ(-0.12 + wob(tau, 18.35, 0.12, 12, 4));
     question.scale.setScalar(lerp(0.94, 1, u));
-    question.userData.look(seg(u, 0, 0.2) * (1 - out));
+    question.userData.look(t >= REW_T0 ? 0 : seg(u, 0, 0.2) * (1 - out)); // not on the way back
   }
   // the dock and the icons
   {
@@ -793,12 +793,12 @@ function update(t) {
 
   // the person
   {
-    const { p, typing } = poseTau(tau);
-    let slump = t < REW_T0 ? k(t, 26.05, 27.0, EIO) : 1 - k(t, 30.25, 30.95, EIO);
-    const settle = t >= 26.05 && t < REW_T0 ? wob(t, 27.0, 0.025, 9, 5) : 0;
-    const q = mixPose(p, POSES.slump, slump);
-    q.spine += settle;
-    setPose(q, typing * (1 - slump), tau);
+    // While the evening plays backwards the person only sits up: replaying the lean-back or the typing
+    // at speed reads as a jolt, and that gesture has nothing to say on the way back.
+    const rewinding = t >= REW_T0;
+    const { p, typing } = rewinding ? { p: POSES.type, typing: 0 } : poseTau(tau);
+    const slump = t < REW_T0 ? k(t, 26.05, 27.15, EIO) : 1 - k(t, 30.25, 30.95, EIO);
+    setPose(mixPose(p, POSES.slump, slump), typing * (1 - slump), tau);
   }
 
   const popped = propsAt(tau, t);
