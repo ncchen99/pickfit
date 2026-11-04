@@ -1240,7 +1240,7 @@ class QualityComponent(_Model):
 
 
 class QualityComponents(_Model):
-    """The six quality components of B.3 (nominal weights 35/20/15/10/10/10+).
+    """The quality components of formula b3.v6 (nominal weights 20/20/25/10/5/10/10+; pickfit/score.py).
 
     A hosted web app (formula web.v1, pickfit/score.py) adds browser_facts and gives the four components a
     README and a repository feed weight 0: it is opened, not installed. Other records never carry it.
@@ -1256,6 +1256,14 @@ class QualityComponents(_Model):
             "Only external reports count. <3 reports: weight 10, score null (dropped from "
             "the denominator); 3-9: 10; 10-29: 20; >=30: 30 (usage_outcomes_weight)."
         )
+    )
+    feature_results: QualityComponent | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description=(
+            "Formula b3.v6: checked / (checked + failed because of the tool), over the passed runs. "
+            "Null score when no feature reached a verdict (dropped from the denominator)."
+        ),
     )
     browser_facts: QualityComponent | None = Field(
         default=None,

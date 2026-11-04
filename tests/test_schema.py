@@ -340,6 +340,7 @@ def test_record_schema_forbids_unknown_keys():
         "engineering_hygiene",
         "responsiveness",
         "usage_outcomes",
+        "feature_results",  # formula b3.v6, optional
         "browser_facts",  # web apps only (web.v1), optional
         "usability",  # GUI and web apps under gui.v1 and web.v2 only, optional
     ]
