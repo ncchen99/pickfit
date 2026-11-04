@@ -29,7 +29,14 @@ export interface SubmitOutput {
   next: string;
 }
 
-export class SubmitError extends Error {}
+export class SubmitError extends Error {
+  /** invalid: not a URL pickfit takes. busy: the hourly cap. The MCP sends the message; the web page says it in its own words. */
+  code: 'invalid' | 'busy';
+  constructor(message: string, code: 'invalid' | 'busy') {
+    super(message);
+    this.code = code;
+  }
+}
 
 export const NOTE_MAX = 300;
 
@@ -120,6 +127,15 @@ function output(row: Row, url: string, already: boolean): SubmitOutput {
   };
 }
 
+export interface SubmissionRow extends Row {
+  url: string;
+  submitted_at: string;
+}
+
+/** One submission by its id, for the status page. The submitter's note is not read. */
+export const submissionById = (db: D1Database, id: string): Promise<SubmissionRow | null> =>
+  db.prepare('SELECT id, url, status, slug, reason, submitted_at FROM submissions WHERE id = ?1').bind(id).first<SubmissionRow>();
+
 export interface SubmitDeps {
   catalog: Catalog;
   db: D1Database;
@@ -134,6 +150,7 @@ export async function submitSoftware(input: SubmitInput, deps: SubmitDeps): Prom
   if (!url) {
     throw new SubmitError(
       'pickfit accepts a GitHub repository URL, like https://github.com/owner/repo, or the https URL of a public web app, like https://example.com/tool.',
+      'invalid',
     );
   }
   const now = deps.now();
@@ -172,7 +189,7 @@ export async function submitSoftware(input: SubmitInput, deps: SubmitDeps): Prom
     .bind(hourAgo)
     .first<{ n: number }>();
   if ((recent?.n ?? 0) >= deps.hourlyCap) {
-    throw new SubmitError('pickfit has taken as many new submissions as it can this hour. Try again in an hour.');
+    throw new SubmitError('pickfit has taken as many new submissions as it can this hour. Try again in an hour.', 'busy');
   }
 
   const row: Row = { id: newId('sub'), status: 'queued', slug: null, reason: null };

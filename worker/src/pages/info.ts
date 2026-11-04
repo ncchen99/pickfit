@@ -8,7 +8,7 @@ import { icon } from '../ui/icons.ts';
 import { badge, command, fitz, levelIcon, marksLegend, tape } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 
-const head = (title: string, lede: string, who: Parameters<typeof fitz>[0]) =>
+export const head = (title: string, lede: string, who: Parameters<typeof fitz>[0]) =>
   `<section class="head mat after-top"><div class="wrap head-row"><div><h1>${esc(title)}</h1><p class="lede">${esc(lede)}</p></div>` +
   `${fitz(who, 150, { eager: true })}</div><div class="ruler" aria-hidden="true"></div></section>`;
 
@@ -50,7 +50,7 @@ export function renderHow(catalog: Catalog, nonce: string): string {
     `<h3>${L('Match labels', '符合度標籤')}</h3><p>${L('When the model is paused, pickfit ranks by rules and labels each pick ', '模型暫停時，pickfit 改用規則排序，並看簡介提到你的哪些字詞，把每個選項標為 ')}${badge('pass', L('Good match', '高度符合'))} ${badge('caution', L('Partial match', '部分符合'))}${L(' or ', ' 或 ')}${badge('caution', L('Weak match', '勉強符合'))}${L(' by which of your words its profile mentions. With the model, Muse Spark writes the fit sentence and code checks each of its reasons.', '。使用模型時，由 Muse Spark 寫出符合原因，再由程式核對每個理由。')}</p>` +
     `<h2 id="rules">${L('Fitz’s rules', 'Fitz 的原則')}</h2><div class="care"><div><p>${L('pickfit is neutral on purpose. It belongs to no agent maker and no software vendor, takes no money for placement, and doesn’t make any of the software it suggests. That is what lets it say a little-known tool fits better, or that what you already have is enough.', 'pickfit 刻意保持中立。它不屬於任何 agent 開發商或軟體廠商，不收取排名費用，也不開發它推薦的任何軟體。正因如此，它才能直說某款冷門工具更適合你，或是你現有的已經夠用。')}</p>` +
     `<p>${L('Privacy: no account, no IP address stored. Your sentence goes to Meta’s Muse Spark (served by Meta, reached directly or through OpenRouter) with storage turned off; pickfit keeps only the conditions it parsed, such as the task and the OS. Compare picks stay in your own browser.', '隱私：免帳號，也不記錄 IP。你的描述會送到 Meta 的 Muse Spark（由 Meta 提供，直接或經 OpenRouter 轉送；已關閉資料保存）；pickfit 只保留從中解析出的條件，例如任務和作業系統。比較清單只存在你自己的瀏覽器裡。')}</p></div>${rulesLabel()}</div>` +
-    `<div class="tip">${fitz('peek', 52)}<h3>${L('Found a tool that should be here?', '有好工具想推薦？')}</h3><p>${L('Authors and users can submit a GitHub project, or the address of a web app, through the MCP <code>submit_software</code> tool. It gets the same review: read, tried in a sandbox, scored. Submitting never earns a better rank.', '作者和使用者都可以透過 MCP 的 <code>submit_software</code> 工具提交 GitHub 專案或網頁應用的網址。它會經過同樣的審查：閱讀、在沙盒中試裝、評分。提交不會換來更好的排名。')}</p><p><a class="more" href="/agents">${L('Connect an agent', '接上 agent')}${icon('arrow-right')}</a></p></div>` +
+    `<div class="tip">${fitz('peek', 52)}<h3>${L('Found a tool that should be here?', '有好工具想推薦？')}</h3><p>${L('Authors and users can submit a GitHub project, or the address of a web app, right here on the site or through the MCP <code>submit_software</code> tool. It gets the same review: read, tried in a sandbox, scored. Submitting never earns a better rank.', '作者和使用者都可以直接在網站上，或透過 MCP 的 <code>submit_software</code> 工具，提交 GitHub 專案或網頁應用的網址。它會經過同樣的審查：閱讀、在沙盒中試裝、評分。提交不會換來更好的排名。')}</p><p><a class="more" href="/submit">${L('Add your software', '加入你的軟體')}${icon('arrow-right')}</a></p></div>` +
     `</article></div>`;
   return renderShell({ nonce, title: L('How pickfit works · pickfit', 'pickfit 的運作方式 · pickfit'), description: L('How pickfit finds, reads, installs, verifies and matches software, and what each label means.', 'pickfit 如何搜尋、閱讀、安裝、驗證與比對軟體，以及每個標籤的意思。'), active: 'how', tray: false, main });
 }
@@ -62,7 +62,7 @@ export function renderAgents(origin: string, nonce: string): string {
     ['find_alternatives', L('Replacements for a tool you use now, given what you don’t like about it and what you must keep.', '根據你對現用工具不滿意的地方和必須保留的功能，找出替代品。')],
     ['get_install_guide', L('The steps that worked in pickfit’s run, for your OS, with what you do by hand and how to check the install.', '針對你的作業系統，提供在 pickfit 測試中可行的步驟，包含需要手動操作的部分，以及如何確認安裝成功。')],
     ['report_outcome', L('Did it install, did it work, are you still using it. Failures queue the tool for a fresh run.', '回報是否安裝成功、是否能用、是否還在使用。失敗的回報會讓工具排入重新測試。')],
-    ['submit_software', L('Send a GitHub project for review. It goes through the same read, install and replay as everything else.', '提交 GitHub 專案供審查。它會和其他工具一樣經過閱讀、安裝和重播。')],
+    ['submit_software', L('Send a GitHub project or a web app for review, the same as the form on /submit. It goes through the same read, install and replay as everything else.', '提交 GitHub 專案或網頁應用供審查，和 /submit 的表單一樣。它會和其他工具一樣經過閱讀、安裝和重播。')],
   ];
   const main =
     head(

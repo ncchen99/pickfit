@@ -33,6 +33,58 @@ export const script = () => `
     a.href = location.pathname + '?' + q + location.hash;
   }
 
+  // ---------------------------------------------------------------- a submission: follow it until it ends
+  const subLive = $('[data-sub-live]');
+  if (subLive) {
+    const since = $('[data-sub-since]');
+    const offline = $('[data-sub-offline]');
+    const showAgo = () => {
+      if (!since) return;
+      const min = Math.floor((Date.now() - Date.parse(since.dateTime)) / 60000);
+      since.textContent = min < 1 ? ${J('just now', '剛剛')} : min < 60 ? min + ${J(' min ago', ' 分鐘前')} : Math.floor(min / 60) + ${J(' h ago', ' 小時前')};
+    };
+    let timer = 0;
+    const current = () => $('[data-sub-state]', subLive);
+    const running = () => current().dataset.subState === 'running';
+    const next = () => { clearTimeout(timer); if (running()) timer = setTimeout(poll, 6000); };
+    const poll = async () => {
+      if (document.hidden) return; // picked up again when the tab comes back
+      showAgo();
+      try {
+        const res = await fetch(location.pathname, { headers: { accept: 'text/html', 'x-pickfit-fragment': '1' } });
+        if (!res.ok) throw new Error(String(res.status));
+        const fresh = document.createElement('template');
+        fresh.innerHTML = await res.text();
+        const row = fresh.content.firstElementChild;
+        if (offline) offline.hidden = true;
+        if (row && row.dataset.subKey !== current().dataset.subKey) {
+          subLive.setAttribute('aria-live', 'polite'); // only a change is news; not the page as it loads
+          subLive.replaceChildren(row);
+          document.title = row.dataset.subTab;
+          if (!running()) for (const el of $$('.sub-keep, .sub-offline')) el.remove();
+        }
+      } catch {
+        if (offline) offline.hidden = false;
+      }
+      next();
+    };
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && running()) poll(); });
+    next();
+  }
+  const copyPage = $('[data-copy-page]');
+  if (copyPage) {
+    copyPage.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(location.href); toast(${J('Link copied', '已複製連結')}); }
+      catch { toast(${J('Couldn’t copy. The link is in the address bar.', '無法複製，連結就在網址列。')}); }
+    });
+  }
+  const subForm = $('#submit-form');
+  if (subForm) subForm.addEventListener('submit', () => {
+    const go = $('.go', subForm);
+    go.setAttribute('aria-busy', 'true');
+    go.disabled = true;
+  });
+
   // ---------------------------------------------------------------- search
   const form = $('#search');
   if (form) {

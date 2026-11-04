@@ -10,7 +10,7 @@ import { FITZ_BASE, ICON_32, ICON_32_DARK, marksLegend, popover } from './kit.ts
 import { script } from './script.ts';
 import { CSS, CSS_ZH } from './styles.ts';
 
-export type NavKey = 'find' | 'browse' | 'compare' | 'how' | 'agents' | null;
+export type NavKey = 'find' | 'browse' | 'compare' | 'how' | 'agents' | 'submit' | null;
 
 export interface ShellInput {
   nonce: string;
@@ -30,6 +30,7 @@ const NAV = (): [Exclude<NavKey, null>, string, string][] => [
   ['compare', '/compare', L('Compare', '比較')],
   ['how', '/how', L('How it works', '運作方式')],
   ['agents', '/agents', L('For agents', '給 agent')],
+  ['submit', '/submit', L('Add software', '加入軟體')],
 ];
 
 /** The wordmark: Fitz's 32 px icon (cream outline on the dark page) and the name, with the cap-rufous dot over the i. */
