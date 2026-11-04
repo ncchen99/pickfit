@@ -1,6 +1,6 @@
 # YouTube 上傳用：標題與說明
 
-影片：`video/out/pickfit-demo.mp4`（2:57，1920×1080，30 fps）。公開或不公開清單皆可，但要「任何有連結的人都能看」（比賽規則）。
+影片：`video/out/pickfit-demo.mp4`（2:56，1920×1080，30 fps）。公開或不公開清單皆可，但要「任何有連結的人都能看」（比賽規則）。
 
 ## 標題（擇一，建議第一個）
 
@@ -40,7 +40,7 @@ Chapters
 1:26 Your agent finds tools too: a CLI and an MCP server
 1:50 Following the stitch: how pickfit tests software
 2:26 The maker, and what's next
-2:42 Ask through your agent, or on the web
+2:41 Ask through your agent, or on the web
 
 Credits: narration in the developer's own voice, generated with ElevenLabs; music and sound effects by ElevenLabs; 3D scenes made with three.js and GSAP; Fitz the tailorbird is original artwork made for pickfit.
 
@@ -49,7 +49,7 @@ Credits: narration in the developer's own voice, generated with ElevenLabs; musi
 
 ## 上傳前確認
 
-- 影片長度 ≤ 3:00（目前 2:57）。
+- 影片長度 ≤ 3:00（目前 2:56）。
 - 第一句旁白是賽前揭露。
 - 說明裡的數字（1,050／732）與錄影當天的目錄一致；若重新發布資料後數字變了，標題卡與說明一起改。
 - repo 轉 public 之後，Code 連結才打得開。
