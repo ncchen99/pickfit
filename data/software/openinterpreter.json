@@ -68,18 +68,25 @@
       "first_task": "interpreter"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-openinterpreter-20261104-133541-210c",
       "method": "script",
       "steps": [
         {
-          "command": "curl -fsSL https://www.openinterpreter.com/install | sh",
-          "purpose": null
+          "command": "curl -fsSL https://www.openinterpreter.com/install -o /tmp/oi-install.sh",
+          "purpose": "Download installer script from openinterpreter.com"
+        },
+        {
+          "command": "sh /tmp/oi-install.sh 2>&1",
+          "purpose": "Run installer script to install interpreter binary"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "interpreter"
+      "check": {
+        "command": "interpreter --version 2>&1",
+        "expected_signal": "interpreter 0.0.59"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -109,12 +116,401 @@
     "url": "https://github.com/openinterpreter/openinterpreter/releases/tag/rust-v0.0.59"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:36:59.154353+08:00",
+    "runs": [
+      {
+        "id": "verify-openinterpreter-20261104-133541-210c",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T13:36:59.154353+08:00",
+        "tool_version": "0.0.59",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://www.openinterpreter.com/install -o /tmp/oi-install.sh",
+            "purpose": "Download installer script from openinterpreter.com"
+          },
+          {
+            "command": "sh /tmp/oi-install.sh 2>&1",
+            "purpose": "Run installer script to install interpreter binary"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "interpreter --version 2>&1",
+            "expected_signal": "interpreter 0.0.59",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "interpreter 0.0.59",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "interpreter --help 2>&1",
+            "expected_signal": "Print help",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Print help (see a summary with '-h')",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show interpreter printing version 0.0.59 and a full help listing including help and version flags.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-openinterpreter-20261104-133541-210c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-openinterpreter-20261104-133541-210c/check-1-cmd3.judged.png",
+            "runs/verify/verify-openinterpreter-20261104-133541-210c/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.030489,
+        "features": [
+          {
+            "feature": "switch agent harnesses with /harness",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "run commands inside native sandboxing",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "run as ACP agent in editors",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "test web and native apps",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/openinterpreter/openinterpreter@f12ce327eeee",
+      "codex-rs/Cargo.lock",
+      "sdk/python/uv.lock"
+    ],
+    "packages_checked": 1356,
+    "findings_total": 16,
+    "advisories_total": 16,
+    "findings": [
+      {
+        "package": "crates:zip",
+        "version": "2.4.2",
+        "advisory": "GHSA-m665-v7pm-7grj",
+        "cves": [
+          "CVE-2026-115905"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.5",
+        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "2.4.2",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false
+      },
+      {
+        "package": "crates:gix",
+        "version": "0.81.0",
+        "advisory": "GHSA-f26g-jm89-4g65",
+        "cves": [
+          "CVE-2026-40034"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.83.0",
+        "summary": "gitoxide: CommandForbiddenInModulesConfiguration Bypass in gix_submodule::File::update() Enables Arbitrary Command Execution via .gitmodules",
+        "malicious": false
+      },
+      {
+        "package": "crates:gix",
+        "version": "0.81.0",
+        "advisory": "GHSA-fr8x-3vfx-f45h",
+        "cves": [
+          "CVE-2026-82251"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.83.0",
+        "summary": "gix and gitoxide: unvalidated submodule name traverses out of .git/modules and redirects state() / open() to another repository",
+        "malicious": false
+      },
+      {
+        "package": "crates:gix",
+        "version": "0.81.0",
+        "advisory": "GHSA-p3hw-mv63-rf9w",
+        "cves": [
+          "CVE-2026-82253"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.83.0",
+        "summary": "gix's submodule name validation bypass + trust inheritance flaw enables path traversal and credential disclosure",
+        "malicious": false
+      },
+      {
+        "package": "crates:gix",
+        "version": "0.81.0",
+        "advisory": "GHSA-pg4w-g64p-qwhj",
+        "cves": [
+          "CVE-2026-82252"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.83.0",
+        "summary": "gix and gitoxide's symlinked .gitmodules are followed and parsed from outside of the repository",
+        "malicious": false
+      },
+      {
+        "package": "crates:gix-fs",
+        "version": "0.19.2",
+        "advisory": "GHSA-f89h-2fjh-2r9q",
+        "cves": [
+          "CVE-2026-44471"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.21.1",
+        "summary": "gix-fs: Symlink prefix-reuse allows worktree escape during checkout",
+        "malicious": false
+      },
+      {
+        "package": "crates:gix-pack",
+        "version": "0.68.0",
+        "advisory": "GHSA-x494-mj8g-cj27",
+        "cves": [
+          "CVE-2026-82254"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.69.0",
+        "summary": "gix-pack has multiple DoS vectors: unchecked indexing panics and uncapped OOM allocations from crafted pack data",
+        "malicious": false
+      },
+      {
+        "package": "crates:hickory-proto",
+        "version": "0.25.2",
+        "advisory": "GHSA-3v94-mw7p-v465",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "hickory-proto: NSEC3 closest-encloser proof validation enters unbounded loop on cross-zone responses",
+        "malicious": false
+      },
+      {
+        "package": "crates:hickory-resolver",
+        "version": "0.25.2",
+        "advisory": "GHSA-5j98-2g5x-46v6",
+        "cves": [
+          "CVE-2026-93657"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.26.2",
+        "summary": "hickory-resolver: Resolver::lookup() and Resolver::lookup_ip() APIs obscure DNSSEC validation failures",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.17",
+        "advisory": "RUSTSEC-2026-0340",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.17",
+        "advisory": "RUSTSEC-2026-0343",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Outgoing datagram buffer accounting can panic the sender in quinn-proto",
+        "malicious": false
+      },
+      {
+        "package": "crates:rmcp",
+        "version": "1.8.0",
+        "advisory": "GHSA-33f5-2c5q-wgwj",
+        "cves": [
+          "CVE-2026-63127"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.0.0",
+        "summary": "RMCP: Missing Resource Field Validation in OAuth Protected Resource Metadata Discovery",
+        "malicious": false
+      },
+      {
+        "package": "crates:rmcp",
+        "version": "1.8.0",
+        "advisory": "GHSA-9pj6-vhgr-3mwh",
+        "cves": [
+          "CVE-2026-63128"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.0.0",
+        "summary": "RMCP: Unauthenticated permanent session-table leak in rmcp Streamable HTTP server transport leads to remote denial-of-service",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "2.4.2",
+        "advisory": "GHSA-q7v9-x93c-xqv3",
+        "cves": [
+          "CVE-2026-115909"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "2.4.2",
+        "advisory": "RUSTSEC-2026-0367",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:17:43+08:00",
+    "quality": {
+      "total": 66.8,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7037,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 68790,
+        "monthly_downloads": null,
+        "forks": 5937,
+        "dependents": null,
+        "release_downloads": 67784,
+        "hn_top_score": 82,
+        "registries_count": 0
+      },
+      "age_days": 1208,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.68
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "e9f7808f8908f6d2f137d47fd1a13dd825fa9fb36d3622e8282b0b64ae4cd80e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A coding agent optimized for low-cost models."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Live model sources require the provider credentials documented in the"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://www.openinterpreter.com/install | sh\n```\n\nWindows:\n\n```powershell\nirm https://www.openinterpreter.com/install.ps1 | iex"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Then type `i` or `interpreter` in your terminal to start a session."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "`~/.openinterpreter` is reserved for configuration and runtime state that does"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Runs commands inside native sandboxing on macOS, Linux, and Windows."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -347,5 +743,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:02+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

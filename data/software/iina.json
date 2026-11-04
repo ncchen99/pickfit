@@ -53,18 +53,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-iina-20261104-155721-f347",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask iina",
-          "purpose": null
+          "command": "brew install --cask --appdir=$HOME/Applications iina 2>&1",
+          "purpose": "Install IINA via brew cask to ~/Applications"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "ls -la ~/Applications/IINA.app 2>&1 | head -20\nls -la /opt/homebrew/bin/iina 2>&1\n/opt/homebrew/bin/iina --help 2>&1",
+        "expected_signal": "Usage: iina-cli"
+      },
+      "first_task": "open ~/Applications/IINA.app"
     },
     "linux": null,
     "windows": null
@@ -82,12 +85,223 @@
     "url": "https://github.com/iina/iina/releases/tag/v1.5.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T16:03:14.200397+08:00",
+    "runs": [
+      {
+        "id": "verify-iina-20261104-155721-f347",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T16:03:14.200397+08:00",
+        "tool_version": "1.5.0",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications iina 2>&1",
+            "purpose": "Install IINA via brew cask to ~/Applications"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ls -la ~/Applications/IINA.app 2>&1 | head -20\nls -la /opt/homebrew/bin/iina 2>&1\n/opt/homebrew/bin/iina --help 2>&1",
+            "expected_signal": "Usage: iina-cli",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: iina-cli [arguments] [files] [-- mpv_option [...]]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/IINA.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask iina",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications iina to install without admin rights",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows IINA.app Contents present and iina --help printing 'Usage: iina-cli' with arguments list. / IINA shows a white Highlights onboarding window with a Continue button behind its dark main window offering Open and Open URL.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-iina-20261104-155721-f347/report.json",
+          "log_path": "runs/verify/verify-iina-20261104-155721-f347/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-iina-20261104-155721-f347/check-1-cmd2.judged.png",
+            "runs/verify/verify-iina-20261104-155721-f347/replay-3-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.029442,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open ~/Applications/IINA.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "play video and music with subtitles and playlists",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "search online subtitles and match local subtitles",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "play audio files in standalone Music Mode",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "use picture-in-picture and Touch Bar controls",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T16:03:14+08:00",
+    "quality": {
+      "total": 64.9,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.75,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6562,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 47002,
+        "monthly_downloads": null,
+        "forks": 2987,
+        "dependents": null,
+        "release_downloads": 203582,
+        "hn_top_score": 160,
+        "registries_count": 0
+      },
+      "age_days": 3606,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.49
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:14:21.996880+08:00",
+      "sources_sha": "f3a33e0b3922c078e5616ef58ffc1e57f30e7f3faed999013da3adb1e8b38d89",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "* All the features you need for video and music: subtitles, playlists, chapters…and much, much more!"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "* mpv configuration files and script system for advanced users"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Designed with modern versions of macOS (11.0+) in mind"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install --cask iina"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "* mpv configuration files and script system for advanced users"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "In-app auto update will be published within 24 hours."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "The modern video player for macOS."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -342,5 +556,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:38+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

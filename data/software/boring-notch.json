@@ -42,20 +42,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-boring-notch-20261104-170902-4738",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask TheBoredTeam/boring-notch/boring-notch",
-          "purpose": null
+          "command": "brew tap TheBoredTeam/boring-notch && brew trust --tap TheBoredTeam/boring-notch && brew install --cask --appdir=$HOME/Applications TheBoredTeam/boring-notch/boring-notch",
+          "purpose": "Install Boring Notch via Homebrew cask tap"
         }
       ],
-      "manual_steps": [
-        "bypass macOS unidentified developer warning on first launch"
-      ],
-      "check": null,
-      "first_task": null
+      "manual_steps": [],
+      "check": {
+        "command": "ls -la ~/Applications/boringNotch.app && ls -lh /Users/sbx/Applications/",
+        "expected_signal": "boringNotch.app"
+      },
+      "first_task": "open ~/Applications/boringNotch.app"
     },
     "linux": null,
     "windows": null
@@ -73,12 +74,228 @@
     "url": "https://github.com/TheBoredTeam/boring.notch/releases/tag/v2.7.3"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T17:13:47.934002+08:00",
+    "runs": [
+      {
+        "id": "verify-boring-notch-20261104-170902-4738",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T17:13:47.934002+08:00",
+        "tool_version": "2.7.3",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew tap TheBoredTeam/boring-notch && brew trust --tap TheBoredTeam/boring-notch && brew install --cask --appdir=$HOME/Applications TheBoredTeam/boring-notch/boring-notch",
+            "purpose": "Install Boring Notch via Homebrew cask tap"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ls -la ~/Applications/boringNotch.app && ls -lh /Users/sbx/Applications/",
+            "expected_signal": "boringNotch.app",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "drwxr-xr-x 3 sbx staff 96B Nov 24 2025 boringNotch.app",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/boringNotch.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask TheBoredTeam/boring-notch/boring-notch",
+            "actually_needed": "Need to tap and trust the third-party tap first and specify --appdir=$HOME/Applications for non-admin user (no /Applications write)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "App requires bypassing quarantine via xattr after manual download",
+            "actually_needed": "Homebrew cask automatically handles quarantine bypass, no manual xattr needed",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The listings show boringNotch.app exists and contains a Contents directory. / The app shows its Boring Notch Welcome onboarding screen with icon and a Get started button.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-boring-notch-20261104-170902-4738/report.json",
+          "log_path": "runs/verify/verify-boring-notch-20261104-170902-4738/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-boring-notch-20261104-170902-4738/check-1-cmd2.judged.png",
+            "runs/verify/verify-boring-notch-20261104-170902-4738/replay-3-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.02657,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open ~/Applications/boringNotch.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "control music from notch with visualizer",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "manage calendar and reminders from notch",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "store and share files via shelf",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "replace macOS system HUD controls",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:13:47+08:00",
+    "quality": {
+      "total": 71.4,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8056,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 84.6,
+      "signals": {
+        "stars": 11254,
+        "monthly_downloads": null,
+        "forks": 1186,
+        "dependents": null,
+        "release_downloads": 1207771,
+        "hn_top_score": 2,
+        "registries_count": 0
+      },
+      "age_days": 823,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 11.0
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:14:21.996880+08:00",
+      "sources_sha": "73ca71361032d6fdf5e59e749accf97c11f5484e6536409b8380ade8e71fac3a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "your notch transforms into a dynamic music control center, complete with a vibrant visualizer and all the essential music controls you need."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "the coolest way to make your MacBook’s notch the star of the show!"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "macOS **14 Sonoma** or later"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install --cask TheBoredTeam/boring-notch/boring-notch"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Launch the app, and voilà—your notch is now the coolest part of your screen."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Click the star in your menu bar to customize your notch to your heart's content."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "so macOS will warn you that Boring Notch is from an unidentified developer on first launch."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Apple Silicon or Intel Mac"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -271,5 +488,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:33+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

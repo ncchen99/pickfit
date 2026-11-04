@@ -52,20 +52,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-maccy-20261104-170402-cbdd",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install maccy",
-          "purpose": null
+          "command": "mkdir -p $HOME/Applications && brew install --cask --appdir=$HOME/Applications maccy",
+          "purpose": "brew install --cask --appdir=$HOME/Applications maccy"
         }
       ],
-      "manual_steps": [
-        "Add Maccy to System Settings Privacy and Security Accessibility"
-      ],
-      "check": null,
-      "first_task": null
+      "manual_steps": [],
+      "check": {
+        "command": "ls -la $HOME/Applications/Maccy.app && file $HOME/Applications/Maccy.app/Contents/MacOS/Maccy 2>&1",
+        "expected_signal": "Maccy.app"
+      },
+      "first_task": "open $HOME/Applications/Maccy.app"
     },
     "linux": null,
     "windows": null
@@ -83,12 +84,223 @@
     "url": "https://github.com/p0deje/Maccy/releases/tag/2.8.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T17:09:02.062015+08:00",
+    "runs": [
+      {
+        "id": "verify-maccy-20261104-170402-cbdd",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T17:09:02.062015+08:00",
+        "tool_version": "2.8.0",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p $HOME/Applications && brew install --cask --appdir=$HOME/Applications maccy",
+            "purpose": "brew install --cask --appdir=$HOME/Applications maccy"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ls -la $HOME/Applications/Maccy.app && file $HOME/Applications/Maccy.app/Contents/MacOS/Maccy 2>&1",
+            "expected_signal": "Maccy.app",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/Users/sbx/Applications/Maccy.app/Contents/MacOS/Maccy: Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open $HOME/Applications/Maccy.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install maccy",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications maccy (standard user cannot write /Applications, needs user Applications dir)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows Maccy.app exists with Contents directory and its MacOS/Maccy binary is a Mach-O universal binary for x86_64 and arm64. / The Maccy menu-bar panel is open showing a search field and its Clear, Preferences, About, Quit commands.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-maccy-20261104-170402-cbdd/report.json",
+          "log_path": "runs/verify/verify-maccy-20261104-170402-cbdd/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-maccy-20261104-170402-cbdd/check-1-cmd3.judged.png",
+            "runs/verify/verify-maccy-20261104-170402-cbdd/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.027822,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "open $HOME/Applications/Maccy.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "Keep history of copied items",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "Search clipboard history",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "Paste history items",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "Pin history items to top",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:09:02+08:00",
+    "quality": {
+      "total": 67.4,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.75,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.4176,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 22202,
+        "monthly_downloads": null,
+        "forks": 1268,
+        "dependents": null,
+        "release_downloads": 1977977,
+        "hn_top_score": 134,
+        "registries_count": 0
+      },
+      "age_days": 3199,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.74
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:14:21.996880+08:00",
+      "sources_sha": "ccad5d92d9b232b39ef876a859d548e21036c125a51e07513fb3170ea3982d2e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Maccy is a lightweight clipboard manager for macOS. It keeps the history of what you copy"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Maccy works on macOS Sonoma 14 or higher."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install maccy"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "<kbd>SHIFT (⇧)</kbd> + <kbd>COMMAND (⌘)</kbd> + <kbd>C</kbd> to popup Maccy or click on its icon in the menu bar."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "defaults write org.p0deje.Maccy ignoreEvents true # default is false"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Why doesn't it paste when I select an item in history?"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[MIT](./LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -335,5 +547,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:31+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

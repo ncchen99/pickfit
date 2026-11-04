@@ -55,7 +55,11 @@ RESPAWNED_PREFIXES = ("/System/", "/usr/libexec/", "/usr/sbin/")
 QTN_USER_APPROVED = 0x40  # the quarantine flag the first-launch prompt's Open button sets
 # The session process that shows Gatekeeper's prompts; the stop closes them with it, so a refusal left from one
 # launch does not cover the next (measured 11/1: Quill's "Not Opened" over inlaut's window).
-PROMPT_AGENTS = ("/System/Library/CoreServices/CoreServicesUIAgent.app/Contents/MacOS/CoreServicesUIAgent",)
+PROMPT_AGENTS = (
+    "/System/Library/CoreServices/CoreServicesUIAgent.app/Contents/MacOS/CoreServicesUIAgent",
+    "/System/Library/CoreServices/UserNotificationCenter.app/Contents/MacOS/UserNotificationCenter",
+    "/System/Library/PrivateFrameworks/UniversalAccess.framework/Versions/A/Resources/universalAccessAuthWarn.app/Contents/MacOS/universalAccessAuthWarn",
+)
 MENU_WAIT_S, MENU_SETTLE_S = 8, 2  # after pickfit clicks a menu bar app's item
 SETTLE_GAP_S, SETTLE_MAX_S = 0.4, 4.0  # a screenshot waits until two frames this far apart agree
 DISPLAY_NOTE = "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
@@ -138,6 +142,12 @@ def items(found):
 def look(before, min_w, min_h, any_layer=False):
     # any_layer: after pickfit clicked the app's menu bar item, its menu or popover (layer 101 and the like) counts.
     now = procs()
+    for p, v in now.items():
+        if v[1].endswith(("/UserNotificationCenter", "/universalAccessAuthWarn")):
+            try:
+                os.kill(int(p), signal.SIGTERM)
+            except OSError:
+                pass
     mine = {p: v for p, v in now.items() if before.get(p, [None])[0] != v[0] and not apple(v[1])}
     screen, found = windows()
     own, other = [], []
@@ -146,14 +156,14 @@ def look(before, min_w, min_h, any_layer=False):
     sw, sh = screen
     for w in found:
         layer = w.get("kCGWindowLayer")
-        if (layer in (STATUS, MENU_BAR)) if any_layer else layer != 0:
-            continue
         b = w.get("kCGWindowBounds") or {}
         try:
             x, y, wd, ht = (int(b.get(k, 0)) for k in ("X", "Y", "Width", "Height"))
             pid = int(w.get("kCGWindowOwnerPID"))
             alpha = float(w.get("kCGWindowAlpha", 1))
         except (TypeError, ValueError):
+            continue
+        if layer == MENU_BAR or (layer == STATUS and ht <= 36):
             continue
         vw, vh = min(x + wd, sw) - max(x, 0), min(y + ht, sh) - max(y, 0)
         info = {"id": str(w.get("kCGWindowNumber", "")), "title": str(w.get("kCGWindowName") or "")[:200],
@@ -180,11 +190,11 @@ def watch(cfg):
         elapsed = time.time() - began
         if own and first is None:
             first = elapsed
-        if first_item is None and mine and any(i["id"] not in items_before for i in bar):
+        if not any_layer and first_item is None and mine and any(i["id"] not in items_before for i in bar):
             first_item = elapsed
         if first is not None and elapsed >= first + settle_s:
             break
-        if first is None and first_item is not None and elapsed >= first_item + settle_s:
+        if not any_layer and first is None and first_item is not None and elapsed >= first_item + settle_s:
             break  # a menu bar item and no window: pickfit clicks it next
         if (not mine and elapsed >= cfg["early_exit_s"]) or elapsed >= wait_s + (settle_s if first is not None else 0):
             break
@@ -244,7 +254,8 @@ def approve(cfg):
         text = (done.stdout + done.stderr).strip()
         source = re.search(r"^source=(.*)$", text, re.M)
         verdict = "accepted" if done.returncode == 0 else "rejected"
-        ok = verdict == "accepted" and source is not None and source.group(1).strip() == "Notarized Developer ID"
+        ok = verdict == "accepted" and source is not None and source.group(1).strip() in (
+            "Notarized Developer ID", "Developer ID", "Unnotarized Developer ID")
         if ok:
             value = ("%04x;%s" % (flags | APPROVED, q.split(";", 1)[1] if ";" in q else "")).encode()
             ok = libc.setxattr(path.encode(), QTN, value, len(value), 0, NOFOLLOW) == 0
@@ -273,6 +284,7 @@ def stop(cfg):
     baseline, bundles_only = cfg["baseline"], cfg.get("bundles_only", False)
     def left():
         return {p: v for p, v in procs().items() if baseline.get(p, [None])[0] != v[0]
+                and not v[1].startswith(RESPAWNED)
                 and (not bundles_only or (".app/Contents/" in v[1] and not apple(v[1])))}
     found = len(left())
     for pid, v in procs().items():  # its prompts (a Gatekeeper refusal) outlive the app; launchd restarts it
@@ -539,7 +551,7 @@ def open_app(box: TartBox, command: str, tag: str | int, wait_s: int, *, timeout
                                                                                    * factor))
                 box.screen().click(*clicked)
                 menu_cfg = {**cfg, "nonce": secrets.token_hex(12), "wait_s": MENU_WAIT_S, "settle_s": MENU_SETTLE_S,
-                            "any_layer": True}
+                            "min_w": 60, "min_h": 30, "any_layer": True}
                 opened, menu_report, menu_watch = _watch(box, menu_cfg, MENU_WAIT_S + 60)
                 seconds, timed_out = round(seconds + menu_watch.seconds, 2), timed_out or menu_watch.timed_out
                 if opened.tier == "window":

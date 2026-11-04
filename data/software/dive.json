@@ -50,7 +50,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-dive-20261104-133407-e260",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "DIVE_VERSION=$(curl -sL \"https://api.github.com/repos/wagoodman/dive/releases/latest\" | grep '\"tag_name\":' | sed -E 's/.*\"v([^\"]+)\".*/\\1/')\ncurl -fL \"https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.tar.gz\" -o /tmp/dive.tar.gz\nmkdir -p ~/.local/bin\ntar -xzf /tmp/dive.tar.gz -C /tmp",
+          "purpose": "Download dive 0.13.1 linux_amd64 tarball from GitHub releases"
+        },
+        {
+          "command": "install -m 755 /tmp/dive ~/.local/bin/dive && ~/.local/bin/dive --help 2>&1",
+          "purpose": "Install binary to ~/.local/bin and verify --version/--help"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "dive --version",
+        "expected_signal": "dive 0.13.1"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -66,12 +86,233 @@
     "url": "https://github.com/wagoodman/dive/releases/tag/v0.13.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:34:50.246112+08:00",
+    "runs": [
+      {
+        "id": "verify-dive-20261104-133407-e260",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T13:34:50.246112+08:00",
+        "tool_version": "0.13.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "DIVE_VERSION=$(curl -sL \"https://api.github.com/repos/wagoodman/dive/releases/latest\" | grep '\"tag_name\":' | sed -E 's/.*\"v([^\"]+)\".*/\\1/')\ncurl -fL \"https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.tar.gz\" -o /tmp/dive.tar.gz\nmkdir -p ~/.local/bin\ntar -xzf /tmp/dive.tar.gz -C /tmp",
+            "purpose": "Download dive 0.13.1 linux_amd64 tarball from GitHub releases"
+          },
+          {
+            "command": "install -m 755 /tmp/dive ~/.local/bin/dive && ~/.local/bin/dive --help 2>&1",
+            "purpose": "Install binary to ~/.local/bin and verify --version/--help"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "dive --version",
+            "expected_signal": "dive 0.13.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "dive 0.13.1",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install github.com/wagoodman/dive@latest (requires Go 1.26+) and pacman -S dive",
+            "actually_needed": "Go toolchain not present in box and pacman not available on Debian; installed via direct download of linux_amd64 tarball from GitHub releases to ~/.local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Ubuntu/Debian install via sudo apt install .deb",
+            "actually_needed": "No sudo/root in box, so extracted tarball instead of installing deb",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows dive --version printing dive 0.13.1.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-dive-20261104-133407-e260/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-dive-20261104-133407-e260/check-1-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.025274,
+        "features": [
+          {
+            "feature": "show Docker image contents by layer",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "indicate what changed in each layer",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "estimate image efficiency and wasted space",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "build image and analyze immediately",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/wagoodman/dive@e97febbeb695",
+      "go.mod"
+    ],
+    "packages_checked": 184,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "go:github.com/go-jose/go-jose/v4",
+        "version": "v4.1.5",
+        "advisory": "GHSA-mgcc-cww5-fp2q",
+        "cves": [
+          "CVE-2026-116587"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.1.6",
+        "summary": "Go JOSE: DoS when parsing JWKs that contain RSA keys",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:17:43+08:00",
+    "quality": {
+      "total": 54.8,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.455,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.2214,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 96.3,
+      "signals": {
+        "stars": 54699,
+        "monthly_downloads": 959,
+        "forks": 2011,
+        "dependents": null,
+        "release_downloads": 2515637,
+        "hn_top_score": 684,
+        "registries_count": 1
+      },
+      "age_days": 3096,
+      "packages": [
+        "homebrew:dive"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 2.03
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "b21d2b6067053a7f263ba10207f43d909aa6d8b0c530c50aafbe7f8f39c616c3",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A tool for exploring a Docker image, layer contents, and discovering ways to shrink the size of your Docker/OCI image."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Requires Go version 1.26 or higher"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install dive"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "dive <your-image-tag>"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "No configuration is necessary, however, you can create a config file and override values:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "The Snap method is not recommended if you installed Docker via `apt-get`, since it might break your existing Docker daemon."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "License: MIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -272,5 +513,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:58+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

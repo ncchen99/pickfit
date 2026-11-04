@@ -76,21 +76,21 @@
       "first_task": "whisperx path/to/audio.wav"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-whisperx-20261104-133427-0d92",
       "method": "uv",
       "steps": [
         {
-          "command": "uvx whisperx",
-          "purpose": null
+          "command": "uv tool install whisperx 2>&1",
+          "purpose": "install whisperx via uv tool install"
         }
       ],
-      "manual_steps": [
-        "generate Hugging Face access token for diarization",
-        "accept user agreement for diarization model"
-      ],
-      "check": null,
-      "first_task": "whisperx path/to/audio.wav"
+      "manual_steps": [],
+      "check": {
+        "command": "whisperx --version 2>&1",
+        "expected_signal": "whisperx 3.8.6"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -123,12 +123,315 @@
     "url": "https://github.com/m-bain/whisperX/releases/tag/v3.8.6"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:37:39.140943+08:00",
+    "runs": [
+      {
+        "id": "verify-whisperx-20261104-133427-0d92",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T13:37:39.140943+08:00",
+        "tool_version": "3.8.6",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install whisperx 2>&1",
+            "purpose": "install whisperx via uv tool install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "whisperx --version 2>&1",
+            "expected_signal": "whisperx 3.8.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "whisperx 3.8.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "whisperx --help 2>&1",
+            "expected_signal": "--help",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "-h, --help show this help message and exit",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show whisperx 3.8.6 version output and full whisperx help usage with options.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-whisperx-20261104-133427-0d92/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-whisperx-20261104-133427-0d92/check-1-cmd3.judged.png",
+            "runs/verify/verify-whisperx-20261104-133427-0d92/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.021762,
+        "features": [
+          {
+            "feature": "transcribe speech with word-level timestamps",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "label transcript with speaker IDs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "align words using wav2vec2 models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "pypi:whisperx (fresh install, 117 packages)"
+    ],
+    "packages_checked": 117,
+    "findings_total": 9,
+    "advisories_total": 9,
+    "findings": [
+      {
+        "package": "pypi:torch",
+        "version": "2.8.0",
+        "advisory": "GHSA-63cw-57p8-fm3p",
+        "cves": [
+          "CVE-2026-24747"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.10.0",
+        "summary": "PyTorch Vulnerable to Remote Code Execution via Untrusted Checkpoint Files",
+        "malicious": false
+      },
+      {
+        "package": "pypi:torch",
+        "version": "2.8.0",
+        "advisory": "PYSEC-2025-203",
+        "cves": [
+          "CVE-2025-55551"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.9.0",
+        "summary": "An issue in the component torch.linalg.lu of pytorch v2.8.0 allows attackers to cause a Denial of Service (DoS) when performing a slice operation.",
+        "malicious": false
+      },
+      {
+        "package": "pypi:torch",
+        "version": "2.8.0",
+        "advisory": "PYSEC-2025-204",
+        "cves": [
+          "CVE-2025-55552"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.9.0",
+        "summary": "pytorch v2.8.0 was discovered to display unexpected behavior when the components torch.rot90 and torch.randn_like are used together.",
+        "malicious": false
+      },
+      {
+        "package": "pypi:torch",
+        "version": "2.8.0",
+        "advisory": "PYSEC-2026-139",
+        "cves": [
+          "CVE-2026-4538"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "A vulnerability was identified in PyTorch 2.10.0. The affected element is an unknown function of the component pt2 Loading Handler. The manipulation leads to deserialization. The attack can only be pe",
+        "malicious": false
+      },
+      {
+        "package": "pypi:transformers",
+        "version": "4.57.6",
+        "advisory": "GHSA-29pf-2h5f-8g72",
+        "cves": [
+          "CVE-2026-4372"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.3.0",
+        "summary": "HuggingFace transformers vulnerable to remote code execution",
+        "malicious": false
+      },
+      {
+        "package": "pypi:transformers",
+        "version": "4.57.6",
+        "advisory": "GHSA-fgcw-684q-jj6r",
+        "cves": [
+          "CVE-2026-5241"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.5.0",
+        "summary": "huggingface/transformers: Arbitrary Code Execution During Model Initialization in the LightGlue Model Loading Path",
+        "malicious": false
+      },
+      {
+        "package": "pypi:transformers",
+        "version": "4.57.6",
+        "advisory": "GHSA-x9r9-c232-4q39",
+        "cves": [
+          "CVE-2026-80047"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Hugging Face Transformers downloads custom generation code before trust consent",
+        "malicious": false
+      },
+      {
+        "package": "pypi:transformers",
+        "version": "4.57.6",
+        "advisory": "GHSA-xrqw-3rrv-vx5w",
+        "cves": [
+          "CVE-2026-9856"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.10.0",
+        "summary": "Transformers save_pretrained path traversal allows arbitrary file writes through chat template names",
+        "malicious": false
+      },
+      {
+        "package": "pypi:transformers",
+        "version": "4.57.6",
+        "advisory": "PYSEC-2025-217",
+        "cves": [
+          "CVE-2025-14929"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Hugging Face Transformers X-CLIP Checkpoint Conversion Deserialization of Untrusted Data Remote Code Execution Vulnerability. This vulnerability allows remote attackers to execute arbitrary code on af",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:17:43+08:00",
+    "quality": {
+      "total": 66.4,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5097,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 95.0,
+      "signals": {
+        "stars": 25080,
+        "monthly_downloads": 342919,
+        "forks": 2530,
+        "dependents": null,
+        "release_downloads": 3727,
+        "hn_top_score": 2,
+        "registries_count": 1
+      },
+      "age_days": 1426,
+      "packages": [
+        "pypi:whisperx"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.32
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "257f1efedea16b93a85563808e2ae4b226404c7924bc8645291030da767b24af",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "This repository provides fast automatic speech recognition (70x realtime with large-v2) with word-level timestamps and speaker diarization."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "To use WhisperX with GPU acceleration, install the CUDA toolkit 12.8 before WhisperX."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install whisperx"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "whisperx path/to/audio.wav"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "include your Hugging Face access token (read) that you can generate from [Here]"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "To reduce GPU memory requirements, try any of the following (2. & 3. can affect quality):"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "For **Linux** users, install the CUDA toolkit 12.8 following this guide:"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -393,5 +696,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:07:40+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

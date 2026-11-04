@@ -55,17 +55,28 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "brew",
+      "basis": "replayed",
+      "run_id": "verify-lazygit-20261104-133414-c11e",
+      "method": "binary",
       "steps": [
         {
-          "command": "brew install lazygit",
-          "purpose": null
+          "command": "curl -s https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep -Po '\"tag_name\": *\"v\\K[^\"]*' > /tmp/v.txt && cat /tmp/v.txt",
+          "purpose": "get latest lazygit version from GitHub API"
+        },
+        {
+          "command": "V=$(cat /tmp/v.txt) && curl -Lo /tmp/lazygit.tar.gz https://github.com/jesseduffield/lazygit/releases/download/v${V}/lazygit_${V}_Linux_x86_64.tar.gz",
+          "purpose": "download lazygit tarball"
+        },
+        {
+          "command": "tar xf /tmp/lazygit.tar.gz -C /tmp lazygit && install /tmp/lazygit -D -t ~/.local/bin/",
+          "purpose": "extract and install binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "lazygit --version",
+        "expected_signal": "version=0.66.2"
+      },
       "first_task": null
     },
     "windows": {
@@ -96,12 +107,219 @@
     "url": "https://github.com/jesseduffield/lazygit/releases/tag/v0.66.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:35:02.391470+08:00",
+    "runs": [
+      {
+        "id": "verify-lazygit-20261104-133414-c11e",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T13:35:02.391470+08:00",
+        "tool_version": "0.66.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -s https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep -Po '\"tag_name\": *\"v\\K[^\"]*' > /tmp/v.txt && cat /tmp/v.txt",
+            "purpose": "get latest lazygit version from GitHub API"
+          },
+          {
+            "command": "V=$(cat /tmp/v.txt) && curl -Lo /tmp/lazygit.tar.gz https://github.com/jesseduffield/lazygit/releases/download/v${V}/lazygit_${V}_Linux_x86_64.tar.gz",
+            "purpose": "download lazygit tarball"
+          },
+          {
+            "command": "tar xf /tmp/lazygit.tar.gz -C /tmp lazygit && install /tmp/lazygit -D -t ~/.local/bin/",
+            "purpose": "extract and install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lazygit --version",
+            "expected_signal": "version=0.66.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "commit=63ab89fff478854deb4a35ef8902676b3cc5ca72, build date=2026-10-16T09:27:30Z, build source=binaryRelease, version=0.66.2, os=linux, arch=amd64, git version=2.47.3",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "sudo xbps-install -S lazygit (Void Linux) as ranked install candidate",
+            "actually_needed": "downloaded binary release from GitHub and installed to ~/.local/bin without sudo, using Debian/Ubuntu manual instructions",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows lazygit --version printing commit info including version=0.66.2.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lazygit-20261104-133414-c11e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lazygit-20261104-133414-c11e/check-1-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.053206,
+        "features": [
+          {
+            "feature": "stage hunks or individual lines",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "perform interactive rebase",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "cherry-pick commits",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "bisect commits to find bug",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/jesseduffield/lazygit@0002c0354770",
+      "go.mod"
+    ],
+    "packages_checked": 62,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 66.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7037,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 83638,
+        "monthly_downloads": 40535,
+        "forks": 3244,
+        "dependents": null,
+        "release_downloads": 1002509,
+        "hn_top_score": 551,
+        "registries_count": 1
+      },
+      "age_days": 3091,
+      "packages": [
+        "homebrew:lazygit"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "32e1eaa45fbb65ce622ae0ac571b91037e97e9c453434f1f09fb099c177c09ea",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A simple terminal UI for git commands"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "If you're a mere mortal like me and you're tired of hearing how powerful git is"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "it requires the [`gh`](https://cli.github.com/) tool to be installed"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install lazygit"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "There is no configuration needed to enable this for github.com"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "- [FAQ](#faq)"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "For Windows, Mac OS(10.12+) or Linux, you can download a binary release [here](../../releases)."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -342,5 +560,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:49+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

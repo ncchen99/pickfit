@@ -47,18 +47,18 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-playcover-20261104-161033-cd83",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask PlayCover/playcover/playcover-community",
-          "purpose": null
+          "command": "brew tap PlayCover/playcover && brew trust --tap PlayCover/playcover && brew install --cask --appdir=$HOME/Applications PlayCover/playcover/playcover-community",
+          "purpose": "install PlayCover via brew cask"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "open ~/Applications/PlayCover.app"
     },
     "linux": null,
     "windows": null
@@ -76,12 +76,205 @@
     "url": "https://github.com/PlayCover/PlayCover/releases/tag/3.1.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T17:40:50.093105+08:00",
+    "runs": [
+      {
+        "id": "verify-playcover-20261104-161033-cd83",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T17:40:50.093105+08:00",
+        "tool_version": "3.1.0",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew tap PlayCover/playcover && brew trust --tap PlayCover/playcover && brew install --cask --appdir=$HOME/Applications PlayCover/playcover/playcover-community",
+            "purpose": "install PlayCover via brew cask"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/PlayCover.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask PlayCover/playcover/playcover-community",
+            "actually_needed": "brew tap + brew trust --tap + brew install --cask --appdir=$HOME/Applications (required for third-party tap and non-admin install)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The PlayCover App Library window is fully drawn showing an empty library with No IPAs Installed and an Import IPA button.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-playcover-20261104-161033-cd83/report.json",
+          "log_path": "runs/verify/verify-playcover-20261104-161033-cd83/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-playcover-20261104-161033-cd83/replay-3-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.020385,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "open ~/Applications/PlayCover.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "run iOS apps and games on Mac",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "map touch controls to keyboard",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "run apps through iPad-emulating wrapper",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00"
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:40:50+08:00",
+    "quality": {
+      "total": 60.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.7,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.75,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5857,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 84.6,
+      "signals": {
+        "stars": 12088,
+        "monthly_downloads": null,
+        "forks": 1029,
+        "dependents": null,
+        "release_downloads": 2409216,
+        "hn_top_score": 2,
+        "registries_count": 0
+      },
+      "age_days": 1579,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 9.35
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:14:21.996880+08:00",
+      "sources_sha": "18d4d2afefa642b77f75575121d477996057d0c05b8eee8d3f147f92d7f08a10",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Run iOS apps and games on Apple Silicon Macs with mouse, keyboard and controller support."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "run iOS apps and games on Apple Silicon devices running macOS 12.0 or newer."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install --cask PlayCover/playcover/playcover-community"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Remove PlayCover using `brew uninstall --cask playcover-community`;"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Distributed under the GPLv3 License."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -328,5 +521,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:32+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:40:50.095066+08:00"
 }

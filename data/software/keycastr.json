@@ -45,20 +45,18 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-keycastr-20261104-133042-068d",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask keycastr",
-          "purpose": null
+          "command": "brew install --cask --appdir=$HOME/Applications keycastr",
+          "purpose": "install KeyCastr via brew cask"
         }
       ],
-      "manual_steps": [
-        "unlock Input Monitoring menu and enable KeyCastr"
-      ],
+      "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "open ~/Applications/KeyCastr.app"
     },
     "linux": null,
     "windows": null
@@ -76,12 +74,205 @@
     "url": "https://github.com/keycastr/keycastr/releases/tag/v0.11.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:35:36.910903+08:00",
+    "runs": [
+      {
+        "id": "verify-keycastr-20261104-133042-068d",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T13:35:36.910903+08:00",
+        "tool_version": "0.11.1",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications keycastr",
+            "purpose": "install KeyCastr via brew cask"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/KeyCastr.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask keycastr",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications keycastr to install without admin rights",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows KeyCastr's menu bar menu with About, Preferences, Start Casting, and Quit options.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-keycastr-20261104-133042-068d/report.json",
+          "log_path": "runs/verify/verify-keycastr-20261104-133042-068d/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-keycastr-20261104-133042-068d/replay-3-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.029435,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "open ~/Applications/KeyCastr.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "display command keys, modified keys or keystrokes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "include mouse clicks in display",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "develop custom visualizers on KeyCastr",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 60.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.35,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.324,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 15186,
+        "monthly_downloads": null,
+        "forks": 583,
+        "dependents": null,
+        "release_downloads": 231581,
+        "hn_top_score": 60,
+        "registries_count": 0
+      },
+      "age_days": 6466,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.07
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "c250a9338173e2e0b5e0e026676b8e3d4ad70bc1bf9bef8faf9774d5d4e3d696",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "You can choose to display command keys, all modified keys, or all keystrokes, and there is also an option to include mouse clicks."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "when creating screencasts, presenting, or collaborating with others."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install --cask keycastr"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "To modify the position of displayed keystrokes, click and drag the text like so:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "There are two likely causes for the app seeming not to work:"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[BSD 3-Clause](https://opensource.org/licenses/BSD-3-Clause)\n\nKeyCastr has been freely available for the Mac since 2009."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -304,5 +495,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:35+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

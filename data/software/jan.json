@@ -63,7 +63,24 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-jan-20261104-133747-a9ad",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -L -o /tmp/jan.AppImage \"https://app.jan.ai/download/latest/linux-amd64-appimage\"",
+          "purpose": "Download Jan AppImage from official CDN"
+        },
+        {
+          "command": "chmod +x /tmp/jan.AppImage",
+          "purpose": "Make AppImage executable"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "/tmp/jan.AppImage --appimage-extract-and-run --no-sandbox"
+    },
     "windows": null
   },
   "pricing": {
@@ -79,12 +96,357 @@
     "url": "https://github.com/janhq/jan/releases/tag/v0.8.8"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:40:26.220123+08:00",
+    "runs": [
+      {
+        "id": "verify-jan-20261104-133747-a9ad",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-04T13:40:26.220123+08:00",
+        "tool_version": "0.8.8",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -L -o /tmp/jan.AppImage \"https://app.jan.ai/download/latest/linux-amd64-appimage\"",
+            "purpose": "Download Jan AppImage from official CDN"
+          },
+          {
+            "command": "chmod +x /tmp/jan.AppImage",
+            "purpose": "Make AppImage executable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "/tmp/jan.AppImage --appimage-extract-and-run --no-sandbox",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "README lists Linux AppImage download link",
+            "actually_needed": "AppImage must be run with --appimage-extract-and-run and --no-sandbox on this Debian box (no FUSE, no user namespaces)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The Jan app shows its Step 1 of 4 initial setup card asking to set up the system, with sidebar navigation visible.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-jan-20261104-133747-a9ad/report.json",
+          "log_path": "runs/verify/verify-jan-20261104-133747-a9ad/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-jan-20261104-133747-a9ad/replay-3-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.037836,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "/tmp/jan.AppImage --appimage-extract-and-run --no-sandbox",
+          "window_title": "Jan",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "Download and run local LLMs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "Connect to cloud AI models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "Create specialized AI assistants",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "Serve OpenAI-compatible local API",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/janhq/jan@12c59c8b8b0d",
+      "src-tauri/Cargo.lock",
+      "src-tauri/jan-cli/Cargo.lock",
+      "src-tauri/plugins/tauri-plugin-extensions/Cargo.lock",
+      "src-tauri/plugins/tauri-plugin-hardware/Cargo.lock",
+      "src-tauri/plugins/tauri-plugin-llamacpp/Cargo.lock",
+      "src-tauri/plugins/tauri-plugin-rag/Cargo.lock",
+      "src-tauri/utils/Cargo.lock"
+    ],
+    "packages_checked": 1227,
+    "findings_total": 13,
+    "advisories_total": 8,
+    "findings": [
+      {
+        "package": "crates:calamine",
+        "version": "0.37.0",
+        "advisory": "RUSTSEC-2026-0436",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.38.0",
+        "summary": "Panic and unbounded allocation (OOM) in the CFB/OLE2 parser on malformed input",
+        "malicious": false
+      },
+      {
+        "package": "crates:pulldown-cmark",
+        "version": "0.13.4",
+        "advisory": "RUSTSEC-2026-0414",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.13.5",
+        "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
+        "malicious": false
+      },
+      {
+        "package": "crates:pulldown-cmark",
+        "version": "0.13.4",
+        "advisory": "RUSTSEC-2026-0433",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.13.6",
+        "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.31.0",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.39.4",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.31.0",
+        "advisory": "RUSTSEC-2026-0195",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.39.4",
+        "advisory": "RUSTSEC-2026-0195",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.16",
+        "advisory": "RUSTSEC-2026-0340",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.17",
+        "advisory": "RUSTSEC-2026-0340",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.15",
+        "advisory": "RUSTSEC-2026-0340",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.16",
+        "advisory": "RUSTSEC-2026-0341",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.17",
+        "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.15",
+        "advisory": "RUSTSEC-2026-0341",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.17",
+        "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.17",
+        "advisory": "RUSTSEC-2026-0343",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Outgoing datagram buffer accounting can panic the sender in quinn-proto",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:17:43+08:00",
+    "quality": {
+      "total": 67.0,
+      "confidence": 0.8,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 45410,
+        "monthly_downloads": null,
+        "forks": 3145,
+        "dependents": null,
+        "release_downloads": 1840643,
+        "hn_top_score": 194,
+        "registries_count": 0
+      },
+      "age_days": 1175,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.7
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "0708e5a14b47191902ee60738e303a26799f542d0985f632184aab648bd8d272",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Jan is an open source alternative to ChatGPT that runs 100% offline on your computer."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- Node.js ≥ 20.0.0\n- Yarn ≥ 4.5.3\n- Make ≥ 3.81\n- Rust (for Tauri)"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "git clone https://github.com/janhq/jan"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "make dev"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Engine variants are picked with `JAN_ENGINE_VARIANT`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Check our [troubleshooting docs](https://jan.ai/docs/desktop/troubleshooting)"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Apache 2.0 - Because sharing is caring."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -341,5 +703,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:01+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

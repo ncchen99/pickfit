@@ -72,17 +72,20 @@
       "first_task": null
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "docker",
+      "basis": "replayed",
+      "run_id": "verify-github-mcp-server-20261104-144846-0326",
+      "method": "binary",
       "steps": [
         {
-          "command": "docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN ghcr.io/github/github-mcp-server",
-          "purpose": null
+          "command": "curl -fsSL -o /tmp/github-mcp-server.tar.gz https://github.com/github/github-mcp-server/releases/download/v2.1.0/github-mcp-server_Linux_x86_64.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/github-mcp-server.tar.gz -C ~/.local/bin && chmod +x ~/.local/bin/github-mcp-server && ~/.local/bin/github-mcp-server --help 2>&1",
+          "purpose": "download and install github-mcp-server Linux x86_64 binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "github-mcp-server --version",
+        "expected_signal": "Version: 2.1.0"
+      },
       "first_task": null
     },
     "windows": {
@@ -113,10 +116,165 @@
     "url": "https://github.com/github/github-mcp-server/releases/tag/v2.1.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T14:49:28.015093+08:00",
+    "runs": [
+      {
+        "id": "verify-github-mcp-server-20261104-144846-0326",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T14:49:28.015093+08:00",
+        "tool_version": "2.1.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/github-mcp-server.tar.gz https://github.com/github/github-mcp-server/releases/download/v2.1.0/github-mcp-server_Linux_x86_64.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/github-mcp-server.tar.gz -C ~/.local/bin && chmod +x ~/.local/bin/github-mcp-server && ~/.local/bin/github-mcp-server --help 2>&1",
+            "purpose": "download and install github-mcp-server Linux x86_64 binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "github-mcp-server --version",
+            "expected_signal": "Version: 2.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Version: 2.1.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- github-mcp-server stdio",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshots show MCP handshake succeeding with 46 tools listed and --version reporting 2.1.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-github-mcp-server-20261104-144846-0326/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-github-mcp-server-20261104-144846-0326/check-1-cmd5.judged.png",
+            "runs/verify/verify-github-mcp-server-20261104-144846-0326/check-2-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.057919,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "github-mcp-server",
+            "stdio"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "github-mcp-server",
+          "server_version": "2.1.0",
+          "tools": [
+            "add_comment_to_pending_review",
+            "add_issue_comment",
+            "add_reply_to_pull_request_comment",
+            "assign_copilot_to_issue",
+            "create_branch",
+            "create_or_update_file",
+            "create_pull_request",
+            "create_repository",
+            "delete_file",
+            "fork_repository",
+            "get_commit",
+            "get_file_contents",
+            "get_label",
+            "get_latest_release",
+            "get_me",
+            "get_release_by_tag",
+            "get_tag",
+            "get_team_members",
+            "get_teams",
+            "issue_read",
+            "issue_write",
+            "list_branches",
+            "list_commits",
+            "list_issue_fields",
+            "list_issue_types",
+            "list_issues",
+            "list_pull_requests",
+            "list_releases",
+            "list_repository_collaborators",
+            "list_tags",
+            "merge_pull_request",
+            "pull_request_read",
+            "pull_request_review_write",
+            "push_files",
+            "request_copilot_review",
+            "search_code",
+            "search_commits",
+            "search_issues",
+            "search_pull_requests",
+            "search_repositories",
+            "search_users",
+            "sub_issue_write",
+            "ui_get",
+            "update_issue_comment",
+            "update_pull_request",
+            "update_pull_request_branch"
+          ],
+          "tool_count": 46,
+          "called_tool": null,
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "read repositories and code files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "manage issues and pull requests",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "monitor GitHub Actions workflow runs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "examine security findings and alerts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "mcp": {
     "transports": [
@@ -154,7 +312,131 @@
       "get_gist"
     ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/github/github-mcp-server@4bcdcdf8d7be",
+      "go.mod",
+      "ui/package-lock.json"
+    ],
+    "packages_checked": 183,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "npm:zod",
+        "version": "4.6.5",
+        "advisory": "GHSA-mrhx-c7xc-m3w5",
+        "cves": [
+          "CVE-2023-54404"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.6.6",
+        "summary": "Zod can exhaust memory while validating oversized constrained collections",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:17:43+08:00",
+    "quality": {
+      "total": 74.5,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.68,
+          "weight": 40
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6129,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 94.7,
+      "signals": {
+        "stars": 34205,
+        "monthly_downloads": 1318,
+        "forks": 5281,
+        "dependents": null,
+        "release_downloads": 221434,
+        "hn_top_score": 6,
+        "registries_count": 1
+      },
+      "age_days": 609,
+      "packages": [
+        "homebrew:github-mcp-server"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.95
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "ebb075ec82a12d643d99ff9aea8535997b3243beca4943e644517cfb3530da2d",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "The GitHub MCP Server connects AI tools directly to GitHub's platform."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Built for developers who want to connect their AI tools to GitHub context and capabilities"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "To run the server in a container, you will need to have [Docker](https://www.docker.com/) installed."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=$GITHUB_PAT -- docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN ghcr.io/github/github-mcp-server"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "github-mcp-server --toolsets repos,issues,pull_requests,actions,code_security"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export GITHUB_PAT=your_token_here"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "The image is public; if you get errors on pull, you may have an expired token and need to `docker logout ghcr.io`."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "1. A compatible MCP host with remote server support (VS Code 1.101+, Claude Desktop, Cursor, Windsurf, etc.)"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -515,5 +797,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:07+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

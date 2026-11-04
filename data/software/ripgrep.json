@@ -77,18 +77,21 @@
       "first_task": "rg -n -w '[A-Z]+_SUSPEND'"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-ripgrep-20261104-133131-3618",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install ripgrep",
-          "purpose": null
+          "command": "RG_VER=15.2.0 && mkdir -p ~/.local/bin && curl -LO https://github.com/BurntSushi/ripgrep/releases/download/${RG_VER}/ripgrep-${RG_VER}-x86_64-unknown-linux-musl.tar.gz && tar -xzf ripgrep-${RG_VER}-x86_64-unknown-linux-musl.tar.gz && cp ripgrep-${RG_VER}-x86_64-unknown-linux-musl/rg ~/.local/bin/rg && chmod +x ~/.local/bin/rg",
+          "purpose": "download official musl tarball 15.2.0 and install rg to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "rg -n -w '[A-Z]+_SUSPEND'"
+      "check": {
+        "command": "rg --version",
+        "expected_signal": "ripgrep 15.2.0"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -118,12 +121,221 @@
     "url": "https://github.com/BurntSushi/ripgrep/releases/tag/15.2.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:32:43.144321+08:00",
+    "runs": [
+      {
+        "id": "verify-ripgrep-20261104-133131-3618",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T13:32:43.144321+08:00",
+        "tool_version": "15.2.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "RG_VER=15.2.0 && mkdir -p ~/.local/bin && curl -LO https://github.com/BurntSushi/ripgrep/releases/download/${RG_VER}/ripgrep-${RG_VER}-x86_64-unknown-linux-musl.tar.gz && tar -xzf ripgrep-${RG_VER}-x86_64-unknown-linux-musl.tar.gz && cp ripgrep-${RG_VER}-x86_64-unknown-linux-musl/rg ~/.local/bin/rg && chmod +x ~/.local/bin/rg",
+            "purpose": "download official musl tarball 15.2.0 and install rg to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "rg --version",
+            "expected_signal": "ripgrep 15.2.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ripgrep 15.2.0 (rev e89fff89ac)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rg --help",
+            "expected_signal": "--files",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "rg [OPTIONS] --files [PATH ...]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install ripgrep / cargo binstall ripgrep",
+            "actually_needed": "cargo not present in box (no Rust toolchain); installed via official prebuilt musl tarball from GitHub releases instead",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows rg --version printing ripgrep 15.2.0 with build details.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ripgrep-20261104-133131-3618/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ripgrep-20261104-133131-3618/check-1-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.035568,
+        "features": [
+          {
+            "feature": "recursively search directories for regex pattern",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "respect gitignore and skip hidden files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "search specific file types",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "search compressed files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/BurntSushi/ripgrep@91f5d22ef48b",
+      "Cargo.lock"
+    ],
+    "packages_checked": 50,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 61.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.7,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5273,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 69689,
+        "monthly_downloads": 89744,
+        "forks": 4185,
+        "dependents": null,
+        "release_downloads": 67004975,
+        "hn_top_score": 547,
+        "registries_count": 2
+      },
+      "age_days": 3890,
+      "packages": [
+        "crates:ripgrep",
+        "homebrew:ripgrep"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "50355482c70c8034e0fa7eba804ef7baacbd1347684df6173c3931265fdb8102",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "ripgrep recursively searches directories for a regex pattern while respecting your gitignore"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "use ripgrep if you like speed, filtering by default, fewer\nbugs and Unicode support."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "ripgrep is written in Rust, so you'll need to grab a\n[Rust installation](https://www.rust-lang.org/) in order to compile it."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "$ brew install ripgrep"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ ./target/release/rg --version\n0.1.3"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "ripgrep can be configured via a\n  [configuration file](GUIDE.md#configuration-file)."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org)."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -380,5 +592,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:43+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

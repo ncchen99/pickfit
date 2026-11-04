@@ -71,18 +71,21 @@
       "first_task": "python main.py"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "other",
+      "basis": "replayed",
+      "run_id": "verify-comfyui-20261104-133414-f81c",
+      "method": "uv",
       "steps": [
         {
-          "command": "comfy install",
-          "purpose": null
+          "command": "uv tool install comfy-cli 2>&1",
+          "purpose": "install comfy-cli via uv tool install comfy-cli"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "python main.py"
+      "check": {
+        "command": "comfy --help 2>&1",
+        "expected_signal": "comfy cloud login"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -112,12 +115,203 @@
     "url": "https://github.com/Comfy-Org/ComfyUI/releases/tag/v0.44.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:35:03.867945+08:00",
+    "runs": [
+      {
+        "id": "verify-comfyui-20261104-133414-f81c",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T13:35:03.867945+08:00",
+        "tool_version": "1.25.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install comfy-cli 2>&1",
+            "purpose": "install comfy-cli via uv tool install comfy-cli"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "comfy --help 2>&1",
+            "expected_signal": "comfy cloud login",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "comfy cloud login → comfy run --workflow wf.json --where cloud (prints a prompt_id) → comfy",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows comfy --help output listing commands including cloud and a quickstart containing 'comfy cloud login'.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-comfyui-20261104-133414-f81c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-comfyui-20261104-133414-f81c/check-1-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.032129,
+        "features": [
+          {
+            "feature": "build workflows with visual node graph",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "generate images, videos, 3D and audio",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "run diffusion models efficiently locally",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "save and load workflows as JSON",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/Comfy-Org/ComfyUI@70bcb4e9fc70",
+      "requirements.txt"
+    ],
+    "packages_checked": 5,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 71.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 144908,
+        "monthly_downloads": null,
+        "forks": 17244,
+        "dependents": null,
+        "release_downloads": 1136482,
+        "hn_top_score": 15,
+        "registries_count": 0
+      },
+      "age_days": 1387,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 7.12
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "072bd0479fd5f1b0036857f06d6c7b1426ece8168d90e027b69dfbbdee8751a6",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "The most powerful and modular diffusion model GUI, api and backend with a graph/nodes interface."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "ComfyUI is the AI creation engine for visual professionals who demand control over every model"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Python 3.13 is very well supported. If you have trouble with some custom node dependencies on 3.13 you can try 3.12"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install comfy-cli"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "python main.py"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Configure additional model locations with [`extra_model_paths.yaml`](extra_model_paths.yaml.example)."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "If you get the \"Torch not compiled with CUDA enabled\" error, uninstall torch with:"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "It is available on Windows, Linux, and macOS"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -390,5 +584,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:06+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

@@ -72,18 +72,25 @@
       "first_task": "yazi"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "brew",
+      "basis": "replayed",
+      "run_id": "verify-yazi-20261104-144824-5867",
+      "method": "binary",
       "steps": [
         {
-          "command": "brew install yazi",
-          "purpose": null
+          "command": "curl -fL -o /tmp/yazi.zip \"https://github.com/sxyazi/yazi/releases/download/v26.9.1/yazi-x86_64-unknown-linux-gnu.zip\"",
+          "purpose": "download yazi binary zip"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && unzip -o /tmp/yazi.zip -d /tmp && install -m 755 /tmp/yazi-x86_64-unknown-linux-gnu/yazi ~/.local/bin/yazi && install -m 755 /tmp/yazi-x86_64-unknown-linux-gnu/ya ~/.local/bin/ya",
+          "purpose": "install yazi binaries to PATH"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "yazi"
+      "check": {
+        "command": "yazi --version",
+        "expected_signal": "Yazi"
+      },
+      "first_task": null
     },
     "windows": null
   },
@@ -100,12 +107,209 @@
     "url": "https://github.com/sxyazi/yazi/releases/tag/v26.9.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T14:49:02.328744+08:00",
+    "runs": [
+      {
+        "id": "verify-yazi-20261104-144824-5867",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T14:49:02.328744+08:00",
+        "tool_version": "26.9.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fL -o /tmp/yazi.zip \"https://github.com/sxyazi/yazi/releases/download/v26.9.1/yazi-x86_64-unknown-linux-gnu.zip\"",
+            "purpose": "download yazi binary zip"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && unzip -o /tmp/yazi.zip -d /tmp && install -m 755 /tmp/yazi-x86_64-unknown-linux-gnu/yazi ~/.local/bin/yazi && install -m 755 /tmp/yazi-x86_64-unknown-linux-gnu/ya ~/.local/bin/ya",
+            "purpose": "install yazi binaries to PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "yazi --version",
+            "expected_signal": "Yazi",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Yazi",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows yazi --version printing Yazi version 26.9.1 with build details.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-yazi-20261104-144824-5867/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-yazi-20261104-144824-5867/check-1-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.024659,
+        "features": [
+          {
+            "feature": "manage files in terminal asynchronously",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "preview videos, PDFs, archives and code",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "install plugins and themes with one command",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "manage remote files via virtual filesystem",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/sxyazi/yazi@606096f6af22",
+      "Cargo.lock"
+    ],
+    "packages_checked": 517,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T15:02:29+08:00",
+    "quality": {
+      "total": 62.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.4375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.9727,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 98.6,
+      "signals": {
+        "stars": 43212,
+        "monthly_downloads": 5820,
+        "forks": 1058,
+        "dependents": null,
+        "release_downloads": 623174,
+        "hn_top_score": 157,
+        "registries_count": 1
+      },
+      "age_days": 1214,
+      "packages": [
+        "homebrew:yazi"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.87
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:02:29.034584+08:00",
+      "sources_sha": "5573e8b6c40a7a426495ad7f042d523ecfaedcbf8629c93a101affb1baa7e994",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "💥 Blazing fast terminal file manager written in Rust, based on async I/O."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "☑️ [Überzug++][ueberzug] required"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install yazi"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "run command shown by the store: yazi"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "store: Homebrew Cask (apps for macOS)\ncask: yazi\nname: yazi\nsummary: Blazing fast terminal file manager written in Rust, based on async I/O\nlicense: MIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -344,5 +548,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:49+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

@@ -3,7 +3,7 @@
   "slug": "lossless-cut",
   "repo_id": "gh:72343657",
   "name": "LosslessCut",
-  "summary": "LosslessCut is a cross-platform GUI for fast lossless cutting and editing of video and audio.",
+  "summary": "Lossless desktop editor for trimming and cutting video and audio files.",
   "aliases": [],
   "status": "listed",
   "status_reason": null,
@@ -23,17 +23,13 @@
     "video-editor",
     "video-files"
   ],
-  "use_cases": [
-    "rough-cut large camera videos to save space",
-    "extract highlights without re-encoding",
-    "remux MKV to MP4 without re-encoding"
-  ],
+  "use_cases": [],
   "alternatives_to": [],
   "features": [
-    "cut and trim video losslessly",
-    "merge video segments losslessly",
-    "manage audio and subtitle tracks",
-    "remux formats without re-encoding"
+    "cut and trim video and audio losslessly",
+    "merge cut segments or files losslessly",
+    "remux format without re-encoding",
+    "add remove or extract audio subtitle tracks"
   ],
   "why_worth_it": null,
   "homepage": "https://losslesscut.app/",
@@ -70,9 +66,26 @@
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "flatpak run no.mifi.losslesscut"
     },
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-lossless-cut-20261104-145315-9d56",
+      "method": "other",
+      "steps": [
+        {
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add Flathub remote for user"
+        },
+        {
+          "command": "flatpak install --user -y flathub no.mifi.losslesscut 2>&1",
+          "purpose": "install losslesscut from Flathub"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "dbus-run-session -- flatpak run no.mifi.losslesscut --no-sandbox"
+    },
     "windows": null
   },
   "pricing": {
@@ -88,12 +101,217 @@
     "url": "https://github.com/mifi/lossless-cut/releases/tag/v3.70.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T14:57:37.565598+08:00",
+    "runs": [
+      {
+        "id": "verify-lossless-cut-20261104-145315-9d56",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-04T14:57:37.565598+08:00",
+        "tool_version": null,
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add Flathub remote for user"
+          },
+          {
+            "command": "flatpak install --user -y flathub no.mifi.losslesscut 2>&1",
+            "purpose": "install losslesscut from Flathub"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "dbus-run-session -- flatpak run no.mifi.losslesscut --no-sandbox",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak run no.mifi.losslesscut",
+            "actually_needed": "dbus-run-session -- flatpak run no.mifi.losslesscut --no-sandbox (X11 dbus autolaunch disabled and Electron sandbox fails without --no-sandbox in this container)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "LosslessCut main window shows its menu bar and empty editor with central DROP FILE(S) prompt awaiting a file.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lossless-cut-20261104-145315-9d56/report.json",
+          "log_path": "runs/verify/verify-lossless-cut-20261104-145315-9d56/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-lossless-cut-20261104-145315-9d56/replay-7-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.032594,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "dbus-run-session -- flatpak run no.mifi.losslesscut --no-sandbox",
+          "window_title": "LosslessCut 3.69.0",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "cut and trim video and audio losslessly",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "merge cut segments or files losslessly",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "remux format without re-encoding",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "add remove or extract audio subtitle tracks",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "lockfile_not_supported",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T15:02:29+08:00",
+    "quality": {
+      "total": 65.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.4375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.875,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 45680,
+        "monthly_downloads": null,
+        "forks": 2303,
+        "dependents": null,
+        "release_downloads": 2752545,
+        "hn_top_score": 417,
+        "registries_count": 0
+      },
+      "age_days": 3656,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.52
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:02:29.034584+08:00",
+      "sources_sha": "fd6cf7bc36ae3e051f8aee6d8a70ae9a9f0580b6f108de99cab91697317c7051",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "LosslessCut aims to be the ultimate cross platform FFmpeg GUI for extremely fast and lossless operations on video, audio, subtitle"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "install command shown by the store: flatpak install flathub no.mifi.losslesscut"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "run command shown by the store: flatpak run no.mifi.losslesscut"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "- [Troubleshooting and known issues and limitations](https://losslesscut.app/docs/troubleshooting)"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "license: GPL-2.0"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -155,6 +373,12 @@
       "fetched_at": "2026-11-04T13:05:23+08:00"
     },
     {
+      "id": "flathub:no.mifi.losslesscut",
+      "kind": "package_registry",
+      "url": "https://flathub.org/apps/no.mifi.losslesscut",
+      "fetched_at": "2026-11-04T13:49:21+08:00"
+    },
+    {
       "id": "homebrew_cask:losslesscut",
       "kind": "package_registry",
       "url": "https://formulae.brew.sh/cask/losslesscut",
@@ -165,34 +389,34 @@
     {
       "field": "/kind",
       "source_id": "readme",
-      "quote": "LosslessCut aims to be the ultimate cross platform FFmpeg GUI for extremely fast and lossless operations",
+      "quote": "LosslessCut aims to be the ultimate cross platform FFmpeg GUI",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:39+08:00"
+      "checked_at": "2026-11-04T13:49:59+08:00"
     },
     {
       "field": "/audience",
       "source_id": "readme",
-      "quote": "LosslessCut aims to be the ultimate cross platform FFmpeg GUI for extremely fast and lossless operations",
+      "quote": "If you prefer to download the executables manually",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:39+08:00"
+      "checked_at": "2026-11-04T13:49:59+08:00"
     },
     {
       "field": "/category",
+      "source_id": "readme",
+      "quote": "ultimate cross platform FFmpeg GUI for extremely fast and lossless operations",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:59+08:00"
+    },
+    {
+      "field": "/summary",
       "source_id": "github_api",
       "quote": "The swiss army knife of lossless video/audio editing",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:39+08:00"
-    },
-    {
-      "field": "/summary",
-      "source_id": "readme",
-      "quote": "LosslessCut aims to be the ultimate cross platform FFmpeg GUI for extremely fast and lossless operations on video, audio, subtitle and other related media files.",
-      "method": "model",
-      "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:39+08:00"
+      "checked_at": "2026-11-04T13:49:59+08:00"
     },
     {
       "field": "/name",
@@ -200,15 +424,15 @@
       "quote": "<b>LosslessCut</b>",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:39+08:00"
+      "checked_at": "2026-11-04T13:49:59+08:00"
     },
     {
       "field": "/platforms",
       "source_id": "readme",
-      "quote": "LosslessCut aims to be the ultimate cross platform FFmpeg GUI for extremely fast and lossless operations on video",
+      "quote": "LosslessCut aims to be the ultimate cross platform FFmpeg GUI",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:39+08:00"
+      "checked_at": "2026-11-04T13:49:59+08:00"
     },
     {
       "field": "/repo",
@@ -259,36 +483,12 @@
       "checked_at": "2026-11-04T13:05:23+08:00"
     },
     {
-      "field": "/use_cases/0",
-      "source_id": "readme",
-      "quote": "which is great for saving space by rough-cutting your large video files taken from a video camera, GoPro, drone, etc.",
-      "method": "model",
-      "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:39+08:00"
-    },
-    {
-      "field": "/use_cases/1",
-      "source_id": "readme",
-      "quote": "It lets you quickly extract the good parts from your videos and discard many gigabytes of data without doing a slow re-encode",
-      "method": "model",
-      "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:39+08:00"
-    },
-    {
-      "field": "/use_cases/2",
-      "source_id": "readme",
-      "quote": "Change the format (remux), for example from MKV to MP4, without re-encoding",
-      "method": "model",
-      "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:39+08:00"
-    },
-    {
       "field": "/features/0",
       "source_id": "readme",
       "quote": "Cut and trim video and audio losslessly, in seconds",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:39+08:00"
+      "checked_at": "2026-11-04T13:49:59+08:00"
     },
     {
       "field": "/features/1",
@@ -296,23 +496,23 @@
       "quote": "Merge cut segments, or whole files with identical codecs, losslessly",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:39+08:00"
+      "checked_at": "2026-11-04T13:49:59+08:00"
     },
     {
       "field": "/features/2",
       "source_id": "readme",
-      "quote": "Add, remove, replace or extract tracks: audio, subtitles and more",
+      "quote": "Change the format (remux), for example from MKV to MP4, without re-encoding",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:39+08:00"
+      "checked_at": "2026-11-04T13:49:59+08:00"
     },
     {
       "field": "/features/3",
       "source_id": "readme",
-      "quote": "Change the format (remux), for example from MKV to MP4, without re-encoding",
+      "quote": "Add, remove, replace or extract tracks: audio, subtitles and more",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:39+08:00"
+      "checked_at": "2026-11-04T13:49:59+08:00"
     },
     {
       "field": "/install/macos/steps/0",
@@ -320,25 +520,33 @@
       "quote": "brew install --cask losslesscut",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:39+08:00"
+      "checked_at": "2026-11-04T13:49:59+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "flathub:no.mifi.losslesscut",
+      "quote": "flatpak install flathub no.mifi.losslesscut",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:59+08:00"
     },
     {
       "field": "/pricing",
       "source_id": "readme",
-      "quote": "LosslessCut is maintained by me alone and will always remain free and open source.",
+      "quote": "will always remain free and open source",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:39+08:00"
+      "checked_at": "2026-11-04T13:49:59+08:00"
     },
     {
       "field": "/processing",
       "source_id": "readme",
-      "quote": "Everything is extremely fast because it does an almost direct data copy, fueled by the awesome FFmpeg which does all the grunt work.",
+      "quote": "it does an almost direct data copy, fueled by the awesome FFmpeg",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:39+08:00"
+      "checked_at": "2026-11-04T13:49:59+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:04:39+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

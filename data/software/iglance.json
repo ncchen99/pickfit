@@ -88,11 +88,178 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_root",
+    "checked_at": "2026-11-04T15:57:21.043341+08:00",
+    "runs": [
+      {
+        "id": "verify-iglance-20261104-155254-d5a8",
+        "level": "unverified",
+        "unverified_reason": "needs_root",
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T15:57:21.043341+08:00",
+        "tool_version": "2.1.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fL -o ~/Downloads/iGlance_v2.1.0.zip https://github.com/iglance/iGlance/releases/download/v2.1.0/iGlance_v2.1.0.zip",
+            "purpose": "Download iGlance_v2.1.0.zip from GitHub releases"
+          },
+          {
+            "command": "mkdir -p ~/Applications && unzip -q ~/Downloads/iGlance_v2.1.0.zip -d ~/Applications",
+            "purpose": "Extract zip to ~/Applications (creates iGlance.app)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/iGlance.app",
+            "expected_signal": "gui tier: none (the app showed no window and is not running)",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "gui tier: none (the app showed no window and is not running)",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask iglance",
+            "actually_needed": "cask no longer available in homebrew/cask (No Cask with this name exists); installed directly from GitHub release https://github.com/iglance/iGlance/releases/download/v2.1.0/iGlance_v2.1.0.zip",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "App shows stats in menu bar",
+            "actually_needed": "launch_gui reports gui tier none - expected for menu-bar-only app that shows no window, not a failure to launch; app binary is x86_64-only (Mach-O thin x86_64) relying on Rosetta on arm64",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": "iGlance v2.1.0 is an x86_64-only Mach-O binary; running on arm64 requires root to install Rosetta 2 (softwareupdate --install-rosetta; arch -x86_64 exits 77: Bad CPU type in executable).",
+        "judge": {
+          "verdict": "inconclusive",
+          "observed": "the GUI launch left no screenshot to judge",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-iglance-20261104-155254-d5a8/report.json",
+          "log_path": "runs/verify/verify-iglance-20261104-155254-d5a8/app.log",
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.038768
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00"
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T15:14:21+08:00",
+    "quality": {
+      "total": 38.3,
+      "confidence": 0.5,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.4375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.3944,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 78.1,
+      "signals": {
+        "stars": 2489,
+        "monthly_downloads": null,
+        "forks": 126,
+        "dependents": null,
+        "release_downloads": 50475,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 3078,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 8.39
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:14:21.996880+08:00",
+      "sources_sha": "a10cfac72fc9b7372d95b91d41d6ef60745c0b5d7d0d20250dea3231935e240e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Free system monitor for OSX and macOS. See all system information at a glance in the menu bar."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "displays current stats about your Mac on the menu bar."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install --cask iglance"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "This software is published under the <b>GNU GPLv3</b>."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -341,5 +508,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:35+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:27:08.052133+08:00"
 }

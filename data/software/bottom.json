@@ -72,18 +72,21 @@
       "first_task": "btm -h"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-bottom-20261104-133142-248b",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install bottom --locked",
-          "purpose": null
+          "command": "cd /home/sbx/work && curl -LO https://github.com/ClementTsang/bottom/releases/download/0.15.0/bottom_x86_64-unknown-linux-gnu.tar.gz && tar -xzf bottom_x86_64-unknown-linux-gnu.tar.gz && mkdir -p ~/.local/bin && cp btm ~/.local/bin/ && ~/.local/bin/btm --version",
+          "purpose": "Download pre-built binary tarball and install btm to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "btm -h"
+      "check": {
+        "command": "btm --version",
+        "expected_signal": "bottom 0.15.0"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -113,12 +116,206 @@
     "url": "https://github.com/ClementTsang/bottom/releases/tag/0.15.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:32:53.712788+08:00",
+    "runs": [
+      {
+        "id": "verify-bottom-20261104-133142-248b",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T13:32:53.712788+08:00",
+        "tool_version": "0.15.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /home/sbx/work && curl -LO https://github.com/ClementTsang/bottom/releases/download/0.15.0/bottom_x86_64-unknown-linux-gnu.tar.gz && tar -xzf bottom_x86_64-unknown-linux-gnu.tar.gz && mkdir -p ~/.local/bin && cp btm ~/.local/bin/ && ~/.local/bin/btm --version",
+            "purpose": "Download pre-built binary tarball and install btm to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "btm --version",
+            "expected_signal": "bottom 0.15.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "bottom 0.15.0",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The terminal shows btm --version outputting bottom 0.15.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-bottom-20261104-133142-248b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-bottom-20261104-133142-248b/check-1-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.030095,
+        "features": [
+          {
+            "feature": "visualize CPU RAM network usage graphs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "display sort search processes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "send kill signals to processes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "customize behaviour with config file",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/ClementTsang/bottom@cc6facab1660",
+      "Cargo.lock"
+    ],
+    "packages_checked": 223,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 63.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7231,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 98.2,
+      "signals": {
+        "stars": 14155,
+        "monthly_downloads": 5516,
+        "forks": 404,
+        "dependents": null,
+        "release_downloads": 105961,
+        "hn_top_score": 9,
+        "registries_count": 2
+      },
+      "age_days": 2624,
+      "packages": [
+        "crates:bottom",
+        "homebrew:bottom"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 1.13
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "98cf9a72aa10cefcf35ee8203da99229b6cc5b6ce55087e338cc5cbc4c3324ce",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A customizable cross-platform graphical process/system monitor for the terminal."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "# You might need to update the stable version of Rust first."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install bottom"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "You can run bottom using `btm`."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Additionally, bottom will automatically generate a configuration file on the first launch, which can be changed."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "You can uninstall via Control Panel, Options, or `winget --uninstall bottom`."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Supports Linux, macOS, and Windows."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -359,5 +556,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:52+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

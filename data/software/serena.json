@@ -53,7 +53,20 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-serena-20261104-133503-01fa",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install -p 3.13 serena-agent",
+          "purpose": "install serena via uv tool install -p 3.13 serena-agent"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -69,10 +82,122 @@
     "url": "https://github.com/oraios/serena/releases/tag/v2.1.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:36:05.532626+08:00",
+    "runs": [
+      {
+        "id": "verify-serena-20261104-133503-01fa",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T13:36:05.532626+08:00",
+        "tool_version": "2.1.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install -p 3.13 serena-agent",
+            "purpose": "install serena via uv tool install -p 3.13 serena-agent"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py -- serena start-mcp-server --enable-web-dashboard False --open-web-dashboard False 2>&1",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "serena init 2>&1; echo EXIT:$?\nls -la ~/.serena 2>&1 || ls -la ~/.config/serena 2>&1; ls -la /home/sbx/work/.serena 2>&1 || true",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows the Serena MCP server initializing, listing 3 tools, and completing handshake ok with exit 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-serena-20261104-133503-01fa/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-serena-20261104-133503-01fa/check-1-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.029483,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "serena",
+            "start-mcp-server",
+            "--enable-web-dashboard",
+            "False",
+            "--open-web-dashboard",
+            "False"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "Serena",
+          "server_version": "2.1.0",
+          "tools": [
+            "activate_project",
+            "initial_instructions",
+            "serena_repl"
+          ],
+          "tool_count": 3,
+          "called_tool": null,
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "semantic code retrieval and editing",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "find referencing symbols",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "rename symbols",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "interactive debugging with breakpoints",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
   "mcp": {
     "transports": [],
@@ -86,7 +211,307 @@
       "execute_shell_command"
     ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "pypi:serena-agent (fresh install, 70 packages)"
+    ],
+    "packages_checked": 70,
+    "findings_total": 16,
+    "advisories_total": 16,
+    "findings": [
+      {
+        "package": "pypi:cryptography",
+        "version": "46.0.6",
+        "advisory": "GHSA-537c-gmf6-5ccf",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "48.0.1",
+        "summary": "Vulnerable OpenSSL included in cryptography wheels",
+        "malicious": false
+      },
+      {
+        "package": "pypi:cryptography",
+        "version": "46.0.6",
+        "advisory": "GHSA-g6cj-pr64-35w5",
+        "cves": [
+          "CVE-2026-69247"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "50.0.0",
+        "summary": "cryptography: PKCS#7 EnvelopedData decryption exposes a Bleichenbacher oracle through distinguishable errors and timing",
+        "malicious": false
+      },
+      {
+        "package": "pypi:cryptography",
+        "version": "46.0.6",
+        "advisory": "GHSA-jwv3-5hgf-82ww",
+        "cves": [
+          "CVE-2026-69249"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "49.0.0",
+        "summary": "python-cryptography: Duplicate self-signed intermediates can cause exponential path-building",
+        "malicious": false
+      },
+      {
+        "package": "pypi:filelock",
+        "version": "3.25.2",
+        "advisory": "GHSA-v4x8-3wr5-3wq8",
+        "cves": [
+          "CVE-2026-112940"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.2.1",
+        "summary": "filelock ReadWriteLock: SQLite reopens the lock database by name, so a planted symlink or journal file makes the lock user's process overwrite or unlink its own files",
+        "malicious": false
+      },
+      {
+        "package": "pypi:mcp",
+        "version": "1.26.0",
+        "advisory": "GHSA-hvrp-rf83-w775",
+        "cves": [
+          "CVE-2026-52870"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.27.2",
+        "summary": "MCP Python SDK: Experimental task handlers allow any client to access and cancel other clients' tasks",
+        "malicious": false
+      },
+      {
+        "package": "pypi:mcp",
+        "version": "1.26.0",
+        "advisory": "GHSA-jpw9-pfvf-9f58",
+        "cves": [
+          "CVE-2026-52869"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.27.2",
+        "summary": "MCP Python SDK: HTTP transports serve session requests without verifying the authenticated principal",
+        "malicious": false
+      },
+      {
+        "package": "pypi:mcp",
+        "version": "1.26.0",
+        "advisory": "GHSA-vj7q-gjh5-988w",
+        "cves": [
+          "CVE-2026-59950"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.28.1",
+        "summary": "MCP Python SDK: WebSocket server transport does not support Host/Origin validation",
+        "malicious": false
+      },
+      {
+        "package": "pypi:python-multipart",
+        "version": "0.0.22",
+        "advisory": "GHSA-5rvq-cxj2-64vf",
+        "cves": [
+          "CVE-2026-53539"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.0.30",
+        "summary": "python-multipart: Quadratic-time querystring parsing with semicolon separators causes CPU denial of service",
+        "malicious": false
+      },
+      {
+        "package": "pypi:python-multipart",
+        "version": "0.0.22",
+        "advisory": "GHSA-pp6c-gr5w-3c5g",
+        "cves": [
+          "CVE-2026-42561"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.0.27",
+        "summary": "python-multipart has Denial of Service via unbounded multipart part headers",
+        "malicious": false
+      },
+      {
+        "package": "pypi:serena-agent",
+        "version": "1.0.0",
+        "advisory": "GHSA-37h2-6p4f-mp3q",
+        "cves": [
+          "CVE-2026-49471"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.5.2",
+        "summary": "Serena: Unauthenticated Flask dashboard on fixed port enables DNS rebinding → memory poisoning → RCE",
+        "malicious": false
+      },
+      {
+        "package": "pypi:starlette",
+        "version": "1.0.0",
+        "advisory": "GHSA-82w8-qh3p-5jfq",
+        "cves": [
+          "CVE-2026-54283"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.3.1",
+        "summary": "Starlette: request.form() limits silently ignored for application/x-www-form-urlencoded enable DoS",
+        "malicious": false
+      },
+      {
+        "package": "pypi:starlette",
+        "version": "1.0.0",
+        "advisory": "GHSA-wqp7-x3pw-xc5r",
+        "cves": [
+          "CVE-2026-48818"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.1.0",
+        "summary": "Starlette: SSRF and NTLM credential theft via UNC paths in StaticFiles on Windows",
+        "malicious": false
+      },
+      {
+        "package": "pypi:urllib3",
+        "version": "2.6.3",
+        "advisory": "GHSA-8988-9cw3-xx77",
+        "cves": [
+          "CVE-2026-97687"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.8.0",
+        "summary": "urllib3: HTTPS proxy TLS configuration may be ignored or overridden",
+        "malicious": false
+      },
+      {
+        "package": "pypi:urllib3",
+        "version": "2.6.3",
+        "advisory": "GHSA-mf9v-mfxr-j63j",
+        "cves": [
+          "CVE-2026-44432"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.7.0",
+        "summary": "urllib3: Decompression-bomb safeguards bypassed in parts of the streaming API",
+        "malicious": false
+      },
+      {
+        "package": "pypi:urllib3",
+        "version": "2.6.3",
+        "advisory": "GHSA-qccp-gfcp-xxvc",
+        "cves": [
+          "CVE-2026-44431"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.7.0",
+        "summary": "urllib3: Sensitive headers forwarded across origins in proxied low-level redirects",
+        "malicious": false
+      },
+      {
+        "package": "pypi:urllib3",
+        "version": "2.6.3",
+        "advisory": "GHSA-vxq7-64xx-v4gw",
+        "cves": [
+          "CVE-2026-97689"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.8.0",
+        "summary": "urllib3: HTTPResponse.stream()/read_chunked() buffers an unbounded chunk-size line into memory",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:17:43+08:00",
+    "quality": {
+      "total": 77.5,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.8,
+          "weight": 40
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6562,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 93.5,
+      "signals": {
+        "stars": 31071,
+        "monthly_downloads": 147731,
+        "forks": 2125,
+        "dependents": null,
+        "release_downloads": 81,
+        "hn_top_score": 4,
+        "registries_count": 1
+      },
+      "age_days": 590,
+      "packages": [
+        "pypi:serena-agent"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 5.04
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "561079b62eafe807b073a5ed2bfa78ddc5f848b99692696a606d92e0f8d1755f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Serena provides essential **semantic code retrieval, editing, refactoring and debugging tools**"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "our end users are essentially AI agents."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Serena is managed by *uv*, and [installing uv](https://docs.astral.sh/uv/getting-started/installation/) is the only required prerequisite."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "uv tool install -p 3.13 serena-agent"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "serena init"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "To connect Serena to your preferred MCP client, you typically need to [configure a launch command in your client]"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "the **Serena application** (everything else) under [GPL-3.0-or-later](LICENSES/GPL-3.0-or-later.txt)."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -311,5 +736,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:08+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

@@ -53,7 +53,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-memos-20261104-150138-4241",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "cd /home/sbx/work && curl -fL -o memos_26.11.0_linux_amd64.tar.gz https://github.com/usememos/memos/releases/download/26.11.0/memos_26.11.0_linux_amd64.tar.gz",
+          "purpose": "Download memos_26.11.0_linux_amd64.tar.gz from GitHub releases"
+        },
+        {
+          "command": "cd /home/sbx/work && tar -xzf memos_26.11.0_linux_amd64.tar.gz && mkdir -p ~/.local/bin && mv memos ~/.local/bin/memos && chmod +x ~/.local/bin/memos",
+          "purpose": "Extract tarball and install binary to ~/.local/bin/memos"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "memos --help",
+        "expected_signal": "Available Commands:"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -69,12 +89,312 @@
     "url": "https://github.com/usememos/memos/releases/tag/26.11.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T15:02:25.621932+08:00",
+    "runs": [
+      {
+        "id": "verify-memos-20261104-150138-4241",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T15:02:25.621932+08:00",
+        "tool_version": "26.11.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /home/sbx/work && curl -fL -o memos_26.11.0_linux_amd64.tar.gz https://github.com/usememos/memos/releases/download/26.11.0/memos_26.11.0_linux_amd64.tar.gz",
+            "purpose": "Download memos_26.11.0_linux_amd64.tar.gz from GitHub releases"
+          },
+          {
+            "command": "cd /home/sbx/work && tar -xzf memos_26.11.0_linux_amd64.tar.gz && mkdir -p ~/.local/bin && mv memos ~/.local/bin/memos && chmod +x ~/.local/bin/memos",
+            "purpose": "Extract tarball and install binary to ~/.local/bin/memos"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "memos --help",
+            "expected_signal": "Available Commands:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Available Commands:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "memos --version",
+            "expected_signal": "26.11.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "26.11.0",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows memos --help output with Usage, Available Commands, and Flags.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-memos-20261104-150138-4241/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-memos-20261104-150138-4241/check-1-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.028456,
+        "features": [
+          {
+            "feature": "write memos with Markdown formatting",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "browse memos in personal timeline",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "control private and shared publishing",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "connect memos with tags",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/usememos/memos@b40d8a7b5737",
+      "go.mod",
+      "web/pnpm-lock.yaml"
+    ],
+    "packages_checked": 317,
+    "findings_total": 8,
+    "advisories_total": 8,
+    "findings": [
+      {
+        "package": "npm:nanoid",
+        "version": "3.3.11",
+        "advisory": "GHSA-28wg-ghj8-5hjv",
+        "cves": [
+          "CVE-2026-67214"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.3.16",
+        "summary": "nanoid: non-secure generators can loop indefinitely with negative size",
+        "malicious": false
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "3.3.11",
+        "advisory": "GHSA-2v37-7h3g-55p8",
+        "cves": [
+          "CVE-2026-67213"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.3.18",
+        "summary": "nanoid: custom generators can loop indefinitely when size is zero",
+        "malicious": false
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "3.3.11",
+        "advisory": "GHSA-xwg4-73v4-xw9w",
+        "cves": [
+          "CVE-2026-73086"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.3.12",
+        "summary": "nanoid: Integer Overflow or Wraparound",
+        "malicious": false
+      },
+      {
+        "package": "npm:postcss",
+        "version": "8.5.14",
+        "advisory": "GHSA-r28c-9q8g-f849",
+        "cves": [
+          "CVE-2026-73646"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "8.5.18",
+        "summary": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+        "malicious": false
+      },
+      {
+        "package": "npm:react-router",
+        "version": "7.15.0",
+        "advisory": "GHSA-chx6-hx7r-mcp5",
+        "cves": [
+          "CVE-2026-55685"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.18.0",
+        "summary": "React Router: Unauthenticated Denial of Service via Inefficient Route Matching",
+        "malicious": false
+      },
+      {
+        "package": "npm:react-router",
+        "version": "7.15.0",
+        "advisory": "GHSA-qwww-vcr4-c8h2",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "7.18.2",
+        "summary": "React Router: RSC Mode CSRF Bypass Allows Action Execution Before 400 Response",
+        "malicious": false
+      },
+      {
+        "package": "npm:source-map-js",
+        "version": "1.2.1",
+        "advisory": "GHSA-68fv-2mgg-jv7q",
+        "cves": [
+          "CVE-2026-93749"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.2.2",
+        "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+        "malicious": false
+      },
+      {
+        "package": "npm:vite",
+        "version": "8.0.11",
+        "advisory": "GHSA-587h-7wmj-h5pm",
+        "cves": [
+          "CVE-2026-112942"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "8.1.6",
+        "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:17:43+08:00",
+    "quality": {
+      "total": 66.1,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.85,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 64258,
+        "monthly_downloads": null,
+        "forks": 4934,
+        "dependents": null,
+        "release_downloads": 23363,
+        "hn_top_score": 129,
+        "registries_count": 0
+      },
+      "age_days": 1791,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.61
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "d744412d1a4299d7bb711f785979e928cc7c7b5c744c2bd2b598b2921135e428",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Memos is an open-source, self-hosted note-taking app that brings your everyday thoughts together in a personal timeline."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "what to share with family and friends, and what to publish on the web."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "With Docker installed, run:"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "docker run -d \\"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Open http://localhost:5230 and create the first account."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Move them into the configuration directory (`/etc/memos/config`) as described in the 26.10.0 upgrade notes."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "The Docker tag `stable` follows stable releases"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Memos is open source under the [MIT License](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -283,5 +603,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:10+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

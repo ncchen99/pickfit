@@ -59,20 +59,18 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-stats-20261104-145622-2faa",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install stats",
-          "purpose": null
+          "command": "mkdir -p $HOME/Applications && brew install --cask --appdir=$HOME/Applications stats 2>&1",
+          "purpose": "Install Stats cask to user Applications via Homebrew"
         }
       ],
-      "manual_steps": [
-        "Allow Stats in System Settings Menu Bar"
-      ],
+      "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "open \"$HOME/Applications/Stats.app\""
     },
     "linux": null,
     "windows": null
@@ -90,12 +88,213 @@
     "url": "https://github.com/exelban/stats/releases/tag/v3.0.24"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T15:01:30.323330+08:00",
+    "runs": [
+      {
+        "id": "verify-stats-20261104-145622-2faa",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T15:01:30.323330+08:00",
+        "tool_version": "3.0.24",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p $HOME/Applications && brew install --cask --appdir=$HOME/Applications stats 2>&1",
+            "purpose": "Install Stats cask to user Applications via Homebrew"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open \"$HOME/Applications/Stats.app\"",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install stats installs to /Applications",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications stats for non-admin user without sudo",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows the Stats Setup welcome window with app icon and Previous/Next onboarding controls.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-stats-20261104-145622-2faa/report.json",
+          "log_path": "runs/verify/verify-stats-20261104-145622-2faa/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-stats-20261104-145622-2faa/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.022757,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open \"$HOME/Applications/Stats.app\"",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "monitor CPU utilization",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "monitor memory usage",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "monitor network usage",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "view temperature voltage power sensors",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T15:13:24+08:00",
+    "quality": {
+      "total": 72.5,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.9785,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 43095,
+        "monthly_downloads": null,
+        "forks": 1613,
+        "dependents": null,
+        "release_downloads": 1616856,
+        "hn_top_score": 450,
+        "registries_count": 0
+      },
+      "age_days": 2715,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 7.25
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:13:24.379663+08:00",
+      "sources_sha": "39f2445a3f4019ae5665c7406ecde98a3c7d8385158234bca8285dba87e5be04",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Stats is an application that allows you to monitor your macOS system.\n\n - CPU utilization\n - GPU utilization\n - Memory usage"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Stats is supported on macOS 12 (Monterey) and newer."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install stats"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "prints a URL with an authorization code - open it on any device and sign in to your System Stats account"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "sh /Applications/Stats.app/Contents/Resources/Scripts/uninstall.sh"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Stats is an open-source project: the full source code is available under the MIT license"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -350,5 +549,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:28+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

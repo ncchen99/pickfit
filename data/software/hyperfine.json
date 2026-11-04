@@ -67,18 +67,21 @@
       "first_task": "hyperfine 'sleep 0.3'"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-hyperfine-20261104-133340-4466",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install --locked hyperfine",
-          "purpose": null
+          "command": "mkdir -p ~/.local/bin && curl -fsSL https://github.com/sharkdp/hyperfine/releases/download/v2.0.0/hyperfine-v2.0.0-x86_64-unknown-linux-gnu.tar.gz -o /tmp/hyperfine.tar.gz && tar -xzf /tmp/hyperfine.tar.gz -C /tmp && cp /tmp/hyperfine-v2.0.0-x86_64-unknown-linux-gnu/hyperfine ~/.local/bin/hyperfine && chmod +x ~/.local/bin/hyperfine && ~/.local/bin/hyperfine --version",
+          "purpose": "download latest release tarball and install binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "hyperfine 'sleep 0.3'"
+      "check": {
+        "command": "hyperfine --version",
+        "expected_signal": "hyperfine 2.0.0"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -108,12 +111,218 @@
     "url": "https://github.com/sharkdp/hyperfine/releases/tag/v2.0.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:34:27.461132+08:00",
+    "runs": [
+      {
+        "id": "verify-hyperfine-20261104-133340-4466",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T13:34:27.461132+08:00",
+        "tool_version": "2.0.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin && curl -fsSL https://github.com/sharkdp/hyperfine/releases/download/v2.0.0/hyperfine-v2.0.0-x86_64-unknown-linux-gnu.tar.gz -o /tmp/hyperfine.tar.gz && tar -xzf /tmp/hyperfine.tar.gz -C /tmp && cp /tmp/hyperfine-v2.0.0-x86_64-unknown-linux-gnu/hyperfine ~/.local/bin/hyperfine && chmod +x ~/.local/bin/hyperfine && ~/.local/bin/hyperfine --version",
+            "purpose": "download latest release tarball and install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "hyperfine --version",
+            "expected_signal": "hyperfine 2.0.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hyperfine 2.0.0",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install --locked hyperfine",
+            "actually_needed": "Rust toolchain not available in box (cargo not found), skipped",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "apt install hyperfine / conda install -c conda-forge hyperfine",
+            "actually_needed": "apt requires root (Permission denied on /var/lib/dpkg/lock-frontend), conda not installed; installed via binary tarball from GitHub releases to ~/.local/bin instead",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows hyperfine --version printed hyperfine 2.0.0 with exit code 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hyperfine-20261104-133340-4466/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hyperfine-20261104-133340-4466/check-1-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.03573,
+        "features": [
+          {
+            "feature": "statistical analysis across multiple runs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "benchmark arbitrary shell commands",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "export results to multiple formats",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "run parameterized benchmarks",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/sharkdp/hyperfine@c51615249805",
+      "Cargo.lock",
+      "pyproject.toml (resolved today)"
+    ],
+    "packages_checked": 149,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 66.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8333,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 29204,
+        "monthly_downloads": 49569,
+        "forks": 643,
+        "dependents": null,
+        "release_downloads": 1738651,
+        "hn_top_score": 241,
+        "registries_count": 2
+      },
+      "age_days": 3216,
+      "packages": [
+        "crates:hyperfine",
+        "homebrew:hyperfine"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "7ab5566c6f48b75a9d1a5335f55acffc184d51e159cf87d1b20493fecc1a4ba2",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A command-line benchmarking tool"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Make sure that you use Rust 1.97 or newer."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install hyperfine"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "hyperfine 'sleep 0.3'"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Use `--env` to set environment variables for benchmark commands"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "`hyperfine` is dual-licensed under the terms of the MIT License and the Apache License 2.0."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -330,5 +539,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:53+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

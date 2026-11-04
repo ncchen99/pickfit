@@ -3,7 +3,7 @@
   "slug": "libresprite",
   "repo_id": "gh:67058735",
   "name": "LibreSprite",
-  "summary": "Free open-source program for creating and animating pixel-art sprites.",
+  "summary": "Free pixel-art tool to create and animate game sprites.",
   "aliases": [],
   "status": "listed",
   "status_reason": null,
@@ -22,7 +22,8 @@
     "sprites"
   ],
   "use_cases": [
-    "create and animate sprites"
+    "create 2D animations for videogames",
+    "create pixel-art retro style graphics"
   ],
   "alternatives_to": [
     "Aseprite"
@@ -30,8 +31,8 @@
   "features": [
     "preview animations in real time",
     "use onion skinning",
-    "edit multiple sprites at once",
-    "draw in tiled mode"
+    "draw in tiled mode",
+    "edit sprites with layers and frames"
   ],
   "why_worth_it": null,
   "homepage": "https://libresprite.github.io/",
@@ -42,8 +43,8 @@
     "archived": false
   },
   "platforms": [
-    "linux",
     "macos",
+    "linux",
     "windows"
   ],
   "prerequisites": {
@@ -57,7 +58,24 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-libresprite-20261104-140249-102f",
+      "method": "other",
+      "steps": [
+        {
+          "command": "flatpak --version; flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add flathub remote and verify flatpak available"
+        },
+        {
+          "command": "flatpak install --user -y flathub com.github.libresprite.LibreSprite",
+          "purpose": "install LibreSprite via flatpak"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "flatpak run com.github.libresprite.LibreSprite"
+    },
     "windows": null
   },
   "pricing": {
@@ -73,12 +91,211 @@
     "url": "https://github.com/LibreSprite/LibreSprite/releases/tag/v1.3"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T14:05:17.834890+08:00",
+    "runs": [
+      {
+        "id": "verify-libresprite-20261104-140249-102f",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-04T14:05:17.834890+08:00",
+        "tool_version": "1.2-dev",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak --version; flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add flathub remote and verify flatpak available"
+          },
+          {
+            "command": "flatpak install --user -y flathub com.github.libresprite.LibreSprite",
+            "purpose": "install LibreSprite via flatpak"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run com.github.libresprite.LibreSprite",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows LibreSprite's Home dashboard with menu bar, empty Recent files and Recent folders panels, and version footer.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-libresprite-20261104-140249-102f/report.json",
+          "log_path": "runs/verify/verify-libresprite-20261104-140249-102f/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-libresprite-20261104-140249-102f/replay-3-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.021133,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "flatpak run com.github.libresprite.LibreSprite",
+          "window_title": "LibreSprite 1.2-dev",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "preview animations in real time",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "use onion skinning",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "draw in tiled mode",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "edit sprites with layers and frames",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 56.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.4375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.7,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.4417,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 8724,
+        "monthly_downloads": null,
+        "forks": 613,
+        "dependents": null,
+        "release_downloads": 1448691,
+        "hn_top_score": 287,
+        "registries_count": 0
+      },
+      "age_days": 3716,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 5.62
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "489ca1bbc3f176df35f5dcf85dc4ec3a0a946e0980bd00b9d597e60aaac11901",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "LibreSprite is a free and open source program for creating and animating your sprites."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "LibreSprite lets you create 2D animations for videogames."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "flatpak install flathub com.github.libresprite.LibreSprite"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "flatpak run com.github.libresprite.LibreSprite"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "This program is distributed under the [GNU General Public License Version 2](LICENSE.txt)."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -138,6 +355,12 @@
       "kind": "release",
       "url": "https://github.com/LibreSprite/LibreSprite/releases/tag/v1.3",
       "fetched_at": "2026-11-04T13:05:23+08:00"
+    },
+    {
+      "id": "flathub:com.github.libresprite.LibreSprite",
+      "kind": "package_registry",
+      "url": "https://flathub.org/apps/com.github.libresprite.LibreSprite",
+      "fetched_at": "2026-11-04T13:49:24+08:00"
     }
   ],
   "evidence": [
@@ -147,39 +370,39 @@
       "quote": "LibreSprite is a free and open source program for creating and animating your sprites.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:26+08:00"
+      "checked_at": "2026-11-04T13:49:49+08:00"
     },
     {
       "field": "/audience",
-      "source_id": "readme",
-      "quote": "Get the [latest release](https://github.com/LibreSprite/LibreSprite/releases/latest) for Linux, MacOS, Windows or Android.",
+      "source_id": "flathub:com.github.libresprite.LibreSprite",
+      "quote": "flatpak run com.github.libresprite.LibreSprite",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:26+08:00"
+      "checked_at": "2026-11-04T13:49:49+08:00"
     },
     {
       "field": "/category",
       "source_id": "github_api",
-      "quote": "Animated sprite editor & pixel art tool -- Fork of the last GPLv2 commit of Aseprite",
-      "method": "model",
-      "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:26+08:00"
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-04T13:07:36+08:00"
     },
     {
       "field": "/summary",
-      "source_id": "readme",
-      "quote": "LibreSprite is a free and open source program for creating and animating your sprites.",
+      "source_id": "github_api",
+      "quote": "Animated sprite editor & pixel art tool -- Fork of the last GPLv2 commit of Aseprite",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:26+08:00"
+      "checked_at": "2026-11-04T13:49:49+08:00"
     },
     {
       "field": "/name",
-      "source_id": "github_api",
-      "quote": "LibreSprite",
+      "source_id": "readme",
+      "quote": "# LibreSprite [![Liberapay](https://i.imgur.com/UOLKpPA.png \"Support our work\")](https://liberapay.com/LibreSprite/)",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:26+08:00"
+      "checked_at": "2026-11-04T13:49:49+08:00"
     },
     {
       "field": "/platforms",
@@ -187,7 +410,7 @@
       "quote": "Get the [latest release](https://github.com/LibreSprite/LibreSprite/releases/latest) for Linux, MacOS, Windows or Android.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:26+08:00"
+      "checked_at": "2026-11-04T13:49:49+08:00"
     },
     {
       "field": "/repo",
@@ -239,11 +462,19 @@
     },
     {
       "field": "/use_cases/0",
-      "source_id": "readme",
-      "quote": "LibreSprite is a free and open source program for creating and animating your sprites.",
+      "source_id": "flathub:com.github.libresprite.LibreSprite",
+      "quote": "LibreSprite lets you create 2D animations for videogames.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:26+08:00"
+      "checked_at": "2026-11-04T13:49:49+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "flathub:com.github.libresprite.LibreSprite",
+      "quote": "From sprites, to pixel-art, retro style graphics, and whatever you like about the 8-bit (and 16-bit) era.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:49+08:00"
     },
     {
       "field": "/alternatives_to/0",
@@ -251,7 +482,7 @@
       "quote": "LibreSprite originated as a fork of [Aseprite](https://www.aseprite.org)",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:26+08:00"
+      "checked_at": "2026-11-04T13:49:49+08:00"
     },
     {
       "field": "/features/0",
@@ -259,7 +490,7 @@
       "quote": "Real-time animation previews.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:26+08:00"
+      "checked_at": "2026-11-04T13:49:49+08:00"
     },
     {
       "field": "/features/1",
@@ -267,23 +498,31 @@
       "quote": "Onion skinning.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:26+08:00"
+      "checked_at": "2026-11-04T13:49:49+08:00"
     },
     {
       "field": "/features/2",
       "source_id": "readme",
-      "quote": "Multiple sprites can be edited at once.",
+      "quote": "Tiled drawing mode, useful to draw patterns and textures.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:26+08:00"
+      "checked_at": "2026-11-04T13:49:49+08:00"
     },
     {
       "field": "/features/3",
       "source_id": "readme",
-      "quote": "Tiled drawing mode, useful to draw patterns and textures.",
+      "quote": "Sprites are composed of both layers & frames.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:26+08:00"
+      "checked_at": "2026-11-04T13:49:49+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "flathub:com.github.libresprite.LibreSprite",
+      "quote": "flatpak install flathub com.github.libresprite.LibreSprite",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:49+08:00"
     },
     {
       "field": "/pricing",
@@ -291,9 +530,9 @@
       "quote": "LibreSprite is a free and open source program for creating and animating your sprites.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:12:26+08:00"
+      "checked_at": "2026-11-04T13:49:49+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:04:40+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

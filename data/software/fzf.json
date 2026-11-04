@@ -65,18 +65,29 @@
       "first_task": "find * -type f | fzf > selected"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "brew",
+      "basis": "replayed",
+      "run_id": "verify-fzf-20261104-133251-fa2b",
+      "method": "source",
       "steps": [
         {
-          "command": "brew install fzf",
-          "purpose": null
+          "command": "git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf",
+          "purpose": "clone fzf source (candidate 1)"
+        },
+        {
+          "command": "~/.fzf/install --bin\n",
+          "purpose": "download fzf binary via install script"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && ln -sf ~/.fzf/bin/fzf ~/.local/bin/fzf; fzf --help",
+          "purpose": "expose fzf on PATH and verify version/help"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "find * -type f | fzf > selected"
+      "check": {
+        "command": "fzf --version\n",
+        "expected_signal": "0.74.5"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -106,12 +117,224 @@
     "url": "https://github.com/junegunn/fzf/releases/tag/v0.74.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:33:50.636273+08:00",
+    "runs": [
+      {
+        "id": "verify-fzf-20261104-133251-fa2b",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T13:33:50.636273+08:00",
+        "tool_version": "0.74.5",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf",
+            "purpose": "clone fzf source (candidate 1)"
+          },
+          {
+            "command": "~/.fzf/install --bin\n",
+            "purpose": "download fzf binary via install script"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && ln -sf ~/.fzf/bin/fzf ~/.local/bin/fzf; fzf --help",
+            "purpose": "expose fzf on PATH and verify version/help"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "fzf --version\n",
+            "expected_signal": "0.74.5",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.74.5 (c0a193e0)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "git clone then build or sudo apt install fzf",
+            "actually_needed": "install script downloaded prebuilt binary (v0.74.5) because Go toolchain not present; binary then symlinked to ~/.local/bin for PATH",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "sudo apt install fzf",
+            "actually_needed": "not runnable as non-root user sbx; skipped",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows fzf --version printing 0.74.5 (c0a193e0).",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-fzf-20261104-133251-fa2b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-fzf-20261104-133251-fa2b/check-1-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.04898,
+        "features": [
+          {
+            "feature": "select files with fuzzy matching",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "browse command history interactively",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "preview items in preview window",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "fuzzy complete files and commands",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/junegunn/fzf@99bfd5aa0f66",
+      "go.mod"
+    ],
+    "packages_checked": 11,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 68.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8571,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 83998,
+        "monthly_downloads": 52119,
+        "forks": 4153,
+        "dependents": null,
+        "release_downloads": 3551824,
+        "hn_top_score": 279,
+        "registries_count": 1
+      },
+      "age_days": 4759,
+      "packages": [
+        "homebrew:fzf"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "8f553f11719920fd71b6d407eb358d7de12f643bea6e4294c46c036f79215086",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "fzf is a general-purpose command-line fuzzy finder and an interactive terminal toolkit."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Whether you're selecting files, browsing command history, previewing data,"
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install fzf"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "find * -type f | fzf > selected"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export FZF_DEFAULT_OPTS=\"--layout=reverse --inline-info\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "brew update; brew upgrade fzf"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "You can use [Homebrew](https://brew.sh/) (on macOS or Linux) to install fzf."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -320,5 +543,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:46+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

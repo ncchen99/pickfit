@@ -53,18 +53,25 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "brew",
+      "basis": "replayed",
+      "run_id": "verify-alacritty-20261104-162129-095d",
+      "method": "binary",
       "steps": [
         {
-          "command": "brew install --cask alacritty",
-          "purpose": null
+          "command": "curl -fL -o ~/Downloads/Alacritty-v0.17.0.dmg https://github.com/alacritty/alacritty/releases/download/v0.17.0/Alacritty-v0.17.0.dmg",
+          "purpose": "download Alacritty v0.17.0 dmg from GitHub releases"
+        },
+        {
+          "command": "mkdir -p ~/mnt/alacritty ~/Applications && hdiutil attach -nobrowse -mountpoint ~/mnt/alacritty ~/Downloads/Alacritty-v0.17.0.dmg && cp -R ~/mnt/alacritty/Alacritty.app ~/Applications/ && hdiutil detach -force ~/mnt/alacritty",
+          "purpose": "mount dmg and copy Alacritty.app to ~/Applications"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "~/Applications/Alacritty.app/Contents/MacOS/alacritty --version",
+        "expected_signal": "alacritty 0.17.0"
+      },
+      "first_task": "open ~/Applications/Alacritty.app"
     },
     "linux": null,
     "windows": null
@@ -82,12 +89,244 @@
     "url": "https://github.com/alacritty/alacritty/releases/tag/v0.17.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T17:42:33.390451+08:00",
+    "runs": [
+      {
+        "id": "verify-alacritty-20261104-162129-095d",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T17:42:33.390451+08:00",
+        "tool_version": "0.17.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fL -o ~/Downloads/Alacritty-v0.17.0.dmg https://github.com/alacritty/alacritty/releases/download/v0.17.0/Alacritty-v0.17.0.dmg",
+            "purpose": "download Alacritty v0.17.0 dmg from GitHub releases"
+          },
+          {
+            "command": "mkdir -p ~/mnt/alacritty ~/Applications && hdiutil attach -nobrowse -mountpoint ~/mnt/alacritty ~/Downloads/Alacritty-v0.17.0.dmg && cp -R ~/mnt/alacritty/Alacritty.app ~/Applications/ && hdiutil detach -force ~/mnt/alacritty",
+            "purpose": "mount dmg and copy Alacritty.app to ~/Applications"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "~/Applications/Alacritty.app/Contents/MacOS/alacritty --version",
+            "expected_signal": "alacritty 0.17.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "alacritty 0.17.0 (94e7c88)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "~/Applications/Alacritty.app/Contents/MacOS/alacritty --help",
+            "expected_signal": "A fast, cross-platform, OpenGL terminal emulator",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "A fast, cross-platform, OpenGL terminal emulator",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Alacritty.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask alacritty",
+            "actually_needed": "Homebrew reports Cask 'alacritty' has been disabled because it does not pass the macOS Gatekeeper check (disabled 2026-09-01); installed via direct .dmg download from GitHub releases instead",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows the --version command outputting alacritty 0.17.0. / Alacritty terminal window shows login text and an interactive shell prompt ready for input.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-alacritty-20261104-162129-095d/report.json",
+          "log_path": "runs/verify/verify-alacritty-20261104-162129-095d/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-alacritty-20261104-162129-095d/check-1-cmd7.judged.png",
+            "runs/verify/verify-alacritty-20261104-162129-095d/replay-6-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.034543,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "open ~/Applications/Alacritty.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "run GPU-accelerated terminal emulation",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "configure terminal via config file",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/alacritty/alacritty@aecf0f600fa8",
+      "Cargo.lock"
+    ],
+    "packages_checked": 288,
+    "findings_total": 2,
+    "advisories_total": 2,
+    "findings": [
+      {
+        "package": "crates:quick-xml",
+        "version": "0.37.5",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.37.5",
+        "advisory": "RUSTSEC-2026-0195",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00"
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:42:33+08:00",
+    "quality": {
+      "total": 62.3,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.4335,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.86,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.949,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 66115,
+        "monthly_downloads": null,
+        "forks": 3703,
+        "dependents": null,
+        "release_downloads": 1108170,
+        "hn_top_score": 152,
+        "registries_count": 0
+      },
+      "age_days": 3912,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.23
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:14:21.996880+08:00",
+      "sources_sha": "159e2aa5bad546c89612dd8d63d7893beb401a28d4385b0acb0e6d8275858ed4",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Alacritty - A fast, cross-platform, OpenGL terminal emulator"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- At least OpenGL ES 2.0\n- [Windows] ConPTY support (Windows 10 version 1809 or higher)"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install --cask alacritty"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Alacritty doesn't create the config file for you, but it looks for one in the"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "**_Is it really the fastest terminal emulator?_**"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Alacritty is released under the [Apache License, Version 2.0]."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -286,5 +525,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:49+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:42:33.391676+08:00"
 }

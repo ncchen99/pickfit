@@ -110,11 +110,375 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_root",
+    "checked_at": "2026-11-04T14:48:54.600098+08:00",
+    "runs": [
+      {
+        "id": "verify-dog-20261104-144757-180d",
+        "level": "unverified",
+        "unverified_reason": "needs_root",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T14:48:54.600098+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "curl -fL https://github.com/ogham/dog/releases/download/v0.1.0/dog-v0.1.0-x86_64-unknown-linux-gnu.zip -o /tmp/dog.zip && unzip -l /tmp/dog.zip 2>&1 && mkdir -p /tmp/dog-extract && unzip -o /tmp/dog.zip -d /tmp/dog-extract && ls -R /tmp/dog-extract",
+            "purpose": "download prebuilt dog v0.1.0 Linux binary from GitHub releases"
+          },
+          {
+            "command": "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/rustup.sh && head -n 20 /tmp/rustup.sh\nls -l /tmp/rustup.sh",
+            "purpose": "download rustup install script"
+          },
+          {
+            "command": "sh /tmp/rustup.sh -y --no-modify-path 2>&1 | tail -n 50\nls ~/.cargo/bin/ 2>&1 | head -n 20\n~/.cargo/bin/cargo --version 2>&1; ~/.cargo/bin/rustc --version 2>&1",
+            "purpose": "install rust toolchain via rustup"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mkdir -p ~/.local/bin && cp /tmp/dog-extract/bin/dog ~/.local/bin/dog && chmod +x ~/.local/bin/dog && ~/.local/bin/dog --version 2>&1; echo \"exit:$?\"\n~/.local/bin/dog --help 2>&1",
+            "expected_signal": "dog 0.1.0",
+            "exit_code": 127,
+            "passed": false,
+            "observed_excerpt": "/home/sbx/.local/bin/dog: error while loading shared libraries: libssl.so.1.1: cannot open shared object file: No such file or directory",
+            "setup": [
+              {
+                "command": "curl -fL https://github.com/ogham/dog/releases/download/v0.1.0/dog-v0.1.0-x86_64-unknown-linux-gnu.zip -o /tmp/dog.zip && unzip -l /tmp/dog.zip 2>&1 && mkdir -p /tmp/dog-extract && unzip -o /tmp/dog.zip -d /tmp/dog-extract && ls -R /tmp/dog-extract",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Binary downloads available for Linux from GitHub releases",
+            "actually_needed": "Latest release binary links against libssl.so.1.1 which is not present on Debian 13 (has libssl.so.3); needs manual libssl1.1 or rebuild from source",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "cargo build compiles dog from source",
+            "actually_needed": "box has no C compiler (cc/gcc) so Rust build fails with 'failed to find tool cc' after installing rustup; also needs OpenSSL dev headers",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": "libssl.so.1.1: cannot open shared object file: No such file or directory (Debian 13 provides libssl.so.3 only; no root to apt-get libssl1.1, no static/musl binary offered)",
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-dog-20261104-144757-180d/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.045875
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/ogham/dog@721440b12ef0",
+      "Cargo.lock"
+    ],
+    "packages_checked": 103,
+    "findings_total": 16,
+    "advisories_total": 16,
+    "findings": [
+      {
+        "package": "crates:failure",
+        "version": "0.1.8",
+        "advisory": "GHSA-jq66-xh47-j9f3",
+        "cves": [
+          "CVE-2019-25010",
+          "CVE-2020-25575"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": null,
+        "summary": "Type confusion if __private_get_type_id__ is overriden",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl-src",
+        "version": "111.15.0+1.1.1k",
+        "advisory": "GHSA-5ww6-px42-wc85",
+        "cves": [
+          "CVE-2021-3711"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "111.16.0",
+        "summary": "SM2 Decryption Buffer Overflow",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl",
+        "version": "0.10.33",
+        "advisory": "GHSA-6hcf-g6gr-hhcr",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.10.48",
+        "summary": "`openssl` `X509Extension::new` and `X509Extension::new_nid` null pointer dereference",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl",
+        "version": "0.10.33",
+        "advisory": "GHSA-8c75-8mhr-p7r9",
+        "cves": [
+          "CVE-2026-41678"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.10.78",
+        "summary": "rust-openssl has incorrect bounds assertion in aes key wrap",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl",
+        "version": "0.10.33",
+        "advisory": "GHSA-9qwg-crg9-m2vc",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.10.48",
+        "summary": "`openssl` `SubjectAlternativeName` and `ExtendedKeyUsage::other` allow arbitrary file read",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl",
+        "version": "0.10.33",
+        "advisory": "GHSA-hppc-g8h3-xhp3",
+        "cves": [
+          "CVE-2026-41898"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.10.78",
+        "summary": "rust-openssl: Unchecked callback length in PSK/cookie trampolines leaks adjacent memory to peer",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl",
+        "version": "0.10.33",
+        "advisory": "GHSA-pqf5-4pqq-29f5",
+        "cves": [
+          "CVE-2026-41676"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.10.78",
+        "summary": "rust-openssl: Deriver::derive and PkeyCtxRef::derive can overflow short buffers on OpenSSL 1.1.1",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl",
+        "version": "0.10.33",
+        "advisory": "GHSA-xp3w-r5p5-63rr",
+        "cves": [
+          "CVE-2026-42327"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.10.79",
+        "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl-src",
+        "version": "111.15.0+1.1.1k",
+        "advisory": "GHSA-3wx7-46ch-7rq2",
+        "cves": [
+          "CVE-2022-2097"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "111.22.0",
+        "summary": "AES OCB fails to encrypt some bytes",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl-src",
+        "version": "111.15.0+1.1.1k",
+        "advisory": "GHSA-q9wj-f4qw-6vfj",
+        "cves": [
+          "CVE-2021-3712"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "111.16.0",
+        "summary": "Read buffer overruns processing ASN.1 strings",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl-src",
+        "version": "111.15.0+1.1.1k",
+        "advisory": "GHSA-r7jw-wp68-3xch",
+        "cves": [
+          "CVE-2023-0215"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "111.25.0",
+        "summary": "openssl-src vulnerable to Use-after-free following `BIO_new_NDEF`",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl-src",
+        "version": "111.15.0+1.1.1k",
+        "advisory": "GHSA-v5w6-wcm8-jm4q",
+        "cves": [
+          "CVE-2022-4450"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "111.25.0",
+        "summary": "openssl-src contains Double free after calling `PEM_read_bio_ex`",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl-src",
+        "version": "111.15.0+1.1.1k",
+        "advisory": "GHSA-x3mh-jvjw-3xwx",
+        "cves": [
+          "CVE-2022-0778"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "111.18.0",
+        "summary": "openssl-src's infinite loop in `BN_mod_sqrt()` reachable when parsing certificates",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl-src",
+        "version": "111.15.0+1.1.1k",
+        "advisory": "GHSA-x4qr-2fvf-3mr5",
+        "cves": [
+          "CVE-2023-0286"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "111.25.0",
+        "summary": "Vulnerable OpenSSL included in cryptography wheels",
+        "malicious": false
+      },
+      {
+        "package": "crates:rustls",
+        "version": "0.19.1",
+        "advisory": "RUSTSEC-2024-0336",
+        "cves": [
+          "CVE-2024-32650"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.21.11",
+        "summary": "`rustls::ConnectionCommon::complete_io` could fall into an infinite loop based on network input",
+        "malicious": false
+      },
+      {
+        "package": "crates:webpki",
+        "version": "0.21.4",
+        "advisory": "GHSA-8qv2-5vq6-g2g7",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.22.2",
+        "summary": "webpki: CPU denial of service in certificate path building",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 35.1,
+      "confidence": 0.5,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.4375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.1629,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 6691,
+        "monthly_downloads": null,
+        "forks": 216,
+        "dependents": null,
+        "release_downloads": 74812,
+        "hn_top_score": 255,
+        "registries_count": 0
+      },
+      "age_days": 2383,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.51
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "de6ecf5000500c0d83b7ba610d812112eb85b2233af67d05362e761b7357e042",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "**dog** is a command-line DNS client, like `dig`."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "You will need rustc version [1.45.0](https://blog.rust-lang.org/2020/07/16/Rust-1.45.0.html) or higher."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "$ cargo build"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "dog example.net                          Query a domain using default settings"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "dog’s source code is licenced under the [European Union Public Licence]"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -355,5 +719,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:57+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

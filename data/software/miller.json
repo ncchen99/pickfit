@@ -75,17 +75,24 @@
       "first_task": null
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "brew",
+      "basis": "replayed",
+      "run_id": "verify-miller-20261104-133040-ba26",
+      "method": "binary",
       "steps": [
         {
-          "command": "brew install miller",
-          "purpose": null
+          "command": "curl -fL -o /tmp/miller.tar.gz https://github.com/johnkerl/miller/releases/download/v6.22.0/miller-6.22.0-linux-amd64.tar.gz",
+          "purpose": "download Miller prebuilt binary tarball v6.22.0 for linux-amd64"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && tar xzf /tmp/miller.tar.gz -C /tmp && cp /tmp/miller-6.22.0-linux-amd64/mlr ~/.local/bin/mlr && chmod +x ~/.local/bin/mlr && ~/.local/bin/mlr --help",
+          "purpose": "extract and install mlr binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "mlr --version",
+        "expected_signal": "mlr 6.22.0"
+      },
       "first_task": null
     },
     "windows": {
@@ -116,12 +123,215 @@
     "url": "https://github.com/johnkerl/miller/releases/tag/v6.22.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:31:36.532000+08:00",
+    "runs": [
+      {
+        "id": "verify-miller-20261104-133040-ba26",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T13:31:36.532000+08:00",
+        "tool_version": "6.22.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fL -o /tmp/miller.tar.gz https://github.com/johnkerl/miller/releases/download/v6.22.0/miller-6.22.0-linux-amd64.tar.gz",
+            "purpose": "download Miller prebuilt binary tarball v6.22.0 for linux-amd64"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && tar xzf /tmp/miller.tar.gz -C /tmp && cp /tmp/miller-6.22.0-linux-amd64/mlr ~/.local/bin/mlr && chmod +x ~/.local/bin/mlr && ~/.local/bin/mlr --help",
+            "purpose": "extract and install mlr binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mlr --version",
+            "expected_signal": "mlr 6.22.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "mlr 6.22.0",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "apt-get install miller / yum install miller / snap install miller",
+            "actually_needed": "those package managers require root or are not installed in this sandbox; downloaded prebuilt binary tarball from GitHub releases and copied mlr to ~/.local/bin",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows mlr --version printing mlr 6.22.0 with exit code 0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-miller-20261104-133040-ba26/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-miller-20261104-133040-ba26/check-1-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.03181,
+        "features": [
+          {
+            "feature": "add and transform fields with functions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "convert between CSV TSV JSON formats",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "process CSV TSV JSON data",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "slice dice reformat data for databases",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/johnkerl/miller@f36045ba6847",
+      "go.mod"
+    ],
+    "packages_checked": 36,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 66.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7778,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 95.7,
+      "signals": {
+        "stars": 10055,
+        "monthly_downloads": 593,
+        "forks": 255,
+        "dependents": null,
+        "release_downloads": 159602,
+        "hn_top_score": 318,
+        "registries_count": 1
+      },
+      "age_days": 4202,
+      "packages": [
+        "homebrew:miller"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 2.84
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "e467792692bc0d99ba3a5d5a89c8fafaefe3572427beffeae347ec18966e11e1",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Miller is like awk, sed, cut, join, and sort for name-indexed data such as CSV, TSV, and tabular JSON"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "it's useful for **data cleaning**,\n**data reduction**, **statistical reporting**, **devops**, **system\nadministration**"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Miller is written in portable, modern Go, with **zero runtime dependencies**."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "|Linux|`yum install miller`<br/> `apt-get install miller`<br/> `snap install miller`|"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Support XDG Base Directory spec for location of .mlrrc"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Miller's license is two-clause BSD"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -386,5 +596,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:07:37+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

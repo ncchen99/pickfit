@@ -42,18 +42,22 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-quickrecorder-20261104-163200-4f8e",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install lihaoyun6/tap/quickrecorder",
-          "purpose": null
+          "command": "brew tap lihaoyun6/tap 2>&1 && brew trust --tap lihaoyun6/tap 2>&1; brew install --cask --appdir=$HOME/Applications lihaoyun6/tap/quickrecorder 2>&1",
+          "purpose": "brew tap and install QuickRecorder cask to ~/Applications"
+        },
+        {
+          "command": "xattr -dr com.apple.quarantine ~/Applications/QuickRecorder.app 2>&1 && xattr -l ~/Applications/QuickRecorder.app 2>&1",
+          "purpose": "remove Gatekeeper quarantine (app not notarized, Apple Development signature)"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "open ~/Applications/QuickRecorder.app"
     },
     "linux": null,
     "windows": null
@@ -71,12 +75,222 @@
     "url": "https://github.com/lihaoyun6/QuickRecorder/releases/tag/1.6.9"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T16:39:21.795901+08:00",
+    "runs": [
+      {
+        "id": "verify-quickrecorder-20261104-163200-4f8e",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T16:39:21.795901+08:00",
+        "tool_version": "1.6.7",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew tap lihaoyun6/tap 2>&1 && brew trust --tap lihaoyun6/tap 2>&1; brew install --cask --appdir=$HOME/Applications lihaoyun6/tap/quickrecorder 2>&1",
+            "purpose": "brew tap and install QuickRecorder cask to ~/Applications"
+          },
+          {
+            "command": "xattr -dr com.apple.quarantine ~/Applications/QuickRecorder.app 2>&1 && xattr -l ~/Applications/QuickRecorder.app 2>&1",
+            "purpose": "remove Gatekeeper quarantine (app not notarized, Apple Development signature)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/QuickRecorder.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install lihaoyun6/tap/quickrecorder",
+            "actually_needed": "needs brew tap lihaoyun6/tap && brew trust --tap lihaoyun6/tap and --appdir=$HOME/Applications because $HOME is /Users/sbx and /Applications is not writable without sudo",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "app launches after brew install",
+            "actually_needed": "app is signed with Apple Development certificate (RLYLNV942Y) and not notarized (spctl shows Apple Development origin), so macOS quarantines it and open fails until xattr -dr com.apple.quarantine ~/Applications/QuickRecorder.app",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows QuickRecorder's main recording toolbar with options for System Audio, Screen, Screen Area, Application, Window, Mobile Device, and Preferences.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-quickrecorder-20261104-163200-4f8e/report.json",
+          "log_path": "runs/verify/verify-quickrecorder-20261104-163200-4f8e/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-quickrecorder-20261104-163200-4f8e/replay-6-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.032788,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "open ~/Applications/QuickRecorder.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "record screens windows and applications",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "record audio loopback without driver",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "overlay camera in real time",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "record HEVC with Alpha video",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T16:39:21+08:00",
+    "quality": {
+      "total": 46.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.105,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.5,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.3412,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 82.9,
+      "signals": {
+        "stars": 8772,
+        "monthly_downloads": null,
+        "forks": 533,
+        "dependents": null,
+        "release_downloads": 144245,
+        "hn_top_score": 1,
+        "registries_count": 0
+      },
+      "age_days": 926,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 7.87
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:14:21.996880+08:00",
+      "sources_sha": "a07ae0e5eb14f1e545029f92a5fa7f9d3ec6f73a00c3aa81b4f2be8a5fb83802",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A lightweight and high-performance screen recorder for macOS"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- macOS 12.3 and Later"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install lihaoyun6/tap/quickrecorder"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "you can turn off the `Record Microphone to Main Track` option in the settings panel."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "**1. Where can I reopen the main panel after closing it?**"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "- macOS 12.3 and Later"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -269,5 +483,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:31+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

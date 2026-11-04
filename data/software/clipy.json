@@ -48,18 +48,18 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-clipy-20261104-153459-48c3",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask clipy",
-          "purpose": null
+          "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications clipy",
+          "purpose": "install Clipy via brew cask to ~/Applications"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "open ~/Applications/Clipy.app"
     },
     "linux": null,
     "windows": null
@@ -77,12 +77,205 @@
     "url": "https://github.com/Clipy/Clipy/releases/tag/1.4.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T15:41:24.307739+08:00",
+    "runs": [
+      {
+        "id": "verify-clipy-20261104-153459-48c3",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T15:41:24.307739+08:00",
+        "tool_version": "1.4.1",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications clipy",
+            "purpose": "install Clipy via brew cask to ~/Applications"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/Clipy.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask clipy",
+            "actually_needed": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications clipy (standard user cannot write /Applications, needs --appdir)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "A small Clipy dialog asks whether to launch on system startup with setup buttons.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-clipy-20261104-153459-48c3/report.json",
+          "log_path": "runs/verify/verify-clipy-20261104-153459-48c3/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-clipy-20261104-153459-48c3/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.018318,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open ~/Applications/Clipy.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "access clipboard history",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "select saved snippets",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "open clipboard history and settings",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T15:41:24+08:00",
+    "quality": {
+      "total": 66.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.3909,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 82.9,
+      "signals": {
+        "stars": 8961,
+        "monthly_downloads": null,
+        "forks": 842,
+        "dependents": null,
+        "release_downloads": 2066344,
+        "hn_top_score": 1,
+        "registries_count": 0
+      },
+      "age_days": 4154,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 11.42
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:14:21.996880+08:00",
+      "sources_sha": "392fcf1c9fd34e99be63069de10859b779a12d64343969df2d4aa74a5ada797f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Open the main menu to access clipboard history, snippets, and settings."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "__Requirement__: macOS 14 Sonoma or later"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install --cask clipy"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "⇧⌘V (Shift + Command + V)"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "You can change these shortcuts in **Settings > Shortcuts**."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "macOS may ask for Accessibility permission again for every build."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Clipy is available under the MIT license."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -289,5 +482,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:26+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

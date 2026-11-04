@@ -3,7 +3,7 @@
   "slug": "appflowy",
   "repo_id": "gh:377496562",
   "name": "AppFlowy",
-  "summary": "Open-source AI workspace for projects, wikis and team collaboration with data control.",
+  "summary": "AI workspace bringing projects, wikis and teams together with data control.",
   "aliases": [],
   "status": "listed",
   "status_reason": null,
@@ -24,17 +24,17 @@
     "task-management"
   ],
   "use_cases": [
-    "manage to-dos in a kanban board",
-    "track tasks and projects in databases",
-    "write notes and reports in docs"
+    "manage notes, tasks and databases in one workspace",
+    "combine database views in shared dashboards"
   ],
   "alternatives_to": [
     "Notion"
   ],
   "features": [
-    "combine views from multiple databases in dashboards",
-    "create number charts with drill-down tables",
-    "format documents with full-width and custom widths"
+    "Manage notes, tasks and databases",
+    "Combine database views in dashboards",
+    "Create charts with grouping controls",
+    "Use AI in team wikis"
   ],
   "why_worth_it": null,
   "homepage": "https://appflowy.com",
@@ -55,7 +55,7 @@
     "gpu": null,
     "apple_silicon_only": null,
     "min_ram_gb": null,
-    "network": "optional",
+    "network": null,
     "api_keys": []
   },
   "install": {
@@ -71,30 +71,543 @@
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "flatpak run io.appflowy.AppFlowy"
     },
-    "linux": null,
-    "windows": null
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-appflowy-20261104-135727-7258",
+      "method": "other",
+      "steps": [
+        {
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add Flathub remote for user"
+        },
+        {
+          "command": "flatpak install --user -y flathub io.appflowy.AppFlowy 2>&1",
+          "purpose": "install AppFlowy Flatpak from Flathub"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "flatpak run io.appflowy.AppFlowy"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "flatpak install flathub io.appflowy.AppFlowy",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "flatpak run io.appflowy.AppFlowy"
+    }
   },
   "pricing": {
-    "model": "freemium",
+    "model": null,
     "note": null
   },
   "open_source": true,
   "license": "AGPL-3.0",
-  "processing": "hybrid",
+  "processing": null,
   "last_release": {
     "tag": "0.15.0",
     "published_at": "2026-11-02T23:40:52Z",
     "url": "https://github.com/AppFlowy-IO/AppFlowy/releases/tag/0.15.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T14:04:23.542383+08:00",
+    "runs": [
+      {
+        "id": "verify-appflowy-20261104-135727-7258",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-04T14:04:23.542383+08:00",
+        "tool_version": "0.15.0",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add Flathub remote for user"
+          },
+          {
+            "command": "flatpak install --user -y flathub io.appflowy.AppFlowy 2>&1",
+            "purpose": "install AppFlowy Flatpak from Flathub"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run io.appflowy.AppFlowy",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows AppFlowy welcome screen asking for email and offering Continue login options.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-appflowy-20261104-135727-7258/report.json",
+          "log_path": "runs/verify/verify-appflowy-20261104-135727-7258/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-appflowy-20261104-135727-7258/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.033955,
+        "gui": {
+          "tier": "window",
+          "screen": "sign_in_wall",
+          "command": "flatpak run io.appflowy.AppFlowy",
+          "window_title": "AppFlowy",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "Manage notes, tasks and databases",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "Combine database views in dashboards",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "Create charts with grouping controls",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "Use AI in team wikis",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/AppFlowy-IO/AppFlowy@8fcee27d9bd9",
+      "frontend/rust-lib/Cargo.lock"
+    ],
+    "packages_checked": 792,
+    "findings_total": 25,
+    "advisories_total": 21,
+    "findings": [
+      {
+        "package": "crates:zip",
+        "version": "0.6.6",
+        "advisory": "GHSA-m665-v7pm-7grj",
+        "cves": [
+          "CVE-2026-115905"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.5",
+        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "2.2.0",
+        "advisory": "GHSA-m665-v7pm-7grj",
+        "cves": [
+          "CVE-2026-115905"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.5",
+        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "0.6.6",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "2.2.0",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false
+      },
+      {
+        "package": "crates:diesel",
+        "version": "2.2.10",
+        "advisory": "GHSA-h5x4-m2qf-r4f2",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "2.3.8",
+        "summary": "Diesel's SQLite backend has possible UTF-8 corruption",
+        "malicious": false
+      },
+      {
+        "package": "crates:lopdf",
+        "version": "0.36.0",
+        "advisory": "GHSA-6fj4-rcr3-r7rr",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.42.0",
+        "summary": "lopdf has a stack overflow via deeply nested PDF objects",
+        "malicious": false
+      },
+      {
+        "package": "crates:lz4_flex",
+        "version": "0.11.2",
+        "advisory": "GHSA-vvp9-7p8x-rfvv",
+        "cves": [
+          "CVE-2026-32829"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.11.6",
+        "summary": "lz4_flex's decompression can leak information from uninitialized memory or reused output buffer",
+        "malicious": false
+      },
+      {
+        "package": "crates:mio",
+        "version": "0.8.9",
+        "advisory": "GHSA-r8w9-5wcg-vfj7",
+        "cves": [
+          "CVE-2024-27308"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.8.11",
+        "summary": "Mio's tokens for named pipes may be delivered after deregistration",
+        "malicious": false
+      },
+      {
+        "package": "crates:oneshot",
+        "version": "0.1.11",
+        "advisory": "GHSA-rvr2-r3pv-5m4p",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.1.12",
+        "summary": "oneshot has potential Use After Free when used asynchronously",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl",
+        "version": "0.10.62",
+        "advisory": "GHSA-8c75-8mhr-p7r9",
+        "cves": [
+          "CVE-2026-41678"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.10.78",
+        "summary": "rust-openssl has incorrect bounds assertion in aes key wrap",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl",
+        "version": "0.10.62",
+        "advisory": "GHSA-ghm9-cr32-g9qj",
+        "cves": [
+          "CVE-2026-41681"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.10.78",
+        "summary": "rust-openssl: rustMdCtxRef::digest_final() writes past caller buffer with no length check",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl",
+        "version": "0.10.62",
+        "advisory": "GHSA-hppc-g8h3-xhp3",
+        "cves": [
+          "CVE-2026-41898"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.10.78",
+        "summary": "rust-openssl: Unchecked callback length in PSK/cookie trampolines leaks adjacent memory to peer",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl",
+        "version": "0.10.62",
+        "advisory": "GHSA-pqf5-4pqq-29f5",
+        "cves": [
+          "CVE-2026-41676"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.10.78",
+        "summary": "rust-openssl: Deriver::derive and PkeyCtxRef::derive can overflow short buffers on OpenSSL 1.1.1",
+        "malicious": false
+      },
+      {
+        "package": "crates:openssl",
+        "version": "0.10.62",
+        "advisory": "GHSA-xp3w-r5p5-63rr",
+        "cves": [
+          "CVE-2026-42327"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.10.79",
+        "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
+        "malicious": false
+      },
+      {
+        "package": "crates:pulldown-cmark",
+        "version": "0.13.0",
+        "advisory": "RUSTSEC-2026-0414",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.13.5",
+        "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
+        "malicious": false
+      },
+      {
+        "package": "crates:pulldown-cmark",
+        "version": "0.13.0",
+        "advisory": "RUSTSEC-2026-0433",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.13.6",
+        "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.9",
+        "advisory": "GHSA-4w2j-m93h-cj5j",
+        "cves": [
+          "CVE-2026-25800"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.11.15",
+        "summary": "Quinn: Remote memory exhaustion in quinn-proto from unbounded out-of-order stream reassembly",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.9",
+        "advisory": "GHSA-6xvm-j4wr-6v98",
+        "cves": [
+          "CVE-2026-31812"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.11.14",
+        "summary": "Quinn affected by unauthenticated remote DoS via panic in QUIC transport parameter parsing",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.9",
+        "advisory": "RUSTSEC-2026-0340",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+        "malicious": false
+      },
+      {
+        "package": "crates:rustls-webpki",
+        "version": "0.102.8",
+        "advisory": "GHSA-82j2-j2ch-gfr8",
+        "cves": [
+          "CVE-2026-93599"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.103.13",
+        "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "2.2.0",
+        "advisory": "GHSA-94vh-gphv-8pm8",
+        "cves": [
+          "CVE-2025-29787"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.3.0",
+        "summary": "zip Incorrectly Canonicalizes Paths during Archive Extraction Leading to Arbitrary File Write",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "2.2.0",
+        "advisory": "GHSA-q7v9-x93c-xqv3",
+        "cves": [
+          "CVE-2026-115909"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "0.6.6",
+        "advisory": "RUSTSEC-2026-0367",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "2.2.0",
+        "advisory": "RUSTSEC-2026-0367",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "0.6.6",
+        "advisory": "RUSTSEC-2026-0429",
+        "cves": [
+          "CVE-2026-115909"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: `ZipArchive::extract` aborts the process on a symlink entry with a large declared size",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:17:43+08:00",
+    "quality": {
+      "total": 67.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7208,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 78162,
+        "monthly_downloads": null,
+        "forks": 6170,
+        "dependents": null,
+        "release_downloads": 454374,
+        "hn_top_score": 149,
+        "registries_count": 0
+      },
+      "age_days": 1966,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.7
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "7a748f1b21bf10e3af9f099759fd977abd242db5619c3b8263db74f9b5b586b4",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Bring projects, wikis, and teams together with AI. AppFlowy is the AI collaborative workspace where you achieve more without losing control of your data."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Built for individuals who care about data security and mobile experience"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Android 10 or above; ARMv7 is"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "flatpak install flathub io.appflowy.AppFlowy"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "flatpak run io.appflowy.AppFlowy"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Distributed under the AGPLv3 License."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -156,6 +669,12 @@
       "fetched_at": "2026-11-04T13:05:20+08:00"
     },
     {
+      "id": "flathub:io.appflowy.AppFlowy",
+      "kind": "package_registry",
+      "url": "https://flathub.org/apps/io.appflowy.AppFlowy",
+      "fetched_at": "2026-11-04T13:49:24+08:00"
+    },
+    {
       "id": "homebrew_cask:appflowy",
       "kind": "package_registry",
       "url": "https://formulae.brew.sh/cask/appflowy",
@@ -169,39 +688,39 @@
       "quote": "Download AppFlowy Desktop (macOS, Windows, and Linux)",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
+      "checked_at": "2026-11-04T13:49:48+08:00"
     },
     {
       "field": "/audience",
-      "source_id": "readme",
-      "quote": "Download AppFlowy Desktop (macOS, Windows, and Linux)",
+      "source_id": "flathub:io.appflowy.AppFlowy",
+      "quote": "Download and install AppFlowy on your local machine",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
+      "checked_at": "2026-11-04T13:49:48+08:00"
     },
     {
       "field": "/category",
-      "source_id": "github_api",
-      "quote": "Bring projects, wikis, and teams together with AI.",
-      "method": "model",
-      "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
-    },
-    {
-      "field": "/summary",
       "source_id": "readme",
       "quote": "AppFlowy is the AI workspace where you achieve more without losing control of your data",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
+      "checked_at": "2026-11-04T13:49:48+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Bring projects, wikis, and teams together with AI.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:48+08:00"
     },
     {
       "field": "/name",
       "source_id": "github_api",
-      "quote": "name: AppFlowy",
+      "quote": "AppFlowy",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
+      "checked_at": "2026-11-04T13:49:48+08:00"
     },
     {
       "field": "/platforms",
@@ -209,15 +728,7 @@
       "quote": "Download AppFlowy Desktop (macOS, Windows, and Linux)",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
-    },
-    {
-      "field": "/prerequisites/network",
-      "source_id": "release:0.15.0",
-      "quote": "creating new widget views required a server connection.",
-      "method": "model",
-      "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
+      "checked_at": "2026-11-04T13:49:48+08:00"
     },
     {
       "field": "/repo",
@@ -269,59 +780,59 @@
     },
     {
       "field": "/use_cases/0",
-      "source_id": "readme",
-      "quote": "AppFlowy Kanban Board for To-dos",
+      "source_id": "flathub:io.appflowy.AppFlowy",
+      "quote": "AppFlowy is a privacy-first open source workspace for your notes, tasks, databases, and more.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
+      "checked_at": "2026-11-04T13:49:48+08:00"
     },
     {
       "field": "/use_cases/1",
-      "source_id": "readme",
-      "quote": "AppFlowy Databases for Tasks and Projects",
-      "method": "model",
-      "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
-    },
-    {
-      "field": "/use_cases/2",
-      "source_id": "readme",
-      "quote": "Beautiful docs for notes and reports",
-      "method": "model",
-      "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
-    },
-    {
-      "field": "/alternatives_to/0",
-      "source_id": "readme",
-      "quote": "⭐️  The Open Source Alternative To Notion  ⭐️",
-      "method": "model",
-      "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
-    },
-    {
-      "field": "/features/0",
       "source_id": "release:0.15.0",
       "quote": "Added dashboards combining views from multiple databases, with movable and resizable widgets",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
+      "checked_at": "2026-11-04T13:49:48+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "github_api",
+      "quote": "The leading open source Notion alternative.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:48+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "flathub:io.appflowy.AppFlowy",
+      "quote": "AppFlowy is a privacy-first open source workspace for your notes, tasks, databases, and more.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:48+08:00"
     },
     {
       "field": "/features/1",
       "source_id": "release:0.15.0",
-      "quote": "Added Number charts for workspaces with Pro features, expanded grouping and display controls",
+      "quote": "Added dashboards combining views from multiple databases, with movable and resizable widgets",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
+      "checked_at": "2026-11-04T13:49:48+08:00"
     },
     {
       "field": "/features/2",
       "source_id": "release:0.15.0",
-      "quote": "Added full-width and custom-width formatting per document",
+      "quote": "Added Number charts for workspaces with Pro features, expanded grouping and display controls",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
+      "checked_at": "2026-11-04T13:49:48+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Team wikis with ask AI",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:48+08:00"
     },
     {
       "field": "/install/macos/steps/0",
@@ -329,25 +840,25 @@
       "quote": "brew install --cask appflowy",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
+      "checked_at": "2026-11-04T13:49:48+08:00"
     },
     {
-      "field": "/pricing",
-      "source_id": "release:0.15.0",
-      "quote": "Added Number charts for workspaces with Pro features",
+      "field": "/install/linux/steps/0",
+      "source_id": "homebrew_cask:appflowy",
+      "quote": "brew install --cask appflowy",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
+      "checked_at": "2026-11-04T13:49:48+08:00"
     },
     {
-      "field": "/processing",
-      "source_id": "release:0.15.0",
-      "quote": "Local dashboards could reuse existing views; creating new widget views required a server connection.",
+      "field": "/install/windows/steps/0",
+      "source_id": "flathub:io.appflowy.AppFlowy",
+      "quote": "flatpak install flathub io.appflowy.AppFlowy",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:20+08:00"
+      "checked_at": "2026-11-04T13:49:48+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:04:36+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

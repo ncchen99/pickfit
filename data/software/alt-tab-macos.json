@@ -48,18 +48,18 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-alt-tab-macos-20261104-163921-c8ea",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask alt-tab",
-          "purpose": null
+          "command": "brew install --cask --appdir=$HOME/Applications alt-tab",
+          "purpose": "install AltTab via brew cask"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "open ~/Applications/AltTab.app"
     },
     "linux": null,
     "windows": null
@@ -77,12 +77,192 @@
     "url": "https://github.com/lwouis/alt-tab-macos/releases/tag/v11.10.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T16:43:10.028420+08:00",
+    "runs": [
+      {
+        "id": "verify-alt-tab-macos-20261104-163921-c8ea",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T16:43:10.028420+08:00",
+        "tool_version": "11.10.1",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications alt-tab",
+            "purpose": "install AltTab via brew cask"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/AltTab.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask alt-tab",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications alt-tab (standard user cannot write /Applications)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The window shows AltTab's initial setup flow requesting Accessibility and Screen Recording permissions.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-alt-tab-macos-20261104-163921-c8ea/report.json",
+          "log_path": "runs/verify/verify-alt-tab-macos-20261104-163921-c8ea/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-alt-tab-macos-20261104-163921-c8ea/replay-3-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.019151,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open ~/Applications/AltTab.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "switch windows with Windows-like alt-tab",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/lwouis/alt-tab-macos@c500294bdb01",
+      "package-lock.json"
+    ],
+    "packages_checked": 20,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T16:43:10+08:00",
+    "quality": {
+      "total": 61.9,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.3125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8855,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 16484,
+        "monthly_downloads": null,
+        "forks": 923,
+        "dependents": null,
+        "release_downloads": 796240,
+        "hn_top_score": 156,
+        "registries_count": 0
+      },
+      "age_days": 2638,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.19
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:14:21.996880+08:00",
+      "sources_sha": "8d8117835ee8e5b77682f38fd6c7e1aab5acc5bec985f534804d5b0b9aeccc0e",
+      "items": {
+        "what_it_does": {
+          "score": 1,
+          "quote": "Windows alt-tab on macOS"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "requires macOS: {\">=\": [\"12\"]}"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install --cask alt-tab"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "apps for macOS"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -265,5 +445,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:30+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

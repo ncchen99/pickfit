@@ -68,11 +68,319 @@
   },
   "verification": {
     "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "unverified_reason": "needs_root",
+    "checked_at": "2026-11-04T15:02:36.139225+08:00",
+    "runs": [
+      {
+        "id": "verify-stirling-pdf-20261104-150138-f253",
+        "level": "unverified",
+        "unverified_reason": "needs_root",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T15:02:36.139225+08:00",
+        "tool_version": "3.2.2",
+        "install_method": "binary",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "curl -fL -o /home/sbx/Stirling-PDF-linux-x86_64.AppImage https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v3.2.2/Stirling-PDF-linux-x86_64.AppImage && chmod +x /home/sbx/Stirling-PDF-linux-x86_64.AppImage && ls -lh /home/sbx/Stirling-PDF-linux-x86_64.AppImage",
+            "purpose": "Download Stirling-PDF-linux-x86_64.AppImage from GitHub releases v3.2.2 and chmod +x"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mkdir -p /tmp/stirling-extract && cd /tmp/stirling-extract && /home/sbx/Stirling-PDF-linux-x86_64.AppImage --appimage-extract > /tmp/extract.log 2>&1; echo EX:$?; ls -l; ls squashfs-root 2>&1 | head -n 80",
+            "expected_signal": "squashfs-root",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "drwx------ 1 sbx sbx 200 Nov 4 07:02 squashfs-root",
+            "setup": [
+              {
+                "command": "curl -fL -o /home/sbx/Stirling-PDF-linux-x86_64.AppImage https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v3.2.2/Stirling-PDF-linux-x86_64.AppImage && chmod +x /home/sbx/Stirling-PDF-linux-x86_64.AppImage && ls -lh /home/sbx/Stirling-PDF-linux-x86_64.AppImage",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "docker run and generic binary install",
+            "actually_needed": "AppImage requires FUSE (fusermount) and system libfontconfig.so.1 not present in box; --appimage-extract works but extracted binary still fails with missing libfontconfig.so.1",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "no Java prerequisite mentioned for desktop AppImage",
+            "actually_needed": "Java not preinstalled; JDK 21 must be manually downloaded to run jar variants",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-stirling-pdf-20261104-150138-f253/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.0396
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/Stirling-Tools/Stirling-PDF@00cd05d229f5",
+      "frontend/package-lock.json",
+      "frontend/src-tauri/Cargo.lock",
+      "frontend/src-tauri/provisioner/Cargo.lock",
+      "frontend/src-tauri/thumbnail-handler/Cargo.lock"
+    ],
+    "packages_checked": 1198,
+    "findings_total": 13,
+    "advisories_total": 11,
+    "findings": [
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "GHSA-m665-v7pm-7grj",
+        "cves": [
+          "CVE-2026-115905"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.5",
+        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.37.5",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.38.4",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.37.5",
+        "advisory": "RUSTSEC-2026-0195",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.38.4",
+        "advisory": "RUSTSEC-2026-0195",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.16",
+        "advisory": "RUSTSEC-2026-0340",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.16",
+        "advisory": "RUSTSEC-2026-0341",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.17",
+        "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "GHSA-q7v9-x93c-xqv3",
+        "cves": [
+          "CVE-2026-115909"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "RUSTSEC-2026-0367",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+        "malicious": false
+      },
+      {
+        "package": "npm:@vue/server-renderer",
+        "version": "3.5.39",
+        "advisory": "GHSA-g2v6-rqmx-r4w6",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "3.5.42",
+        "summary": "@vue/server-renderer: XSS via missing CR in attribute-name blacklist",
+        "malicious": false
+      },
+      {
+        "package": "npm:react-router",
+        "version": "7.18.1",
+        "advisory": "GHSA-qwww-vcr4-c8h2",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "7.18.2",
+        "summary": "React Router: RSC Mode CSRF Bypass Allows Action Execution Before 400 Response",
+        "malicious": false
+      },
+      {
+        "package": "npm:source-map-js",
+        "version": "1.2.1",
+        "advisory": "GHSA-68fv-2mgg-jv7q",
+        "cves": [
+          "CVE-2026-93749"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.2.2",
+        "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 46.8,
+      "confidence": 0.5,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 95701,
+        "monthly_downloads": null,
+        "forks": 10012,
+        "dependents": null,
+        "release_downloads": 832934,
+        "hn_top_score": 366,
+        "registries_count": 0
+      },
+      "age_days": 1376,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 4.68
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "84551eed7c97a40a4cc7b399b8aea23cb38150743ed63c2d4d3c6101df17ef8f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Stirling PDF is a powerful, open-source PDF editing platform."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "**Developer platform** - REST APIs available for nearly all tools to integrate into your existing systems."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "docker run -p 8080:8080 docker.stirlingpdf.com/stirlingtools/stirling-pdf"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Then open: http://localhost:8080"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "**Everywhere you work** - Desktop client, browser UI, and self-hosted server with a private API."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -265,5 +573,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:09+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

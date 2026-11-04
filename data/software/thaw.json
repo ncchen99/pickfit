@@ -51,18 +51,18 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-thaw-20261104-150505-e7fa",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install thaw",
-          "purpose": null
+          "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications thaw 2>&1",
+          "purpose": "install Thaw via brew cask to ~/Applications"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "open ~/Applications/Thaw.app"
     },
     "linux": null,
     "windows": null
@@ -80,12 +80,213 @@
     "url": "https://github.com/thaw-app/Thaw/releases/tag/2.1.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T15:10:26.288090+08:00",
+    "runs": [
+      {
+        "id": "verify-thaw-20261104-150505-e7fa",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T15:10:26.288090+08:00",
+        "tool_version": "2.1.0",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications thaw 2>&1",
+            "purpose": "install Thaw via brew cask to ~/Applications"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/Thaw.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install thaw",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications thaw with mkdir -p ~/Applications to install without admin rights",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The app shows a welcome screen with its icon, introductory text, and a Continue button.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-thaw-20261104-150505-e7fa/report.json",
+          "log_path": "runs/verify/verify-thaw-20261104-150505-e7fa/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-thaw-20261104-150505-e7fa/replay-3-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.022131,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open ~/Applications/Thaw.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "hide unneeded menu bar items",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "organize items into groups",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "switch between profiles",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "close menu bar with Zen Mode",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T15:13:24+08:00",
+    "quality": {
+      "total": 72.5,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.9048,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 82.9,
+      "signals": {
+        "stars": 12530,
+        "monthly_downloads": null,
+        "forks": 332,
+        "dependents": null,
+        "release_downloads": 33599,
+        "hn_top_score": 1,
+        "registries_count": 0
+      },
+      "age_days": 278,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 12.4
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:13:24.379663+08:00",
+      "sources_sha": "b51237a645e9ec9a88a3034cffa7ec0fa044a95c87a0364322788533ae86f25b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Thaw hides the menu bar items you don't need, brings them back on demand, and finds any of them in a keystroke."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Thaw 2 for macOS 15 to 26, Thaw 3 for macOS 27"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install thaw"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "there is no subscription, no account and no tracking"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "<a href=\"https://www.getthaw.app/faq\"><strong>FAQ</strong></a>"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "a new macOS never costs an upgrade. The code is open source under GPL-3.0."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -300,5 +501,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:29+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

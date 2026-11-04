@@ -44,7 +44,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-zellij-20261104-133450-9189",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -L https://zellij.dev/launch -o /tmp/zellij_launch.sh",
+          "purpose": "download zellij launch script from https://zellij.dev/launch"
+        },
+        {
+          "command": "mkdir -p /tmp/zellij/bootstrap ~/.local/bin && curl -L https://github.com/zellij-org/zellij/releases/latest/download/zellij-x86_64-unknown-linux-musl.tar.gz | tar -C /tmp/zellij/bootstrap -xz && cp /tmp/zellij/bootstrap/zellij ~/.local/bin/zellij && chmod +x ~/.local/bin/zellij",
+          "purpose": "clean install zellij binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "zellij --version",
+        "expected_signal": "zellij 0.45.1"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -60,12 +80,212 @@
     "url": "https://github.com/zellij-org/zellij/releases/tag/v0.45.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:36:55.245423+08:00",
+    "runs": [
+      {
+        "id": "verify-zellij-20261104-133450-9189",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T13:36:55.245423+08:00",
+        "tool_version": "0.45.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -L https://zellij.dev/launch -o /tmp/zellij_launch.sh",
+            "purpose": "download zellij launch script from https://zellij.dev/launch"
+          },
+          {
+            "command": "mkdir -p /tmp/zellij/bootstrap ~/.local/bin && curl -L https://github.com/zellij-org/zellij/releases/latest/download/zellij-x86_64-unknown-linux-musl.tar.gz | tar -C /tmp/zellij/bootstrap -xz && cp /tmp/zellij/bootstrap/zellij ~/.local/bin/zellij && chmod +x ~/.local/bin/zellij",
+            "purpose": "clean install zellij binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "zellij --version",
+            "expected_signal": "zellij 0.45.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "zellij 0.45.1",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows the command `zellij --version` printing `zellij 0.45.1`.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-zellij-20261104-133450-9189/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-zellij-20261104-133450-9189/check-1-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.035133,
+        "features": [
+          {
+            "feature": "manage floating and stacked panes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "collaborate in multiplayer sessions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "automate workspaces through layouts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "extend via WebAssembly plugins",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/zellij-org/zellij@87276681135d",
+      "Cargo.lock"
+    ],
+    "packages_checked": 652,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 54.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.3125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6136,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 99.1,
+      "signals": {
+        "stars": 35935,
+        "monthly_downloads": 8545,
+        "forks": 1519,
+        "dependents": null,
+        "release_downloads": 1226212,
+        "hn_top_score": 414,
+        "registries_count": 2
+      },
+      "age_days": 2254,
+      "packages": [
+        "crates:zellij",
+        "homebrew:zellij"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.49
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "c5912e460c80d4731a1841db2d5709808241df15f359e027eb4e3a49ff723320",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A terminal workspace with batteries included"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "cargo install --locked zellij"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "For configuring Zellij, please see the [Configuration Documentation](https://zellij.dev/documentation/configuration.html)."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "MIT"
+        }
+      },
+      "unquoted": [
+        "who_it_is_for"
+      ]
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -258,5 +478,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:48+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

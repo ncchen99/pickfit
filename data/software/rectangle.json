@@ -44,20 +44,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-rectangle-20261104-144303-b446",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask rectangle",
-          "purpose": null
+          "command": "brew install --cask --appdir=$HOME/Applications rectangle 2>&1",
+          "purpose": "Install Rectangle via Homebrew cask"
         }
       ],
-      "manual_steps": [
-        "Launch Rectangle and grant Accessibility permission when prompted"
-      ],
-      "check": null,
-      "first_task": "open -g \"rectangle://execute-action?name=left-half\""
+      "manual_steps": [],
+      "check": {
+        "command": "ls -ld ~/Applications/Rectangle.app && plutil -p ~/Applications/Rectangle.app/Contents/Info.plist | grep -i CFBundleShortVersionString -A1 | head -20; echo \"---\"; defaults read ~/Applications/Rectangle.app/Contents/Info.plist CFBundleShortVersionString 2>&1",
+        "expected_signal": "2.0.4"
+      },
+      "first_task": "open ~/Applications/Rectangle.app"
     },
     "linux": null,
     "windows": null
@@ -75,12 +76,223 @@
     "url": "https://github.com/rxhanson/Rectangle/releases/tag/v2.0.4"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T14:49:18.067738+08:00",
+    "runs": [
+      {
+        "id": "verify-rectangle-20261104-144303-b446",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T14:49:18.067738+08:00",
+        "tool_version": "2.0.4",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications rectangle 2>&1",
+            "purpose": "Install Rectangle via Homebrew cask"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ls -ld ~/Applications/Rectangle.app && plutil -p ~/Applications/Rectangle.app/Contents/Info.plist | grep -i CFBundleShortVersionString -A1 | head -20; echo \"---\"; defaults read ~/Applications/Rectangle.app/Contents/Info.plist CFBundleShortVersionString 2>&1",
+            "expected_signal": "2.0.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"CFBundleShortVersionString\" => \"2.0.4\"",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "open ~/Applications/Rectangle.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask rectangle",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications rectangle to install without admin rights",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows Rectangle.app exists and both plist queries report version 2.0.4. / The window shows Rectangle's authorization setup screen asking for permission to control window positions.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-rectangle-20261104-144303-b446/report.json",
+          "log_path": "runs/verify/verify-rectangle-20261104-144303-b446/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-rectangle-20261104-144303-b446/check-1-cmd2.judged.png",
+            "runs/verify/verify-rectangle-20261104-144303-b446/replay-3-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.022413,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open ~/Applications/Rectangle.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "move and resize windows with keyboard shortcuts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "snap windows by dragging to screen edges",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "tile windows in rows or columns",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "cycle stacked windows in same area",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T15:02:29+08:00",
+    "quality": {
+      "total": 71.1,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.65,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7955,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 30227,
+        "monthly_downloads": null,
+        "forks": 1040,
+        "dependents": null,
+        "release_downloads": 2753853,
+        "hn_top_score": 41,
+        "registries_count": 0
+      },
+      "age_days": 2692,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 7.11
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:02:29.034584+08:00",
+      "sources_sha": "7bd0370f9bc844bfd730a5bf3f605671053a0a6825c76ffa37403dc367d6532a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Move and resize windows on macOS with keyboard shortcuts and snap areas"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Rectangle supports macOS v14+."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install --cask rectangle"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Example, from a shell: `open -g \"rectangle://execute-action?name=left-half\"`"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "There are buttons for importing and exporting the config as a JSON file on the **App Settings** tab of the Settings window."
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "Rectangle can be uninstalled by quitting the app and moving it to the trash."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Rectangle is a window management app for macOS based on Spectacle."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -287,5 +499,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:28+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

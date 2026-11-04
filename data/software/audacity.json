@@ -3,7 +3,7 @@
   "slug": "audacity",
   "repo_id": "gh:32921736",
   "name": "Audacity",
-  "summary": "Multi-track audio editor and recorder for Windows, macOS and Linux.",
+  "summary": "Audacity is a multi-track audio editor and recorder.",
   "aliases": [],
   "status": "listed",
   "status_reason": null,
@@ -21,13 +21,18 @@
     "wxwidgets-applications"
   ],
   "use_cases": [
-    "edit multi-track audio",
-    "record audio"
+    "record live audio",
+    "convert tapes and records into digital recordings",
+    "edit WAV, AIFF, FLAC, MP3 or Ogg files",
+    "cut, copy, splice or mix sounds",
+    "change speed or pitch of a recording"
   ],
   "alternatives_to": [],
   "features": [
-    "edit multi-track audio",
-    "record audio"
+    "record live audio",
+    "edit WAV, AIFF, FLAC, MP3, Ogg files",
+    "cut, copy, splice and mix sounds",
+    "change speed or pitch of recording"
   ],
   "why_worth_it": null,
   "homepage": "https://www.audacityteam.org/manual/getting-started/",
@@ -53,24 +58,37 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-audacity-20261104-161635-aee9",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask audacity",
+          "command": "brew install --cask --appdir=$HOME/Applications audacity 2>&1",
+          "purpose": "brew install Audacity cask"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "open ~/Applications/Audacity\\ 4.app"
+    },
+    "linux": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "flatpak install flathub org.audacityteam.Audacity",
           "purpose": null
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "flatpak run org.audacityteam.Audacity"
     },
-    "linux": null,
     "windows": null
   },
   "pricing": {
-    "model": "free",
+    "model": null,
     "note": null
   },
   "open_source": null,
@@ -82,12 +100,213 @@
     "url": "https://github.com/audacity/audacity/releases/tag/Audacity-4.0.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T16:21:29.137928+08:00",
+    "runs": [
+      {
+        "id": "verify-audacity-20261104-161635-aee9",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T16:21:29.137928+08:00",
+        "tool_version": "4.0.2",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications audacity 2>&1",
+            "purpose": "brew install Audacity cask"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/Audacity\\ 4.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask audacity",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications audacity (standard user cannot write /Applications)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Audacity 4.0 multitrack editor shows its Tracks timeline behind an Audio plugin validation dialog.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-audacity-20261104-161635-aee9/report.json",
+          "log_path": "runs/verify/verify-audacity-20261104-161635-aee9/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-audacity-20261104-161635-aee9/replay-2-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.01505,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "open ~/Applications/Audacity\\ 4.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "record live audio",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "edit WAV, AIFF, FLAC, MP3, Ogg files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "cut, copy, splice and mix sounds",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "change speed or pitch of recording",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T16:21:29+08:00",
+    "quality": {
+      "total": 64.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.65,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6944,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 18950,
+        "monthly_downloads": null,
+        "forks": 2714,
+        "dependents": null,
+        "release_downloads": 20500782,
+        "hn_top_score": 1163,
+        "registries_count": 0
+      },
+      "age_days": 4240,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.47
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:14:21.996880+08:00",
+      "sources_sha": "5cb5afa82f670210de45eace7eb78791651d6eeb271a51c3145df2123a189712",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Audacity is the world's most popular audio editing and recording app."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Edit WAV, AIFF, FLAC, MP2, MP3 or Ogg Vorbis sound files"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "requires macOS: {\">=\": [\"13\"]}"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "flatpak install flathub org.audacityteam.Audacity"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "flatpak run org.audacityteam.Audacity"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Audacity is open source software licensed GPLv3."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -149,6 +368,12 @@
       "fetched_at": "2026-11-04T13:05:23+08:00"
     },
     {
+      "id": "flathub:org.audacityteam.Audacity",
+      "kind": "package_registry",
+      "url": "https://flathub.org/apps/org.audacityteam.Audacity",
+      "fetched_at": "2026-11-04T13:49:22+08:00"
+    },
+    {
       "id": "homebrew_cask:audacity",
       "kind": "package_registry",
       "url": "https://formulae.brew.sh/cask/audacity",
@@ -159,34 +384,34 @@
     {
       "field": "/kind",
       "source_id": "readme",
-      "quote": "is an easy-to-use, multi-track audio editor and recorder for Windows, macOS, GNU/Linux",
+      "quote": "multi-track audio editor and recorder for Windows, macOS, GNU/Linux and other operating systems.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:15+08:00"
+      "checked_at": "2026-11-04T13:49:36+08:00"
     },
     {
       "field": "/audience",
-      "source_id": "readme",
-      "quote": "is an easy-to-use, multi-track audio editor and recorder for Windows, macOS, GNU/Linux",
+      "source_id": "flathub:org.audacityteam.Audacity",
+      "quote": "flatpak run org.audacityteam.Audacity",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:15+08:00"
+      "checked_at": "2026-11-04T13:49:36+08:00"
     },
     {
       "field": "/category",
       "source_id": "readme",
-      "quote": "is an easy-to-use, multi-track audio editor and recorder for Windows, macOS, GNU/Linux",
+      "quote": "multi-track audio editor and recorder for Windows, macOS, GNU/Linux and other operating systems.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:15+08:00"
+      "checked_at": "2026-11-04T13:49:36+08:00"
     },
     {
       "field": "/summary",
       "source_id": "readme",
-      "quote": "is an easy-to-use, multi-track audio editor and recorder for Windows, macOS, GNU/Linux and other operating systems",
+      "quote": "is an easy-to-use, multi-track audio editor and recorder for Windows, macOS, GNU/Linux and other operating systems.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:15+08:00"
+      "checked_at": "2026-11-04T13:49:36+08:00"
     },
     {
       "field": "/name",
@@ -194,15 +419,15 @@
       "quote": "# Audacity",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:15+08:00"
+      "checked_at": "2026-11-04T13:49:36+08:00"
     },
     {
       "field": "/platforms",
       "source_id": "readme",
-      "quote": "for Windows, macOS, GNU/Linux and other operating systems",
+      "quote": "multi-track audio editor and recorder for Windows, macOS, GNU/Linux and other operating systems.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:15+08:00"
+      "checked_at": "2026-11-04T13:49:36+08:00"
     },
     {
       "field": "/repo",
@@ -254,35 +479,75 @@
     },
     {
       "field": "/use_cases/0",
-      "source_id": "readme",
-      "quote": "multi-track audio editor and recorder",
+      "source_id": "flathub:org.audacityteam.Audacity",
+      "quote": "Record live audio",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:15+08:00"
+      "checked_at": "2026-11-04T13:49:36+08:00"
     },
     {
       "field": "/use_cases/1",
-      "source_id": "readme",
-      "quote": "multi-track audio editor and recorder",
+      "source_id": "flathub:org.audacityteam.Audacity",
+      "quote": "Convert tapes and records into digital recordings or CDs",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:15+08:00"
+      "checked_at": "2026-11-04T13:49:36+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "flathub:org.audacityteam.Audacity",
+      "quote": "Edit WAV, AIFF, FLAC, MP2, MP3 or Ogg Vorbis sound files",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:36+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "flathub:org.audacityteam.Audacity",
+      "quote": "Cut, copy, splice or mix sounds together",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:36+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "flathub:org.audacityteam.Audacity",
+      "quote": "Change the speed or pitch of a recording",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:36+08:00"
     },
     {
       "field": "/features/0",
-      "source_id": "readme",
-      "quote": "multi-track audio editor and recorder",
+      "source_id": "flathub:org.audacityteam.Audacity",
+      "quote": "Record live audio",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:15+08:00"
+      "checked_at": "2026-11-04T13:49:36+08:00"
     },
     {
       "field": "/features/1",
-      "source_id": "readme",
-      "quote": "multi-track audio editor and recorder for Windows, macOS, GNU/Linux",
+      "source_id": "flathub:org.audacityteam.Audacity",
+      "quote": "Edit WAV, AIFF, FLAC, MP2, MP3 or Ogg Vorbis sound files",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:15+08:00"
+      "checked_at": "2026-11-04T13:49:36+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "flathub:org.audacityteam.Audacity",
+      "quote": "Cut, copy, splice or mix sounds together",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:36+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "flathub:org.audacityteam.Audacity",
+      "quote": "Change the speed or pitch of a recording",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:36+08:00"
     },
     {
       "field": "/install/macos/steps/0",
@@ -290,17 +555,17 @@
       "quote": "brew install --cask audacity",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:15+08:00"
+      "checked_at": "2026-11-04T13:49:36+08:00"
     },
     {
-      "field": "/pricing",
-      "source_id": "readme",
-      "quote": "Audacity is open source software licensed GPLv3",
+      "field": "/install/linux/steps/0",
+      "source_id": "flathub:org.audacityteam.Audacity",
+      "quote": "flatpak install flathub org.audacityteam.Audacity",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:15+08:00"
+      "checked_at": "2026-11-04T13:49:36+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:04:40+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

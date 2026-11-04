@@ -70,18 +70,21 @@
       "first_task": "vd <input>"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-visidata-20261104-133328-cfd3",
       "method": "uv",
       "steps": [
         {
-          "command": "uvx visidata",
-          "purpose": null
+          "command": "uv tool install visidata",
+          "purpose": "install visidata via uv tool"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "vd <input>"
+      "check": {
+        "command": "vd -v",
+        "expected_signal": "saul.pw/VisiData v3.5"
+      },
+      "first_task": "vd -v"
     },
     "windows": {
       "basis": "readme_claim",
@@ -111,12 +114,196 @@
     "url": "https://github.com/saulpw/visidata/releases/tag/v3.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:34:14.119273+08:00",
+    "runs": [
+      {
+        "id": "verify-visidata-20261104-133328-cfd3",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T13:34:14.119273+08:00",
+        "tool_version": "v3.5",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install visidata",
+            "purpose": "install visidata via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "vd -v",
+            "expected_signal": "saul.pw/VisiData v3.5",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "saul.pw/VisiData v3.5",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The screenshot shows `vd -v` printing saul.pw/VisiData v3.5.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-visidata-20261104-133328-cfd3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-visidata-20261104-133328-cfd3/check-1-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.022522,
+        "features": [
+          {
+            "feature": "Explore tabular data in terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "Arrange tabular data",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "Open tsv csv sqlite json xlsx formats",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "pypi:visidata (fresh install, 3 packages)"
+    ],
+    "packages_checked": 3,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 68.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.65,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 94.4,
+      "signals": {
+        "stars": 9442,
+        "monthly_downloads": 19691,
+        "forks": 378,
+        "dependents": null,
+        "release_downloads": 17,
+        "hn_top_score": 221,
+        "registries_count": 1
+      },
+      "age_days": 3660,
+      "packages": [
+        "pypi:visidata"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.85
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "09e50b9d83f0da6b369df272c2acdd949ed8115178e81134314e537d4df63fc8",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A terminal interface for exploring and arranging tabular data."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- Linux, OS/X, or Windows (with WSL)\n- Python 3.8+"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip3 install visidata"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "$ vd <input>"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Connection details come from libpq (via `$PGUSER`, `$PGHOST`, `~/.pgpass`, etc)."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "If VisiData reports `package X not installed` even after you installed it"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "available for use and redistribution under GPLv3."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -333,5 +520,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:07:37+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

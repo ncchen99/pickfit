@@ -3,7 +3,7 @@
   "slug": "keepassxc",
   "repo_id": "gh:52729242",
   "name": "KeePassXC",
-  "summary": "Open-source password manager that stores logins and sensitive data in offline encrypted files.",
+  "summary": "Offline password manager that stores credentials in encrypted KDBX files.",
   "aliases": [],
   "status": "listed",
   "status_reason": null,
@@ -24,13 +24,14 @@
     "security"
   ],
   "use_cases": [
-    "store usernames, passwords, URLs and notes",
-    "generate passwords",
-    "store and generate TOTP codes"
+    "store usernames and passwords in grouped entries",
+    "auto-type passwords into applications",
+    "store and generate TOTP codes",
+    "import databases from other password managers"
   ],
   "alternatives_to": [],
   "features": [
-    "store passwords in encrypted grouped entries",
+    "store passwords in organized encrypted entries",
     "generate passwords and passphrases",
     "auto-type passwords into applications",
     "integrate with web browsers"
@@ -72,11 +73,41 @@
       "check": null,
       "first_task": null
     },
-    "linux": null,
-    "windows": null
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-keepassxc-20261104-135727-477c",
+      "method": "other",
+      "steps": [
+        {
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add Flathub remote for user"
+        },
+        {
+          "command": "flatpak install --user -y flathub org.keepassxc.KeePassXC",
+          "purpose": "install KeePassXC Flatpak from Flathub"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "flatpak run org.keepassxc.KeePassXC"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "flatpak install flathub org.keepassxc.KeePassXC",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    }
   },
   "pricing": {
-    "model": null,
+    "model": "free",
     "note": null
   },
   "open_source": null,
@@ -88,12 +119,211 @@
     "url": "https://github.com/keepassxreboot/keepassxc/releases/tag/2.8.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T14:02:49.898244+08:00",
+    "runs": [
+      {
+        "id": "verify-keepassxc-20261104-135727-477c",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-04T14:02:49.898244+08:00",
+        "tool_version": "2.8.0",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add Flathub remote for user"
+          },
+          {
+            "command": "flatpak install --user -y flathub org.keepassxc.KeePassXC",
+            "purpose": "install KeePassXC Flatpak from Flathub"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run org.keepassxc.KeePassXC",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The app shows its welcome screen with options to create, open, or import a password database.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-keepassxc-20261104-135727-477c/report.json",
+          "log_path": "runs/verify/verify-keepassxc-20261104-135727-477c/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-keepassxc-20261104-135727-477c/replay-4-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.021175,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "flatpak run org.keepassxc.KeePassXC",
+          "window_title": "KeePassXC",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "store passwords in organized encrypted entries",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "generate passwords and passphrases",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "auto-type passwords into applications",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "integrate with web browsers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 66.9,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.9744,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 29750,
+        "monthly_downloads": null,
+        "forks": 2008,
+        "dependents": null,
+        "release_downloads": 14171834,
+        "hn_top_score": 343,
+        "registries_count": 0
+      },
+      "age_days": 3901,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.69
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "bcc7f55adbe7608e2aaf39733104fbe53f40b7857d63fd63149eea03cfb8d78a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "is a modern, secure, and open-source password manager that stores and manages your most sensitive information."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "KeePassXC is for people with extremely high demands of secure personal data management."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "flatpak install flathub org.keepassxc.KeePassXC"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "flatpak run org.keepassxc.KeePassXC"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "KeePassXC code is licensed under GPL-2 or GPL-3."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -155,6 +385,12 @@
       "fetched_at": "2026-11-04T13:05:23+08:00"
     },
     {
+      "id": "flathub:org.keepassxc.KeePassXC",
+      "kind": "package_registry",
+      "url": "https://flathub.org/apps/org.keepassxc.KeePassXC",
+      "fetched_at": "2026-11-04T13:49:20+08:00"
+    },
+    {
       "id": "homebrew_cask:keepassxc",
       "kind": "package_registry",
       "url": "https://formulae.brew.sh/cask/keepassxc",
@@ -168,7 +404,7 @@
       "quote": "You can run KeePassXC on Windows, macOS, and Linux systems.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:08+08:00"
+      "checked_at": "2026-11-04T13:49:39+08:00"
     },
     {
       "field": "/audience",
@@ -176,15 +412,15 @@
       "quote": "You can run KeePassXC on Windows, macOS, and Linux systems.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:08+08:00"
+      "checked_at": "2026-11-04T13:49:39+08:00"
     },
     {
       "field": "/category",
-      "source_id": "github_api",
-      "quote": null,
-      "method": "rule",
-      "model": null,
-      "checked_at": "2026-11-04T13:07:36+08:00"
+      "source_id": "readme",
+      "quote": "is a modern, secure, and open-source password manager that stores and manages your most sensitive information.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:39+08:00"
     },
     {
       "field": "/summary",
@@ -192,7 +428,7 @@
       "quote": "is a modern, secure, and open-source password manager that stores and manages your most sensitive information.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:08+08:00"
+      "checked_at": "2026-11-04T13:49:39+08:00"
     },
     {
       "field": "/name",
@@ -200,7 +436,7 @@
       "quote": "# <img src=\"https://keepassxc.org/assets/img/keepassxc.svg\" width=\"40\" height=\"40\"/> KeePassXC",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:08+08:00"
+      "checked_at": "2026-11-04T13:49:39+08:00"
     },
     {
       "field": "/platforms",
@@ -208,7 +444,7 @@
       "quote": "You can run KeePassXC on Windows, macOS, and Linux systems.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:08+08:00"
+      "checked_at": "2026-11-04T13:49:39+08:00"
     },
     {
       "field": "/repo",
@@ -261,18 +497,18 @@
     {
       "field": "/use_cases/0",
       "source_id": "readme",
-      "quote": "It saves many different types of information, such as usernames, passwords, URLs, attachments, and notes",
+      "quote": "Store sensitive information in entries that are organized by groups",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:08+08:00"
+      "checked_at": "2026-11-04T13:49:39+08:00"
     },
     {
       "field": "/use_cases/1",
       "source_id": "readme",
-      "quote": "Password generator",
+      "quote": "Auto-Type passwords into applications",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:08+08:00"
+      "checked_at": "2026-11-04T13:49:39+08:00"
     },
     {
       "field": "/use_cases/2",
@@ -280,7 +516,15 @@
       "quote": "TOTP storage and generation",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:08+08:00"
+      "checked_at": "2026-11-04T13:49:39+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Import databases from CSV, 1Password, Bitwarden, Proton Pass, and KeePass1 formats",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:39+08:00"
     },
     {
       "field": "/features/0",
@@ -288,15 +532,15 @@
       "quote": "Store sensitive information in entries that are organized by groups",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:08+08:00"
+      "checked_at": "2026-11-04T13:49:39+08:00"
     },
     {
       "field": "/features/1",
       "source_id": "readme",
-      "quote": "A customizable, fast, and easy-to-use password generator utility allows you to create passwords",
+      "quote": "Password generator",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:08+08:00"
+      "checked_at": "2026-11-04T13:49:39+08:00"
     },
     {
       "field": "/features/2",
@@ -304,7 +548,7 @@
       "quote": "Auto-Type passwords into applications",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:08+08:00"
+      "checked_at": "2026-11-04T13:49:39+08:00"
     },
     {
       "field": "/features/3",
@@ -312,7 +556,7 @@
       "quote": "Browser integration with Google Chrome, Mozilla Firefox, Microsoft Edge, Chromium, Vivaldi, Brave, and Tor-Browser",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:08+08:00"
+      "checked_at": "2026-11-04T13:49:39+08:00"
     },
     {
       "field": "/install/macos/steps/0",
@@ -320,17 +564,41 @@
       "quote": "brew install --cask keepassxc",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:08+08:00"
+      "checked_at": "2026-11-04T13:49:39+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "flathub:org.keepassxc.KeePassXC",
+      "quote": "flatpak install flathub org.keepassxc.KeePassXC",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:39+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "flathub:org.keepassxc.KeePassXC",
+      "quote": "flatpak install flathub org.keepassxc.KeePassXC",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:39+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "is a modern, secure, and open-source password manager",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:39+08:00"
     },
     {
       "field": "/processing",
       "source_id": "readme",
-      "quote": "notes in an offline, encrypted file that can be stored in any location",
+      "quote": "in an offline, encrypted file that can be stored in any location",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:08+08:00"
+      "checked_at": "2026-11-04T13:49:39+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:04:41+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

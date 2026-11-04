@@ -69,18 +69,22 @@
       "first_task": "flatpak run com.bilingify.readest"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "brew",
+      "basis": "replayed",
+      "run_id": "verify-readest-20261104-133747-acda",
+      "method": "other",
       "steps": [
         {
-          "command": "brew install --cask readest",
-          "purpose": null
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add Flathub remote for flatpak install"
+        },
+        {
+          "command": "flatpak install --user -y flathub com.bilingify.readest",
+          "purpose": "install Readest flatpak com.bilingify.readest from Flathub"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": "flatpak run com.bilingify.readest"
+      "first_task": "dbus-run-session flatpak run com.bilingify.readest"
     },
     "windows": {
       "basis": "readme_claim",
@@ -110,12 +114,298 @@
     "url": "https://github.com/readest/readest/releases/tag/v0.12.16"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:43:14.576405+08:00",
+    "runs": [
+      {
+        "id": "verify-readest-20261104-133747-acda",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-04T13:43:14.576405+08:00",
+        "tool_version": "0.12.16",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add Flathub remote for flatpak install"
+          },
+          {
+            "command": "flatpak install --user -y flathub com.bilingify.readest",
+            "purpose": "install Readest flatpak com.bilingify.readest from Flathub"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "dbus-run-session flatpak run com.bilingify.readest",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak run com.bilingify.readest",
+            "actually_needed": "dbus-run-session flatpak run com.bilingify.readest to provide session bus (Failed to connect to session bus without it)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The app shows its empty library view with a search bar, 'Start your library' prompt, and Import Books button.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-readest-20261104-133747-acda/report.json",
+          "log_path": "runs/verify/verify-readest-20261104-133747-acda/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-readest-20261104-133747-acda/replay-8-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.057964,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "dbus-run-session flatpak run com.bilingify.readest",
+          "window_title": "Readest",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "read EPUB, PDF, MOBI and other ebook formats",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "search full text inside books and library",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "add highlights, bookmarks and notes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "listen with multilingual text-to-speech narration",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/readest/readest@8f36b28982b8",
+      "Cargo.lock",
+      "pnpm-lock.yaml"
+    ],
+    "packages_checked": 2174,
+    "findings_total": 7,
+    "advisories_total": 7,
+    "findings": [
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "GHSA-m665-v7pm-7grj",
+        "cves": [
+          "CVE-2026-115905"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.5",
+        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false
+      },
+      {
+        "package": "crates:nix",
+        "version": "0.19.1",
+        "advisory": "GHSA-wgrg-5h56-jg27",
+        "cves": [
+          "CVE-2021-45707"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.20.2",
+        "summary": "Out-of-bounds write in nix::unistd::getgrouplist",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.17",
+        "advisory": "RUSTSEC-2026-0340",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.17",
+        "advisory": "RUSTSEC-2026-0343",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Outgoing datagram buffer accounting can panic the sender in quinn-proto",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "GHSA-q7v9-x93c-xqv3",
+        "cves": [
+          "CVE-2026-115909"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "RUSTSEC-2026-0367",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:17:43+08:00",
+    "quality": {
+      "total": 71.8,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 25925,
+        "monthly_downloads": null,
+        "forks": 1819,
+        "dependents": null,
+        "release_downloads": 629926,
+        "hn_top_score": 12,
+        "registries_count": 0
+      },
+      "age_days": 752,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 7.18
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "b5ea6e32852c0f8ff293c46d01d929b4c417aeeb907d22fc581075fe7848d55d",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Readest is a modern, feature-rich ebook reader designed for avid readers offering seamless cross-platform access"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "designed for avid readers offering seamless cross-platform access"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Readest depends on WebView2 to render the interface on Windows."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install --cask readest"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "flatpak run com.bilingify.readest"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "### 1. Readest Won’t Launch on Windows (Missing Edge WebView2 Runtime)"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "to deliver a smooth, cross-platform experience across macOS, Windows, Linux, Android, iOS, and the Web."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -354,5 +644,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:43+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

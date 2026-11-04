@@ -5,8 +5,8 @@
   "name": "Logseq",
   "summary": "Privacy-first open-source platform for knowledge management and collaboration.",
   "aliases": [],
-  "status": "listed",
-  "status_reason": null,
+  "status": "hidden",
+  "status_reason": "malicious package reported on OSV.dev: MAL-2025-21003",
   "category": "other",
   "kind": "desktop_app",
   "audience": "end_user",
@@ -60,18 +60,18 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "script",
+      "basis": "replayed",
+      "run_id": "verify-logseq-20261104-150904-949b",
+      "method": "binary",
       "steps": [
         {
-          "command": "curl -fsSL https://raw.githubusercontent.com/logseq/logseq/master/scripts/install-linux.sh | bash",
-          "purpose": null
+          "command": "mkdir -p ~/apps && cd ~/apps && curl -fL -o Logseq.AppImage https://github.com/logseq/logseq/releases/download/2.0.2/Logseq-linux-x86_64-2.0.2.AppImage && chmod +x Logseq.AppImage",
+          "purpose": "download Logseq AppImage 2.0.2 and make executable"
         }
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "/home/sbx/apps/Logseq.AppImage --appimage-extract-and-run --no-sandbox"
     },
     "windows": null
   },
@@ -88,12 +88,943 @@
     "url": "https://github.com/logseq/logseq/releases/tag/2.0.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T15:11:41.733984+08:00",
+    "runs": [
+      {
+        "id": "verify-logseq-20261104-150904-949b",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-04T15:11:41.733984+08:00",
+        "tool_version": "2.0.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/apps && cd ~/apps && curl -fL -o Logseq.AppImage https://github.com/logseq/logseq/releases/download/2.0.2/Logseq-linux-x86_64-2.0.2.AppImage && chmod +x Logseq.AppImage",
+            "purpose": "download Logseq AppImage 2.0.2 and make executable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "/home/sbx/apps/Logseq.AppImage --appimage-extract-and-run --no-sandbox",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Logseq-linux-x86_64-2.0.2.AppImage runs directly",
+            "actually_needed": "must pass --no-sandbox on this box (no user namespaces: electron/chromium sandbox fails) and ensure DISPLAY=:99; also --appimage-extract-and-run required due to no FUSE",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Logseq daily journal page showing Nov 4th, 2026 with navigation toolbar drawn.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-logseq-20261104-150904-949b/report.json",
+          "log_path": "runs/verify/verify-logseq-20261104-150904-949b/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-logseq-20261104-150904-949b/replay-6-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.046287,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "/home/sbx/apps/Logseq.AppImage --appimage-extract-and-run --no-sandbox",
+          "window_title": "Logseq",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "manage knowledge notes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "collaborate with others",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "annotate PDFs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "manage tasks",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/logseq/logseq@25b5ecf9cceb",
+      "cli/pnpm-lock.yaml",
+      "deps/db/pnpm-lock.yaml",
+      "deps/db-sync/pnpm-lock.yaml",
+      "deps/graph-parser/pnpm-lock.yaml",
+      "deps/outliner/pnpm-lock.yaml",
+      "deps/publish/pnpm-lock.yaml",
+      "deps/publishing/pnpm-lock.yaml",
+      "libs/cljs-sdk/pnpm-lock.yaml",
+      "libs/pnpm-lock.yaml",
+      "pnpm-lock.yaml",
+      "resources/pnpm-lock.yaml"
+    ],
+    "packages_checked": 769,
+    "findings_total": 98,
+    "advisories_total": 66,
+    "findings": [
+      {
+        "package": "npm:fs",
+        "version": "0.0.1-security",
+        "advisory": "MAL-2025-21003",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": null,
+        "summary": "Malicious code in fs (npm)",
+        "malicious": true
+      },
+      {
+        "package": "npm:@capacitor/android",
+        "version": "8.3.1",
+        "advisory": "GHSA-rvm3-566m-v7fv",
+        "cves": [
+          "CVE-2026-103922"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "8.4.3",
+        "summary": "Capacitor Android and iOS: remote content can be loaded at the app origin via the internal HTTP proxy path",
+        "malicious": false
+      },
+      {
+        "package": "npm:@capacitor/ios",
+        "version": "8.3.1",
+        "advisory": "GHSA-rvm3-566m-v7fv",
+        "cves": [
+          "CVE-2026-103922"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "8.4.3",
+        "summary": "Capacitor Android and iOS: remote content can be loaded at the app origin via the internal HTTP proxy path",
+        "malicious": false
+      },
+      {
+        "package": "npm:proxy-addr",
+        "version": "2.0.7",
+        "advisory": "GHSA-jqcg-44mw-7w3h",
+        "cves": [
+          "CVE-2026-90711"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "2.0.8",
+        "summary": "proxy-addr vulnerable to IP spoofing via IPv4-mapped IPv6 trust subnet",
+        "malicious": false
+      },
+      {
+        "package": "npm:tar",
+        "version": "7.5.13",
+        "advisory": "GHSA-23hp-3jrh-7fpw",
+        "cves": [
+          "CVE-2026-59873"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "7.5.19",
+        "summary": "node-tar: Decompression/parse DoS via unlimited input",
+        "malicious": false
+      },
+      {
+        "package": "npm:tar",
+        "version": "6.2.1",
+        "advisory": "GHSA-23hp-3jrh-7fpw",
+        "cves": [
+          "CVE-2026-59873"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "7.5.19",
+        "summary": "node-tar: Decompression/parse DoS via unlimited input",
+        "malicious": false
+      },
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.29.0",
+        "advisory": "GHSA-22jm-h49p-29qw",
+        "cves": [
+          "CVE-2026-111767"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.32.0",
+        "summary": "MCP TypeScript SDK: Experimental tasks were not tied to the session that created them",
+        "malicious": false
+      },
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.29.0",
+        "advisory": "GHSA-46jr-4wx8-v453",
+        "cves": [
+          "CVE-2026-111768"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.32.0",
+        "summary": "MCP TypeScript SDK: One HTTP request within the default size limit could exhaust server memory during validation",
+        "malicious": false
+      },
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.29.0",
+        "advisory": "GHSA-6qxp-vccf-f47h",
+        "cves": [
+          "CVE-2026-104850"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.31.0",
+        "summary": "MCP TypeScript SDK: OAuth client could send credentials to an authorization server chosen by the MCP server",
+        "malicious": false
+      },
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.29.0",
+        "advisory": "GHSA-f897-62hf-6gxq",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "1.30.1",
+        "summary": "MCP TypeScript SDK: HTTP server transports and handlers did not limit request body size or JSON-RPC batch length",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.9.10",
+        "advisory": "GHSA-27p8-2357-5qqv",
+        "cves": [
+          "CVE-2026-83608"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.9.12",
+        "summary": "xmldom: DocType `name` Injection Bypasses requireWellFormed",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.8.13",
+        "advisory": "GHSA-27p8-2357-5qqv",
+        "cves": [
+          "CVE-2026-83608"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.8.15",
+        "summary": "xmldom: DocType `name` Injection Bypasses requireWellFormed",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.9.10",
+        "advisory": "GHSA-3px3-54cx-rmw9",
+        "cves": [
+          "CVE-2026-83609"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.9.12",
+        "summary": "xmldom: Creation-time XML Name/QName validation is bypassable via an embedded line terminator, allowing injection on the default serialization path",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.9.10",
+        "advisory": "GHSA-4w3w-2rp5-g8jm",
+        "cves": [
+          "CVE-2026-83605"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.9.11",
+        "summary": "xmldom: Attribute name injection via setAttribute() bypasses requireWellFormed",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.8.13",
+        "advisory": "GHSA-4w3w-2rp5-g8jm",
+        "cves": [
+          "CVE-2026-83605"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.8.14",
+        "summary": "xmldom: Attribute name injection via setAttribute() bypasses requireWellFormed",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.9.10",
+        "advisory": "GHSA-6mj3-qw4j-hgrw",
+        "cves": [
+          "CVE-2026-83612"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.9.12",
+        "summary": "xmldom: HTML raw-text closing-tag case mismatch causes output amplification",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.9.10",
+        "advisory": "GHSA-8344-3jmq-59r6",
+        "cves": [
+          "CVE-2026-83613"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.9.12",
+        "summary": "xmldom: Quadratic-time attribute deduplication",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.8.13",
+        "advisory": "GHSA-8344-3jmq-59r6",
+        "cves": [
+          "CVE-2026-83613"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.8.15",
+        "summary": "xmldom: Quadratic-time attribute deduplication",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.9.10",
+        "advisory": "GHSA-93r5-fhx6-vmg9",
+        "cves": [
+          "CVE-2026-83614"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.9.12",
+        "summary": "xmldom: Quadratic-time parsing via the malformed-input recovery path — `parseElementStartPart` re-scan and `normalize()` adjacent-text merge",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.8.13",
+        "advisory": "GHSA-93r5-fhx6-vmg9",
+        "cves": [
+          "CVE-2026-83614"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.8.15",
+        "summary": "xmldom: Quadratic-time parsing via the malformed-input recovery path — `parseElementStartPart` re-scan and `normalize()` adjacent-text merge",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.9.10",
+        "advisory": "GHSA-965w-775f-mr7g",
+        "cves": [
+          "CVE-2026-83615"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.9.12",
+        "summary": "xmldom: Quadratic-memory consumption",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.8.13",
+        "advisory": "GHSA-965w-775f-mr7g",
+        "cves": [
+          "CVE-2026-83615"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.8.15",
+        "summary": "xmldom: Quadratic-memory consumption",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.9.10",
+        "advisory": "GHSA-c7q8-3ch8-vqpv",
+        "cves": [
+          "CVE-2026-83616"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.9.12",
+        "summary": "xmldom: Processing Instruction Target Injection Bypasses requireWellFormed",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.8.13",
+        "advisory": "GHSA-c7q8-3ch8-vqpv",
+        "cves": [
+          "CVE-2026-83616"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.8.15",
+        "summary": "xmldom: Processing Instruction Target Injection Bypasses requireWellFormed",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.9.10",
+        "advisory": "GHSA-g53g-w8rj-fmg7",
+        "cves": [
+          "CVE-2026-83606"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.9.11",
+        "summary": "xmldom PI grammar regex ReDoS: quadratic backtracking on unterminated processing instructions",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.9.10",
+        "advisory": "GHSA-vr34-hp96-76pp",
+        "cves": [
+          "CVE-2026-83618"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.9.12",
+        "summary": "xmldom: requireWellFormed DocType publicId/systemId validation is bypassable via an embedded line terminator",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.9.10",
+        "advisory": "GHSA-w2rr-34g9-rvrj",
+        "cves": [
+          "CVE-2026-83607"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.9.11",
+        "summary": "xmldom: Element name injection via createElement() bypasses requireWellFormed",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.8.13",
+        "advisory": "GHSA-w2rr-34g9-rvrj",
+        "cves": [
+          "CVE-2026-83607"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.8.14",
+        "summary": "xmldom: Element name injection via createElement() bypasses requireWellFormed",
+        "malicious": false
+      },
+      {
+        "package": "npm:@xmldom/xmldom",
+        "version": "0.8.13",
+        "advisory": "GHSA-x4fp-j954-r2f4",
+        "cves": [
+          "CVE-2026-83619"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.8.15",
+        "summary": "xmldom: End-tag Whitespace-Trim Regex ReDoS — quadratic backtracking in the 0.8.x end-tag parser",
+        "malicious": false
+      },
+      {
+        "package": "npm:body-parser",
+        "version": "2.3.0",
+        "advisory": "GHSA-27r3-jxmh-p828",
+        "cves": [
+          "CVE-2026-111181"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.4.0",
+        "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
+        "malicious": false
+      },
+      {
+        "package": "npm:body-parser",
+        "version": "2.2.2",
+        "advisory": "GHSA-27r3-jxmh-p828",
+        "cves": [
+          "CVE-2026-111181"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.4.0",
+        "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.4",
+        "advisory": "GHSA-3jxr-9vmj-r5cp",
+        "cves": [
+          "CVE-2026-13149"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.7",
+        "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.5",
+        "advisory": "GHSA-3jxr-9vmj-r5cp",
+        "cves": [
+          "CVE-2026-13149"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.7",
+        "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "1.1.14",
+        "advisory": "GHSA-3jxr-9vmj-r5cp",
+        "cves": [
+          "CVE-2026-13149"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.1.16",
+        "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.4",
+        "advisory": "GHSA-6j4f-fj2g-mc7p",
+        "cves": [
+          "CVE-2026-102276"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.10",
+        "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.5",
+        "advisory": "GHSA-6j4f-fj2g-mc7p",
+        "cves": [
+          "CVE-2026-102276"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.10",
+        "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "1.1.14",
+        "advisory": "GHSA-6j4f-fj2g-mc7p",
+        "cves": [
+          "CVE-2026-102276"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.1.19",
+        "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.4",
+        "advisory": "GHSA-mh99-v99m-4gvg",
+        "cves": [
+          "CVE-2026-14257"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.8",
+        "summary": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.5",
+        "advisory": "GHSA-mh99-v99m-4gvg",
+        "cves": [
+          "CVE-2026-14257"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.8",
+        "summary": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "1.1.14",
+        "advisory": "GHSA-mh99-v99m-4gvg",
+        "cves": [
+          "CVE-2026-14257"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.1.17",
+        "summary": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.4",
+        "advisory": "GHSA-qhr7-859c-m2p7",
+        "cves": [
+          "CVE-2026-102278"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.11",
+        "summary": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.5",
+        "advisory": "GHSA-qhr7-859c-m2p7",
+        "cves": [
+          "CVE-2026-102278"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.11",
+        "summary": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "1.1.14",
+        "advisory": "GHSA-qhr7-859c-m2p7",
+        "cves": [
+          "CVE-2026-102278"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.1.20",
+        "summary": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.4",
+        "advisory": "GHSA-rgw5-rvv9-x895",
+        "cves": [
+          "CVE-2026-69152"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.9",
+        "summary": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.5",
+        "advisory": "GHSA-rgw5-rvv9-x895",
+        "cves": [
+          "CVE-2026-69152"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.9",
+        "summary": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "1.1.14",
+        "advisory": "GHSA-rgw5-rvv9-x895",
+        "cves": [
+          "CVE-2026-69152"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.1.18",
+        "summary": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+        "malicious": false
+      },
+      {
+        "package": "npm:builder-util-runtime",
+        "version": "9.5.1",
+        "advisory": "GHSA-p2f4-r6v6-j797",
+        "cves": [
+          "CVE-2026-54673"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.7.0",
+        "summary": "electron-updater: Cross-origin redirect leaks `PRIVATE-TOKEN` and mixed-case `Authorization` credentials in `builder-util-runtime`",
+        "malicious": false
+      },
+      {
+        "package": "npm:dompurify",
+        "version": "3.3.3",
+        "advisory": "GHSA-mrv2-3pqr-j5jr",
+        "cves": [
+          "CVE-2026-116803"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.4.17",
+        "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
+        "malicious": false
+      },
+      {
+        "package": "npm:dompurify",
+        "version": "3.4.2",
+        "advisory": "GHSA-mrv2-3pqr-j5jr",
+        "cves": [
+          "CVE-2026-116803"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.4.17",
+        "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
+        "malicious": false
+      },
+      {
+        "package": "npm:extract-zip",
+        "version": "2.0.1",
+        "advisory": "GHSA-7pqw-9j4j-h8q3",
+        "cves": [
+          "CVE-2026-19693"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "extract-zip allows arbitrary file writes through symlink archive entries",
+        "malicious": false
+      },
+      {
+        "package": "npm:extract-zip",
+        "version": "2.0.1",
+        "advisory": "GHSA-jmr9-qjv8-65gv",
+        "cves": [
+          "CVE-2026-56876"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "extract-zip unvalidated symlink path traversal",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.0",
+        "advisory": "GHSA-4c8g-83qw-93j6",
+        "cves": [
+          "CVE-2026-13676"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.3",
+        "summary": "fast-uri vulnerable to host confusion via failed IDN canonicalization",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.3",
+        "advisory": "GHSA-5jgf-p345-68v8",
+        "cves": [
+          "CVE-2026-75931"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.6",
+        "summary": "fast-uri vulnerable to host confusion via skipped IDN canonicalization on scheme-relative references",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.3",
+        "advisory": "GHSA-7p8r-x3mc-p8w7",
+        "cves": [
+          "CVE-2026-18446"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.5",
+        "summary": "fast-uri vulnerable to host confusion via backslash authority introducer",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.0",
+        "advisory": "GHSA-7p8r-x3mc-p8w7",
+        "cves": [
+          "CVE-2026-18446"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.5",
+        "summary": "fast-uri vulnerable to host confusion via backslash authority introducer",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.3",
+        "advisory": "GHSA-f65p-4m7j-42xc",
+        "cves": [
+          "CVE-2026-75975"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.6",
+        "summary": "fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.0",
+        "advisory": "GHSA-f65p-4m7j-42xc",
+        "cves": [
+          "CVE-2026-75975"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.6",
+        "summary": "fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.3",
+        "advisory": "GHSA-fph4-wmhf-6fwf",
+        "cves": [
+          "CVE-2026-75899"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.6",
+        "summary": "fast-uri vulnerable to server-side request forgery via repeated hostname percent-decoding",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.3",
+        "advisory": "GHSA-jqff-g426-hqxp",
+        "cves": [
+          "CVE-2026-76172"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.6",
+        "summary": "fast-uri vulnerable to host confusion via percent-encoded scheme normalization",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.0",
+        "advisory": "GHSA-jqff-g426-hqxp",
+        "cves": [
+          "CVE-2026-76172"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.6",
+        "summary": "fast-uri vulnerable to host confusion via percent-encoded scheme normalization",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:17:43+08:00",
+    "quality": {
+      "total": 63.4,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40
+        },
+        "install_docs": {
+          "score": 0.4375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7143,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 45467,
+        "monthly_downloads": null,
+        "forks": 2866,
+        "dependents": null,
+        "release_downloads": 66535653,
+        "hn_top_score": 276,
+        "registries_count": 0
+      },
+      "age_days": 2356,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.34
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:13:24.379663+08:00",
+      "sources_sha": "56e3c4a4239900ee1fae2324b60a8c1f3e5a5755bdca4a3ce7daa6d34d8529ed",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A privacy-first, open-source platform for knowledge management and collaboration"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Whether you're a student, a professional, or anyone who values a clear and organized approach"
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/logseq/logseq/master/scripts/install-linux.sh | bash"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "FAQ page: [Logseq Docs:  FAQ](https://docs.logseq.com/#/page/faq)"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "The DB version has its own new mobile app (on iOS, with Android coming soon)!"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -334,5 +1265,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:36+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

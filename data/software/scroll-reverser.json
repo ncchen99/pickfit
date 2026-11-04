@@ -43,20 +43,18 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-scroll-reverser-20261104-143649-d768",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask scroll-reverser",
-          "purpose": null
+          "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications scroll-reverser 2>&1",
+          "purpose": "install Scroll Reverser cask to user Applications"
         }
       ],
-      "manual_steps": [
-        "grant Accessibility permission"
-      ],
+      "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "open \"$HOME/Applications/Scroll Reverser.app\""
     },
     "linux": null,
     "windows": null
@@ -74,12 +72,205 @@
     "url": "https://github.com/pilotmoon/Scroll-Reverser/releases/tag/v2.0.2"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T14:43:03.203085+08:00",
+    "runs": [
+      {
+        "id": "verify-scroll-reverser-20261104-143649-d768",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T14:43:03.203085+08:00",
+        "tool_version": "2.1.1",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications scroll-reverser 2>&1",
+            "purpose": "install Scroll Reverser cask to user Applications"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open \"$HOME/Applications/Scroll Reverser.app\"",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask scroll-reverser",
+            "actually_needed": "mkdir -p ~/Applications && brew install --cask --appdir=$HOME/Applications scroll-reverser to install without admin rights (box cannot write /Applications)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The window shows a 'Scroll Reverser is now running!' welcome message directing the user to the menu bar icon with an OK button.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-scroll-reverser-20261104-143649-d768/report.json",
+          "log_path": "runs/verify/verify-scroll-reverser-20261104-143649-d768/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-scroll-reverser-20261104-143649-d768/replay-3-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.024112,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open \"$HOME/Applications/Scroll Reverser.app\"",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "reverse scrolling direction per device and app",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "configure horizontal scrolling independently",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "adjust scrolling step size",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T15:02:29+08:00",
+    "quality": {
+      "total": 62.5,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.6,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5143,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 86.0,
+      "signals": {
+        "stars": 3695,
+        "monthly_downloads": null,
+        "forks": 179,
+        "dependents": null,
+        "release_downloads": 40362,
+        "hn_top_score": 8,
+        "registries_count": 0
+      },
+      "age_days": 5487,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 8.75
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:02:29.034584+08:00",
+      "sources_sha": "3d938c60b2a159f8f421a191443d761cc8092e2ca242a5082364b6c95cc5522e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Reverses the direction of scrolling on macOS, with separate settings for each source of scrolling"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "The tap needs Accessibility permission."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install --cask scroll-reverser"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "**Scrolling:** Natural for trackpads, Classic for other devices (mice, in practice)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "If you try to build fresh out of the box you will get a build error because you don't have my code signing certificate."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Reverses the direction of scrolling on macOS"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -286,5 +477,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:27+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

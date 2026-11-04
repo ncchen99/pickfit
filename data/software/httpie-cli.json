@@ -56,7 +56,23 @@
     "api_keys": []
   },
   "install": {
-    "macos": null,
+    "macos": {
+      "basis": "replayed",
+      "run_id": "verify-httpie-cli-20261104-152142-6fd4",
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install httpie\n",
+          "purpose": "install httpie via brew install httpie"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "http --version\n",
+        "expected_signal": "3.2.4"
+      },
+      "first_task": null
+    },
     "linux": null,
     "windows": null
   },
@@ -73,12 +89,218 @@
     "url": "https://github.com/httpie/cli/releases/tag/3.2.4"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T15:26:10.913091+08:00",
+    "runs": [
+      {
+        "id": "verify-httpie-cli-20261104-152142-6fd4",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-04T15:26:10.913091+08:00",
+        "tool_version": "3.2.4",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install httpie\n",
+            "purpose": "install httpie via brew install httpie"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "http --version\n",
+            "expected_signal": "3.2.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3.2.4",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The terminal shows http --version executed and printed version 3.2.4.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-httpie-cli-20261104-152142-6fd4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-httpie-cli-20261104-152142-6fd4/check-1-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.013208,
+        "features": [
+          {
+            "feature": "expressive and intuitive syntax",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "formatted and colorized terminal output",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "built-in JSON support",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "persistent sessions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "pypi:httpie (fresh install, 16 packages)"
+    ],
+    "packages_checked": 16,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "pypi:httpie",
+        "version": "3.2.4",
+        "advisory": "PYSEC-2023-242",
+        "cves": [
+          "CVE-2023-48052"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Missing SSL certificate validation in HTTPie v3.2.2 allows attackers to eavesdrop on communications between the host and server via a man-in-the-middle attack.",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:17:43+08:00",
+    "quality": {
+      "total": 43.5,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40
+        },
+        "install_docs": {
+          "score": 0.4375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 91.7,
+      "signals": {
+        "stars": 38691,
+        "monthly_downloads": 604608,
+        "forks": 4037,
+        "dependents": null,
+        "release_downloads": 12739,
+        "hn_top_score": 0,
+        "registries_count": 2
+      },
+      "age_days": 5365,
+      "packages": [
+        "pypi:httpie",
+        "homebrew:httpie"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.61
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T17:17:09.282371+08:00",
+      "sources_sha": "0c662b20f31c9a9543bb565a9866d118ce5434cda6367d523b0804e90b913035",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "🥧 HTTPie CLI  — modern, user-friendly command-line HTTP client for the API era. JSON support, colors, sessions, downloads, plugins & more."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "HTTPie is designed for testing, debugging, and generally interacting with APIs & HTTP servers."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install httpie"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "https httpie.io/hello"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "license: BSD-3-Clause"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -309,5 +531,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:16:09+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

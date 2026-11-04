@@ -76,18 +76,25 @@
       "first_task": "nix run github:eza-community/eza"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "other",
+      "basis": "replayed",
+      "run_id": "verify-eza-20261104-133243-f364",
+      "method": "binary",
       "steps": [
         {
-          "command": "nix run github:eza-community/eza",
-          "purpose": null
+          "command": "curl -fsSL -o /tmp/eza.tar.gz https://github.com/eza-community/eza/releases/download/v0.23.5/eza_x86_64-unknown-linux-gnu.tar.gz",
+          "purpose": "download prebuilt eza tarball from GitHub releases"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/eza.tar.gz -C /tmp && cp /tmp/eza ~/.local/bin/eza && chmod +x ~/.local/bin/eza",
+          "purpose": "extract and install binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "nix run github:eza-community/eza"
+      "check": {
+        "command": "eza --version",
+        "expected_signal": "v0.23.5"
+      },
+      "first_task": null
     },
     "windows": {
       "basis": "readme_claim",
@@ -117,12 +124,216 @@
     "url": "https://github.com/eza-community/eza/releases/tag/v0.23.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:33:40.782072+08:00",
+    "runs": [
+      {
+        "id": "verify-eza-20261104-133243-f364",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T13:33:40.782072+08:00",
+        "tool_version": "v0.23.5",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/eza.tar.gz https://github.com/eza-community/eza/releases/download/v0.23.5/eza_x86_64-unknown-linux-gnu.tar.gz",
+            "purpose": "download prebuilt eza tarball from GitHub releases"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && tar -xzf /tmp/eza.tar.gz -C /tmp && cp /tmp/eza ~/.local/bin/eza && chmod +x ~/.local/bin/eza",
+            "purpose": "extract and install binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "eza --version",
+            "expected_signal": "v0.23.5",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "v0.23.5 [+git]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "nix run github:eza-community/eza",
+            "actually_needed": "Nix not available in box; used prebuilt binary eza_x86_64-unknown-linux-gnu.tar.gz from GitHub releases",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows eza --version printing v0.23.5 with description and GitHub URL.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-eza-20261104-133243-f364/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-eza-20261104-133243-f364/check-1-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.04759,
+        "features": [
+          {
+            "feature": "distinguish file types with colours",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "list files Git status",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "recurse into directories as tree",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "display icons for files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/eza-community/eza@471bfbc7b03c",
+      "Cargo.lock"
+    ],
+    "packages_checked": 215,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 53.9,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.4375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.7,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5167,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 23770,
+        "monthly_downloads": 25368,
+        "forks": 551,
+        "dependents": null,
+        "release_downloads": 1198535,
+        "hn_top_score": 291,
+        "registries_count": 2
+      },
+      "age_days": 1194,
+      "packages": [
+        "crates:eza",
+        "homebrew:eza"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "547b4565a201f85474d79f08e9c60bc03f7d57951e006d93e3d8209b0d813454",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "**eza** is a modern alternative for the venerable file-listing command-line program `ls` that ships with Unix and Linux operating systems, giving it more features and better defaults."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "nix run github:eza-community/eza"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "nix run github:eza-community/eza -- -ol"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "environment variable `EZA_CONFIG_DIR`, or will looked for by default in `$XDG_CONFIG_HOME/eza`."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "eza is available for Windows, macOS and Linux."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -379,5 +590,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:45+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

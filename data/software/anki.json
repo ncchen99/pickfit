@@ -3,7 +3,7 @@
   "slug": "anki",
   "repo_id": "gh:7270538",
   "name": "Anki",
-  "summary": "Anki is a spaced repetition flashcard program for memory training.",
+  "summary": "Spaced repetition flashcard app that makes remembering things easy.",
   "aliases": [],
   "status": "listed",
   "status_reason": null,
@@ -13,11 +13,13 @@
   "maturity": null,
   "tags": [],
   "use_cases": [
-    "train memory with flashcards"
+    "remember things in daily life"
   ],
   "alternatives_to": [],
   "features": [
-    "study flashcards with spaced repetition"
+    "study with spaced repetition flashcards",
+    "create cards with images, audio, video",
+    "create cards with scientific markup via LaTeX"
   ],
   "why_worth_it": null,
   "homepage": "https://apps.ankiweb.net",
@@ -27,11 +29,7 @@
     "created_at": "2012-12-21T08:03:31Z",
     "archived": false
   },
-  "platforms": [
-    "macos",
-    "linux",
-    "windows"
-  ],
+  "platforms": [],
   "prerequisites": {
     "runtimes": [],
     "system_packages": [],
@@ -54,9 +52,26 @@
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "flatpak run net.ankiweb.Anki"
     },
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-anki-20261104-135727-100d",
+      "method": "other",
+      "steps": [
+        {
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+          "purpose": "add Flathub remote for flatpak"
+        },
+        {
+          "command": "flatpak install --user -y flathub net.ankiweb.Anki",
+          "purpose": "install Anki flatpak from Flathub"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "flatpak run net.ankiweb.Anki"
+    },
     "windows": null
   },
   "pricing": {
@@ -72,12 +87,264 @@
     "url": "https://github.com/ankitects/anki/releases/tag/26.09.3"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T14:02:11.221972+08:00",
+    "runs": [
+      {
+        "id": "verify-anki-20261104-135727-100d",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-04T14:02:11.221972+08:00",
+        "tool_version": "26.09.3",
+        "install_method": "other",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "purpose": "add Flathub remote for flatpak"
+          },
+          {
+            "command": "flatpak install --user -y flathub net.ankiweb.Anki",
+            "purpose": "install Anki flatpak from Flathub"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "flatpak run net.ankiweb.Anki",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Anki's first-run language chooser lists languages with English (United States) selected and an OK button.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-anki-20261104-135727-100d/report.json",
+          "log_path": "runs/verify/verify-anki-20261104-135727-100d/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-anki-20261104-135727-100d/replay-3-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.017285,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "flatpak run net.ankiweb.Anki",
+          "window_title": "Anki",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "study with spaced repetition flashcards",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "create cards with images, audio, video",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "create cards with scientific markup via LaTeX",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/ankitects/anki@8ee487f60ca3",
+      "Cargo.lock",
+      "pylib/pyproject.toml (resolved today)",
+      "uv.lock",
+      "qt/pyproject.toml (resolved today)"
+    ],
+    "packages_checked": 633,
+    "findings_total": 5,
+    "advisories_total": 5,
+    "findings": [
+      {
+        "package": "crates:pulldown-cmark",
+        "version": "0.13.5",
+        "advisory": "RUSTSEC-2026-0433",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.13.6",
+        "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.16",
+        "advisory": "RUSTSEC-2026-0340",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.16",
+        "advisory": "RUSTSEC-2026-0341",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.17",
+        "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
+        "malicious": false
+      },
+      {
+        "package": "pypi:urllib3",
+        "version": "2.7.0",
+        "advisory": "GHSA-8988-9cw3-xx77",
+        "cves": [
+          "CVE-2026-97687"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.8.0",
+        "summary": "urllib3: HTTPS proxy TLS configuration may be ignored or overridden",
+        "malicious": false
+      },
+      {
+        "package": "pypi:urllib3",
+        "version": "2.7.0",
+        "advisory": "GHSA-vxq7-64xx-v4gw",
+        "cves": [
+          "CVE-2026-97689"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.8.0",
+        "summary": "urllib3: HTTPResponse.stream()/read_chunked() buffers an unbounded chunk-size line into memory",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:17:43+08:00",
+    "quality": {
+      "total": 63.4,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6562,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 86.7,
+      "signals": {
+        "stars": 32521,
+        "monthly_downloads": null,
+        "forks": 3397,
+        "dependents": null,
+        "release_downloads": 3333196,
+        "hn_top_score": 4,
+        "registries_count": 0
+      },
+      "age_days": 5065,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 8.43
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "3ea9b1ae4f88be048b8375ed90c9bb6155918958d2fa1c6de27d45d38fccb28c",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Anyone who needs to remember things in their daily life can benefit from Anki. Since it is content-agnostic and supports images, audio, videos and scientific markup (via LaTeX)"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Anyone who needs to remember things in their daily life can benefit from Anki."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "flatpak install flathub net.ankiweb.Anki"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "flatpak run net.ankiweb.Anki"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "store: Flathub (flatpak apps for Linux)\napp id: net.ankiweb.Anki\nname: Anki\nsummary: Powerful, intelligent flash cards\ndeveloper: Damien Elmes\nlicense: AGPL-3.0+"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -139,6 +406,12 @@
       "fetched_at": "2026-11-04T13:05:21+08:00"
     },
     {
+      "id": "flathub:net.ankiweb.Anki",
+      "kind": "package_registry",
+      "url": "https://flathub.org/apps/net.ankiweb.Anki",
+      "fetched_at": "2026-11-04T13:49:21+08:00"
+    },
+    {
       "id": "homebrew_cask:anki",
       "kind": "package_registry",
       "url": "https://formulae.brew.sh/cask/anki",
@@ -152,23 +425,23 @@
       "quote": "This repo contains the source code for the computer version of",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:18+08:00"
+      "checked_at": "2026-11-04T13:49:42+08:00"
     },
     {
       "field": "/audience",
-      "source_id": "homebrew_cask:anki",
-      "quote": "installs: app, target",
+      "source_id": "flathub:net.ankiweb.Anki",
+      "quote": "run command shown by the store: flatpak run net.ankiweb.Anki",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:18+08:00"
+      "checked_at": "2026-11-04T13:49:42+08:00"
     },
     {
       "field": "/category",
-      "source_id": "homebrew_cask:anki",
-      "quote": "Memory training application",
+      "source_id": "flathub:net.ankiweb.Anki",
+      "quote": "categories: Education, Languages",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:18+08:00"
+      "checked_at": "2026-11-04T13:49:42+08:00"
     },
     {
       "field": "/summary",
@@ -176,23 +449,15 @@
       "quote": "Anki is a smart spaced repetition flashcard program",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:18+08:00"
+      "checked_at": "2026-11-04T13:49:42+08:00"
     },
     {
       "field": "/name",
-      "source_id": "homebrew_cask:anki",
+      "source_id": "flathub:net.ankiweb.Anki",
       "quote": "name: Anki",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:18+08:00"
-    },
-    {
-      "field": "/platforms",
-      "source_id": "release:26.09.3",
-      "quote": "anki-26.09.3-linux-aarch64.tar.zst, anki-26.09.3-linux-x86_64.tar.zst, anki-26.09.3-mac-apple.dmg, anki-26.09.3-mac-intel.dmg, anki-26.09.3-win-arm64.msi",
-      "method": "model",
-      "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:18+08:00"
+      "checked_at": "2026-11-04T13:49:42+08:00"
     },
     {
       "field": "/repo",
@@ -236,11 +501,11 @@
     },
     {
       "field": "/use_cases/0",
-      "source_id": "homebrew_cask:anki",
-      "quote": "Memory training application",
+      "source_id": "flathub:net.ankiweb.Anki",
+      "quote": "Anyone who needs to remember things in their daily life can benefit from Anki.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:18+08:00"
+      "checked_at": "2026-11-04T13:49:42+08:00"
     },
     {
       "field": "/features/0",
@@ -248,7 +513,23 @@
       "quote": "Anki is a smart spaced repetition flashcard program",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:18+08:00"
+      "checked_at": "2026-11-04T13:49:42+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "flathub:net.ankiweb.Anki",
+      "quote": "supports images, audio, videos and scientific markup (via LaTeX), the possibilities are endless.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:42+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "flathub:net.ankiweb.Anki",
+      "quote": "supports images, audio, videos and scientific markup (via LaTeX), the possibilities are endless.",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:42+08:00"
     },
     {
       "field": "/install/macos/steps/0",
@@ -256,9 +537,17 @@
       "quote": "brew install --cask anki",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:18+08:00"
+      "checked_at": "2026-11-04T13:49:42+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "flathub:net.ankiweb.Anki",
+      "quote": "flatpak install flathub net.ankiweb.Anki",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:42+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:04:37+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

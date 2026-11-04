@@ -48,7 +48,23 @@
     "api_keys": []
   },
   "install": {
-    "macos": null,
+    "macos": {
+      "basis": "replayed",
+      "run_id": "verify-whisper-cpp-20261104-151317-1206",
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install whisper-cpp",
+          "purpose": "brew install whisper-cpp"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "whisper-cli --help 2>&1 | head -n 50; echo \"---exit:$?\" ; which whisper-cli; whisper-cli -h 2>&1",
+        "expected_signal": "--print-colors"
+      },
+      "first_task": null
+    },
     "linux": null,
     "windows": null
   },
@@ -65,12 +81,202 @@
     "url": "https://github.com/ggml-org/whisper.cpp/releases/tag/v1.9.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T15:17:39.929616+08:00",
+    "runs": [
+      {
+        "id": "verify-whisper-cpp-20261104-151317-1206",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-04T15:17:39.929616+08:00",
+        "tool_version": "1.9.5",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install whisper-cpp",
+            "purpose": "brew install whisper-cpp"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "whisper-cli --help 2>&1 | head -n 50; echo \"---exit:$?\" ; which whisper-cli; whisper-cli -h 2>&1",
+            "expected_signal": "--print-colors",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "-pc, --print-colors [false ] print colors",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows whisper-cli help output listing usage and options including --print-colors.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-whisper-cpp-20261104-151317-1206/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-whisper-cpp-20261104-151317-1206/check-1-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.030851,
+        "features": [
+          {
+            "feature": "transcribe audio files to text",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "transcribe microphone audio in real time",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "quantize Whisper models to integers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "highlight transcription confidence with colors",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:17:09+08:00",
+    "quality": {
+      "total": 64.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5222,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 95.5,
+      "signals": {
+        "stars": 54902,
+        "monthly_downloads": 22568,
+        "forks": 6272,
+        "dependents": null,
+        "release_downloads": 910820,
+        "hn_top_score": 2,
+        "registries_count": 1
+      },
+      "age_days": 1500,
+      "packages": [
+        "homebrew:whisper.cpp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 2.92
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T17:17:09.282371+08:00",
+      "sources_sha": "32ca363b27d882bfe36dd3af7d4d20a3f17f517caedb55d46e302232a55dc49b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "High-performance inference of [OpenAI's Whisper](https://github.com/openai/whisper) automatic speech recognition (ASR) model:"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "- Docker must be installed and running on your system."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "cmake -B build"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ ./build/bin/whisper-cli -m ./models/ggml-base.en.bin -f ./samples/jfk.wav -ml 16\n\nwhisper_model_load: loading model from './models/ggml-base.en.bin'"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "export ANEFORGE_ENCODER=/tmp/whisper-base-encoder"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Supported platforms:\n\n- [x] Mac OS (Intel and Arm)"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -255,5 +461,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:04+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

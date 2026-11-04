@@ -149,3 +149,8 @@
     1. **低知名度／新興長尾軟體（優先深測功能）**：缺乏社群與公開評價背書，使用者與 AI Agent 無法確定其功能是否真能運作，因此將有限的 API credits 優先用於深度的沙盒功能實測（`function`、`service`、`inference`）與多步 GUI 操作驗證，以發掘真正可靠的「寶藏（Hidden Gems）」。
     2. **高星知名開源專案（優先收錄並驗證至 `install`）**：對於在 GitHub 上已累積數千至數萬顆星、具備廣泛社群信賴與長期維護紀錄的知名開源專案（如 `ripgrep`、`lazygit`、`Rectangle`、`stats`、`ollama` 等），優先擴大目錄收錄覆蓋率，並在沙盒中驗證至 `install` 等級（確認能乾淨安裝、基礎啟動或印出版本／說明），不額外消耗大量 credits 進行多步功能操作測試。
 - **範圍**：由 6 個子代理針對 6 大領域（macOS 桌面與選單列工具、跨平台桌面生產力與影音創作、開發者核心 CLI/TUI、資料／網路／容器 CLI、本地 AI 與離線語音、MCP Servers 與自架 Web 工具）共 28 個子領域搜尋出 231 款尚未收錄的知名開源專案，扣除線上 Demo 預留額度後，精選出 87 款（含念誠指定的 7 款 macOS 開源工具與 80 款各子領域功能不重疊、具 OSI 開源授權且仍在維護的代表作）納入收錄與 `install` 等級驗證。
+- **結果（11/4 18:05 台北）**：87 款全部抽取並寫成紀錄、全部計分、全部跑過 OSV 安全檢查。驗證（Linux 工具用 Modal gVisor，macOS App 用 Tart VM + 乾淨 VM 重播 + 截圖判讀）：**通過 80**（install 76、function 4）；未驗證 7：
+  - `needs_root` 5：`backgroundmusic`、`dog`、`stirling-pdf`、`lulu`（必須放在 `/Applications` 並載入系統網路延伸）、`iglance`（只有 x86_64 執行檔，Apple Silicon 上要 root 安裝 Rosetta 2）。
+  - `not_run` 2：`itsycal`、`keepingyouawake`。兩者都裝得起來、程序常駐、選單列有新圖示，但點圖示沒有打開屬於 App 自己的視窗（KeepingYouAwake 左鍵是切換防睡眠，不開選單），截圖判讀沒有畫面可判，所以不算通過，照規則不寫成 install。
+  - 念誠指定的 7 款：`gifski`、`clipy`、`scroll-reverser`、`stats`、`rectangle`、`thaw` 通過 install；`itsycal` 未驗證（理由同上）。
+  - 花費：OpenRouter 約 \$5.5、Modal 沙盒 < \$1，其餘留給線上 Demo。

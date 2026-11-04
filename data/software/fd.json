@@ -63,18 +63,25 @@
   "install": {
     "macos": null,
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "other",
+      "basis": "replayed",
+      "run_id": "verify-fd-20261104-144647-a089",
+      "method": "npm",
       "steps": [
         {
-          "command": "apt install fd-find",
-          "purpose": null
+          "command": "cat > ~/.local/bin/wget <<'EOS'\n#!/bin/sh\ndest=\"\"\nurl=\"\"\nwhile [ $# -gt 0 ]; do\n  case \"$1\" in\n    -qO) dest=\"$2\"; shift 2 ;;\n    --) url=\"$2\"; shift 2 ;;\n    *) shift ;;\n  esac\ndone\nexec curl -sL -o \"$dest\" -- \"$url\"\nEOS\nchmod +x ~/.local/bin/wget",
+          "purpose": "create wget shim for npm download script"
+        },
+        {
+          "command": "npm install -g fd-find",
+          "purpose": "install fd-find via npm"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "fd -h"
+      "check": {
+        "command": "fd --version",
+        "expected_signal": "fd 10.5.0"
+      },
+      "first_task": null
     },
     "windows": null
   },
@@ -91,12 +98,217 @@
     "url": "https://github.com/sharkdp/fd/releases/tag/v10.5.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T14:48:24.301248+08:00",
+    "runs": [
+      {
+        "id": "verify-fd-20261104-144647-a089",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T14:48:24.301248+08:00",
+        "tool_version": "10.5.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cat > ~/.local/bin/wget <<'EOS'\n#!/bin/sh\ndest=\"\"\nurl=\"\"\nwhile [ $# -gt 0 ]; do\n  case \"$1\" in\n    -qO) dest=\"$2\"; shift 2 ;;\n    --) url=\"$2\"; shift 2 ;;\n    *) shift ;;\n  esac\ndone\nexec curl -sL -o \"$dest\" -- \"$url\"\nEOS\nchmod +x ~/.local/bin/wget",
+            "purpose": "create wget shim for npm download script"
+          },
+          {
+            "command": "npm install -g fd-find",
+            "purpose": "install fd-find via npm"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "fd --version",
+            "expected_signal": "fd 10.5.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "fd 10.5.0",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm install -g fd-find",
+            "actually_needed": "box has no wget; download.js requires wget, so created ~/.local/bin/wget shim wrapping curl before retrying",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows fd --version printing fd 10.5.0.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-fd-20261104-144647-a089/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-fd-20261104-144647-a089/check-1-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.039473,
+        "features": [
+          {
+            "feature": "search files with intuitive syntax",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "search with regex and glob patterns",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "execute commands for search results",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "respect gitignore and hidden files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "npm:fd-find (fresh install, 1 packages)",
+      "github.com/sharkdp/fd@193d0df1d0ad",
+      "Cargo.lock"
+    ],
+    "packages_checked": 95,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T15:02:29+08:00",
+    "quality": {
+      "total": 75.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8333,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 44940,
+        "monthly_downloads": 30420,
+        "forks": 1269,
+        "dependents": null,
+        "release_downloads": 9617458,
+        "hn_top_score": 718,
+        "registries_count": 2
+      },
+      "age_days": 3465,
+      "packages": [
+        "crates:fd-find",
+        "homebrew:fd"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:02:29.034584+08:00",
+      "sources_sha": "b25fc2c6df0f5d06843389faca4ce2b214d9d8d89978a52399d6329c67df31b7",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "`fd` is a program to find entries in your filesystem."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Note that rust version *1.90.0* or later is required."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install fd"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "> fd netfl\nSoftware/python/imdb-ratings/netflix-details.py"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "variable [`LS_COLORS`](https://linux.die.net/man/5/dir_colors) has to be set."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "### `fd` does not find my file!"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "`fd` is distributed under the terms of both the MIT License and the Apache License 2.0."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -337,5 +549,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:44+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

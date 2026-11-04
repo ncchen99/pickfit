@@ -73,17 +73,24 @@
       "first_task": "k9s version"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-k9s-20261104-133228-848a",
       "method": "script",
       "steps": [
         {
-          "command": "curl -sS https://webinstall.dev/k9s | bash",
-          "purpose": null
+          "command": "curl -fsSL https://webinstall.dev/k9s -o /tmp/k9s-webinstall.sh",
+          "purpose": "download webinstall script to /tmp/k9s-webinstall.sh"
+        },
+        {
+          "command": "bash /tmp/k9s-webinstall.sh",
+          "purpose": "run webinstall script to install k9s to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
+      "check": {
+        "command": "k9s version",
+        "expected_signal": "Version: v0.51.0"
+      },
       "first_task": "k9s version"
     },
     "windows": {
@@ -114,12 +121,209 @@
     "url": "https://github.com/derailed/k9s/releases/tag/v0.51.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:33:31.874837+08:00",
+    "runs": [
+      {
+        "id": "verify-k9s-20261104-133228-848a",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T13:33:31.874837+08:00",
+        "tool_version": "v0.51.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://webinstall.dev/k9s -o /tmp/k9s-webinstall.sh",
+            "purpose": "download webinstall script to /tmp/k9s-webinstall.sh"
+          },
+          {
+            "command": "bash /tmp/k9s-webinstall.sh",
+            "purpose": "run webinstall script to install k9s to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "k9s version",
+            "expected_signal": "Version: v0.51.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[36mDate:\u001b[0m 2026-06-06T14:04:25Z",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows k9s version output with Version v0.51.0, commit and date.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-k9s-20261104-133228-848a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-k9s-20261104-133228-848a/check-1-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.034695,
+        "features": [
+          {
+            "feature": "interact with Kubernetes clusters via terminal UI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "watch Kubernetes for changes and interact",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "view resource logs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "shell into containers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/derailed/k9s@fea247d9f57f",
+      "go.mod"
+    ],
+    "packages_checked": 416,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 69.4,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.625,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 99.5,
+      "signals": {
+        "stars": 34919,
+        "monthly_downloads": 11983,
+        "forks": 2342,
+        "dependents": null,
+        "release_downloads": 3728029,
+        "hn_top_score": 154,
+        "registries_count": 1
+      },
+      "age_days": 2839,
+      "packages": [
+        "homebrew:k9s"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.35
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "b43e37a240578fb45d4409173e570da5d3ae291cb374b1286e9c63e4cc25e5bd",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "K9s provides a terminal UI to interact with your Kubernetes clusters."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "K9s prefers recent kubernetes versions ie 1.28+"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install derailed/k9s/k9s"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "# List current version\nk9s version"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export KUBE_EDITOR=my_fav_editor"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "K9s is available on Linux, macOS and Windows platforms."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -384,5 +588,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:57+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

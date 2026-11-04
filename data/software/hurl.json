@@ -54,18 +54,21 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-hurl-20261104-152610-4894",
       "method": "brew",
       "steps": [
         {
           "command": "brew install hurl",
-          "purpose": null
+          "purpose": "install hurl via brew"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "hurl sample.hurl"
+      "check": {
+        "command": "hurl --version",
+        "expected_signal": "hurl 8.1.0"
+      },
+      "first_task": null
     },
     "linux": null,
     "windows": null
@@ -83,12 +86,279 @@
     "url": "https://github.com/Orange-OpenSource/hurl/releases/tag/8.1.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T15:29:23.272465+08:00",
+    "runs": [
+      {
+        "id": "verify-hurl-20261104-144804-e3e1",
+        "level": "unverified",
+        "unverified_reason": "needs_root",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T14:48:31.561178+08:00",
+        "tool_version": "8.1.0",
+        "install_method": "binary",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/hurl-install && INSTALL_DIR=/tmp/hurl-install VERSION=8.1.0 && curl --silent --location https://github.com/Orange-OpenSource/hurl/releases/download/$VERSION/hurl-$VERSION-x86_64-unknown-linux-gnu.tar.gz | tar xvz -C $INSTALL_DIR && ls -l $INSTALL_DIR/hurl-$VERSION-x86_64-unknown-linux-gnu/bin/",
+            "purpose": "Download and extract hurl-8.1.0-x86_64-unknown-linux-gnu.tar.gz to /tmp/hurl-install"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cp /tmp/hurl-install/hurl-8.1.0-x86_64-unknown-linux-gnu/bin/hurl ~/.local/bin/hurl && cp /tmp/hurl-install/hurl-8.1.0-x86_64-unknown-linux-gnu/bin/hurlfmt ~/.local/bin/hurlfmt && ~/.local/bin/hurl --version; echo \"---\"; ~/.local/bin/hurl --help",
+            "expected_signal": "libxml2.so.2: cannot open shared object file",
+            "exit_code": 127,
+            "passed": true,
+            "observed_excerpt": "/home/sbx/.local/bin/hurl: error while loading shared libraries: libxml2.so.2: cannot open shared object file: No such file or directory",
+            "setup": [
+              {
+                "command": "mkdir -p ~/.local/bin /tmp/hurl-install && INSTALL_DIR=/tmp/hurl-install VERSION=8.1.0 && curl --silent --location https://github.com/Orange-OpenSource/hurl/releases/download/$VERSION/hurl-$VERSION-x86_64-unknown-linux-gnu.tar.gz | tar xvz -C $INSTALL_DIR && ls -l $INSTALL_DIR/hurl-$VERSION-x86_64-unknown-linux-gnu/bin/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Precompiled binary (depending on libc >=2.35) available at GitHub release and works by extracting tar.gz and adding bin to PATH",
+            "actually_needed": "Binary also requires libxml2.so.2 which is not present in this Debian trixie box; hurl fails to start with 'cannot open shared object file' and would need apt-get install libxml2",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-hurl-20261104-144804-e3e1/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.05821
+      },
+      {
+        "id": "verify-hurl-20261104-152610-4894",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26@c7b08f9f7074",
+        "checked_at": "2026-11-04T15:29:23.272465+08:00",
+        "tool_version": "8.1.0",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install hurl",
+            "purpose": "install hurl via brew"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "hurl --version",
+            "expected_signal": "hurl 8.1.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hurl 8.1.0 (x86_64-apple-darwin25.0) libcurl/8.7.1 (SecureTransport) LibreSSL/3.3.6 zlib/1.2.12 nghttp2/1.68.1",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows hurl --version printing hurl 8.1.0 with libcurl and feature details.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hurl-20261104-152610-4894/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hurl-20261104-152610-4894/check-1-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.015603,
+        "features": [
+          {
+            "feature": "chain HTTP requests in plain text",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "test HTTP responses with asserts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "integrate tests in CI/CD with reports",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/Orange-OpenSource/hurl@4253603a1962",
+      "Cargo.lock",
+      "contrib/npm/hurl/package-lock.json",
+      "contrib/sample/Cargo.lock",
+      "bin/requirements.txt"
+    ],
+    "packages_checked": 352,
+    "findings_total": 2,
+    "advisories_total": 2,
+    "findings": [
+      {
+        "package": "npm:extract-zip",
+        "version": "2.0.1",
+        "advisory": "GHSA-7pqw-9j4j-h8q3",
+        "cves": [
+          "CVE-2026-19693"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "extract-zip allows arbitrary file writes through symlink archive entries",
+        "malicious": false
+      },
+      {
+        "package": "npm:extract-zip",
+        "version": "2.0.1",
+        "advisory": "GHSA-jmr9-qjv8-65gv",
+        "cves": [
+          "CVE-2026-56876"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "extract-zip unvalidated symlink path traversal",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:17:43+08:00",
+    "quality": {
+      "total": 64.2,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 95.7,
+      "signals": {
+        "stars": 19299,
+        "monthly_downloads": 622,
+        "forks": 752,
+        "dependents": null,
+        "release_downloads": 3081003,
+        "hn_top_score": 592,
+        "registries_count": 1
+      },
+      "age_days": 2261,
+      "packages": [
+        "homebrew:hurl"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 2.76
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T17:17:09.282371+08:00",
+      "sources_sha": "ae215c06c8afc04b09d60c6424b4dc13cdc0f1052d4e0015f0b7e6c7c8b5b0d4",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Hurl is a command line tool that runs <b>HTTP requests</b> defined in a simple <b>plain text format</b>."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "<li><b>Text Format:</b> for both devops and developers</li>"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "<b>Single Binary:</b> easy to install, with no runtime required"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install hurl"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "$ hurl sample.hurl"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "$ hurl --secret token=1234 file.hurl"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "## Debug Tips"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "store: Homebrew Cask (apps for macOS)\ncask: hurl\nname: hurl\nsummary: Run and Test HTTP Requests with plain text and curl\nlicense: Apache-2.0"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -319,5 +589,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:56+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

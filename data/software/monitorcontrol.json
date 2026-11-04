@@ -59,20 +59,18 @@
   },
   "install": {
     "macos": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-monitorcontrol-20261104-164310-67f1",
       "method": "brew",
       "steps": [
         {
-          "command": "brew install --cask monitorcontrol",
-          "purpose": null
+          "command": "brew install --cask --appdir=$HOME/Applications monitorcontrol",
+          "purpose": "install MonitorControl via brew cask to ~/Applications"
         }
       ],
-      "manual_steps": [
-        "Add the app to Accessibility under Privacy & Security for Apple keyboard keys"
-      ],
+      "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "open ~/Applications/MonitorControl.app"
     },
     "linux": null,
     "windows": null
@@ -90,12 +88,213 @@
     "url": "https://github.com/MonitorControl/MonitorControl/releases/tag/v4.4.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T16:51:21.870845+08:00",
+    "runs": [
+      {
+        "id": "verify-monitorcontrol-20261104-164310-67f1",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T16:51:21.870845+08:00",
+        "tool_version": "4.4.0",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install --cask --appdir=$HOME/Applications monitorcontrol",
+            "purpose": "install MonitorControl via brew cask to ~/Applications"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/MonitorControl.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install --cask monitorcontrol",
+            "actually_needed": "brew install --cask --appdir=$HOME/Applications monitorcontrol to install without admin rights to /Applications",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The window shows a Welcome to MonitorControl onboarding screen with Start at Login and keyboard access setup options.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-monitorcontrol-20261104-164310-67f1/report.json",
+          "log_path": "runs/verify/verify-monitorcontrol-20261104-164310-67f1/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-monitorcontrol-20261104-164310-67f1/replay-2-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.01771,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open ~/Applications/MonitorControl.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "control display brightness, volume and contrast",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "show native OSD for brightness and volume",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "use Apple keys or custom keyboard shortcuts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "sync all displays with single slider",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T16:51:21+08:00",
+    "quality": {
+      "total": 59.4,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.7,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.5,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5907,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 34629,
+        "monthly_downloads": null,
+        "forks": 1038,
+        "dependents": null,
+        "release_downloads": 1693951,
+        "hn_top_score": 259,
+        "registries_count": 0
+      },
+      "age_days": 3335,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 5.94
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:14:21.996880+08:00",
+      "sources_sha": "583cdebba887b8810e8ea546d2eb238417fca1af6aafbc320ce7edd527ea665e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Controls your external display brightness and volume and shows native OSD."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "For macOS 27 Golden Gate compatibility [v4.4.0 or newer](https://github.com/MonitorControl/MonitorControl/releases) is required!"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install --cask monitorcontrol"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Open `Settings…` for customization options (enable `Show advanced settings` for even more options)."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Notable exceptions for hardware control compatibility:"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Download for macOS"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -342,5 +541,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:30+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

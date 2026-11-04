@@ -25,16 +25,16 @@
   ],
   "use_cases": [
     "organize notes into notebooks",
-    "find notes via full text search",
-    "import Evernote notes with attachments",
-    "save web pages via Web Clipper"
+    "import Evernote notes into Joplin",
+    "sync notes across devices securely",
+    "save web pages from browser"
   ],
   "alternatives_to": [],
   "features": [
     "organize notes into notebooks",
     "sync notes with end-to-end encryption",
-    "import Evernote notes",
-    "search notes with full text search"
+    "search notes with full text search",
+    "save web pages with Web Clipper"
   ],
   "why_worth_it": null,
   "homepage": "https://joplinapp.org",
@@ -71,9 +71,30 @@
       ],
       "manual_steps": [],
       "check": null,
-      "first_task": null
+      "first_task": "flatpak run net.cozic.joplin_desktop"
     },
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-joplin-20261104-142321-77e8",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo\n",
+          "purpose": "Add Flathub remote per README candidate"
+        },
+        {
+          "command": "flatpak install --user -y flathub net.cozic.joplin_desktop\n",
+          "purpose": "Install Joplin via flatpak (published package)"
+        },
+        {
+          "command": "mkdir -p ~/apps && curl -L -o ~/apps/Joplin.AppImage https://github.com/laurent22/joplin/releases/download/v3.7.22/Joplin-3.7.22.AppImage && chmod +x ~/apps/Joplin.AppImage",
+          "purpose": "Download AppImage release as alternative that actually runs on this box"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "~/apps/Joplin.AppImage --appimage-extract-and-run --no-sandbox"
+    },
     "windows": null
   },
   "pricing": {
@@ -89,12 +110,238 @@
     "url": "https://github.com/laurent22/joplin/releases/tag/v3.7.22"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T14:29:56.270227+08:00",
+    "runs": [
+      {
+        "id": "verify-joplin-20261104-142321-77e8",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-04T14:29:56.270227+08:00",
+        "tool_version": "3.7.22",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo\n",
+            "purpose": "Add Flathub remote per README candidate"
+          },
+          {
+            "command": "flatpak install --user -y flathub net.cozic.joplin_desktop\n",
+            "purpose": "Install Joplin via flatpak (published package)"
+          },
+          {
+            "command": "mkdir -p ~/apps && curl -L -o ~/apps/Joplin.AppImage https://github.com/laurent22/joplin/releases/download/v3.7.22/Joplin-3.7.22.AppImage && chmod +x ~/apps/Joplin.AppImage",
+            "purpose": "Download AppImage release as alternative that actually runs on this box"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "~/apps/Joplin.AppImage --appimage-extract-and-run --no-sandbox",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "flatpak install flathub net.cozic.joplin_desktop then flatpak run",
+            "actually_needed": "flatpak bwrap fails with 'Setting pidns failed: Operation not permitted' due to no user namespaces; AppImage requires --appimage-extract-and-run and --no-sandbox to show window",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The Joplin window shows its three-pane main interface with notebooks sidebar, note list, and rendered Welcome note.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-joplin-20261104-142321-77e8/report.json",
+          "log_path": "runs/verify/verify-joplin-20261104-142321-77e8/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-joplin-20261104-142321-77e8/replay-9-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.041945,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "~/apps/Joplin.AppImage --appimage-extract-and-run --no-sandbox",
+          "window_title": "Joplin",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "organize notes into notebooks",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "sync notes with end-to-end encryption",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "search notes with full text search",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "save web pages with Web Clipper",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/laurent22/joplin@54bde206029d",
+      "packages/app-clipper/popup/package-lock.json",
+      "packages/onenote-converter/Cargo.lock"
+    ],
+    "packages_checked": 110,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "crates:regex",
+        "version": "1.4.6",
+        "advisory": "GHSA-m5pq-gvj9-9vr8",
+        "cves": [
+          "CVE-2022-24713"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.5.5",
+        "summary": "Rust's regex crate vulnerable to regular expression denial of service",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:17:43+08:00",
+    "quality": {
+      "total": 58.8,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40
+        },
+        "install_docs": {
+          "score": 0.4375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7609,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 57014,
+        "monthly_downloads": null,
+        "forks": 6393,
+        "dependents": null,
+        "release_downloads": 1294325,
+        "hn_top_score": 474,
+        "registries_count": 0
+      },
+      "age_days": 3578,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 5.88
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T15:02:29.034584+08:00",
+      "sources_sha": "f671ed2cdf89bf5bdc5d9bed10ca218ca30f9d6ad4612cacad40ee8387067746",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "**Joplin** is a free, open source note taking and to-do application, which can handle a large number of notes organised into notebooks."
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "requires macOS: {\">=\": [\"12\"]}"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "flatpak install flathub net.cozic.joplin_desktop"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "flatpak run net.cozic.joplin_desktop"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "license: AGPL-3.0-or-later"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -156,6 +403,12 @@
       "fetched_at": "2026-11-04T13:05:21+08:00"
     },
     {
+      "id": "flathub:net.cozic.joplin_desktop",
+      "kind": "package_registry",
+      "url": "https://flathub.org/apps/net.cozic.joplin_desktop",
+      "fetched_at": "2026-11-04T13:49:23+08:00"
+    },
+    {
       "id": "homebrew_cask:joplin",
       "kind": "package_registry",
       "url": "https://formulae.brew.sh/cask/joplin",
@@ -169,7 +422,7 @@
       "quote": "The application is available for Windows, Linux, macOS, Android and iOS.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:10+08:00"
+      "checked_at": "2026-11-04T13:49:40+08:00"
     },
     {
       "field": "/audience",
@@ -177,15 +430,15 @@
       "quote": "The application is available for Windows, Linux, macOS, Android and iOS.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:10+08:00"
+      "checked_at": "2026-11-04T13:49:40+08:00"
     },
     {
       "field": "/category",
-      "source_id": "readme",
-      "quote": "The application is available for Windows, Linux, macOS, Android and iOS.",
+      "source_id": "github_api",
+      "quote": "Joplin - the privacy-focused note taking app with sync capabilities",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:10+08:00"
+      "checked_at": "2026-11-04T13:49:40+08:00"
     },
     {
       "field": "/summary",
@@ -193,7 +446,7 @@
       "quote": "**Joplin** is a free, open source note taking and to-do application, which can handle a large number of notes organised into notebooks.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:10+08:00"
+      "checked_at": "2026-11-04T13:49:40+08:00"
     },
     {
       "field": "/name",
@@ -201,7 +454,7 @@
       "quote": "**Joplin** is a free, open source note taking and to-do application",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:10+08:00"
+      "checked_at": "2026-11-04T13:49:40+08:00"
     },
     {
       "field": "/platforms",
@@ -209,7 +462,7 @@
       "quote": "The application is available for Windows, Linux, macOS, Android and iOS.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:10+08:00"
+      "checked_at": "2026-11-04T13:49:40+08:00"
     },
     {
       "field": "/repo",
@@ -265,31 +518,31 @@
       "quote": "which can handle a large number of notes organised into notebooks.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:10+08:00"
+      "checked_at": "2026-11-04T13:49:40+08:00"
     },
     {
       "field": "/use_cases/1",
       "source_id": "readme",
-      "quote": "Full text search is available on all platforms to quickly find the information you need.",
+      "quote": "Notes exported from Evernote [can be imported](https://github.com/laurent22/joplin/blob/dev/readme/apps/import_export.md) into Joplin",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:10+08:00"
+      "checked_at": "2026-11-04T13:49:40+08:00"
     },
     {
       "field": "/use_cases/2",
       "source_id": "readme",
-      "quote": "Notes exported from Evernote [can be imported](https://github.com/laurent22/joplin/blob/dev/readme/apps/import_export.md) into Joplin",
+      "quote": "The notes can be securely [synchronised](https://github.com/laurent22/joplin/blob/dev/readme/apps/sync/index.md) using [end-to-end encryption]",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:10+08:00"
+      "checked_at": "2026-11-04T13:49:40+08:00"
     },
     {
       "field": "/use_cases/3",
       "source_id": "readme",
-      "quote": "to save web pages and screenshots from your browser, is also available",
+      "quote": "to save web pages and screenshots from your browser, is also available for [Firefox]",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:10+08:00"
+      "checked_at": "2026-11-04T13:49:40+08:00"
     },
     {
       "field": "/features/0",
@@ -297,31 +550,31 @@
       "quote": "which can handle a large number of notes organised into notebooks.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:10+08:00"
+      "checked_at": "2026-11-04T13:49:40+08:00"
     },
     {
       "field": "/features/1",
       "source_id": "readme",
-      "quote": "The notes can be securely [synchronised](https://github.com/laurent22/joplin/blob/dev/readme/apps/sync/index.md) using [end-to-end encryption](https://github.com/laurent22/joplin/blob/dev/readme/apps/sync/e2ee.md)",
+      "quote": "The notes can be securely [synchronised](https://github.com/laurent22/joplin/blob/dev/readme/apps/sync/index.md) using [end-to-end encryption]",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:10+08:00"
+      "checked_at": "2026-11-04T13:49:40+08:00"
     },
     {
       "field": "/features/2",
       "source_id": "readme",
-      "quote": "Notes exported from Evernote [can be imported](https://github.com/laurent22/joplin/blob/dev/readme/apps/import_export.md) into Joplin",
+      "quote": "Full text search is available on all platforms to quickly find the information you need.",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:10+08:00"
+      "checked_at": "2026-11-04T13:49:40+08:00"
     },
     {
       "field": "/features/3",
       "source_id": "readme",
-      "quote": "Full text search is available on all platforms to quickly find the information you need.",
+      "quote": "to save web pages and screenshots from your browser, is also available for [Firefox]",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:10+08:00"
+      "checked_at": "2026-11-04T13:49:40+08:00"
     },
     {
       "field": "/install/macos/steps/0",
@@ -329,7 +582,15 @@
       "quote": "brew install --cask joplin",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:10+08:00"
+      "checked_at": "2026-11-04T13:49:40+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "flathub:net.cozic.joplin_desktop",
+      "quote": "flatpak install flathub net.cozic.joplin_desktop",
+      "method": "model",
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T13:49:40+08:00"
     },
     {
       "field": "/pricing",
@@ -337,9 +598,9 @@
       "quote": "**Joplin** is a free, open source note taking and to-do application",
       "method": "model",
       "model": "muse-spark-1.3",
-      "checked_at": "2026-11-04T13:21:10+08:00"
+      "checked_at": "2026-11-04T13:49:40+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:04:37+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

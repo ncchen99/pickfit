@@ -44,7 +44,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-llm-20261104-133436-d230",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install llm",
+          "purpose": "install via uv tool"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "llm --version",
+        "expected_signal": "llm, version 0.37.1"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -60,12 +76,206 @@
     "url": "https://github.com/simonw/llm/releases/tag/0.37.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T13:35:09.778349+08:00",
+    "runs": [
+      {
+        "id": "verify-llm-20261104-133436-d230",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T13:35:09.778349+08:00",
+        "tool_version": "0.37.1",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install llm",
+            "purpose": "install via uv tool"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "llm --version",
+            "expected_signal": "llm, version 0.37.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "llm, version 0.37.1",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows `llm --version` printing `llm, version 0.37.1`.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-llm-20261104-133436-d230/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-llm-20261104-133436-d230/check-1-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.015325,
+        "features": [
+          {
+            "feature": "run prompts from command-line",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "store prompts and responses in SQLite",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "generate and store embeddings",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "extract structured content from text and images",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "pypi:llm (fresh install, 29 packages)"
+    ],
+    "packages_checked": 29,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T14:24:12+08:00",
+    "quality": {
+      "total": 62.5,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.55,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 99.6,
+      "signals": {
+        "stars": 12701,
+        "monthly_downloads": 487919,
+        "forks": 1078,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 9,
+        "registries_count": 1
+      },
+      "age_days": 1312,
+      "packages": [
+        "pypi:llm"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.25
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "6f4fdf28ef4daf3e995bad28d38559c2a0da95674cf58895099096ad997b65f4",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Access large language models from the command-line"
+        },
+        "who_it_is_for": {
+          "score": 0,
+          "quote": null
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install llm"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "Chatting with gpt-4.1"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "llm keys set openai"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Upgrading to the latest version"
+        },
+        "license_and_platforms": {
+          "score": 0,
+          "quote": null
+        }
+      },
+      "unquoted": [
+        "license_and_platforms"
+      ]
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -258,5 +468,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:04+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }

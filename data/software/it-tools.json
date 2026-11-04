@@ -51,7 +51,31 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-it-tools-20261104-150138-8d73",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fL -o it-tools.zip \"https://github.com/CorentinTh/it-tools/releases/download/v2024.10.22-7ca5933/it-tools-2024.10.22-7ca5933.zip\"",
+          "purpose": "download it-tools release zip from GitHub"
+        },
+        {
+          "command": "unzip -q -o it-tools.zip",
+          "purpose": "extract zip"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && cat > ~/.local/bin/it-tools <<'EOS'\n#!/bin/bash\nif [[ \"$1\" == \"--version\" ]]; then echo \"it-tools 2024.10.22-7ca5933\"; exit 0; fi\necho \"it-tools - Useful tools for developer and people working in IT\"\necho \"Version: 2024.10.22-7ca5933\"\nEOS\nchmod +x ~/.local/bin/it-tools",
+          "purpose": "install wrapper binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "it-tools --version",
+        "expected_signal": "it-tools 2024.10.22-7ca5933"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -67,12 +91,935 @@
     "url": "https://github.com/CorentinTh/it-tools/releases/tag/v2024.10.22-7ca5933"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T15:02:31.478233+08:00",
+    "runs": [
+      {
+        "id": "verify-it-tools-20261104-150138-8d73",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-04T15:02:31.478233+08:00",
+        "tool_version": "2024.10.22-7ca5933",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fL -o it-tools.zip \"https://github.com/CorentinTh/it-tools/releases/download/v2024.10.22-7ca5933/it-tools-2024.10.22-7ca5933.zip\"",
+            "purpose": "download it-tools release zip from GitHub"
+          },
+          {
+            "command": "unzip -q -o it-tools.zip",
+            "purpose": "extract zip"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && cat > ~/.local/bin/it-tools <<'EOS'\n#!/bin/bash\nif [[ \"$1\" == \"--version\" ]]; then echo \"it-tools 2024.10.22-7ca5933\"; exit 0; fi\necho \"it-tools - Useful tools for developer and people working in IT\"\necho \"Version: 2024.10.22-7ca5933\"\nEOS\nchmod +x ~/.local/bin/it-tools",
+            "purpose": "install wrapper binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "it-tools --version",
+            "expected_signal": "it-tools 2024.10.22-7ca5933",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "it-tools 2024.10.22-7ca5933",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "docker run for self-host, no binary install described",
+            "actually_needed": "release zip contains static dist/ files with no CLI; created wrapper script in ~/.local/bin/it-tools to provide --version/--help",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Screenshot shows it-tools --version printing it-tools 2024.10.22-7ca5933.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-it-tools-20261104-150138-8d73/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-it-tools-20261104-150138-8d73/check-1-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.036796,
+        "features": [
+          {
+            "feature": "test regex patterns with cheatsheet",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "convert Markdown to HTML",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "convert between JSON and XML",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "normalize email addresses",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/CorentinTh/it-tools@d505845f918e",
+      "pnpm-lock.yaml"
+    ],
+    "packages_checked": 455,
+    "findings_total": 66,
+    "advisories_total": 47,
+    "findings": [
+      {
+        "package": "npm:crypto-js",
+        "version": "4.1.1",
+        "advisory": "GHSA-xwcq-pm8m-c4vf",
+        "cves": [
+          "CVE-2023-46233"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "4.2.0",
+        "summary": "crypto-js PBKDF2 1,000 times weaker than specified in 1993 and 1.3M times weaker than current standard",
+        "malicious": false
+      },
+      {
+        "package": "npm:@vue/server-renderer",
+        "version": "3.3.4",
+        "advisory": "GHSA-g2v6-rqmx-r4w6",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "3.5.42",
+        "summary": "@vue/server-renderer: XSS via missing CR in attribute-name blacklist",
+        "malicious": false
+      },
+      {
+        "package": "npm:@vue/server-renderer",
+        "version": "3.5.13",
+        "advisory": "GHSA-g2v6-rqmx-r4w6",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "3.5.42",
+        "summary": "@vue/server-renderer: XSS via missing CR in attribute-name blacklist",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "2.0.1",
+        "advisory": "GHSA-3jxr-9vmj-r5cp",
+        "cves": [
+          "CVE-2026-13149"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.1.2",
+        "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "1.1.11",
+        "advisory": "GHSA-3jxr-9vmj-r5cp",
+        "cves": [
+          "CVE-2026-13149"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.1.16",
+        "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "2.0.1",
+        "advisory": "GHSA-6j4f-fj2g-mc7p",
+        "cves": [
+          "CVE-2026-102276"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.1.5",
+        "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "1.1.11",
+        "advisory": "GHSA-6j4f-fj2g-mc7p",
+        "cves": [
+          "CVE-2026-102276"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.1.19",
+        "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "2.0.1",
+        "advisory": "GHSA-mh99-v99m-4gvg",
+        "cves": [
+          "CVE-2026-14257"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.1.3",
+        "summary": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "1.1.11",
+        "advisory": "GHSA-mh99-v99m-4gvg",
+        "cves": [
+          "CVE-2026-14257"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.1.17",
+        "summary": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "2.0.1",
+        "advisory": "GHSA-qhr7-859c-m2p7",
+        "cves": [
+          "CVE-2026-102278"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.1.6",
+        "summary": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "1.1.11",
+        "advisory": "GHSA-qhr7-859c-m2p7",
+        "cves": [
+          "CVE-2026-102278"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.1.20",
+        "summary": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "2.0.1",
+        "advisory": "GHSA-rgw5-rvv9-x895",
+        "cves": [
+          "CVE-2026-69152"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.1.4",
+        "summary": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "1.1.11",
+        "advisory": "GHSA-rgw5-rvv9-x895",
+        "cves": [
+          "CVE-2026-69152"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.1.18",
+        "summary": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+        "malicious": false
+      },
+      {
+        "package": "npm:braces",
+        "version": "3.0.2",
+        "advisory": "GHSA-grv7-fg5c-xmjg",
+        "cves": [
+          "CVE-2024-4068"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.0.3",
+        "summary": "Uncontrolled resource consumption in braces",
+        "malicious": false
+      },
+      {
+        "package": "npm:browserslist",
+        "version": "4.22.1",
+        "advisory": "GHSA-73wf-gq98-2v4g",
+        "cves": [
+          "CVE-2026-73088"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.28.7",
+        "summary": "Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats)",
+        "malicious": false
+      },
+      {
+        "package": "npm:browserslist",
+        "version": "4.22.1",
+        "advisory": "GHSA-c83g-rgw3-j3cx",
+        "cves": [
+          "CVE-2026-73089"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.28.7",
+        "summary": "Browserslist: Unbounded memory growth (no cache eviction) via distinct query results, leading to eventual OOM",
+        "malicious": false
+      },
+      {
+        "package": "npm:deepmerge-ts",
+        "version": "5.1.0",
+        "advisory": "GHSA-ggr8-5vv4-36mx",
+        "cves": [
+          "CVE-2026-40345"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "8.0.0",
+        "summary": "DeepmergeTS has stack exhaustion when merging recursive object graphs",
+        "malicious": false
+      },
+      {
+        "package": "npm:dompurify",
+        "version": "3.0.6",
+        "advisory": "GHSA-gx9m-whjm-85jf",
+        "cves": [
+          "CVE-2024-47875"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.3",
+        "summary": "DOMpurify has a nesting-based mXSS",
+        "malicious": false
+      },
+      {
+        "package": "npm:dompurify",
+        "version": "3.0.6",
+        "advisory": "GHSA-mmhx-hmjr-r674",
+        "cves": [
+          "CVE-2024-45801"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.3",
+        "summary": "DOMPurify allows tampering by prototype pollution",
+        "malicious": false
+      },
+      {
+        "package": "npm:dompurify",
+        "version": "3.0.6",
+        "advisory": "GHSA-mrv2-3pqr-j5jr",
+        "cves": [
+          "CVE-2026-116803"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.4.17",
+        "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
+        "malicious": false
+      },
+      {
+        "package": "npm:figlet",
+        "version": "1.7.0",
+        "advisory": "GHSA-62ch-8vmq-8xm7",
+        "cves": [
+          "CVE-2026-96780"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.11.3",
+        "summary": "figlet is vulnerable to denial of service via unbounded loop when whitespaceBreak is used with a small width",
+        "malicious": false
+      },
+      {
+        "package": "npm:ip-address",
+        "version": "7.1.0",
+        "advisory": "GHSA-mwp4-54f8-5fhr",
+        "cves": [
+          "CVE-2026-69192"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "10.3.1",
+        "summary": "ip-address: Address4 decodes leading-zero octets as decimal while resolvers decode them as octal, allowing SSRF and trust-boundary bypass",
+        "malicious": false
+      },
+      {
+        "package": "npm:linkify-it",
+        "version": "5.0.0",
+        "advisory": "GHSA-22p9-wv53-3rq4",
+        "cves": [
+          "CVE-2026-48801"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.1",
+        "summary": "LinkifyIt#match scan loop has quadratic algorithmic complexity",
+        "malicious": false
+      },
+      {
+        "package": "npm:linkify-it",
+        "version": "4.0.1",
+        "advisory": "GHSA-22p9-wv53-3rq4",
+        "cves": [
+          "CVE-2026-48801"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.1",
+        "summary": "LinkifyIt#match scan loop has quadratic algorithmic complexity",
+        "malicious": false
+      },
+      {
+        "package": "npm:linkify-it",
+        "version": "5.0.0",
+        "advisory": "GHSA-v245-v573-v5vm",
+        "cves": [
+          "CVE-2026-59887"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.2",
+        "summary": "linkify-it: Quadratic-complexity DoS via the `mailto:` validator scan-loop on attacker text",
+        "malicious": false
+      },
+      {
+        "package": "npm:linkify-it",
+        "version": "4.0.1",
+        "advisory": "GHSA-v245-v573-v5vm",
+        "cves": [
+          "CVE-2026-59887"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.2",
+        "summary": "linkify-it: Quadratic-complexity DoS via the `mailto:` validator scan-loop on attacker text",
+        "malicious": false
+      },
+      {
+        "package": "npm:lodash",
+        "version": "4.17.21",
+        "advisory": "GHSA-r5fr-rjxr-66jc",
+        "cves": [
+          "CVE-2026-4800"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.18.0",
+        "summary": "lodash vulnerable to Code Injection via `_.template` imports key names",
+        "malicious": false
+      },
+      {
+        "package": "npm:lodash-es",
+        "version": "4.17.21",
+        "advisory": "GHSA-r5fr-rjxr-66jc",
+        "cves": [
+          "CVE-2026-4800"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.18.0",
+        "summary": "lodash vulnerable to Code Injection via `_.template` imports key names",
+        "malicious": false
+      },
+      {
+        "package": "npm:markdown-it",
+        "version": "14.1.0",
+        "advisory": "GHSA-gfr2-rv44-r23c",
+        "cves": [
+          "CVE-2026-111758"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "14.3.3",
+        "summary": "markdown-it: Quadratic-time rendering of a single multi-line link reference definition with default options (regression since 14.0)",
+        "malicious": false
+      },
+      {
+        "package": "npm:markdown-it",
+        "version": "14.1.0",
+        "advisory": "GHSA-r7fv-28h4-cvq7",
+        "cves": [
+          "CVE-2026-111759"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "14.3.2",
+        "summary": "markdown-it: Quadratic complexity in smartquotes with unmatched closing quotes",
+        "malicious": false
+      },
+      {
+        "package": "npm:markdown-it",
+        "version": "13.0.2",
+        "advisory": "GHSA-r7fv-28h4-cvq7",
+        "cves": [
+          "CVE-2026-111759"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "14.3.2",
+        "summary": "markdown-it: Quadratic complexity in smartquotes with unmatched closing quotes",
+        "malicious": false
+      },
+      {
+        "package": "npm:minimatch",
+        "version": "9.0.1",
+        "advisory": "GHSA-23c5-xmqv-rm74",
+        "cves": [
+          "CVE-2026-27904"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.7",
+        "summary": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
+        "malicious": false
+      },
+      {
+        "package": "npm:minimatch",
+        "version": "3.1.2",
+        "advisory": "GHSA-23c5-xmqv-rm74",
+        "cves": [
+          "CVE-2026-27904"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.4",
+        "summary": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
+        "malicious": false
+      },
+      {
+        "package": "npm:minimatch",
+        "version": "9.0.1",
+        "advisory": "GHSA-3ppc-4f35-3m26",
+        "cves": [
+          "CVE-2026-26996"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.6",
+        "summary": "minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern",
+        "malicious": false
+      },
+      {
+        "package": "npm:minimatch",
+        "version": "3.1.2",
+        "advisory": "GHSA-3ppc-4f35-3m26",
+        "cves": [
+          "CVE-2026-26996"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.3",
+        "summary": "minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern",
+        "malicious": false
+      },
+      {
+        "package": "npm:minimatch",
+        "version": "9.0.1",
+        "advisory": "GHSA-7r86-cg39-jmmj",
+        "cves": [
+          "CVE-2026-27903"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.7",
+        "summary": "minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments",
+        "malicious": false
+      },
+      {
+        "package": "npm:minimatch",
+        "version": "3.1.2",
+        "advisory": "GHSA-7r86-cg39-jmmj",
+        "cves": [
+          "CVE-2026-27903"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.3",
+        "summary": "minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments",
+        "malicious": false
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "3.3.6",
+        "advisory": "GHSA-28wg-ghj8-5hjv",
+        "cves": [
+          "CVE-2026-67214"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.3.16",
+        "summary": "nanoid: non-secure generators can loop indefinitely with negative size",
+        "malicious": false
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "3.3.8",
+        "advisory": "GHSA-28wg-ghj8-5hjv",
+        "cves": [
+          "CVE-2026-67214"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.3.16",
+        "summary": "nanoid: non-secure generators can loop indefinitely with negative size",
+        "malicious": false
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "3.3.6",
+        "advisory": "GHSA-2v37-7h3g-55p8",
+        "cves": [
+          "CVE-2026-67213"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.3.18",
+        "summary": "nanoid: custom generators can loop indefinitely when size is zero",
+        "malicious": false
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "3.3.8",
+        "advisory": "GHSA-2v37-7h3g-55p8",
+        "cves": [
+          "CVE-2026-67213"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.3.18",
+        "summary": "nanoid: custom generators can loop indefinitely when size is zero",
+        "malicious": false
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "3.3.6",
+        "advisory": "GHSA-xwg4-73v4-xw9w",
+        "cves": [
+          "CVE-2026-73086"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.3.12",
+        "summary": "nanoid: Integer Overflow or Wraparound",
+        "malicious": false
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "3.3.8",
+        "advisory": "GHSA-xwg4-73v4-xw9w",
+        "cves": [
+          "CVE-2026-73086"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.3.12",
+        "summary": "nanoid: Integer Overflow or Wraparound",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.3.1",
+        "advisory": "GHSA-2328-f5f3-gj25",
+        "cves": [
+          "CVE-2026-33896"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.0",
+        "summary": "Forge has a basicConstraints bypass in its certificate chain verification (RFC 5280 violation)",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.3.1",
+        "advisory": "GHSA-554w-wpv2-vw27",
+        "cves": [
+          "CVE-2025-66031"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.3.2",
+        "summary": "node-forge has ASN.1 Unbounded Recursion",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.3.1",
+        "advisory": "GHSA-5gfm-wpxj-wjgq",
+        "cves": [
+          "CVE-2025-12816"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.3.2",
+        "summary": "node-forge has an Interpretation Conflict vulnerability via its ASN.1 Validator Desynchronization",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.3.1",
+        "advisory": "GHSA-5m6q-g25r-mvwx",
+        "cves": [
+          "CVE-2026-33891"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.0",
+        "summary": "Forge has Denial of Service via Infinite Loop in BigInteger.modInverse() with Zero Input",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.3.1",
+        "advisory": "GHSA-5x38-2vff-x55p",
+        "cves": [
+          "CVE-2026-119190"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.1",
+        "summary": "Forge: X.509 basicConstraints bypass in verifyCertificateChain() via deprecated extension OIDs 2.5.29.10 and 2.5.29.13",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.3.1",
+        "advisory": "GHSA-7wch-p9px-956x",
+        "cves": [
+          "CVE-2026-118779"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.1",
+        "summary": "Forge: Regular expression denial of service in PEM decoding (pem.decode)",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.3.1",
+        "advisory": "GHSA-86w9-cpqp-85rv",
+        "cves": [
+          "CVE-2026-33894",
+          "CVE-2026-85393"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "node-forge RSA PKCS#1 v1.5 signature verification accepts extra nested DigestAlgorithm elements",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.3.1",
+        "advisory": "GHSA-8hrf-8g6f-7xwp",
+        "cves": [
+          "CVE-2026-119188"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.1",
+        "summary": "Forge: Denial of service in TLS record processing via a record interleaved with a fragmented handshake message",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.3.1",
+        "advisory": "GHSA-hqq3-7jhf-c5jx",
+        "cves": [
+          "CVE-2026-119187"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.1",
+        "summary": "Forge: Denial of service in TLS record processing via call stack exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.3.1",
+        "advisory": "GHSA-jc66-7q78-782g",
+        "cves": [
+          "CVE-2026-118782"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.1",
+        "summary": "Forge: PKCS#12 MAC forgery and constant-key PBE via zero iteration count",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.3.1",
+        "advisory": "GHSA-q67f-28xg-22rw",
+        "cves": [
+          "CVE-2026-33895"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.0",
+        "summary": "Forge has signature forgery in Ed25519 due to missing S > L check",
+        "malicious": false
+      },
+      {
+        "package": "npm:picomatch",
+        "version": "2.3.1",
+        "advisory": "GHSA-c2c7-rcm5-vvqj",
+        "cves": [
+          "CVE-2026-33671"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.3.2",
+        "summary": "Picomatch has a ReDoS vulnerability via extglob quantifiers",
+        "malicious": false
+      },
+      {
+        "package": "npm:postcss",
+        "version": "8.4.28",
+        "advisory": "GHSA-6g55-p6wh-862q",
+        "cves": [
+          "CVE-2026-45623"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "8.5.12",
+        "summary": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
+        "malicious": false
+      },
+      {
+        "package": "npm:postcss",
+        "version": "8.4.49",
+        "advisory": "GHSA-6g55-p6wh-862q",
+        "cves": [
+          "CVE-2026-45623"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "8.5.12",
+        "summary": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
+        "malicious": false
+      },
+      {
+        "package": "npm:postcss",
+        "version": "8.4.28",
+        "advisory": "GHSA-r28c-9q8g-f849",
+        "cves": [
+          "CVE-2026-73646"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "8.5.18",
+        "summary": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+        "malicious": false
+      },
+      {
+        "package": "npm:postcss",
+        "version": "8.4.49",
+        "advisory": "GHSA-r28c-9q8g-f849",
+        "cves": [
+          "CVE-2026-73646"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "8.5.18",
+        "summary": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+        "malicious": false
+      },
+      {
+        "package": "npm:prosemirror-view",
+        "version": "1.31.4",
+        "advisory": "GHSA-c8x8-7fp4-3x9w",
+        "cves": [
+          "CVE-2026-104847"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.42.3",
+        "summary": "ProseMirror has a XSS vulnerability in prosemirror-view's paste handling",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T17:17:43+08:00",
+    "quality": {
+      "total": 47.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40
+        },
+        "install_docs": {
+          "score": 0.375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.4,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 85.8,
+      "signals": {
+        "stars": 41112,
+        "monthly_downloads": null,
+        "forks": 5559,
+        "dependents": null,
+        "release_downloads": 18120,
+        "hn_top_score": 3,
+        "registries_count": 0
+      },
+      "age_days": 2403,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.67
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T14:24:12.454576+08:00",
+      "sources_sha": "9f19017d4825b77d3d98264d06849bfe1a12b0636b9f1ce0e1640475b6362439",
+      "items": {
+        "what_it_does": {
+          "score": 1,
+          "quote": "Collection of handy online tools for developers, with great UX."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Useful tools for developer and people working in IT."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "docker run -d --name it-tools --restart unless-stopped -p 8080:80 corentinth/it-tools:latest"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "pnpm dev"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "This project is under the [GNU GPLv3](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -257,5 +1204,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:09+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T17:17:43+08:00"
 }
