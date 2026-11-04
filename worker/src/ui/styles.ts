@@ -268,6 +268,9 @@ button.badge{cursor:help;min-height:24px;text-decoration:underline dotted;text-d
 .meter-note{grid-column:1/-1;font-size:var(--t-small);color:var(--ink-2)}
 .meter-none .meter-read{font:500 var(--t-small)/1 var(--sans);color:var(--ink-2)}
 /* The tip is long and the number sits at the panel's right edge, so it opens to the left, on focus too (a touch screen). */
+/* It qualifies the quality score above it, so it sits close under that tape, smaller, and popularity starts a new group. */
+.meter-conf{margin-top:-6px;margin-bottom:6px}
+.meter-conf .meter-label{font:500 .8rem/1.2 var(--sans);color:var(--ink-3)}
 .meter-conf .conf-read{position:relative;grid-row:auto;font-variant-numeric:tabular-nums;text-decoration:underline dotted;text-decoration-color:var(--line-ctl);text-underline-offset:4px;cursor:help}
 .meter-conf .conf-read:focus-visible{outline:3px solid var(--stitch);outline-offset:2px}
 .meter-conf .conf-read[data-tip]:hover::after,.meter-conf .conf-read[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:auto;right:0;bottom:calc(100% + 6px);z-index:3;padding:8px 10px;border-radius:var(--r-ctl);background:var(--ink);color:var(--paper);font:600 .78rem/1.35 var(--sans);text-align:left;width:max-content;max-width:280px;white-space:normal;pointer-events:none}

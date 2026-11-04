@@ -339,7 +339,7 @@ export function confidenceRow(confidence: number | undefined, unmeasured: string
   if (others.length) lines.push(L(`Also missing: ${others.join(', ')}.`, `另外缺少：${others.join('、')}。`));
   const say = lines.join(' ');
   return (
-    `<div class="meter meter-none meter-conf"><span class="meter-label">${L('Confidence', '信心度')}</span>` +
+    `<div class="meter meter-none meter-conf"><span class="meter-label">${L('Quality confidence', '品質信心度')}</span>` +
     `<span class="meter-read conf-read" tabindex="0" data-tip="${esc(say)}">${pct}%<span class="sr"> ${esc(say)}</span></span></div>`
   );
 }
