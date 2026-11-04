@@ -8,6 +8,7 @@
  * for its test become placeholders. The record keeps the argv exactly as run.
  */
 import type { Entry, InstallGuide } from './catalog.ts';
+import { L } from './i18n.ts';
 
 export interface McpClientConfig {
   transport: 'stdio' | 'streamable_http';
@@ -112,15 +113,27 @@ export function clientConfig(entry: Entry, guide: InstallGuide | null): McpClien
   if (env.length && !http) server.env = Object.fromEntries(env.map((v) => [v.name, v.placeholder]));
   const notes: string[] = [];
   if (http) {
+    const start = launch.map(shellQuote).join(' ');
+    const names = env.map((v) => v.name);
     notes.push(
-      `This server speaks HTTP: start it first and keep it running (${launch.map(shellQuote).join(' ')}${env.length ? ', with ' + env.map((v) => v.name).join(', ') + ' set' : ''}), then add the URL.`,
+      L(
+        `This server speaks HTTP: start it first and keep it running (${start}${names.length ? ', with ' + names.join(', ') + ' set' : ''}), then add the URL.`,
+        `這個伺服器走 HTTP：先啟動並保持執行（${start}${names.length ? `，並設定 ${names.join('、')}` : ''}），再加入網址。`,
+      ),
     );
   }
   const own = fills.filter((f) => f !== INSTALL_FOLDER);
-  if (own.length) notes.push(`Replace ${own.join(', ')} with your own path.`);
-  if (fills.includes(INSTALL_FOLDER)) notes.push(`Replace ${INSTALL_FOLDER} with the folder you ran the install steps in.`);
+  if (own.length) notes.push(L(`Replace ${own.join(', ')} with your own path.`, `請把 ${own.join('、')} 換成你自己的路徑。`));
+  if (fills.includes(INSTALL_FOLDER)) {
+    notes.push(L(`Replace ${INSTALL_FOLDER} with the folder you ran the install steps in.`, `請把 ${INSTALL_FOLDER} 換成你執行安裝步驟的資料夾。`));
+  }
   if (env.length) {
-    notes.push(`Ask the user for ${env.map((v) => v.name).join(', ')}; pickfit never had a value, so these are placeholders.`);
+    notes.push(
+      L(
+        `Ask the user for ${env.map((v) => v.name).join(', ')}; pickfit never had a value, so these are placeholders.`,
+        `${env.map((v) => v.name).join('、')} 要填你自己的值；pickfit 沒有這些值，這裡只是佔位符。`,
+      ),
+    );
   }
   return {
     transport: http ? 'streamable_http' : 'stdio',

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { toCard } from '../src/cards.ts';
 import { installGuide } from '../src/install.ts';
+import { withLang } from '../src/i18n.ts';
 import { clientConfig, shellQuote, userLaunch } from '../src/mcpconfig.ts';
 import { fixtureCatalog } from './helpers.ts';
 
@@ -112,4 +113,14 @@ test('a relative launch says which folder to put in', () => {
   const config = clientConfig(entry, { ...guide, mcp: { ...guide.mcp!, launch: ['node', 'dist/index.js'] } })!;
   assert.deepEqual([config.command, config.args], ['node', ['<install-folder>/dist/index.js']]);
   assert.match(config.note ?? '', /Replace <install-folder> with the folder you ran the install steps in/);
+});
+
+test('the notes follow the page language; an agent over MCP, outside any page, gets English', () => {
+  const entry = catalog.bySlug.get('fixture-notes-mcp')!;
+  const guide = entry.install.linux!;
+  const zh = withLang('zh-TW', () => clientConfig(entry, guide)!);
+  assert.match(zh.note ?? '', /請把 <root> 換成你自己的路徑/);
+  assert.match(zh.note ?? '', /NOTES_SYNC_TOKEN 要填你自己的值/);
+  assert.doesNotMatch(zh.note ?? '', /Replace|Ask the user/);
+  assert.match(clientConfig(entry, guide)!.note ?? '', /Replace <root> with your own path/);
 });
