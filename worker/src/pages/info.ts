@@ -23,7 +23,7 @@ export function renderHow(catalog: Catalog, nonce: string): string {
   const main =
     head(
       L('How Fitz checks a tool', 'Fitz 怎麼檢查工具'),
-      L('Every suggestion rests on a run pickfit did itself, and every reason points at the field it came from. Here is the whole method, and what each label on a tool card means.', '每個推薦都來自 pickfit 親自做的測試，每個理由都指得出依據的欄位。以下是完整方法，以及工具卡上各個標籤的意思。'),
+      L('Every suggestion rests on a run pickfit did itself, and every reason points at the field it came from', '每個推薦都來自 pickfit 親自做的測試，每個理由都指得出依據的欄位'),
       'testing',
     ) +
     `<div class="wrap"><article class="prose">` +
@@ -67,7 +67,7 @@ export function renderAgents(origin: string, nonce: string): string {
   const main =
     head(
       L('Same answers, in your agent', '在 agent 裡也能用'),
-      L('pickfit is an MCP server. Your coding agent gets the same verified data and the same matching as this page, and can install a pick for you with the steps that worked.', 'pickfit 是 MCP 伺服器。你的 coding agent 能拿到和本頁相同的驗證資料與比對結果，還能照可行的步驟幫你安裝。'),
+      L('pickfit is an MCP server. Your coding agent gets the same verified data and the same matching as this page, and can install a pick for you with the steps that worked', 'pickfit 是 MCP 伺服器。你的 coding agent 能拿到和本頁相同的驗證資料與比對結果，還能照可行的步驟幫你安裝'),
       'recommending',
     ) +
     `<div class="wrap"><article class="prose agents-doc">` +

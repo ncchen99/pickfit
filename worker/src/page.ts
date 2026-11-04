@@ -1116,7 +1116,7 @@ export function renderPage(input: PageInput): string {
     `<section class="hero mat after-top" aria-labelledby="title"><div class="wrap hero-grid"><div class="hero-main">` +
     `<h1 id="title">${L('Every tool, <em>tested</em> first', '先幫你<em>試過</em>推薦的軟體')}</h1>` +
     `<p class="lede">${L(
-      'Tell pickfit what you want to do. It suggests tools it has already installed and tested, with commands that work.',
+      'Tell pickfit what you want to do. It suggests tools it has already installed and tested, with commands that work',
       '說說你想做什麼，pickfit 會推薦它親自裝過、測過的工具，還附上實際跑得動的指令',
     )}</p>` +
     `<div class="hero-form">${searchForm(form)}</div>` +

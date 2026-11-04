@@ -473,6 +473,8 @@ ${MEASURE_FITS.map((w, i) => {
 .foot-links a{display:inline-block;padding:4px 0;color:var(--ink-2);font:500 .95rem/1.3 var(--sans);text-decoration-color:var(--line-ctl);text-underline-offset:4px}
 .foot-links a:hover{color:var(--ink);text-decoration-color:var(--stitch)}
 .foot-row p{margin:0;max-width:62ch;font-size:var(--t-small);color:var(--ink-3)}
+.foot-row .foot-brand{grid-column:1/-1;margin-top:8px;font-variant-numeric:tabular-nums}
+.foot-brand>span{font:800 1rem/1 var(--display);letter-spacing:-.03em;color:var(--ink-2);margin-right:4px}
 `;
 
 const RESULTS = `

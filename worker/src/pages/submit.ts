@@ -58,7 +58,7 @@ export function renderSubmitForm(nonce: string, input: SubmitFormInput = {}): st
   const main =
     head(
       L('Recommend software to pickfit', '推薦軟體給 pickfit'),
-      L('Paste a link. Fitz tries it in a clean sandbox and lists it if it works.', '貼上連結。Fitz 會在乾淨的沙盒裡試用，能用就收進來。'),
+      L('Paste a link. Fitz tries it in a clean sandbox and lists it if it works', '貼上連結。Fitz 會在乾淨的沙盒裡試用，能用就收進來'),
       'hello',
     ) +
     `<div class="wrap sub-page"><div class="sub-main">${form}</div>` +

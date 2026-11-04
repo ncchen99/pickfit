@@ -86,12 +86,11 @@ function nav(active: NavKey): string {
   );
 }
 
-/** The footer: one quiet row on the page ground. The links (Compare among them, for visitors without the script) and the two trust sentences. */
+/** The footer: one quiet row on the page ground. The links (Compare among them, for visitors without the script) and the name; the trust promises are in Fitz's rules on /how. */
 const FOOTER = () => `<footer class="foot">
 <div class="wrap foot-row">
 <nav class="foot-links" aria-label="${L('Footer', '頁尾')}"><a href="/">${L('Find software', '搜尋軟體')}</a><a href="/browse">${L('Browse verified tools', '瀏覽已驗證的工具')}</a><a href="/compare">${L('Compare tools', '比較工具')}</a><a href="/agents">${L('Connect your agent', '接上你的 agent')}</a><a href="/how">${L('How Fitz checks a tool', 'Fitz 如何檢查工具')}</a><a href="/how#labels">${L('What the labels mean', '標籤說明')}</a><a href="/how#rules">${L('Fitz’s rules', 'Fitz 的原則')}</a></nav>
-<p>${L('pickfit ranks by fit, not stars. No ads, no paid placement, no referral links, and it doesn’t make any of the software it suggests.', 'pickfit 看合不合身排序，不看星數。沒有廣告、付費排名或推薦連結，推薦的軟體也沒有一款是自家做的。')}</p>
-<p>${L('No account and no IP address stored. Your sentence goes to Meta’s Muse Spark (served by Meta, reached directly or through OpenRouter) with storage turned off; pickfit keeps only the conditions it parsed, such as the task and the OS.', '免帳號，也不記錄 IP。你輸入的句子會送到 Meta 的 Muse Spark（由 Meta 提供，直接或經 OpenRouter 轉送；已關閉資料保存）；pickfit 只保留從中解析出的條件，例如任務和作業系統。')}</p>
+<p class="foot-brand" translate="no"><span>pickf<span class="i-dot">i</span>t</span> © 2026</p>
 </div>
 </footer>`;
 
