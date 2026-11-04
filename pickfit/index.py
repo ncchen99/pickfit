@@ -250,6 +250,11 @@ def _feature_coverage(run: VerificationRun) -> list[dict[str, Any]]:
             for f in run.features]
 
 
+# The note scripts/note_tmp_launch.py put on two records (11/1). The Worker now writes those launch commands with a
+# placeholder for the test's files, so it no longer applies to what a user sees; the records keep it.
+LAUNCH_NOTE = "The sandbox run's launch command points at files it created in /tmp for the test."
+
+
 def _user_guide(guide: dict[str, Any], os_name: str) -> dict[str, Any]:
     """The guide's commands as a user runs them (userpaths.for_user: the sandbox home as $HOME); the guide's own
     steps, first task, setup and check stay exactly as the run executed them."""
@@ -294,7 +299,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
             "first_task": guide.first_task,
             "first_task_setup": _first_task_setup(run, guide.first_task),
             "works_offline": works_offline(run, guide.first_task),
-            "pitfalls": [p.model_dump() for p in run.pitfalls],
+            "pitfalls": [p.model_dump() for p in run.pitfalls if p.readme_said != LAUNCH_NOTE],
             "features": _feature_coverage(run),
             "run": _run_summary(run),
             "mcp": run.mcp.model_dump() if run.mcp else None,
