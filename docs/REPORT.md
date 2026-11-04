@@ -18,7 +18,7 @@ Claude Code was the development tool. Meta's models run the product.
 
 ![How pickfit works. Steps 1–3 decide what to test, steps 4–5 prove it works, steps 6–8 rank it and answer. A real failure report sends the tool back to step 4.](report/figures/pipeline.svg)
 
-**What the week produced.** By 4 Nov the catalog held 970 records, 963 of them listed. 652 listed records were verified at least through install, and 567 had a passing run replayed in a fresh sandbox. 132 are hidden gems, called "treasures": verified, quality ≥ 80, popularity ≤ 45. All Meta-model spend from 28 Oct to 3 Nov came to $290.60, about $0.45 per verified tool. One third-party repo went from submission to first recommendation in 2 min 51 s.
+**What the week produced.** By 5 Nov the catalog held 1,058 records, 1,050 of them listed. 732 listed records were verified at least through install, and 647 had a passing run replayed in a fresh sandbox. 159 are hidden gems, called "treasures": verified, quality ≥ 80, popularity ≤ 45. All Meta-model spend from 28 Oct to 5 Nov came to $380.59, about $0.52 per verified tool. One third-party repo went from submission to first recommendation in 2 min 51 s.
 
 **What changed the design.**
 
@@ -42,7 +42,7 @@ Claude Code was the development tool. Meta's models run the product.
 
 pickfit tests software before it recommends it, and Meta's models make every product decision. This section gives the short description, the headline numbers and the links.
 
-![The catalogue on 4 Nov 2026: of 970 records, 652 are verified at least through install and 132 are hidden gems.](report/figures/funnel.svg)
+![The catalogue on 5 Nov 2026: of 1,058 records, 732 are verified at least through install and 159 are hidden gems.](report/figures/funnel.svg)
 
 pickfit is a software advisor for people and their AI agents. It covers developer CLIs, local AI tools, MCP (Model Context Protocol) servers, desktop apps on Linux and macOS, and web apps. For each project it finds, it reads the project and **installs and tests it in a sandbox**. Then it **replays the steps in a fresh offline sandbox** and scores quality separately from popularity. Only after that can the tool be recommended.
 
@@ -58,15 +58,15 @@ Meta's models make every product decision:
 
 | | Count |
 |---|---|
-| Records in the catalog | 970 (963 listed, 7 hidden by the developer's decision) |
-| Listed records verified at least through `install` | 652 (330 `function`, 156 `service`, 149 `install`, 17 `inference`) |
-| Listed records with a passing run replayed in a fresh sandbox | 567 |
+| Records in the catalog | 1,058 (1,050 listed, 8 not listed) |
+| Listed records verified at least through `install` | 732 (381 `function`, 160 `service`, 173 `install`, 18 `inference`) |
+| Listed records with a passing run replayed in a fresh sandbox | 647 |
 | Web apps tried in a sandboxed browser | 85 |
-| Listed records `unverified` (each with a reason code) / `failed` (human-confirmed) | 310 / 1 |
-| Hidden gems ("treasures": verified, quality ≥ 80, popularity ≤ 45) | 132 |
-| Security check: clean / known high-or-critical vulnerability / unchecked | 436 / 264 / 263 |
-| Model spend on Meta models, 28 Oct – 3 Nov (shared ledger, as of 3 Nov 04:12) | $290.60, about **$0.45 per verified tool** |
-| Python tests collected (this report's run) / Worker tests (status log, 3 Nov) | 1,640 / 282 |
+| Listed records `unverified` (each with a reason code) / `failed` (human-confirmed) | 317 / 1 |
+| Hidden gems ("treasures": verified, quality ≥ 80, popularity ≤ 45) | 159 |
+| Security check: clean / known high-or-critical vulnerability / unchecked | 464 / 294 / 292 |
+| Model spend on Meta models, 28 Oct – 5 Nov (shared ledger) | $380.59, about **$0.52 per verified tool** |
+| Python tests / Worker tests, 5 Nov | 1,648 / 292 |
 
 The verification levels are defined in Section 13.2. In brief:
 
@@ -75,7 +75,7 @@ The verification levels are defined in Section 13.2. In brief:
 - `service`: a server answered a live local request.
 - `inference`: a local AI tool loaded a real model and returned a completion.
 
-Because model API and sandbox compute credits are finite, pickfit applies a tiered verification policy: deeper functional testing (`function`, `service`, `inference`, and multi-step GUI operations) is prioritized for lesser-known tools that lack public reputation, whereas widely trusted, high-star open-source projects are prioritized for catalog coverage and verified up to `install` (confirming a clean install and basic launch; see `docs/discovery/curated-well-known-v2.md`).
+Well-known tools get the same tests. Early on, credits were kept for lesser-known tools and the 87 well-known projects added on 4 Nov stopped at `install`; on 4–5 Nov the developer had them run again with Muse Spark 1.3 as the agent. 51 reached `function`, 4 `service` and 1 `inference`, 24 stayed at `install` and 7 are `unverified`, and 40 have at least one feature checked. Desktop apps operated from screenshots remain the hardest case, menu-bar utilities above all (Section 6.6).
 
 The pre-registered evaluation did **not** prove pickfit better. On the 12 medium and hard questions, the agent with pickfit passed 8 and the web-search-only agent passed 6. That falls short of the pre-set lead of 3 (Section 6.1).
 
@@ -162,7 +162,7 @@ The architecture research (`docs/research/architecture.md`) was written on 28 Oc
 | H7 | No vector search: hard filters plus one model call over ≤ 60 candidate cards is enough | Held for small categories. Once a category passed 60 cards, the 60 sent were the highest treasure scores, not the most relevant. A model keyword step plus a BM25 shortlist (BM25 is a standard keyword-relevance formula) was added on 10/31 | Confirmed with an amendment |
 | H8 | A tool can go from submission to recommendable in about 10 minutes | `matchify` was submitted at 11:40:14 on 11/1 and recommended first by `find_software` at about 11:43:05: about 2 min 51 s | Confirmed (one case) |
 | H9 | The same agent recommends tools that fit hard conditions more often with pickfit than with web search alone | Pre-registered evaluation: 8 vs 6 on 12 questions, below the bar of +3. The main losses were catalog coverage, not matching | Not shown |
-| H10 | High-quality, low-popularity software (treasures) exists in quantity | 132 listed treasures after the security cap: CLI tools (53), web apps (34), MCP servers (34), TUIs (6) and daemons (5) | Confirmed |
+| H10 | High-quality, low-popularity software (treasures) exists in quantity | 159 listed treasures after the security cap: CLI tools (64), MCP servers (41), web apps (34), daemons (7), TUIs (6), desktop apps (6) and a self-hosted web app (1) | Confirmed |
 | H11 | Real usage outcomes (installed, still used, replaced) will improve ranking over time | The loop is built (report → re-verify → diff, plus a consented check-in), but no tool has reached the 3 external reports needed to count | Untested |
 | H12 | Desktop GUI apps can reach `function` with a Meta model operating from screenshots | Yes, but rarely: 16 desktop apps at `function` today. Most unchecked features were never attempted or hit environment limits; the step cap was not the bottleneck | Partly confirmed |
 | H13 | A model can judge how easy an app is to use | Two pre-registered rounds failed; a third model (Muse Wonder) failed a new bar; only measurable visual defects were shipped | Refuted for now |
@@ -512,7 +512,7 @@ Today, across listed records' passing runs, 499 features are checked, 37 failed 
 
 **Failure records** (10/29, after four adversarial review rounds). The pipeline never writes `failed` on its own. Sandbox errors become `unverified` with a concrete reason, or `suspected_tool_fault`. `failed` comes only from a human, or from a human check of a published artifact. The one case is `hillock`, whose PyPI wheel contained only dist-info.
 
-### 6.6 Treasure-score calibration (`b3.v1` → `b3.v5`)
+### 6.6 Treasure-score calibration (`b3.v1` → `b3.v6`)
 
 The first formula called almost everything a treasure. Five versions later, scores separate tools by how deeply pickfit verified them.
 
@@ -521,6 +521,7 @@ The first formula called almost everything a treasure. Five versions later, scor
 - **b3.v4** (10/29 14:47). This version fixed 10 issues found by a review workflow. README-fix detection went from 21 to 15. Check commands no longer count as install steps, and unknown downloads are recorded as `null` instead of 0. Five recomputed qualities matched the reviewers' values.
 - **b3.v5** (10/31 13:18). Only pitfalls tagged `readme_wrong` now count as README fixes. The old text rule had also counted 66 notes, 28 sandbox items and 1 tool-handled item. README fixes fell from 164 to 88 of 328 passing runs. 86 quality scores changed (median +6.0), and treasures went from 71 to 81. No model calls were made.
 - **Later modifiers.** The visual `×0.95` took treasures from 162 to 161. The security cap at 79 took them from 161 to 134, then to 132 after pnpm support.
+- **b3.v6** (11/5). The problem: a tool nobody had a chance to test beyond install lost points as if it had failed, so `ripgrep` scored 61 and could never reach 80. The 40 points for the sandbox split into installing (20) and feature results (20). Feature results are the share of features with a verdict that worked; only a failure the run puts on the tool counts against it, and a feature nobody could try drops out of the denominator, lowering `confidence` instead of the score. The site now shows that confidence beside quality, with what is missing in a tooltip. Result on 1,046 scored records: 275 up by 5 or more, 94 down by 1 or more, 11 down by 5 or more (`ai` −21.2 and `supercli` −11.5 have features that failed on the tool). Treasures went from 132 to 159: 29 gained, 8 of them at `install` level, and 2 lost. The known cost: a tool that only installed can now score high with low confidence (`opstrellis`, 97.4 at 60%), which is why the two numbers appear together.
 
 ### 6.7 GUI step cap, Muse Wonder and reasoning effort (the Linux GUI comparison)
 
@@ -1011,34 +1012,34 @@ For MCP servers, `get_install_guide` returns `claude mcp add` and `mcpServers` c
 
 ## 10. Results in numbers
 
-This section gives the full counts behind the headline numbers, broken down by kind, platform, reason, feature, score, security, source, tests and cost. All counts are this report's read-only count of `data/software/*.json` at `4cf9a747` unless marked.
+This section gives the full counts behind the headline numbers, broken down by kind, platform, reason, feature, score, security, source, tests and cost. All counts are this report's read-only count of `data/software/*.json` on 5 Nov unless marked.
 
-**By kind (listed, 963)**
+**By kind (listed, 1,050)**
 
 | Kind | Listed | `function` | `service` | `install` | `inference` | `unverified` | `failed` |
 |---|---|---|---|---|---|---|---|
-| CLI tool | 335 | 191 | 34 | 14 | 11 | 84 | 1 |
-| Desktop app | 195 | 16 | 0 | 99 | 0 | 80 | 0 |
-| MCP server or agent plugin | 194 | 25 | 104 | 0 | 0 | 65 | 0 |
+| CLI tool | 370 | 221 | 34 | 18 | 11 | 85 | 1 |
+| Desktop app | 230 | 27 | 0 | 118 | 0 | 85 | 0 |
+| MCP server or agent plugin | 198 | 28 | 105 | 0 | 0 | 65 | 0 |
 | Web app | 90 | 58 | 0 | 27 | 0 | 5 | 0 |
-| Server daemon | 82 | 11 | 9 | 2 | 6 | 54 | 0 |
-| TUI | 34 | 26 | 1 | 5 | 0 | 2 | 0 |
-| Self-hosted web app | 32 | 3 | 8 | 2 | 0 | 19 | 0 |
+| Server daemon | 84 | 11 | 10 | 2 | 7 | 54 | 0 |
+| TUI | 41 | 32 | 1 | 6 | 0 | 2 | 0 |
+| Self-hosted web app | 36 | 4 | 10 | 2 | 0 | 20 | 0 |
 | Browser extension | 1 | 0 | 0 | 0 | 0 | 1 | 0 |
-| **Total** | **963** | **330** | **156** | **149** | **17** | **310** | **1** |
+| **Total** | **1050** | **381** | **160** | **173** | **18** | **317** | **1** |
 
-By category (all records): local AI 287, dev CLI 276, other 209, MCP server 198.
+By category (all records): dev CLI 318, local AI 292, other 246, MCP server 202.
 
 **Platforms.**
 
-- Listed records with a passing run: Linux x86_64 620, macOS arm64 106, Windows x86_64 9. 79 records passed on two OSes and 2 on three.
-- Runs by runner: Modal gVisor 586, tart 114, Modal VM with Chromium (web) 85, Modal VM (GUI) 12, VirtualBox 9.
-- GUI tiers in listed runs: 98 `ui_rendered`, 16 `action_checked`.
-- 566 of the 652 verified records have at least one smoke test that passed with the network off.
+- Listed records with a passing run: Linux x86_64 674, macOS arm64 140, Windows x86_64 9. 87 records passed on two OSes and 2 on three.
+- Runs by runner: Modal gVisor 643, tart 151, Modal VM with Chromium (web) 85, Modal VM (GUI) 12, VirtualBox 9.
+- GUI tiers in listed runs: 122 `ui_rendered`, 27 `action_checked`.
+- 646 of the 732 verified records have at least one smoke test that passed with the network off.
 
-**Unverified reasons** (all 317 unverified records): `not_run` 249, `needs_toolchain` 15, `needs_root` 14, `needs_account` 11, `suspected_tool_fault` 11, `needs_more_resources` 6, `needs_container` 4, `needs_gpu` 4, `gui_only` 2, `model_too_large` 1.
+**Unverified reasons** (all unverified records): `not_run` 251, `needs_root` 17, `needs_toolchain` 15, `needs_account` 11, `suspected_tool_fault` 11, `needs_more_resources` 7, `needs_container` 4, `needs_gpu` 4, `gui_only` 3, `model_too_large` 1.
 
-**Features** (union over passing runs). 499 checked, 37 failed their test and 1,630 not checked, on 585 records with feature results. The detailed README's 11/3 breakdown of unchecked features for 193 desktop apps (Linux / Mac):
+**Features** (union over passing runs). 592 checked, 53 failed their test and 1,812 not checked, on 664 records with feature results. The detailed README's 11/3 breakdown of unchecked features for 193 desktop apps (Linux / Mac):
 
 - never attempted: 169 / 17
 - environment: 63 / 21, of which truly missing hardware or GPU 18 / 3
@@ -1048,10 +1049,10 @@ By category (all records): local AI 287, dev CLI 276, other 209, MCP server 198.
 
 **Scores.**
 
-- Treasures: 132 (CLI 53, web app 34, MCP 34, TUI 6, daemon 5).
-- Quality caps: `unverified` 310, `known_vulnerability` 163, `verification_failed` 1.
-- Formula versions: `b3.v5` 770, `b3.v5+visual.v1` 103, `web.v1+visual.v1` 85, `web.v1` 12.
-- Visual checks: 188 (70 with defects).
+- Treasures: 159 (CLI 64, MCP 41, web app 34, daemon 7, TUI 6, desktop app 6, self-hosted web app 1).
+- Quality caps: `unverified` 317, `known_vulnerability` 191, `verification_failed` 1.
+- Formula versions (listed): `b3.v6` 831, `b3.v6+visual.v1` 129, `web.v1+visual.v1` 85, `web.v1` 5.
+- Visual checks: 214 (74 with defects).
 - Usage guide: on 671 records.
 
 **Security.** Clean 436, vulnerable 264, unchecked 263, and 0 malicious. The unchecked records break down as no lockfile 151, resolve failed 58, no source 46 and lockfile not supported 8.
@@ -1128,6 +1129,8 @@ These are worth noting but too small to rely on:
 
 ## 12. What's next
 
+**Submission paths still to connect.** The website form (`/submit`, 11/5) and `submit_software` take any repository or web app and a repository runs end to end by itself: `charmbracelet/glow`, sent through the live form, was listed 12 minutes later, with its vulnerability check; a submitted desktop app also gets its visual check. Two parts are next. A website link waits in the queue for the batch web pipeline, which is started by hand, and the status page says so. The automatic run is Linux only, so an app that needs macOS is listed unverified until it gets a run on the Mac, as MangoDisk did.
+
 The next steps follow from the limits: wider coverage, fuller test environments, deeper agentic checks, and real outcomes in the score. These come from the brief, the story notes and the README. They are post-hackathon plans, not work done during the event.
 
 - **Coverage.** Widen discovery beyond 2026-created repos with ≤ 5,000 stars, so that well-known tools are verified too. In the long term, much of the supply would come from developer submissions through the same agentic review, with concrete failure reasons sent back to authors.
@@ -1175,18 +1178,19 @@ This appendix is reference material: where things live, what the levels and scor
 
 ### 13.3 Score formulas
 
-These come from `docs/submission/README.draft.md` (formula `b3.v5`, `pickfit/score.py`).
+These come from `pickfit/score.py` (formula `b3.v6`).
 
 **Quality (0–100)** is a weighted mean of components. A missing component drops out of the denominator and lowers `confidence`. The components:
 
-- **Sandbox verification, 40%.** The best passed run's depth for its category, × an install-step tier (1.0 / 0.85 / 0.7 for ≤ 3 / 4–6 / > 6 actions), × 0.85 per genuine `readme_wrong` fix.
+- **Installing, 20%.** The best passed run's install-step tier (1.0 / 0.85 / 0.7 for ≤ 3 / 4–6 / > 6 actions), × 0.85 per genuine `readme_wrong` fix.
+- **Feature results, 20%.** Of the features the passed runs reached a verdict on, the share that worked. Only a failure the run puts on the tool counts against it; no verdict means the part drops out.
 - **Install-docs rubric, 25%.** 8 items × 0/1/2, with checked quotes.
 - **Maintenance, 10%.**
 - **Responsiveness, 10%.** Based on external issues; at least 2 are needed.
 - **Engineering hygiene, 5%.**
 - **Usage outcomes, 10% and up,** only after ≥ 3 external reports.
 
-Caps: archived 30, human-confirmed failed 40, not an end-user kind 50, unverified 69, known high/critical vulnerability 79 (`sec.v1`). Visual: × 0.95 if an app-caused defect was found (`+visual.v1`). Web apps use `web.v1`.
+`confidence` is the share of the nominal weight that had data, and the site shows it beside quality. Caps: archived 30, human-confirmed failed 40, not an end-user kind 50, unverified 69, known high/critical vulnerability 79 (`sec.v1`). Visual: × 0.95 if an app-caused defect was found (`+visual.v1`). Web apps use `web.v1`.
 
 **Popularity (0–100)** uses log-normalized stars, forks, release downloads, monthly package downloads, registry count and top HN score. Each is relative to the 95th percentile of the category pool. Star velocity is added for repos at least 3 months old.
 

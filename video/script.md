@@ -113,7 +113,7 @@
 | 抽取 +13 s | README 的句子被標亮、拉成量身單上的欄位，引文跟著走；小標「Muse Spark 1.3」 | **Muse Spark 1.3 read the README and kept the quotes.** |
 | 沙盒 18:30–18:48 | 三個並排的沙盒（Linux on Modal／fresh macOS VM／sandboxed browser）；macOS 那個亮起：VM 裡放好的大檔、重複檔，四個功能一個個打勾；Linux 那個誠實標「needs root: not verified」 | **Then a fresh macOS VM. Muse Spark 1.3 installed it, Muse Spark Open clicked through all four features, and pickfit checked the results.** |
 | 一次修正 | 一個勾選框被點偏 30 px（紅色十字），畫面放大 4 倍、十字重新對準；數字「5 → 13 of 14 hits」 | **When it kept missing small checkboxes, we measured why, and taught it to zoom in and aim again.** |
-| 票牆 | 鏡頭拉遠：上百張票依種類分組成一整面牆（App／CLI／MCP server／Web app），有縫線和沒縫線的都看得到；邊上的計數 | **Nine hundred sixty-three tools listed. About six hundred fifty verified, at least through install. The rest say so.** |
+| 票牆 | 鏡頭拉遠：上百張票依種類分組成一整面牆（App／CLI／MCP server／Web app），有縫線和沒縫線的都看得到；邊上的計數 | **More than a thousand tools listed. Over seven hundred verified, at least through install. The rest say so.** |
 
 自然帶出：技術深度（多階段、真的 VM、保留出處、實驗與修正）、Meta（兩個模型各有分工）、Impact（規模）。數字錄影當天重讀紀錄。
 
@@ -121,7 +121,7 @@
 
 | 畫面 | 旁白 |
 |---|---|
-| 縫線從票牆邊緣跑出去，接到一張維護者的卡：MangoDisk 的公開 repo 與 release 列表（只用公開資訊）。旁邊一張新卡浮起：`submit_software github.com/you/your-app`，同一套檢查的小圖示依序亮。畫面右上角一個 **Next** 標籤，下面兩行：「Makers submit their own work」「Real outcomes sharpen every match」 | **On the other end of the thread is the person who built it. This week, pickfit went looking. Next, makers come to it: submit from your agent in one call, and the same tests run. And what agents report back will sharpen every match.** |
+| 縫線從票牆邊緣跑出去，接到一張維護者的卡：MangoDisk 的公開 repo 與 release 列表（只用公開資訊）。旁邊浮起 pickfit.app/submit 的真實畫面（11/5 用 charmbracelet/glow 實際送出時截的）：空白表單、貼上連結、進度頁，再縮小走過同一套檢查的小圖示。畫面右上角一個 **Next** 標籤，下面兩行：「Makers submit their own work」「Real outcomes sharpen every match」 | **On the other end of the thread is the person who built it. This week, pickfit went looking. Next, makers come to it: submit from your agent in one call, and the same tests run. And what agents report back will sharpen every match.** |
 
 自然帶出：Impact（供需兩端）、長期規劃（清楚標 Next）。
 
@@ -143,7 +143,7 @@ story.md 第 5 節的主張檢查照舊適用。這版另外要確認：
 | 「tested on a fresh macOS VM」 | MangoDisk 的 macOS run `verify-mangodisk-20261103-183054-4c97`：function、離線重播通過、4／4 功能；操作者 Muse Spark Open、安裝與判定 muse-spark-1.3 |
 | 「Muse Spark Open made the first cut in two seconds」 | plan.md 11/3 20:16 那列：初篩 2 秒、抽取 13 秒。錄前再從 D1 或 trace 確認一次 |
 | 「zoom in and aim again」 | plan.md 11/3 22:05：離線評估 14 個 x、y 點擊從 5 中變 13 中。旁白不講數字，畫面寫「5 → 13 of 14」 |
-| 963／約 650 | 11/3 晚上 `data/software`：listed 963，install 以上 652。錄影當天重讀 |
+| More than a thousand／over seven hundred | 11/5 `data/software`：listed 1,050，install 以上 732。錄影當天重讀 |
 | 「pickfit using MangoDisk」那段錄影 | 是工具頁上 pickfit 自己的錄影；另一個 session 可能還在調整，網頁錄影排在它完成之後 |
 | patient-zero「tested on a Mac」 | macOS run `verify-patient-zero-20261031-023503-51ea`，function |
 | gutenberg-mcp-server | macOS run `verify-gutenberg-mcp-server-20261103-181350-c9b3`，service |

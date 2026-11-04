@@ -25,7 +25,7 @@ How Meta models do the work:
 • Muse Spark 1.3 reads each README and keeps the quotes, judges what passed, and matches your request live
 • Muse Spark Open, Meta's open-weight model, does the first cut and operates desktop apps on a fresh macOS VM to check each feature
 
-As of Nov 3, 2026: 963 tools listed (CLI tools, desktop apps, MCP servers, web apps), 652 verified at least through install. The rest are marked "not verified".
+As of Nov 5, 2026: 1,050 tools listed (CLI tools, desktop apps, MCP servers, web apps), 732 verified at least through install. The rest are marked "not verified".
 
 Try it
 • Web: https://pickfit.app
@@ -51,5 +51,5 @@ Credits: narration in the developer's own voice, generated with ElevenLabs; musi
 
 - 影片長度 ≤ 3:00（目前 2:57）。
 - 第一句旁白是賽前揭露。
-- 說明裡的數字（963／652）與錄影當天的目錄一致；若重新發布資料後數字變了，標題卡與說明一起改。
+- 說明裡的數字（1,050／732）與錄影當天的目錄一致；若重新發布資料後數字變了，標題卡與說明一起改。
 - repo 轉 public 之後，Code 連結才打得開。

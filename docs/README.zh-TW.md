@@ -58,7 +58,7 @@
 - **現在的替代**：工具頁的操作影片依功能分段（目前 8 款桌面 App 有），讓人自己看介面判斷。
 - **量得到的視覺缺陷只扣分、不加分（11/3 起）**：
   - **做法**：念誠看過各模型扣分的截圖後決定，「看起來舒服」改成只看量得到的缺陷。由 Muse Wonder 看 pickfit 自己的截圖，列出文字被截斷、元素蓋住內容、控制項被切掉、在字中間斷行、對比太低、字太小、顯示原始碼、圖片壞掉、沒對齊、太擠，不評品味；每個缺陷都附原因和位置。
-  - **怎麼算分**：只要找到 app 本身造成的缺陷，品質分就乘 0.95（扣 5%）；沒找到不加分。公式名稱是 `b3.v5+visual.v1`、`web.v1+visual.v1`，紀錄的 `quality.visual` 記下係數和扣之前的分數。寶藏門檻不變。
+  - **怎麼算分**：只要找到 app 本身造成的缺陷，品質分就乘 0.95（扣 5%）；沒找到不加分。公式名稱是 `b3.v6+visual.v1`、`web.v1+visual.v1`，紀錄的 `quality.visual` 記下係數和扣之前的分數。寶藏門檻不變。
   - **還沒檢查的 App**：186 款有 pickfit 截圖的桌面和網頁 App 都檢查過；另外 104 款還沒檢查（大多沒有 pickfit 的截圖，少數的截圖或 run 已經不在），分數完全不變，工具頁寫「尚未做視覺檢查」。
   - **已知限制**：缺陷說明是模型寫的英文，中文頁面目前也顯示英文原句。
   - **上線前的人工複查**（[docs/usability-pilot.md](docs/usability-pilot.md) 第 11 節）：兩位沒參與開發的獨立複查者（Claude）看了 14 款。模型列的缺陷約每 4 個有 1 個不是真的（24 個中 6 個）；標成「嚴重」的只有三分之一站得住，所以嚴重程度先不算，等更多人工標註校準後再用。
@@ -77,7 +77,7 @@
 pickfit 在隔離的環境裡驗證：Linux 用 Modal 的沙盒（gVisor；網頁 App 與部分桌面 App 用有自己核心的 microVM），Mac 用 tart（Apple 的 Virtualization.framework），Windows 用 VirtualBox。這些環境和一般人的電腦不一樣，所以有些功能在裡面測不了，不代表軟體有問題。
 
 - **環境造成的問題只記「未驗證」，不記「失敗」**：驗證 agent 判斷是環境限制時，寫成未驗證並記下原因（例如 `needs_gpu`、`needs_hardware`、`needs_display`、`needs_service`）。整筆工具的「失敗」只能來自人工驗證或人工檢查發布的檔案。環境不足的代價是覆蓋率，不會冤枉軟體。
-- **測試深度依知名度分配（11/4）**：credits 有限，功能級的深度實測優先給知名度較低的軟體；高星知名開源專案只驗到 `install`（乾淨安裝與基本啟動）。清單見 [curated-well-known-v2.md](discovery/curated-well-known-v2.md)。
+- **知名軟體也實測功能（11/5）**：原本 credits 有限，高星知名專案只驗到 `install`。11/4–5 念誠決定把 `curated-well-known.v2` 的 87 款用 Muse Spark 1.3 重跑：51 款到 `function`，4 款 `service`、1 款 `inference`，24 款停在 `install`，7 款未驗證；40 款至少一項功能通過。清單見 [curated-well-known-v2.md](discovery/curated-well-known-v2.md)。
 - **目前的限制**：
   - Linux：gVisor 沙盒裡沒有 root、不能載入核心模組、不能跑 Docker；虛擬畫面是 1280×800、沒有視窗管理員，也沒有一般桌面的檔案對話框、開網址的預設程式和 Wayland。GPU（NVIDIA T4 等）只有 gVisor 拿得到，microVM 不行。麥克風有 pickfit 自己的模擬（`pickfit/verify/audio.py`：播放新產生的詞，檢查 App 是否收到）；攝影機沒有模擬。
   - Mac：tart 的 GPU 是虛擬的（Metal 可用，但回報的功能比實機少），沒有攝影機；為了隔離，聲音也關掉。

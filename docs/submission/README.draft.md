@@ -123,7 +123,7 @@ A standard RAG pipeline retrieves text chunks from static documentation and para
 
 ## The Treasure Score: Quality and Popularity Scored Separately
 
-Rather than ranking software by GitHub stars, formula `b3.v5` (`pickfit/score.py`) computes **Quality (`0–100`)** and **Popularity (`0–100`)** independently:
+Rather than ranking software by GitHub stars, formula `b3.v6` (`pickfit/score.py`) computes **Quality (`0–100`)** and **Popularity (`0–100`)** independently:
 
 - **Quality (`0–100`)**: Weighted mean of six components (missing components drop out of the denominator and reduce `confidence`):
   - **Sandbox Verification (`40%`)**: Best passed run's category depth (`function` for CLI, `service` for MCP, `inference` for local AI) × install-action step tier (`≤3` actions: `1.0`, `4–6`: `0.85`, `>6`: `0.7`) × `0.85` per genuine `readme_wrong` fix.
