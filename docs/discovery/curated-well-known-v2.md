@@ -122,7 +122,7 @@
 | 74 | `sigoden/aichat` | 9,854 | Apache-2.0 | 支援 Shell 助手、RAG、Function Calling 與 20+ 本地/雲端模型的全能 CLI |
 | 75 | `simonw/llm` | 11,813 | Apache-2.0 | Simon Willison 開發的模組化命令列 LLM 調用、Embedding 與 SQLite 記錄工具 |
 | 76 | `ggml-org/whisper.cpp` | 48,546 | MIT | 高性能純 C/C++ 本地離線語音轉文字（Whisper）推論引擎（支援 Apple Metal） |
-| 77 | `SYSTRAN/faster-whisper` | 22,068 | MIT | 基於 CTranslate2 的高速低顯存 Whisper 語音轉錄工具 |
+| 77 | `datalab-to/marker` | 33,572 | GPL-3.0 | 高精準度本地 AI PDF / 文件轉 Markdown 與 JSON 工具（原 `faster-whisper` 抽取為純 Python SDK 故替補） |
 | 78 | `m-bain/whisperX` | 20,977 | BSD-2-Clause | 具備詞級時間戳對齊與語者分離（Speaker Diarization）的快速離線語音轉文字工具（原 `rhasspy/piper` 已封存故替補） |
 | 79 | `Comfy-Org/ComfyUI` | 108,079 | GPL-3.0 | 模組化節點工作流式本地圖像、影片與音訊生成式 AI 引擎 |
 
@@ -134,7 +134,7 @@
 | 81 | `ChromeDevTools/chrome-devtools-mcp` | 36,158 | Apache-2.0 | Chrome 官方 DevTools 調試、效能追蹤與 DOM 檢視 MCP Server |
 | 82 | `github/github-mcp-server` | 29,211 | MIT | GitHub 官方 MCP Server（讓 Agent 搜尋倉庫、讀寫 Issue/PR 與分析 Actions） |
 | 83 | `oraios/serena` | 23,517 | MIT | 基於 LSP 符號級程式碼語義檢索與編輯的 Coding Agent MCP 工具箱 |
-| 84 | `hoppscotch/hoppscotch` | 78,899 | MIT | 開源輕量 Web API 開發與測試平台（Postman 開源替代） |
+| 84 | `httpie/cli` | 35,848 | MIT | 人性化現代命令列 HTTP / API 開發測試客戶端（原 `hoppscotch` 抽取為純雲端 web_app 故替補） |
 | 85 | `Stirling-Tools/Stirling-PDF` | 75,650 | MIT | 本地/自架一站式 PDF 合併、拆分、轉換、OCR 與簽署工具 |
 | 86 | `CorentinTh/it-tools` | 38,376 | GPL-3.0 | 匯集 80+ 款開發者常用編碼、加密、格式轉換與網路計算器的純淨 Web 工具箱 |
 | 87 | `usememos/memos` | 58,927 | MIT | 極速輕量、隱私優先的自架碎片化筆記與靈感閃念記錄服務 |
