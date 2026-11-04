@@ -1149,6 +1149,25 @@ def main_visual(args: Any) -> int:
     return 0 if not summary["errors"] else 1
 
 
+def visual_one(path: Path, evidence_dir: Path, log: Callable[[str], None] = lambda line: None
+               ) -> tuple[float, str | None]:
+    """The visual check for one record, for a pipeline that has just run it: what it cost, and why it did not finish
+    (None when it wrote its check). Same call and same record field as `pickfit visual --write`."""
+    from pickfit.schema import VisualCheck
+
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    bundle = bundle_for(raw, evidence_dir)
+    if bundle is None:
+        return 0.0, "no screenshots of a passed run"
+    ask = meta_ask(COMFORT_MODEL, VISUAL_CAP_USD, VISUAL_RUN_ID, effort=COMFORT_EFFORT,
+                   max_output_tokens=COMFORT_MAX_TOKENS)
+    inspected = judge_comfort(bundle, ask, TextFinder(), log)
+    if inspected["error"]:
+        return inspected["cost_usd"], str(inspected["error"])[:200]
+    write_visual_check(path, VisualCheck.model_validate(visual_check(bundle, inspected)).model_dump(mode="json"))
+    return inspected["cost_usd"], None
+
+
 def pilot_slugs(repo: Path) -> list[str]:
     return [a["slug"] for a in json.loads((repo / "data" / "calibration" / "ease-pilot.json").read_text())["apps"]]
 

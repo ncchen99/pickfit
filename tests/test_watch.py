@@ -59,6 +59,7 @@ class Pipeline:
         self.display = display
         self.calls: list[str] = []
         self.security: Any = None
+        self.visual: Any = None
 
     def steps(self) -> Steps:
         def prescreen(c: dict[str, Any], run_id: str) -> list[dict[str, Any]]:
@@ -79,7 +80,7 @@ class Pipeline:
             return self.score_error
 
         return Steps(github=self.github, prescreen=prescreen, extract=extract, verify=verify, score=score,
-                     display=self.display, security=self.security)
+                     display=self.display, security=self.security, visual=self.visual)
 
 
 @pytest.fixture
@@ -635,3 +636,28 @@ def test_a_malicious_package_stops_the_listing(env: dict[str, Any]) -> None:
     assert row["status"] == "rejected"
     assert "malicious" in row["reason"]
     assert not (env["data"] / "tinyq.json").exists()
+
+
+def test_only_a_desktop_app_gets_the_visual_check(env: dict[str, Any]) -> None:
+    pipeline = Pipeline(env["tmp"])
+    seen: list[str] = []
+    pipeline.visual = lambda data_dir, slug, log: (seen.append(slug), (0.02, None))[1]
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    [job] = run_once(env, pipeline)
+    assert seen == [] and "visual" not in job.stages  # tinyq is a command-line tool
+    assert submission(env["d1"], "sub_1")["status"] == "verifying"
+
+
+def test_a_visual_check_runs_and_is_paid_for_on_a_desktop_app_and_cannot_lose_the_run(env: dict[str, Any]) -> None:
+    pipeline = Pipeline(env["tmp"], display=True, result=extraction(
+        kind=cited("desktop_app", "A tiny jq-like query tool"),
+        category=cited("other", "A tiny jq-like query tool for JSON Lines.")),
+        runs=[passed_run("run-20261030-linux-7", ["cargo install tinyq"], method="cargo", level="install")])
+    pipeline.visual = lambda data_dir, slug, log: (0.02, "no screenshots of a passed run")
+    lines: list[str] = []
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    [job] = run_once(env, pipeline, lines=lines)
+    assert "visual" in job.stages
+    assert job.cost_usd["meta"] >= 0.02
+    assert (env["data"] / "tinyq.json").exists()
+    assert any("visual check did not finish" in line for line in lines)

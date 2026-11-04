@@ -7,7 +7,8 @@ pipeline:
 
   GitHub details -> rules -> prescreen (Muse Spark Open on Baseten, review by
   muse-spark-1.3) -> extraction (muse-spark-1.3) -> record -> verification on
-  Modal (agent, fresh-box replay, judge) -> scores -> known vulnerabilities (OSV.dev, no model call)
+  Modal (agent, fresh-box replay, judge) -> scores -> known vulnerabilities (OSV.dev, no model call) -> for a
+  desktop app, the visual check of its screenshots (Muse Wonder, one call)
 
 The record is built in runs/watch/<submission>/software/, so data/software
 changes only when a record is finished: then it is copied in and committed
@@ -235,6 +236,7 @@ class Steps:
     score(data_dir, slug) -> None, or the error that kept the record from being scored
     display: verify gives a GUI app (kind desktop_app) a box with a virtual display
     security(data_dir, slug) -> None, or why the known-vulnerability check could not run; the record stays "unchecked"
+    visual(data_dir, slug, log) -> (cost, why it did not finish or None) for a desktop app; the record stays unchecked
     """
 
     github: Any
@@ -244,6 +246,7 @@ class Steps:
     score: Callable[[Path, str], str | None]
     display: bool = False
     security: Callable[[Path, str], str | None] | None = None
+    visual: Callable[[Path, str, Callable[[str], None]], tuple[float, str | None]] | None = None
 
 
 def live_steps(*, runner: str = "modal") -> Steps:
@@ -292,11 +295,20 @@ def live_steps(*, runner: str = "modal") -> Steps:
             return f"{type(err).__name__}: {str(err)[:200]}"
         return None
 
+    def visual(data_dir: Path, slug: str, log: Callable[[str], None]) -> tuple[float, str | None]:
+        from pickfit.discover.github import runs_dir
+        from pickfit.usability import visual_one
+
+        try:
+            return visual_one(data_dir / f"{slug}.json", runs_dir() / "verify", log)
+        except Exception as err:  # noqa: BLE001 - OCR, a budget or a model answer must not lose a finished run
+            return 0.0, f"{type(err).__name__}: {str(err)[:200]}"
+
     return Steps(github=GitHub(github_token()),
                  prescreen=lambda c, run_id: screen_and_review(c, run_id=run_id),
                  extract=lambda c, run_id: extract_with_retries(c, model=MODEL, run_id=run_id,
                                                                 reasoning_effort=EXTRACT_EFFORT),
-                 verify=verify, score=score, display=display, security=security)
+                 verify=verify, score=score, display=display, security=security, visual=visual)
 
 
 def hourly_cap(worker_dir: Path) -> int:
@@ -582,6 +594,7 @@ class Watcher:
         if error:
             raise Retry(f"scores: {error}")
         self._security(job, record_dir, log)
+        self._visual(job, record_dir, log)
         self._land(job, record_dir, not_passed, log)
 
     def _security(self, job: Job, record_dir: Path, log: Callable[[str], None]) -> None:
@@ -599,6 +612,20 @@ class Watcher:
         log(f"security: {(data.get('security') or {}).get('status')}")
         if data.get("status") == "hidden":
             raise Rejected("A package it installs is reported as malicious on OSV.dev.")
+
+    def _visual(self, job: Job, record_dir: Path, log: Callable[[str], None]) -> None:
+        """A desktop app's visual check, from the screenshots its run just took. A web app has no submission path yet,
+        and a check that cannot finish leaves the record marked unchecked."""
+        if self.steps.visual is None or not job.run_id:
+            return
+        if json.loads((record_dir / f"{job.slug}.json").read_text(encoding="utf-8")).get("kind") != "desktop_app":
+            return
+        with self._stage(job, "visual"):
+            cost, error = self.steps.visual(record_dir, job.slug, log)
+        job.spent("meta", cost)
+        if error:
+            job.notes.append(f"visual check did not finish: {error}")
+            log(f"visual check did not finish: {error}")
 
     def _refuse_known(self, job: Job) -> None:
         """A repository another submission took (or is taking) is refused; one already in data/software
