@@ -21,6 +21,7 @@
 - **怎麼切換**：Python 流程看 `PICKFIT_META_VIA=openrouter`（`pickfit/meta.py`，帳本另記一個 `openrouter` 預算，上限 $40：念誠在 OpenRouter 儲值 $50，留約 $10 給線上 Worker）；線上 Worker 看 `META_VIA`（`worker/wrangler.jsonc`）。改回 `meta` 就回到 Meta 的 API。
 - **紀錄怎麼寫**：資料裡的模型名稱仍是 Meta 的 id（例如 `muse-spark-1.3`），帳本那一筆的 provider 記成 `openrouter`。
 - **OpenRouter 沒有的**：contributor 方案在 OpenRouter 上沒有，改用 `muse-spark-1.3`、照它的價格計；SAM 3.1、Muse Image、Muse Voice Transcribe 不經 OpenRouter。
+- **有限 Credit 下的分級驗證與收錄策略（11/4 補充）**：由於模型 API 與沙盒運算 credits 有限，pickfit 將深度的功能實測（`function`、`service`、`inference` 與多步 GUI 操作）優先投入在**知名度較低、缺乏公開背書的小眾軟體**，以替使用者把關並發掘「寶藏（Hidden Gems）」；而對於 **GitHub 上已累積高星數、具備廣泛社群信賴的知名開源專案**，則優先擴大目錄收錄覆蓋率，並在沙盒中驗證至 `install` 等級（確認可乾淨安裝與基礎啟動），不額外消耗大量 credits 測試每一項細部功能。搜尋與收錄清單見 [docs/discovery/curated-well-known-v2.md](discovery/curated-well-known-v2.md)。
 
 ## 非 Meta 模型產生的內容
 

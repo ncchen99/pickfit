@@ -30,6 +30,8 @@ AI agents made building software cheap, so new tools appear every day on GitHub,
 
 pickfit belongs to no vendor and runs no ads or referral links. It reads each project, **installs it in a fresh sandbox, checks that the features work, replays the steps offline**, and only then lets it be recommended. Results are ranked by fit, not stars, and lesser-known tools that do the job well get surfaced as *hidden gems*.
 
+> **Note on verification depth & API credit allocation:** Because model API and sandbox compute credits are finite, pickfit allocates deeper functional testing (`function`, `service`, and `inference` verification, plus multi-step GUI operation) to **lesser-known and emerging projects** where community trust does not yet exist. For **well-known open-source projects with high GitHub star counts** that already enjoy broad community trust, we prioritize catalog coverage and verify them up to the `install` level (confirming a clean sandbox installation and basic launch) rather than exhausting credits re-testing every feature. See [`docs/discovery/curated-well-known-v2.md`](docs/discovery/curated-well-known-v2.md) for details.
+
 Fitz, the mascot, is a tailorbird. Real tailorbirds pick leaves and stitch them into a nest that fits exactly. Fitz never recommends what it hasn't tried.
 
 ## See it

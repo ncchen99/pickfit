@@ -139,3 +139,13 @@
 - 合計（帳本，只算這一批的 run）：Baseten $8.39、Meta $3.79（初篩複查 0.13、第二輪抽取 1.20、判讀 0.46、計分 2.01）、`modal-llm` $2.01、Modal 沙盒約 $0.81（批次的估算）。
 - 第二輪抽取：Spark Open 抽取寫成紀錄的比例只有 55／123，常把類別或 kind 填成 other 或空白。第一輪沒寫成紀錄的 77 筆全部（不挑）改用 `muse-spark-1.3` 再抽一次，照同樣的規則寫紀錄（念誠 11/2 同意）。
 - 目錄：列出的紀錄 856 → 958，install 以上 610 → 648。
+
+## 高星知名開源專案擴充與分級驗證策略（規則 `curated-well-known.v2`）
+
+2026-11-04 13:00（台北）登記，清單與搜尋紀錄見 [`docs/discovery/curated-well-known-v2.json`](discovery/curated-well-known-v2.json) 與 [`docs/discovery/curated-well-known-v2.md`](discovery/curated-well-known-v2.md)。
+
+- **為什麼與資源分配原則（Credit Allocation Policy）**：
+  - 由於模型 API 與沙盒運算 credits 有限，pickfit 採取**依知名度與社群信賴度分級投入測試深度**的策略：
+    1. **低知名度／新興長尾軟體（優先深測功能）**：缺乏社群與公開評價背書，使用者與 AI Agent 無法確定其功能是否真能運作，因此將有限的 API credits 優先用於深度的沙盒功能實測（`function`、`service`、`inference`）與多步 GUI 操作驗證，以發掘真正可靠的「寶藏（Hidden Gems）」。
+    2. **高星知名開源專案（優先收錄並驗證至 `install`）**：對於在 GitHub 上已累積數千至數萬顆星、具備廣泛社群信賴與長期維護紀錄的知名開源專案（如 `ripgrep`、`lazygit`、`Rectangle`、`stats`、`ollama` 等），優先擴大目錄收錄覆蓋率，並在沙盒中驗證至 `install` 等級（確認能乾淨安裝、基礎啟動或印出版本／說明），不額外消耗大量 credits 進行多步功能操作測試。
+- **範圍**：由 6 個子代理針對 6 大領域（macOS 桌面與選單列工具、跨平台桌面生產力與影音創作、開發者核心 CLI/TUI、資料／網路／容器 CLI、本地 AI 與離線語音、MCP Servers 與自架 Web 工具）共 28 個子領域搜尋出 231 款尚未收錄的知名開源專案，扣除線上 Demo 預留額度後，精選出 87 款（含念誠指定的 7 款 macOS 開源工具與 80 款各子領域功能不重疊、具 OSI 開源授權且仍在維護的代表作）納入收錄與 `install` 等級驗證。

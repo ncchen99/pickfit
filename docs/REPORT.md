@@ -75,6 +75,8 @@ The verification levels are defined in Section 13.2. In brief:
 - `service`: a server answered a live local request.
 - `inference`: a local AI tool loaded a real model and returned a completion.
 
+Because model API and sandbox compute credits are finite, pickfit applies a tiered verification policy: deeper functional testing (`function`, `service`, `inference`, and multi-step GUI operations) is prioritized for lesser-known tools that lack public reputation, whereas widely trusted, high-star open-source projects are prioritized for catalog coverage and verified up to `install` (confirming a clean install and basic launch; see `docs/discovery/curated-well-known-v2.md`).
+
 The pre-registered evaluation did **not** prove pickfit better. On the 12 medium and hard questions, the agent with pickfit passed 8 and the web-search-only agent passed 6. That falls short of the pre-set lead of 3 (Section 6.1).
 
 **Links.**
