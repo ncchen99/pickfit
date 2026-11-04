@@ -21,7 +21,6 @@
 - **怎麼切換**：Python 流程看 `PICKFIT_META_VIA=openrouter`（`pickfit/meta.py`，帳本另記一個 `openrouter` 預算，上限 $40：念誠在 OpenRouter 儲值 $50，留約 $10 給線上 Worker）；線上 Worker 看 `META_VIA`（`worker/wrangler.jsonc`）。改回 `meta` 就回到 Meta 的 API。
 - **紀錄怎麼寫**：資料裡的模型名稱仍是 Meta 的 id（例如 `muse-spark-1.3`），帳本那一筆的 provider 記成 `openrouter`。
 - **OpenRouter 沒有的**：contributor 方案在 OpenRouter 上沒有，改用 `muse-spark-1.3`、照它的價格計；SAM 3.1、Muse Image、Muse Voice Transcribe 不經 OpenRouter。
-- **有限 Credit 下的分級驗證與收錄策略（11/4 補充）**：由於模型 API 與沙盒運算 credits 有限，pickfit 將深度的功能實測（`function`、`service`、`inference` 與多步 GUI 操作）優先投入在**知名度較低、缺乏公開背書的小眾軟體**，以替使用者把關並發掘「寶藏（Hidden Gems）」；而對於 **GitHub 上已累積高星數、具備廣泛社群信賴的知名開源專案**，則優先擴大目錄收錄覆蓋率，並在沙盒中驗證至 `install` 等級（確認可乾淨安裝與基礎啟動），不額外消耗大量 credits 測試每一項細部功能。搜尋與收錄清單見 [docs/discovery/curated-well-known-v2.md](discovery/curated-well-known-v2.md)。
 
 ## 非 Meta 模型產生的內容
 
@@ -78,6 +77,7 @@
 pickfit 在隔離的環境裡驗證：Linux 用 Modal 的沙盒（gVisor；網頁 App 與部分桌面 App 用有自己核心的 microVM），Mac 用 tart（Apple 的 Virtualization.framework），Windows 用 VirtualBox。這些環境和一般人的電腦不一樣，所以有些功能在裡面測不了，不代表軟體有問題。
 
 - **環境造成的問題只記「未驗證」，不記「失敗」**：驗證 agent 判斷是環境限制時，寫成未驗證並記下原因（例如 `needs_gpu`、`needs_hardware`、`needs_display`、`needs_service`）。整筆工具的「失敗」只能來自人工驗證或人工檢查發布的檔案。環境不足的代價是覆蓋率，不會冤枉軟體。
+- **測試深度依知名度分配（11/4）**：credits 有限，功能級的深度實測優先給知名度較低的軟體；高星知名開源專案只驗到 `install`（乾淨安裝與基本啟動）。清單見 [curated-well-known-v2.md](discovery/curated-well-known-v2.md)。
 - **目前的限制**：
   - Linux：gVisor 沙盒裡沒有 root、不能載入核心模組、不能跑 Docker；虛擬畫面是 1280×800、沒有視窗管理員，也沒有一般桌面的檔案對話框、開網址的預設程式和 Wayland。GPU（NVIDIA T4 等）只有 gVisor 拿得到，microVM 不行。麥克風有 pickfit 自己的模擬（`pickfit/verify/audio.py`：播放新產生的詞，檢查 App 是否收到）；攝影機沒有模擬。
   - Mac：tart 的 GPU 是虛擬的（Metal 可用，但回報的功能比實機少），沒有攝影機；為了隔離，聲音也關掉。
