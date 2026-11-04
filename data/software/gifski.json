@@ -52,7 +52,24 @@
     "api_keys": []
   },
   "install": {
-    "macos": null,
+    "macos": {
+      "basis": "replayed",
+      "run_id": "verify-gifski-20261104-182100-53d8",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fL -o ~/Downloads/Gifski.zip \"https://www.dropbox.com/scl/fi/kavioam2qu6feughgznl7/Gifski-1781358496.zip?rlkey=2yk36qdq3t7jitmdmptakh6si&raw=1\"",
+          "purpose": "Download Gifski 3.0.3 zip from Dropbox (official non-App Store build)"
+        },
+        {
+          "command": "mkdir -p ~/Applications && unzip -q ~/Downloads/Gifski.zip -d /tmp && cp -R /tmp/Gifski.app ~/Applications/ && codesign -dv ~/Applications/Gifski.app 2>&1",
+          "purpose": "Unzip and copy Gifski.app to ~/Applications"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "open ~/Applications/Gifski.app"
+    },
     "linux": null,
     "windows": null
   },
@@ -69,12 +86,214 @@
     "url": "https://github.com/sindresorhus/Gifski/releases/tag/v3.0.6"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-04T18:24:15.344095+08:00",
+    "runs": [
+      {
+        "id": "verify-gifski-20261104-182100-53d8",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-tahoe-base@sha256:4aaa751fa753 macOS 26.6.2 (25G83) +pickfit-macos-26-gui@ddc56299bc72",
+        "checked_at": "2026-11-04T18:24:15.344095+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fL -o ~/Downloads/Gifski.zip \"https://www.dropbox.com/scl/fi/kavioam2qu6feughgznl7/Gifski-1781358496.zip?rlkey=2yk36qdq3t7jitmdmptakh6si&raw=1\"",
+            "purpose": "Download Gifski 3.0.3 zip from Dropbox (official non-App Store build)"
+          },
+          {
+            "command": "mkdir -p ~/Applications && unzip -q ~/Downloads/Gifski.zip -d /tmp && cp -R /tmp/Gifski.app ~/Applications/ && codesign -dv ~/Applications/Gifski.app 2>&1",
+            "purpose": "Unzip and copy Gifski.app to ~/Applications"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "open ~/Applications/Gifski.app",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The app shows a welcome dialog titled 'Welcome to Gifski!' with usage notes and a 'Get Started' button.",
+          "model": "muse-spark-1.3"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-gifski-20261104-182100-53d8/report.json",
+          "log_path": "runs/verify/verify-gifski-20261104-182100-53d8/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-gifski-20261104-182100-53d8/replay-3-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
+        "cost_usd": 0.042467,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "first_run",
+          "command": "open ~/Applications/Gifski.app",
+          "window_title": "",
+          "display": "macOS desktop 1280x800 in a tart VM; pickfit's screenshot over VNC from the host"
+        },
+        "features": [
+          {
+            "feature": "convert videos to GIF animations",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "adjust dimensions, speed, frame rate and quality",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "create bounce playback GIFs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          },
+          {
+            "feature": "share videos to Gifski via extension",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "install-only run"
+          }
+        ]
+      }
+    ]
   },
-  "scores": null,
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T18:25:04+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/sindresorhus/Gifski@e184b2848869",
+      "gifski-api/Cargo.lock"
+    ],
+    "packages_checked": 90,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v5",
+    "computed_at": "2026-11-04T18:24:47+08:00",
+    "quality": {
+      "total": 62.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.51,
+          "weight": 40.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.75,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5194,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 80.0,
+      "signals": {
+        "stars": 8594,
+        "monthly_downloads": null,
+        "forks": 327,
+        "dependents": null,
+        "release_downloads": 39971,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 3197,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 12.56
+    },
+    "docs_rubric": {
+      "model": "muse-spark-1.3",
+      "checked_at": "2026-11-04T18:24:47.452668+08:00",
+      "sources_sha": "3b143f37f54b5dc7cd418d25874b1bd532927d82950aeb8fae0798100203e06c",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Convert videos to high-quality GIFs on your Mac"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "useful for showing off design work on Dribbble"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requires macOS 26 or later."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install SwiftLint"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "&& open -a Gifski \"$TMPFILE\""
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "changing dimensions, speed, frame rate, quality, cropping, looping, and more."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "The generated GIFs are huge!"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "MIT (the Mac app)"
+        }
+      },
+      "unquoted": []
+    }
+  },
   "outcomes": {
     "external": {
       "installed": 0,
@@ -275,5 +494,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:26+08:00",
-  "updated_at": "2026-11-04T13:28:44+08:00"
+  "updated_at": "2026-11-04T18:25:04+08:00"
 }
