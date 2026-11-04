@@ -1007,10 +1007,10 @@ a.check-mark:hover .check-count,button.check-mark:hover .check-count{text-decora
 .tool-clip+.layout{margin-top:48px}
 .showcase{margin:0 0 48px}
 /* The clip gives up width, never its bar: at any window height the head, the clip and its bar (play, chapters) fit
-   in the first view, down to a 280px-tall clip. The player shrinks to the clip, so there are no black bars beside it. */
-.showcase video{display:block;width:auto;max-width:100%;height:auto;max-height:max(280px,calc(100svh - 356px));object-fit:contain;background:#000}
+   in the first view, down to a 400px-tall clip (a smaller one is hard to read on a short 16:9 screen; there the bar may need a little scroll). The player shrinks to the clip, so there are no black bars beside it. */
+.showcase video{display:block;width:auto;max-width:100%;height:auto;max-height:max(400px,calc(100svh - 356px));object-fit:contain;background:#000}
 /* With tools pinned, the compare tray covers the window's foot: the clip gives up the tray's height too, so its bar stays in view. */
-body.has-tray .showcase video{max-height:max(280px,calc(100svh - 356px - var(--tray-h)))}
+body.has-tray .showcase video{max-height:max(400px,calc(100svh - 356px - var(--tray-h)))}
 .showcase figcaption{margin-top:8px;font-size:var(--t-small);color:var(--ink-3)}
 /* Media, not a card: the player keeps its dark frame with straight edges. */
 .player{width:fit-content;max-width:100%;border-radius:0;overflow:hidden;background:#000}

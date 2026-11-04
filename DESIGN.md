@@ -168,7 +168,7 @@ Rule from the mascot README: Fitz is happy or proud only next to something that 
 
 ## 9. Density (Impeccable distill, 11/1)
 
-One focal point per view: the request card on the home hero; the first pick (Fitz's answer, with its steps and the one Copy) on results; on a tool page pickfit's recorded clip when there is one, with its play bar in the first view at any window height (the compare tray included), and otherwise the "Use it" section, which then comes before "What it does"; the list on Browse; the differing rows on Compare (identical rows collapse into "Same for all of them"). Home sections below the hero are a title plus one line each. Browse shows 30 entries and a "Show more"; the text filter searches all of them. What everyone shares is said once, and evidence stays one click away in a `<details>`, never deleted.
+One focal point per view: the request card on the home hero; the first pick (Fitz's answer, with its steps and the one Copy) on results; on a tool page pickfit's recorded clip when there is one, with its play bar in the first view unless the window is very short (the clip stays at least 400px tall; the compare tray included), and otherwise the "Use it" section, which then comes before "What it does"; the list on Browse; the differing rows on Compare (identical rows collapse into "Same for all of them"). Home sections below the hero are a title plus one line each. Browse shows 30 entries and a "Show more"; the text filter searches all of them. What everyone shares is said once, and evidence stays one click away in a `<details>`, never deleted.
 
 ## 10. Refused (from Impeccable's craft floor, and ours)
 
