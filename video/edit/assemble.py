@@ -15,7 +15,7 @@ SEGMENTS = [  # file, expected seconds
     ("out/agents.mp4", 4.2),
     ("out/screens-agents.mp4", 19.8),
     ("out/thread.mp4", 36.5),
-    ("out/finale.mp4", 30.5),
+    ("out/finale.mp4", 29.3),
 ]
 
 

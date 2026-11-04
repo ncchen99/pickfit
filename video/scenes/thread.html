@@ -17,7 +17,7 @@
 // 1:52 "Along the thread" (36.5 s, one shot). The camera dives into the seam of MangoDisk's ticket
 // and follows the rufous running stitch through the stations of pickfit's record of MangoDisk
 // (3 Nov 2026): submission, prescreen, extraction, the macOS sandbox, the aimed-click fix, and
-// out onto the floor of all 963 tickets, where the thread ends at MangoDisk's.
+// out onto the floor of all the listed tickets, where the thread ends at MangoDisk's.
 import * as THREE from 'three';
 import { gsap } from 'gsap';
 import { Stage, canvasTexture } from '../kit/stage.js';
@@ -25,7 +25,7 @@ import { paperCard, text, drawSeam, drawMeasure, stitchThread, cardPath, aboveFl
 import { site, fonts, ease } from '../kit/tokens.js';
 
 const DURATION = 36.5;
-const stage = new Stage({ dof: { aperture: 0.001, maxblur: 0.006 } });
+const stage = new Stage({ near: 0.3, dof: { aperture: 0.001, maxblur: 0.006 } });
 await stage.ready;
 const { scene, camera } = stage;
 
@@ -112,12 +112,14 @@ function tent(card, h, x, z, face, lean = 0.22) {
 const TKW = 0.26, TKD = 0.17, PX = 0.30, PZ = 0.21, ROWS = 12;
 const ROWZ = [-18.75, -22.7];
 const groups = [
-  { name: 'Desktop apps', n: 195, v: 115, row: 0, x0: -5.1 },
+  // x0 keeps Desktop apps' right edge, where MangoDisk's ticket and the thread end, as the group grows to the left.
+  { name: 'Desktop apps', n: 230, v: 145, row: 0, x0: -6.0 },
   { name: 'Web apps', n: 90, v: 85, row: 0, x0: 0.9 },
-  { name: 'Other', sub: 'servers · terminal · self-hosted · extension', n: 149, v: 73, row: 0, x0: 4.2 },
-  { name: 'CLI tools', n: 335, v: 250, row: 1, x0: -5.7 },
-  { name: 'MCP servers', n: 194, v: 129, row: 1, x0: 3.6 },
+  { name: 'Other', sub: 'servers · terminal · self-hosted · extension', n: 162, v: 85, row: 0, x0: 4.2 },
+  { name: 'CLI tools', n: 369, v: 283, row: 1, x0: -6.0 },
+  { name: 'MCP servers', n: 198, v: 133, row: 1, x0: 3.6 },
 ];
+const LISTED = groups.reduce((sum, g) => sum + g.n, 0), VERIFIED = groups.reduce((sum, g) => sum + g.v, 0);
 let seed = 7;
 const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 const tickets = []; // { x, z, verified, mango }
@@ -427,6 +429,7 @@ function crosshair(color, r) {
   const dot = new THREE.Mesh(new THREE.CircleGeometry(r * 0.12, 16), mat);
   g.add(dot);
   g.userData.mat = mat;
+  g.userData.dot = dot;
   return g;
 }
 const PXU = SW / VW; // frame units per VM pixel
@@ -605,9 +608,9 @@ function drawCount(ctx, w, h, n, stage) {
   text(ctx, ' listed', 60 + x, 250, { size: 110, weight: 700, family: fonts.display, color: site.ink2 });
   if (stage >= 1) {
     drawSeam(ctx, 64, 352, 92, { len: 26, gap: 14, width: 11 });
-    text(ctx, '652 verified · at least through install', 180, 372, { size: 74, color: site.ink });
+    text(ctx, `${VERIFIED} verified · at least through install`, 180, 372, { size: 74, color: site.ink });
   }
-  if (stage >= 2) text(ctx, '311 say “not verified”', 64, 480, { size: 74, color: site.ink3 });
+  if (stage >= 2) text(ctx, `${LISTED - VERIFIED} say “not verified”`, 64, 480, { size: 74, color: site.ink3 });
 }
 const counter = paperCard({ w: COUNT.w, h: COUNT.h, depth: 0.03, edge: site.rule, edgeWidth: 4, ppu: COUNT.ppu, draw: (ctx, w, h) => drawCount(ctx, w, h, 0, 0) });
 const counterG = new THREE.Group();
@@ -786,11 +789,14 @@ stage.run({ duration: DURATION, update: (t) => {
     connectors.children.forEach((c) => (c.material.opacity = ca)); connectors.visible = ca > 0.003;
     const lensChecked = t >= 26.3;
     redrawIf(lensTex, 'lk', String(lensChecked), (ctx) => drawLens(ctx, lensChecked));
-    // the aim inside the lens: starts where the click landed, moves to dead centre, turns green
+    // the aim inside the lens: starts where the click landed, moves to dead centre, turns ink
     const move = ramp(t, 25.55, 0.65, EIO);
     aim.position.set(3 * LPX * (1 - move), -30 * LPX * (1 - move), 0.006);
     const good = t >= 26.22;
-    aim.userData.mat.color.set(good ? site.pass : site.fail);
+    // On target it frames the box in ink, no dot: the box's own green is what says it worked, and a green aim over a
+    // green box read as a broken checkbox.
+    aim.userData.mat.color.set(good ? site.ink : site.fail);
+    aim.userData.dot.visible = !good;
     aim.scale.setScalar(good ? 1 - 0.1 * Math.max(0, 1 - Math.abs(t - 26.3) / 0.1) : 1);
     // the result
     const hp = ramp(t, 26.65, 0.55);
@@ -831,7 +837,7 @@ stage.run({ duration: DURATION, update: (t) => {
     });
     const cp = ramp(t, 29.15, 0.6);
     enter(counterG, COUNTER_BASE, cp, { rise: 0.2, axis: 'z' });
-    const cn = Math.round(963 * ramp(t, 29.5, 1.2, gsap.parseEase('power2.out')));
+    const cn = Math.round(LISTED * ramp(t, 29.5, 1.2, gsap.parseEase('power2.out')));
     const cs = t >= 35.25 ? 2 : t >= 31.6 ? 1 : 0;
     redrawIf(counter, 'ck', cn + ':' + cs, (ctx, w, h) => drawCount(ctx, w, h, cn, cs));
     enter(mangoCallG, MCALL_BASE, ramp(t, 30.3, 0.6), { rise: 0.1, axis: 'z' });

@@ -35,7 +35,10 @@ import {
   nextTag, submitCard, appTicket, station, slip, clockTag, screenTexture, happyEyes,
 } from './finale/parts.js';
 
-const DURATION = 30.5;
+// 1.2 s shorter than the build's clock: the hold after "sharpen every match" ran long (念誠 11/4). Scene times below stay
+// on the build's clock; warp() runs the still stretch 13.7-15.7 in 0.8 s.
+const DURATION = 29.3;
+const warp = (t) => (t < 13.7 ? t : t < 14.5 ? 13.7 + (t - 13.7) * 2.5 : t + 1.2);
 
 const stage = new Stage({ dof: { aperture: 0.0008, maxblur: 0.005 } });
 await stage.ready;
@@ -85,7 +88,8 @@ const mangoTag = paperCard({ w: 1.42, h: 0.42, depth: 0.016, color: site.voice, 
   text(ctx, 'MangoDisk', 26, 88, { size: 64, weight: 700, family: fonts.display });
 } });
 mangoTag.rotation.x = -1.0;
-mangoTag.position.set(MANGO.x + 0.12, 0.21 * Math.cos(1.0), MANGO.z + 0.72 - 0.21 * Math.sin(1.0));
+// 0.04 above the floor so its lower edge clears the tickets it leans over (they cut it off when it stood on the floor).
+mangoTag.position.set(MANGO.x + 0.12, 0.04 + 0.21 * Math.cos(1.0), MANGO.z + 0.72 - 0.21 * Math.sin(1.0));
 zoneA.add(mangoTag);
 
 // The thread runs off the MangoDisk ticket to the maker's card.
@@ -552,6 +556,6 @@ function poseFitzEnd(t) {
   fz.blink(t > 23 && cyc > 1.5 && cyc < 1.62 ? 1 : 0);
 }
 
-stage.run({ duration: DURATION, update });
+stage.run({ duration: DURATION, update: (t) => update(warp(t)) });
 </script>
 </body></html>
