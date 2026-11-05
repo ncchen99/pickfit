@@ -58,6 +58,12 @@ for cue in timeline["vo"]:
 # The score, ducked while the narration speaks.
 music = np.zeros((N, 2), np.float32)
 m = load(HERE / "audio" / "music" / f"score-{MUSIC}.mp3")
+# The page's hold put 2.8 s into the picture (11/5), and the score's ending had to stay under the end card: one 2.5 s phrase
+# (the period the score repeats at there) plays twice at 2:35, with a short equal-power crossfade at the seam.
+REPEAT_AT, REPEAT = int((155.6 - MUSIC_AT) * SR), int(2.504 * SR)
+xf = int(0.25 * SR)
+ramp = np.linspace(0, np.pi / 2, xf)[:, None].astype(np.float32)
+m = np.concatenate([m[:REPEAT_AT], m[REPEAT_AT:REPEAT_AT + xf] * np.cos(ramp) + m[REPEAT_AT - REPEAT:REPEAT_AT - REPEAT + xf] * np.sin(ramp), m[REPEAT_AT - REPEAT + xf:]])
 place(music, fade(m, 0.02, 2.5), MUSIC_AT)
 env = np.abs(vo).max(axis=1)
 win = int(0.05 * SR)
@@ -97,12 +103,13 @@ CUES = [
     ("whoosh", 110.2, -12), ("pop", 113.1, -12), ("whoosh", 115.1, -15), ("whoosh", 118.7, -15), ("whoosh", 122.7, -15),
     ("pop", 128.3, -14), ("pop", 129.1, -14), ("pop", 129.9, -14), ("pop", 130.7, -14), ("stitch", 130.7, -9),
     ("whoosh", 132.6, -15), ("pop", 136.0, -11), ("whoosh", 138.7, -12), ("stitch", 141.6, -12),
-    # the finale (146.5-175.8; 1.2 s came out of the hold before 161.6)
-    ("stitch", 146.65, -9), ("flip", 150.75, -12),
-    ("pop", 154.4, -15), ("pop", 154.7, -15), ("pop", 155.0, -15), ("pop", 155.3, -15), ("flip", 155.5, -13), ("stitch", 155.85, -10),
-    ("pop", 156.0, -12), ("stitch", 156.05, -12), ("pop", 158.05, -15), ("pop", 158.7, -15), ("pop", 159.35, -15), ("pop", 159.6, -13),
-    ("flip", 161.6, -13), ("stitch", 162.7, -11), ("stitch", 163.3, -11), ("stitch", 163.9, -11), ("whoosh", 165.1, -14),
-    ("pop", 167.1, -10), ("stitch", 167.4, -6),
+    # the finale (146.5-178.6): the page turns in on the move, each of its steps done, it lands on the check and turns over
+    ("stitch", 146.65, -9), ("flip", 150.0, -12),
+    ("pop", 154.05, -15), ("pop", 154.5, -15), ("pop", 155.25, -15), ("pop", 156.15, -15), ("pop", 156.55, -13),
+    ("whoosh", 157.15, -17), ("pop", 157.7, -14), ("flip", 158.3, -13), ("stitch", 158.65, -10),
+    ("pop", 158.8, -12), ("stitch", 158.85, -12), ("pop", 160.85, -15), ("pop", 161.5, -15), ("pop", 162.15, -15), ("pop", 162.4, -13),
+    ("flip", 164.4, -13), ("stitch", 165.5, -11), ("stitch", 166.1, -11), ("stitch", 166.7, -11), ("whoosh", 167.9, -14),
+    ("pop", 169.9, -10), ("stitch", 170.2, -6),
 ]
 for name, at, g_db in CUES:
     place(sfx, fade(S[name].copy(), 0.003, 0.08), at, db(g_db))

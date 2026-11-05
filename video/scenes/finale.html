@@ -14,16 +14,18 @@
 </script>
 </head><body>
 <script type="module">
-// 2:26.5–2:57 of the cut (segments J_maker and K_end): the other end of the thread, makers
+// 2:26.5–2:58.6 of the cut (segments J_maker and K_end): the other end of the thread, makers
 // submitting (works today), the Next plan (outcomes coming back), and the end card.
-// t = 0 is the segment start. Cues: 0.3 maker · 3.7 "Makers can already submit on the website:" · 6.55 "paste a link…" ·
-// 9.5 "Next, what agents report back…" · 16.3 screens · 19.2 clock · 21.8 name · 22.7 line.
+// Two clocks: v is the cut, t is the build (see warp). The page runs on v, everything else on t.
+// Cues on v: 0.3 maker · 3.7 "Makers can already submit on the website:" · 6.9 "paste a link…" · 7.55 the status page ·
+// 12.3 "Next, what agents report back…" · 19.1 screens · 22 clock · 24.6 name · 25.5 line.
 
 // ---- swap these when the real frames and time are ready ------------------------------------
 const SCREEN_LEFT = './finale/left.png';   // a frame of the agent conversation (Claude app), 16:10
 const SCREEN_RIGHT = './finale/right.png'; // a frame of pickfit.app's results page, 16:10
-// pickfit.app/submit itself, 16:10: the empty form, the link pasted in, and the status page while it runs.
-const SCREEN_SUBMIT = ['./finale/submit-empty.png', './finale/submit-typed.png', './finale/submit-status.png'];
+// pickfit.app/submit itself, 16:10: the empty form and the link pasted in (from the real submission of charmbracelet/glow),
+// then the status page in each state that submission went through (capture/submit-states.mts).
+const PAGE_SHOTS = { empty: 'empty', typed: 'typed', queued: 'queued', reading: 'reading', trying: 'trying', passed: 'passed', listed: 'listed' };
 const CLOCK_TIME = '7:08 PM';             // the real time the recording ended
 // ---------------------------------------------------------------------------------------------
 
@@ -37,10 +39,13 @@ import {
   nextTag, appTicket, station, slip, clockTag, screenTexture, happyEyes,
 } from './finale/parts.js';
 
-// 1.2 s shorter than the build's clock: the hold after "sharpen every match" ran long (念誠 11/4). Scene times below stay
-// on the build's clock; warp() runs the still stretch 13.7-15.7 in 0.8 s.
-const DURATION = 29.3;
-const warp = (t) => (t < 13.7 ? t : t < 14.5 ? 13.7 + (t - 13.7) * 2.5 : t + 1.2);
+// The build's clock from the cut's. 1.2 s came out of the hold after "sharpen every match" (念誠 11/4: the still stretch 13.7-15.7
+// runs in 0.8 s). 2.8 s went in while the page is held, so its four steps can be read (念誠 11/5): the build's 5.0-8.2, where
+// only the camera's slow drift runs on that clock, takes 6 s.
+const HOLD_ADD = 2.8, HOLD0 = 5.0, HOLD1 = 8.2;
+const DURATION = 29.3 + HOLD_ADD;
+const afterHold = (t) => (t < 13.7 ? t : t < 14.5 ? 13.7 + (t - 13.7) * 2.5 : t + 1.2);
+const warp = (v) => (v < HOLD0 ? v : v < HOLD1 + HOLD_ADD ? HOLD0 + ((v - HOLD0) * (HOLD1 - HOLD0)) / (HOLD1 - HOLD0 + HOLD_ADD) : afterHold(v - HOLD_ADD));
 
 const stage = new Stage({ dof: { aperture: 0.0008, maxblur: 0.005 } });
 await stage.ready;
@@ -136,10 +141,28 @@ camera.add(next.card);
 
 // The real page, held up where you can read it; it then rides the line and turns over into the ticket.
 const SUB_W = 3.5, SUB_H = SUB_W / 1.6, SUB_HOLD = 1.34, SUB_RIDE = 0.34;
-const subTex = await Promise.all(SCREEN_SUBMIT.map((path) => screenTexture(path, 'web')));
+const loadImage = async (path) => {
+  const img = new Image();
+  img.src = path;
+  await img.decode();
+  return img;
+};
+const shots = Object.fromEntries(await Promise.all(Object.entries(PAGE_SHOTS).map(async ([k, f]) => [k, await loadImage(`./finale/submit-${f}.png`)])));
+const tapeImg = await loadImage('./finale/submit-tape.png');
+const tapeAt = await (await fetch('./finale/submit-tape.json', { cache: 'no-store' })).json();
+// One canvas the states are drawn on: a state over the last one as it fades in, and the tape running on the step under way.
+const pageCanvas = document.createElement('canvas');
+pageCanvas.width = shots.empty.naturalWidth;
+pageCanvas.height = shots.empty.naturalHeight;
+const pageCtx = pageCanvas.getContext('2d');
+const pageTex = new THREE.CanvasTexture(pageCanvas);
+pageTex.colorSpace = THREE.SRGBColorSpace;
+pageTex.anisotropy = 8;
+pageTex.generateMipmaps = true;
+pageTex.minFilter = THREE.LinearMipmapLinearFilter;
 const sub = { card: screenPanel({ w: SUB_W, h: SUB_H }), face: null };
 sub.face = sub.card.userData.face;
-sub.face.material.map = subTex[0];
+sub.face.material.map = pageTex;
 sub.face.material.needsUpdate = true;
 const tk = appTicket();
 const flip = new THREE.Group(); // the page, with the ticket on its back
@@ -151,8 +174,47 @@ const carrier = new THREE.Group();
 carrier.add(flip);
 zoneN.add(carrier);
 
-// When the page changes and when it starts down the line, on the words of s15 ("submit on the website: paste a link, and the same tests run").
-const PAGE_TYPED = 6.3, PAGE_STATUS = 6.95, RIDE0 = 7.65;
+// When the page changes, on the words of s15 ("submit on the website: paste a link, and the same tests run"), and when it shrinks onto the
+// stations, all passed by then.
+const PAGE_IN = [3.4, 4.75], PAGE_TYPED = 6.9, PAGE_SENT = 7.55, RIDE0 = 10.65;
+const PAGE_STEPS = [[PAGE_SENT, 'queued'], [8.0, 'reading'], [8.75, 'trying'], [9.65, 'passed'], [10.05, 'listed']];
+const PAGE_FADE = 0.14;
+let pageKey = '';
+function drawPage(v) {
+  let cur = v < PAGE_TYPED ? 'empty' : 'typed', prev = null, u = 1, tape = 0;
+  PAGE_STEPS.forEach(([at, name], i) => {
+    if (v < at) return;
+    prev = cur;
+    cur = name;
+    u = clamp01((v - at) / PAGE_FADE);
+    const end = i + 1 < PAGE_STEPS.length ? PAGE_STEPS[i + 1][0] : at + 1;
+    tape = 0.08 + 0.86 * E.io(clamp01((v - at) / (end - at)));
+  });
+  const key = `${cur}|${prev}|${u.toFixed(3)}|${tape.toFixed(3)}`;
+  if (key === pageKey) return;
+  pageKey = key;
+  const W = pageCanvas.width, H = pageCanvas.height, k = W / 1280;
+  const shot = (name, alpha) => {
+    pageCtx.globalAlpha = alpha;
+    pageCtx.drawImage(shots[name], 0, 0, W, H);
+    pageCtx.globalAlpha = 1;
+  };
+  const roll = (name, part, alpha) => {
+    const r = tapeAt[name];
+    if (!r || part <= 0) return;
+    pageCtx.save();
+    pageCtx.globalAlpha = alpha;
+    pageCtx.beginPath();
+    pageCtx.rect(r.x * k, r.y * k, r.width * k * part, r.height * k);
+    pageCtx.clip();
+    pageCtx.drawImage(tapeImg, r.x * k, r.y * k, r.width * k, r.height * k);
+    pageCtx.restore();
+  };
+  if (prev && u < 1) shot(prev, 1);
+  shot(cur, u);
+  roll(cur, tape, u);
+  pageTex.needsUpdate = true;
+}
 const STATION_X = [10.75, 12.15, 13.55, 14.95];
 const stations = ['sieve', 'readme', 'sandbox', 'check'].map((k, i) => {
   const s = station(k);
@@ -336,7 +398,9 @@ const CAM = [
   [0.0, [-5.4, 8.4, 5.2], [-5.3, 0.0, -0.45]],
   [2.9, [4.6, 3.6, 7.9], [5.6, 0.6, 0.0], E.io],
   [3.4, [4.68, 3.55, 7.8], [5.65, 0.6, 0.0], E.sine],
-  [4.75, [12.8, 4.2, 8.7], [12.8, 0.95, 0.3], E.io],
+  // While the page is held the camera aims along the same line but focuses on the page, so its small text is sharp; focus goes back to the stations as it shrinks.
+  [4.75, [12.8, 4.2, 8.7], [12.8, 1.32, 1.25], E.io],
+  [8.2, [13.0, 4.14, 8.6], [13.0, 1.32, 1.25], E.sine],
   [8.65, [13.2, 4.1, 8.5], [13.2, 0.95, 0.3], E.sine],
   [9.45, [17.75, 3.75, 8.6], [17.75, 0.8, 0.45], E.io],
   [15.7, [17.65, 3.65, 8.35], [17.65, 0.8, 0.45], E.sine],
@@ -372,7 +436,7 @@ function placeFitzBy(target) { // move Fitz so the beak (hold) sits on target
   fz.root.position.add(tmp.copy(target).sub(holdW));
 }
 
-function update(t) {
+function update(t, v) {
   poseCamera(t);
 
   // ---- 1. thread to the maker ---------------------------------------------------------------
@@ -406,47 +470,47 @@ function update(t) {
     next.card.position.set(halfW - (next.w / 2 + 0.32) * s, halfH - (next.h / 2 + 0.3) * s - e.lift, -d);
   }
 
-  zoneN.visible = t > 3.6 && t < 17.35;
+  zoneN.visible = t > 3.3 && t < 17.35;
   if (zoneN.visible) {
     // the old layer dims when the screens come in
     const dim = 1 - 0.75 * prog(t, 15.75, 16.45, E.io) - 0.25 * prog(t, 16.45, 17.2, E.io);
-    // the page comes up once the camera has left the maker's card, then rides the test line
-    const e = entr(t, 4.25, { dur: 0.8, rise: 0.25 });
-    setOpacity(carrier, e.op * dim);
-    const arrive = prog(t, 4.25, 5.05, E.io);
-    let x = lerp(13.3, 12.85, arrive), y = 1.52, z = 1.25, sc = SUB_HOLD;
-    const page = t < PAGE_TYPED ? 0 : t < PAGE_STATUS ? 1 : 2;
-    if (sub.face.material.map !== subTex[page]) sub.face.material.map = subTex[page];
-    const shrink = prog(t, RIDE0, RIDE0 + 0.4, E.io);
-    const STEP0 = RIDE0 + 0.3, STEP = 0.3;
-    x = lerp(x, STATION_X[0], shrink); y = lerp(y, 1.62, shrink); z = lerp(z, 0.05, shrink); sc = lerp(SUB_HOLD, SUB_RIDE, shrink);
-    for (let i = 1; i < 4; i++) x = lerp(x, STATION_X[i], prog(t, STEP0 + (i - 1) * STEP + 0.22, STEP0 + i * STEP, E.io));
+    // The page is already there as the camera leaves the maker's card: it turns in while the camera comes to it, then holds.
+    setOpacity(carrier, dim);
+    const turnIn = prog(v, PAGE_IN[0], PAGE_IN[1], E.out);
+    let x = lerp(14.0, 12.9, turnIn), y = 1.52, z = 1.25, sc = SUB_HOLD;
+    drawPage(v);
+    // all the steps done, it shrinks onto the check, the last station
+    const shrink = prog(v, RIDE0, RIDE0 + 0.55, E.io);
+    x = lerp(x, STATION_X[3], shrink); y = lerp(y, 1.62, shrink); z = lerp(z, 0.05, shrink); sc = lerp(SUB_HOLD, SUB_RIDE, shrink);
     // after the check: to the ticket spot, turning over
-    const go = prog(t, STEP0 + 3 * STEP + 0.05, STEP0 + 3 * STEP + 0.6, E.io);
+    const go = prog(v, RIDE0 + 0.75, RIDE0 + 1.3, E.io);
     x = lerp(x, TK.x, go); y = lerp(y, TK.y, go); z = lerp(z, TK.z, go); sc = lerp(sc, TK.s, go);
-    carrier.position.set(x, y + e.lift, z);
-    carrier.scale.setScalar(sc * e.s);
+    carrier.position.set(x, y, z);
+    carrier.scale.setScalar(sc);
     // Held, the page leans back to face the camera, so it reads square rather than as a wedge.
     carrier.rotation.x = -0.36 * (1 - shrink);
+    carrier.rotation.y = 0.6 * (1 - turnIn);
     // The ticket grows on the way to its spot; the page on its other side keeps its size until it has turned away.
     sub.card.scale.setScalar(go > 0 ? SUB_RIDE / sc : 1);
-    const fv = prog(t, STEP0 + 3 * STEP + 0.15, STEP0 + 3 * STEP + 0.6, E.io);
+    const fv = prog(v, RIDE0 + 0.85, RIDE0 + 1.3, E.io);
     flip.rotation.x = Math.PI * fv; // top edge comes forward, the ticket side turns up into the light
     sub.card.visible = fv < 0.5; // only the side that can be seen, so nothing ghosts through a fade
     tk.card.visible = fv >= 0.5;
     flip.rotation.y = 0.08 * Math.sin(Math.PI * fv);
-    seam.userData.progress(prog(t, STEP0 + 3 * STEP + 0.5, STEP0 + 3 * STEP + 0.85, E.p2out));
-    // stations light as the card arrives over each
+    seam.userData.progress(prog(v, RIDE0 + 1.2, RIDE0 + 1.55, E.p2out));
+    // the stations come out from behind the page already passed, a beat apart; the last one answers as the page lands on it
     stations.forEach((s, i) => {
-      const at = STEP0 + i * STEP - 0.05;
-      s.setLit(t >= at);
-      const pop = Math.sin(Math.PI * clamp01((t - at) / 0.35));
-      s.card.position.y = s.w / 2 + 0.05 * pop;
-      setOpacity(s.card, dim);
+      const at = RIDE0 - 0.05 + i * 0.07;
+      const show = clamp01((v - at) / 0.22);
+      s.card.visible = show > 0;
+      s.setLit(true);
+      const land = i === 3 ? Math.sin(Math.PI * clamp01((v - (RIDE0 + 0.5)) / 0.3)) : 0;
+      s.card.position.y = s.w / 2 + 0.05 * Math.max(Math.sin(Math.PI * clamp01((v - at) / 0.35)), land);
+      setOpacity(s.card, show * dim);
     });
-    const sameRise = prog(t, RIDE0 + 0.2, RIDE0 + 0.75, E.back);
+    const sameRise = prog(v, RIDE0 + 0.2, RIDE0 + 0.75, E.back);
     same.pivot.rotation.x = -Math.PI / 2 * (1 - sameRise);
-    setOpacity(same.card, clamp01((t - (RIDE0 + 0.2)) / 0.18) * dim);
+    setOpacity(same.card, clamp01((v - (RIDE0 + 0.2)) / 0.18) * dim);
 
     // reports flow back into the ticket; then the reading rises a notch
     stitchR.userData.progress(prog(t, 9.55, 10.25, E.p2io));
@@ -572,6 +636,6 @@ function poseFitzEnd(t) {
   fz.blink(t > 23 && cyc > 1.5 && cyc < 1.62 ? 1 : 0);
 }
 
-stage.run({ duration: DURATION, update: (t) => update(warp(t)) });
+stage.run({ duration: DURATION, update: (v) => update(warp(v), v) });
 </script>
 </body></html>
