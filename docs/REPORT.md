@@ -34,7 +34,7 @@ Claude Code was the development tool. Meta's models run the product.
 
 **What is still unproven.** The evaluation was *pre-registered*: its questions and pass bars were committed before any data or results existed. On the 12 medium and hard questions, the agent with pickfit passed 8 and the web-search-only agent passed 6. The required lead was 3. The losses came from catalog coverage: none of the 26 correct answers were in the catalog. The usage-outcome loop is built, but no tool has enough external reports for outcomes to count.
 
-**Where to start reading.** Section 1 has the numbers and Section 4 explains how the system works. Section 6.1 covers the evaluation and Section 6 every experiment. Section 8 covers the designs that keep the catalog honest, and Section 11 covers the limits. The 2:57 demo video is at <https://www.youtube.com/watch?v=AkYyI8kSsiQ>.
+**Where to start reading.** Section 1 has the numbers and Section 4 explains how the system works. Section 6.1 covers the evaluation and Section 6 every experiment. Section 8 covers the designs that keep the catalog honest, and Section 11 covers the limits. The 2:59 demo video is at <https://www.youtube.com/watch?v=Rjuf3dHW0SE>.
 
 ---
 
@@ -84,7 +84,7 @@ The pre-registered evaluation did **not** prove pickfit better. On the 12 medium
 - Site: <https://pickfit.app>
 - MCP: `https://pickfit.app/mcp`
 - Code: <https://github.com/ncchen99/pickfit> (per `video/YOUTUBE.md`; public at submission)
-- Demo video (2:57): <https://www.youtube.com/watch?v=AkYyI8kSsiQ>. The render is at `video/out/pickfit-demo.mp4` (not in git), and the YouTube text is in `video/YOUTUBE.md`.
+- Demo video (2:59): <https://www.youtube.com/watch?v=Rjuf3dHW0SE>. The render is at `video/out/pickfit-demo.mp4` (not in git), and the YouTube text is in `video/YOUTUBE.md`.
 
 ---
 
@@ -815,7 +815,7 @@ The week moved from proving the APIs, to building the catalog, to widening platf
 | **11/1** | **Windows verifier** (VirtualBox); feature coverage rounds 1–3; **Show HN source**; **a third-party repo submitted and recommended in 2 min 51 s (11:48)**; scope revision 16:11; **site redesign with Fitz** (19:30); **web apps in scope** (23:19) |
 | **11/2** | Pre-snapshot merge 07:48, **main frozen during the evaluation**; post-evaluation merge 17:14 (8 branches, 856 records); **videos on tool pages** via R2 (17:57); **bilingual site** (21:07); evaluation finalized (23:31); **pickfit.app** custom domain (23:39) |
 | **11/3** | **Positioning corrected** (00:24); **04:21 Meta API returns 402; 05:47 switch to OpenRouter**; visual deduction shipped (11:47); **security check `sec.v1`** with the 79 cap (16:52); **MangoDisk** verified on macOS; **second site redesign** (21:40) |
-| **11/4** | **Demo video merged** (00:50, 2:57); demo shortlist re-test merged (00:55); the video's fixes merged (11:56: flicker, a greyer room, Fitz's run with the tape) and the new cut public at <https://www.youtube.com/watch?v=AkYyI8kSsiQ> |
+| **11/4** | **Demo video merged** (00:50, 2:57); demo shortlist re-test merged (00:55); the video's fixes merged (11:56: flicker, a greyer room, Fitz's run with the tape) and that cut public on YouTube (replaced by the final cut on 11/5) |
 
 **Smaller items by day** (from the same status-log rows):
 
@@ -1140,7 +1140,7 @@ The next steps follow from the limits: wider coverage, fuller test environments,
   - A small set of physical machines with PiKVM V4, used only to re-check apps that went unverified purely because of the environment.
 - **Agentic depth.** Ship the planning-agent fix after a fair rerun. Keep calibrating usability and visual severity against human grades with stronger models. Support yarn and bun lockfiles and platform-specific dependencies in the security check.
 - **Outcomes.** Accumulate external reports so that retention and replacement rates enter the score. A consented local inventory tool and a "demand map" of needs nobody serves are longer-term ideas in the brief (§3.2). Neither is built.
-- **Submission.** Repo public, Indie Developer track, X post (`docs/hackathon-rules.md` §11). The video is uploaded with a link anyone can open: <https://www.youtube.com/watch?v=AkYyI8kSsiQ>.
+- **Submission.** Repo public, Indie Developer track, X post (`docs/hackathon-rules.md` §11). The video is uploaded with a link anyone can open: <https://www.youtube.com/watch?v=Rjuf3dHW0SE>.
 
 ---
 
@@ -1242,7 +1242,7 @@ The narration, music and effects in the video are ElevenLabs output, and the 3D 
 - Meta's models are the working core of the product (Section 5); non-Meta model use is listed in 5.4.
 - The repository holds no API keys and no credit or billing details. Credentials live in `.env`, which is git-ignored.
 - Every session worked in its own worktree and branch. Only the coordinating session merged to main and wrote the status log.
-- The video's first sentence discloses what existed before the event ("idea and planning notes"). The video is public at <https://www.youtube.com/watch?v=AkYyI8kSsiQ>.
+- The video's first sentence discloses what existed before the event ("idea and planning notes"). The video is public at <https://www.youtube.com/watch?v=Rjuf3dHW0SE>.
 
 ### 13.7 Glossary
 
