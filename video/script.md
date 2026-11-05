@@ -5,7 +5,7 @@
 ## 0. 固定要求
 
 - **第一句是賽前揭露**（[hackathon-rules.md](../docs/hackathon-rules.md) 第 7 節）。
-- **≤ 3:00**，目標 2:56。英文版。旁白用念誠自己的聲音（ElevenLabs voice `2kaIk6v4SfGnZzWDde1Y`），配樂與音效也用 ElevenLabs。
+- **≤ 3:00**，目標 2:59（11/5 念誠：提交頁多留 2.8 秒）。英文版。旁白用念誠自己的聲音（ElevenLabs voice `2kaIk6v4SfGnZzWDde1Y`），配樂與音效也用 ElevenLabs。
 - 只展示比賽期間做的東西；現在做不到的不說成現在式，「之後」的部分畫面上標 **Next**。
 - 不照評分項目分段。Impact、Meta 模型、技術深度、Demo 在故事裡自然出現（每段最後一欄標出）。
 
@@ -117,15 +117,15 @@
 
 自然帶出：技術深度（多階段、真的 VM、保留出處、實驗與修正）、Meta（兩個模型各有分工）、Impact（規模）。數字錄影當天重讀紀錄。
 
-### 2:22–2:42 線的另一端，是做出它的人（收）
+### 2:22–2:44 線的另一端，是做出它的人（收）
 
 | 畫面 | 旁白 |
 |---|---|
-| 縫線從票牆邊緣跑出去，接到一張維護者的卡：MangoDisk 的公開 repo 與 release 列表（只用公開資訊）。旁邊浮起 pickfit.app/submit 的真實畫面（11/5 用 charmbracelet/glow 實際送出時截的）：空白表單、貼上連結、進度頁，再縮小走過同一套檢查的小圖示。畫面右上角一個 **Next** 標籤，下面兩行：「Makers submit their own work」「Real outcomes sharpen every match」 | **On the other end of the thread is the person who built it. This week, pickfit went looking. Next, makers come to it: submit from your agent in one call, and the same tests run. And what agents report back will sharpen every match.** |
+| 縫線從票牆邊緣跑出去，接到一張維護者的卡：MangoDisk 的公開 repo 與 release 列表（只用公開資訊）。鏡頭一離開維護者的卡，pickfit.app/submit 就轉進畫面並停住（表單是 11/5 用 charmbracelet/glow 實際送出時截的）：空白表單、貼上連結，接著頁面自己的四步「In line → Read → Try → List」跑完（進度頁是網站本身的畫面，時間壓縮過，只有最後的 12 分鐘是實測）；四個檢查小圖示已全部通過，頁面縮小落到最後的勾上，翻成票。畫面右上角一個 **Next** 標籤，下面兩行：「Makers submit their own work」「Real outcomes sharpen every match」 | **On the other end of the thread is the person who built it. This week, pickfit went looking. Next, makers come to it: submit from your agent in one call, and the same tests run. And what agents report back will sharpen every match.** |
 
 自然帶出：Impact（供需兩端）、長期規劃（清楚標 Next）。
 
-### 2:42–2:56 這一晚剩下的時間（收尾）
+### 2:44–2:59 這一晚剩下的時間（收尾）
 
 | 畫面 | 旁白 |
 |---|---|
