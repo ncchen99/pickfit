@@ -556,7 +556,14 @@ class ExtractionResult(_Model):
     pricing: Cited[PricingModel] = Field(
         description="freemium: a free tier plus a paid plan."
     )
-    platforms: Cited[list[OS]] = Field(description="Only platforms a source states.")
+    platforms: Cited[list[OS]] = Field(
+        description=(
+            "Every operating system a source says it runs on. A sentence about one system (an install note "
+            "for macOS, where a config file is on Windows, a release that adds Windows support) does not say "
+            "the others are unsupported: null unless a source lists the supported systems or says it runs "
+            "only on some."
+        )
+    )
     prerequisites: ExtractedPrerequisites
     install_methods: list[InstallClaim]
     smoke_test_candidates: list[SmokeTestCandidate] = Field(

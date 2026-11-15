@@ -30,6 +30,7 @@ import hashlib
 import json
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -180,7 +181,12 @@ def cmd_repos(args: argparse.Namespace) -> int:
     queued = 0
     for e in todo:
         sid = submission_id(e["repo"])
-        if known.get(sid) in (None, "queued", "rejected") and not _landed(runs_dir(), sid):
+        job = _job(runs_dir(), sid)
+        # An entry the pipeline turned down stays turned down: running it again until it passes would be
+        # picking. --retry is for an entry that failed for a reason on pickfit's side (a bug since fixed).
+        if job.get("result") == "rejected" and not args.retry:
+            continue
+        if known.get(sid) in (None, "queued", "rejected") and not job.get("landed"):
             if sid in known:
                 d1.execute(sql("UPDATE submissions SET status = 'queued', reason = NULL, updated_at = ?2 "
                                "WHERE id = ?1", sid, now))
@@ -206,11 +212,12 @@ def cmd_repos(args: argparse.Namespace) -> int:
     return 0
 
 
-def _landed(runs: Path, sid: str) -> bool:
+def _job(runs: Path, sid: str) -> dict[str, Any]:
+    """What the watcher saved about this entry's last run; empty when it never ran."""
     try:
-        return bool(json.loads((runs / "watch" / "jobs" / f"{sid}.json").read_text(encoding="utf-8")).get("landed"))
+        return json.loads((runs / "watch" / "jobs" / f"{sid}.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        return False
+        return {}
 
 
 def _tally(values: Any) -> dict[str, int]:
@@ -294,7 +301,11 @@ def cmd_results(args: argparse.Namespace) -> int:
     for path in sorted((runs_dir() / "watch" / "jobs").glob("sub_c1_*.json")):
         jobs[path.stem] = json.loads(path.read_text(encoding="utf-8"))
     sites = {r["site_key"]: r for r in webapps.WebSites(pipeline_db_path()).rows(source=WEB_SOURCE)}
-    before = set(doc.get("slugs_before") or [])
+    began = datetime.fromisoformat(doc["created_at"])
+
+    def of_this_batch(record: dict[str, Any]) -> bool:
+        return datetime.fromisoformat(record["first_seen_at"]) >= began
+
     tally: dict[str, int] = {}
     for e in doc["entries"]:
         record = by_repo.get((e["repo"] or "").lower()) if e["flow"] != "web" else by_site.get(
@@ -307,7 +318,7 @@ def cmd_results(args: argparse.Namespace) -> int:
         elif e["same_repo_as"]:
             result = {"outcome": "same_repository", "as": e["same_repo_as"],
                       "slug": record["slug"] if record else None}
-        elif record and record["slug"] not in before:
+        elif record and of_this_batch(record):
             verification = record.get("verification") or {}
             result = {"outcome": "record", "slug": record["slug"], "category": record["category"],
                       "kind": record["kind"], "level": verification.get("level"),
@@ -349,6 +360,8 @@ def main(argv: list[str] | None = None) -> int:
     selection(r)
     r.add_argument("--concurrency", type=int, default=3, help="repositories at once (default 3)")
     r.add_argument("--max-usd", type=float, default=30.0, help="stop starting entries past this model spend")
+    r.add_argument("--retry", action="store_true",
+                   help="also entries an earlier run rejected (only for a failure on pickfit's side, since fixed)")
     r.set_defaults(func=cmd_repos)
     w = sub.add_parser("web", help="hosted web apps: robots.txt, home page, terms and the model screen (paid)")
     selection(w)
