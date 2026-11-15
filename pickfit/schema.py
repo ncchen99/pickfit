@@ -352,6 +352,14 @@ class Cited(_Model, Generic[T]):
         ),
     )
 
+    @model_validator(mode="before")
+    @classmethod
+    def _null_is_unknown(cls, data: Any) -> Any:
+        # A model whose answer is not held to the schema (Claude reads the extraction schema from the prompt:
+        # it has more nullable fields than its structured outputs compile) writes a bare null for a field it
+        # knows nothing about. That says what {"value": null, "quote": null} says.
+        return {"value": None, "quote": None} if data is None else data
+
     @field_validator("quote", mode="before")
     @classmethod
     def _clip_quote(cls, quote: Any) -> Any:

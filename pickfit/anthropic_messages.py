@@ -65,7 +65,9 @@ _INCOMPLETE = {"max_tokens": "max_output_tokens", "model_context_window_exceeded
 UNION_LIMIT = 16
 SCHEMA_NOTE = ("Reply with one JSON object that is valid against the JSON Schema below, and nothing else: no "
                "words before or after it, no code fence. Every required property must be present; use null "
-               "where the schema allows null and you have no value.\n<json_schema>\n{schema}\n</json_schema>")
+               "where the schema allows null and you have no value, and never put null where the schema asks "
+               "for an object: write the object with its own properties null.\n"
+               "<json_schema>\n{schema}\n</json_schema>")
 # Schemas the API refused as an output format in this process (by hash): asked for in the prompt from then on.
 _refused_schemas: set[str] = set()
 
