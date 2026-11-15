@@ -123,11 +123,11 @@ GUI 桌面 app 的實跑另帶 `verification.gui`（`find_*` 的 pick 與 `get_i
 - 一個 repo 一列（`submissions.url` 唯一）；重送只讀狀態（`already_submitted: true`）。已在目錄裡的 repo 直接回 `listed` 與 slug，不新增一列。
 - 每小時新提交上限 `SUBMIT_HOURLY_CAP`（預設 20，全體共用；不存 IP，所以沒辦法分人計）。
 - Worker 只排隊，處理在管線：`pickfit watch`（P5.2）每 60 秒讀 `status = 'queued'` 的列，更新 `status`（`reading` → `verifying` → `listed`／`listed_unverified`／`rejected`）、`slug`、`reason`、`updated_at`（時間格式和 Worker 一樣是 UTC `toISOString`）。
-  - 每筆走單筆管線：GitHub 資料 → 規則 → 初篩（Baseten 上的 Muse Spark Open）→ `muse-spark-1.3` 抽取 → 紀錄 → Modal 驗證（agent、全新沙盒重播、畫面判讀）→ 評分。紀錄先在 `runs/watch/<submission>/` 建好，全部完成才複製進 `data/software/` 並單獨 commit。
+  - 每筆走單筆管線：GitHub 資料 → 規則 → 初篩（`claude-haiku-5-5`，複查用 `claude-opus-5-5`）→ `claude-opus-5-5` 抽取 → 紀錄 → Modal 驗證（agent、全新沙盒重播、畫面判讀）→ 評分。11/15 以前初篩是 Baseten 上的 Muse Spark Open，抽取是 `muse-spark-1.3`。紀錄先在 `runs/watch/<submission>/` 建好，全部完成才複製進 `data/software/` 並單獨 commit。
   - 全部通過：預設只 commit，`status` 停在 `verifying`、`reason` 寫「下次 publish 上線」；加 `--publish` 才跑 `pickfit publish` 部署並改成 `listed`。別人另外 `pickfit publish` 之後，watch 看到線上 Worker 的 `data_sha256` 等於 `data/software` 的，也把這些改成 `listed`。沒驗證成（沙盒跑不了或沒通過）：commit、`listed_unverified`。
   - commit 之後這筆就算「已落地」（記在 job 檔）：之後的重試只回報實際狀態，不重跑管線，也不會把自己的紀錄說成「已在目錄」；commit 失敗會把 `data/software` 放回原樣。同一個 repo 用兩個網址同時送進來，第二筆直接拒絕（不會產生兩筆同 `repo_id` 的紀錄，那會讓索引與部署失敗）。
-  - 拒絕（`reason` 由程式寫，不放模型的文字）：非 GitHub repo、fixture、私有或不存在、已在 `data/software`（改回該紀錄的狀態）、和另一筆提交是同一個 repo、星數超過發現的上限（300）、規則擋下、初篩判定不是可安裝的軟體、不在 dev_cli／local_ai。
-  - 上限：每小時開始處理的筆數照 `SUBMIT_HOURLY_CAP`；共用帳本的 Meta（每日、總額）與 Baseten 預算要留得下一筆的最壞花費（約 $1）才開始；`--max-usd` 管整次執行。每筆的各階段秒數與「從提交到可發布」的時間記在 `runs/watch/jobs/<submission>.json`。
+  - 拒絕（`reason` 由程式寫，不放模型的文字）：非 GitHub repo、fixture、私有或不存在、已在 `data/software`（改回該紀錄的狀態）、和另一筆提交是同一個 repo、規則擋下（封存的 repo 也在這裡擋；星數多少都不拒絕）、初篩判定不是可安裝的軟體、類別是 `other` 而且不是人會安裝來用的軟體（函式庫、範本之類）。
+  - 上限：每小時開始處理的筆數照 `SUBMIT_HOURLY_CAP`；`--max-usd`（預設 $30）管整次執行，每開始一筆先留它的最壞花費（各階段上限加起來約 $6，實際通常遠低於此）。共用帳本預設沒有每日或總額上限；用 `PICKFIT_PIPELINE_DAILY_CAP_USD`／`PICKFIT_PIPELINE_TOTAL_CAP_USD` 設了上限的話，剩下的額度不夠一筆的最壞花費就先不開始。每筆的各階段秒數與「從提交到可發布」的時間記在 `runs/watch/jobs/<submission>.json`。
   - `pickfit watch --status`（唯讀）列出 D1 的提交與重驗佇列；`--local` 用 `wrangler dev` 的本機 D1。
 
 ## 花費紀錄、選用的上限與 `degraded`
