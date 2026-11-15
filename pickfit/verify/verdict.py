@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import re
 import shlex
+import zlib
 from dataclasses import asdict, dataclass, field
 from typing import TYPE_CHECKING, Any, NamedTuple
 
@@ -566,6 +567,29 @@ def uncitable(command: str) -> list[str]:
     if len(command) > COMMAND_MAX:
         reasons.append(f"it is {len(command)} characters and a step or a check fits in {COMMAND_MAX}")
     return reasons
+
+
+_GITHUB_TOKEN = re.compile(r"\bgh[pousr]_([A-Za-z0-9]{30})([A-Za-z0-9]{6})\b")
+_BASE62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+
+def real_credentials(text: str) -> list[str]:
+    """The kinds of real-format credential in `text`: today a GitHub token whose checksum is right.
+
+    A made-up sample (`ghp_` and 36 random characters) fails the checksum, so a secret scanner's check can
+    still be fed one. A string that passes was issued by GitHub at some time: on 11/16 the model wrote the
+    same one, remembered from somewhere, into the sample files of two secret scanners (repomix, trufflehog),
+    and GitHub refused the push that carried their records. pickfit publishes every command it records, so
+    such a command is not run at all. The token is never returned or logged, only its kind.
+    """
+    for m in _GITHUB_TOKEN.finditer(text):
+        n, digits = zlib.crc32(m.group(1).encode()), ""
+        while n:
+            n, r = divmod(n, 62)
+            digits = _BASE62[r] + digits
+        if digits.rjust(6, "0") == m.group(2):
+            return ["GitHub token"]
+    return []
 
 
 # What `| head` and `| tail` may take for unmasked() to drop them: line or byte counts only.

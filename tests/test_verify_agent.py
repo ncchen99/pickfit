@@ -327,6 +327,44 @@ def test_a_command_that_cannot_be_cited_is_said_with_its_output(task, ledger, tm
     assert report.verdict["level"] == "install" and report.verdict["agrees"]
 
 
+def sample_github_token(body: str = "Ab3" * 10) -> str:
+    """A string with the form and checksum of a GitHub token, built here so that this file holds none."""
+    import zlib
+
+    digits, n = "", zlib.crc32(body.encode())
+    alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    while n:
+        n, r = divmod(n, 62)
+        digits = alphabet[r] + digits
+    return "ghp" + "_" + body + digits.rjust(6, "0")
+
+
+def test_a_command_with_a_real_format_token_is_not_run_or_recorded(task, ledger, tmp_path):
+    # repomix and trufflehog, 11/16: the model wrote a GitHub token it remembered into a scanner's sample
+    # file, the record carried the command, and GitHub refused the push.
+    real, made_up = sample_github_token(), "ghp" + "_" + "x9" * 18
+    leak = f"printf 'github_token = {real}\\n' > leak.txt && evnx scan leak.txt"
+    fine = f"printf 'github_token = {made_up}\\n' > leak.txt && evnx --version"
+    box = FakeBox({**EVNX_BOX, fine: (0, "evnx 0.10.18", "")})
+    version = {"setup_ids": [], "expected_signal": "0.10.18", "expected_exit_code": 0, "observed_excerpt": ""}
+    server = FakeServer(
+        response("r1", run_cmd("pipx install evnx")),
+        response("r2", run_cmd(leak)),
+        response("r3", run_cmd(fine)),
+        response("r4", finish(level="install", steps=[1], smoke=[{**version, "command_id": 2}])),
+    )
+    a = agent(task, box, server, ledger, tmp_path)
+    report = a.run()
+    told = server.requests[2]["input"][-1]["output"]
+    assert told.startswith("error: not run. The command holds a string with the form and checksum of a real GitHub token")
+    assert real not in told and not any(real in line for line in a.lines)
+    assert not any(real in command for command, _ in box.ran)
+    assert [c.command for c in report.commands if c.tool == "run_command"] == ["pipx install evnx", fine]
+    assert "  run_command refused: the command holds a real-format GitHub token" in a.lines
+    assert report.verdict["level"] == "install"  # the made-up one ran as command 2: no budget was used
+    assert "make up random characters of your own" in a.instructions
+
+
 def test_the_prompt_states_the_record_rules_up_front(task, ledger, tmp_path):
     a = agent(task, FakeBox(EVNX_BOX), FakeServer(), ledger, tmp_path)
     assert "one command of at most 500 characters" in a.instructions

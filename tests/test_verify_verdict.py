@@ -14,6 +14,7 @@ from pickfit.verify.verdict import (
     log_verdict,
     masked_exit,
     masked_exits,
+    real_credentials,
     modified_copy,
     split_last,
     uncitable,
@@ -315,6 +316,17 @@ def test_every_fault_of_a_command_is_named_at_once():
     tests[1]["setup_ids"] = [2]
     verdict = log_verdict(claim("function", [1], tests), log)
     assert verdict.level == "function" and verdict.problems == []
+
+
+def test_only_a_token_with_the_right_checksum_is_a_real_credential():
+    from test_verify_agent import sample_github_token
+
+    real = sample_github_token()
+    assert real_credentials(f"echo 'token = {real}' > leak.txt") == ["GitHub token"]
+    assert real_credentials("ghs" + real[3:]) == ["GitHub token"]  # the checksum covers the body, not the prefix
+    assert real_credentials("echo 'token = " + "ghp" + "_" + "x9" * 18 + "'") == []  # made up: no valid checksum
+    assert real_credentials(real[:-1] + ("0" if real[-1] != "0" else "1")) == []
+    assert real_credentials("pipx install evnx") == []
 
 
 def test_a_loop_or_a_long_command_is_not_citable_and_says_why():

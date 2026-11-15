@@ -54,7 +54,7 @@ from pickfit.verify.rules import RuleHit, error_signature, match_rules
 from pickfit.verify.mcp import GUIDE as MCP_GUIDE
 from pickfit.verify.mcp import is_mcp
 from pickfit.verify.task import ReportedFailure, VerifyTask, guide_name, prepare_box
-from pickfit.verify.verdict import LogVerdict, log_verdict, uncitable, unmasked
+from pickfit.verify.verdict import LogVerdict, log_verdict, real_credentials, uncitable, unmasked
 
 HistoryMode = Literal["chain", "replay"]
 DEFAULT_MODE: HistoryMode = "replay"
@@ -460,6 +460,9 @@ with the reason instead.
 fetched it. Never edit the tool's code (sed -i, patch, rewritten files) or install from a copy no install step \
 fetched; such a run cannot pass. If the tool only works patched, record the fix as a pitfall and finish unverified.
 - After a failed command, hints from pickfit's rule table may follow. They can be wrong.
+- pickfit publishes every command it records. When a check needs a sample secret (a key, token or password \
+for a secret scanner to find), make up random characters of your own; never write one you remember from \
+documentation, a test suite or the web, which may be a real credential.
 """
 
 GUI_RULES = """\
@@ -1136,6 +1139,13 @@ class VerifyAgent:
             raw = call.json_arguments()
             if not isinstance(raw, dict):
                 raise ValueError("arguments must be a JSON object")
+            kinds = real_credentials(str(raw.get("command") or ""))
+            if kinds:  # never run, so never recorded, cited or published; the value itself is not logged
+                self._say(f"  {call.name} refused: the command holds a real-format {kinds[0]}")
+                return (f"error: not run. The command holds a string with the form and checksum of a real "
+                        f"{kinds[0]}, and pickfit publishes every command it records. For a sample secret, make "
+                        "up random characters of your own; never write one you remember from documentation, a "
+                        "test suite or the web. This used none of your command budget.")
             if call.name == "list_dir":
                 return self._list_dir(_ListDirArgs.model_validate(raw), turn)
             if call.name == "read_file":
