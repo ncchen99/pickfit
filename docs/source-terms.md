@@ -156,3 +156,19 @@
   - **手動改過的紀錄（11/4 複查時補記）**：最後 5 款 macOS App 原本沒有重跑驗證 agent，而是用一支臨時腳本把先前 run 的紀錄直接拿去乾淨 VM 重播、判讀、寫回。其中 gifski 的第 3、4 步在重播前被手動改寫（拿掉 agent 串在後面的 `ls -R`、`plutil -p … | grep` 等探查命令）；itsycal、keepingyouawake 的紀錄被改成「有視窗」，但重播仍然失敗，沒有寫回。念誠 11/4 決定不採用改過的結果：gifski 先退回未驗證，再用正常流程重跑（`verify-gifski-20261104-182809-8837`，不改任何紀錄），agent 自己裝好、乾淨 VM 重播通過、截圖判讀 working，等級 install，上面的數字不變。（中間還有一次重跑 `182100-53d8` 也通過，但它的本機證據在清理 worktree 時被誤刪，所以再跑一次。）改過的紀錄只留在本機的 `runs/verify/`（不進 repo）；playcover、alacritty 只是重播、沒有改紀錄。
   - 花費：OpenRouter 約 \$5.5、Modal 沙盒 < \$1，其餘留給線上 Demo。
 - **功能驗證重跑（11/4–5，念誠決定）**：上面的分級策略到此取消。87 款改用 Muse Spark 1.3 當驗證 agent 重跑，較弱的通過不覆蓋較強的：`function` 51、`service` 4、`inference` 1、`install` 24、未驗證 7；40 款至少一項功能通過。花費 OpenRouter 約 \$15.7（含最後的視覺檢查），Modal 模型端點 11/4 起約 \$25（含前面用 Muse Spark Open 試跑的部分）。沒有重跑的 5 款（monitorcontrol、boring-notch、lulu、backgroundmusic、iglance）需要特殊硬體或 root。
+
+## 賽後第一批候選清單（規則 `post-hackathon-candidates.v1`）
+
+2026-11-16 00:25（台北）登記，**在這一批的任何搜尋與模型呼叫之前 commit**。清單是念誠 11/15 整理的 [`docs/discovery/post-hackathon-candidates-v1.md`](discovery/post-hackathon-candidates-v1.md)；機器可讀的版本與每一筆的結果在 [`docs/discovery/post-hackathon-candidates-v1.json`](discovery/post-hackathon-candidates-v1.json)（由 `scripts/ingest_candidates.py` 產生）。
+
+為什麼：黑客松結束後的方針（[plan.md](plan.md) 第 8 節）是先擴大 Linux／CLI／TUI、MCP server 與網頁應用，因為這三類在 Linux 沙盒裡驗得出來，不必靠 Mac 或 Windows 實機。這一批是社群常推薦的知名工具，不是冷門工具；知名度分數照既有公式算，不另外調整。
+
+規則：
+
+1. **範圍就是清單**。清單第 3 節（CLI／TUI）、第 4 節（MCP server）、第 5 節（網頁應用與自架 Web 工具）的表格共 118 列，照清單的順序處理，不另外加、不另外刪。
+2. **去重**。先用 repo 全名與網站網址比對 `data/software/` 既有的 1,058 筆；跑的時候再用 GitHub 的 repo id 比一次（改過名的 repo 也擋得住）。已經有紀錄的跳過。
+3. **一個 repo 一筆紀錄**。`modelcontextprotocol/servers` 底下的 7 個參考實作（Fetch、SQLite、Git、Sequential Thinking、Filesystem、Memory、Time）在清單裡各占一列，但同一個 repo 只能有一筆紀錄，所以只跑一次。清單只寫套件名、沒寫 repo 的（Puppeteer MCP）不處理。
+4. **有 repo 的照單筆提交的流程**（52 個 CLI／TUI、27 個 MCP、14 個自架 Web 工具，共 93 個 repo）：GitHub 詳情 → 規則（`rules.py`）→ 初篩 → 抽取 → 寫紀錄 → Modal gVisor 沙盒驗證（agent、乾淨沙盒重播、判讀）→ 計分 → OSV 漏洞檢查，和 `pickfit watch` 處理使用者提交的 repo 是同一段程式。佇列用本機的 SQLite（`SqliteD1`，同一份 migrations），不讀寫線上的 D1，也不發布 Worker。沒過規則、初篩判定不是軟體的，照平常的規則不寫紀錄。
+5. **只有網址的網頁應用照網頁應用的規則**（18 個）：每站只抓 robots.txt、首頁、一頁使用條款；robots.txt 不讓 pickfit 抓、或條款禁止自動化存取的不收（上面「網頁應用（P2.8）」一節的規則 4–8）。通過後由模型初篩、抽取、寫紀錄，再由 `web_verify` 在 Modal microVM 裡開瀏覽器實測，每站只造訪一次。唯一不套用的是規則 3 的人氣區間（中間一半）：那是為了從一大批站裡取樣，這一批是念誠指定的知名網站。
+6. **模型**：初篩 `claude-haiku-5-5`；初篩複查、抽取、驗證 agent、判讀、計分、網頁操作 `claude-opus-5-5`（Anthropic API）。每筆紀錄記下各段用的模型，花費記在帳本的 `pipeline` 預算。
+7. **指令**：`uv run python scripts/ingest_candidates.py list`（解析與去重）、`repos`（有 repo 的）、`web`（網站的規則與初篩）、`results`（把每一筆的結果寫回 JSON）。
