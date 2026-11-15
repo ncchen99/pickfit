@@ -327,7 +327,12 @@ def cmd_results(args: argparse.Namespace) -> int:
         elif job:
             result = {"outcome": job.get("result") or "not_finished", "why": job.get("reason")}
         elif e["flow"] == "web" and webapps.site_key(e["url"]) in sites:
-            result = {"outcome": "no_record", "why": sites[webapps.site_key(e["url"])]["outcome"]}
+            outcome = sites[webapps.site_key(e["url"])]["outcome"]
+            # A site that passed the rules and still has no record: webrecords skipped it (its log says why;
+            # for this batch the extraction could quote nothing that says the page is a web app).
+            result = {"outcome": "no_record",
+                      "why": "passed the rules; no record written (kind not stated in the sources)"
+                      if outcome == "selected" else outcome}
         else:
             result = None
         if job and result is not None:
