@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { findSoftware, type FindInput } from '../src/find.ts';
-import { MATCH_MODEL } from '../src/meta.ts';
-import { answer, harness, metaResponse } from './helpers.ts';
+import { costUsd, estimateCostUsd, MATCH_MODEL } from '../src/meta.ts';
+import { MATCH_INSTRUCTIONS } from '../src/prompt.ts';
+import { answer, harness, modelResponse } from './helpers.ts';
 
 const MAC_OFFLINE: FindInput = {
   need: '我想要一個 Mac 上、免費、能離線跑本地 LLM 的工具 (secret-project-xyz)',
@@ -11,8 +12,8 @@ const MAC_OFFLINE: FindInput = {
   must_run_locally: true,
 };
 
-test('model path: picks come from muse-spark-1.3 and are checked against the cards', async () => {
-  const h = harness(() => metaResponse(answer()));
+test('model path: picks come from claude-opus-5-5 and are checked against the cards', async () => {
+  const h = harness(() => modelResponse(answer()));
   const out = await findSoftware(MAC_OFFLINE, h.deps);
   await h.settle();
 
@@ -29,7 +30,7 @@ test('model path: picks come from muse-spark-1.3 and are checked against the car
   assert.equal(runner.verification.method, 'human');
   assert.equal(runner.verification.verified_on_user_os, true);
   assert.match(runner.how_we_know, /installed it by hand on macos\/arm64/);
-  assert.match(runner.how_we_know, /Chosen by muse-spark-1\.3 among 5 tools/);
+  assert.match(runner.how_we_know, /Chosen by claude-opus-5-5 among 5 tools/);
   assert.equal(runner.evidence_url, 'https://example.invalid/runs/run-20261028-macos-1');
   assert.deepEqual(runner.scores, { quality: 84, popularity: 12, treasure: true });
   // Verified only on Linux: the response says so even though the model did not.
@@ -38,31 +39,124 @@ test('model path: picks come from muse-spark-1.3 and are checked against the car
   assert.deepEqual(out.best_free, { slug: 'fixture-llm-runner', reason: 'Free, open source and runs offline.' });
 });
 
-test('the request uses muse-spark-1.3, store false, low effort and a strict schema limited to the candidates', async () => {
-  const h = harness(() => metaResponse(answer()));
+test('the request is an Anthropic Messages call: claude-opus-5-5, low effort and a JSON schema limited to the candidates', async () => {
+  const h = harness(() => modelResponse(answer()));
   await findSoftware(MAC_OFFLINE, h.deps);
   assert.equal(h.requests.length, 1);
   const { url, init, body } = h.requests[0];
-  assert.equal(url, 'https://api.meta.ai/v1/responses');
-  assert.equal((init.headers as Record<string, string>).authorization, 'Bearer test-key');
-  assert.equal(body.model, 'muse-spark-1.3');
-  assert.equal(body.store, false);
-  assert.deepEqual(body.reasoning, { effort: 'low' });
-  assert.equal(body.text.format.type, 'json_schema');
-  assert.equal(body.text.format.strict, true);
-  const slugEnum = body.text.format.schema.properties.picks.items.properties.slug.enum;
-  assert.deepEqual(slugEnum, ['fixture-chat-tui', 'fixture-json-query', 'fixture-llm-runner', 'fixture-transcribe', 'fixture-web-sketch']);
-  // The user's words go to the model inside <request>, as data.
-  assert.match(body.input[1].content, /<request>\n.*secret-project-xyz.*\n<\/request>/);
+  assert.equal(url, 'https://api.anthropic.com/v1/messages');
+  const headers = new Headers(init.headers);
+  assert.equal(headers.get('x-api-key'), 'test-key');
+  assert.equal(headers.get('anthropic-version'), '2026-10-21');
+  assert.equal(headers.get('content-type'), 'application/json');
+  assert.equal(headers.get('authorization'), null);
+  assert.equal(body.model, 'claude-opus-5-5');
+  // Exactly these fields: no sampling parameters, no thinking setting (this model rejects both), no forced tool.
+  assert.deepEqual(Object.keys(body).sort(), ['max_tokens', 'messages', 'model', 'output_config', 'system']);
+  assert.equal(body.max_tokens, 8000);
+  assert.equal(body.system, MATCH_INSTRUCTIONS.replace('{limit}', '3'));
+  assert.deepEqual(Object.keys(body.output_config).sort(), ['effort', 'format']);
+  assert.equal(body.output_config.effort, 'low');
+  assert.deepEqual(Object.keys(body.output_config.format).sort(), ['schema', 'type']);
+  assert.equal(body.output_config.format.type, 'json_schema');
+  const schema = body.output_config.format.schema;
+  assert.deepEqual(schema.properties.picks.items.properties.slug.enum, ['fixture-chat-tui', 'fixture-json-query', 'fixture-llm-runner', 'fixture-transcribe', 'fixture-web-sketch']);
+  // A nullable field is anyOf with null, and every object is closed: what the API's JSON outputs accept.
+  assert.deepEqual(schema.properties.best_free_slug.anyOf[1], { type: 'null' });
+  assert.deepEqual(schema.properties.need.properties.os, { anyOf: [{ type: 'string', enum: ['macos', 'linux', 'windows'] }, { type: 'null' }] });
+  const open: string[] = [];
+  const walk = (node: any, path: string) => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node.type)) open.push(`${path}: type list`);
+    if (node.type === 'object' && node.additionalProperties !== false) open.push(`${path}: open object`);
+    for (const [key, value] of Object.entries(node)) walk(value, `${path}/${key}`);
+  };
+  walk(schema, '');
+  assert.deepEqual(open, []);
+  // One user message; the user's words go to the model inside <request>, as data.
+  assert.equal(body.messages.length, 1);
+  assert.equal(body.messages[0].role, 'user');
+  assert.match(body.messages[0].content, /<request>\n.*secret-project-xyz.*\n<\/request>/);
+});
+
+test('the answer is read by block type: thinking first, several text blocks, or text alone', async () => {
+  const text = JSON.stringify(answer());
+  for (const content of [
+    [{ type: 'thinking', thinking: '', signature: 's' }, { type: 'thinking', thinking: 'summary', signature: 's' }, { type: 'text', text }],
+    [{ type: 'text', text: text.slice(0, 40) }, { type: 'text', text: text.slice(40) }],
+    [{ type: 'text', text }],
+  ]) {
+    const h = harness(() => modelResponse(null, { content }));
+    const out = await findSoftware(MAC_OFFLINE, h.deps);
+    assert.equal(out.matched_by, MATCH_MODEL);
+    assert.deepEqual(out.picks.map((p) => p.slug), ['fixture-llm-runner', 'fixture-chat-tui']);
+  }
+});
+
+test('stop_reason is read before the content: a refusal or a cut-off answer is not an answer', async () => {
+  for (const [opts, reason] of [
+    [{ stop_reason: 'refusal', stop_details: { type: 'refusal', category: 'cyber', explanation: 'x' } }, 'model_refused'],
+    [{ stop_reason: 'refusal', stop_details: null, content: [] }, 'model_refused'], // declined before any output
+    [{ stop_reason: 'max_tokens' }, 'model_incomplete'], // the text is there but cut off
+    [{ stop_reason: 'max_tokens', content: [{ type: 'thinking', thinking: '', signature: 's' }] }, 'model_incomplete'], // thinking used the limit
+    [{ stop_reason: 'tool_use' }, 'model_incomplete'],
+    [{ stop_reason: null }, 'model_incomplete'],
+    [{ content: [{ type: 'thinking', thinking: '', signature: 's' }] }, 'model_no_output'], // ended with no text block
+    [{ usage: null }, 'model_no_output'],
+  ] as const) {
+    const h = harness(() => modelResponse(answer(), opts as any));
+    const out = await findSoftware(MAC_OFFLINE, h.deps);
+    await h.settle();
+    assert.equal(out.matched_by, 'rules', reason);
+    assert.equal(out.degraded_reason, reason, JSON.stringify(opts));
+    assert.equal(out.model_attempts, 1, reason); // an answer, even a refused one, is never retried
+    assert.ok(out.picks.length > 0, reason);
+    const spent = (h.sqlite.prepare('SELECT cost_usd FROM meta_budget').get() as any).cost_usd;
+    assert.ok(spent > 0, `${reason}: what came back is still recorded as spend`);
+  }
+});
+
+test('token cost: uncached input, cache reads, cache writes and output each at their own rate', () => {
+  const near = (a: number, b: number) => assert.ok(Math.abs(a - b) < 1e-12, `${a} vs ${b}`);
+  // $4 input, $0.20 cache read, $5 cache write (1.25 x input), $20 output per million tokens.
+  near(costUsd({ input_tokens: 1_000_000, cached_tokens: 0, cache_write_tokens: 0, output_tokens: 0 }), 4);
+  near(costUsd({ input_tokens: 1_000_000, cached_tokens: 1_000_000, cache_write_tokens: 0, output_tokens: 0 }), 0.2);
+  near(costUsd({ input_tokens: 1_000_000, cached_tokens: 0, cache_write_tokens: 1_000_000, output_tokens: 0 }), 5);
+  near(costUsd({ input_tokens: 0, cached_tokens: 0, cache_write_tokens: 0, output_tokens: 1_000_000 }), 20);
+  near(costUsd({ input_tokens: 3500, cached_tokens: 1000, cache_write_tokens: 500, output_tokens: 800 }), (2000 * 4 + 1000 * 0.2 + 500 * 5 + 800 * 20) / 1e6);
+  // The upper bound for a request that never answers: 3 characters a token, every output token used.
+  near(estimateCostUsd(30_000, 1000), (10_000 * 4 + 1000 * 20) / 1e6);
+});
+
+test("the API's usage is summed into one input count, and each part is billed and logged", async () => {
+  const usage = { input_tokens: 2000, cache_creation_input_tokens: 500, cache_read_input_tokens: 1000, output_tokens: 800 };
+  const h = harness(() => modelResponse(answer(), { usage }));
+  const lines: string[] = [];
+  const original = console.log;
+  console.log = (line: string) => void lines.push(line);
+  try {
+    await findSoftware(MAC_OFFLINE, h.deps);
+  } finally {
+    console.log = original;
+  }
+  await h.settle();
+  const logged = lines.map((line) => JSON.parse(line)).find((e) => e.event === 'meta_call');
+  assert.deepEqual(
+    [logged.model, logged.input_tokens, logged.cached_tokens, logged.cache_write_tokens, logged.output_tokens],
+    ['claude-opus-5-5', 3500, 1000, 500, 800],
+  );
+  const expected = (2000 * 4 + 1000 * 0.2 + 500 * 5 + 800 * 20) / 1e6;
+  assert.ok(Math.abs(logged.cost_usd - expected) < 1e-12);
+  assert.ok(Math.abs((h.sqlite.prepare('SELECT cost_usd FROM meta_budget').get() as any).cost_usd - expected) < 1e-12);
 });
 
 test('D1 keeps parsed conditions and spend, never the request text', async () => {
-  const h = harness(() => metaResponse(answer()));
+  const h = harness(() => modelResponse(answer()));
   const out = await findSoftware(MAC_OFFLINE, h.deps);
   await h.settle();
   const row = h.sqlite.prepare('SELECT * FROM events WHERE type = ?').get('find') as any;
   assert.equal(row.rec_id, out.rec_id);
-  assert.equal(row.matched_by, 'muse-spark-1.3');
+  assert.equal(row.matched_by, 'claude-opus-5-5');
   assert.equal(row.degraded, 0);
   assert.deepEqual(JSON.parse(row.results), ['fixture-llm-runner', 'fixture-chat-tui']);
   const need = JSON.parse(row.need);
@@ -71,8 +165,8 @@ test('D1 keeps parsed conditions and spend, never the request text', async () =>
   const everything = JSON.stringify(h.sqlite.prepare('SELECT * FROM events').all());
   assert.ok(!everything.includes('secret-project-xyz'));
   assert.ok(!everything.includes('本地'));
-  // 2000 uncached input, 1000 cached, 800 output tokens at muse-spark-1.3 prices.
-  const expected = (2000 * 1.25 + 1000 * 0.15 + 800 * 4.25) / 1e6;
+  // 2000 uncached input, 1000 read from the cache, 800 output tokens at claude-opus-5-5 prices.
+  const expected = (2000 * 4 + 1000 * 0.2 + 800 * 20) / 1e6;
   const budget = h.sqlite.prepare('SELECT * FROM meta_budget').get() as any;
   assert.equal(budget.day, '2026-10-30');
   assert.equal(budget.calls, 1);
@@ -82,7 +176,7 @@ test('D1 keeps parsed conditions and spend, never the request text', async () =>
 
 test('guard drops reasons that do not match their field and picks left without reasons', async () => {
   const h = harness(() =>
-    metaResponse(
+    modelResponse(
       answer({
         picks: [
           {
@@ -123,7 +217,7 @@ test('guard drops reasons that do not match their field and picks left without r
 
 test('a fit sentence that contradicts the card is replaced by the summary', async () => {
   const h = harness(() =>
-    metaResponse(
+    modelResponse(
       answer({
         picks: [
           {
@@ -153,7 +247,7 @@ test('every pick rejected by the guard falls back to rules', async () => {
       },
     ],
   });
-  const h = harness(() => metaResponse(bad));
+  const h = harness(() => modelResponse(bad));
   const out = await findSoftware(MAC_OFFLINE, h.deps);
   await h.settle();
   assert.equal(out.matched_by, 'rules');
@@ -166,9 +260,9 @@ test('every pick rejected by the guard falls back to rules', async () => {
 
 const failures: [string, () => Response | Promise<Response>, string][] = [
   ['HTTP 500', () => Response.json({ error: { code: 'internal' } }, { status: 500 }), 'model_http'],
-  ['incomplete answer', () => metaResponse(answer(), { status: 'incomplete' }), 'model_incomplete'],
-  ['not JSON', () => metaResponse('this is not json'), 'model_bad_output'],
-  ['wrong shape', () => metaResponse({ picks: 'none' }), 'model_bad_output'],
+  ['incomplete answer', () => modelResponse(answer(), { stop_reason: 'max_tokens' }), 'model_incomplete'],
+  ['not JSON', () => modelResponse('this is not json'), 'model_bad_output'],
+  ['wrong shape', () => modelResponse({ picks: 'none' }), 'model_bad_output'],
 ];
 for (const [label, fake, reason] of failures) {
   test(`model failure (${label}) degrades to rules`, async () => {
@@ -203,7 +297,7 @@ test('a timeout degrades to rules and charges the worst-case cost', async () => 
   assert.ok(budget.cost_usd > 0.01);
 });
 
-test('MATCH_MODE off and a missing key never call Meta', async () => {
+test('MATCH_MODE off and a missing key never call the model', async () => {
   for (const [settings, reason] of [
     [{ modelEnabled: false }, 'model_off'],
     [{ apiKey: null }, 'no_api_key'],
@@ -218,12 +312,55 @@ test('MATCH_MODE off and a missing key never call Meta', async () => {
   }
 });
 
-test('the daily cap and the total cap stop the model call', async () => {
-  for (const rows of [
-    [['2026-10-30', 2.99]], // today is nearly at $3
-    [['2026-10-20', 20], ['2026-10-25', 19.99]], // $40 total reached on earlier days
-  ]) {
-    const h = harness(null);
+const SPENT_ROWS = [
+  [['2026-10-30', 2.99]], // today is nearly at $3
+  [['2026-10-20', 20], ['2026-10-25', 19.99]], // $40 in all, reached on earlier days
+] as const;
+
+test('with no cap set, recorded spend never stops the model call: it is only recorded', async () => {
+  for (const rows of [...SPENT_ROWS, [['2026-10-30', 5000]]] as const) {
+    const h = harness(() => modelResponse(answer())); // the defaults: dailyCapUsd and totalCapUsd null
+    for (const [day, cost] of rows) {
+      h.sqlite.prepare('INSERT INTO meta_budget (day, calls, cost_usd) VALUES (?, 1, ?)').run(day, cost);
+    }
+    const before = (h.sqlite.prepare('SELECT SUM(cost_usd) AS usd, SUM(calls) AS calls FROM meta_budget').get() as any);
+    const out = await findSoftware(MAC_OFFLINE, h.deps);
+    await h.settle();
+    assert.equal(h.requests.length, 1);
+    assert.equal(out.matched_by, MATCH_MODEL);
+    assert.equal(out.degraded, false);
+    const after = (h.sqlite.prepare('SELECT SUM(cost_usd) AS usd, SUM(calls) AS calls FROM meta_budget').get() as any);
+    assert.equal(after.calls, before.calls + 1);
+    assert.ok(after.usd > before.usd);
+  }
+});
+
+test('with no cap set, a D1 that cannot be read does not turn the model off', async () => {
+  const h = harness(() => modelResponse(answer()));
+  h.sqlite.exec('DROP TABLE meta_budget');
+  const errors: string[] = [];
+  const original = console.error;
+  console.error = (line: string) => void errors.push(line);
+  try {
+    const out = await findSoftware(MAC_OFFLINE, h.deps);
+    await h.settle();
+    assert.equal(out.matched_by, MATCH_MODEL);
+    assert.equal(out.degraded, false);
+  } finally {
+    console.error = original;
+  }
+  // The spend could not be written, and that is logged rather than hidden.
+  assert.ok(errors.some((line) => JSON.parse(line).what === 'meta_budget'));
+});
+
+test('an opt-in daily cap or total cap stops the model call', async () => {
+  for (const [rows, caps] of [
+    [SPENT_ROWS[0], { dailyCapUsd: 3, totalCapUsd: null }],
+    [SPENT_ROWS[1], { dailyCapUsd: null, totalCapUsd: 40 }],
+    [SPENT_ROWS[0], { dailyCapUsd: 3, totalCapUsd: 40 }],
+    [[], { dailyCapUsd: 0, totalCapUsd: null }], // a cap of 0 is a stop, not "no cap"
+  ] as const) {
+    const h = harness(null, caps);
     for (const [day, cost] of rows) {
       h.sqlite.prepare('INSERT INTO meta_budget (day, calls, cost_usd) VALUES (?, 1, ?)').run(day, cost);
     }
@@ -232,6 +369,25 @@ test('the daily cap and the total cap stop the model call', async () => {
     assert.equal(out.degraded_reason, 'over_budget');
     assert.equal(out.matched_by, 'rules');
   }
+  // Each cap looks only at its own sum: $2.99 today is under a $40 total, and $39.99 on earlier days is under $3 a day.
+  for (const [rows, caps] of [
+    [SPENT_ROWS[0], { dailyCapUsd: null, totalCapUsd: 40 }],
+    [SPENT_ROWS[1], { dailyCapUsd: 3, totalCapUsd: null }],
+  ] as const) {
+    const h = harness(() => modelResponse(answer()), caps);
+    for (const [day, cost] of rows) {
+      h.sqlite.prepare('INSERT INTO meta_budget (day, calls, cost_usd) VALUES (?, 1, ?)').run(day, cost);
+    }
+    assert.equal((await findSoftware(MAC_OFFLINE, h.deps)).matched_by, MATCH_MODEL);
+  }
+});
+
+test('with a cap set, a D1 that cannot be read stops the model call: spend that cannot be counted is not spent', async () => {
+  const h = harness(null, { dailyCapUsd: 3 });
+  h.sqlite.exec('DROP TABLE meta_budget');
+  const out = await findSoftware(MAC_OFFLINE, h.deps);
+  assert.equal(out.degraded_reason, 'budget_unavailable');
+  assert.equal(out.matched_by, 'rules');
 });
 
 test('rules ranking puts request keywords and verification on the user OS first', async () => {
@@ -268,7 +424,7 @@ test('no candidate after the hard filters: no model call, an honest note', async
 });
 
 test('the model may honestly answer that nothing fits', async () => {
-  const h = harness(() => metaResponse(answer({ picks: [], best_free_slug: null })));
+  const h = harness(() => modelResponse(answer({ picks: [], best_free_slug: null })));
   const out = await findSoftware({ need: 'edit videos with a timeline', os: 'linux' }, h.deps);
   assert.equal(out.matched_by, MATCH_MODEL);
   assert.deepEqual(out.picks, []);
@@ -276,7 +432,7 @@ test('the model may honestly answer that nothing fits', async () => {
 });
 
 test('best_free must be a free candidate', async () => {
-  const h = harness(() => metaResponse(answer({ best_free_slug: 'fixture-cloud-summarize' })));
+  const h = harness(() => modelResponse(answer({ best_free_slug: 'fixture-cloud-summarize' })));
   const out = await findSoftware({ need: 'summarize a git diff', os: 'linux' }, h.deps);
   assert.equal(out.best_free, null);
 });

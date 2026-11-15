@@ -1,34 +1,36 @@
 /**
- * The Worker's model calls: Meta Responses API, muse-spark-1.3 (the match
- * call, and English keywords when the shortlist must cut, expand.ts).
+ * The Worker's model calls: Claude through the Anthropic Messages API (the
+ * match call, and English keywords when the shortlist must cut, expand.ts).
  *
- * User requests are private, so the model is fixed here: never the
- * -contributor models (their inputs may be used for training), and
- * store: false so Meta keeps no copy of the request.
+ * The model is fixed here, one constant with its price beside it. The file
+ * keeps its first name, and so do the D1 table (meta_budget), the events
+ * column (meta_cost_usd) and the log events (meta_call, meta_retry): until
+ * 2026-11-15 these calls went to Meta's muse-spark-1.3.
  */
 
-export const META_BASE_URL = 'https://api.meta.ai/v1';
-export const MATCH_MODEL = 'muse-spark-1.3';
+export const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
+export const ANTHROPIC_VERSION = '2026-10-21';
+export const MATCH_MODEL = 'claude-opus-5-5';
 /**
- * META_VIA=openrouter (11/3: Meta's API answered the team's key with 402 billing errors): the same model through
- * OpenRouter's Responses API, with Meta as the only provider it may use and none that collects data. The request
- * is otherwise unchanged; the cost is what OpenRouter reports (it lists no cached-input price).
+ * USD per 1M tokens for MATCH_MODEL (same table as pickfit/meta.py). cacheWrite is the 5-minute prompt
+ * cache, 1.25 times input. To change the model, change MATCH_MODEL and this together.
  */
-export const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
-const OPENROUTER_MODEL = 'meta/muse-spark-1.3';
-const OPENROUTER_PIN = { order: ['meta'], allow_fallbacks: false, data_collection: 'deny' };
-/** USD per 1M tokens for MATCH_MODEL (same table as pickfit/meta.py). */
-const PRICE = { input: 1.25, cached: 0.15, output: 4.25 };
-export const MAX_OUTPUT_TOKENS = 4000;
+const PRICE = { input: 4.0, cacheRead: 0.2, cacheWrite: 5.0, output: 20.0 };
+/** Thinking is always on for this model and shares the limit with the answer (a match answer is about 1,000 tokens). */
+export const MAX_OUTPUT_TOKENS = 8000;
 
 export interface Usage {
+  /** Every input token: uncached, written to the prompt cache and read from it. */
   input_tokens: number;
+  /** Of input_tokens, those read from the prompt cache. */
   cached_tokens: number;
+  /** Of input_tokens, those written to the prompt cache. */
+  cache_write_tokens: number;
+  /** Thinking included; the API does not count it apart. */
   output_tokens: number;
-  reasoning_tokens: number;
 }
 
-export interface MetaResult {
+export interface ModelResult {
   text: string;
   usage: Usage;
   /** All requests this call sent; an HTTP error costs nothing. */
@@ -38,29 +40,30 @@ export interface MetaResult {
   statuses: (number | null)[];
 }
 
-export type MetaFailure = 'http' | 'timeout' | 'network' | 'incomplete' | 'no_output';
+/** refused: the API's safety classifiers, or the model, declined (stop_reason "refusal"). */
+export type ModelFailure = 'http' | 'timeout' | 'network' | 'incomplete' | 'refused' | 'no_output';
 
 interface FailureDetail {
   costUsd?: number;
-  /** The HTTP status Meta returned; null for a timeout or a request that never got a response. */
+  /** The HTTP status the API returned; null for a timeout or a request that never got a response. */
   status?: number | null;
   /** Worth one retry: see isTransient. */
   transient?: boolean;
-  /** How long Meta asked us to wait (Retry-After), when it said. */
+  /** How long the API asked us to wait (Retry-After), when it said. */
   retryAfterMs?: number | null;
   statuses?: (number | null)[];
 }
 
-export class MetaCallError extends Error {
-  readonly kind: MetaFailure;
-  /** What the failed call may have cost; charged to the budget. */
+export class ModelCallError extends Error {
+  readonly kind: ModelFailure;
+  /** What the failed call may have cost; recorded as spend. */
   readonly costUsd: number;
   readonly status: number | null;
   readonly transient: boolean;
   readonly retryAfterMs: number | null;
   /** HTTP status of each request sent (null where none came back), in order. */
   readonly statuses: (number | null)[];
-  constructor(kind: MetaFailure, message: string, detail: FailureDetail = {}) {
+  constructor(kind: ModelFailure, message: string, detail: FailureDetail = {}) {
     super(message);
     this.kind = kind;
     this.costUsd = detail.costUsd ?? 0;
@@ -71,19 +74,16 @@ export class MetaCallError extends Error {
   }
 }
 
-/** No retry with less than this left of the timeout: a match call takes 6-8 s, and a retry that times out is still charged. */
+/** No retry with less than this left of the timeout: a retry that times out is still charged. */
 const RETRY_MIN_LEFT_MS = 10_000;
 /** Honor Retry-After up to this; asked to wait longer, degrade now. */
 const RETRY_AFTER_MAX_MS = 5_000;
-/** Jittered wait before the retry when Meta gives no Retry-After. */
+/** Jittered wait before the retry when the API gives no Retry-After. */
 const BACKOFF_MS = [200, 800] as const;
 
-/** A 404 that says the model is missing: Meta returned this for muse-spark-1.3, on and off, on 2026-10-29. */
-const MODEL_NOT_FOUND = /model_not_found|\bmodel\b[^\n]{0,80}\b(?:not found|does not exist)/i;
-
-/** Rate limits, server errors, and a 404 that says the model is missing (it came back minutes later). */
-export function isTransient(status: number, body: string): boolean {
-  return status === 429 || (status >= 500 && status <= 599) || (status === 404 && MODEL_NOT_FOUND.test(body));
+/** Rate limits and server errors (529 "overloaded" included). A 404 here is a wrong model id, which a retry cannot fix. */
+export function isTransient(status: number): boolean {
+  return status === 429 || (status >= 500 && status <= 599);
 }
 
 /** Milliseconds from `retry-after-ms`, else `retry-after` (seconds or an HTTP date); null when absent. */
@@ -99,8 +99,12 @@ export function retryAfterMs(headers: Headers, nowMs: number): number | null {
 
 export function costUsd(usage: Usage): number {
   const cached = Math.min(usage.cached_tokens, usage.input_tokens);
+  const written = Math.min(usage.cache_write_tokens, usage.input_tokens - cached);
   return (
-    ((usage.input_tokens - cached) * PRICE.input + cached * PRICE.cached + usage.output_tokens * PRICE.output) /
+    ((usage.input_tokens - cached - written) * PRICE.input +
+      cached * PRICE.cacheRead +
+      written * PRICE.cacheWrite +
+      usage.output_tokens * PRICE.output) /
     1_000_000
   );
 }
@@ -110,24 +114,25 @@ export function estimateCostUsd(requestChars: number, maxOutputTokens = MAX_OUTP
   return ((requestChars / 3) * PRICE.input + maxOutputTokens * PRICE.output) / 1_000_000;
 }
 
+/** The API reports uncached, cache-written and cache-read input apart; Usage.input_tokens is their sum. */
 function readUsage(raw: any): Usage | null {
   const u = raw?.usage;
   if (!u || typeof u.input_tokens !== 'number') return null;
+  const cached = u.cache_read_input_tokens ?? 0;
+  const written = u.cache_creation_input_tokens ?? 0;
   return {
-    input_tokens: u.input_tokens,
-    cached_tokens: u.input_tokens_details?.cached_tokens ?? 0,
+    input_tokens: u.input_tokens + cached + written,
+    cached_tokens: cached,
+    cache_write_tokens: written,
     output_tokens: u.output_tokens ?? 0,
-    reasoning_tokens: u.output_tokens_details?.reasoning_tokens ?? 0,
   };
 }
 
+/** The answer is in the text blocks; thinking blocks may come first and are skipped. */
 function outputText(raw: any): string | null {
   const parts: string[] = [];
-  for (const item of raw?.output ?? []) {
-    if (item?.type !== 'message') continue;
-    for (const part of item.content ?? []) {
-      if (part?.type === 'output_text' && typeof part.text === 'string') parts.push(part.text);
-    }
+  for (const block of raw?.content ?? []) {
+    if (block?.type === 'text' && typeof block.text === 'string') parts.push(block.text);
   }
   return parts.length ? parts.join('') : null;
 }
@@ -135,32 +140,26 @@ function outputText(raw: any): string | null {
 export interface StructuredRequest {
   instructions: string;
   input: string;
-  schemaName: string;
+  /** JSON schema of the answer: every object closed (additionalProperties false), a nullable field as anyOf with null. */
   schema: Record<string, unknown>;
-  /** Defaults: the match call's low effort and MAX_OUTPUT_TOKENS. */
-  effort?: 'minimal' | 'low';
+  /** Defaults: low effort (this model cannot turn thinking off; effort is the control) and MAX_OUTPUT_TOKENS. */
+  effort?: 'low' | 'medium' | 'high';
   maxOutputTokens?: number;
 }
 
 export function requestBody(req: StructuredRequest): Record<string, unknown> {
   return {
     model: MATCH_MODEL,
-    store: false,
-    reasoning: { effort: req.effort ?? 'low' },
-    max_output_tokens: req.maxOutputTokens ?? MAX_OUTPUT_TOKENS,
-    input: [
-      { role: 'developer', content: req.instructions },
-      { role: 'user', content: req.input },
-    ],
-    text: { format: { type: 'json_schema', name: req.schemaName, schema: req.schema, strict: true } },
+    max_tokens: req.maxOutputTokens ?? MAX_OUTPUT_TOKENS,
+    system: req.instructions,
+    messages: [{ role: 'user', content: req.input }],
+    output_config: { effort: req.effort ?? 'low', format: { type: 'json_schema', schema: req.schema } },
   };
 }
 
 export interface CallOptions {
   /** META_TIMEOUT_MS: both tries and the wait between them fit in it. */
   timeoutMs: number;
-  /** Meta's API (default) or OpenRouter pinned to Meta (META_VIA). */
-  via?: 'meta' | 'openrouter';
   fetch?: typeof fetch;
   /** Milliseconds now, the wait before a retry, and jitter in [0, 1); seams for tests. */
   clock?: () => number;
@@ -171,28 +170,28 @@ export interface CallOptions {
 const pause = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /**
- * One structured call, retried once after a transient HTTP error (429, 5xx,
- * 404 model not found) when enough of timeoutMs is left. Never retried: an
- * answer (even one that turns out bad), a timeout, a network error, or any
- * other status. Throws MetaCallError on anything short of a complete answer.
+ * One structured call, retried once after a transient HTTP error (429, 5xx)
+ * when enough of timeoutMs is left. Never retried: an answer (even one that
+ * turns out bad, cut off or refused), a timeout, a network error, or any
+ * other status. Throws ModelCallError on anything short of a complete answer.
  */
-export async function callMeta(apiKey: string, body: Record<string, unknown>, opts: CallOptions): Promise<MetaResult> {
+export async function callModel(apiKey: string, body: Record<string, unknown>, opts: CallOptions): Promise<ModelResult> {
   const clock = opts.clock ?? Date.now;
   const deadline = clock() + opts.timeoutMs;
   const statuses: (number | null)[] = [];
   let spent = 0;
   for (let attempt = 1; ; attempt++) {
     try {
-      const result = await callOnce(apiKey, body, deadline - clock(), opts.fetch ?? fetch, clock, opts.via ?? 'meta');
+      const result = await callOnce(apiKey, body, deadline - clock(), opts.fetch ?? fetch, clock);
       return { ...result, costUsd: spent + result.costUsd, statuses: [...statuses, ...result.statuses] };
     } catch (err) {
-      if (!(err instanceof MetaCallError)) throw err;
+      if (!(err instanceof ModelCallError)) throw err;
       statuses.push(err.status);
       spent += err.costUsd;
       const wait = attempt === 1 ? retryWait(err, opts.random ?? Math.random) : null;
       const leftMs = deadline - clock() - (wait ?? 0);
       if (wait === null || leftMs < RETRY_MIN_LEFT_MS) {
-        throw new MetaCallError(err.kind, err.message, {
+        throw new ModelCallError(err.kind, err.message, {
           costUsd: spent,
           status: err.status,
           transient: err.transient,
@@ -207,15 +206,14 @@ export async function callMeta(apiKey: string, body: Record<string, unknown>, op
 }
 
 /** How long to wait before the one retry, or null for no retry. */
-function retryWait(err: MetaCallError, random: () => number): number | null {
+function retryWait(err: ModelCallError, random: () => number): number | null {
   if (!err.transient) return null;
   const jitter = BACKOFF_MS[0] + random() * (BACKOFF_MS[1] - BACKOFF_MS[0]);
   if (err.retryAfterMs === null) return jitter;
   return err.retryAfterMs <= RETRY_AFTER_MAX_MS ? Math.max(err.retryAfterMs, jitter) : null;
 }
 
-const outputLimit = (body: Record<string, unknown>) =>
-  typeof body.max_output_tokens === 'number' ? body.max_output_tokens : MAX_OUTPUT_TOKENS;
+const outputLimit = (body: Record<string, unknown>) => (typeof body.max_tokens === 'number' ? body.max_tokens : MAX_OUTPUT_TOKENS);
 
 async function callOnce(
   apiKey: string,
@@ -223,26 +221,21 @@ async function callOnce(
   timeoutMs: number,
   doFetch: typeof fetch,
   clock: () => number,
-  via: 'meta' | 'openrouter',
-): Promise<MetaResult> {
+): Promise<ModelResult> {
   const started = clock();
-  const [url, sent] =
-    via === 'openrouter'
-      ? [`${OPENROUTER_BASE_URL}/responses`, { ...body, model: OPENROUTER_MODEL, provider: OPENROUTER_PIN }]
-      : [`${META_BASE_URL}/responses`, body];
+  const upperBound = () => estimateCostUsd(JSON.stringify(body).length, outputLimit(body));
   let response: Response;
   try {
-    response = await doFetch(url, {
+    response = await doFetch(ANTHROPIC_URL, {
       method: 'POST',
-      headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
-      body: JSON.stringify(sent),
+      headers: { 'x-api-key': apiKey, 'anthropic-version': ANTHROPIC_VERSION, 'content-type': 'application/json' },
+      body: JSON.stringify(body),
       signal: AbortSignal.timeout(Math.max(1, timeoutMs)),
     });
   } catch (err) {
     const timedOut = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError');
     // A timed-out request may still be billed; charge the upper bound.
-    const charge = timedOut ? estimateCostUsd(JSON.stringify(body).length, outputLimit(body)) : 0;
-    throw new MetaCallError(timedOut ? 'timeout' : 'network', String(err), { costUsd: charge });
+    throw new ModelCallError(timedOut ? 'timeout' : 'network', String(err), { costUsd: timedOut ? upperBound() : 0 });
   }
   const latencyMs = clock() - started;
   const bodyText = await response.text().catch(() => '');
@@ -254,20 +247,25 @@ async function callOnce(
   }
   const status = response.status;
   if (!response.ok) {
-    const code = raw?.error?.code ?? raw?.error?.type ?? 'unknown';
-    throw new MetaCallError('http', `Meta API ${status} ${code}`, {
+    const code = raw?.error?.type ?? 'unknown';
+    throw new ModelCallError('http', `Anthropic API ${status} ${code}`, {
       status,
-      transient: isTransient(status, bodyText),
+      transient: isTransient(status),
       retryAfterMs: retryAfterMs(response.headers, clock()),
     });
   }
   const usage = readUsage(raw);
-  const reported = via === 'openrouter' && typeof raw?.usage?.cost === 'number' ? raw.usage.cost : null;
-  const cost = reported ?? (usage ? costUsd(usage) : estimateCostUsd(JSON.stringify(body).length, outputLimit(body)));
-  if (raw?.status !== 'completed') {
-    throw new MetaCallError('incomplete', `response status ${raw?.status ?? 'missing'}`, { costUsd: cost, status });
+  const cost = usage ? costUsd(usage) : upperBound();
+  // stop_reason comes before content: a refusal or a cut-off answer is a 200 whose text is not an answer.
+  const stop = raw?.stop_reason;
+  if (stop === 'refusal') {
+    const category = typeof raw?.stop_details?.category === 'string' ? ` (${raw.stop_details.category})` : '';
+    throw new ModelCallError('refused', `stop_reason refusal${category}`, { costUsd: cost, status });
+  }
+  if (stop !== 'end_turn') {
+    throw new ModelCallError('incomplete', `stop_reason ${stop ?? 'missing'}`, { costUsd: cost, status });
   }
   const text = outputText(raw);
-  if (!text || !usage) throw new MetaCallError('no_output', 'no output text or usage', { costUsd: cost, status });
+  if (!text || !usage) throw new ModelCallError('no_output', 'no output text or usage', { costUsd: cost, status });
   return { text, usage, costUsd: cost, latencyMs, statuses: [status] };
 }

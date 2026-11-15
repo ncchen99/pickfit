@@ -1,7 +1,9 @@
 /**
  * The AI path must not change: with saved keyword outputs (bench/keywords.ts),
- * this tree and another checkout send byte-identical match requests to Meta
- * (instructions, request, the cards and their order, schema). No model call:
+ * this tree and another checkout send byte-identical match requests to the model
+ * (instructions, request, the cards and their order, schema). Both checkouts must
+ * be on the same side of the 2026-11-15 change of API (Meta's Responses API before
+ * it, Anthropic's Messages API from it): across it every request differs. No model call:
  * the keyword call is answered from the saved file and the match call is
  * captured, then failed.
  *
@@ -23,8 +25,12 @@ const [indexPath, needsPath, kwEnPath, kwZhPath, otherDir, ...flags] = process.a
 const control = flags.includes('--control');
 const alternatives = flags.includes('--alternatives');
 const outPath = flags.includes('--out') ? flags[flags.indexOf('--out') + 1] : null;
+/** The request and cards, the answer's schema and the kind of call, in either API's request body. */
+const userText = (b: any) => String(b.messages?.[0]?.content ?? b.input?.[1]?.content ?? '');
+const schemaOf = (b: any) => b.output_config?.format?.schema ?? b.text?.format?.schema ?? {};
+const isKeywords = (b: any) => 'keywords' in (schemaOf(b).properties ?? {});
 const cardSlugs = (body: string) =>
-  String(JSON.parse(body).input[1].content)
+  userText(JSON.parse(body))
     .split('\n')
     .filter((line) => line.startsWith('{"slug"'))
     .map((line) => JSON.parse(line).slug as string);
@@ -44,15 +50,15 @@ async function version(dir: string) {
   const catalog = loadCatalog(JSON.parse(readFileSync(indexPath, 'utf8')));
   const picked = (body: any) => {
     const cards = new Map(
-      String(body.input[1].content)
+      userText(body)
         .split('\n')
         .filter((line) => line.startsWith('{"slug"'))
         .map((line) => JSON.parse(line))
         .map((card: any) => [card.slug, card]),
     );
-    return helpers.metaResponse(
+    return (helpers.modelResponse ?? helpers.metaResponse)(
       helpers.answer({
-        picks: body.text.format.schema.properties.picks.items.properties.slug.enum.slice(0, 2).map((slug: string) => ({
+        picks: schemaOf(body).properties.picks.items.properties.slug.enum.slice(0, 2).map((slug: string) => ({
           slug,
           fit: 'Fits.',
           reasons: [{ claim: 'It is this tool', field: 'name', value: (cards.get(slug) as any).name }],
@@ -65,7 +71,8 @@ async function version(dir: string) {
   };
   return async (args: Record<string, unknown>, kw: string[]) => {
     const run = async (match: (body: any) => Response) => {
-      const h = helpers.harness((body: any) => (body.text.format.name === 'pickfit_keywords' ? helpers.metaResponse({ keywords: kw }) : match(body)));
+      const respond = helpers.modelResponse ?? helpers.metaResponse;
+      const h = helpers.harness((body: any) => (isKeywords(body) ? respond({ keywords: kw }) : match(body)));
       h.deps.catalog = catalog;
       const out = alternatives
         ? await find.findAlternatives({ current_software: 'Ollama', pain_points: args.need, ...(args.category ? { category: args.category } : {}) }, h.deps)
@@ -74,11 +81,11 @@ async function version(dir: string) {
     };
     const failed = await run(() => new Response('{}', { status: 400 }));
     const answered = await run(picked);
-    const match = failed.h.requests.find((r: any) => ['pickfit_match', 'pickfit_alternatives'].includes(r.body.text.format.name));
+    const match = failed.h.requests.find((r: any) => !isKeywords(r.body));
     return {
       match: match ? String(match.init.body) : null,
-      keywordCall: failed.h.requests.some((r: any) => r.body.text.format.name === 'pickfit_keywords'),
-      response: answered.out.matched_by === 'muse-spark-1.3' ? JSON.stringify({ ...answered.out, rec_id: '' }) : null,
+      keywordCall: failed.h.requests.some((r: any) => isKeywords(r.body)),
+      response: answered.out.matched_by !== 'rules' ? JSON.stringify({ ...answered.out, rec_id: '' }) : null,
     };
   };
 }

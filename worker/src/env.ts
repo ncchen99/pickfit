@@ -1,16 +1,19 @@
-/** Bindings and settings (wrangler.jsonc vars; MODEL_API_KEY is a secret). */
+/** Bindings and settings (wrangler.jsonc vars; ANTHROPIC_API_KEY is a secret). */
 export interface Env {
   DB: D1Database;
-  /** Meta Model API key. Missing means find_software ranks by rules. */
-  MODEL_API_KEY?: string;
-  /** "meta" (default) or "openrouter": reach muse-spark-1.3 through OpenRouter, Meta as the only provider. */
-  META_VIA?: string;
-  /** OpenRouter API key, used when META_VIA is "openrouter". */
-  OPENROUTER_API_KEY?: string;
-  /** "model" (default) or "off" to rank by rules without calling Meta. */
+  /** Anthropic API key. Missing means find_software ranks by rules. */
+  ANTHROPIC_API_KEY?: string;
+  /** "model" (default) or "off" to rank by rules without calling the model. */
   MATCH_MODE?: string;
+  /**
+   * Optional hard stops on the model spend recorded in D1 meta_budget: USD per UTC day, and in all.
+   * Unset (the default) means no stop: spend is still recorded, and nothing blocks a call.
+   * These three settings keep the names they had when the model was Meta's (like meta.ts and meta_budget),
+   * so a config or a command that sets a stop still stops.
+   */
   META_DAILY_CAP_USD?: string;
   META_TOTAL_CAP_USD?: string;
+  /** Both tries of a model call and the wait between them fit in this many milliseconds (default 40,000). */
   META_TIMEOUT_MS?: string;
   /** Comma-separated extra Host names to accept, e.g. the workers.dev host. */
   ALLOWED_HOSTS?: string;
@@ -22,7 +25,7 @@ export interface Env {
   TOOLS?: string;
   /** "on" (default) or "off": the product web page (GET / for browsers, POST /search). */
   WEB_SEARCH?: string;
-  /** Web searches stop calling Meta once today's spend reaches this; the rest of the daily cap is left for agents. */
+  /** Optional: web searches stop calling the model once today's spend reaches this, leaving the rest of a daily cap for agents. Unset = no stop of its own. */
   WEB_DAILY_CAP_USD?: string;
   /** Workers rate limiting binding for web searches (wrangler.jsonc ratelimits); without it, a per-isolate count. */
   WEB_RATE_LIMITER?: RateLimit;
@@ -31,15 +34,14 @@ export interface Env {
 }
 
 export type ToolSet = 'all' | 'readonly';
-export type MetaVia = 'meta' | 'openrouter';
 
 export interface Settings {
   modelEnabled: boolean;
-  /** Where the model calls go; apiKey is that route's key. */
-  via: MetaVia;
   apiKey: string | null;
-  dailyCapUsd: number;
-  totalCapUsd: number;
+  /** USD per UTC day; null = no stop. */
+  dailyCapUsd: number | null;
+  /** USD in all; null = no stop. */
+  totalCapUsd: number | null;
   timeoutMs: number;
   submitHourlyCap: number;
   tools: ToolSet;
@@ -50,6 +52,15 @@ function number(value: string | undefined, fallback: number): number {
   return value !== undefined && value.trim() !== '' && Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
 }
 
+/**
+ * An opt-in cap: unset or blank is no cap (null). A value that is not a number from 0 up stops at 0,
+ * so a typo never lifts a stop someone meant to set.
+ */
+function cap(value: string | undefined): number | null {
+  if (value === undefined || value.trim() === '') return null;
+  return number(value, 0);
+}
+
 /** Unset or "all" exposes every tool; any other value is read-only, so a typo never exposes the write tools. */
 function toolSet(value: string | undefined): ToolSet {
   const v = (value ?? '').trim().toLowerCase();
@@ -57,15 +68,12 @@ function toolSet(value: string | undefined): ToolSet {
 }
 
 export function settings(env: Env): Settings {
-  // Only "openrouter" leaves Meta's API, so a typo keeps the calls where they were.
-  const via: MetaVia = (env.META_VIA ?? '').trim().toLowerCase() === 'openrouter' ? 'openrouter' : 'meta';
   return {
     modelEnabled: (env.MATCH_MODE ?? 'model').trim().toLowerCase() !== 'off',
-    via,
-    apiKey: (via === 'openrouter' ? env.OPENROUTER_API_KEY : env.MODEL_API_KEY)?.trim() || null,
-    dailyCapUsd: number(env.META_DAILY_CAP_USD, 3),
-    totalCapUsd: number(env.META_TOTAL_CAP_USD, 40),
-    timeoutMs: number(env.META_TIMEOUT_MS, 25_000),
+    apiKey: env.ANTHROPIC_API_KEY?.trim() || null,
+    dailyCapUsd: cap(env.META_DAILY_CAP_USD),
+    totalCapUsd: cap(env.META_TOTAL_CAP_USD),
+    timeoutMs: number(env.META_TIMEOUT_MS, 40_000),
     submitHourlyCap: number(env.SUBMIT_HOURLY_CAP, 20),
     tools: toolSet(env.TOOLS),
   };
@@ -73,13 +81,14 @@ export function settings(env: Env): Settings {
 
 export interface WebSettings {
   enabled: boolean;
-  dailyCapUsd: number;
+  /** USD per UTC day for web searches; null = no stop of its own. */
+  dailyCapUsd: number | null;
 }
 
 /** Only "off" turns the page off, so the evaluation deployments say so explicitly. */
 export function webSettings(env: Env): WebSettings {
   return {
     enabled: (env.WEB_SEARCH ?? 'on').trim().toLowerCase() !== 'off',
-    dailyCapUsd: number(env.WEB_DAILY_CAP_USD, 2),
+    dailyCapUsd: cap(env.WEB_DAILY_CAP_USD),
   };
 }

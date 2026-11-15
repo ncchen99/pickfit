@@ -24,8 +24,8 @@ const STEPS = (repo: boolean): { name: string; line: string }[] => [
   {
     name: L('Read', '閱讀'),
     line: repo
-      ? L('Muse Spark reads the README and writes down what the software claims, with the quotes.', 'Muse Spark 讀 README，記下軟體宣稱能做什麼，並保留原文引述。')
-      : L('Muse Spark reads the site and writes down what it says it does.', 'Muse Spark 讀網站，記下它說自己能做什麼。'),
+      ? L('Claude reads the README and writes down what the software claims, with the quotes.', 'Claude 讀 README，記下軟體宣稱能做什麼，並保留原文引述。')
+      : L('Claude reads the site and writes down what it says it does.', 'Claude 讀網站，記下它說自己能做什麼。'),
   },
   {
     name: L('Try', '試用'),

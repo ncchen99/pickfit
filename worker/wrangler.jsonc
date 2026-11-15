@@ -21,21 +21,22 @@
     }
   ],
   "vars": {
+    // The model is Claude through the Anthropic API (src/meta.ts; secret ANTHROPIC_API_KEY), since 2026-11-15.
     "MATCH_MODE": "model",
-    // 11/3: Meta's API answers the team's key with 402 billing errors, so muse-spark-1.3 is reached through
-    // OpenRouter with Meta as the only provider (secret OPENROUTER_API_KEY). "meta" goes back to Meta's API.
-    "META_VIA": "openrouter",
-    "META_DAILY_CAP_USD": "3",
-    "META_TOTAL_CAP_USD": "15",
-    "META_TIMEOUT_MS": "25000",
+    // Spend is recorded in D1 meta_budget and stops at a cap only when one is set: META_DAILY_CAP_USD (per UTC
+    // day), META_TOTAL_CAP_USD (in all), WEB_DAILY_CAP_USD (a lower daily stop for the web page). The hackathon's
+    // $15 total and the web page's $2 a day are gone. The one stop left is a daily ceiling, because /mcp and the
+    // search box are open to anyone and each match is a paid call: past it, answers are ranked by rules until
+    // 00:00 UTC. Delete the line for no stop at all.
+    "META_DAILY_CAP_USD": "20",
+    "META_TIMEOUT_MS": "40000",
     "SUBMIT_HOURLY_CAP": "20",
     "TOOLS": "all",
     "ALLOWED_HOSTS": "pickfit.app,pickfit-mcp.ncchen99.workers.dev",
     // Browsers opening a page on workers.dev get a 301 to pickfit.app (src/worker.ts); /mcp is served on both.
     "CANONICAL_HOST": "pickfit.app",
-    // The product web page (src/web.ts): it stops calling Meta at $2 of the $3 daily cap, leaving $1 for agents.
-    "WEB_SEARCH": "on",
-    "WEB_DAILY_CAP_USD": "2"
+    // The product web page (src/web.ts).
+    "WEB_SEARCH": "on"
   },
   // Web searches per visitor per minute (src/web.ts SEARCHES_PER_MINUTE); counted per Cloudflare location.
   "ratelimits": [
@@ -47,10 +48,11 @@
   // Evaluation deployments: same code, same bundled data, settings only.
   // `uv run pickfit publish --env <name>`; do not publish an env again while
   // its evaluation runs (that is what keeps it frozen). Each has its own D1,
-  // so its events and Meta budget stay apart from the public server's.
-  // vars and d1_databases are not inherited from the top level.
+  // so its events and model spend stay apart from the public server's.
+  // vars and d1_databases are not inherited from the top level. Each env also
+  // needs its own ANTHROPIC_API_KEY secret (`wrangler secret put … --env <name>`).
   "env": {
-    // The pickfit arm: read-only tools, muse-spark-1.3 matching.
+    // The pickfit arm: read-only tools, model matching (muse-spark-1.3 in the 11/2 evaluation; Claude from 11/15).
     "eval": {
       "d1_databases": [
         {
@@ -64,9 +66,10 @@
       "vars": {
         "TOOLS": "readonly",
         "MATCH_MODE": "model",
+        // An evaluation run keeps its own hard stop: $10 a day and in all.
         "META_DAILY_CAP_USD": "10",
         "META_TOTAL_CAP_USD": "10",
-        "META_TIMEOUT_MS": "25000",
+        "META_TIMEOUT_MS": "40000",
         "SUBMIT_HOURLY_CAP": "0",
         "ALLOWED_HOSTS": "pickfit-mcp-eval.ncchen99.workers.dev",
         // No web page: an evaluation deployment serves /mcp and the JSON health check only.
@@ -97,7 +100,7 @@
         "MATCH_MODE": "off",
         "META_DAILY_CAP_USD": "0",
         "META_TOTAL_CAP_USD": "0",
-        "META_TIMEOUT_MS": "25000",
+        "META_TIMEOUT_MS": "40000",
         "SUBMIT_HOURLY_CAP": "0",
         "ALLOWED_HOSTS": "pickfit-mcp-eval-rules.ncchen99.workers.dev",
         // No web page: an evaluation deployment serves /mcp and the JSON health check only.

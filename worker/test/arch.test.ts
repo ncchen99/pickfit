@@ -9,7 +9,7 @@ import { test } from 'node:test';
 import { toCard } from '../src/cards.ts';
 import { findSoftware, type FindInput } from '../src/find.ts';
 import { installGuide } from '../src/install.ts';
-import { answer, fixtureCatalog, harness, metaResponse } from './helpers.ts';
+import { answer, fixtureCatalog, harness, modelResponse } from './helpers.ts';
 
 const runner = () => fixtureCatalog().bySlug.get('fixture-llm-runner')!;
 const LLM: FindInput = { need: 'run a language model offline on my laptop', must_run_locally: true };
@@ -27,9 +27,9 @@ test('the card the model reads: verified_on_user_os needs the arch to match when
 });
 
 async function runnerPick(input: FindInput) {
-  const h = harness(() => metaResponse(answer()));
+  const h = harness(() => modelResponse(answer()));
   const out = await findSoftware(input, h.deps);
-  const card = h.requests[0].body.input[1].content
+  const card = h.requests[0].body.messages[0].content
     .split('\n')
     .map((line: string) => (line.startsWith('{') ? JSON.parse(line) : null))
     .find((c: any) => c?.slug === 'fixture-llm-runner');
@@ -67,7 +67,7 @@ test('the guard drops a model reason that claims verification on an Intel Mac fr
     ['arm64', true],
     ['x86_64', false],
   ] as const) {
-    const h = harness(() => metaResponse(answer({ picks })));
+    const h = harness(() => modelResponse(answer({ picks })));
     const out = await findSoftware({ ...LLM, os: 'macos', arch }, h.deps);
     const reasons = out.picks.find((p) => p.slug === 'fixture-llm-runner')!.why;
     assert.equal(reasons.some((r) => r.field === 'verified_on_user_os'), kept, arch);

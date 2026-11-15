@@ -94,7 +94,7 @@ test('find_software by rules: the web app comes first among equal fits, labelled
   assert.equal(pick.web_app?.label, 'No install, just open it');
   assert.deepEqual([pick.web_app?.url, pick.web_app?.checked_at, pick.web_app?.works_offline], ['https://fixture-sketch.example.invalid/', '2026-11-02T09:00:00Z', 'verified']);
   assert.deepEqual([pick.verification.level, pick.verification.os, pick.verification.verified_on_user_os, pick.repo], ['function', null, null, null]);
-  assert.match(pick.how_we_know, /opened it in a sandboxed browser .* on 2026-11-02; the page loaded to its main screen, and a model \(Muse Spark\) then used it/);
+  assert.match(pick.how_we_know, /opened it in a sandboxed browser .* on 2026-11-02; the page loaded to its main screen, and a model(?: \(Muse Spark Open\))? then used it/);
   assert.ok(pick.why.some((r) => r.field === 'no_install'), 'the template reasons say there is nothing to install');
   assert.deepEqual([pick.features.recorded, pick.features.checked.length], [true, 2]);
 });
@@ -187,7 +187,7 @@ test('page: a web app ticket opens the URL, says no install, and shows what the 
   const entry = catalog.bySlug.get(SLUG)!;
   assert.ok(ticket.includes(esc(webRunWords(entry, webCheck(entry)!))));
   assert.match(ticket, /When pickfit opened it in a browser on \d{1,2} \w{3} \d{4}, the page loaded to its main screen\./);
-  assert.doesNotMatch(ticket, /Chromium|headless|Muse Spark|visited once|no replay/);
+  assert.doesNotMatch(ticket, /Chromium|headless|Muse Spark|Claude|visited once|no replay/);
 });
 
 test('page: the tool page of a web app, browse and compare', async () => {
@@ -195,7 +195,7 @@ test('page: the tool page of a web app, browse and compare', async () => {
   const worker = makeWorker(fixtureIndex(), { now: () => new Date('2026-11-02T12:00:00Z') });
   const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
   const get = async (path: string) =>
-    (await worker.fetch(new Request(`http://127.0.0.1:8787${path}`, { headers: { accept: 'text/html' } }), { DB: d1.db, MODEL_API_KEY: 'k' } as Env, ctx)).text();
+    (await worker.fetch(new Request(`http://127.0.0.1:8787${path}`, { headers: { accept: 'text/html' } }), { DB: d1.db, ANTHROPIC_API_KEY: 'k' } as Env, ctx)).text();
   const tool = await get(`/tool/${SLUG}`);
   assert.match(tool, /<h1>Fixture Web Sketch<\/h1>/);
   assert.match(tool, /Tested in a browser/);
@@ -237,7 +237,7 @@ test('page: a web app no browser run passed on says so, and its features come fr
   data.entries.find((e: any) => e.slug === SLUG).web.check = null;
   const worker = makeWorker(data, { now: () => new Date('2026-11-02T12:00:00Z') });
   const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
-  const res = await worker.fetch(new Request(`http://127.0.0.1:8787/tool/${SLUG}`, { headers: { accept: 'text/html' } }), { DB: makeD1().db, MODEL_API_KEY: 'k' } as Env, ctx);
+  const res = await worker.fetch(new Request(`http://127.0.0.1:8787/tool/${SLUG}`, { headers: { accept: 'text/html' } }), { DB: makeD1().db, ANTHROPIC_API_KEY: 'k' } as Env, ctx);
   const html = await res.text();
   assert.match(html, /pickfit hasn’t checked Fixture Web Sketch in its browser yet<\/b>\./);
   assert.doesNotMatch(html, /never suggests it/); // pickfit's own policy is the How page's, not this page's

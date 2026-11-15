@@ -3,7 +3,7 @@
  * matcher reads (name, tags, summary, use cases, alternatives, MCP tool names),
  * with field weights. Used to choose which cards reach the model when more
  * than MAX_CARDS pass the hard filters, and by the rules fallback. Words are
- * English; Meta adds English keywords for the request first (expand.ts).
+ * English; the model adds English keywords for the request first (expand.ts).
  * Without those keywords (rules only, or the keyword call failed) the rules'
  * own scorer, rulesRelevance, ranks instead: it reads Chinese words through a
  * small dictionary, counts generic words for little and favors profiles that

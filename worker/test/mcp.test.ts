@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import type { Env } from '../src/env.ts';
 import { INSTRUCTIONS, READONLY_INSTRUCTIONS } from '../src/server.ts';
 import { makeWorker } from '../src/worker.ts';
-import { answer, fixtureIndex, makeD1, metaResponse } from './helpers.ts';
+import { answer, fixtureIndex, makeD1, modelResponse } from './helpers.ts';
 
 const MODERN_META = {
   'io.modelcontextprotocol/protocolVersion': '2026-07-28',
@@ -57,8 +57,9 @@ test('legacy clients: initialize, list and call without a session', async () => 
   const initMsg = await message(init);
   assert.match(initMsg.result.instructions, /^pickfit matches software to the user's need; each was installed and tested in a sandbox\. Scope: .*desktop GUI apps/);
   // Every client loads these each session: keep them short (they grew past 512 with the answer guidance, past 900 with the GUI scope,
-  // past 1000 with the known-vulnerability sentence).
-  assert.ok(initMsg.result.instructions.length <= 1030);
+  // past 1000 with the known-vulnerability sentence, past 1030 with the five categories added on 2026-11-15).
+  assert.ok(initMsg.result.instructions.length <= 1060);
+  assert.match(initMsg.result.instructions, /Scope: dev CLIs, local AI tools, MCP servers, DevOps, security, data, docs and media tools, desktop GUI apps, web apps\. /);
 
   const list = await message(
     await call(rpc({ jsonrpc: '2.0', id: 2, method: 'tools/list' }, { 'mcp-protocol-version': '2025-11-25' })),
@@ -67,7 +68,8 @@ test('legacy clients: initialize, list and call without a session', async () => 
   assert.deepEqual(Object.keys(tools).sort(), ['find_alternatives', 'find_software', 'get_install_guide', 'report_outcome', 'submit_software']);
   for (const tool of Object.values(tools) as any[]) {
     assert.equal(tool.outputSchema.type, 'object', tool.name);
-    assert.ok(tool.description.length <= 1000, tool.name);
+    // Short enough to load every session; find_software's coverage sentence grew by the five categories added on 2026-11-15.
+    assert.ok(tool.description.length <= 1050, tool.name);
   }
   assert.equal(tools.find_software.annotations.readOnlyHint, true);
   assert.equal(tools.find_alternatives.annotations.readOnlyHint, true);
@@ -127,13 +129,13 @@ test('submit_software says what it takes: desktop apps too, not libraries', asyn
     await call(rpc({ jsonrpc: '2.0', id: 1, method: 'tools/list' }, { 'mcp-protocol-version': '2025-11-25' })),
   );
   const tools = Object.fromEntries(list.result.tools.map((t: any) => [t.name, t.description as string]));
-  assert.match(tools.submit_software, /MCP servers, desktop GUI apps and web apps are taken/);
+  assert.match(tools.submit_software, /MCP servers, DevOps, security, data, document and media tools, desktop GUI apps and web apps are taken/);
   assert.match(tools.submit_software, /libraries and other code people import are rejected/);
   assert.doesNotMatch(tools.submit_software, /other software may be rejected/);
 });
 
 test('modern clients: the model path end to end, then the install guide', async () => {
-  const { call, sqlite, settle } = setup({ MATCH_MODE: 'model', MODEL_API_KEY: 'k' }, () => metaResponse(answer()));
+  const { call, sqlite, settle } = setup({ MATCH_MODE: 'model', ANTHROPIC_API_KEY: 'k' }, () => modelResponse(answer()));
   const headers = { 'mcp-protocol-version': '2026-07-28', 'mcp-method': 'tools/call' };
   const found = await message(
     await call(
@@ -149,7 +151,7 @@ test('modern clients: the model path end to end, then the install guide', async 
     ),
   );
   const out = found.result.structuredContent;
-  assert.equal(out.matched_by, 'muse-spark-1.3');
+  assert.equal(out.matched_by, 'claude-opus-5-5');
   assert.deepEqual(out.picks.map((p: any) => p.slug), ['fixture-llm-runner', 'fixture-chat-tui']);
 
   const guide = await message(

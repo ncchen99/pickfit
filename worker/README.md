@@ -9,12 +9,13 @@ cd worker
 npm install
 npm run build:index -- --data test/fixtures/software   # 還沒有真資料：先用 5 筆假 profile
 npm run db:migrate:local                                # 本機 D1 建表（套用 migrations/ 全部）
-grep -E '^MODEL_API_KEY=' ../.env > .dev.vars           # 只取這一個變數；.dev.vars 已 gitignore
+grep -E '^ANTHROPIC_API_KEY=' ../.env > .dev.vars       # 只取這一個變數；.dev.vars 已 gitignore
 npm run dev                                             # http://127.0.0.1:8787/mcp
 ```
 
-- 關掉模型：`npx wrangler dev --var MATCH_MODE:off`（或不放 `MODEL_API_KEY`）。
-- 測試：`npm test`（先用 `scripts/build_index.py` 從 fixture 建索引；D1 用 `node:sqlite` 跑同一份 migration；Meta 回應是假的，不打 API）。型別：`npm run typecheck`。
+- 模型：2026-11-15 起是 Claude（`claude-opus-5-5`），走 Anthropic Messages API，金鑰是 `ANTHROPIC_API_KEY`。在這之前是 Meta 的 `muse-spark-1.3`（11/3 起經 OpenRouter）。`src/meta.ts`、D1 的 `meta_budget`、`events.meta_cost_usd`、log 的 `meta_call`／`meta_retry`、設定 `META_*` 都沿用原本的名字。下文標了日期的實測數字是當時在 `muse-spark-1.3` 上量的，換成 Claude 之後還沒重量。
+- 關掉模型：`npx wrangler dev --var MATCH_MODE:off`（或不放 `ANTHROPIC_API_KEY`）。
+- 測試：`npm test`（先用 `scripts/build_index.py` 從 fixture 建索引；D1 用 `node:sqlite` 跑同一份 migration；模型回應是假的，不打 API）。型別：`npm run typecheck`。
 - 輸出格式：`test/conformance.test.ts` 透過 MCP server 呼叫 5 個工具的每一種回應，用 SDK 自己的驗證器（`CfWorkerJsonSchemaValidator`）檢查 `structuredContent` 符合 `tools/list` 公布的 `outputSchema`。schema 是 `additionalProperties: false`，所以工具多回一個欄位、`server.ts` 的 zod 沒跟著加，這個測試就會失敗；嚴格驗證的客戶端遇到這種回應會整個拒收。
 - 真資料：`npm run build:index`（讀 `data/software/*.json`，任何一筆不合 `software.v1` 就失敗、不寫索引）。部署用 `uv run pickfit publish`（見文末）。
 
@@ -33,7 +34,7 @@ env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p "…" \
 
 | 工具 | 呼叫模型 | 寫 D1 | 重點 |
 |---|---|---|---|
-| `find_software` | `muse-spark-1.3` 一次；合格超過 60 款時先多一次小呼叫取英文關鍵字（超預算或失敗退回規則） | `events`（find） | 見下節 |
+| `find_software` | `claude-opus-5-5` 一次；合格超過 60 款時先多一次小呼叫取英文關鍵字（失敗，或設了上限而超出時退回規則） | `events`（find） | 見下節 |
 | `find_alternatives` | 同上，同一條路徑 | `events`（alternatives） | 多送 `current_software`、`pain_points`、`must_keep`；回 `current`、`keep_current` |
 | `get_install_guide` | 不呼叫 | `events`（install_guide） | 只回實跑過的步驟；沿用或新發 `rec_id` |
 | `report_outcome` | 不呼叫 | `events`（outcome）、`reverify_queue` | 帶有效 `rec_id` 才計分；同一回報只記一次 |
@@ -43,11 +44,13 @@ env -i HOME="$HOME" PATH="$PATH" ANTHROPIC_API_KEY=… claude -p "…" \
 
 GUI 桌面 app 的實跑另帶 `verification.gui`（`find_*` 的 pick 與 `get_install_guide` 都有；其他軟體是 `null`）：`tier`（`window`＝出現 app 自己行程的視窗；`ui_rendered`＝另一個模型看截圖判定 app 自己的介面畫出來了）、`screen`（模型看到的畫面：主畫面、首次設定畫面、登入牆等）、`display`（虛擬螢幕）、`launch_offline`（新沙盒重播時斷網也啟動成功）。`how_we_know` 會照實寫出看到了什麼，並註明沒用過任何功能；`level` 一律維持 `install`，啟動成功不算 function。視窗標題是 app 自己設定的文字，不進索引。
 
+**類別**：`category` 可以是 `dev_cli`、`local_ai`、`mcp_server`、`infra_devops`（維運與容器）、`security_net`（資安與網路）、`data_db`（資料與資料庫）、`productivity_docs`（生產力與文件）、`media_files`（影音與檔案工具），或不指定（`any`）。後五個是 2026-11-15 加的。清單只寫在 `src/catalog.ts`（`NAMED_CATEGORIES`，以及多一個 `other` 的 `CATEGORIES`），要和 `pickfit/schema.py` 的 `Category` 一致。工具的 enum、硬條件、配對 schema、中英文標籤、圖示和 `/browse` 的分類都從這份清單產生。`/browse` 只列出目前有工具的分類，還沒有工具的分類不出現在篩選列，直接開它的網址會看到「沒有符合的工具」。
+
 ### `find_software`、`find_alternatives` 怎麼配對（architecture F.2）
 
 1. **硬條件（程式）**：只留有實跑過安裝步驟的（`install.<os>` 的 basis 是 `replayed` 或 `human`）；類別、`budget: free_only` → `pricing = free`、`must_run_locally` → `processing = local`、不需網路、不需 API key；作業系統要在 `platforms` 或已驗證過。只在別的 OS 驗證過的留下，但卡片與回應都會標明。`verified_on_user_os` 要 OS 相同；請求有給 `arch` 時，跑的 CPU 架構也要相同，所以只在 arm64 Mac 跑過的，對 Intel Mac 是 `false`，並在取捨裡寫明。沒給 `arch` 就只看 OS，回應的 `verification.arch` 和 `get_install_guide` 的 note 會寫出實際跑的架構。`find_alternatives` 另外把使用者目前的工具（依 slug 或名稱比對到目錄裡的那筆）排除。
 2. **候選卡**：全部合格的卡（≤60 張，依 slug 排，不給模型看熱門度順序）。超過 60 張時（dev_cli、local_ai、不分類別幾乎都會）改成**先看相關度**（`src/filter.ts`、`src/relevance.ts`）：
-   - **英文關鍵字**（`src/expand.ts`）：先送一次小的 `muse-spark-1.3`（`store: false`、effort `minimal`、strict schema、最多 600 個輸出 token），把需求變成 6–15 個英文關鍵字：別的語言就是翻譯，英文就是同義詞。實測中位數 1.4 秒、約 $0.0012。最多等 5 秒；失敗、逾時、超預算、模型關掉時，改用下面「規則的相關度」挑卡（什麼字都對不到才是寶藏分數排序）。關鍵字只用來挑卡，模型讀到的仍是使用者原本的需求；不寫進 D1。
+   - **英文關鍵字**（`src/expand.ts`）：先送一次小的模型呼叫（effort `low`、JSON schema、`max_tokens` 2,000，thinking 也算在這個上限裡），把需求變成 6–15 個英文關鍵字：別的語言就是翻譯，英文就是同義詞。最多等 8 秒（在 `muse-spark-1.3` 上實測中位數 1.4 秒、約 $0.0012，當時最多等 5 秒；Claude 的還沒量）。失敗、逾時、超出設定的上限、模型關掉時，改用下面「規則的相關度」挑卡（什麼字都對不到才是寶藏分數排序）。關鍵字只用來挑卡，模型讀到的仍是使用者原本的需求；不寫進 D1。
    - **BM25**：需求原本的字加關鍵字，對卡片上的名稱（slug）、tags、summary、`alternatives_to`、use cases、`why_worth_it`、MCP 握手列出的工具名算 BM25（欄位加權：名稱 3、tags 2、summary 與 alternatives 1.5、其他 1；小寫、拆 camelCase／snake_case、去停用字、簡單去字尾）。
    - **挑 60 張**：（`find_alternatives`）`alternatives_to` 提到目前工具的先放，再放 BM25 最高的，合計最多 50 張；剩下 10 張以上給其餘寶藏分數最高的，好的通用選項不會因為沒對到字就消失。沒有任何字對到就全照寶藏分數。硬條件完全不放寬。
    - 回應的 `coverage_note` 說明幾張是因相關度、幾張是因寶藏分數；`events.need.shortlist` 記 `by_relevance`（張數）與關鍵字呼叫的結果（`ok`、`model_off`、`model_timeout`…），不記任何字。
@@ -57,10 +60,10 @@ GUI 桌面 app 的實跑另帶 `verification.gui`（`find_*` 的 pick 與 `get_i
      - 遇到標點、轉折或新的肯定動詞（`但`、`需要`、`要`、`用`、`能`、`but`、`need`、`with`…）、`的`、英文 `and`／`for`／`to`（動名詞後的 `to` 除外）、英文後面接的中文詞、其他字，或滿 4 個字就結束（`不需要 GPU，但需要 CUDA` 只排除 GPU）。
      - `find_alternatives` 的痛點不套用：痛點裡的 `no dark mode` 是想要 dark mode，所以規則排序、標記與模型路徑的 shortlist 都照原字算；`must_keep` 照常套用否定。
      - 模型路徑：1268 筆存下的關鍵字請求中 42 筆的 60 張卡不同（都來自真的否定詞）；把其中 20 筆實際送給模型（舊請求兩次、新請求一次），最後選的工具只在第 3 個或順序上變，和模型自己兩次之間的差異差不多（`scripts/replay_match.py`）。`find_alternatives` 的模型請求 0 筆不同。
-   - 量法：`scripts/shortlist_needs.py` 只從 `data/software` 產生檢查集（每筆驗證過的工具，用 Meta 模型把它的 summary 改寫成使用者的英文與中文需求），`bench/shortlist.ts` 算「自己那款有沒有進 60 張」；`bench/keywords.ts`、`bench/latency.ts` 量關鍵字呼叫與整體延遲（要花錢）。
-3. **一次 `muse-spark-1.3`**（Responses API、`store: false`、`reasoning.effort: low`、strict JSON schema；slug 欄位的 enum 就是這次的候選）：解析需求成條件、選 1–3 個、每個理由引用一個卡片欄位與原值、取捨、和知名工具比、最好的免費選項、「內建就夠」、不在資料裡的知名免費工具（`well_known_option`，見下）、最多 1 個追問。模型固定在程式裡，不能換成 `-contributor`（使用者需求是私人資料）。`find_alternatives` 用同一份 prompt，**後面加 4 條規則**（`ALTERNATIVES_RULES`：只選做同一件事、至少解決一個痛點、保留 `must_keep` 的；和目前的工具比較；`keep_current`；解析出的痛點）；`find_software` 的 prompt 與 schema 不變。
+   - 量法：`scripts/shortlist_needs.py` 只從 `data/software` 產生檢查集（每筆驗證過的工具，用模型把它的 summary 改寫成使用者的英文與中文需求），`bench/shortlist.ts` 算「自己那款有沒有進 60 張」；`bench/keywords.ts`、`bench/latency.ts` 量關鍵字呼叫與整體延遲（要花錢）。
+3. **一次 `claude-opus-5-5`**（Anthropic Messages API：`system` 放指示、一則 user 訊息放需求與候選卡、`output_config.effort: low`、`output_config.format` 的 JSON schema、`max_tokens` 8,000；slug 欄位的 enum 就是這次的候選。不送 `temperature`、關閉或限額的 `thinking`、強制的 `tool_choice`，這個模型對這三種都回 400）：解析需求成條件、選 1–3 個、每個理由引用一個卡片欄位與原值、取捨、和知名工具比、最好的免費選項、「內建就夠」、不在資料裡的知名免費工具（`well_known_option`，見下）、最多 1 個追問。模型固定在程式裡（`src/meta.ts` 的 `MATCH_MODEL`，價格在它旁邊，要換就兩個一起改）。回應先看 `stop_reason` 再讀內容：`refusal`（`model_refused`）和 `max_tokens`（`model_incomplete`）都不算答案。答案在 `text` 區塊，前面可能有 `thinking` 區塊。`find_alternatives` 用同一份 prompt，**後面加 4 條規則**（`ALTERNATIVES_RULES`：只選做同一件事、至少解決一個痛點、保留 `must_keep` 的；和目前的工具比較；`keep_current`；解析出的痛點）；`find_software` 的 prompt 與 schema 不變。
 4. **守門（程式）**：slug 必須在候選裡；理由引用的值要真的出現在該欄位；理由不能和卡片矛盾（離線、免費、開源、在某 OS 驗證過、不需 key、不需 GPU）。不合的理由丟掉，沒有理由的推薦丟掉。`well_known_option` 另有自己的檢查（見下）。
-5. **退回規則**：模型關掉、沒有 key、超出預算、逾時、HTTP 錯誤（重試一次後仍失敗，見下面「重試」）、輸出壞掉、或推薦全被守門擋掉 → 依「（`find_alternatives`）卡片的 `alternatives_to` 提到目前的工具 → 規則的相關度分數（有關鍵字就加上關鍵字）→ 分數相同時：在使用者 OS 驗證過 → 寶藏分數」排序，理由用模板（只從欄位產生），標 `matched_by: "rules"`、`degraded: true`、`degraded_reason`。規則模式不判斷 `keep_current`（回 `null`）。
+5. **退回規則**：模型關掉、沒有 key、超出設定的上限、逾時、HTTP 錯誤（重試一次後仍失敗，見下面「重試」）、模型拒答、答案被截斷、輸出壞掉、或推薦全被守門擋掉 → 依「（`find_alternatives`）卡片的 `alternatives_to` 提到目前的工具 → 規則的相關度分數（有關鍵字就加上關鍵字）→ 分數相同時：在使用者 OS 驗證過 → 寶藏分數」排序，理由用模板（只從欄位產生），標 `matched_by: "rules"`、`degraded: true`、`degraded_reason`。規則模式不判斷 `keep_current`（回 `null`）。
    - **合不合（`src/fit.ts`，只在規則模式；只加標記，不改列出的工具）**：把需求裡「具體的字」（去掉通用字、OS 名稱（整個字，`macOS` 不會變成產品 `OS`）、`MCP server` 這類工具種類、口語填充字與介系詞、`without`／`no` 到子句結束的限制、`不用` 之後的限制、`secret-project-xyz` 這類自己取的名字；只留目錄裡有出現過的字或產品名）和每個工具的能力欄位（名稱、summary、use cases、tags、MCP 工具名）比對。每個字算一樣重；一個中文詞的幾個英文同義字算一個字（`記憶體` → memory 或 ram，提到任一個就算）。判斷用的中文另有幾條修正（`ZH_PHRASES`：`編碼助手` 是 coding assistant 不是 encoding；`助手`／`助理` 是工具種類），排序用的 `ZH_EN` 不變。
      - **good**：需求點名的產品（Notion、GitHub、PostgreSQL 這類大小寫混合或句中大寫的字；PDF、JSON 這種縮寫算一般字；`my Node project` 這種「在哪裡做」的不算點名）全都直接提到，涵蓋**過半**的具體字，而且至少兩個字。需求只有一個具體字時最多 partial，除非那個字是點名的產品、卡片也直接提到它。
      - **partial**：至少提到一個點名的產品（有點名時），涵蓋至少三分之一的具體字：至少兩個字，或一個字但佔需求的一半以上。
@@ -127,38 +130,52 @@ GUI 桌面 app 的實跑另帶 `verification.gui`（`find_*` 的 pick 與 `get_i
   - 上限：每小時開始處理的筆數照 `SUBMIT_HOURLY_CAP`；共用帳本的 Meta（每日、總額）與 Baseten 預算要留得下一筆的最壞花費（約 $1）才開始；`--max-usd` 管整次執行。每筆的各階段秒數與「從提交到可發布」的時間記在 `runs/watch/jobs/<submission>.json`。
   - `pickfit watch --status`（唯讀）列出 D1 的提交與重驗佇列；`--local` 用 `wrangler dev` 的本機 D1。
 
-## 花費上限與 `degraded`
+## 花費紀錄、選用的上限與 `degraded`
 
-Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.sqlite` 分開）：每日 $3、總額 $15（10/31 由 $40 調降為 $20，同日再降為 $15、把 $5 移給管線的 MCP 擴充；`META_DAILY_CAP_USD`、`META_TOTAL_CAP_USD`）。`find_*` 呼叫前先用「這次最多花多少」檢查兩個上限，超過就不呼叫、回 `degraded: true`、`degraded_reason: "over_budget"`；呼叫後記實際花費；逾時的呼叫照上限計。查不到 D1 就不呼叫模型（`budget_unavailable`）。
+Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.sqlite` 分開）。每次模型呼叫後都記實際花費，逾時的呼叫照最壞情況記。價格在 `src/meta.ts`：`claude-opus-5-5` 每百萬 token 輸入 $4、讀快取 $0.20、寫快取 $5、輸出 $20（thinking 算輸出）。
+
+**上限是選用的，預設不擋**（2026-11-15 起）。沒設上限時，`find_*` 不查 D1 就直接呼叫模型，D1 壞了也不會讓模型停掉，帳只是紀錄。要擋才設：
+
+| 設定 | 作用 |
+|---|---|
+| `META_DAILY_CAP_USD` | 每個 UTC 日的上限 |
+| `META_TOTAL_CAP_USD` | 累計總額的上限 |
+| `WEB_DAILY_CAP_USD` | 只管網頁搜尋的每日上限，可以比上面的低，把剩下的留給 agent |
+
+- 沒設或空字串就是沒有上限。`0` 是「每次都擋」。寫錯的值（不是 0 以上的數字）當成 `0`，打錯字不會把原本想設的上限放掉。
+- 有設的時候照舊：呼叫前先用「這次最多花多少」檢查，超過就不呼叫、回 `degraded: true`、`degraded_reason: "over_budget"`。查不到 D1 就不呼叫模型（`budget_unavailable`）。
+- `wrangler.jsonc` 目前的設定：公開的 server 只留每日 $20（`META_DAILY_CAP_USD`），沒有總額上限，也沒有網頁自己的上限。留這一條是因為 `/mcp` 和搜尋框誰都能用，每次配對都要付費；超過之後當天改用規則排序，UTC 00:00 恢復。要完全不擋就刪掉那一行。評測用的 `eval`、`eval-rules` 保留自己的上限（見「評測部署」）。
+- 黑客松期間的上限是每日 $3、總額 $15、網頁每日 $2（10/31 總額由 $40 調降為 $20，同日再降為 $15，把 $5 移給管線的 MCP 擴充），11/15 取消。
 
 ### 重試（暫時性錯誤只重試一次）
 
-10/29 重新部署後，Meta 曾有幾分鐘對 `muse-spark-1.3` 時好時壞地回 404「model not found」，當時 `find_software` 一遇錯就退回規則。現在 `src/meta.ts` 的 `callMeta` 遇到下面三種狀態會**再試一次**：
+`src/meta.ts` 的 `callModel` 遇到下面兩種狀態會**再試一次**：
 
 - `429`；
-- 任何 `5xx`；
-- `404` 且內容說模型不存在（`model_not_found`，或 `model … not found／does not exist`）。
+- 任何 `5xx`（Anthropic 的 `529 overloaded` 也在內）。
 
-其他狀態不重試：`400`、`401`、`403`、路徑不對的 `404` 等。逾時、連線錯誤也不重試。Meta 已經回了答案的也不重試，不論輸出壞掉、`incomplete`，或推薦全被守門擋掉。
+其他狀態不重試：`400`、`401`、`403`、`404`（模型 id 寫錯，重試也沒用）等。逾時、連線錯誤也不重試。模型已經回了答案的也不重試，不論是拒答（`stop_reason: refusal`）、被 `max_tokens` 截斷、輸出壞掉，或推薦全被守門擋掉。
 
-- **等待**：200–800 ms 隨機。Meta 給的 `Retry-After`（或 `retry-after-ms`）在 5 秒以內就照它等；要求等更久就不重試，直接退回規則。
-- **時限**：兩次請求加上中間的等待都在 `META_TIMEOUT_MS` 之內；有關鍵字呼叫時，它用掉的時間也算在內，配對只拿剩下的。第二次的逾時是剩下的時間；剩不到 10 秒（一次配對約 6–8 秒）就不重試，照原本的方式退回規則。
+（10/29 Meta 曾有幾分鐘對 `muse-spark-1.3` 時好時壞地回 404「model not found」，當時為此加了「404 且內容說模型不存在也重試」。換到 Anthropic API 後拿掉了。）
+
+- **等待**：200–800 ms 隨機。API 給的 `Retry-After`（或 `retry-after-ms`）在 5 秒以內就照它等；要求等更久就不重試，直接退回規則。
+- **時限**：兩次請求加上中間的等待都在 `META_TIMEOUT_MS`（預設 40 秒；`muse-spark-1.3` 時是 25 秒）之內；有關鍵字呼叫時，它用掉的時間也算在內，配對只拿剩下的。第二次的逾時是剩下的時間；剩不到 10 秒就不重試，照原本的方式退回規則。40 秒是估的，Claude 的實際延遲還沒量。
 - **花費**：HTTP 錯誤沒有 usage，記 $0；只記有回 usage 的那次。配對呼叫只寫一筆 `meta_budget`（`calls + 1`）；有關鍵字呼叫時它另記一筆，`events.meta_cost_usd` 是兩者的和。重試前不再查一次上限，因為失敗的那次沒有花到錢。
 - **紀錄**：
   - `degraded_reason` 維持 `model_http`。
-  - 回應多兩個欄位：`model_attempts`（送給 Meta 幾次；0 表示沒用模型，2 表示重試過）、`model_http_status`（`degraded_reason` 是 `model_http` 時，Meta 最後一次回的狀態碼）。
+  - 回應多兩個欄位：`model_attempts`（送給模型 API 幾次；0 表示沒用模型，2 表示重試過）、`model_http_status`（`degraded_reason` 是 `model_http` 時，API 最後一次回的狀態碼）。
   - `events` 多三欄（`0003`）：`degraded_reason`、`model_attempts`、`model_statuses`（每次的狀態碼，例如 `[503, 200]`；沒拿到回應的記 `null`）。
   - Workers log 每次重試記一行 `meta_retry`，內容是 `status`、`wait_ms`、`left_ms`。
 
-本機實測（假資料 4–5 張卡，10/28）：`find_software` 約 $0.009、7 秒；`find_alternatives` 約 $0.009–0.011、6–7 秒。
+本機實測（假資料 4–5 張卡，10/28，`muse-spark-1.3`）：`find_software` 約 $0.009、7 秒；`find_alternatives` 約 $0.009–0.011、6–7 秒。
 
 ## 不快取
 
-`find_software`、`find_alternatives` 每次呼叫都重新做一次完整配對（硬條件 → 候選卡 → 一次 `muse-spark-1.3` → 守門），Worker 裡沒有任何結果快取；同樣的請求送兩次就是兩次模型呼叫、兩個不同的 `rec_id`、兩列 `events`（`test/deployments.test.ts` 有測）。其他層也不快取：
+`find_software`、`find_alternatives` 每次呼叫都重新做一次完整配對（硬條件 → 候選卡 → 一次模型呼叫 → 守門），Worker 裡沒有任何結果快取；同樣的請求送兩次就是兩次模型呼叫、兩個不同的 `rec_id`、兩列 `events`（`test/deployments.test.ts` 有測）。其他層也不快取：
 
 - MCP：2026-07-28 版只有 `tools/list`、`server/discover` 等清單類結果帶快取欄位（SDK 預設 `ttlMs: 0`、`private`）；`tools/call` 的結果沒有。
 - HTTP：`/mcp` 的每個回應都帶 `Cache-Control: no-store`。
-- Meta：請求帶 `store: false`。Meta 可能把重複的 prompt 前段算成 cached input token（計價較低），那只是重用輸入，答案每次都重新產生，所以同樣的請求可能得到不同的 picks。
+- 模型：請求不帶 `cache_control`，所以不寫也不讀 prompt 快取；答案每次都重新產生，同樣的請求可能得到不同的 picks。Anthropic API 沒有 `store: false` 這種開關（Meta 的 Responses API 才有），請求在 Anthropic 那邊保留多久照該組織的 API 資料保留設定。
 
 例外只有產品網頁自己的快取（下一節）：只在 `POST /search` 裡讀寫，MCP 的路徑碰不到（`test/web.test.ts` 有測：網頁同樣的搜尋兩次只呼叫一次模型，MCP 兩次仍是兩次）。
 
@@ -176,17 +193,18 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
   - **桌面 app**：試驗紀錄照 `verification.gui` 寫出畫面判讀看到什麼，並明說 pickfit 沒用過它的任何功能；斷網啟動有通過也會寫出來。只有 `main_ui`、`first_run` 打勾，顯示錯誤或空白視窗的不打勾，用警示色。
   - **規則路徑**：每個 pick 標 Good／Partial／Weak match，下面一行列出 profile 提到與沒提到的需求字；`find.ts` 加在取捨裡的同一句不重複。標題跟著 `match_quality`：partial 是「Partial fits」，none 是「No clear fit」，`coverage_note` 移到 picks 前面。
 - **不記個資**：不存 IP。`events` 和 MCP 一樣只存解析後的條件，另標 `client = 'web'`，網頁和 agent 的使用量分得開。網頁上顯示安裝步驟**不**寫 `install_guide` 事件，因為使用者還沒選，而 MCP 的那個事件代表「選了這一款」。不支援 `?need=` 預填：請求網址會進 Workers log，頁尾寫著 pickfit 不留使用者的原話。
-- **花費與濫用**（每次搜尋是一次付費的 `muse-spark-1.3`，用 Worker 自己的 `meta_budget`）：
-  - **網頁上限** `WEB_DAILY_CAP_USD`（預設 2）：呼叫模型前，先用**一條** D1 指令（`budget.ts` 的 `reserveSpend`，`INSERT … SELECT … WHERE` 加 upsert）預留這次最壞情況的花費（配對呼叫 `estimateCostUsd(150000)` 加上超過 60 筆時的關鍵字呼叫 `estimateCostUsd(8000, 600)`，約 $0.085；今天 60 張卡約 8.4 萬字元）。條件是「今天已花＋預留 ≤ `min(WEB_DAILY_CAP_USD, META_DAILY_CAP_USD)`」而且「總額＋預留 ≤ $40」。同時湧入的搜尋不會在任何一筆記帳前全部通過檢查；兩個 isolate 共用一個 D1 也一樣，`test/web.test.ts` 有測。呼叫結束（不論成敗）後釋放預留，實際花費照 MCP 原本的方式記帳。`findSoftware` 裡原本的檢查照跑，只是上限加上自己的預留，不重複計算。MCP 路徑不預留，程式沒變，但它的檢查看得到網頁正在進行的預留，所以比較保守。預留不到時改用規則排序，並說明原因：
+- **花費與濫用**（每次搜尋是一次付費的模型呼叫，記在 Worker 自己的 `meta_budget`）：
+  - **沒設上限時**（程式的預設）：搜尋直接呼叫模型，不預留、不查 D1，只記實際花費。這時擋濫用的只有下面的每人頻率和同時進行的筆數。
+  - **有設上限時**（`META_DAILY_CAP_USD`、`META_TOTAL_CAP_USD`，或網頁自己的 `WEB_DAILY_CAP_USD`）：呼叫模型前，先用**一條** D1 指令（`budget.ts` 的 `reserveSpend`，`INSERT … SELECT … WHERE` 加 upsert）預留這次最壞情況的花費（配對呼叫 `estimateCostUsd(150000)` 加上超過 60 筆時的關鍵字呼叫 `estimateCostUsd(8000, 2000)`，照 Claude 的價格約 $0.41；今天 60 張卡約 8.4 萬字元）。條件是「今天已花＋預留 ≤ 每日上限（`WEB_DAILY_CAP_USD` 和 `META_DAILY_CAP_USD` 有設的取較低者）」而且「總額＋預留 ≤ 總額上限（有設才算）」。同時湧入的搜尋不會在任何一筆記帳前全部通過檢查；兩個 isolate 共用一個 D1 也一樣，`test/web.test.ts` 有測。呼叫結束（不論成敗）後釋放預留，實際花費照 MCP 原本的方式記帳。`findSoftware` 裡原本的檢查照跑，只是上限加上自己的預留，不重複計算。MCP 路徑不預留，程式沒變，但它的檢查看得到網頁正在進行的預留，所以比較保守。預留不到時改用規則排序，並說明原因：
     - 網頁今天的額度用完：「paused until 00:00 UTC」，並說明網頁和 agent 的花費合計已到上限；
     - 總額用完：不承諾重置；
     - 查不到 D1：照實說查不到。
-  - **每人頻率**：`ratelimits` 綁定 `WEB_RATE_LIMITER`，每分鐘 6 次（以 Cloudflare 機房計）。鍵是「UTC 日期＋IP」的 SHA-256 前 32 字元，IPv6 位址以 /64 計（一戶或一台主機常持有整個 /64；IPv4-mapped 位址照 IPv4 計），只存在限流計數器裡，不進 D1、不進 log。沒有綁定時（例如在別的環境）改用這個 isolate 記憶體裡的計數；綁定出錯時放行並記 `web_rate_limit_failed`，花費仍受網頁上限擋。超過回 429、`Retry-After: 60` 與「Busy」訊息，不呼叫模型、不寫事件。
+  - **每人頻率**：`ratelimits` 綁定 `WEB_RATE_LIMITER`，每分鐘 6 次（以 Cloudflare 機房計）。鍵是「UTC 日期＋IP」的 SHA-256 前 32 字元，IPv6 位址以 /64 計（一戶或一台主機常持有整個 /64；IPv4-mapped 位址照 IPv4 計），只存在限流計數器裡，不進 D1、不進 log。沒有綁定時（例如在別的環境）改用這個 isolate 記憶體裡的計數；綁定出錯時放行並記 `web_rate_limit_failed`；這時有設上限才擋得住花費。超過回 429、`Retry-After: 60` 與「Busy」訊息，不呼叫模型、不寫事件。
   - **快取與併發**：同樣的需求（忽略大小寫與多餘空白）加同樣的條件：
     - 10 分鐘內在同一個 isolate 直接重用結果，不呼叫模型、不寫事件，頁面註明是剛才的結果。
     - 還在跑的搜尋，後到的那筆等它的結果，不另外呼叫。
     - 鍵是雜湊，不留原話；`degraded` 的結果不快取，下一次會再試模型。
-    - 一個 isolate 同時最多 `MAX_IN_FLIGHT`（6）筆模型搜尋，超過回 503、`Retry-After: 10` 與「Busy」。跨 isolate 的花費由上面的預留擋。
+    - 一個 isolate 同時最多 `MAX_IN_FLIGHT`（6）筆模型搜尋，超過回 503、`Retry-After: 10` 與「Busy」。跨 isolate 的花費，有設上限時由上面的預留擋。
   - **跨站**：`POST /search` 和 `/mcp` 一樣檢查 Host 與 Origin，別的網站的表單不能花這裡的預算。表單以位元組計，邊讀邊算，超過 8 KB（`Content-Length` 已超過就不讀）回 413。需求以字元（code point）計，要 3–500 字，否則回 400 並說出字數，不會默默截斷；500 個中日文字約 4.5 KB，在上限內。都不呼叫模型。
 - **設計**（11/1 改版，取代 10/30 版）：品牌與設計系統見 repo 根目錄的 [DESIGN.md](../DESIGN.md) 與 [PRODUCT.md](../PRODUCT.md)，方法參考 Impeccable（impeccable.style）。概念是「裁縫的試衣間」：吉祥物 Fitz（縫葉鶯）量你的條件、先在沙盒試穿、只交出合身的。
   - 綠色裁切墊（有量測格線）是頁首、結果頁頭與頁尾的底；每個量測值（品質、知名度、功能檢查）畫成黃色量尺；只有 pickfit 自己跑過的證據上方有紅褐色縫線，沒驗證的沒有縫線、徽章、步驟或連結。
@@ -211,8 +229,8 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 | 設定 | 作用 |
 |---|---|
 | `TOOLS` | 不設或 `all`：5 個工具。`readonly`：只註冊 `find_software`、`find_alternatives`、`get_install_guide`；server instructions 與工具說明不再提到另外兩個，呼叫它們回 JSON-RPC `-32602 Tool … not found`。其他任何值也當 `readonly`（打錯字不會意外打開寫入工具） |
-| `MATCH_MODE` | `model` 或 `off`（規則排序，不呼叫 Meta） |
-| `META_DAILY_CAP_USD`、`META_TOTAL_CAP_USD` | 這個部署自己的 Meta 上限；算的是這個部署的 D1 `meta_budget` |
+| `MATCH_MODE` | `model` 或 `off`（規則排序，不呼叫模型） |
+| `META_DAILY_CAP_USD`、`META_TOTAL_CAP_USD` | 這個部署自己的模型花費上限（選用；沒設就不擋）；算的是這個部署的 D1 `meta_budget` |
 
 `wrangler.jsonc` 已有兩個範本（`env` 區塊；wrangler 不會把頂層的 `vars`、`d1_databases` 繼承進 env，所以每個都完整列出）：
 
@@ -228,7 +246,7 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 1. `npx wrangler d1 create pickfit-eval`，把 id 填進 `env.eval.d1_databases`；`npx wrangler d1 migrations apply pickfit-eval --env eval --remote`。
 2. `env.eval.vars.ALLOWED_HOSTS` 填 `pickfit-mcp-eval.<workers.dev 子網域>.workers.dev`（env 部署的 Worker 名稱是 `pickfit-mcp-<env>`），commit。
 3. `uv run pickfit publish --dry-run --env eval`（會印出這個 env 的 `TOOLS`、`MATCH_MODE`、上限），沒問題再 `uv run pickfit publish --env eval`。
-4. 金鑰：把文末第 6 步的指令改成 `npx wrangler secret put MODEL_API_KEY --env eval`。
+4. 金鑰：把文末第 6 步的指令改成 `npx wrangler secret put ANTHROPIC_API_KEY --env eval`。11/2 的評測是用 `muse-spark-1.3` 跑的；這個 env 現在要再用，得先設這把金鑰，否則 `find_*` 以 `no_api_key` 退回規則。
 5. 確認 `GET /` 的 `tools` 是 `readonly`、`data_sha256` 和另一個 arm 相同；`tools/list` 只有 3 個工具。
 
 ## D1（`migrations/`）
@@ -251,11 +269,11 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 3. **`ALLOWED_HOSTS`**：在 `wrangler.jsonc` 的 `vars` 填 `pickfit-mcp.<workers.dev 子網域>.workers.dev`（子網域就是 P0.5 hello 部署用的那個，dashboard 的 Workers & Pages 也看得到），commit。沒填的話遠端每個請求都是 403，`pickfit publish` 也會拒絕部署。
 4. **先 dry run**：在 repo 根目錄 `uv run pickfit publish --dry-run`。它會驗 `data/software/` 每一筆、確認不是 fixture、資料都已 commit、`wrangler.jsonc` 已填好；任何一項不過就列出問題、exit 1。
 5. **部署**：`uv run pickfit publish`。它用真資料重建 `worker/src/generated/index.json`，再跑 `npx wrangler deploy`。（之後本機要回到假資料：`npm run build:index -- --data test/fixtures/software`。）
-6. **設金鑰**（第一次部署後；在設好之前，`find_*` 會以 `no_api_key` 退回規則排序）。從 `.env` 只讀這一個值、經 pipe 交給 wrangler，不會印在終端機：
+6. **設金鑰**（第一次部署後；在設好之前，`find_*` 會以 `no_api_key` 退回規則排序）。金鑰的名字是 `ANTHROPIC_API_KEY`。**從 `muse-spark-1.3` 換到 Claude 的這一版，要在 push 到 `main`（會自動部署）之前先設好**，不然新版一上線就沒有金鑰可用，全部退回規則。舊的 `MODEL_API_KEY`、`OPENROUTER_API_KEY` 兩個 secret 新版不讀，確認上線正常後可以用 `npx wrangler secret delete` 刪掉。從 `.env` 只讀這一個值、經 pipe 交給 wrangler，不會印在終端機：
 
    ```bash
-   uv run --project .. python -c "import sys; from pickfit.env import read_env; sys.stdout.write(read_env(['MODEL_API_KEY'])['MODEL_API_KEY'])" | npx wrangler secret put MODEL_API_KEY
+   uv run --project .. python -c "import sys; from pickfit.env import read_env; sys.stdout.write(read_env(['ANTHROPIC_API_KEY'])['ANTHROPIC_API_KEY'])" | npx wrangler secret put ANTHROPIC_API_KEY
    ```
 
-7. **確認**：`curl https://<host>/` 的 `entries` 等於 dry run 的筆數（瀏覽器開同一個網址是產品網頁，試搜一次）；`claude mcp add --transport http pickfit https://<host>/mcp`（用 `env -i` 啟動，見上）看得到 5 個工具；問一題，回應的 `matched_by` 是 `muse-spark-1.3`。
+7. **確認**：`curl https://<host>/` 的 `entries` 等於 dry run 的筆數（瀏覽器開同一個網址是產品網頁，試搜一次）；`claude mcp add --transport http pickfit https://<host>/mcp`（用 `env -i` 啟動，見上）看得到 5 個工具；問一題，回應的 `matched_by` 是 `claude-opus-5-5`。
 8. **緊急關模型**：`npx wrangler deploy --var MATCH_MODE:off`，或把 `META_DAILY_CAP_USD` 調成 `0` 再部署；兩種都會讓 `find_*` 改用規則、標 `degraded`。

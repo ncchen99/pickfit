@@ -30,7 +30,7 @@ function forbidden(message: string): Response {
 }
 
 export interface WorkerOptions {
-  /** Test hook: replaces global fetch for the Meta call. */
+  /** Test hook: replaces global fetch for the model call. */
   fetch?: typeof fetch;
   now?: () => Date;
   /** The web page's zh-TW sentences per tool (generated/zh-TW.json). */
