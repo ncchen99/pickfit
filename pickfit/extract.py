@@ -1,8 +1,9 @@
-"""Extraction v0: a Meta model reads a candidate's public sources into ExtractionResult.
+"""Extraction v0: a model (Claude Opus; muse-spark-1.3 during the hackathon) reads a candidate's public
+sources into ExtractionResult.
 
 The sources (repo description and topics, README, newest release, and for an
 app a package store lists, the store's entry) go to the model wrapped in <source> blocks, and the instructions say that text inside
-them is data, not instructions. The answer comes back through Meta strict
+them is data, not instructions. The answer comes back through strict
 structured output (`text.format` from meta_strict_schema), is validated by
 pydantic, and then every quote and copied command is checked against the exact
 text that was sent: a value whose quote is not in the sources is a guess, so it
@@ -40,7 +41,7 @@ from typing import Any
 from pickfit.discover.run import pipeline_db_path
 from pickfit.discover.store import PipelineDB
 from pickfit.ledger import BudgetExceeded, Ledger, taipei_now
-from pickfit.meta import call_meta, resolve_model
+from pickfit.meta import PROD_MODELS, call_meta, resolve_model
 from pickfit.schema import ExtractedFeatures, ExtractionResult, meta_strict_schema
 
 STAGE = "extract"
@@ -48,11 +49,15 @@ README_MAX_CHARS = 30_000  # about 8-10K tokens; long READMEs are cut, and the s
 RELEASE_NOTES_MAX_CHARS = 3_000
 MAX_OUTPUT_TOKENS = 8_000  # reasoning shares this limit
 RETRY_MAX_OUTPUT_TOKENS = 16_000  # a retry after running out of output tokens gets twice the room
-SCOPE_CAP_USD = 0.20  # per candidate per run; a muse-spark-1.3 call is about $0.02
+# Per candidate per run. A call is reserved at its worst case before it is sent: on Claude Opus about $0.25
+# for a long README with 8,000 output tokens allowed and $0.40 for the retry with 16,000, so the cap holds
+# two attempts and a retry. What a call costs once settled is a small part of that.
+SCOPE_CAP_USD = 1.50
 MAX_CONSECUTIVE_ERRORS = 3
 MAX_ATTEMPTS = 2
-DEFAULT_CONCURRENCY = 4  # muse-spark-1.3 allows 3,000 RPM, the contributor model 150 RPM
-# Same instructions and schema on every call: one cache key lets Meta reuse that prefix.
+DEFAULT_CONCURRENCY = 4
+# Same instructions and schema on every call: the provider caches that prefix (Claude: the system prompt
+# is a cache breakpoint; the key is a hint only Meta's API reads).
 PROMPT_CACHE_KEY = "pickfit-extract-v3"  # v2: the mcp section; v3: package-store entries
 # call_meta has already retried these; one more try later often gets through.
 TRANSIENT_ERRORS = ("APIConnectionError", "APITimeoutError", "InternalServerError", "RateLimitError",
@@ -443,15 +448,27 @@ def feature_rows(db: PipelineDB, repo_id: str, model: str) -> dict[str, Any] | N
 _LABEL_ORDER = {"tool": 0, "uncertain": 1}
 
 
+def same_tier(model: str) -> tuple[str, ...]:
+    """The models whose extraction counts as `model`'s own when deciding what is left to read: for the prod
+    model, the hackathon's prod model too (meta.PROD_MODELS)."""
+    return PROD_MODELS if model in PROD_MODELS else (model,)
+
+
 def _extracted(db: PipelineDB, candidate: dict[str, Any], model: str) -> bool:
-    last = db.last_extraction(candidate["repo_id"], model, exclude=(FEATURES_STATUS,))
-    return bool(last and last["status"] in _DONE and last["sources_sha"] == sources_sha(build_sources(candidate)))
+    """Whether `model` (or its tier) has a finished extraction of the candidate's sources as they are now."""
+    sha = sources_sha(build_sources(candidate))
+    for m in same_tier(model):
+        last = db.last_extraction(candidate["repo_id"], m, exclude=(FEATURES_STATUS,))
+        if last and last["status"] in _DONE and last["sources_sha"] == sha:
+            return True
+    return False
 
 
 def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[str] | None = None,
                       force: bool = False, features_only: bool = False,
                       categories: list[str] | None = None) -> list[dict[str, Any]]:
-    """Rule-passed candidates not yet extracted from the same sources by this model.
+    """Rule-passed candidates not yet extracted from the same sources by this model (or, for the prod
+    model, by the hackathon's: same_tier).
 
     Candidates the prescreen rejected are skipped unless asked for by id; unscreened ones still go.
 
@@ -474,13 +491,10 @@ def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[
         if not repo_ids and prescreen.get(c["repo_id"], {}).get("keep") is False:
             continue  # the open-weight prescreen (or its review) said this is not usable software
         if features_only:
-            if not force and feature_rows(db, c["repo_id"], model):
+            if not force and any(feature_rows(db, c["repo_id"], m) for m in same_tier(model)):
                 continue
-        else:
-            last = db.last_extraction(c["repo_id"], model, exclude=(FEATURES_STATUS,))
-            if not force and last and last["status"] in _DONE and last["sources_sha"] == sources_sha(
-                    build_sources(c)):
-                continue
+        elif not force and _extracted(db, c, model):
+            continue
         todo.append(c)
     todo.sort(key=lambda c: c["repo"].get("pushed_at") or "", reverse=True)
     todo.sort(key=lambda c: _LABEL_ORDER.get(c["rule_label"], 2))

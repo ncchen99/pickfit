@@ -1,8 +1,8 @@
-"""Verification agent: Muse Spark installs and smoke-tests one tool in a Box (P3.3).
+"""Verification agent: a model (Claude Opus; Muse Spark to 11/4) installs and smoke-tests one tool in a Box (P3.3).
 
 The model decides every step through function tools (list_dir, read_file,
 run_command, run_background, finish); the program runs them in the Box and
-enforces the limits: 25 turns, 15 commands, 20 minutes, $0.50 per run
+enforces the limits: 25 turns, 15 commands, 20 minutes, $3.00 per run
 (`scope="verify:<slug>"` in the shared ledger), and a stop after the same
 error three times. Near a limit the model is told to call `finish` now; it
 keeps the same tools, so the conversation's prompt cache still holds, but any
@@ -83,7 +83,10 @@ class AgentLimits:
     max_turns: int = 25
     max_commands: int = 15
     max_seconds: float = 20 * 60
-    scope_cap_usd: float = 0.50
+    # One run's model calls (agent, judges). Each turn is reserved at its worst case before it is sent (about
+    # $0.25-0.40 on Claude Opus with the history uncached and every output token used), then settled to what
+    # it cost, so the cap is what a full run settles to plus one reservation; $0.50 on Meta's prices to 11/4.
+    scope_cap_usd: float = 3.00
     same_error_limit: int = 3
     max_operations: int = OPERATE_MAX  # display boxes: 0 makes the run install-only (no operate_gui)
 

@@ -5,10 +5,10 @@ Every `interval_s` (60 s) the watcher reads queued rows of the Worker's D1
 queued, so two watchers never take the same row) and runs the single-record
 pipeline:
 
-  GitHub details -> rules -> prescreen (Muse Spark Open on Baseten, review by
-  muse-spark-1.3) -> extraction (muse-spark-1.3) -> record -> verification on
+  GitHub details -> rules -> prescreen (Claude Haiku, review by Claude Opus) -> extraction (Claude Opus)
+  -> record -> verification on
   Modal (agent, fresh-box replay, judge) -> scores -> known vulnerabilities (OSV.dev, no model call) -> for a
-  desktop app, the visual check of its screenshots (Muse Wonder, one call)
+  desktop app, the visual check of its screenshots (one model call)
 
 The record is built in runs/watch/<submission>/software/, so data/software
 changes only when a record is finished: then it is copied in and committed
@@ -33,10 +33,9 @@ submission (also one still in flight), and whatever the rules reject. Any star
 count is taken: pickfit lists any software, not only lesser-known tools.
 
 Limits: at most SUBMIT_HOURLY_CAP submissions start per rolling hour (the cap
-the Worker applies to intake, from wrangler.jsonc); a submission starts only
-when the pipeline's Meta budget (daily and total, in the shared ledger) and
-the Baseten budget have room for its worst case; `max_usd` caps the whole
-watch run. Every job's timings, counted from submitted_at, land in
+the Worker applies to intake, from wrangler.jsonc); `max_usd` caps the whole
+watch run; and where the user set a daily or total cap on the pipeline budget
+(pickfit.ledger), a submission starts only while it has room for its worst case. Every job's timings, counted from submitted_at, land in
 runs/watch/jobs/<submission>.json.
 """
 
@@ -52,6 +51,7 @@ import urllib.request
 from collections.abc import Callable, Iterator
 from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import contextmanager
+import math
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -62,11 +62,12 @@ from pickfit.discover.github import normalize_repo
 from pickfit.discover.rules import RULES_VERSION, classify
 from pickfit.discover.store import PipelineDB, repo_key
 from pickfit.ledger import TAIPEI, BudgetExceeded, Ledger, taipei_now
+from pickfit.meta import PROD_MODEL
 from pickfit.schema import LISTED_CATEGORIES, TOOL_KINDS, ExtractionResult, SoftwareRecord, is_passed
 from pickfit.verify.batch import NEVER_RAN, not_in_box
 from pickfit.verify.task import VerifyTask
 
-MODEL = "muse-spark-1.3"
+MODEL = PROD_MODEL
 EXTRACT_EFFORT = "minimal"
 COVERED = LISTED_CATEGORIES  # dev_cli, local_ai, mcp_server
 # Category "other" is taken too when the kind is software people install and run (desktop and web apps, CLI tools
@@ -74,14 +75,15 @@ COVERED = LISTED_CATEGORIES  # dev_cli, local_ai, mcp_server
 OTHER_KINDS = TOOL_KINDS
 DEFAULT_INTERVAL_S = 60
 DEFAULT_CONCURRENCY = 2
-DEFAULT_MAX_USD = 5.0
+DEFAULT_MAX_USD = 30.0  # five submissions at their worst case (WORST_CASE_META_USD)
 DEFAULT_HOURLY_CAP = 20  # the Worker's default when wrangler.jsonc has none
 MAX_ATTEMPTS = 3
 STALE_AFTER = timedelta(hours=1)  # a row left in reading/verifying this long lost its watcher
-# Room a submission needs before it starts: prescreen review $0.05 + extraction $0.20 +
-# verification $0.50 + rubric $0.10 (each stage's own cap), rounded up.
-WORST_CASE_META_USD = 1.0
-WORST_CASE_BASETEN_USD = 0.05
+# Room a submission needs before it starts: prescreen $0.30 + review $0.30 + extraction $1.50 +
+# verification $3.00 + rubric $0.60 (each stage's own cap on Claude's prices), rounded up. A usual one costs
+# far less; this is what --max-usd and a user-set cap are checked against. The names are the hackathon's.
+WORST_CASE_META_USD = 6.0
+WORST_CASE_BASETEN_USD = 0.0
 REASON_MAX = 300  # submissions.reason CHECK
 DONE_EXTRACTIONS = ("ok", "quotes_dropped")
 READY_REASON = "Installed, replayed in a fresh sandbox and checked; goes live at pickfit's next publish."
@@ -126,12 +128,14 @@ def stop_reason(outcome: Any) -> str | None:
 
 
 def budget_blocked(needs: list[tuple[str, Ledger | None, float]]) -> str | None:
-    """Why a job needing `need` dollars from each ledger may not start (daily or total cap), or None."""
+    """Why a job needing `need` dollars from each ledger may not start (a daily or total cap the user set),
+    or None. A ledger with no cap never blocks."""
     for name, ledger, need in needs:
         if ledger is None:
             continue
         spend = ledger.spend_summary()
-        room = min(spend["daily_cap_usd"] - spend["today_usd"], spend["total_cap_usd"] - spend["total_usd"])
+        room = min(math.inf if spend["daily_cap_usd"] is None else spend["daily_cap_usd"] - spend["today_usd"],
+                   math.inf if spend["total_cap_usd"] is None else spend["total_cap_usd"] - spend["total_usd"])
         if room < need:
             return f"{name} budget: ${room:.2f} left today or in total, a job may need ${need:.2f}"
     return None
@@ -192,7 +196,7 @@ class Job:
     commit: str | None = None
     publish_check: list[str] | None = None  # problems `pickfit publish --dry-run` would report
     stages: dict[str, float] = field(default_factory=dict)  # seconds
-    cost_usd: dict[str, float] = field(default_factory=dict)  # meta, baseten, box
+    cost_usd: dict[str, float] = field(default_factory=dict)  # model, box (to 11/4: meta, baseten, box)
     ready_at: str | None = None
     listed_at: str | None = None
     seconds_to_ready: float | None = None  # from submitted_at
@@ -250,7 +254,7 @@ class Steps:
 
 
 def live_steps(*, runner: str = "modal") -> Steps:
-    """The real pipeline: GitHub, Baseten and Meta through the ledger, Modal boxes."""
+    """The real pipeline: GitHub, Claude through the ledger, Modal boxes."""
     from pickfit.discover.github import GitHub, github_token
     from pickfit.extract import extract_with_retries
     from pickfit.prescreen import screen_and_review
@@ -454,7 +458,7 @@ class Watcher:
         if self.spent_usd + (len(running) + 1) * WORST_CASE_META_USD > self.s.max_usd:
             return f"this run's cap: ${self.spent_usd:.2f} spent of --max-usd {self.s.max_usd:.2f}"
         jobs = len(running) + 1  # the ones in flight may still spend their worst case
-        return budget_blocked([("Meta pipeline", self.meta_ledger, WORST_CASE_META_USD * jobs),
+        return budget_blocked([("Model pipeline", self.meta_ledger, WORST_CASE_META_USD * jobs),
                                ("Baseten", self.baseten_ledger, WORST_CASE_BASETEN_USD * jobs)])
 
     # -- the pipeline for one submission
@@ -496,7 +500,7 @@ class Watcher:
                     self._slugs_in_flight.discard(job.slug)
                 if job.repo_id and self._repos_in_flight.get(job.repo_id) == job.url:
                     self._repos_in_flight.pop(job.repo_id)
-                self.spent_usd += sum(job.cost_usd.get(k, 0.0) for k in ("meta", "baseten"))
+                self.spent_usd += sum(job.cost_usd.get(k, 0.0) for k in ("model", "meta", "baseten"))
             self._save(job)
         log(f"done · {job.summary()}")
         return job
@@ -582,7 +586,7 @@ class Watcher:
             with self._stage(job, "verify"):
                 outcome = self.steps.verify(task, record_dir, log)
             job.run_id, job.level = outcome.run_id, outcome.run.level
-            job.spent("meta", outcome.cost_usd)
+            job.spent("model",outcome.cost_usd)
             job.spent("box", getattr(outcome, "box_usd", 0.0))
             stop = stop_reason(outcome)
             if stop in NEVER_RAN:
@@ -622,7 +626,7 @@ class Watcher:
             return
         with self._stage(job, "visual"):
             cost, error = self.steps.visual(record_dir, job.slug, log)
-        job.spent("meta", cost)
+        job.spent("model",cost)
         if error:
             job.notes.append(f"visual check did not finish: {error}")
             log(f"visual check did not finish: {error}")
@@ -663,7 +667,7 @@ class Watcher:
             return done
         for row in self.steps.prescreen(candidate, run_id):
             self.db.save_prescreen(**row)
-            job.spent("baseten" if row["role"] == "screen" else "meta", row["cost_usd"])
+            job.spent("model", row["cost_usd"])
         return self.db.prescreen_decisions().get(candidate["repo_id"])
 
     def _extract(self, candidate: dict[str, Any], run_id: str, job: Job) -> dict[str, Any]:
@@ -676,7 +680,7 @@ class Watcher:
         rows = self.steps.extract(candidate, run_id)
         for row in rows:
             self.db.save_extraction(**row)
-            job.spent("meta", row["cost_usd"])
+            job.spent("model",row["cost_usd"])
         final = rows[-1] if rows else None
         if final is None or final["status"] not in DONE_EXTRACTIONS:
             raise Retry(f"extraction {final['status'] if final else 'did not run'}")
@@ -898,7 +902,7 @@ class Watcher:
         def blocked() -> str | None:
             if self.spent_usd + (busy + 1) * WORST_CASE_META_USD > self.s.max_usd:
                 return f"this run's cap: ${self.spent_usd:.2f} spent of --max-usd {self.s.max_usd:.2f}"
-            return budget_blocked([("Meta pipeline", self.meta_ledger, WORST_CASE_META_USD * (busy + 1))])
+            return budget_blocked([("Model pipeline", self.meta_ledger, WORST_CASE_META_USD * (busy + 1))])
 
         def work() -> list[Any]:
             try:

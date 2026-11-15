@@ -29,7 +29,7 @@ from pickfit.extract import (
     select_candidates,
 )
 from pickfit.ledger import Caps, Ledger
-from pickfit.meta import OPEN_MODEL
+from pickfit.meta import BULK_MODEL
 from pickfit.schema import _NO_MCP, ExtractionResult, meta_strict_schema
 
 README = """# tinyq
@@ -88,7 +88,7 @@ def extraction(**overrides: Any) -> dict[str, Any]:
 def responses_reply(payload: dict[str, Any] | str, status: str = "completed") -> dict[str, Any]:
     text = payload if isinstance(payload, str) else json.dumps(payload)
     return {
-        "id": "resp_x", "object": "response", "created_at": 0, "model": "muse-spark-1.3-contributor",
+        "id": "resp_x", "object": "response", "created_at": 0, "model": "claude-haiku-5-5",
         "status": status,
         "output": [{"type": "message", "id": "m", "role": "assistant", "status": "completed",
                     "content": [{"type": "output_text", "text": text, "annotations": []}]}],
@@ -275,11 +275,11 @@ def test_run_extract_stores_results_and_spends_through_call_meta(tmp_path: Path,
     summary = run_extract(limit=5, db_path=db_path, client=server.client(), ledger=ledger,
                           runs_dir=tmp_path / "runs", log=lines.append)
     assert summary["attempted"] == 1 and summary["by_status"] == {"ok": 1} and summary["errors"] == 0
-    assert summary["model"] == "muse-spark-1.3-contributor"
-    assert summary["cost_usd"] == pytest.approx((5000 * 0.10 + 900 * 0.20) / 1e6)
+    assert summary["model"] == "claude-haiku-5-5"
+    assert summary["cost_usd"] == pytest.approx((5000 * 0.10 + 900 * 0.50) / 1e6)
     (request,) = server.requests
     assert request["path"] == "/v1/responses"
-    assert request["model"] == "muse-spark-1.3-contributor"
+    assert request["model"] == "claude-haiku-5-5"
     assert request["reasoning"] == {"effort": "minimal"} and request["store"] is False
     assert request["text"]["format"]["name"] == "software_extraction"
     (row,) = db.extractions()
@@ -288,8 +288,8 @@ def test_run_extract_stores_results_and_spends_through_call_meta(tmp_path: Path,
     assert ledger.spend_summary()["by_stage"]["extract"] == pytest.approx(summary["cost_usd"])
     funnel = db.funnel()
     assert funnel["extract"]["by_status"] == {"ok": 1}
-    assert funnel["extract"]["models"] == {"muse-spark-1.3-contributor": 1}
-    assert funnel["extract"]["by_model"] == {"muse-spark-1.3-contributor": {
+    assert funnel["extract"]["models"] == {"claude-haiku-5-5": 1}
+    assert funnel["extract"]["by_model"] == {"claude-haiku-5-5": {
         "candidates": 1, "by_status": {"ok": 1}, "cost_usd": pytest.approx(summary["cost_usd"])}}
     # Already extracted from the same sources: a second run makes no call.
     again = run_extract(limit=5, db_path=db_path, client=FakeMeta().client(), ledger=ledger,
@@ -297,18 +297,18 @@ def test_run_extract_stores_results_and_spends_through_call_meta(tmp_path: Path,
     assert again["attempted"] == 0
 
 
-def test_run_extract_on_muse_spark_open_stores_its_model(tmp_path: Path, ledger: Ledger) -> None:
+def test_run_extract_on_the_bulk_model_stores_its_model(tmp_path: Path, ledger: Ledger) -> None:
     db_path = tmp_path / "pipeline.db"
     db = PipelineDB(db_path)
     add_candidate(db, 1, "someone/tinyq")
     server = FakeMeta(ok(extraction()))
     summary = run_extract(limit=5, model="open", db_path=db_path, client=server.client(), ledger=ledger,
                           runs_dir=tmp_path / "runs", log=lambda line: None)
-    assert summary["model"] == OPEN_MODEL and summary["by_status"] == {"ok": 1}
+    assert summary["model"] == BULK_MODEL and summary["by_status"] == {"ok": 1}
     (request,) = server.requests
-    assert request["model"] == OPEN_MODEL and request["text"]["format"]["strict"] is True
+    assert request["model"] == BULK_MODEL and request["text"]["format"]["strict"] is True
     (row,) = db.extractions()
-    assert row["model"] == OPEN_MODEL
+    assert row["model"] == BULK_MODEL
     assert run_extract(limit=5, model="prod", db_path=db_path, client=FakeMeta().client(), ledger=ledger,
                        runs_dir=tmp_path / "runs", log=lambda line: None, max_attempts=1)["attempted"] == 1
     # Done by this model from the same sources: a second "open" run makes no call.
@@ -343,7 +343,7 @@ def test_features_only_asks_for_features_and_keeps_the_earlier_extraction(tmp_pa
                        runs_dir=tmp_path / "runs", log=lambda line: None)["attempted"] == 0
     assert run_extract(limit=5, db_path=db_path, features_only=True, client=FakeMeta().client(), ledger=ledger,
                        runs_dir=tmp_path / "runs", log=lambda line: None)["attempted"] == 0
-    assert db.last_extraction(key, "muse-spark-1.3-contributor", exclude=("features",))["status"] == "ok"
+    assert db.last_extraction(key, "claude-haiku-5-5", exclude=("features",))["status"] == "ok"
 
 
 def test_run_extract_records_schema_errors_and_quote_failures(tmp_path: Path, ledger: Ledger) -> None:

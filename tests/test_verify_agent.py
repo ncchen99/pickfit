@@ -51,6 +51,10 @@ def task() -> VerifyTask:
     return load_fixture(FIXTURES / "evnx.json", fetch=lambda url: "# evnx\n\nInstall: `pipx install evnx`\n")
 
 
+# Chain mode carries history by previous_response_id, which only Meta's API keeps; Claude runs replay.
+CHAIN_MODEL = "muse-spark-1.3-contributor"
+
+
 def agent(task: VerifyTask, box: Box, server: FakeServer, ledger: Ledger, tmp_path: Path,
           **kwargs: Any) -> VerifyAgent:
     lines: list[str] = []
@@ -82,7 +86,7 @@ def test_chain_mode_reads_the_error_fixes_it_and_finishes(task, ledger, tmp_path
         response("r4", finish(steps=[1], smoke=SMOKE), summary="validate exit 1 is right."),
     )
     box = FakeBox(EVNX_BOX)
-    runner = agent(task, box, server, ledger, tmp_path, mode="chain")
+    runner = agent(task, box, server, ledger, tmp_path, mode="chain", model=CHAIN_MODEL)
     report = runner.run()
 
     assert report.stop_reason == "finished"
@@ -244,7 +248,7 @@ def test_finish_with_other_calls_is_not_recorded(task, ledger, tmp_path):
         response("r2", finish(level="install", steps=[1])),
         response("r3", finish(level="install", steps=[1])),
     )
-    report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path, mode="chain").run()
+    report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path, mode="chain", model=CHAIN_MODEL).run()
     outputs = [item["output"] for item in server.requests[1]["input"]]
     assert outputs[1].startswith("Not recorded: call finish alone")
     # No check in the log: sent back once, then the second identical finish stands.
@@ -326,7 +330,7 @@ def test_invalid_finish_and_bad_tool_arguments_go_back_to_the_model(task, ledger
         response("r2", ("read_file", {"path": "README.md", "offset": 0}), ("nope", {})),
         response("r3", finish(level="install", steps=[1])),
     )
-    report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path, mode="chain").run()
+    report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path, mode="chain", model=CHAIN_MODEL).run()
     first_outputs = [item["output"] for item in server.requests[1]["input"]]
     assert first_outputs[0].startswith("error: invalid arguments for run_command")
     second_outputs = [item["output"] for item in server.requests[2]["input"]]

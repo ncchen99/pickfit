@@ -15,18 +15,23 @@ import pickfit.env
 from pickfit.env import REPO_ROOT
 from pickfit.ledger import (
     BASETEN_CAPS,
+    MODAL_LLM_CAPS,
+    NO_CAPS,
+    OPENROUTER_CAPS,
     PIPELINE_CAPS,
     BudgetExceeded,
     Caps,
     Ledger,
+    baseten_ledger,
     default_ledger,
     pipeline_caps,
-    pipeline_daily_cap,
     taipei_date,
 )
 
 OCT28_NOON_TAIPEI = datetime(2026, 10, 28, 4, 0, tzinfo=UTC)
 OCT29_EARLY_TAIPEI = datetime(2026, 10, 28, 16, 30, tzinfo=UTC)  # 00:30 on 10/29 in Taipei
+# Caps a caller passes are enforced as before: a total, and a daily cap that changes with the day.
+CAPPED = Caps(total_usd=225.0, daily_usd=lambda day: 3.0 if day < date(2026, 10, 29) else 25.0)
 
 
 def fixed(moment: datetime):
@@ -44,37 +49,49 @@ def db(tmp_path: Path) -> Path:
     return tmp_path / "ledger.sqlite"
 
 
-def test_daily_cap_schedule():
-    assert pipeline_daily_cap(date(2026, 10, 28)) == 3.0
-    assert pipeline_daily_cap(date(2026, 10, 29)) == 25.0
-    assert pipeline_daily_cap(date(2026, 10, 30)) == 25.0
-    assert pipeline_daily_cap(date(2026, 10, 31)) == 80.0
-    assert pipeline_daily_cap(date(2026, 11, 1)) == 45.0
-    assert pipeline_daily_cap(date(2026, 11, 2)) == 45.0
-    assert pipeline_daily_cap(date(2026, 11, 3)) == 50.0
-    assert pipeline_daily_cap(date(2026, 11, 4)) == 25.0
-    assert PIPELINE_CAPS.total_usd == 225.0
-
-
-def test_total_cap_setting_can_only_lower_it(monkeypatch: pytest.MonkeyPatch):
+def test_no_budget_has_a_total_or_daily_cap_by_default(db: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.delenv("PICKFIT_PIPELINE_TOTAL_CAP_USD", raising=False)
-    monkeypatch.setattr("pickfit.ledger.get_env", lambda name, default=None, path=None: None)
-    assert pipeline_caps().total_usd == 225.0
-    monkeypatch.setattr("pickfit.ledger.get_env", lambda name, default=None, path=None: "5")
+    monkeypatch.delenv("PICKFIT_PIPELINE_DAILY_CAP_USD", raising=False)
+    monkeypatch.setenv("PICKFIT_LEDGER", str(db))
+    for caps in (PIPELINE_CAPS, BASETEN_CAPS, MODAL_LLM_CAPS, OPENROUTER_CAPS, pipeline_caps()):
+        assert caps is NO_CAPS
+    # Far past the hackathon's $225 total and its daily caps: recorded, never refused.
+    assert default_ledger().caps is NO_CAPS
+    for ledger in (Ledger(db, clock=fixed(OCT28_NOON_TAIPEI)), baseten_ledger()):  # two budgets, one file
+        ledger.settle(ledger.reserve(400.0, stage="verify"), 400.0)
+        ledger.reserve(400.0, stage="verify")
+        summary = ledger.spend_summary()
+        assert summary["total_usd"] == pytest.approx(800.0)
+        assert summary["daily_cap_usd"] is None and summary["total_cap_usd"] is None
+
+
+def test_a_scope_cap_still_stops_a_call_without_any_budget_cap(db: Path):
+    ledger = Ledger(db)
+    ledger.settle(ledger.reserve(2.5, run_id="r1", scope="verify:tinyq", scope_cap_usd=3.0), 2.5)
+    with pytest.raises(BudgetExceeded) as info:
+        ledger.reserve(0.6, run_id="r1", scope="verify:tinyq", scope_cap_usd=3.0)
+    assert info.value.cap == "scope verify:tinyq"
+
+
+def test_the_user_can_set_a_total_and_a_daily_cap(db: Path, monkeypatch: pytest.MonkeyPatch):
+    settings: dict[str, str] = {}
+    monkeypatch.setattr("pickfit.ledger.get_env", lambda name, default=None, path=None: settings.get(name, default))
+    assert pipeline_caps() is NO_CAPS
+    settings["PICKFIT_PIPELINE_TOTAL_CAP_USD"] = "5"
     assert pipeline_caps().total_usd == 5.0
-    assert pipeline_caps().daily_usd(date(2026, 11, 1)) == 45.0
-    for bad in ("300", "-1", "five"):
-        monkeypatch.setattr("pickfit.ledger.get_env", lambda name, default=None, path=None, v=bad: v)
+    assert pipeline_caps().daily_usd(date(2026, 11, 15)) == float("inf")
+    settings["PICKFIT_PIPELINE_DAILY_CAP_USD"] = "2"
+    assert pipeline_caps().daily_usd(date(2026, 11, 15)) == 2.0
+    ledger = Ledger(db, caps=pipeline_caps())
+    ledger.settle(ledger.reserve(1.5), 1.5)
+    with pytest.raises(BudgetExceeded) as info:
+        ledger.reserve(0.6)
+    assert info.value.cap == "daily"
+    assert ledger.spend_summary()["daily_cap_usd"] == 2.0 and ledger.spend_summary()["total_cap_usd"] == 5.0
+    for bad in ("-1", "five", "nan"):
+        settings["PICKFIT_PIPELINE_TOTAL_CAP_USD"] = bad
         with pytest.raises(ValueError):
             pipeline_caps()
-
-
-def test_baseten_daily_cap_is_raised_on_11_1_and_11_2_only():
-    assert BASETEN_CAPS.total_usd == 100.0
-    assert BASETEN_CAPS.daily_usd(date(2026, 10, 31)) == 25.0
-    assert BASETEN_CAPS.daily_usd(date(2026, 11, 1)) == 70.0
-    assert BASETEN_CAPS.daily_usd(date(2026, 11, 2)) == 35.0
-    assert BASETEN_CAPS.daily_usd(date(2026, 11, 3)) == 25.0
 
 
 def test_taipei_date_crosses_midnight_at_utc_16():
@@ -88,7 +105,7 @@ def test_ledger_uses_wal(db: Path):
 
 
 def test_reserve_then_settle_to_actual_cost(db: Path):
-    ledger = Ledger(db, clock=fixed(OCT28_NOON_TAIPEI))
+    ledger = Ledger(db, caps=CAPPED, clock=fixed(OCT28_NOON_TAIPEI))
     row = ledger.reserve(0.50, run_id="r1", stage="extract", scope="extract:tinyq",
                          provider="meta", model="muse-spark-1.3")
     assert ledger.spend_summary()["today_usd"] == 0.5  # the open reservation counts
@@ -106,7 +123,7 @@ def test_reserve_then_settle_to_actual_cost(db: Path):
 
 
 def test_release_frees_the_reservation(db: Path):
-    ledger = Ledger(db, clock=fixed(OCT28_NOON_TAIPEI))
+    ledger = Ledger(db, caps=CAPPED, clock=fixed(OCT28_NOON_TAIPEI))
     row = ledger.reserve(2.0, stage="verify")
     ledger.release(row)
     assert ledger.spend_summary()["today_usd"] == 0
@@ -114,7 +131,7 @@ def test_release_frees_the_reservation(db: Path):
 
 
 def test_daily_cap_blocks_before_it_is_exceeded(db: Path):
-    ledger = Ledger(db, clock=fixed(OCT28_NOON_TAIPEI))
+    ledger = Ledger(db, caps=CAPPED, clock=fixed(OCT28_NOON_TAIPEI))
     ledger.settle(ledger.reserve(2.9), 2.9)
     with pytest.raises(BudgetExceeded) as info:
         ledger.reserve(0.2)
@@ -122,10 +139,10 @@ def test_daily_cap_blocks_before_it_is_exceeded(db: Path):
     assert ledger.spend_summary()["calls"] == 1  # nothing was recorded for the refused call
 
 
-def test_daily_cap_is_per_taipei_day_and_rises_on_oct29(db: Path):
-    today = Ledger(db, clock=fixed(OCT28_NOON_TAIPEI))
+def test_daily_cap_is_per_taipei_day(db: Path):
+    today = Ledger(db, caps=CAPPED, clock=fixed(OCT28_NOON_TAIPEI))
     today.settle(today.reserve(2.9), 2.9)
-    next_day = Ledger(db, clock=fixed(OCT29_EARLY_TAIPEI))
+    next_day = Ledger(db, caps=CAPPED, clock=fixed(OCT29_EARLY_TAIPEI))
     next_day.reserve(20.0)  # new Taipei day, $25 cap
     summary = next_day.spend_summary()
     assert summary["today"] == "2026-10-29"

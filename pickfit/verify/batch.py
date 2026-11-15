@@ -2,7 +2,7 @@
 
 Candidates come from the pipeline database (runs/pipeline.db, or --db), opened
 read-only: a candidate that passed the rules and has a finished extraction
-(muse-spark-1.3 preferred over the contributor model), with the features of a
+(the prod model's preferred over a cheaper tier's, MODEL_PREFERENCE), with the features of a
 newer features-only extraction merged in. Before any box starts,
 the program sets aside what the box cannot verify (GUI apps unless the boxes
 have a display, browser extensions, GPU only, another OS only, Apple Silicon
@@ -38,15 +38,16 @@ from typing import Any
 from pydantic import ValidationError
 
 from pickfit.ledger import TAIPEI, taipei_now
-from pickfit.meta import OPEN_MODEL
+from pickfit.meta import BULK_MODEL, OPEN_MODEL, PROD_MODEL
 from pickfit.schema import TOOL_KINDS, ExtractedFeatures, ExtractionResult, is_passed
 from pickfit.verify.plan import plan_for
 from pickfit.verify.task import VerifyTask
 
 DONE_STATUSES = ("ok", "quotes_dropped")
 FEATURES_STATUS = "features"  # a features-only extraction (extract.py)
-# A muse-spark-1.3 extraction wins over a Muse Spark Open one of the same repo unless the batch asks for one.
-MODEL_PREFERENCE = ("muse-spark-1.3", "muse-spark-1.3-contributor", OPEN_MODEL)
+# Of one repo's extractions the prod model's wins (Claude Opus, then the hackathon's muse-spark-1.3), then the
+# cheaper tiers', unless the batch asks for a model.
+MODEL_PREFERENCE = (PROD_MODEL, "muse-spark-1.3", "muse-spark-1.3-contributor", BULK_MODEL, OPEN_MODEL)
 NOT_IN_BOX_KINDS = {"desktop_app": "GUI app", "browser_extension": "browser extension"}
 
 

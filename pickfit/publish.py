@@ -13,7 +13,7 @@ before anything is written, and any problem refuses the whole publish:
   vars or D1 bindings into an environment).
 
 Before that, a top-level publish translates the web page's new or changed tool
-sentences into zh-TW (pickfit/translate.py: Muse Spark Open on Modal, at most
+sentences into zh-TW (pickfit/translate.py: Claude Opus, at most
 TRANSLATE_MAX_USD) and commits only data/i18n/zh-TW; a failure is reported and
 the deploy goes on, with those sentences shown in English. Frozen deployments
 (``--env``) and ``--no-translate`` skip it.
@@ -24,10 +24,10 @@ check and prints the plan, including the deployment's settings, without
 writing a file or calling wrangler.
 
 Deployments differ only by wrangler.jsonc settings (TOOLS, MATCH_MODE, the
-Meta caps), never by code: a frozen evaluation deployment is an env that is
+model caps), never by code: a frozen evaluation deployment is an env that is
 not published again while the evaluation runs.
 
-Remote D1 migrations and the MODEL_API_KEY secret are separate steps
+Remote D1 migrations and the ANTHROPIC_API_KEY secret are separate steps
 (worker/README.md, deploy checklist).
 """
 
@@ -178,13 +178,13 @@ def plan(
     return result
 
 
-TRANSLATE_MAX_USD = 1.0
+TRANSLATE_MAX_USD = 4.0  # holds the worst-case reservations of the requests that run at once (pickfit.translate)
 
 
 def translate_new(index: dict[str, Any], data_dir: Path, *, dry_run: bool, out=print) -> None:
     """zh-TW for the sentences the page lacks, committed alone; never raises (the page falls back to English)."""
     from pickfit.i18n import i18n_dir
-    from pickfit.translate import BATCH_CHARS, batches, missing, run
+    from pickfit.translate import BATCH_CHARS, DEFAULT_MODEL, batches, missing, run
 
     directory = i18n_dir(data_dir)
     known, todo = missing(index["entries"], directory)
@@ -195,9 +195,9 @@ def translate_new(index: dict[str, Any], data_dir: Path, *, dry_run: bool, out=p
     if dry_run:
         out(f"publish: dry run; would translate {len(todo)} sentence(s) of {tools} tool(s) into zh-TW")
         return
-    out(f"publish: zh-TW: translating {len(todo)} sentence(s) of {tools} tool(s) with Muse Spark Open")
+    out(f"publish: zh-TW: translating {len(todo)} sentence(s) of {tools} tool(s) with Claude Opus")
     try:
-        totals = run(batches(todo, BATCH_CHARS["open-modal"]), known, directory, max_usd=TRANSLATE_MAX_USD, out=out)
+        totals = run(batches(todo, BATCH_CHARS[DEFAULT_MODEL]), known, directory, max_usd=TRANSLATE_MAX_USD, out=out)
         out(f"publish: zh-TW: {totals.sentences} translated, {totals.failed} request(s) failed, ${totals.usd:.2f}")
         if totals.sentences:
             subprocess.run(["git", "add", "--", str(directory)], cwd=REPO_ROOT, check=True)

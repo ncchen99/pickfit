@@ -174,7 +174,7 @@ WEB_FORMULAS = frozenset({WEB_FORMULA_VERSION, WEB2_FORMULA_VERSION, WEB_VISUAL_
 STAGE = "score-rubric"
 REASONING_EFFORT = "low"
 MAX_OUTPUT_TOKENS = 8_000  # reasoning shares it; at effort low one call used 4,000 and ran out
-SCOPE_CAP_USD = 0.10  # per record per run; one rubric call is about $0.015
+SCOPE_CAP_USD = 0.60  # per record per run; one rubric call is reserved at about $0.25 on Claude Opus
 PROMPT_CACHE_KEY = "pickfit-rubric-v1"
 DEFAULT_CONCURRENCY = 4
 

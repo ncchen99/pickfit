@@ -147,7 +147,8 @@ def bridge_llm(channel: Channel) -> Any:
         def get_client(self) -> Any:  # type: ignore[override]
             return _Client()
 
-    return BridgeLLM(model="muse-spark-open", api_key="none-held-here", temperature=None, frequency_penalty=None,
+    # The name is a label inside the box only: the host picks the model (web_verify.OPERATOR_MODEL).
+    return BridgeLLM(model="pickfit-host", api_key="none-held-here", temperature=None, frequency_penalty=None,
                      reasoning_models=None, max_completion_tokens=None, max_retries=0)
 
 

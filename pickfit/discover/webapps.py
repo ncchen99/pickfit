@@ -735,13 +735,13 @@ def page_source_text(page: _PageParser, text: str) -> str:
     return "\n".join(head + ["", text])[:PAGE_TEXT_MAX]
 
 
-# --- Rule 8: what the page is (Muse Spark Open, reviewed by muse-spark-1.3) ---------------
+# --- Rule 8: what the page is (the bulk model, reviewed by the prod model) ---------------
 
 SCREEN_STAGE = "webscreen"
 SCREEN_TEXT_MAX = 8_000
 SCREEN_README_MAX = 4_000
 SCREEN_MAX_OUTPUT_TOKENS = 4_000
-SCREEN_SCOPE_CAP_USD = 0.05
+SCREEN_SCOPE_CAP_USD = 0.30  # one call's worst-case reservation on Claude Opus is about $0.10
 REVIEW_BELOW = 0.7
 SAMPLE_PERCENT = 5
 
@@ -829,13 +829,13 @@ def in_sample(key: str) -> bool:
 
 def screen_call(sources: list[Any], *, role: str, scope: str, run_id: str, client: Any = None,
                 ledger: Any = None) -> dict[str, Any]:
-    """One screen (Muse Spark Open on Baseten, forced tool call) or review (muse-spark-1.3, strict
-    structured output). Returns {status, result, keep, review, cost_usd, model, error}."""
+    """One screen (the bulk model, forced tool call) or review (the prod model, strict structured output).
+    Returns {status, result, keep, review, cost_usd, model, error}."""
     from dataclasses import asdict
 
     from pickfit.extract import render_sources
-    from pickfit.ledger import BudgetExceeded, baseten_ledger, default_ledger
-    from pickfit.meta import OPEN_MODEL, call_meta
+    from pickfit.ledger import BudgetExceeded, default_ledger
+    from pickfit.meta import BULK_MODEL, PROD_MODEL, call_meta
     from pickfit.schema import meta_strict_schema
 
     schema = meta_strict_schema(WebScreenResult)
@@ -851,16 +851,15 @@ def screen_call(sources: list[Any], *, role: str, scope: str, run_id: str, clien
     else:
         body = {"messages": messages, "response_format": {"type": "json_schema", "json_schema": {
                     "name": "webscreen", "schema": schema, "strict": True}}}
-    model = OPEN_MODEL if screen else "muse-spark-1.3"
+    model = BULK_MODEL if screen else PROD_MODEL
     out: dict[str, Any] = {"role": role, "model": model, "status": "error", "result": None, "keep": None,
                            "review": None, "cost_usd": 0.0, "usage": None, "error": None}
     try:
         meta = call_meta("chat", body, stage=SCREEN_STAGE, public_data_only=True,
-                         max_output_tokens=SCREEN_MAX_OUTPUT_TOKENS, model=model,
-                         provider="baseten" if screen else "meta", reasoning_effort="low",
+                         max_output_tokens=SCREEN_MAX_OUTPUT_TOKENS, model=model, reasoning_effort="low",
                          scope=f"{SCREEN_STAGE}:{role}:{scope}", scope_cap_usd=SCREEN_SCOPE_CAP_USD, run_id=run_id,
                          output_model=None if screen else WebScreenResult, cache=False, client=client,
-                         ledger=ledger or (baseten_ledger() if screen else default_ledger()))
+                         ledger=ledger or default_ledger())
     except BudgetExceeded:
         raise
     except Exception as err:  # noqa: BLE001 - recorded; call_meta already scrubbed keys
