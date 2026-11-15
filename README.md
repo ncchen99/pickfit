@@ -16,7 +16,7 @@ A software advisor for people and their AI agents. pickfit installs and tests so
 </p>
 
 <p align="center">
-  <img alt="Built with Muse Spark" src="https://img.shields.io/badge/built%20with-Meta%20Muse%20Spark-1A1D17?labelColor=F5C243">
+  <img alt="Runs on Claude" src="https://img.shields.io/badge/runs%20on-Claude-1A1D17?labelColor=F5C243">
   <img alt="MCP server" src="https://img.shields.io/badge/MCP-streamable%20HTTP-2E7A35">
   <img alt="Cloudflare Workers" src="https://img.shields.io/badge/runs%20on-Cloudflare%20Workers-C4552D">
   <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-4F5149">
@@ -38,7 +38,7 @@ Fitz, the mascot, is a tailorbird. Real tailorbirds pick leaves and stitch them 
 |---|---|
 | <img src="brand/screenshots/home.png" alt="pickfit home page: an 'I need…' search box over a ruler, with filters for OS, CPU, free, offline and data stays local" width="420"> | <img src="brand/screenshots/tool-page.png" alt="A pickfit tool page for OpenPets: tested on macOS, a video recorded by pickfit with chapters for each checked feature" width="420"> |
 
-As of 5 Nov 2026: **1,050** projects read, **732** verified at least through install, **647** replayed in a fresh sandbox, **85** web apps tried in a browser, **159** hidden gems. CLI tools, local AI tools, MCP servers, desktop apps (Linux and macOS) and web apps.
+As of 16 Nov 2026: **1,154** projects read, **813** verified at least through install, **715** replayed in a fresh sandbox, **98** web apps tried in a browser, **159** hidden gems. CLI tools, local AI tools, MCP servers, desktop apps (Linux and macOS) and web apps, in nine categories.
 
 <p align="center"><a href="https://www.youtube.com/watch?v=Rjuf3dHW0SE"><img src="brand/screenshots/demo-video.jpg" alt="Watch the pickfit demo video on YouTube (2:59)" width="640"></a><br><sub>Watch the 3-minute demo: Claude Code finds and installs MangoDisk through pickfit, then the app's first use.</sub></p>
 
@@ -74,15 +74,17 @@ Every answer carries `how_we_know` and an `evidence_url`, so your agent can tell
 
 ```mermaid
 flowchart LR
-  A[Discover<br>GitHub · Show HN · Flathub<br>Homebrew Cask · web · submissions] --> B[Prescreen<br>rules + Muse Spark Open]
-  B --> C[Read<br>Muse Spark 1.3 extracts facts<br>with checked quotes]
+  A[Discover<br>GitHub · Show HN · Flathub<br>Homebrew Cask · web · submissions] --> B[Prescreen<br>rules + Claude Haiku]
+  B --> C[Read<br>Claude Opus extracts facts<br>with checked quotes]
   C --> D[Try<br>agent installs and operates it<br>Linux · macOS · Windows · browser]
   D --> E[Replay<br>fresh box, network off]
   E --> F[Score<br>quality · popularity · gem<br>security · visual check]
   F --> G[Publish<br>MCP + pickfit.app]
 ```
 
-Meta's models do every product decision: **Muse Spark 1.3** reads READMEs, judges what passed and matches requests live; **Muse Spark Open** (open weights, on Baseten and Modal) does the first cut and operates desktop apps from screenshots; **Muse Wonder** checks screenshots for visual defects. Since 3 Nov the same Meta models are reached through OpenRouter, pinned to Meta as the only provider with data collection denied. Claude was the development tool and the agent under test in the evaluation; it also wrote the tool pages' how-to text for records that existed on 2 Nov, and each such record names the model that wrote it. The [full report](https://ncchen99.github.io/pickfit/) covers the hypotheses, every experiment (including the ones that failed), the iterations, and the designs that keep the catalogue honest.
+Since 15 Nov 2026 every product decision runs on Claude through the Anthropic API. **Claude Opus 5.5** reads each README (and the project's own install guide, when the README only links to it), installs and operates the software in the sandbox, judges what passed and matches requests live; **Claude Haiku 5.5** does the first cut. The sandboxes run on Modal. Each record names the model that read it, ran it and judged it.
+
+During the hackathon (27 Oct – 4 Nov) the same jobs ran on Meta's models: **Muse Spark 1.3** read READMEs, judged what passed and matched requests; **Muse Spark Open** (open weights, on Baseten and Modal) did the first cut and operated desktop apps from screenshots; **Muse Wonder** checked screenshots for visual defects. From 3 Nov those models were reached through OpenRouter, pinned to Meta as the only provider with data collection denied. Claude was then the development tool and the agent under test in the evaluation; it also wrote the tool pages' how-to text for records that existed on 2 Nov, and each such record names the model that wrote it. Records made in that period keep their model names, and nothing about them was rewritten. The [full report](https://ncchen99.github.io/pickfit/) covers that period: the hypotheses, every experiment (including the ones that failed), the iterations, and the designs that keep the catalogue honest.
 
 ## Repository
 
@@ -100,7 +102,9 @@ Run the pipeline with `uv run pickfit --help`; run the Worker with `cd worker &&
 
 ## The hackathon
 
-Built for the [Meta Global AI Developer Hackathon](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) (27 Oct – 4 Nov 2026 ET). The idea and planning notes predate the event and are **not** in this repository; all code, data, the website, the mascot and the video were made during the hackathon. Rules and how we followed them: [`docs/hackathon-rules.md`](docs/hackathon-rules.md). Experiments that were tried and not merged are kept as git tags (`git tag -l 'archive/*' -n3`).
+Built for the [Meta Global AI Developer Hackathon](https://cerebralvalley.ai/e/meta-ai-developer-hackathon) (27 Oct – 4 Nov 2026 ET). The idea and planning notes predate the event and are **not** in this repository; all code, data, the website, the mascot and the video up to commit `bee232a8` (5 Nov) were made during the hackathon. Rules and how we followed them: [`docs/hackathon-rules.md`](docs/hackathon-rules.md). Experiments that were tried and not merged are kept as git tags (`git tag -l 'archive/*' -n3`).
+
+Work has continued since. From 15 Nov 2026 the pipeline and the live matcher use Claude, and the catalogue gained five categories (infrastructure and DevOps, security and networking, data and databases, documents and productivity, media and files) with a first batch of well-known command-line tools, MCP servers and web apps. The commit history and the hackathon's evaluation and cost records are left as they were.
 
 ## License
 
