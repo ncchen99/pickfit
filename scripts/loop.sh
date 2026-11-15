@@ -11,7 +11,8 @@
 # Run it in a loop worktree (scripts/loop_setup.sh). Every batch is a new session, so nothing is carried in
 # a context window: what is done, parked or broken is in loop/. After each batch this script, not the
 # session, looks at the branch: a protected file that changed or a test that was deleted stops the loop
-# (exit 4), and two batches in a row that changed nothing stop it too (exit 5).
+# (exit 4), and two batches in a row that changed nothing stop it too (exit 5). No batch starts once a
+# spending cap of loop/budget.json is reached (exit 6).
 #
 # Do not export ANTHROPIC_API_KEY into this shell unless the sessions should bill the API key: `claude`
 # uses a key it finds in its environment (docs/plan.md, section 2, rule 7). pickfit reads .env by itself.
@@ -38,7 +39,9 @@ logs=${LOOP_LOG_DIR:-runs/loop}
 
 state() { uv run --quiet python scripts/loop_state.py "$@"; }
 
-goal="/goal Work pickfit's ingest loop exactly as the pickfit-loop skill says (read .claude/skills/pickfit-loop/SKILL.md first). The goal is met when \`uv run python scripts/loop_state.py status\` shows done plus parked at least $items higher than in the first status line you printed in this session, or shows todo=0 doing=0. Print that status line before the first item and after every item. Never ask a question: write what needs a person in loop/journal.md and take the next item. Stop after $((items * 6)) turns in any case."
+budget() { python3 scripts/loop_budget.py "$@"; }
+
+goal="/goal Work pickfit's ingest loop exactly as the pickfit-loop skill says (read .claude/skills/pickfit-loop/SKILL.md first). The goal is met when \`uv run python scripts/loop_state.py status\` shows done plus parked at least $items higher than in the first status line you printed in this session, or shows todo=0 doing=0, or \`python3 scripts/loop_budget.py status\` says a cap is reached. Print both status lines before the first item and after every item. Never ask a question: write what needs a person in loop/journal.md and take the next item. Stop after $((items * 6)) turns in any case."
 
 cmd=(claude -p "$goal" --permission-mode auto --settings loop/settings.json
      --max-budget-usd "$batch_usd" --output-format stream-json --verbose)
@@ -70,6 +73,7 @@ fi
 if [ "$dry" = 1 ]; then
   echo "branch:  $branch"
   echo "status:  $(state status)"
+  echo "budget:  $(budget status || true)"
   echo "batches: $batches x $items items, at most US\$$batch_usd of model use each (Claude Code's own estimate)"
   printf 'command:'; printf ' %q' "${cmd[@]}"; echo
   exit 0
@@ -80,6 +84,12 @@ notify() {
   command -v osascript >/dev/null 2>&1 \
     && osascript -e "display notification \"$1\" with title \"pickfit loop\"" >/dev/null 2>&1 || true
 }
+
+if [ -n "${ANTHROPIC_API_KEY:-}" ] && [ "${LOOP_ALLOW_API_KEY:-0}" != 1 ]; then
+  echo "loop.sh: ANTHROPIC_API_KEY is set in this shell, so the Claude Code sessions themselves would be billed" >&2
+  echo "         to the API credit the pipeline needs. Unset it, or run with LOOP_ALLOW_API_KEY=1 to accept that." >&2
+  exit 2
+fi
 
 mkdir -p "$logs" loop/proposals
 protected=$(python3 scripts/loop_guard.py --list-protected)
@@ -100,6 +110,12 @@ while [ "$n" -lt "$batches" ]; do
     echo "loop.sh: loop_state.py failed ($rc)" >&2
     exit "$rc"
   fi
+  rc=0
+  spent=$(budget status --exit-code) || rc=$?
+  if [ "$rc" != 0 ]; then  # 4: a cap is reached; 2: the budget cannot be read. Either way nothing is started.
+    notify "no batch $n: $spent"
+    exit 6
+  fi
   before=$(git rev-parse HEAD)
   log="$logs/$(date +%Y%m%d-%H%M%S)-batch$n.jsonl"
   echo "loop.sh: batch $n of $batches -> $log"
@@ -115,6 +131,7 @@ while [ "$n" -lt "$batches" ]; do
     echo
     echo "## $(date '+%Y-%m-%d %H:%M') loop.sh batch $n"
     echo "- status: $after_status"
+    echo "- $(budget status || true)"
     echo "- commits: $(git rev-list --count "$before"..HEAD)，log: $log"
     [ -z "$edited" ] || echo "- 這批改過的既有測試（請看一眼有沒有改鬆）：$(echo $edited)"
     [ -z "$changed" ] || echo "- 需要你：受保護的檔案被改了，loop 已停：$(echo $changed)"

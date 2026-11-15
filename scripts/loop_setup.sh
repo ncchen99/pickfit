@@ -54,7 +54,7 @@ branch:        $branch
 Attended (you can watch and steer): open a Claude Code session in that folder, choose Auto in the
 permission-mode picker, and send:
 
-  /goal Work pickfit's ingest loop as the pickfit-loop skill says. Met when \`uv run python scripts/loop_state.py status\` shows todo=0 doing=0, or 10 more items done or parked than the first status line of this session; print the status line after every item. Never ask a question: write what needs me in loop/journal.md and take the next item.
+  /goal Work pickfit's ingest loop as the pickfit-loop skill says. Met when \`uv run python scripts/loop_state.py status\` shows todo=0 doing=0, or 10 more items done or parked than the first status line of this session, or \`python3 scripts/loop_budget.py status\` says a cap is reached; print both status lines after every item. Never ask a question: write what needs me in loop/journal.md and take the next item.
 
 Unattended (a fresh session per batch):
 

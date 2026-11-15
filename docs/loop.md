@@ -56,6 +56,23 @@ agent 會停，有三種原因，各用一樣東西處理。
 3. **hook 之外再查一次。** shell 改檔案的方法太多，hook 擋不完。所以 `scripts/loop.sh` 每跑完一批，會從 session 外面比對分支的 diff：受保護的檔案有變動，或有測試被刪，整個 loop 就停（exit 4）。這一步 session 自己動不到。
 4. **修 harness 要過三關**：全部單元測試（現在 1,644 個，約 85 秒）；動到箱子就重跑 `--limits-test`，隔離不能變鬆；原本失敗的項目重跑通過，再挑一筆原本就通過的重跑確認沒變差。既有的測試可以改不能刪，改過哪些會列在 journal 請念誠看一眼。
 
+## 花費上限
+
+賽後帳本不再有硬性上限（沒設就不擋），所以 loop 自己有一份，寫在 `loop/budget.json`。念誠 11/15 23:55 給了兩邊剩下的額度，上限設在那之下，留一些給線上的 Worker 和其他 session：
+
+| 帳 | 算什麼 | 總額 | 每天 |
+|---|---|---|---|
+| `model` | 帳本裡 `since` 之後的所有模型呼叫，不分 session、不分供應商 | US$100 | US$40 |
+| `box` | 每次驗證估出來的 Modal 沙盒費用（`outcome.json` 的 `box_usd`） | US$25 | US$10 |
+
+另外單一項目以 US$5 為限。擋的地方有三層：
+
+1. hook：到了上限，所有要花錢的管線指令都被拒絕，session 只能記錄和收尾。
+2. `loop.sh`：每批開始前檢查，到了就不開新的一批（exit 6）。
+3. 帳本自己：loop 的 session 帶著 `PICKFIT_PIPELINE_DAILY_CAP_USD=40`，Anthropic 切換合併後，單日超過時模型呼叫會在送出前被帳本擋下。
+
+`box` 這本帳是 pickfit 自己的估計，不是 Modal 的帳單，映像建置、限制檢查和網頁驗證用的沙盒沒算進去，所以上限抓得比剩餘額度低不少。Modal 後台的 workspace 花費上限只有念誠能設，建議設成剩餘的額度當最後一道。loop 改不了 `loop/budget.json`。
+
 ## 狀態都在磁碟上
 
 | 檔案 | 內容 | 誰寫 |
@@ -65,6 +82,7 @@ agent 會停，有三種原因，各用一樣東西處理。
 | `loop/journal.md` | 每個項目一段，只加不改 | session；每批結束 `loop.sh` 加一段 |
 | `loop/proposals/` | 要念誠決定的修改 | session |
 | `loop/settings.json` | loop 專用的 hook 與 deny 規則 | 人；loop 不能改 |
+| `loop/budget.json` | 花費上限與起算時間 | 人；loop 不能改 |
 
 session 不靠記憶。每個 session 開始時讀這些檔案，結束時什麼都不用交接。
 
@@ -114,7 +132,7 @@ cua-driver 需要「輔助使用」和「螢幕錄製」兩個權限，要在做
 - **hook 在真的 session 裡會不會擋，還沒實測。** 從寫這份文件的 session 裡起 `claude -p`，回的是 `Credit balance is too low`（那個環境走 API key 登入）。`loop_setup.sh` 之後先跑一次 `scripts/loop.sh --probe`，它會開一個小 session 試著改 `verdict.py`，確認被擋。
 - **佇列裡 43 筆，目前 `verify --batch` 只選得到 7 筆**（H-001）。loop 的第一件事多半是修這個。
 - **模型**：Anthropic API 的切換在另一個 worktree 進行中。loop 用的是管線當下設定的模型，切換合併後不用改 loop。
-- **花費上限**（單一項目 US$5、每天 US$40、每批 session US$25）是先抓的數字，寫在 skill 和 `loop.sh` 裡，可以改。
+- **Modal 的實際花費沒有進帳本。** `box` 的上限靠的是估計值，見「花費上限」一節。
 
 ## 參考
 

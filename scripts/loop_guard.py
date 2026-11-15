@@ -44,8 +44,10 @@ PROTECTED = (
     "schema/",
     "scripts/guarded_write_back.py",
     "scripts/loop_guard.py",
+    "scripts/loop_budget.py",
     "scripts/loop.sh",
     "loop/settings.json",
+    "loop/budget.json",
     ".claude/settings.json",
     ".claude/settings.local.json",
 )
@@ -65,6 +67,10 @@ _WRITES = re.compile(
     r"|(?:^|\s)patch\s|\bgit\s+(?:checkout|restore|rm|mv|apply|stash)\b|\bopen\(|\.write_text\(|\.write_bytes\(|\.write\(")
 _FD_REDIRECT = re.compile(r"\d*>&\d+|\d*>\s*/dev/null")
 _REDIRECT_TARGET = re.compile(r">>?\s*([^\s;|&)]+)")
+# The pipeline commands that call a model or start a sandbox. --dry-run and --status spend nothing.
+_PAID = re.compile(r"\bpickfit\s+(?:verify|extract|prescreen|score|usability|visual|reverify|watch|webapps|"
+                   r"translate|usage-guide|ping)\b")
+_FREE = re.compile(r"--dry-run\b|--status\b")
 _DELETES = re.compile(r"\b(?:git\s+)?rm\b")
 _PARTS = re.compile(r"&&|\|\||[;|\n]")
 _COPY = re.compile(r"\b(?:cp|install|rsync)\b.*\s(\S+)\s*$")  # group 1: the destination, the last word
@@ -121,10 +127,29 @@ def check_file(tool: str, path: str, cwd: str) -> str | None:
     return None
 
 
+def over_budget() -> str | None:
+    """Why no more may be spent: a cap in loop/budget.json is reached, or the budget cannot be read."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    try:
+        import loop_budget
+        reached = loop_budget.report(ROOT / "loop")["reached"]
+    except Exception as error:  # a budget that cannot be read stops spending rather than letting it through
+        return f"the loop's budget cannot be read ({type(error).__name__}: {error})"
+    finally:
+        sys.path.pop(0)
+    return ", ".join(reached) if reached else None
+
+
 def check_bash(command: str) -> str | None:
     for pattern, name in _OUTWARD:
         if pattern.search(command):
             return f"{name} stays with a person: note it in loop/journal.md and go on with the next item"
+    if any(_PAID.search(part) and not _FREE.search(part) for part in _PARTS.split(command)):
+        reached = over_budget()
+        if reached:
+            return (f"the loop's spending cap is reached: {reached}. Start nothing that costs money: write "
+                    f"'需要你' with this line in loop/journal.md, leave the item as it is (the next session "
+                    f"takes it up again) and end the session")
     off = _mentions(command, OFF_LIMITS)
     if off:
         return f"the command names {off}, which a loop session never reads"

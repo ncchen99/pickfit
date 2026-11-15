@@ -17,6 +17,12 @@ _SPEC.loader.exec_module(loop_guard)
 ROOT = str(loop_guard.ROOT)
 
 
+@pytest.fixture(autouse=True)
+def room_in_the_budget(monkeypatch):
+    """No test reads the real ledger: the budget has room unless a test says otherwise."""
+    monkeypatch.setattr(loop_guard, "over_budget", lambda: None)
+
+
 def bash(command: str) -> str | None:
     return loop_guard.decide({"tool_name": "Bash", "tool_input": {"command": command}, "cwd": ROOT})
 
@@ -111,6 +117,35 @@ def test_the_main_checkout_s_copies_are_protected_from_a_worktree(monkeypatch):
     assert loop_guard.check_file("Edit", "/repo/pickfit/verify/judge.py", "/repo/.claude/worktrees/loop")
     assert loop_guard.check_file("Edit", "/repo/.claude/worktrees/other/pickfit/score.py", "/repo")
     assert loop_guard.check_file("Edit", "/repo/.claude/worktrees/loop/pickfit/verify/box.py", "/repo") is None
+
+
+def test_a_reached_cap_stops_what_costs_money_and_nothing_else(monkeypatch):
+    monkeypatch.setattr(loop_guard, "over_budget", lambda: "box total ($25.10 of $25)")
+    refused = bash("uv run pickfit verify --batch 1 --repo owner/name --force --runner modal")
+    assert "box total ($25.10 of $25)" in refused and "需要你" in refused
+    assert bash("cd . && uv run pickfit verify --limits-test --runner modal")
+    assert bash("uv run pickfit extract --limit 5")
+    # What costs nothing still runs, so the session can write up where it stopped.
+    assert bash("uv run pickfit verify --batch 1 --repo owner/name --force --runner modal --dry-run") is None
+    assert bash("uv run pickfit spend") is None
+    assert bash("uv run pytest -q") is None
+    assert bash("uv run python scripts/loop_state.py status") is None
+    assert bash("git commit -m 'journal: the cap is reached'") is None
+
+
+def test_a_budget_that_cannot_be_read_stops_spending(monkeypatch, tmp_path):
+    monkeypatch.undo()  # the real over_budget, pointed at a checkout with no loop/budget.json
+    monkeypatch.setattr(loop_guard, "ROOT", tmp_path)
+    assert "cannot be read" in loop_guard.over_budget()
+    assert "cannot be read" in bash("uv run pickfit verify --batch 1 --repo a/b --runner modal")
+    assert bash("uv run pytest -q") is None
+
+
+def test_the_loop_cannot_raise_its_own_caps():
+    assert file("Edit", f"{ROOT}/loop/budget.json")
+    assert bash("echo '{}' > loop/budget.json")
+    assert file("Edit", f"{ROOT}/scripts/loop_budget.py")
+    assert file("Read", f"{ROOT}/loop/budget.json") is None
 
 
 def test_main_prints_a_deny_decision_only_when_it_refuses(monkeypatch, capsys):

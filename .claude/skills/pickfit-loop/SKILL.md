@@ -16,9 +16,10 @@ description: 跑 pickfit 的收錄與修 harness 的 loop。從 loop/queue.jsonl
 ## 開工前（每個 session 做一次）
 
 - `git branch --show-current` 要是 `loop/…`。不是的話停下來，請使用者先跑 `scripts/loop_setup.sh`。
-- `uv run pytest -q` 要全過。沒過就先修到過，那是上一個 session 留下的。
+- `git merge --no-edit main`，把 main 上最新的管線併進來，免得用舊的程式跑。有衝突就 `git merge --abort`，在 journal 寫「需要你」，照現有的程式繼續。
+- `uv run pytest -q` 要全過。沒過就先修到過，那是上一個 session 或剛併進來的程式留下的。
 - 讀 `loop/issues.md`，以及 `loop/journal.md` 最後 40 行。
-- 印一次 `uv run python scripts/loop_state.py status`。
+- 印一次 `uv run python scripts/loop_state.py status` 和 `python3 scripts/loop_budget.py status`。花費已經到上限就直接收尾。
 
 ## 一圈
 
@@ -33,7 +34,7 @@ description: 跑 pickfit 的收錄與修 harness 的 loop。從 loop/queue.jsonl
 4. **分流**：照下一節。
 5. **寫回**：通過而且重播過的 run 用 `uv run python scripts/guarded_write_back.py <run 目錄>` 寫回，它會確認紀錄沒有因此變差。不手改 `data/software/`。
 6. **記錄**：`loop_state.py finish` 或 `park`；在 `loop/journal.md` 最後加一段（格式在那個檔案開頭）；commit，一個項目一個 commit，訊息用英文。`docs/plan.md` 的狀態紀錄只有協調的 session 寫，這裡不碰。
-7. 印 `loop_state.py status`，回到第 1 步。
+7. 印 `loop_state.py status` 和 `loop_budget.py status`，回到第 1 步。
 
 ## 分流：這次沒過，是誰的問題
 
@@ -75,9 +76,15 @@ hook 會直接擋下這些：`git push`、`pickfit publish`、`wrangler deploy`�
 
 - 在這台 Mac 上裝系統層的東西（`brew install`、改系統設定、下載數十 GB 的 VM 映像）。
 - 建帳號、接受條款、開始用新的付費服務。
-- 單一項目花超過 US$5，或當天的 loop 花超過 US$40。用 `uv run pickfit spend` 看帳本。
+- 單一項目花超過 `loop/budget.json` 的 `item_usd`（看 run 的 `cost_usd` 加 `box_usd`）。快到了就停手，照 harness 的問題或合理的限制處理，不要再重跑。
 
 遇到了就在 journal 那一段寫「需要你」，講清楚要決定什麼、卡住哪些項目，把那些項目 park，繼續下一個。
+
+## 花費上限
+
+上限寫在 `loop/budget.json`，從裡面的 `since` 起算，分兩本帳。`model` 是所有 session 經過帳本的模型呼叫，`box` 是每次驗證估出來的 Modal 沙盒費用。各有總額和每天的上限，`python3 scripts/loop_budget.py status` 會印出來。
+
+到了上限，hook 會擋下所有要花錢的管線指令（`--dry-run` 和不花錢的指令照常能跑）。這時不要想辦法繞過：在 journal 寫「需要你」和那一行 `LOOP_BUDGET`，手上的項目留著不動，下一個 session 會接著做，然後收尾。`loop/budget.json` 只有念誠能改。
 
 ## 收尾
 
